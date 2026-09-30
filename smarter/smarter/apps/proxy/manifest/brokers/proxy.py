@@ -119,7 +119,7 @@ class SAMProxyBroker(AbstractBroker):
                 self.user_profile,
             )
             if self.plugin_meta:
-                self._orm_instance = PluginDataBase.objects.get(id=self.plugin_meta.id)  # type: ignore
+                self._orm_instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
             if self._orm_instance:
                 logger.debug(
                     "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
