@@ -1,6 +1,5 @@
 """Views for provider-related pages in the Smarter Workbench web console."""
 
-import logging
 from typing import Optional, Sequence
 
 import yaml
@@ -17,6 +16,7 @@ from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.logger_helpers import formatted_json
 from smarter.common.utils import rfc1034_compliant_to_snake
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,

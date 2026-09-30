@@ -1,11 +1,11 @@
 """Smarter API Manifests Enumerations."""
 
-import logging
 from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterException
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +94,32 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    GUARDRAIL = "Guardrail"
+    """Smarter API Guardrail resource.
+
+    A Django ORM model instance.
+    """
+
     LLM_CLIENT = "LLMClient"
     """Smarter LLMClient resource.
+
+    A Django ORM model instance.
+    """
+
+    LLMHOST = "LLMHost"
+    """Smarter LLMHost resource.
+
+    A Django ORM model instance.
+    """
+
+    MCPCLIENT = "MCPClient"
+    """Smarter MCPClient resource.
+
+    A Django ORM model instance.
+    """
+
+    ORCHESTRATOR = "Orchestrator"
+    """Smarter Orchestrator resource.
 
     A Django ORM model instance.
     """
@@ -136,6 +160,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    SKILL_PLUGIN = "SkillPlugin"
+    """Smarter Skill Plugin AI resource.
+
+    A Django ORM model instance.
+    """
+
     SQL_PLUGIN = "SqlPlugin"
     """Smarter SQL Plugin AI resource.
 
@@ -154,8 +184,22 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django Auth User model instance.
     """
 
+    VECTORSEARCH = "Vectorsearch"
+    """Smarter Vectorsearch resource.
+
+    A Django ORM model instance.
+    """
+
     VECTORSTORE = "Vectorstore"
     """Smarter Vectorstore resource.
+
+    A Django ORM model instance.
+    """
+
+    WEBSEARCH_PLUGIN = "WebsearchPlugin"
+    """Smarter Websearch Plugin AI resource.
+
+    Experimental.
 
     A Django ORM model instance.
     """
@@ -168,17 +212,23 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
             (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
             (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
+            (cls.GUARDRAIL.value, cls.GUARDRAIL.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
+            (cls.MCPCLIENT.value, cls.MCPCLIENT.value),
+            (cls.ORCHESTRATOR.value, cls.ORCHESTRATOR.value),
             (cls.PROMPT.value, cls.PROMPT.value),
             (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
             (cls.PROXY.value, cls.PROXY.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
+            (cls.SKILL_PLUGIN.value, cls.SKILL_PLUGIN.value),
             (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
             (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
             (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
             (cls.USER.value, cls.USER.value),
+            (cls.VECTORSEARCH.value, cls.VECTORSEARCH.value),
             (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
+            (cls.WEBSEARCH_PLUGIN.value, cls.WEBSEARCH_PLUGIN.value),
         ]
 
 
@@ -213,6 +263,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     UNDEPLOY = "undeploy"
     VERSION = "version"
     WHOAMI = "whoami"
+    RESOURCES = "resources"
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
@@ -233,6 +284,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             (cls.VERSION.value, cls.VERSION.value),
             (cls.UNDEPLOY.value, cls.UNDEPLOY.value),
             (cls.WHOAMI.value, cls.WHOAMI.value),
+            (cls.RESOURCES.value, cls.RESOURCES.value),
         ]
 
     @classmethod
@@ -254,6 +306,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.VERSION.value: "fetched version",
             cls.UNDEPLOY.value: "undeployed",
             cls.WHOAMI.value: "fetched identity",
+            cls.RESOURCES.value: "fetched resources",
         }
 
     @classmethod

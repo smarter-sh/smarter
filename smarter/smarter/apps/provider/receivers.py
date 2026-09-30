@@ -1,14 +1,14 @@
-"""Provider Signal receivers"""
+"""Provider Signal receivers."""
 
 # pylint: disable=W0613
 
-import logging
 from typing import Union
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

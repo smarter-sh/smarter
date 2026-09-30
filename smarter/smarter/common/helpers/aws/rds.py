@@ -1,9 +1,8 @@
 """AWS RDS helper class."""
 
-import logging
-
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.aws.exceptions import AWSNotReadyError
+from smarter.lib import logging
 
 from .aws import AWSBase
 
@@ -12,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 class AWSRds(AWSBase):
     """
-    AWS RDS helper class. Provides a high-level interface for managing
+    AWS RDS helper class.
+
+    Provides a high-level interface for managing
     Amazon Relational Database Service (RDS) resources.
 
     This helper class abstracts common operations related to AWS RDS, such as retrieving information about database
@@ -30,7 +31,7 @@ class AWSRds(AWSBase):
 
     def get_mysql_info(self) -> dict[str, str]:
         """
-        Return the version of the MySQL server
+        Return the version of the MySQL server.
 
         :return: MySQL server information
         :rtype: dict[str, str]

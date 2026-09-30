@@ -26,7 +26,7 @@ spec:
   selector:
     directive: search_terms
     #------------------------------------------------------------
-    # search terms that will trigger the llm_client to use this customized configuration.
+    # search terms that will trigger the llmclient to use this customized configuration.
     #------------------------------------------------------------
     searchTerms:
       - Cli Test
@@ -54,7 +54,6 @@ spec:
   # own discretion.
   # ------------------------------------------------------------
   data:
-    description: an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
     #------------------------------------------------------------
     # if a.) this module is able to locate any of the search terms in the user prompt
     #    b.) OpenAI API Function Calling opts to call this plugin_data

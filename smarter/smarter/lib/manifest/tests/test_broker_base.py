@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Base class for testing classes derived from AbstractBroker."""
 
-import logging
 import os
 from http import HTTPStatus
 from typing import Type
@@ -12,7 +11,7 @@ from django.http import HttpRequest
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import mask_string
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
@@ -29,9 +28,7 @@ logger_prefix = formatted_text(f"{HERE}.TestSAMBrokerBaseClass()")
 
 
 class TestSAMBrokerBaseClass(TestAccountMixin):
-    """
-    Test the Smarter SAMUserBroker.
-    """
+    """Test the Smarter SAMUserBroker."""
 
     _here: str
     _request: HttpRequest
@@ -43,7 +40,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
     @classmethod
     def setUpClass(cls):
-        """class-level setup."""
+        """Class-level setup."""
         super().setUpClass()
         cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
             user_profile=cls.user_profile,
@@ -65,7 +62,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
     @classmethod
     def tearDownClass(cls):
-        """class-level teardown."""
+        """Class-level teardown."""
         title = f" {logger_prefix}.tearDownClass() "
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
@@ -77,7 +74,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         super().tearDownClass()
 
     def setUp(self):
-        """test-level setup."""
+        """Test-level setup."""
         super().setUp()
         self._here = None  # type: ignore
         self._broker = None  # type: ignore
@@ -150,7 +147,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     @property
     def request(self) -> HttpRequest:
         """
-        Return a basic authenticated HttpRequest with a
+        Return a basic authenticated HttpRequest with a.
+
         valid SAMUser yaml manifest in the body.
         Ensures user.is_authenticated is True.
         """
@@ -189,7 +187,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     @property
     def broker(self) -> AbstractBroker:
         """
-        Return the SAMBroker for this test based
+        Return the SAMBroker for this test based.
+
         on a default initialization scenario using
         a request object containing a valid SAM manifest in the body
         and a loader initialized with the same manifest.
@@ -311,7 +310,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         response: SmarterJournaledJsonResponse,
     ) -> bool:
         """
-        Validate that the response is a SmarterJournaledJsonResponse containing
+        Validate that the response is a SmarterJournaledJsonResponse containing.
+
         a properly structured SAM manifest dict.
         """
 
@@ -342,7 +342,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
     def validate_get(self, response: SmarterJournaledJsonResponse) -> bool:
         """
-        Validate that the response is a SmarterJournaledJsonResponse
+        Validate that the response is a SmarterJournaledJsonResponse.
+
         containing a properly structured SAM manifest dict.
         """
         response_json: dict = json.loads(response.content.decode("utf-8"))
@@ -362,7 +363,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         response: SmarterJournaledJsonResponse,
     ) -> bool:
         """
-        Validate that the response is a SmarterJournaledJsonResponse
+        Validate that the response is a SmarterJournaledJsonResponse.
+
         containing a properly structured SAM manifest dict after an apply operation.
         """
 

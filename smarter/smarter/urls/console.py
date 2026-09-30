@@ -47,7 +47,15 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
-from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.guardrail import urls as guardrail_urls
+from smarter.apps.guardrail.const import namespace as guardrail_namespace
+from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.llmhost import urls as llmhost_urls
+from smarter.apps.llmhost.const import namespace as llmhost_namespace
+from smarter.apps.mcpclient import urls as mcp_urls
+from smarter.apps.mcpclient.const import namespace as mcp_namespace
+from smarter.apps.orchestrator import urls as orchestrator_urls
+from smarter.apps.orchestrator.const import namespace as orchestrator_namespace
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
@@ -59,6 +67,8 @@ from smarter.apps.proxy import urls as proxy_urls
 from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorsearch import urls as vectorsearch_urls
+from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
@@ -108,7 +118,7 @@ smarter_restricted_admin_site, which is accessible to staff users.
 SMARTER_APP_LABELS = [
     "account",
     "api",
-    "llm_client",
+    "llmclient",
     "plugin",
     "prompt",
     "provider",
@@ -164,12 +174,17 @@ urlpatterns = [
     path("api/", include(urls, namespace=api_namespace)),
     path("authtoken/", include(drf_urls, namespace=drf_namespace)),
     path("connection/", include(connection_urls, namespace=connection_namespace)),
+    path("guardrail/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
+    path("llmhost", include(llmhost_urls, namespace=llmhost_namespace)),
+    path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
+    path("orchestrator/", include(orchestrator_urls, namespace=orchestrator_namespace)),
     path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
+    path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     path("session-test/", session_test_view, name="session_test"),
     path("secret/", include(secret_urls, namespace=secret_namespace)),

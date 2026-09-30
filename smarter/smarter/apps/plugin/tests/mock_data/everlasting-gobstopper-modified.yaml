@@ -22,6 +22,5 @@ spec:
     maxTokens: 256
 
   data:
-    description: MODIFIED
     staticData:
       returnData: MODIFIED

@@ -11,8 +11,10 @@ from smarter.apps.account.serializers import (
 from smarter.apps.connection.models import ApiConnection, SqlConnection
 from smarter.apps.plugin.models import (
     PluginDataApi,
+    PluginDataSkill,
     PluginDataSql,
     PluginDataStatic,
+    PluginDataWebsearch,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
@@ -74,7 +76,6 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
         #   "annotations": {...},
         #   "tags": ["tag1", "tag2"]
         # }
-
     """
 
     user_profile = UserProfileSerializer(read_only=True)
@@ -140,7 +141,6 @@ class PluginSelectorSerializer(SmarterCamelCaseSerializer):
         #   "directive": "...",
         #   "searchTerms": "..."
         # }
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -196,7 +196,6 @@ class PluginPromptSerializer(SmarterCamelCaseSerializer):
         #   "temperature": ...,
         #   "maxTokens": ...
         # }
-
     """
 
     # TODO: this temporarily deals with a breaking change in gpt 5
@@ -208,21 +207,143 @@ class PluginPromptSerializer(SmarterCamelCaseSerializer):
         fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
 
 
+class PluginSkillSerializer(SmarterCamelCaseSerializer):
+    """
+    Serializer for the PluginDataSkill model.
+
+    This serializer handles SKILL.md-format plugin data, exposing fields for description,
+    the raw skill_document (YAML frontmatter + Markdown instructions), the parsed metadata,
+    the denormalized allowed_tools list, and any bundled resource references. It is used to
+    serialize and deserialize skill plugin configuration for API endpoints.
+
+    :param description: A brief description of the skill plugin.
+    :type description: str
+    :param skill_document: The raw SKILL.md document (frontmatter + Markdown body) for the plugin.
+    :type skill_document: str
+    :param metadata: Parsed YAML frontmatter from skill_document (name, description, license, allowed-tools).
+    :type metadata: dict
+    :param allowed_tools: The list of tool names this skill is permitted to invoke.
+    :type allowed_tools: list
+    :param resources: The skill's bundled files (scripts/, references/, assets/), keyed by path relative to
+        the skill root. A null value denotes a file whose contents are unavailable, such as a binary asset.
+    :type resources: dict
+    :param source_url: The URL from which the skill was retrieved, for remotely sourced skills.
+    :type source_url: str
+    :param source_retrieved_at: When a remotely sourced skill was last retrieved.
+    :type source_retrieved_at: datetime
+
+    :return: Serialized skill plugin data.
+    :rtype: dict
+
+    .. seealso::
+
+        - :class:`PluginDataSkill`
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.plugin.serializers import PluginSkillSerializer
+        from smarter.apps.plugin.models import PluginDataSkill
+
+        skill_plugin = PluginDataSkill.objects.first()
+        serializer = PluginSkillSerializer(skill_plugin)
+        print(serializer.data)
+        # Output: {
+        #   "description": "...",
+        #   "skillDocument": "---\\nname: code-review\\n...",
+        #   "metadata": {"name": "code-review", "description": "...", "allowed-tools": "Read Grep"},
+        #   "allowedTools": ["Read", "Grep"],
+        #   "resources": {"references/checklist.md": "# Review checklist ..."},
+        #   "sourceUrl": null,
+        #   "sourceRetrievedAt": null
+        # }
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataSkill
+        fields = [
+            "description",
+            "skill_document",
+            "metadata",
+            "allowed_tools",
+            "resources",
+            "source_url",
+            "source_retrieved_at",
+        ]
+
+
+class PluginWebsearchSerializer(SmarterCamelCaseSerializer):
+    """
+    Serializer for the PluginDataWebsearch model.
+
+    Experimental.
+
+    This serializer exposes the configuration of a WebsearchPlugin: its web search API, the
+    Secret that contains the api key, search options, web page reading options, domain policy,
+    timeout and cache duration. The api key is serialized as the name of its Secret, never its value.
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        serializer = PluginWebsearchSerializer(PluginDataWebsearch.objects.first())
+        print(serializer.data)
+        # Output: {
+        #   "description": "...",
+        #   "searchProvider": "brave",
+        #   "searchApiKey": "brave_search_api_key",
+        #   "searchMaxResults": 5,
+        #   "fetchEnabled": true,
+        #   "allowedDomains": [],
+        #   ...
+        # }
+
+    .. note::
+
+        **Experimental.** The WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+        Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
+        be documented.
+    """
+
+    search_api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataWebsearch
+        fields = [
+            "description",
+            "search_provider",
+            "search_api_key",
+            "search_max_results",
+            "search_safe_search",
+            "search_country",
+            "search_language",
+            "search_freshness",
+            "fetch_enabled",
+            "fetch_max_characters",
+            "fetch_respect_robots_txt",
+            "allowed_domains",
+            "blocked_domains",
+            "timeout",
+            "cache_ttl",
+        ]
+
+
 class PluginStaticSerializer(SmarterCamelCaseSerializer):
     """
     Serializer for the PluginDataStatic model.
 
-    This serializer handles static plugin data, exposing fields for description and static_data.
-    It is used to serialize and deserialize static plugin configuration for API endpoints.
+    This serializer handles static plugin data, exposing the static_data field, which is
+    rendered as ``spec.data`` of a StaticPlugin manifest. The model's description is not
+    exposed, since it is redundant with ``metadata.description`` of the manifest.
 
-    :param description: A brief description of the static plugin.
-    :type description: str
     :param static_data: Arbitrary static data associated with the plugin.
     :type static_data: dict or str
 
     :return: Serialized static plugin data.
     :rtype: dict
-
 
     .. seealso::
 
@@ -239,16 +360,14 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
         serializer = PluginStaticSerializer(static_plugin)
         print(serializer.data)
         # Output: {
-        #   "description": "...",
         #   "staticData": {...}
         # }
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataStatic
-        fields = ["description", "static_data"]
+        fields = ["static_data"]
 
 
 class PluginSqlSerializer(SmarterCamelCaseSerializer):
@@ -302,7 +421,6 @@ class PluginSqlSerializer(SmarterCamelCaseSerializer):
         #   "testValues": {...},
         #   "limit": ...
         # }
-
     """
 
     if is_sphinx_build():

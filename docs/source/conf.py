@@ -48,13 +48,16 @@ contributors_github_token = os.environ.get("GITHUB_TOKEN")
 
 django.setup()
 
-
 ###############################################################################
 # Patch the get_field_type function in sphinxcontrib_django to be more robust
 # and return "Unknown" instead of raising an exception when it encounters
 # an issue.
 ###############################################################################
 from sphinxcontrib_django.docstrings import classes, field_utils
+
+# Import the guardrail services' Pydantic contracts before sphinx_autodoc_typehints resolves
+# pydantic's type-checking-only imports, after which pydantic cannot build their models.
+import smarter.apps.guardrail.services  # noqa: E402,F401  # pylint: disable=wrong-import-position,unused-import
 
 
 def safe_get_field_type(field, include_role=True):
@@ -125,6 +128,9 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
+# sphinx_autodoc_typehints cannot resolve some type hints that third party packages, e.g.
+# asgiref and pydantic, import only for type checking. These are harmless.
+suppress_warnings = ["sphinx_autodoc_typehints.guarded_import"]
 exclude_patterns = []
 django_settings = "smarter.settings.prod"
 todo_include_todos = True

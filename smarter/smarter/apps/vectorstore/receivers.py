@@ -2,7 +2,6 @@
 """Receivers for the vectorstore app."""
 
 import json
-import logging
 
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -15,6 +14,7 @@ from smarter.apps.vectorstore.signals import (
     load_success,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

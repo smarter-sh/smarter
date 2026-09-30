@@ -1,7 +1,6 @@
 # pylint: disable=W0613,W0718
 """Test prompt API prompt passthrough view."""
 
-import logging
 import os
 from typing import Any, cast
 
@@ -14,6 +13,7 @@ from smarter.apps.prompt.api.v1.urls import PromptAPINamespace
 from smarter.apps.prompt.const import namespace as smarter_apps_prompt_namespace
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 
 # api:v1:prompt:passthrough

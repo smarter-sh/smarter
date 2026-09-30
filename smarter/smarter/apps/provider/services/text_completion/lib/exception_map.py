@@ -5,7 +5,6 @@ This is used in the main try block of handler() to map exceptions to
 HTTP status codes and error types.
 """
 
-import logging
 from http import HTTPStatus
 
 import openai
@@ -15,6 +14,7 @@ from smarter.common.exceptions import (
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

@@ -9,7 +9,7 @@ Command
     Implements the logic for the ``manage.py get_secret`` command.
 
 Command-line Arguments
-=====================
+=======================
 --name : str, required
     The name of the Secret to retrieve (not the key).
 --username : str, required
@@ -26,9 +26,8 @@ Usage Example
     python manage.py get_secret --name="my_secret" --username="myuser"
 """
 
-import logging
-
 from smarter.apps.secret.models import Secret, User, UserProfile
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

@@ -1,8 +1,6 @@
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
 
-import logging
-
 from django.contrib.auth.signals import user_logged_in
 from django.core import serializers
 from django.db.models.signals import post_delete, post_save
@@ -16,7 +14,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import get_cached_default_account
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

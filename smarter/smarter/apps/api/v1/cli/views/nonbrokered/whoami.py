@@ -52,6 +52,6 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
             return JsonResponse(data={"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
 
     def post(self, request):
-        """Get method for PluginManifestView."""
+        """ApiV1CliWhoamiApiView post view."""
         response = self.whoami()
         return response

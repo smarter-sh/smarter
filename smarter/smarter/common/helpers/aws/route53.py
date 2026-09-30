@@ -1,7 +1,6 @@
 """AWS Route53 helper class."""
 
 # python stuff
-import logging
 import time
 from typing import Any, Optional, Tuple
 
@@ -11,6 +10,7 @@ import dns.resolver
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from .aws import AWSBase, SmarterAWSException
 from .exceptions import AWSRoute53RecordVerificationTimeout
@@ -708,7 +708,7 @@ class AWSRoute53(AWSBase):
                 record_type="A",
                 record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
                 record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-                record_ttl=smarter_settings.llm_client_tasks_default_ttl,
+                record_ttl=smarter_settings.llmclient_tasks_default_ttl,
             )
             verb = "Created" if created else "Verified"
             logger.debug(

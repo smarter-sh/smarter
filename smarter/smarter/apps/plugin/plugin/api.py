@@ -1,18 +1,18 @@
 """
-A PLugin that uses a remote REST API server to retrieve its return data.
+A Plugin that uses a remote REST API server to retrieve its return data.
 
 .. note::
 
     This is a complex AI resource that exists within the following class hierarchy
 
     1. Smarter Secret: The authentication credential for the remote API connection.
-    2. Smarter API Connection: The complete connection configuration to the remote API database server (host, port, secret, ssh key, username, etc.).
-    3. Smarter API Plugin: The plugin that defines the API query and it's parameters to run against the remote API database server.
+    2. Smarter API Connection: The complete connection configuration to the remote REST API server (base url, authentication method, api key, timeout, proxy, etc.).
+    3. Smarter API Plugin: The plugin that defines the API endpoint, HTTP method, headers, body and parameters to send to the remote REST API server.
     4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the API Plugin:
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
@@ -24,14 +24,15 @@ A PLugin that uses a remote REST API server to retrieve its return data.
     :language: yaml
     :caption: 3.) Example Stackademy API Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-api.yaml
     :language: yaml
     :caption: 4.) Example Stackademy LLMClient Manifest
 """
 
-import logging
+import re
 from datetime import datetime
 from typing import Any, Optional, Type, Union
+from urllib.parse import quote
 
 from django.core.exceptions import MultipleObjectsReturned
 
@@ -68,10 +69,11 @@ from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
-from smarter.common.const import SMARTER_ADMIN_USERNAME
+from smarter.common.const import SMARTER_ADMIN_USERNAME, SmarterHttpMethods
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
-from smarter.lib import json
+from smarter.lib import json, logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -88,7 +90,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-MAX_API_RESULTS = 1000  # Maximum length of API query to prevent excessive load on the database
+MAX_API_RESULTS = 1000  # Maximum number of API response rows to return, to prevent excessive load on the remote API
 
 
 class SmarterApiPluginError(SmarterPluginError):
@@ -97,22 +99,41 @@ class SmarterApiPluginError(SmarterPluginError):
 
 class ApiPlugin(PluginBase):
     """
-    Implements a plugin that executes API queries on a remote API database server to retrieve data.
+    Implements a plugin that sends HTTP requests to a remote REST API server to retrieve data.
 
-    This class provides mechanisms to:
+    This class provides the logic for integrating REST API-based plugins into the Smarter platform. It supports
+    manifest-driven configuration, parameter validation, and authenticated request execution. The plugin can be
+    instantiated from either a manifest (Pydantic model) or an existing Django ORM instance.
 
-    - Retrieve and serialize plugin data using Django ORM and Pydantic models.
-    - Validate and recast API parameters to conform to OpenAI's function calling schema.
-    - Integrate with Smarter's plugin manifest and metadata system.
-    - Handle plugin instantiation from both manifest and database sources.
-    - Manage connections to external APIs using account-specific credentials.
-    - Provide example manifest generation for API plugins.
-    - Enforce configuration and data integrity through custom error handling.
+    Key Features:
 
-    The plugin expects a manifest describing the API endpoint, parameters, headers, and other metadata.
-    It supports lazy loading and validation of plugin data, and ensures compatibility with Smarter's plugin infrastructure.
+        - Accepts plugin configuration via manifest or ORM model.
+        - Validates and recasts parameter definitions to conform to OpenAI function calling schema.
+        - Interpolates user-provided arguments into ``{placeholder}`` path segments of the endpoint, with URL encoding.
+        - Sends remaining arguments as URL query string parameters (``GET``, ``DELETE``) or as JSON body fields (``POST``, ``PUT``, ``PATCH``).
+        - Executes requests using a remote API connection, which supplies the base url, authentication and timeout.
+        - Handles errors related to configuration, connection, and request execution.
+        - Provides example manifest generation for testing and documentation.
 
-    Subclasses must implement the ``tool_call_fetch_plugin_response`` and ``apply`` methods to define custom API interaction logic.
+    Usage:
+
+        - Instantiate with a manifest or ORM model.
+        - Use `tool_call_fetch_plugin_response()` to execute API requests with arguments from OpenAI tool calls.
+        - Use `plugin_data_django_model` to convert manifest data to a Django ORM-compatible dictionary.
+        - Use `example_manifest()` to generate a sample manifest for this plugin type.
+
+    .. note::
+
+        - Static ``urlParams``, ``headers`` and ``body`` from the manifest are sent with every request. Arguments
+          from the LLM tool call take precedence over static values of the same name.
+        - The maximum number of returned rows is limited to prevent excessive load on the remote API.
+        - Only ``GET`` responses are cached. Failed requests are never cached.
+        - Logging is controlled via feature switches and log level settings.
+
+    .. seealso::
+
+        - OpenAI Function Calling: https://platform.openai.com/docs/guides/function-calling?api-mode=prompt
+        - Smarter Plugin Manifest Documentation
     """
 
     SAMPluginType = SAMApiPlugin
@@ -178,8 +199,8 @@ class ApiPlugin(PluginBase):
 
             >>> plugin = ApiPlugin()
             >>> manifest = plugin.manifest
-            >>> print(manifest.spec.apiData.api_query)
-            SELECT * FROM auth_user WHERE username = '{username}';
+            >>> print(manifest.spec.apiData.endpoint)
+            /stackademy/course-catalogue/
         """
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
@@ -217,8 +238,8 @@ class ApiPlugin(PluginBase):
 
             >>> plugin = ApiPlugin()
             >>> data = plugin.plugin_data
-            >>> print(data.api_query)
-            SELECT * FROM auth_user WHERE username = '{username}';
+            >>> print(data.endpoint)
+            /stackademy/course-catalogue/
         """
         if self._plugin_data:
             return self._plugin_data
@@ -309,7 +330,7 @@ class ApiPlugin(PluginBase):
             >>> plugin = ApiPlugin()
             >>> serializer = plugin.plugin_data_serializer
             >>> print(serializer.data)
-            {'api_query': "SELECT * FROM auth_user WHERE username = '{username}';", ...}
+            {'endpoint': '/stackademy/course-catalogue/', 'method': 'GET', ...}
         """
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginApiSerializer(self.plugin_data)
@@ -419,27 +440,29 @@ class ApiPlugin(PluginBase):
                     maxTokens: 256
                 connection: test_api_connection
                 apiData:
-                    apiQuery: >
-                    SELECT * FROM auth_user WHERE username = '{username}';
+                    endpoint: /v1/weather/{location}/
+                    method: GET
+                    headers:
+                    - name: Accept
+                      value: application/json
                     parameters:
-                    - name: username
-                        type: string
-                        description: The username to query.
-                        required: true
-                        default: admin
+                    - name: location
+                      type: string
+                      description: The city and state, e.g., San Francisco, CA
+                      required: true
                     - name: unit
-                        type: string
-                        enum:
-                        - Celsius
-                        - Fahrenheit
-                        description: The temperature unit to use.
-                        required: false
-                        default: Celsius
+                      type: string
+                      enum:
+                      - Celsius
+                      - Fahrenheit
+                      description: The temperature unit to use.
+                      required: false
+                      default: Celsius
                     testValues:
-                    - name: username
-                        value: admin
+                    - name: location
+                      value: San Francisco, CA
                     - name: unit
-                        value: Celsius
+                      value: Celsius
                     limit: 10
         """
         if not self._manifest:
@@ -467,8 +490,9 @@ class ApiPlugin(PluginBase):
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
             # recast the Pydantic model to the PluginDataApi Django ORM model
+            plugin_data_apiconnection: Optional[ApiConnection] = None
+            account = self.user_profile.cached_account if self.user_profile else None
             try:
-                account = self.user_profile.cached_account if self.user_profile else None
                 plugin_data_apiconnection = ApiConnection.objects.get(
                     user_profile__account=account,
                     name=connection_name,
@@ -580,7 +604,7 @@ class ApiPlugin(PluginBase):
             pluginClass=SAMPluginCommonMetadataClass.API.value,
             description="Get additional information about courses available at Stackademy.",
             version="0.1.0",
-            tags=["db", "api", "database"],
+            tags=["api", "rest"],
             annotations=[
                 {"smarter.sh/created_by": "smarter_api_plugin_broker"},
                 {"smarter.sh/plugin": "api_example"},
@@ -641,12 +665,12 @@ class ApiPlugin(PluginBase):
             ],
             testValues=[
                 TestValue(
-                    name="username",
-                    value=SMARTER_ADMIN_USERNAME,
+                    name="max_cost",
+                    value="500.00",
                 ),
                 TestValue(
-                    name="limit",
-                    value="1",
+                    name="description",
+                    value="Python",
                 ),
             ],
             limit=100,
@@ -696,39 +720,195 @@ class ApiPlugin(PluginBase):
         logger.debug("%s.create() called.", self.formatted_class_name)
         super().create()
 
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     def tool_call_fetch_plugin_response(
         self, function_args: Union[dict[str, Any], list]
     ) -> Optional[Union[dict, list, str]]:
         """
-        Fetch information from a Plugin object.
+        Fetch information from a Plugin object in response to an OpenAI API tool call.
 
-        :param function_args: The function arguments to pass to the plugin.
-        :type function_args: dict[str, Any]
-        :return: The response from the plugin.
-        :rtype: Optional[str]
-        :raises NotImplementedError: If the method is not implemented in a subclass.
+        This method processes the arguments received from an OpenAI function call,
+        builds an HTTP request from the plugin's API data, sends it to the remote
+        REST API server via the plugin's :py:class:`smarter.apps.connection.models.ApiConnection`,
+        and returns the JSON response.
+
+        Arguments are mapped onto the request as follows:
+
+        1. Arguments whose names match a ``{placeholder}`` in the endpoint are URL encoded and
+           interpolated into the endpoint path, e.g. ``/v1/weather/{location}/``.
+        2. For ``GET`` and ``DELETE`` requests, all remaining arguments are appended to the static
+           ``urlParams`` as URL query string parameters.
+        3. For ``POST``, ``PUT`` and ``PATCH`` requests, all remaining arguments are merged into the
+           static JSON ``body``, provided that the body is a JSON object. Otherwise they are sent
+           as URL query string parameters.
+
+        Arguments with a ``null`` value are omitted, since these are optional parameters for
+        which the LLM did not provide a value. Static ``headers`` from the manifest are sent
+        with every request, and authentication headers are added by the connection.
+
+        See the OpenAI documentation:
+        https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
+
+        **Example tool call payload:**
+
+        .. code-block:: python
+
+            "tool_calls": [
+                {
+                    "id": "call_1Ucn2R5WmBh7TtoE197SsP3p",
+                    "function": {
+                        "arguments": "{\"description\":\"Python\",\"max_cost\":\"500.00\"}",  # these are the function_args
+                        "name": "smarter_plugin_0000004468"
+                    },
+                    "type": "function"
+                }
+            ]
+
+        **Resulting HTTP request, for the example manifest:**
+
+        .. code-block:: text
+
+            GET {base_url}/stackademy/course-catalogue/?max_cost=500.00&description=Python
+
+        :param function_args: Arguments for the function call, as a dict, list, or JSON string.
+        :return: The JSON response of the API request as a dict or list, or an empty string if the request failed or returned no results.
+        :raises SmarterApiPluginError: If plugin data or API connection is invalid, arguments are malformed, or a required endpoint placeholder is missing.
         """
-        raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
+        logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
 
-    # pylint: disable=W0613
-    def apply(self, function_args: dict[str, Any]) -> Optional[str]:
-        """
-        Apply the plugin to the function arguments.
+        if not self.plugin_data:
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
+            )
+        api_connection = self.plugin_data.connection
+        if not isinstance(api_connection, ApiConnection):
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data ApiConnection is not a valid ApiConnection instance."
+            )
 
-        :param function_args: The function arguments to pass to the plugin.
-        :type function_args: dict[str, Any]
-        :return: The response from the plugin.
-        :rtype: Optional[str]
-        :raises SmarterConfigurationError: If the plugin is not ready.
-        :raises NotImplementedError: If the method is not implemented in a subclass.
-        """
-        if not self.user or not self.user.is_staff:
-            raise SmarterApiPluginError("Only account admins can apply static plugins.")
+        function_args = function_args or []
+        if isinstance(function_args, str):
+            try:
+                function_args = json.loads(function_args)
+            except json.JSONDecodeError as e:
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args is not a valid JSON string. Error: {e}"
+                ) from e
+        if isinstance(function_args, dict):
+            function_args = [function_args]
 
-        if not self.ready:
-            raise SmarterConfigurationError(f"{self.name} PluginDataApi.apply() error: Plugin is not ready.")
+        if not isinstance(function_args, list):
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a dict or a JSON string."
+            )
 
-        raise NotImplementedError("apply() must be implemented in a subclass of PluginBase.")
+        # combine the list of dictionaries into a single dictionary, omitting
+        # optional parameters for which the LLM did not provide a value.
+        params: dict[str, Any] = {}
+        for d in function_args:
+            if not isinstance(d, dict):
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+                )
+            params.update(d)
+        params = {key: value for key, value in params.items() if value is not None}
+
+        endpoint = self.plugin_data.endpoint
+        if not isinstance(endpoint, str):
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} endpoint must be a string."
+            )
+
+        # interpolate path placeholders, e.g. /v1/weather/{location}/
+        path_params: set[str] = set()
+
+        def repl(match):
+            key = match.group(1)
+            if key not in params:
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} missing a value for endpoint placeholder '{key}'."
+                )
+            path_params.add(key)
+            return quote(str(params[key]), safe="")
+
+        endpoint = re.sub(r"\{(\w+)\}", repl, endpoint)
+        params = {key: value for key, value in params.items() if key not in path_params}
+
+        method = (self.plugin_data.method or SmarterHttpMethods.GET).upper()
+        headers = {str(header["name"]): str(header["value"]) for header in self.plugin_data.headers or []}
+        url_params = {str(url_param["key"]): url_param["value"] for url_param in self.plugin_data.url_params or []}
+        body = self.plugin_data.body
+
+        if method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH) and isinstance(
+            body, (dict, type(None))
+        ):
+            body = {**(body or {}), **params}
+        else:
+            url_params.update(params)
+
+        limit = (
+            self.plugin_data.limit
+            if self.plugin_data.limit and self.plugin_data.limit < MAX_API_RESULTS
+            else MAX_API_RESULTS
+        )
+
+        logger.debug(
+            "%s.tool_call_fetch_plugin_response() sending remote API request: %s %s params=%s",
+            self.formatted_class_name,
+            method,
+            endpoint,
+            url_params,
+        )
+
+        def execute_request() -> Union[dict[str, Any], list[Any]]:
+            retval = api_connection.execute_query(
+                endpoint=endpoint,
+                params=url_params,
+                limit=limit,
+                method=method,
+                headers=headers,
+                body=body,
+            )
+            if not isinstance(retval, (dict, list)):
+                # raise rather than return so that failed requests are never cached.
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} API request failed: {method} {endpoint}"
+                )
+            return retval
+
+        @cache_results()
+        def get_cached_api_response(connection_id: int, method: str, endpoint: str, request: str) -> Any:
+            retval = execute_request()
+            logger.debug(
+                "%s.tool_call_fetch_plugin_response() fetched and cached API response for request: %s %s",
+                self.formatted_class_name,
+                method,
+                endpoint,
+            )
+            return retval
+
+        try:
+            if method == SmarterHttpMethods.GET:
+                # the cache key must include everything that can alter the response.
+                request = json.dumps({"params": url_params, "headers": headers, "limit": limit}, sort_keys=True)
+                retval = get_cached_api_response(api_connection.pk, method, endpoint, request)
+            else:
+                retval = execute_request()
+        except SmarterApiPluginError as e:
+            logger.warning("%s. Returning empty string.", e)
+            return ""
+
+        if not retval:
+            logger.warning(
+                "%s.tool_call_fetch_plugin_response() API request returned no results. Returning empty string.",
+                self.formatted_class_name,
+            )
+            return ""
+        if not isinstance(retval, (str, list, dict)):
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} API request returned an unexpected type: {type(retval)}. Expected str, list, or dict."
+            )
+        return retval
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
@@ -760,8 +940,8 @@ class ApiPlugin(PluginBase):
 
             >>> plugin = ApiPlugin()
             >>> manifest_json = plugin.to_json()
-            >>> print(manifest_json["spec"]["apiData"]["api_query"])
-            SELECT * FROM auth_user WHERE username = '{username}';
+            >>> print(manifest_json["spec"]["apiData"]["endpoint"])
+            /stackademy/course-catalogue/
         """
         if self.ready:
             if version == "v1":
@@ -776,6 +956,18 @@ class ApiPlugin(PluginBase):
                     )
                 retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value] = (
                     self.plugin_data_serializer.data if self.plugin_data_serializer else None
+                )
+                # parameters are stored in OpenAI function calling schema. convert them back to manifest format.
+                retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value]["parameters"] = (
+                    self.parameters_to_manifest(self.plugin_data.parameters if self.plugin_data else None)
+                )
+                # the api serializer does not include parameters nor test values.
+                retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value]["testValues"] = (
+                    self.plugin_data.test_values if self.plugin_data else None
+                )
+                # the connection is a top-level spec field in the manifest, not a field of the data section.
+                retval[SAMKeys.SPEC.value]["connection"] = (
+                    self.plugin_data.connection.name if self.plugin_data and self.plugin_data.connection else None
                 )
                 return json.loads(json.dumps(retval))
             raise SmarterPluginError(f"Invalid version: {version}")

@@ -2,14 +2,14 @@
  * Central type definitions for the Prompt List React application.
  *
  * This module exports TypeScript types and interfaces used throughout the CardView,
- * llm_client, and API response layers. It provides strong typing for user, plugin,
- * llm_client, API response, and session context data structures.
+ * llmclient, and API response layers. It provides strong typing for user, plugin,
+ * llmclient, API response, and session context data structures.
  *
  * Exports:
  *   - TabKey: Type for tab keys ("owned" | "shared").
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
- *   - LLMClient: Type for llm_client configuration and metadata.
+ *   - LLMClient: Type for llmclient configuration and metadata.
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:

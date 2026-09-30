@@ -6,7 +6,7 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
 )
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.cache import lazy_cache as cache
@@ -26,7 +26,7 @@ class Prompt(MetaDataWithOwnershipModel):
     objects: MetaDataWithOwnershipModelManager["Prompt"] = MetaDataWithOwnershipModelManager()
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
-    llm_client = models.ForeignKey(LLMClient, on_delete=models.CASCADE, blank=False, null=False)
+    llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE, blank=False, null=False)
     ip_address = models.GenericIPAddressField(blank=False, null=False)
     user_agent = models.CharField(max_length=255, blank=False, null=False)
     url = models.URLField(blank=False, null=False)

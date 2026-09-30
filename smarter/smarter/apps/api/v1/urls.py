@@ -7,7 +7,7 @@ delegates route handling to app-specific URL modules.
 **Routes**
 
 - ``accounts/``: User account management endpoints.
-- ``llm_clients/``: LLMClient CRUD and related operations.
+- ``llmclients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
 - ``connections/``: External connection integration endpoints.
 - ``plugins/``: Plugin management endpoints.
@@ -33,8 +33,13 @@ from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.api.v1.cli import urls as cli_urls
 from smarter.apps.api.v1.tests import urls as tests_urls
 from smarter.apps.connection.api.v1 import urls as connection_urls
-from smarter.apps.llm_client.api.v1 import urls as llm_client_urls
-from smarter.apps.llm_client.const import namespace as llm_client_namespace
+from smarter.apps.connection.const import namespace as connnection_namespace
+from smarter.apps.guardrail.api.v1 import urls as guardrail_urls
+from smarter.apps.guardrail.const import namespace as guardrail_namespace
+from smarter.apps.llmclient.api.v1 import urls as llmclient_urls
+from smarter.apps.llmclient.const import namespace as llmclient_namespace
+from smarter.apps.mcpclient.api.v1 import urls as mcpclient_urls
+from smarter.apps.mcpclient.const import namespace as mcpclient_namespace
 from smarter.apps.plugin.api.v1 import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.api.v1 import urls as prompt_urls
@@ -45,6 +50,8 @@ from smarter.apps.proxy.api.v1 import urls as proxy_urls
 from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret.api.v1 import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorsearch.api.v1 import urls as vectorsearch_urls
+from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
@@ -60,19 +67,22 @@ app_name = namespace
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
     # for LLMClients of the form https://example.3141-5926-5359.alpha.api.example.com
-    # path("", include(llm_client_urls)),
+    # path("", include(llmclient_urls)),
     # -------------------------------------------
     # the main API
     # -------------------------------------------
     path("accounts/", include(account_urls, namespace=account_namespace)),
-    path("llm-clients/", include(llm_client_urls, namespace=llm_client_namespace)),
+    path("llm-clients/", include(llmclient_urls, namespace=llmclient_namespace)),
+    path("mcpclients/", include(mcpclient_urls, namespace=mcpclient_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
-    path("connections/", include(connection_urls, namespace="connection")),
+    path("connections/", include(connection_urls, namespace=connnection_namespace)),
+    path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("plugins/", include(plugin_urls, namespace=plugin_namespace)),
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
     path("providers/", include(provider_urls, namespace=provider_namespace)),
     path("secrets/", include(secret_urls, namespace=secret_namespace)),
     path("tests/", include(tests_urls, namespace="tests")),
+    path("vectorsearches/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
 ]
 
 if smarter_settings.enable_proxy:

@@ -191,7 +191,8 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 # https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
 # smarter locally for non-developers.
 COPY ./smarter/requirements requirements
-RUN pip install pip==25.3 setuptools wheel pip-tools && \
+RUN pip install --upgrade pip
+RUN pip install setuptools wheel pip-tools && \
   pip install --no-cache-dir -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
@@ -369,7 +370,7 @@ FROM react_assets AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llm_client/data/ ./data/manifests/
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llmclient/data/ ./data/manifests/
 RUN mkdir -p /home/smarter_user/smarter/staticfiles
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 

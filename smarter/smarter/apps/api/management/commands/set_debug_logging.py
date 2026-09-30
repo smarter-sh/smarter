@@ -1,9 +1,8 @@
 """Initialize Waffle flags and switches."""
 
-import logging
-
 from django.core.management import call_command
 
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -54,12 +53,13 @@ class Command(SmarterCommand):
         group.add_argument("--disable", action="store_true", dest="disable", help="Disable debug mode")
 
     def handle(self, *args, **options):
-        """ensure that switches exist. If not, then create them"""
+        """Ensure that switches exist.
+
+        If not, then create them
+        """
 
         def set_logging_level(level):
-            """
-            Set the logging level for the root logger and all its handlers.
-            """
+            """Set the logging level for the root logger and all its handlers."""
 
             logging.getLogger().setLevel(level)
             for handler in logging.getLogger().handlers:

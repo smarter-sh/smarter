@@ -1,13 +1,13 @@
 # pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
-"""Django settings for beta.platform.smarter.sh"""
+"""Django settings for beta.platform.smarter.sh."""
 
-import logging
 import os
 import sys
 
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import logging
 
 from .base_aws import *
 

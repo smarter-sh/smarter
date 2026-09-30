@@ -21,7 +21,7 @@ metadata:
 spec:
   selector:
     directive: search_terms
-    # Complete search terms that will trigger the llm_client to use your customized system prompt.
+    # Complete search terms that will trigger the llmclient to use your customized system prompt.
     searchTerms:
       - Gobstopper
       - Gobstoppers
@@ -35,7 +35,6 @@ spec:
     temperature: 1.0
     maxTokens: 256
   data:
-    description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
     # ---------------------------------------------------------------------------
     # Information provided to the OpenAI "Function Calling" algorithm to help it generate custom responses.
     # ---------------------------------------------------------------------------

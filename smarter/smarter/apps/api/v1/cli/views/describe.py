@@ -1,10 +1,10 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'describe' view."""
 
-import logging
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
+from smarter.lib import logging
 
 from .base import APIV1CLIViewError, CliBaseApiView
 from .swagger import (

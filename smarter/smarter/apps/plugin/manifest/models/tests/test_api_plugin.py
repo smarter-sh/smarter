@@ -1,5 +1,6 @@
 """
-Test SAM Plugin manifest using ApiPlugin
+Test SAM Plugin manifest using ApiPlugin.
+
 Test cases for the PluginDataAPI Manifest.
 
 http://localhost:9357/api/v1/tests/unauthenticated/dict/
@@ -8,7 +9,6 @@ http://localhost:9357/api/v1/tests/authenticated/dict/
 http://localhost:9357/api/v1/tests/authenticated/list/
 """
 
-import logging
 import os
 from typing import Optional
 
@@ -42,6 +42,7 @@ from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import SAMBrokerError
@@ -54,7 +55,8 @@ MANIFEST_PATH_API_PLUGIN = os.path.abspath(
     os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "api-plugin.yaml")
 )
 """
-Path to the Api plugin manifest file 'api-plugin.yaml' which
+Path to the Api plugin manifest file 'api-plugin.yaml' which.
+
 contains the actual connection parameters for the remote test database.
 
 Note that we're borrowing the sql-connection.yaml file from the
@@ -308,9 +310,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             )
 
     def test_alternative_initialization(self):
-        """
-        Test that the SAMApiPlugin model can be initialized using a single dict.
-        """
+        """Test that the SAMApiPlugin model can be initialized using a single dict."""
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
@@ -573,7 +573,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
 
 # pylint: disable=W0223
 class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, AuthenticatedRequestMixin):
-    """Test SAM manifest using ApiPlugin"""
+    """Test SAM manifest using ApiPlugin."""
 
     _secret_model: Optional[SAMSecret] = None
     _api_plugin_model: Optional[SAMApiPlugin] = None
@@ -605,7 +605,7 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         return self._api_plugin_model
 
     def test_00_api_connection_mixin(self):
-        """Test the ApiConnection itself, lest we get ahead of ourselves"""
+        """Test the ApiConnection itself, lest we get ahead of ourselves."""
         self.assertIsInstance(self.connection_django_model, ApiConnection)
         self.assertIsInstance(self.connection_model, SAMApiConnection)
         self.assertIsInstance(self.connection_loader, SAMLoader)

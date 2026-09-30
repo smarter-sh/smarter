@@ -1,0 +1,38 @@
+---
+# A SkillPlugin that refers to Anthropic's pdf skill in the public
+# https://github.com/anthropics/skills repository, by the URL of its directory.
+# SKILL.md and all of its bundled files are retrieved when this manifest is
+# applied. Apply it again to retrieve the latest version.
+#
+# Note: Anthropic's skills are subject to their own license terms. See the
+# LICENSE.txt bundled with each skill.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: anthropic_pdf
+  pluginClass: skill
+  description: Anthropic's pdf skill, for reading, creating, merging and filling PDF files.
+  version: 0.1.0
+  tags:
+    - pdf
+    - documents
+    - anthropic
+  annotations:
+    - smarter.sh/anthropic-pdf/source: https://github.com/anthropics/skills
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - pdf
+      - pdf form
+      - merge pdfs
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant that is expert at working with PDF documents.
+    model: gpt-4o-mini
+    temperature: 0.0
+    maxTokens: 4096
+  skillData:
+    source:
+      url: https://github.com/anthropics/skills/tree/main/skills/pdf

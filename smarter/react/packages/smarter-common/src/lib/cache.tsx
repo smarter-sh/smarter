@@ -28,13 +28,13 @@ export const makeCacheKey = (apiUrl: string, slug: string) => {
 };
 
 /**
- * Reads and validates cached llm_client objects.
+ * Reads and validates cached llmclient objects.
  *
  * Returns null for missing, invalid, or expired entries and removes expired
  * data to keep storage clean.
  *
  * @param key Fully qualified sessionStorage cache key.
- * @returns The cached llm_client array when present and valid; otherwise `null`.
+ * @returns The cached llmclient array when present and valid; otherwise `null`.
  * @throws No exceptions are propagated. JSON parse errors, sessionStorage access
  * failures, and other runtime errors are caught and treated as a cache miss.
  */
@@ -65,7 +65,7 @@ export const readCache = (key: string): any[] | null => {
 };
 
 /**
- * Persists llm_client objects to sessionStorage with a write timestamp.
+ * Persists llmclient objects to sessionStorage with a write timestamp.
  *
  * @param key Fully qualified sessionStorage cache key.
  * @param objects LLMClient objects to cache for subsequent reads.

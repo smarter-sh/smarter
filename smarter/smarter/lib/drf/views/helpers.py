@@ -1,7 +1,5 @@
 """Django template and view helper functions."""
 
-import logging
-
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
@@ -10,6 +8,7 @@ from rest_framework.views import APIView
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 

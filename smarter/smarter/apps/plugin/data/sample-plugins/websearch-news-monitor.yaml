@@ -1,0 +1,50 @@
+---
+# A WebsearchPlugin that finds recent news. It searches only, and does not read
+# pages. freshness restricts results to those published within the last day by
+# default, and the LLM can widen this to a week, month or year for a query. The
+# country and language localize results to US English news. safeSearch filters
+# adult content strictly. The cache is short, since news changes quickly.
+#
+# Prerequisite: a Smarter Secret named brave_search_api_key.
+#
+# Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: news_monitor
+  pluginClass: websearch
+  description: Finds the latest news about companies, products and events, with links to each story.
+  version: 0.1.0
+  tags:
+    - websearch
+    - news
+  annotations:
+    - smarter.sh/news-monitor/use-case: news monitoring
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - news
+      - headlines
+      - today
+      - this week
+      - announced
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a news analyst. Summarize the most recent, relevant stories in a
+      short bulleted list. Give each story's publication date, and link to it.
+    model: gpt-4o-mini
+    temperature: 0.3
+    maxTokens: 2048
+  websearchData:
+    search:
+      provider: brave
+      apiKey: brave_search_api_key
+      maxResults: 10
+      safeSearch: strict
+      country: us
+      language: en
+      freshness: day
+    cacheTtl: 300

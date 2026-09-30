@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMSecretBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -13,7 +12,7 @@ from smarter.apps.secret.manifest.models.secret.spec import (
     SAMSecretSpec,
     SAMSecretSpecConfig,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,

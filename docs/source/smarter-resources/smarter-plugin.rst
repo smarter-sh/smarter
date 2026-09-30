@@ -8,24 +8,26 @@ Plugins provide a `declarative <https://en.wikipedia.org/wiki/Declarative_progra
 `yaml <https://en.wikipedia.org/wiki/YAML>`__
 `manifest <https://kubernetes.io/docs/concepts/overview/working-with-objects/>`__
 alternative to programming in Python in order to
-extend :doc:`LLM tool functionality <plugins/how-tools-work>`.
+extend :doc:`LLM tool functionality <plugin/how-tools-work>`.
 :doc:`Smarter Application Manifests (SAM) <../smarter-framework/developer-reference/lib/drf/manifest>`
-are used to :doc:`define Smarter Plugins <plugins/how-it-works>`, which can be used to provide three powerful kinds of
+are used to :doc:`define Smarter Plugins <plugin/how-it-works>`, which can be used to provide three powerful kinds of
 enterprise data integrations, two of which require a ``Connection`` resource as well as a ``Secret``
 resource to store authentication credentials:
 
 **Plugins Types**
 
- - :doc:`plugins/plugin/static`: These plugins provide structured data that is part of the SAM itself.
- - :doc:`plugins/plugin/sql`: These plugins allow you to run docs/build/html/adr.htmlSQL queries against a connected database.
- - :doc:`plugins/plugin/api`: These plugins allow you to connect to external APIs.
+ - :doc:`plugin/plugin/skill`: These plugins provide Anthropic standard Skills definitions in markdown format. See `The Complete Guide To Building Skills For Claude <https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf>``
+ - :doc:`plugin/plugin/websearch`: Experimental. These plugins search the open web, and read web pages, with citations.
+ - :doc:`plugin/plugin/static`: These plugins provide structured data that is part of the SAM itself.
+ - :doc:`plugin/plugin/sql`: These plugins allow you to run docs/build/html/adr.htmlSQL queries against a connected database.
+ - :doc:`plugin/plugin/api`: These plugins allow you to connect to external APIs.
 
 **Connection Types**
 
  - :doc:`connection/resources/api`: Connect to REST APIs.
  - :doc:`connection/resources/sql`: Connect to SQL databases.
 
-Plugins are fundamentally more feature rich than traditional :doc:`LLM function tools <plugins/how-tools-work>`. A Smarter Plugin manifest
+Plugins are fundamentally more feature rich than traditional :doc:`LLM function tools <plugin/how-tools-work>`. A Smarter Plugin manifest
 defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself
 (which provider, model, temperature, etc.), and most importantly, the criteria which
 the tool should be presented to the LLM.
@@ -67,7 +69,7 @@ the tool should be presented to the LLM.
 .. seealso::
 
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
-    - :doc:`Smarter LLMClient <../smarter-resources/smarter-llm_client>`
+    - :doc:`Smarter LLMClient <../smarter-resources/smarter-llmclient>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
 
@@ -93,7 +95,7 @@ Usage
 Example Manifest
 -----------------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest
 
@@ -103,20 +105,20 @@ Technical Reference
 .. toctree::
    :maxdepth: 1
 
-   plugins/api
-   plugins/caching
-   plugins/const
-   plugins/how-it-works
-   plugins/how-tools-work
-   plugins/resource-types
-   plugins/management
-   plugins/models
-   plugins/manifests
-   plugins/serializers
-   plugins/nlp
-   plugins/signals
-   plugins/receivers
-   plugins/tasks
-   plugins/templatetags
-   plugins/utils
-   plugins/views
+   plugin/api
+   plugin/caching
+   plugin/const
+   plugin/how-it-works
+   plugin/how-tools-work
+   plugin/resource-types
+   plugin/management
+   plugin/models
+   plugin/manifests
+   plugin/serializers
+   plugin/nlp
+   plugin/signals
+   plugin/receivers
+   plugin/tasks
+   plugin/templatetags
+   plugin/utils
+   plugin/views

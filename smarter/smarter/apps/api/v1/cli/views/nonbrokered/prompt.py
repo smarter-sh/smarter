@@ -12,8 +12,8 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 
-from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.prompt.models import Prompt, PromptHistory
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
@@ -86,7 +86,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
 
         This is a single raw text input
         from the user. This will need to be added to a message list and sent
-        to the llm_client.
+        to the llmclient.
         """
         if self.is_config:
             # config views are not expected to have a prompt
@@ -150,7 +150,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
           the session_key for Prompt.
 
         - prompt: the prompt is the raw text of the prompt message that is sent to the
-            llm_client. The prompt is added to the payload of the request body and is
+            llmclient. The prompt is added to the payload of the request body and is
             distinguished from the manifest text based on the url path.
         """
         super().initial(request, *args, **kwargs)
@@ -266,14 +266,14 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return self._chat_config
 
     @property
-    def llm_client_config(self) -> dict[str, Any]:
-        """The llm_client configuration dict."""
-        return self.chat_config.get("llm_client", {})
+    def llmclient_config(self) -> dict[str, Any]:
+        """The llmclient configuration dict."""
+        return self.chat_config.get("llmclient", {})
 
     @property
-    def url_llm_client(self) -> Optional[str]:
-        """The url of the llm_client."""
-        return self.llm_client_config.get("url_llm_client", None)
+    def url_llmclient(self) -> Optional[str]:
+        """The url of the llmclient."""
+        return self.llmclient_config.get("url_llmclient", None)
 
     @property
     def prompt(self) -> Optional[Prompt]:
@@ -324,7 +324,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         welcome_dict: Optional[dict] = None
         prompt_dict: Optional[dict] = None
 
-        system_role: str = self.llm_client_config.get(
+        system_role: str = self.llmclient_config.get(
             "default_system_role",
             self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
         )
@@ -332,10 +332,10 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
             OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
         }
-        welcome_message: Optional[str] = self.llm_client_config.get("app_welcome_message")
-        example_prompts: Optional[list[str]] = self.llm_client_config.get("app_example_prompts")
+        welcome_message: Optional[str] = self.llmclient_config.get("app_welcome_message")
+        example_prompts: Optional[list[str]] = self.llmclient_config.get("app_example_prompts")
         if example_prompts and welcome_message:
-            app_assistant: str = self.llm_client_config.get("app_assistant", "an llm_client")
+            app_assistant: str = self.llmclient_config.get("app_assistant", "an llmclient")
             bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
             bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
             intro = f"I'm {app_assistant}, how can I assist you today?"
@@ -363,7 +363,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return retval
 
     def chat_request_factory(self, request_body: dict) -> HttpRequest:
-        """Create a new request for the llm_client API."""
+        """Create a new request for the llmclient API."""
         if self.parsed_url is None:
             raise SmarterConfigurationError(
                 f"Internal error. The parsed_url is None. This should never happen. url: {self.url}"
@@ -402,7 +402,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             )
         if chat_config.status_code != 200:  # type: ignore[union-attr]
             raise APIV1CLIChatViewError(
-                f"Internal error. Failed to get prompt config for llm_client: {name} {chat_config.get('content')}"
+                f"Internal error. Failed to get prompt config for llmclient: {name} {chat_config.get('content')}"
             )
         logger.debug("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
 
@@ -446,10 +446,10 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             json.dumps(self.chat_config),
         )
 
-        # create a Smarter llm_client request body
+        # create a Smarter llmclient request body
         request_body = self.chat_request_body_factory()
 
-        # create a Smarter llm_client request and prompt the llm_client
+        # create a Smarter llmclient request and prompt the llmclient
         chat_request = self.chat_request_factory(request_body=request_body)
         chat_response = DefaultLLMClientApiView.as_view()(request=chat_request, name=name)
         if not isinstance(chat_response, JsonResponse):
@@ -504,7 +504,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         Validate the request body and url parameters.
 
         Note that we are not necessarily expecting a complete
-        set of messages. The message list + the prompt will be sent to the llm_client, which is responsible
+        set of messages. The message list + the prompt will be sent to the llmclient, which is responsible
         for ensuring that the system prompt is included in the request.
 
         example request body:
@@ -540,7 +540,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         operation_description="""
 Smarter API command-line interface 'prompt' view. This is a non-brokered view
 that sends prompt sessions to a LLMClient by creating a http post request
-to the LLMClient's published url. The llm_client is expected to be a Smarter llm_client
+to the LLMClient's published url. The llmclient is expected to be a Smarter llmclient
 that is capable of receiving a list of messages and returning a response in the
 smarter.sh/v1 protocol.
 
@@ -553,7 +553,7 @@ Args:
 
 request body:
 - session_key: str. optional. the session_key for the prompt session. if not provided then a new session_key will be generated.
-- prompt: str. the raw text of the prompt to send to the llm_client. This will be appended to the message list, if this is not a new session.
+- prompt: str. the raw text of the prompt to send to the llmclient. This will be appended to the message list, if this is not a new session.
 
 url params:
 - new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
@@ -593,7 +593,7 @@ This is a Non-brokered operation.
     @csrf_exempt
     def post(self, request, name, *args, **kwargs):
 
-        # validate the llm_client name, as this is the next most likely point of failure
+        # validate the llmclient name, as this is the next most likely point of failure
         try:
             if not LLMClient.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
                 raise LLMClient.DoesNotExist()

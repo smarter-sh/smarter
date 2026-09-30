@@ -8,7 +8,6 @@ which really should be (or might already be) in the broker test bank.
 
 # pylint: disable=W0104
 
-import logging
 import os
 from typing import Optional
 
@@ -35,6 +34,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import to_snake_case
+from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -44,7 +44,8 @@ MANIFEST_PATH_SQL_CONNECTION = os.path.abspath(
     os.path.join(DATA_PATH, "manifest", "brokers", "tests", "data", "sql-connection.yaml")
 )
 """
-Path to the SqlConnection manifest file 'sql-connection.yaml' which
+Path to the SqlConnection manifest file 'sql-connection.yaml' which.
+
 contains the actual connection parameters for the remote test database.
 
 Note that we're borrowing the sql-connection.yaml file from the
@@ -105,9 +106,7 @@ class TestSAMSqlConnection(TestSAMBrokerBaseClass):
             )
 
     def test_alternative_initialization(self):
-        """
-        Test that the SAMSqlConnection model can be initialized using a single dict.
-        """
+        """Test that the SAMSqlConnection model can be initialized using a single dict."""
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
@@ -259,7 +258,7 @@ class TestSAMSqlConnection(TestSAMBrokerBaseClass):
 
 
 class TestSqlConnectionLegacy(TestConnectionBase):
-    """Test SqlConnection Django ORM and Manifest Loader"""
+    """Test SqlConnection Django ORM and Manifest Loader."""
 
     _model: Optional[SAMSqlConnection] = None
 
@@ -594,7 +593,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-sqldb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -678,7 +677,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-sqldb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -764,7 +763,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-sqldb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -818,7 +817,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         # pylint: disable=W0612
         example_output = {
             "dbEngine": "django.db.backends.mysql",
-            "hostname": "smarter-mysql",
+            "hostname": "smarter-sqldb",
             "port": 3306,
             "database": "smarter",
             "username": "smarter",

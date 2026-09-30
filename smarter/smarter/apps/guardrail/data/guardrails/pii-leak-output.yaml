@@ -1,0 +1,31 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: pii_leak_output
+  description: Redacts personal data from the LLM's reply, in case the assistant repeats or reveals personal
+    data from its tools, its context or the conversation.
+  version: 1.0.0
+  tags:
+  - pii
+  - privacy
+  - data-leakage
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: output
+    category: pii
+    strategy: detector
+    detectors:
+    - credit_card
+    - us_ssn
+    - email
+    - phone_number
+    - iban
+    action: redact
+    replacement: '[REDACTED]'
+    severity: 4
+    priority: 10

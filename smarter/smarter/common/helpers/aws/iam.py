@@ -1,11 +1,11 @@
 """AWS IAM helper class."""
 
 # python stuff
-import logging
 from typing import Any
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.aws.exceptions import AWSNotReadyError
+from smarter.lib import logging
 
 from .aws import AWSBase
 

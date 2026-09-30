@@ -31,7 +31,6 @@ spec:
     maxTokens: 256
 
   data:
-    description: an system verification utility plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
     staticData:
       usage: system verification utility plugin
       platformProvider: Smarter API

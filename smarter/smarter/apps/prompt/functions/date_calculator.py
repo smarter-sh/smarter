@@ -1,6 +1,7 @@
 # pylint: disable=broad-exception-caught
 """
-This module provides date calculation functions for use with the OpenAI API
+This module provides date calculation functions for use with the OpenAI API.
+
 function calling feature.
 
 Overview
@@ -34,7 +35,6 @@ See individual function documentation for usage details.
 """
 
 import datetime
-import logging
 from typing import List, Optional
 
 from dateutil import parser
@@ -48,7 +48,7 @@ from smarter.apps.prompt.signals import (
 )
 from smarter.common.enum import SmarterEnum
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

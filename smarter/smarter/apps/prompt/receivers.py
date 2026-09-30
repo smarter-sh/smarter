@@ -1,7 +1,6 @@
 """Django Signal Receivers for prompt app."""
 
 # pylint: disable=W0612,W0613,C0115
-import logging
 from typing import Any, Optional, Union
 
 from django.core.handlers.asgi import ASGIRequest
@@ -14,6 +13,7 @@ from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.utils import request_to_json
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestType
 from smarter.lib.django.waffle import SmarterWaffleSwitches

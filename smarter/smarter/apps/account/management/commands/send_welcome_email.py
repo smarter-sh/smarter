@@ -12,7 +12,7 @@ Features
 - Will create the AccountContact record if it does not already exist.
 
 Command-line Options
--------------------
+---------------------
 - ``--account_number``: The Smarter account number to which the user belongs.
 - ``--company_name``: The company name to which the user belongs.
 - ``--username``: The username of the user.

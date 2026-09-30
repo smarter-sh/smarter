@@ -1,0 +1,18 @@
+---
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: test_llmhost
+  description: llmhost for running unit test
+  version: 1.0.0
+  tags:
+    - test
+    - llmhost
+    - unittests
+  annotations:
+    - smarter.sh/llm-client/test-llmhost/creator: QA Team
+    - smarter.sh/llm-client/test-llmhost/purpose: unit testing
+    - smarter.sh/llm-client/test-llmhost/release-date: 2024-06-15
+    - smarter.sh/llm-client/test-llmhost/backward-compatibility: true
+spec:
+  config:

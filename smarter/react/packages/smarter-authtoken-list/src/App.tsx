@@ -4,7 +4,7 @@
  * Used to display a list of available authtokens.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { AuthToken, AuthTokenListViewProps, AuthTokenCardViewProps } from "@/lib/Types";
@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "AuthTokens";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-framework/developer-reference/lib/drf/models.html";
+  const helpText = "Smarter Authtokens are a Django REST Framework API authentication token that can be associated with any Smarter resource, rather than being limited to a user account. This allows access to be scoped precisely: individual users and services can each be issued a token limited to a specific resource, rather than sharing one broad credential across an entire integration.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="authtoken-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={authtokenTabbedListViewContext} />
       </section>
     </>

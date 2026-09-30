@@ -1,6 +1,5 @@
 """Initialize Smarter vectorstore providers."""
 
-import logging
 from pathlib import Path
 
 from pydantic import SecretStr
@@ -10,6 +9,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.apps.vectorstore.const import PINECONE_API_KEY_SECRET_NAME
 from smarter.common.conf.const import get_env
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

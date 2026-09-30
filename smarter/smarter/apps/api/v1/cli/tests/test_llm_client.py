@@ -8,7 +8,7 @@ import yaml
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -31,7 +31,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
     Account.
     """
 
-    llm_client: Optional[LLMClient] = None
+    llmclient: Optional[LLMClient] = None
 
     def setUp(self):
         super().setUp()
@@ -39,12 +39,12 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         self.query_params = urlencode({"name": self.name})
 
     def tearDown(self):
-        if self.llm_client:
-            self.llm_client.delete()
+        if self.llmclient:
+            self.llmclient.delete()
         super().tearDown()
 
-    def llm_client_factory(self):
-        llm_client = LLMClient.objects.create(
+    def llmclient_factory(self):
+        llmclient = LLMClient.objects.create(
             name=self.name,
             user_profile=self.user_profile,
             description="Test LLMClient",
@@ -56,7 +56,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
-        return llm_client
+        return llmclient
 
     def validate_response(self, response: dict) -> None:
         # validate the response and status are both good
@@ -113,7 +113,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
     def test_describe(self) -> None:
         """Test describe command."""
-        self.llm_client = self.llm_client_factory()
+        self.llmclient = self.llmclient_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -124,20 +124,20 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_spec(data)
 
-        # verify the data matches the llm_client
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value], self.llm_client.name)
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.llm_client.description)
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.llm_client.version)
+        # verify the data matches the llmclient
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value], self.llmclient.name)
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.llmclient.description)
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.llmclient.version)
 
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["deployed"], self.llm_client.deployed)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appName"], self.llm_client.app_name)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appAssistant"], self.llm_client.app_assistant)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appWelcomeMessage"], self.llm_client.app_welcome_message)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["deployed"], self.llmclient.deployed)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appName"], self.llmclient.app_name)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appAssistant"], self.llmclient.app_assistant)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appWelcomeMessage"], self.llmclient.app_welcome_message)
 
     def test_apply(self) -> None:
         """Test apply command."""
 
-        self.llm_client = self.llm_client_factory()
+        self.llmclient = self.llmclient_factory()
 
         # retrieve the current manifest by calling 'describe'
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
@@ -204,8 +204,8 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
     def test_get(self) -> None:
         """Test get command."""
 
-        # create an llm_client so that we have something to get.
-        self.llm_client = self.llm_client_factory()
+        # create an llmclient so that we have something to get.
+        self.llmclient = self.llmclient_factory()
 
         def validate_titles(data):
             if "titles" not in data:
@@ -265,8 +265,8 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command."""
-        # create an llm_client so that we have something to deploy
-        self.llm_client = self.llm_client_factory()
+        # create an llmclient so that we have something to deploy
+        self.llmclient = self.llmclient_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -274,14 +274,14 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
-        self.llm_client.refresh_from_db()
-        self.assertTrue(self.llm_client.deployed)
+        self.llmclient.refresh_from_db()
+        self.assertTrue(self.llmclient.deployed)
 
     def test_undeploy(self) -> None:
         """Test undeploy command."""
 
-        # create an llm_client so that we have something to undeploy
-        self.llm_client = self.llm_client_factory()
+        # create an llmclient so that we have something to undeploy
+        self.llmclient = self.llmclient_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -289,8 +289,8 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
-        self.llm_client.refresh_from_db()
-        self.assertFalse(self.llm_client.deployed)
+        self.llmclient.refresh_from_db()
+        self.assertFalse(self.llmclient.deployed)
 
     def test_logs(self) -> None:
         """Test logs command."""
@@ -304,8 +304,8 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
     def test_delete(self) -> None:
         """Test delete command."""
-        # create an llm_client so that we have something to delete
-        self.llm_client = self.llm_client_factory()
+        # create an llmclient so that we have something to delete
+        self.llmclient = self.llmclient_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -314,7 +314,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
 
-        # verify the llm_client was deleted
+        # verify the llmclient was deleted
         try:
             LLMClient.objects.get(name=self.name, user_profile=self.user_profile)
             self.fail("LLMClient was not deleted")

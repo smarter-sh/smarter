@@ -2,7 +2,6 @@
 """Test SAMUserBroker."""
 
 import datetime
-import logging
 import os
 
 from django.http import HttpRequest
@@ -10,7 +9,7 @@ from taggit.managers import TaggableManager
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.account.manifest.models.user.model import SAMUser
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,

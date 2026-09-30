@@ -356,7 +356,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             obj = MyModel.objects.create(name="Example")
             print(obj.id)  # e.g., 123
-            print(obj.record_locator)  # e.g., "llm_client-rc2x"
+            print(obj.record_locator)  # e.g., "llmclient-rc2x"
 
         :returns: Record locator string (URL-safe, no padding)
         :rtype: str

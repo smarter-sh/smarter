@@ -8,7 +8,6 @@ inherit from this class and provide concrete implementations for these methods
 based on the specific vector store being used (e.g., Pinecone, Weaviate, etc.).
 """
 
-import logging
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
@@ -20,6 +19,7 @@ from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.signals import connected
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

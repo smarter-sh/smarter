@@ -148,8 +148,8 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT.value)}")
         self.process_url(url)
 
-    def test_url_json_schema_llm_client(self) -> None:
-        """Test url for llm_client JSON schema."""
+    def test_url_json_schema_llmclient(self) -> None:
+        """Test url for llmclient JSON schema."""
         url = reverse(f"{namespace}:{json_schema_name(SAMKinds.LLM_CLIENT.value)}")
         self.process_url(url)
 
@@ -206,8 +206,8 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT.value)}")
         self.process_url(url)
 
-    def test_url_manifest_llm_client(self) -> None:
-        """Test url for llm_client manifest."""
+    def test_url_manifest_llmclient(self) -> None:
+        """Test url for llmclient manifest."""
         url = reverse(f"{namespace}:{manifest_name(SAMKinds.LLM_CLIENT.value)}")
         self.process_url(url)
 

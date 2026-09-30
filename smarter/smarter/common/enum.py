@@ -1,9 +1,10 @@
 """Smarter enumeration base helper class."""
 
-import logging
 from enum import Enum
 from typing import Optional
 from urllib.parse import urlparse
+
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -13,38 +14,28 @@ class SmarterEnumAbstract(Enum):
 
     @classmethod
     def all(cls) -> list[str]:
-        """
-        Return a list of all enumeration values.
-        """
+        """Return a list of all enumeration values."""
         retval = [member.value for name, member in cls.__members__.items() if not name.startswith("_")]
         return retval
 
     @classmethod
     def list_all(cls) -> str:
-        """
-        Return a comma-separated string of all enumeration values.
-        """
+        """Return a comma-separated string of all enumeration values."""
         return ", ".join(cls.all())
 
     @classmethod
     def all_slugs(cls):
-        """
-        Return a list of all enumeration slugs (singular and plural).
-        """
+        """Return a list of all enumeration slugs (singular and plural)."""
         return cls.singular_slugs() + cls.plural_slugs()
 
     @classmethod
     def singular_slugs(cls):
-        """
-        Return a list of singular enumeration slugs.
-        """
+        """Return a list of singular enumeration slugs."""
         return [slug.lower() for slug in cls.all()]
 
     @classmethod
     def plural_slugs(cls):
-        """
-        Return a list of plural enumeration slugs.
-        """
+        """Return a list of plural enumeration slugs."""
         return [f"{slug.lower()}s" for slug in cls.all()]
 
     @classmethod
@@ -88,9 +79,7 @@ class SmarterEnum:
 
     @classmethod
     def all(cls) -> list[str]:
-        """
-        Return a list of all enumeration values.
-        """
+        """Return a list of all enumeration values."""
         return [
             value
             for name, value in cls.__dict__.items()
@@ -99,9 +88,7 @@ class SmarterEnum:
 
     @classmethod
     def list_all(cls) -> str:
-        """
-        Return a comma-separated string of all enumeration values.
-        """
+        """Return a comma-separated string of all enumeration values."""
         return ", ".join(cls.all())
 
     def __str__(self) -> str:
@@ -109,9 +96,7 @@ class SmarterEnum:
 
 
 class SmarterResourceOwnershipFilterEnum:
-    """
-    Enum-like class for ownership filter options.
-    """
+    """Enum-like class for ownership filter options."""
 
     OWNED = "owned"
     SHARED = "shared"

@@ -52,21 +52,21 @@ from django.http.response import JsonResponse
 
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.llm_client.caching import (
-    get_cached_llm_clients_available_to_user_profile,
-    get_cached_llm_clients_owned_by_user_profile,
-    get_cached_llm_clients_shared_with_user_profile,
-    invalidate_all_cached_llm_clients_for_user_profile,
+from smarter.apps.llmclient.caching import (
+    get_cached_llmclients_available_to_user_profile,
+    get_cached_llmclients_owned_by_user_profile,
+    get_cached_llmclients_shared_with_user_profile,
+    invalidate_all_cached_llmclients_for_user_profile,
 )
-from smarter.apps.llm_client.models import LLMClient
-from smarter.apps.llm_client.serializers import LLMClientSerializer
+from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.serializers import LLMClientSerializer
 from smarter.common.conf import smarter_settings
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-DEFAULT_PAGE_SIZE = 25  # default number of llm_clients to return per page in the API response
+DEFAULT_PAGE_SIZE = 25  # default number of llmclients to return per page in the API response
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
@@ -168,16 +168,16 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         )
 
         if invalidate_cache:
-            invalidate_all_cached_llm_clients_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
 
         if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_llm_clients_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
+            qs = get_cached_llmclients_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
 
         elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_llm_clients_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
+            qs = get_cached_llmclients_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
 
         elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_llm_clients_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
+            qs = get_cached_llmclients_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
         else:
             logger.warning(
                 "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
@@ -190,13 +190,13 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
             )
 
         paginator = Paginator(qs.order_by("-updated_at"), page_size)
-        llm_clients = paginator.get_page(page)
+        llmclients = paginator.get_page(page)
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMClientSerializer(llm_clients, many=True).data,
+            "objects": LLMClientSerializer(llmclients, many=True).data,
         }
         return JsonResponse(retval)
 
@@ -217,15 +217,15 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
     Example URL Paths:
 
-        /workbench/api/listview/clone/<int:llm_client_id>/<str:new_name>/
-        /workbench/api/listview/clone/123/?new_name=cloned_llm_client/
+        /workbench/api/listview/clone/<int:llmclient_id>/<str:new_name>/
+        /workbench/api/listview/clone/123/?new_name=cloned_llmclient/
 
     :param request: The HTTP request object containing the parameters for cloning.
     :type request: HttpRequest
     :param args: Additional positional arguments (not used).
     :param kwargs: Additional keyword arguments, including:
 
-        - llm_client_id (str): The ID of the LLMClient to be cloned.
+        - llmclient_id (str): The ID of the LLMClient to be cloned.
         - new_name (str): The new name for the cloned LLMClient.
 
     :returns: A JsonResponse containing the serialized data of the newly cloned LLMClient if successful, or an error message if the cloning fails.
@@ -252,45 +252,45 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - llm_client_id (str): The ID of the LLMClient to be cloned.
+            - llmclient_id (str): The ID of the LLMClient to be cloned.
             - new_name (str): The new name for the cloned LLMClient.
 
         :returns: A JsonResponse containing the serialized data of the newly cloned LLMClient if successful, or an error message if the cloning fails.
         :rtype: JsonResponse
         """
-        llm_client_id = kwargs.get("llm_client_id")
+        llmclient_id = kwargs.get("llmclient_id")
         new_name = kwargs.get("new_name")
-        llm_client: LLMClient
+        llmclient: LLMClient
 
-        if not llm_client_id or not new_name:
+        if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llm_client_id: %s, new_name: %s",
+                "%s.post() Missing required parameters. llmclient_id: %s, new_name: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 new_name,
             )
-            return JsonResponse({"error": "llm_client_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"error": "llmclient_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            llm_client = LLMClient.objects.with_read_permission_for(self.user_profile.user).get(id=llm_client_id)  # type: ignore
+            llmclient = LLMClient.objects.with_read_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except LLMClient.DoesNotExist:
             logger.warning(
-                "%s.post() LLMClient with id %s not found for cloning.", self.formatted_class_name, llm_client_id
+                "%s.post() LLMClient with id %s not found for cloning.", self.formatted_class_name, llmclient_id
             )
-            return JsonResponse({"error": f"LLMClient with id {llm_client_id} not found."}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({"error": f"LLMClient with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            cloned_llm_client = llm_client.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
-            invalidate_all_cached_llm_clients_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = LLMClientSerializer(cloned_llm_client).data
+            cloned_llmclient = llmclient.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            data = LLMClientSerializer(cloned_llmclient).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error cloning LLMClient with id %s: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 str(e),
                 exc_info=True,
             )
@@ -326,38 +326,36 @@ class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - llm_client_id (str): The ID of the LLMClient to be deleted.
+            - llmclient_id (str): The ID of the LLMClient to be deleted.
 
         :returns: A JsonResponse indicating the success or failure of the deletion.
         :rtype: JsonResponse
         """
-        llm_client_id = kwargs.get("llm_client_id")
-        if not llm_client_id:
-            logger.warning(
-                "%s.post() Missing required parameter llm_client_id for deletion.", self.formatted_class_name
-            )
-            return JsonResponse({"error": "llm_client_id is required."}, status=HTTPStatus.BAD_REQUEST)
+        llmclient_id = kwargs.get("llmclient_id")
+        if not llmclient_id:
+            logger.warning("%s.post() Missing required parameter llmclient_id for deletion.", self.formatted_class_name)
+            return JsonResponse({"error": "llmclient_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            llm_client = LLMClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=llm_client_id)  # type: ignore
+            llmclient = LLMClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except LLMClient.DoesNotExist:
             logger.warning(
-                "%s.post() LLMClient with id %s not found for deletion.", self.formatted_class_name, llm_client_id
+                "%s.post() LLMClient with id %s not found for deletion.", self.formatted_class_name, llmclient_id
             )
-            return JsonResponse({"error": f"LLMClient with id {llm_client_id} not found."}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({"error": f"LLMClient with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
-            llm_client.delete()
-            invalidate_all_cached_llm_clients_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            llmclient.delete()
+            invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse(
-                {"message": f"LLMClient with id {llm_client_id} deleted successfully."}, status=HTTPStatus.OK
+                {"message": f"LLMClient with id {llmclient_id} deleted successfully."}, status=HTTPStatus.OK
             )
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error deleting LLMClient with id %s: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 str(e),
                 exc_info=True,
             )
@@ -393,43 +391,43 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - llm_client_id (str): The ID of the LLMClient to be renamed.
+            - llmclient_id (str): The ID of the LLMClient to be renamed.
             - new_name (str): The new name for the LLMClient.
 
         :returns: A JsonResponse indicating the success or failure of the renaming.
         :rtype: JsonResponse
         """
-        llm_client_id = kwargs.get("llm_client_id")
+        llmclient_id = kwargs.get("llmclient_id")
         new_name = kwargs.get("new_name")
-        if not llm_client_id or not new_name:
+        if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. llm_client_id: %s, new_name: %s",
+                "%s.post() Missing required parameters for renaming. llmclient_id: %s, new_name: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 new_name,
             )
-            return JsonResponse({"error": "llm_client_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"error": "llmclient_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            llm_client = LLMClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=llm_client_id)  # type: ignore
+            llmclient = LLMClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except LLMClient.DoesNotExist:
             logger.warning(
-                "%s.post() LLMClient with id %s not found for renaming.", self.formatted_class_name, llm_client_id
+                "%s.post() LLMClient with id %s not found for renaming.", self.formatted_class_name, llmclient_id
             )
-            return JsonResponse({"error": f"LLMClient with id {llm_client_id} not found."}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({"error": f"LLMClient with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            llm_client.rename(new_name=new_name)
-            invalidate_all_cached_llm_clients_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = LLMClientSerializer(llm_client).data
+            llmclient.rename(new_name=new_name)
+            invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            data = LLMClientSerializer(llmclient).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error renaming LLMClient with id %s: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 str(e),
                 exc_info=True,
             )

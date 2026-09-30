@@ -9,7 +9,7 @@ from django.db.utils import IntegrityError
 from django.http import HttpRequest
 from rest_framework import serializers
 
-from smarter.apps.llm_client.models import LLMClient, get_cached_llm_client_by_request
+from smarter.apps.llmclient.models import LLMClient, get_cached_llmclient_by_request
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
@@ -71,7 +71,7 @@ class PromptHelper(SmarterRequestMixin):
     This class provides methods for creating and retrieving :class:`Prompt` objects,
     as well as managing the cache for prompt sessions. It is designed to simplify
     the process of interacting with prompt-related data and to ensure consistent
-    handling of prompt sessions, llm_clients, and associated metadata.
+    handling of prompt sessions, llmclients, and associated metadata.
 
     **Features**
 
@@ -84,7 +84,7 @@ class PromptHelper(SmarterRequestMixin):
     **Usage**
 
     Typically, this class is instantiated with a Django :class:`HttpRequest` object and a session key.
-    Optionally, a :class:`LLMClient` instance can be provided to associate the prompt session with a specific llm_client.
+    Optionally, a :class:`LLMClient` instance can be provided to associate the prompt session with a specific llmclient.
 
     Example
     -------
@@ -93,15 +93,15 @@ class PromptHelper(SmarterRequestMixin):
         helper = PromptHelper(request, session_key)
         if helper.ready:
             prompt = helper.prompt
-            llm_client = helper.llm_client
+            llmclient = helper.llmclient
             history = helper.history
 
     :param request: The Django HttpRequest object for the current session.
     :type request: django.http.HttpRequest
     :param session_key: The session key identifying the prompt session.
     :type session_key: Optional[str]
-    :param llm_client: An optional LLMClient instance to associate with the prompt session.
-    :type llm_client: Optional[LLMClient]
+    :param llmclient: An optional LLMClient instance to associate with the prompt session.
+    :type llmclient: Optional[LLMClient]
     :param args: Additional positional arguments.
     :param kwargs: Additional keyword arguments.
 
@@ -116,20 +116,20 @@ class PromptHelper(SmarterRequestMixin):
         - Remove the session_key parameter and rely solely on the LLMClient instance for prompt session management.
 
     .. seealso::
-        - :class:`smarter.apps.llm_client.models.LLMClient`
+        - :class:`smarter.apps.llmclient.models.LLMClient`
         - :class:`smarter.apps.account.models.Account`
         - :class:`smarter.apps.prompt.models.Prompt`
         - :class:`smarter.lib.django.request.SmarterRequestMixin`
     """
 
     _chat: Optional[Prompt] = None
-    _llm_client: Optional[LLMClient] = None
+    _llmclient: Optional[LLMClient] = None
     _prompt_tool_call: Optional[Union[models.QuerySet, list]] = None
     _prompt_plugin_usage: Optional[Union[models.QuerySet, list]] = None
     _history: Optional[dict] = None
 
     def __init__(
-        self, request: HttpRequest, session_key: Optional[str], *args, llm_client: Optional[LLMClient] = None, **kwargs
+        self, request: HttpRequest, session_key: Optional[str], *args, llmclient: Optional[LLMClient] = None, **kwargs
     ) -> None:
         """
         Initialize the PromptHelper instance.
@@ -138,8 +138,8 @@ class PromptHelper(SmarterRequestMixin):
         :type request: django.http.HttpRequest
         :param session_key: The session key identifying the prompt session.
         :type session_key: Optional[str]
-        :param llm_client: An optional LLMClient instance to associate with the prompt session.
-        :type llm_client: Optional[LLMClient]
+        :param llmclient: An optional LLMClient instance to associate with the prompt session.
+        :type llmclient: Optional[LLMClient]
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -147,36 +147,36 @@ class PromptHelper(SmarterRequestMixin):
         :raises SmarterConfigurationError: If there is an error creating a new Prompt object.
         """
         logger_verbose.debug(
-            "%s.__init__() - received request: %s session_key: %s, llm_client: %s",
+            "%s.__init__() - received request: %s session_key: %s, llmclient: %s",
             self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
             session_key,
-            llm_client,
+            llmclient,
         )
         if not request:
             raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
         super().__init__(request, session_key=session_key, **kwargs)
         self._chat = None
-        self._llm_client = llm_client
+        self._llmclient = llmclient
         self._prompt_tool_call = None
         self._prompt_plugin_usage = None
         self._history = None
 
-        if not session_key and not llm_client:
+        if not session_key and not llmclient:
             raise SmarterValueError(
                 f"{self.formatted_class_name} either a session_key or a LLMClient instance is required"
             )
 
-        if llm_client and llm_client.user_profile:
-            logger_verbose.debug("%s.__init__() received LLMClient instance: %s", self.formatted_class_name, llm_client)
+        if llmclient and llmclient.user_profile:
+            logger_verbose.debug("%s.__init__() received LLMClient instance: %s", self.formatted_class_name, llmclient)
             logger_verbose.debug(
-                "%s.__init__() - reinitializing AccountMixin from llm_client.user_profile: %s",
+                "%s.__init__() - reinitializing AccountMixin from llmclient.user_profile: %s",
                 self.formatted_class_name,
-                llm_client.user_profile,
+                llmclient.user_profile,
             )
-            self._user_profile = llm_client.user_profile
-            self._account = llm_client.user_profile.account
-            self._user = llm_client.user_profile.user
+            self._user_profile = llmclient.user_profile
+            self._account = llmclient.user_profile.account
+            self._user = llmclient.user_profile.user
 
             # rerun the ready status check to ensure that the account is authorized and ready.
             self._am_ready = False
@@ -217,14 +217,14 @@ class PromptHelper(SmarterRequestMixin):
         :returns: ``True`` if the PromptHelper is ready to use, otherwise ``False``.
         :rtype: bool
         """
-        return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._llm_client)
+        return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._llmclient)
 
     def to_json(self) -> dict[str, Any]:
         """
         Convert the PromptHelper instance to a JSON serializable dictionary.
 
         This method returns a dictionary representation of the PromptHelper instance,
-        including key metadata and related objects such as the prompt, llm_client, prompt history,
+        including key metadata and related objects such as the prompt, llmclient, prompt history,
         and a unique client string.
 
         :returns: A dictionary containing the serialized state of the PromptHelper.
@@ -236,7 +236,7 @@ class PromptHelper(SmarterRequestMixin):
                 "ready": self.ready,
                 "session_key": self.session_key,
                 "prompt": self.prompt.id if self.prompt else None,  # type: ignore[return]
-                "llm_client": self.llm_client.id if self.llm_client else None,  # type: ignore[return]
+                "llmclient": self.llmclient.id if self.llmclient else None,  # type: ignore[return]
                 "history": self.history,
                 "unique_client_string": self.unique_client_string,
             }
@@ -278,7 +278,7 @@ class PromptHelper(SmarterRequestMixin):
         return self._chat
 
     @property
-    def llm_client(self):
+    def llmclient(self):
         """
         Returns a lazy instance of the LLMClient.
 
@@ -290,9 +290,9 @@ class PromptHelper(SmarterRequestMixin):
         :returns: The LLMClient instance.
         :rtype: LLMClient
         """
-        if self._llm_client:
-            return self._llm_client
-        self._llm_client = get_cached_llm_client_by_request(request=self.smarter_request)
+        if self._llmclient:
+            return self._llmclient
+        self._llmclient = get_cached_llmclient_by_request(request=self.smarter_request)
 
     @property
     def prompt_history(self) -> Union[models.QuerySet, list]:
@@ -350,7 +350,7 @@ class PromptHelper(SmarterRequestMixin):
             "prompt_tool_call_history": prompt_tool_call_serializer.data,
             "prompt_plugin_usage_history": prompt_plugin_usage_serializer.data,
             # these two will be added upstream.
-            "llm_client_request_history": None,  # LLMClientRequests
+            "llmclient_request_history": None,  # LLMClientRequests
         }
         return self._history
 
@@ -393,7 +393,7 @@ class PromptHelper(SmarterRequestMixin):
                 pass
 
         if not prompt:
-            if not self.llm_client:
+            if not self.llmclient:
                 raise SmarterValueError(
                     f"{self.formatted_class_name} LLMClient instance is required for creating a Prompt object."
                 )
@@ -406,7 +406,7 @@ class PromptHelper(SmarterRequestMixin):
                 prompt = Prompt.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
-                    llm_client=self.llm_client,
+                    llmclient=self.llmclient,
                     ip_address=self.ip_address,
                     user_agent=self.user_agent,
                     url=django_friendly_url,
@@ -420,7 +420,7 @@ class PromptHelper(SmarterRequestMixin):
                 "%s - cached prompt instance: %s session_key: %s", self.formatted_class_name, prompt, prompt.session_key
             )
 
-        if not prompt.llm_client:
+        if not prompt.llmclient:
             raise ValueError(f"{self.formatted_class_name} LLMClient instance is required for Prompt object.")
 
         return prompt

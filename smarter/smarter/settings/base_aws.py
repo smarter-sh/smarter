@@ -1,12 +1,11 @@
 # pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 
-import logging
 import os
 import sys
 
 from smarter.common.conf import smarter_settings
-from smarter.lib import json
+from smarter.lib import json, logging
 
 from .base import *
 

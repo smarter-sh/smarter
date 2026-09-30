@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMStaticPluginBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -16,7 +15,7 @@ from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlu
 from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.plugin.static import StaticPlugin
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )

@@ -1,8 +1,6 @@
 # pylint: disable=C0115,W0212
 """Account admin."""
 
-import logging
-
 from django import forms
 
 # from django.contrib import admin
@@ -17,6 +15,7 @@ from smarter.apps.dashboard.admin import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
 from .models import Secret
 
@@ -92,7 +91,9 @@ class SecretAdminForm(forms.ModelForm):
 # @admin.register(Secret)
 class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     """
-    Secret model admin. This is a primary Smarter resource, that descends
+    Secret model admin.
+
+    This is a primary Smarter resource, that descends
     directly from MetaDataWithOwnershipModel. Visibility of Secrets is
     determined by ownership and role.
     """
@@ -130,13 +131,15 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
 
     def display_value(self, obj: Secret):
         """
-        Display the secret value as '********' for users who do not have
+        Display the secret value as '********' for users who do not have.
+
         permission to view it.
         """
 
         def has_all_permission() -> bool:
             """
             Determine if the current user has permission to view the Secret value.
+
              - Superusers can view all secrets.
              - The owner of the secret can view it.
              - All other users cannot view the secret value.
@@ -222,7 +225,8 @@ class CustomPasswordWidget(forms.Widget):
 
     def render(self, name, value, attrs=None, renderer=None):
         """
-        use a placeholder and let the admin render the anchor correctly
+        Use a placeholder and let the admin render the anchor correctly.
+
         This works because the admin will replace __pk__ with the actual user id
         """
         url = "../password/"  # relative to the change page, works in Django admin

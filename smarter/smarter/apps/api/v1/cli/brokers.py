@@ -29,13 +29,26 @@ from smarter.apps.connection.manifest.brokers.api_connection import (
 from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
-from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBroker
+from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
+from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
+from smarter.apps.llmhost.manifest.brokers.llmhost import SAMLLMHostBroker
+from smarter.apps.mcpclient.manifest.brokers.mcpclient import SAMMCPClientBroker
+from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
+    SAMOrchestratorBroker,
+)
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
+from smarter.apps.plugin.manifest.brokers.skill_plugin import SAMSkillPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
+from smarter.apps.plugin.manifest.brokers.websearch_plugin import (
+    SAMWebsearchPluginBroker,
+)
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
+from smarter.apps.vectorsearch.manifest.brokers.vectorsearch import (
+    SAMVectorsearchBroker,
+)
 from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import logging
@@ -95,18 +108,25 @@ class Brokers:
 
     _brokers: Dict[str, Type[AbstractBroker]] = {
         SAMKinds.ACCOUNT.value: SAMAccountBroker,
-        SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
-        SAMKinds.PROMPT.value: SAMPromptBroker,
-        SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
-        SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
+        SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
+        SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.GUARDRAIL.value: SAMGuardrailBroker,
+        SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
+        SAMKinds.LLM_HOST.value: SAMLLMHostBroker,
+        SAMKinds.MCP_CLIENT.value: SAMMCPClientBroker,
+        SAMKinds.PROMPT.value: SAMPromptBroker,
+        SAMKinds.PROVIDER.value: SAMProviderBroker,
+        SAMKinds.ORCHESTRATOR.value: SAMOrchestratorBroker,
+        SAMKinds.SECRET.value: SAMSecretBroker,
+        SAMKinds.SKILL_PLUGIN.value: SAMSkillPluginBroker,
         SAMKinds.SQL_PLUGIN.value: SAMSqlPluginBroker,
         SAMKinds.SQL_CONNECTION.value: SAMSqlConnectionBroker,
-        SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
+        SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
         SAMKinds.USER.value: SAMUserBroker,
-        SAMKinds.SECRET.value: SAMSecretBroker,
-        SAMKinds.PROVIDER.value: SAMProviderBroker,
         SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
+        SAMKinds.VECTORSEARCH.value: SAMVectorsearchBroker,
+        SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPluginBroker,
     }
 
     @classmethod

@@ -1,12 +1,12 @@
 """AWS API Gateway helper class."""
 
-import logging
 from typing import Any, Optional
 
 import botocore.exceptions
 from botocore.config import Config
 
 from smarter.common.conf import settings_defaults
+from smarter.lib import logging
 
 from .aws import AWSBase, SmarterAWSException
 

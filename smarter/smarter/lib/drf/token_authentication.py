@@ -1,7 +1,5 @@
 """Knox TokenAuthentication subclass that checks if the token is active."""
 
-import logging
-
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 from knox.auth import TokenAuthentication
@@ -13,6 +11,7 @@ from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

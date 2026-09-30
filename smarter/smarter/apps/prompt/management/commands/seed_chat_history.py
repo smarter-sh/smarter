@@ -9,7 +9,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
-from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
+from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
@@ -42,7 +42,7 @@ class Command(SmarterCommand):
         be mindful of we are in the bootstrapping sequence. The
         smarter system account, admin user and profile are *SUPPOSED*
         to exist at this point, as well as the built-in example
-        llm_client and plugins.
+        llmclient and plugins.
         """
         self.handle_begin()
 
@@ -63,15 +63,15 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=f"User profile not found for account: {account} user: {user}")
             raise ValueError(f"User profile not found for account: {account} user: {user}")
 
-        llm_client = LLMClient.objects.get(user_profile=user_profile, name=SMARTER_EXAMPLE_LLM_CLIENT_NAME)
-        if not llm_client:
+        llmclient = LLMClient.objects.get(user_profile=user_profile, name=SMARTER_EXAMPLE_LLM_CLIENT_NAME)
+        if not llmclient:
             self.handle_completed_failure(msg=f"LLMClient not found {SMARTER_EXAMPLE_LLM_CLIENT_NAME}")
             raise ValueError(f"LLMClient not found {SMARTER_EXAMPLE_LLM_CLIENT_NAME}")
 
         session_key = "seed_chat_history.py_" + secrets.token_urlsafe(16)
         prompt, _ = Prompt.objects.get_or_create(
             session_key=session_key,
-            llm_client=llm_client,
+            llmclient=llmclient,
             user_profile=user_profile,
             url="https://localhost:9357/seed-prompt-history",
             ip_address="192.1.1.1",
@@ -82,10 +82,10 @@ class Command(SmarterCommand):
             self.stdout.write(self.style.NOTICE(f"Processing file: {file_path}"))
             with open(file_path, encoding="utf-8") as file:
                 data = json.loads(file.read())
-                plugins = LLMClientPlugin().plugins(llm_client=llm_client)
+                plugins = LLMClientPlugin().plugins(llmclient=llmclient)
                 if not plugins or len(plugins) == 0:
                     raise ValueError(
-                        f"No plugins found for llm_client: {llm_client}. "
+                        f"No plugins found for llmclient: {llmclient}. "
                         "Seeding the prompt history is only useful if the LLMClient has "
                         "one or more plugins. Please check the LLMClientPlugin model."
                     )

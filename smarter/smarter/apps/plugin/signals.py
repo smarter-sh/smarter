@@ -12,7 +12,6 @@ Arguments:
 Example::
 
     plugin_created.send(sender=self.__class__, plugin=self)
-
 """
 
 plugin_cloned = Signal()
@@ -34,7 +33,6 @@ Signal sent when a plugin is updated.
 Example::
 
     plugin_updated.send(sender=self.__class__, plugin=self)
-
 """
 
 plugin_deleted = Signal()
@@ -51,7 +49,6 @@ Example::
     plugin_deleted.send(
         sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta, plugin_name=plugin_name
     )
-
 """
 plugin_deleting = Signal()
 """
@@ -116,7 +113,9 @@ Example::
 
 plugin_selected = Signal()
 """
-Signal sent when a plugin is selected for use. That is, when the Plugin
+Signal sent when a plugin is selected for use.
+
+That is, when the Plugin
 selection logic results in this Plugin being included in the set of Plugins
 to be presented to the LLM for a given text completion request.
 
@@ -147,4 +146,58 @@ Arguments:
 Example::
 
     broker_ready.send(sender=self.__class__, broker=self)
+"""
+
+websearch_searched = Signal()
+"""
+Signal sent when a WebsearchPlugin searches the web.
+
+Experimental.
+
+Arguments:
+    plugin: The WebsearchPlugin instance.
+    query: The search query.
+    provider: The web search API, e.g. ``brave``.
+    result_count: The number of results returned to the LLM.
+    cached: True if the results were served from the cache.
+
+Example::
+
+    websearch_searched.send(sender=self.__class__, plugin=self, query=query, provider="brave", result_count=5, cached=False)
+"""
+
+websearch_fetched = Signal()
+"""
+Signal sent when a WebsearchPlugin reads a web page.
+
+Experimental.
+
+Arguments:
+    plugin: The WebsearchPlugin instance.
+    url: The requested URL.
+    final_url: The URL of the page that was read, after any redirects.
+    characters: The number of characters of content returned to the LLM.
+    truncated: True if the content was truncated.
+    cached: True if the page was served from the cache.
+
+Example::
+
+    websearch_fetched.send(sender=self.__class__, plugin=self, url=url, final_url=final_url, characters=1234, truncated=False, cached=False)
+"""
+
+websearch_failed = Signal()
+"""
+Signal sent when a WebsearchPlugin cannot perform a search or read a web page.
+
+Experimental.
+
+Arguments:
+    plugin: The WebsearchPlugin instance.
+    operation: ``search`` or ``fetch``.
+    target: The search query or URL.
+    error: A description of the error, which is also returned to the LLM.
+
+Example::
+
+    websearch_failed.send(sender=self.__class__, plugin=self, operation="fetch", target=url, error="HTTP 404")
 """

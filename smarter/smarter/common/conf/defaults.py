@@ -186,7 +186,7 @@ class SettingsDefaults:
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
-        "You are a helpful llm_client. When given the opportunity to utilize "
+        "You are a helpful llmclient. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
         "provide the best possible responses to the user. If you are unable to "
         "provide a response, you should prompt the user for more information. If "

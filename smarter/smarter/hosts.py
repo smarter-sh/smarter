@@ -50,17 +50,17 @@ Named LLMClient Hosts
 
    * - Host
      - Description
-   * - <llm_client_name>.<account_number>.api.example.com
-     - Deployed named llm_client on production API.
-   * - <llm_client_name>.<account_number>.alpha.api.example.com
-     - Deployed named llm_client on alpha API.
-   * - <llm_client_name>.<account_number>.beta.api.example.com
-     - Deployed named llm_client on beta API.
-   * - <llm_client_name>.<account_number>.next.api.example.com
-     - Deployed named llm_client on next API.
+   * - <llmclient_name>.<account_number>.api.example.com
+     - Deployed named llmclient on production API.
+   * - <llmclient_name>.<account_number>.alpha.api.example.com
+     - Deployed named llmclient on alpha API.
+   * - <llmclient_name>.<account_number>.beta.api.example.com
+     - Deployed named llmclient on beta API.
+   * - <llmclient_name>.<account_number>.next.api.example.com
+     - Deployed named llmclient on next API.
 
 Each host pattern is mapped to the appropriate Django URL configuration for the
-console, API, or llm_client endpoints, and supports multiple environments for
+console, API, or llmclient endpoints, and supports multiple environments for
 development, staging, and production.
 """
 
@@ -70,7 +70,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.urls import api as smarter_api_urls
 from smarter.urls import console as smarter_console_urls
-from smarter.urls import llm_clients as smarter_llm_clients_urls
+from smarter.urls import llmclients as smarter_llmclients_urls
 
 host_patterns = patterns(
     "",
@@ -129,25 +129,25 @@ host_patterns = patterns(
     # eg https://education.3141-5926-5359.alpha.api.example.com/
     # -------------------------------------------------------------------------
     host(
-        rf"(?P<llm_client_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_llm_clients_urls,
-        name="llm_client_named_api",
-    ),  # for https://<llm_client_name>.<account_number>.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name="llmclient_named_api",
+    ),  # for https://<llmclient_name>.<account_number>.api.platform.example.com/
     host(
-        rf"(?P<llm_client_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_llm_clients_urls,
-        name=f"llm_client_named_{SmarterEnvironments.ALPHA}_api",
-    ),  # for https://<llm_client_name>.<account_number>.alpha.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name=f"llmclient_named_{SmarterEnvironments.ALPHA}_api",
+    ),  # for https://<llmclient_name>.<account_number>.alpha.api.platform.example.com/
     host(
-        rf"(?P<llm_client_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_llm_clients_urls,
-        name=f"llm_client_named_{SmarterEnvironments.BETA}_api",
-    ),  # for https://<llm_client_name>.<account_number>.beta.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name=f"llmclient_named_{SmarterEnvironments.BETA}_api",
+    ),  # for https://<llmclient_name>.<account_number>.beta.api.platform.example.com/
     host(
-        rf"(?P<llm_client_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_llm_clients_urls,
-        name=f"llm_client_named_{SmarterEnvironments.NEXT}_api",
-    ),  # for https://<llm_client_name>.<account_number>.next.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name=f"llmclient_named_{SmarterEnvironments.NEXT}_api",
+    ),  # for https://<llmclient_name>.<account_number>.next.api.platform.example.com/
 )
 
 __all__ = ["host_patterns"]

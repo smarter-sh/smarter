@@ -1,0 +1,32 @@
+---
+# Search and read AWS documentation, and check the regional availability of AWS services.
+# Documentation: https://awslabs.github.io/mcp/servers/aws-knowledge-mcp-server
+#
+# This server requires no authentication.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: aws_knowledge
+  description: Search and read AWS documentation, and check the regional availability of AWS services.
+  version: 1.0.0
+  tags:
+    - documentation
+    - aws
+    - cloud
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://awslabs.github.io/mcp/servers/aws-knowledge-mcp-server
+spec:
+  config:
+    transport: http
+    endpointUrl: https://knowledge-mcp.global.api.aws
+    authType: none
+    allowedTools:
+      - aws___search_documentation
+      - aws___read_documentation
+      - aws___list_regions
+      - aws___get_regional_availability
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

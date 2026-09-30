@@ -23,9 +23,9 @@ module_prefix = "smarter.apps.account.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_charge(*args, **kwargs):
     """
@@ -77,9 +77,9 @@ def create_charge(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def aggregate_records():
     """

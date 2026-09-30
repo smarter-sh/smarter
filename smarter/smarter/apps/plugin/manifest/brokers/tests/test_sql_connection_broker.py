@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMSqlConnectionBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -22,7 +21,7 @@ from smarter.apps.connection.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.secret.models import Secret
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )

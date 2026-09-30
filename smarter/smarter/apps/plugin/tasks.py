@@ -1,4 +1,4 @@
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument,too-many-locals
 """Celery tasks for the plugin app."""
 
 from typing import Optional
@@ -28,9 +28,9 @@ module_prefix = "smarter.apps.plugin.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_plugin_selector_history(*args, **kwargs):
     """
@@ -95,7 +95,7 @@ def create_plugin_selector_history(*args, **kwargs):
     user_profile = None
     user_profile_id = kwargs.get("user_profile_id")
     if user_profile_id:
-        user_profile = UserProfile.get_cached_object(user_profile_id=user_profile_id)
+        user_profile = UserProfile.get_cached_object(pk=user_profile_id)
     user_id = kwargs.get("user_id")
     if user_id and not user_profile:
         user = get_cached_user_for_user_id(user_id=user_id)
@@ -106,6 +106,14 @@ def create_plugin_selector_history(*args, **kwargs):
         )
     plugin_id = kwargs.get("plugin_id")
     plugin_meta = cached_plugin_by_id(plugin_id) if plugin_id else None
+    if plugin_meta is None:
+        logger.error(
+            "%s plugin_id: %s, user_profile: %s, error: plugin not found",
+            formatted_text(module_prefix + "create_plugin_selector_history()"),
+            plugin_id,
+            user_profile,
+        )
+        return
     try:
         # to catch a race situation in unit tests.
         plugin_controller = PluginController(
@@ -148,9 +156,9 @@ def create_plugin_selector_history(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_plugin_charge(*args, **kwargs):
     pass

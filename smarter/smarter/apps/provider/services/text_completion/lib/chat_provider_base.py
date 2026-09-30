@@ -1,6 +1,5 @@
 """Base class for prompt providers."""
 
-import logging
 from functools import cached_property
 from typing import Any, Dict, List, Optional, Union
 
@@ -40,7 +39,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -539,8 +538,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         :rtype: List[Dict[str, str]]
         """
         default_system_role = get_date_time_string()
-        if self.prompt and self.prompt.llm_client and self.prompt.llm_client.default_system_role_enhanced:
-            default_system_role += self.prompt.llm_client.default_system_role_enhanced
+        if self.prompt and self.prompt.llmclient and self.prompt.llmclient.default_system_role_enhanced:
+            default_system_role += self.prompt.llmclient.default_system_role_enhanced
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
         if not isinstance(client_message_thread, list):

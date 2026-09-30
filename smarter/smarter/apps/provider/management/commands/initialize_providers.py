@@ -1,7 +1,6 @@
 """Initialize 3rd party providers."""
 
 import base64
-import logging
 from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import urljoin
@@ -21,7 +20,7 @@ from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
 from smarter.common.conf.const import get_env
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

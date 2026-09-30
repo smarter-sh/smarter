@@ -11,12 +11,11 @@ Classes:
         application.
 """
 
-import logging
-
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
 from .const import namespace as app_name
 

@@ -1,12 +1,12 @@
 # pylint: disable=wrong-import-position
 """Test Secret API end points."""
 
-import logging
 from http import HTTPStatus
 
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 
 from .factories import factory_secret_teardown, secret_factory
@@ -42,7 +42,7 @@ class TestSecretAPIUrls(TestAccountMixin):
         super().tearDown()
 
     def test_secret_view(self):
-        """test that we can see the secret view and that it matches the secret data."""
+        """Test that we can see the secret view and that it matches the secret data."""
         response = self.client.get(reverse(self.namespace + "secret_list_view"))
 
         redirect_url = response.get("Location")
@@ -57,7 +57,7 @@ class TestSecretAPIUrls(TestAccountMixin):
         self.assertEqual(json_data.get("name"), self.secret.name)
 
     def test_secrets_index_view(self):
-        """test that we can see a secret from inside the list view and that it matches the secret data."""
+        """Test that we can see a secret from inside the list view and that it matches the secret data."""
         response = self.client.post(reverse(self.namespace + "secret_view", args=[str(self.secret.id)]))
 
         redirect_url = response.get("Location")

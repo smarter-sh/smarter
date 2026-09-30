@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
-import logging
 from http import HTTPStatus
 from typing import Optional, Union
 
@@ -11,7 +10,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
     HttpAnonymousRequestSerializer,
@@ -35,7 +34,8 @@ logger = logging.getLogger(__name__)
 
 class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     """
-    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses
+    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses.
+
     with additional manifest structure and metadata.
 
     This class is designed to provide a consistent response format for all Smarter API endpoints,
@@ -93,9 +93,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
 
         def anonymous_serialized_request(request) -> dict:
-            """
-            handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`.
-            """
+            """Handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`."""
             try:
                 return HttpAnonymousRequestSerializer(request).data
             except AttributeError:
@@ -108,9 +106,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 return {}
 
         def authenticated_serialized_request(request) -> dict:
-            """
-            handles the same but for authenticated requests
-            """
+            """Handles the same but for authenticated requests."""
             try:
                 return HttpAuthenticatedRequestSerializer(request).data
             except AttributeError:
@@ -245,7 +241,6 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 "context": "thing=account, command=create"
             }
         }
-
     """
 
     # pylint: disable=too-many-arguments,too-many-locals

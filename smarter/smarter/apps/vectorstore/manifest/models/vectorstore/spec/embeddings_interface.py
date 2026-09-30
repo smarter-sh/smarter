@@ -1,12 +1,12 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
-import logging
 import os
 from typing import Any, Dict, Literal, Mapping, Optional, Sequence
 
 from pydantic import Field, field_validator
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -32,7 +32,9 @@ logger_prefix = formatted_text(f"{__name__}.SAMVectorstoreSpec()")
 
 class SAMEmbeddingsInterface(SmarterBasePydanticModel):
     """
-    Interface for embedding services. Defines methods for generating embeddings
+    Interface for embedding services.
+
+    Defines methods for generating embeddings
     from text inputs, with optional metadata support.
 
     This interface originates from langchain_openai.embeddings.base.Embeddings
@@ -100,7 +102,8 @@ class SAMEmbeddingsInterface(SmarterBasePydanticModel):
     @field_validator("provider")
     def validate_provider(cls, v):
         """
-        Validate that the provider value is a non-empty string if provided and that
+        Validate that the provider value is a non-empty string if provided and that.
+
         at least 1 record exists in the Provider table with the given name.
 
         If the model includes an authenticated user then also validate that at
@@ -115,7 +118,8 @@ class SAMEmbeddingsInterface(SmarterBasePydanticModel):
     @field_validator("provider_model")
     def validate_provider_model(cls, v):
         """
-        Validate that the provider_model value is a non-empty string if
+        Validate that the provider_model value is a non-empty string if.
+
         provided and that at least 1 record exists in the ProviderModel
         table with the given name and provider.
 

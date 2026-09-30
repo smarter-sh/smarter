@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler."""
 
-import logging
 from typing import Optional, Type
 
 from django.core import serializers
@@ -24,6 +23,7 @@ from smarter.apps.plugin.models import (
     PluginMeta,
 )
 from smarter.common.utils.decorators import camel_case
+from smarter.lib import logging
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys

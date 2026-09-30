@@ -1,6 +1,5 @@
 """Smarter API Manifest Loader base class."""
 
-import logging
 import warnings
 from enum import Enum
 from typing import Any, Optional, Union
@@ -10,7 +9,7 @@ import yaml
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import json
+from smarter.lib import json, logging
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase

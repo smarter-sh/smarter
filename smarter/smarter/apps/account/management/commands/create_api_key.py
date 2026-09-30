@@ -7,7 +7,7 @@ Command
     Implements the logic for the ``manage.py create_api_key`` command.
 
 Command-line Arguments
-=====================
+=======================
 --account_number : str, optional
     The Smarter account number to which the user belongs. Format: ####-####-####
 --username : str, optional

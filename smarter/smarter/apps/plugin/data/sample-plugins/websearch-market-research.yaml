@@ -1,0 +1,55 @@
+---
+# A WebsearchPlugin for competitive and market research. It uses Tavily, a web
+# search API designed for LLMs, restricts results to the last month by default,
+# and returns up to 10 results per search. Social media is blocked, so that
+# research is based on primary sources.
+#
+# Prerequisite: a Smarter Secret named tavily_api_key.
+#
+# Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: market_research
+  pluginClass: websearch
+  description: Researches competitors, pricing, product launches and market trends from primary sources.
+  version: 0.1.0
+  tags:
+    - websearch
+    - market-research
+    - competitive-intelligence
+  annotations:
+    - smarter.sh/market-research/use-case: competitive research
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - competitor
+      - competitors
+      - pricing
+      - market
+      - launch
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a market research analyst. Prefer primary sources, such as company
+      websites, press releases and filings. Compare findings in a table, and cite
+      the url of every claim.
+    model: gpt-4o-mini
+    temperature: 0.2
+    maxTokens: 4096
+  websearchData:
+    search:
+      provider: tavily
+      apiKey: tavily_api_key
+      maxResults: 10
+      freshness: month
+    fetch:
+      maxCharacters: 30000
+    blockedDomains:
+      - facebook.com
+      - x.com
+      - twitter.com
+      - reddit.com
+      - tiktok.com

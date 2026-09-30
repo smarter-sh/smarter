@@ -1,6 +1,5 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
-import logging
 import os
 from typing import Any, Optional
 
@@ -9,6 +8,7 @@ from pinecone.db_control.models import ByocSpec, PodSpec, ServerlessSpec
 from pydantic import Field, field_validator
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -80,7 +80,6 @@ class SAMIndexModelInterface(SmarterBasePydanticModel):
 
         from pinecone.db_control.models import ServerlessSpec
         from pinecone.db_control.enums import CloudProvider, AwsRegion
-
         """
         if v is not None:
             if not isinstance(v, dict):
@@ -110,9 +109,7 @@ class SAMIndexModelInterface(SmarterBasePydanticModel):
 
     @field_validator("metric")
     def validate_metric(cls, v):
-        """
-        Validate that the metric value is a valid Metric enum value or string.
-        """
+        """Validate that the metric value is a valid Metric enum value or string."""
         valid_metrics = {item.value.lower() for item in Metric}
         if v.lower() not in valid_metrics:
             raise SAMValidationError(f"Invalid metric: {v}. Supported metrics are: {', '.join(valid_metrics)}.")
@@ -120,9 +117,7 @@ class SAMIndexModelInterface(SmarterBasePydanticModel):
 
     @field_validator("deletion_protection")
     def validate_deletion_protection(cls, v):
-        """
-        Validate that the deletion_protection value is a valid DeletionProtection enum value or string.
-        """
+        """Validate that the deletion_protection value is a valid DeletionProtection enum value or string."""
         valid_options = {item.value.lower() for item in DeletionProtection}
         if v.lower() not in valid_options:
             raise SAMValidationError(
@@ -132,9 +127,7 @@ class SAMIndexModelInterface(SmarterBasePydanticModel):
 
     @field_validator("vector_type")
     def validate_vector_type(cls, v):
-        """
-        Validate that the vector_type value is a valid VectorType enum value or string.
-        """
+        """Validate that the vector_type value is a valid VectorType enum value or string."""
         valid_types = {item.value.lower() for item in VectorType}
         if v.lower() not in valid_types:
             raise SAMValidationError(f"Invalid vector_type: {v}. Supported types are: {', '.join(valid_types)}.")

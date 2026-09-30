@@ -1,9 +1,9 @@
 """AWS EKS helper class."""
 
-import logging
 from typing import Any
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 from .aws import AWSBase
 from .exceptions import AWSNotReadyError
@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 class AWSEks(AWSBase):
     """
-    AWS EKS helper class. Provides a high-level interface for interacting
+    AWS EKS helper class.
+
+    Provides a high-level interface for interacting
     with Amazon Elastic Kubernetes Service (EKS) clusters.
 
     This helper class abstracts common operations related to AWS EKS, such as retrieving cluster information and

@@ -15,7 +15,7 @@ The context processors in this module serve the following purposes:
 
 - **Dashboard Context**: Supplies user-specific and application-wide metadata,
     such as the current user's email, username, role flags, product version, and
-    resource counts (e.g., llm_clients, plugins, API keys, custom domains, connections,
+    resource counts (e.g., llmclients, plugins, API keys, custom domains, connections,
     and secrets). This enables the dashboard to display personalized and up-to-date
     information for each authenticated user.
 
@@ -67,7 +67,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.connection.models import ConnectionBase
 from smarter.apps.connection.urls import ConnectionReverseNames
-from smarter.apps.llm_client.models import (
+from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
@@ -94,9 +94,9 @@ logger_prefix = logging.formatted_text(__name__)
 
 def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
-    Returns the number of llm_client deployments that are pending for the specified user.
+    Returns the number of llmclient deployments that are pending for the specified user.
 
-    This function queries the database for all llm_client instances associated with the
+    This function queries the database for all llmclient instances associated with the
     user's account that have not yet been deployed. The result is used to inform users
     of outstanding deployment actions required on their dashboard.
 
@@ -106,7 +106,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :param user_profile: UserProfile instance. The user profile whose pending deployments are to be counted.
     :type user_profile: UserProfile
-    :return: The number of pending llm_client deployments for the user.
+    :return: The number of pending llmclient deployments for the user.
     :rtype: int
     """
 
@@ -133,30 +133,30 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     return _get_pending_deployments(user_profile.id)  # type: ignore
 
 
-def get_llm_clients(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+def get_llmclients(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
-    Returns the total number of llm_clients associated with the specified user.
+    Returns the total number of llmclients associated with the specified user.
 
-    This function queries the database for all llm_client instances linked to
+    This function queries the database for all llmclient instances linked to
     the user's account, regardless of deployment status. The resulting count
-    is used to display the user's available llm_clients on the dashboard.
+    is used to display the user's available llmclients on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user_profile: UserProfile instance. The user profile whose llm_clients are to be counted.
+    :param user_profile: UserProfile instance. The user profile whose llmclients are to be counted.
     :type user_profile: UserProfile
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
 
-    :return: The number of llm_clients belonging to the user.
+    :return: The number of llmclients belonging to the user.
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_llm_clients() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("%s.get_llmclients() called without user_profile. Returning None.", logger_prefix)
         return 0
 
-    llm_clients = LLMClient.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
-    return len(llm_clients)
+    llmclients = LLMClient.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
+    return len(llmclients)
 
 
 def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -188,7 +188,7 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     Returns the total number of API keys associated with the specified user.
 
     This function queries the database for all API key records linked to
-    llm_clients owned by the user's account. The resulting count is used to
+    llmclients owned by the user's account. The resulting count is used to
     display the user's available API keys on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
@@ -209,7 +209,7 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
             invalidate,
             user_profile,
         )
-        retval = LLMClientAPIKey.objects.filter(llm_client__user_profile__id=user_profile_id).count() or 0
+        retval = LLMClientAPIKey.objects.filter(llmclient__user_profile__id=user_profile_id).count() or 0
         logger.debug("%s.get_api_keys() retrieved and cached API keys count: %s", logger_prefix, retval)
         return retval
 
@@ -228,7 +228,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     Returns the total number of custom domains associated with the specified user.
 
     This function queries the database for all custom domain records linked
-    to llm_clients owned by the user's account. The resulting count is used to
+    to llmclients owned by the user's account. The resulting count is used to
     display the user's available custom domains on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
@@ -249,7 +249,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
             invalidate,
             user_profile,
         )
-        retval = LLMClientCustomDomain.objects.filter(llm_client__user_profile__id=user_profile_id).count() or 0
+        retval = LLMClientCustomDomain.objects.filter(llmclient__user_profile__id=user_profile_id).count() or 0
         logger.debug("%s.get_custom_domains() retrieved and cached custom domains count: %s", logger_prefix, retval)
         return retval
 
@@ -351,8 +351,8 @@ class MyResourcesView(SmarterAuthenticatedWebView):
         def _get_resources() -> dict[str, object]:
             retval = {
                 "pending_deployments": get_pending_deployments(user_profile=user_profile),
-                "llm_clients_qty": get_llm_clients(user_profile=user_profile),
-                "llm_clients_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "llmclients_qty": get_llmclients(user_profile=user_profile),
+                "llmclients_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "plugins_qty": get_plugins(user_profile=user_profile),
                 "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "connections_qty": get_connections(user_profile=user_profile),

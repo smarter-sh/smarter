@@ -9,7 +9,7 @@ Command
     Handles the logic for adding an account contact via command-line arguments.
 
 Command-line Arguments
-=====================
+=======================
 --account_number : str, optional
     The Smarter account number to which the user belongs.
 

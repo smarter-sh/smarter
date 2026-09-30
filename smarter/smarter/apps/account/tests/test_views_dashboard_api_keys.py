@@ -1,8 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test API Keys."""
 
-# python stuff
-import logging
 import uuid
 from http import HTTPStatus
 
@@ -13,6 +11,9 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 
 # our stuff
 from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
+
+# python stuff
+from smarter.lib import logging
 from smarter.lib.drf.models import SmarterAuthToken
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=R0902
 class TestAPIKeys(TestAccountMixin):
-    """Test API Keys"""
+    """Test API Keys."""
 
     def setUp(self):
         """Set up test fixtures."""

@@ -1,6 +1,5 @@
 """PluginDataStatic model for storing static plugin data configuration."""
 
-from functools import lru_cache
 from typing import Any, Optional, Union
 
 from django.db import models
@@ -8,7 +7,6 @@ from django.db import models
 from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import (
@@ -22,7 +20,7 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = logging.formatted_text(f"{__name__}")
 
 
 class PluginDataStatic(PluginDataBase):
@@ -102,12 +100,11 @@ class PluginDataStatic(PluginDataBase):
         return retval
 
     @property
-    @lru_cache(maxsize=128)
     def return_data_keys(self) -> Optional[list[str]]:
         """
         Return all keys present in the ``static_data`` attribute.
 
-        This property extracts, caches and returns a list of all keys found in the ``static_data`` field, supporting both dictionary and list formats:
+        This property extracts and returns a list of all keys found in the ``static_data`` field, supporting both dictionary and list formats:
 
         - If ``static_data`` is a dictionary, all nested keys are recursively collected and returned as a flat list.
         - If ``static_data`` is a list of dictionaries, the keys are extracted from each dictionary and returned as a list, truncated to ``smarter_settings.plugin_max_data_results`` items if necessary.
@@ -190,14 +187,14 @@ class PluginDataStatic(PluginDataBase):
                 retval = cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
                     "%s.get_cached_data_by_plugin() fetched and cached PluginDataStatic for plugin_id: %s",
-                    formatted_text(cls.__name__),
+                    logging.formatted_text(cls.__name__),
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    formatted_text(cls.__name__),
+                    logging.formatted_text(cls.__name__),
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataStatic with plugin_id {plugin_id} does not exist.") from e
@@ -242,7 +239,7 @@ class PluginDataStatic(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{PluginDataStatic.__name__}.get_cached_object()")
+        logger_prefix = logging.formatted_text(f"{__name__}.{PluginDataStatic.__name__}.get_cached_object()")
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,

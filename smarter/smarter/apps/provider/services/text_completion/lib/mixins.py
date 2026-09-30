@@ -1,6 +1,5 @@
 """This file contains the mixins for the provider model."""
 
-import logging
 from typing import Optional
 
 from django.db.models import Sum
@@ -23,6 +22,7 @@ from smarter.apps.prompt.tasks import (
 from smarter.apps.provider.models import Provider
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -243,7 +243,6 @@ class ChatDbMixin(AccountMixin):
             logger.debug(
                 "%s.prompt setter updated prompt session key to: %s", self.formatted_class_name, value.session_key
             )
-        self._chat = None
         self._chat_tool_call = None  # type: ignore
         self._chat_plugin_usage = None  # type: ignore
         self._charges = None

@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test TestSmarterConnectionBrokerBase."""
 
-import logging
 import os
 
 from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
@@ -9,6 +8,7 @@ from smarter.apps.api.utils import apply_manifest
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -17,7 +17,8 @@ MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD = os.path.abspath(
     os.path.join(ACCOUNT_DATA_PATH, "example-manifests", "secret-smarter-test-db.yaml")
 )
 """
-Path to the Secret manifest file 'secret-smarter-test-db.yaml' which
+Path to the Secret manifest file 'secret-smarter-test-db.yaml' which.
+
 contains the actual password value for the remote test database.
 """
 
@@ -25,7 +26,8 @@ MANIFEST_PATH_SECRET_PROXY_PASSWORD = os.path.abspath(
     os.path.join(ACCOUNT_DATA_PATH, "example-manifests", "secret-smarter-test-db-proxy-password.yaml")
 )
 """
-Path to the Secret manifest file 'secret-smarter-test-db-proxy-password.yaml' which
+Path to the Secret manifest file 'secret-smarter-test-db-proxy-password.yaml' which.
+
 contains the actual password value for the proxy connection.
 """
 
@@ -33,9 +35,7 @@ HERE = __name__
 
 
 class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
-    """
-    Adds a class-level setup to create Secret instances for use in connection broker tests.
-    """
+    """Adds a class-level setup to create Secret instances for use in connection broker tests."""
 
     test_smarter_connection_broker_base_logger_prefix = formatted_text(f"{HERE}.TestSmarterConnectionBrokerBase()")
 
@@ -43,6 +43,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
     def setUpClass(cls):
         """
         Set up the test class with a single account, and admin and non-admin users.
+
         using the class setup so that we retain the same user_profile for each test,
         which is needed so that the django Secret model can be queried.
 

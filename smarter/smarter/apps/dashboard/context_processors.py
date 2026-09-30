@@ -35,7 +35,7 @@ Cache utilities
 ---------------
 
 :func:`cache_invalidations`
-    Invalidates all per-user caches (account, profile, plugins, llm_clients, and
+    Invalidates all per-user caches (account, profile, plugins, llmclients, and
     page-level caches for the dashboard and workbench) after user data changes.
     Called by signal handlers in the account app.
 
@@ -85,7 +85,11 @@ from smarter.apps.dashboard.views.terminal_emulator.names import (
 )
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.guardrail.urls import GuardrailReverseNames
+from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmhost.urls import LLMHostReverseNames
+from smarter.apps.mcpclient.urls import MCPClientReverseNames
+from smarter.apps.orchestrator.urls import OrchestratorReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
@@ -94,6 +98,7 @@ from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.proxy.urls import ProxyReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
+from smarter.apps.vectorsearch.urls import VectorsearchReverseNames
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
@@ -134,10 +139,15 @@ def sidebar_context() -> dict[str, Any]:
             "prompt_passthrough": reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
             ),
+            "llmhost": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
+            "mcpclients": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
+            "orchestrators": reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+            "guardrails": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+            "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
@@ -202,7 +212,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
     This context processor injects a comprehensive set of user-specific and
     application-wide variables into the template context. These variables
     include user identity, role flags, product metadata, and resource counts
-    (such as llm_clients, plugins, API keys, custom domains, connections, and
+    (such as llmclients, plugins, API keys, custom domains, connections, and
     secrets). The context is used to render the dashboard layout and
     personalize the user experience.
 
