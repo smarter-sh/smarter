@@ -19,10 +19,6 @@ metadata:
     - smarter.sh/everlasting-gobstopper/documentation: https://wwcf.com/everlasting-gobstopper-info
 spec:
   data:
-    description: Get additional information about the Everlasting Gobstopper product
-      created by Willy Wonka Chocolate Factory. Information includes sales promotions,
-      coupon codes, company contact information and biographical background on the
-      company founder.
     staticData:
       description: Get additional information about the Everlasting Gobstopper product
         created by Willy Wonka Chocolate Factory. Information includes sales promotions,

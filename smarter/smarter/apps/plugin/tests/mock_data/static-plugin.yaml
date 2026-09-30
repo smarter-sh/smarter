@@ -58,7 +58,6 @@ spec:
   # own discretion.
   # ------------------------------------------------------------
   data:
-    description: an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
     #------------------------------------------------------------
     # if a.) this module is able to locate any of the search terms in the user prompt
     #    b.) OpenAI API Function Calling opts to call this plugin_data

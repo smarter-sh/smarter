@@ -172,3 +172,6 @@ class PluginDataBase(TimestampedModel):
         self.validate()
         super().save(*args, **kwargs)
         self.get_cached_data_by_plugin(self.plugin, invalidate=True)
+        # plugins retrieve their data with get_cached_object(plugin=...), which has
+        # its own cache. without this, plugins would be served stale data after an update.
+        self.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore[call-arg]

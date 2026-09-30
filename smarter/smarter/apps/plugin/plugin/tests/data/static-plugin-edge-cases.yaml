@@ -1,0 +1,63 @@
+---
+# A StaticPlugin whose staticData exercises the semantics of the static data structure:
+#
+# - every key is an inquiry type that the LLM can request, including the keys of
+#   nested dicts (hours, weekdays, holidays, christmas, ...)
+# - keys at a shallower level take precedence over nested keys of the same name
+#   (name vs details.name)
+# - keys inside lists are NOT inquiry types (contact[].phone)
+# - values may be dicts, lists, strings, numbers, booleans or null
+# - strings containing a JSON object or array are decoded. all other strings,
+#   including JSON literals like "42", "true" and "null", are returned as-is.
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  name: test_static_plugin_edge_cases
+  pluginClass: static
+  description: Static data edge cases for unit testing the StaticPlugin.
+  version: 0.1.0
+  tags:
+    - static
+    - test
+  annotations:
+    - smarter.sh/static-test/purpose: unit testing
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: You are a helpful assistant for unit testing the StaticPlugin.
+    model: gpt-4o-mini
+    temperature: 0.0
+    maxTokens: 256
+  data:
+    staticData:
+      name: Top Level Name
+      details:
+        name: Nested Name
+        color: purple
+      hours:
+        weekdays: 9am - 5pm
+        weekends: closed
+        holidays:
+          christmas: closed
+          newYears: 10am - 2pm
+      contact:
+        - phone: +1 123-456-7890
+        - email: test@example.com
+      biographical: >
+        A folded yaml string, which ends with a newline.
+      founded: 1964
+      rating: 4.5
+      isOpen: true
+      discontinued: null
+      emptyString: ""
+      emptyList: []
+      emptyDict: {}
+      jsonObject: '{"a": 1, "b": [2, 3]}'
+      jsonArray: '[1, 2, 3]'
+      numericString: "42"
+      booleanString: "true"
+      nullString: "null"
+      notJson: "{not json"
+      unicode: "Café ☕ – ünïcödé"

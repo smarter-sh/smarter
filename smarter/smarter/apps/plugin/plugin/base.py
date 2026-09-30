@@ -1673,7 +1673,12 @@ class PluginBase(ABC, AccountMixin):
 
             plugin_data_copy = copy.deepcopy(self.plugin_data)
             if isinstance(plugin_data_copy, self.plugin_data_class) and isinstance(plugin_meta_copy, PluginMeta):
+                # plugin data models use multi-table inheritance, so the pk is the
+                # parent link rather than id. both must be cleared, otherwise save()
+                # updates the original record and re-assigns it to the new plugin_meta.
+                plugin_data_copy.pk = None
                 plugin_data_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_data_copy._state.adding = True  # pylint: disable=protected-access
                 plugin_data_copy.plugin = plugin_meta_copy
                 plugin_data_copy.save()
 
@@ -1722,6 +1727,56 @@ class PluginBase(ABC, AccountMixin):
                 )
             retval["enum"] = enum
         return retval
+
+    @classmethod
+    def parameters_to_manifest(
+        cls, parameters: Optional[Union[dict[str, Any], list[dict[str, Any]]]]
+    ) -> Optional[list[dict[str, Any]]]:
+        """
+        Convert plugin parameters from the OpenAI function calling schema, as stored in the.
+
+        Django ORM, back to the list of parameters used in a plugin manifest.
+
+        This is the inverse of the recasting performed by ``plugin_data_django_model``
+        in the SqlPlugin and ApiPlugin subclasses.
+
+        :param parameters: The parameters in OpenAI function calling schema. A list is assumed to already be in manifest format.
+        :type parameters: Optional[Union[dict[str, Any], list[dict[str, Any]]]]
+        :return: A list of manifest parameters, or ``None`` if there are no parameters.
+        :rtype: Optional[list[dict[str, Any]]]
+
+        **Example:**
+
+        .. code-block:: python
+
+            PluginBase.parameters_to_manifest(
+                {
+                    "type": "object",
+                    "properties": {
+                        "unit": {"type": "string", "description": "The unit.", "enum": ["Celsius", "Fahrenheit"]}
+                    },
+                    "required": ["unit"],
+                    "additionalProperties": False,
+                }
+            )
+            # [{"name": "unit", "type": "string", "description": "The unit.", "required": True, "default": None, "enum": ["Celsius", "Fahrenheit"]}]
+        """
+        if not parameters:
+            return None
+        if isinstance(parameters, list):
+            return parameters
+        required = set(parameters.get("required") or [])
+        return [
+            cls.parameter_factory(
+                name=name,
+                data_type=definition.get("type"),
+                description=definition.get("description", ""),
+                enum=definition.get("enum"),
+                required=name in required,
+                default=definition.get("default"),
+            )
+            for name, definition in (parameters.get("properties") or {}).items()
+        ]
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
@@ -1802,6 +1857,15 @@ class PluginBase(ABC, AccountMixin):
                         else None
                     ),
                     "updated": (
+                        self.plugin_meta.updated_at.isoformat()
+                        if self.plugin_meta
+                        and self.plugin_meta.updated_at
+                        and isinstance(self.plugin_meta.updated_at, datetime.datetime)
+                        else None
+                    ),
+                    # required by SAMPluginCommonStatus
+                    "recordLocator": self.plugin_meta.record_locator if self.plugin_meta else None,
+                    "modified": (
                         self.plugin_meta.updated_at.isoformat()
                         if self.plugin_meta
                         and self.plugin_meta.updated_at

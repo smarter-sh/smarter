@@ -1,12 +1,20 @@
 """
-A PLugin that returns a static json object stored in the Plugin itself.
+A Plugin that returns static data stored in the Plugin itself.
 
 .. note::
 
     This is a complex AI resource that exists within the following class hierarchy
 
-    - Smarter SQL Plugin: The plugin that defines the SQL query and it's parameters to run against the remote SQL database server.
-    - Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
+    1. Smarter Static Plugin: The plugin that defines the static data, organized by inquiry type, that it returns to the LLM.
+    2. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the Static Plugin.
+
+.. note::
+
+    The structure of ``spec.data.staticData`` has semantic meaning. Its keys are the
+    *inquiry types* that the LLM can request, and each key's value is the data returned
+    for that inquiry type. Keys of nested dicts are inquiry types too. In the example
+    manifest below, the LLM can request ``contact``, ``biographical``,
+    ``salesPromotions`` or ``couponCodes``.
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
@@ -48,6 +56,7 @@ from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -123,27 +132,6 @@ class StaticPlugin(PluginBase):
         super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
-    def ORMModelClass(self) -> Type[SAMStaticPlugin]:
-        """
-        Return the Pydantic model class for the StaticPlugin manifest.
-
-        This property provides access to the Pydantic model class that defines the structure
-        and validation rules for the StaticPlugin manifest. The returned class is typically
-        :class:`SAMStaticPlugin`, which encapsulates all necessary fields and constraints
-        for a static plugin manifest.
-
-        :return: The Pydantic model class for the StaticPlugin manifest.
-        :rtype: Type[SAMStaticPlugin]
-
-        Notes
-        -----
-        This property is useful for introspection, type checking, and for scenarios where
-        you need to interact with the manifest model class directly (such as creating new
-        instances or performing validation).
-        """
-        return SAMStaticPlugin
-
-    @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         Return the Pydantic model representation of the plugin manifest.
@@ -200,6 +188,10 @@ class StaticPlugin(PluginBase):
         """
         if self._plugin_data:
             return self._plugin_data
+
+        if not self.plugin_meta:
+            # new Plugin scenario, or a plugin that is not ready. there's nothing in the database yet.
+            return None
 
         try:
             self._plugin_data = PluginDataStatic.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
@@ -333,24 +325,72 @@ class StaticPlugin(PluginBase):
         This property is useful for bridging the gap between Pydantic-based manifest validation
         and Django ORM persistence, enabling consistent data handling across both systems.
         """
-        # recast the Pydantic model the the PluginDataStatic Django ORM model
-        if self._manifest:
-            return {
-                "plugin": self.plugin_meta,
-                "static_data": (
-                    self.manifest.spec.data.staticData
-                    if self.manifest and self.manifest.spec and self.manifest.spec.data
-                    else None
-                ),
-            }
+        # recast the Pydantic model to the PluginDataStatic Django ORM model
+        if not self._manifest:
+            return None
+        return {
+            "plugin": self.plugin_meta,
+            # the description is presented to the LLM as the tool description. it is
+            # metadata.description of the manifest. spec.data.description would be redundant.
+            "description": (
+                self._manifest.metadata.description
+                if self._manifest.metadata and self._manifest.metadata.description
+                else self.plugin_meta.description if self.plugin_meta else ""
+            ),
+            "static_data": (
+                self._manifest.spec.data.staticData if self._manifest.spec and self._manifest.spec.data else None
+            ),
+        }
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:
+    def inquiry_types(self) -> list[str]:
+        """
+        Return the inquiry types that the LLM can request from this plugin.
+
+        The inquiry types are the keys of ``staticData``, including the keys of nested dicts,
+        without duplicates. Keys inside lists are not inquiry types. Their order is the order
+        in which the database returns the static data. They are presented to the LLM as the
+        ``enum`` of the ``inquiry_type`` function parameter, and each one can be resolved by
+        :meth:`tool_call_fetch_plugin_response`.
+
+        :return: The inquiry types, or an empty list if the plugin data is not available.
+        :rtype: list[str]
+
+        **Example:**
+
+        .. code-block:: yaml
+
+            staticData:
+              contact:
+                - name: Willy Wonka
+              biographical: >
+                Willy Wonka is a fictional character ...
+              hours:
+                weekdays: 9am - 5pm
+                weekends: closed
+
+        .. code-block:: python
+
+            plugin.inquiry_types
+            # ['contact', 'biographical', 'hours', 'weekdays', 'weekends']
+        """
+        keys = self.plugin_data.return_data_keys if self.plugin_data else None
+        return list(dict.fromkeys(str(key) for key in keys or []))
+
+    @property
+    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
+        The tool takes a single required parameter, ``inquiry_type``, whose ``enum`` is
+        :attr:`inquiry_types`. The ``enum`` is omitted if the plugin has no inquiry types,
+        since a null ``enum`` is not a valid JSON schema.
+
         See the OpenAI documentation:
         https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
+
+        :return: The tool definition, or ``None`` if the plugin is not ready.
+        :rtype: Optional[dict[str, Any]]
 
         **Example:**
 
@@ -359,14 +399,14 @@ class StaticPlugin(PluginBase):
             tool = {
                 "type": "function",
                 "function": {
-                    "name": "static_plugin_function",
-                    "description": "Static Plugin",
+                    "name": "smarter_plugin_0000000042",
+                    "description": "Get additional information about the Everlasting Gobstopper ...",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "inquiry_type": {
                                 "type": "string",
-                                "enum": ["contact", "biographical", "sales_promotions", "coupon_codes"],
+                                "enum": ["contact", "biographical", "salesPromotions", "couponCodes"],
                             },
                         },
                         "required": ["inquiry_type"],
@@ -374,25 +414,28 @@ class StaticPlugin(PluginBase):
                 },
             }
         """
-        if self.ready:
-            return {
-                "type": "function",
-                "function": {
-                    "name": self.function_calling_identifier,
-                    "description": self.plugin_data.description if self.plugin_data else "Static Plugin",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "inquiry_type": {
-                                "type": "string",
-                                "enum": self.plugin_data.return_data_keys if self.plugin_data else None,
-                            },
-                        },
-                        "required": ["inquiry_type"],
-                    },
+        if not self.ready:
+            return None
+        description = (
+            (self.plugin_data.description if self.plugin_data else None)
+            or (self.plugin_meta.description if self.plugin_meta else None)
+            or "Static Plugin"
+        )
+        inquiry_type: dict[str, Any] = {"type": "string"}
+        if self.inquiry_types:
+            inquiry_type["enum"] = self.inquiry_types
+        return {
+            "type": "function",
+            "function": {
+                "name": self.function_calling_identifier,
+                "description": description,
+                "parameters": {
+                    "type": "object",
+                    "properties": {"inquiry_type": inquiry_type},
+                    "required": ["inquiry_type"],
                 },
-            }
-        return None
+            },
+        }
 
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
@@ -503,44 +546,126 @@ class StaticPlugin(PluginBase):
 
         return json.loads(sam_static_plugin.model_dump_json())
 
-    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Union[dict, list, str]:
+    @classmethod
+    def find_inquiry_value(cls, data: dict[str, Any], inquiry_type: str) -> tuple[bool, Any]:
+        """
+        Find the value of an inquiry type in the static data.
+
+        Keys at the current level take precedence, after which nested dicts are searched
+        depth-first. This mirrors how :attr:`inquiry_types` are collected, so that every
+        advertised inquiry type can be resolved.
+
+        :param data: The static data.
+        :type data: dict[str, Any]
+        :param inquiry_type: The inquiry type to find.
+        :type inquiry_type: str
+        :return: A tuple of (found, value). ``found`` distinguishes a missing inquiry type from one whose value is ``None``.
+        :rtype: tuple[bool, Any]
+
+        **Example:**
+
+        .. code-block:: python
+
+            StaticPlugin.find_inquiry_value({"hours": {"weekdays": "9am - 5pm"}}, "weekdays")
+            # (True, '9am - 5pm')
+        """
+        if inquiry_type in data:
+            return True, data[inquiry_type]
+        for value in data.values():
+            if isinstance(value, dict):
+                found, nested_value = cls.find_inquiry_value(value, inquiry_type)
+                if found:
+                    return True, nested_value
+        return False, None
+
+    @classmethod
+    def to_tool_response(cls, value: Any) -> Union[dict, list, str]:
+        """
+        Convert a static data value to a tool call response.
+
+        - dicts and lists are returned as-is.
+        - strings containing a JSON object or array are decoded. All other strings are returned as-is.
+        - ``None`` is returned as an empty string.
+        - all other scalars (numbers, booleans) are returned as their JSON string representation.
+
+        :param value: A value from the static data.
+        :type value: Any
+        :return: The tool call response.
+        :rtype: Union[dict, list, str]
+        """
+        if isinstance(value, (dict, list)):
+            return value
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            # only decode json objects and arrays. decoding every string would
+            # turn values like "42", "true" or "null" into python scalars.
+            if value.strip()[:1] in ("{", "["):
+                try:
+                    decoded = json.loads(value)
+                    if isinstance(decoded, (dict, list)):
+                        return decoded
+                except json.JSONDecodeError:
+                    pass
+            return value
+        return json.dumps(value)
+
+    def tool_call_fetch_plugin_response(
+        self, function_args: Union[dict[str, Any], str, None]
+    ) -> Union[dict, list, str]:
         """
         Fetch a response from the StaticPlugin based on the provided inquiry type.
 
-        This method retrieves the value associated with the specified ``inquiry_type`` from the plugin's static data.
-        It is intended for use with function calling interfaces, such as those provided by OpenAI, where the inquiry
-        type is passed as an argument and the corresponding static data is returned as a JSON-encoded string.
+        This method retrieves the value associated with the specified ``inquiry_type`` from the plugin's
+        static data. It is the handler for the OpenAI function calling tool defined by :attr:`custom_tool`.
 
-        The method performs several validation steps:
+        See the OpenAI documentation:
+        https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
 
+        The method:
+
+        - Accepts the arguments as a dict, or as the JSON string sent by OpenAI.
         - Ensures that the ``inquiry_type`` argument is present and is a string.
         - Verifies that the plugin is in a ready state and that plugin data is available.
-        - Emits signals when the plugin is called and when it responds.
-        - Looks up the value for the given inquiry type in the plugin's static data.
-        - Serializes the result to a JSON string before returning.
-        - Raises detailed errors if any step fails, including missing inquiry types, serialization issues, or invalid data.
+        - Emits ``plugin_called`` when the plugin is called and ``plugin_responded`` when it responds.
+        - Looks up the value for the inquiry type in the static data, including in nested dicts.
+        - Converts the value to a dict, list or str. See :meth:`to_tool_response`.
 
-        Parameters
-        ----------
-        function_args : dict[str, Any]
-            A dictionary of arguments, expected to include the key ``inquiry_type`` specifying which static data to fetch.
+        **Example tool call payload:**
 
-        Returns
-        -------
-        str
-            The JSON-encoded string corresponding to the requested inquiry type.
+        .. code-block:: python
 
-        Raises
-        ------
-        SmarterPluginError
-            If the inquiry type is missing, not a string, not found in the static data, or if the plugin is not ready or lacks data.
-            Also raised if the return value cannot be serialized to JSON or is not a string.
+            "tool_calls": [
+                {
+                    "id": "call_1Ucn2R5WmBh7TtoE197SsP3p",
+                    "function": {
+                        "arguments": "{\"inquiry_type\":\"couponCodes\"}",  # these are the function_args
+                        "name": "smarter_plugin_0000004468"
+                    },
+                    "type": "function"
+                }
+            ]
 
-        Notes
-        -----
-        This method is typically used as the handler for function calling APIs, enabling external systems to retrieve
-        specific pieces of static information from the plugin in a robust and validated manner.
+        :param function_args: The function arguments, which must include ``inquiry_type``.
+        :type function_args: Union[dict[str, Any], str, None]
+        :return: The static data for the inquiry type.
+        :rtype: Union[dict, list, str]
+        :raises SmarterPluginError: If the arguments are malformed, the inquiry type is missing, not a string or
+            not found in the static data, or if the plugin is not ready or lacks data.
         """
+        if isinstance(function_args, str):
+            try:
+                function_args = json.loads(function_args) if function_args.strip() else {}
+            except json.JSONDecodeError as e:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} function_args is not a valid JSON string: {e}.",
+                ) from e
+        function_args = function_args or {}
+        if not isinstance(function_args, dict):
+            raise SmarterPluginError(
+                f"Plugin {self.name} function_args must be a dict or a JSON string, got {type(function_args)}.",
+            )
+
         inquiry_type = function_args.get("inquiry_type")
         if not isinstance(inquiry_type, str):
             raise SmarterPluginError(
@@ -565,52 +690,31 @@ class StaticPlugin(PluginBase):
 
         try:
             return_data = self.plugin_data.sanitized_return_data(self.params)
-            if not isinstance(return_data, dict):
-                raise SmarterPluginError(
-                    f"Plugin {self.name} return data is not a dictionary.",
-                )
-
-            try:
-                retval = return_data[inquiry_type]
-            except KeyError as e:
-                raise SmarterPluginError(
-                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data)}.",
-                ) from e
-
-            if retval is None:
-                raise SmarterPluginError(
-                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is None.",
-                )
-
-            # try:
-            #     retval = json.dumps(retval)
-            # except (TypeError, ValueError) as e:
-            #     raise SmarterPluginError(
-            #         f"Plugin {self.name} return value for inquiry_type: {inquiry_type} could not be serialized to JSON: {e}.",
-            #     ) from e
-
-            if isinstance(retval, str):
-                try:
-                    retval = json.loads(retval)
-                except json.JSONDecodeError:
-                    # it's just a string, not json
-                    pass
-            if not isinstance(retval, (dict, list, str)):
-                raise SmarterPluginError(
-                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a str, dict or list. Expected a str, dict or list, got {type(retval)}.",
-                )
-            plugin_responded.send(
-                sender=self.tool_call_fetch_plugin_response,
-                plugin=self,
-                inquiry_type=inquiry_type,
-                response=retval,
+        except SmarterValueError as e:
+            raise SmarterPluginError(f"Plugin {self.name} static data is invalid: {e}") from e
+        if not isinstance(return_data, dict):
+            raise SmarterPluginError(
+                f"Plugin {self.name} return data is not a dictionary.",
             )
-            return retval
-        except KeyError as e:
+
+        found, value = self.find_inquiry_value(return_data, inquiry_type)
+        if not found:
             raise SmarterPluginError(
-                f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}.",
-            ) from e
-        except json.JSONDecodeError as e:
-            raise SmarterPluginError(
-                f"Plugin {self.name} contains Json data that could not be decoded: {e}.",
-            ) from e
+                f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available inquiry types are: {self.inquiry_types}.",
+            )
+        if value is None:
+            logger.warning(
+                "%s.tool_call_fetch_plugin_response() plugin %s return value for inquiry_type %s is None. Returning empty string.",
+                self.formatted_class_name,
+                self.name,
+                inquiry_type,
+            )
+
+        retval = self.to_tool_response(value)
+        plugin_responded.send(
+            sender=self.tool_call_fetch_plugin_response,
+            plugin=self,
+            inquiry_type=inquiry_type,
+            response=retval,
+        )
+        return retval

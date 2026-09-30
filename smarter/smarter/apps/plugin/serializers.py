@@ -262,11 +262,10 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
     """
     Serializer for the PluginDataStatic model.
 
-    This serializer handles static plugin data, exposing fields for description and static_data.
-    It is used to serialize and deserialize static plugin configuration for API endpoints.
+    This serializer handles static plugin data, exposing the static_data field, which is
+    rendered as ``spec.data`` of a StaticPlugin manifest. The model's description is not
+    exposed, since it is redundant with ``metadata.description`` of the manifest.
 
-    :param description: A brief description of the static plugin.
-    :type description: str
     :param static_data: Arbitrary static data associated with the plugin.
     :type static_data: dict or str
 
@@ -288,7 +287,6 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
         serializer = PluginStaticSerializer(static_plugin)
         print(serializer.data)
         # Output: {
-        #   "description": "...",
         #   "staticData": {...}
         # }
     """
@@ -296,7 +294,7 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataStatic
-        fields = ["description", "static_data"]
+        fields = ["static_data"]
 
 
 class PluginSqlSerializer(SmarterCamelCaseSerializer):
