@@ -1,5 +1,5 @@
-# pylint: disable=W0613
-"""This module is used to create a new plugin using manage.py"""
+# pylint: disable=W0613,R0914
+"""This module is used to create a new plugin using manage.py."""
 
 from typing import Optional
 
@@ -10,13 +10,17 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_plugin command. This command is used to create a plugin from a yaml import file."""
+    """Django manage.py create_plugin command.
+
+    This command is used to create a plugin from a yaml import file.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -29,7 +33,7 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """create the plugin."""
+        """Create the plugin."""
         self.handle_begin()
         account_number: Optional[str] = options["account_number"]
         file_path: Optional[str] = options["file_path"]
@@ -60,13 +64,19 @@ class Command(SmarterCommand):
         except UserProfile.DoesNotExist as e:
             self.handle_completed_failure(e, f"UserProfile for {user} and {account} does not exist.")
 
-        loader = SAMLoader(
-            api_version=SmarterApiVersions.V1,
-            file_path=file_path,
-        )
+        try:
+            loader = SAMLoader(
+                api_version=SmarterApiVersions.V1,
+                file_path=file_path,
+            )
+        except SAMLoaderError as e:
+            self.handle_completed_failure(e, f"manage.py create_plugin. {file_path} is not a valid manifest.")
+            raise
 
-        if not loader.ready:
-            self.handle_completed_failure(None, "manage.py create_plugin. SAMLoader is not ready.")
+        if not loader.ready or loader.manifest_kind not in SAM_MAP:
+            err = SmarterValueError(f"{file_path} is not a plugin manifest.")
+            self.handle_completed_failure(err, "manage.py create_plugin. SAMLoader is not ready.")
+            raise err
 
         plugin_class = SAM_MAP[loader.manifest_kind]
         manifest = plugin_class(**loader.pydantic_model_dump())

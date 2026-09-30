@@ -23,7 +23,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 logger_prefix = formatted_text(f"{__name__}")
 
 
-# pylint: disable=W0613,C0415
+# pylint: disable=W0613,C0415,R0914
 def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
     """
     Create example plugins for a new user.
@@ -51,7 +51,6 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
         - The `user_profile` parameter must be a valid `UserProfile` instance. Passing `None` or an incorrect type will result in an error.
         - If any manifest or secret update fails, the function raises an exception and does not proceed with plugin creation.
 
-
     .. seealso::
 
         - :class:`PluginExamples`
@@ -69,14 +68,12 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
         success = add_example_plugins(user_profile)
         if success:
             print("Example plugins created successfully.")
-
     """
     # pylint: disable=W0621
     logger_prefix = formatted_text(f"{__name__}.add_example_plugins()")
     logger.debug("%s.add_example_plugins Adding example plugins for user profile: %s", logger_prefix, user_profile)
 
     plugin_examples = PluginExamples()
-    data: Optional[dict] = None
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
     username: str = user_profile.user.username
@@ -108,11 +105,13 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     except Exception as e:
         raise SmarterValueError(f"Failed to apply manifest or secret for example plugins: {e}") from e
 
+    retval = True
     for plugin in plugin_examples.plugins:
         yaml_data = plugin.to_yaml()
-        if isinstance(yaml_data, str):
-            yaml_data = yaml_data.encode("utf-8")
-            data = yaml.safe_load(yaml_data)
+        if not isinstance(yaml_data, str):
+            raise SmarterValueError(f"Plugin {plugin.name} does not have a valid YAML representation.")
+        data = yaml.safe_load(yaml_data.encode("utf-8"))
+        try:
             plugin_controller = PluginController(
                 user_profile=user_profile,
                 manifest=data,  # type: ignore[arg-type]
@@ -121,9 +120,19 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             # Note that plugins self-validate in their own way, so this is just a basic check.
             # pylint: disable=W0104
             plugin_controller.plugin
-        else:
-            raise SmarterValueError(f"Plugin {plugin.name} does not have a valid YAML representation.")
-    return True
+        # pylint: disable=W0718
+        except Exception as e:
+            # some examples have prerequisites, like the api key Secret of a
+            # WebsearchPlugin, that the user might not have.
+            logger.warning(
+                "%s skipping example plugin %s, which could not be created for %s: %s",
+                logger_prefix,
+                plugin.name,
+                user_profile,
+                e,
+            )
+            retval = False
+    return retval
 
 
 def get_plugin_examples_by_name() -> Optional[list[str]]:
@@ -151,7 +160,6 @@ def get_plugin_examples_by_name() -> Optional[list[str]]:
             print("Available example plugins:", plugin_names)
         else:
             print("No example plugins found.")
-
     """
     plugin_examples = PluginExamples()
     return [plugin.name for plugin in plugin_examples.plugins if plugin.name is not None]

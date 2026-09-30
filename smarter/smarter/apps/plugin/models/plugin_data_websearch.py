@@ -353,6 +353,6 @@ class PluginDataWebsearch(PluginDataBase):
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[assignment]
             charge_authorization(retval.record_locator, cls.__name__)  # type: ignore[union-attr]
         if plugin:
-            retval = _get_model_by_plugin_meta(plugin.id)
+            retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[reportAttributeAccessIssue]
             charge_authorization(retval.record_locator, cls.__name__)  # type: ignore[union-attr]
         return retval

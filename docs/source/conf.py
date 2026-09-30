@@ -125,6 +125,9 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
+# sphinx_autodoc_typehints cannot resolve some type hints that third party packages, e.g.
+# asgiref and pydantic, import only for type checking. These are harmless.
+suppress_warnings = ["sphinx_autodoc_typehints.guarded_import"]
 exclude_patterns = []
 django_settings = "smarter.settings.prod"
 todo_include_todos = True

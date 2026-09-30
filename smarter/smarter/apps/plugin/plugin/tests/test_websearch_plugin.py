@@ -279,7 +279,8 @@ class TestWebsearchPlugin(PluginTestBase):
 
     def test_secret_deletion_disables_search(self):
         """Test that deleting the api key Secret leaves the plugin, which then reports that the key is unavailable."""
-        secret = self.new_secret("websearch_disposable_key")
+        # this test deletes the Secret itself, so it is not registered for cleanup.
+        secret = secret_factory(user_profile=self.user_profile, name="websearch_disposable_key", value="a-secret-value")
         name = "websearch_secret_deleted"
         manifest = self.websearch_manifest_dict(name)
         manifest["spec"]["websearchData"]["search"]["apiKey"] = secret.name

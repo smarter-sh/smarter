@@ -42,8 +42,10 @@ class Plugins:
     :param account: The account context for plugin retrieval.
     :type account: Account
 
-    :raises PluginDataValueError:
-        If a plugin cannot be loaded or is malformed
+    .. note::
+
+        A plugin that cannot be loaded, for example one whose plugin data
+        is missing, is logged and skipped.
 
     .. seealso::
 
@@ -67,30 +69,49 @@ class Plugins:
         self.account = account or UserProfile.get_cached_object(user=user).account
         self.user_profile = UserProfile.get_cached_object(user=user, account=account)
 
-        # plugins for this user profile
-        for plugin in PluginMeta.objects.filter(user_profile=self.user_profile):
-            plugin_controller = PluginController(
-                user_profile=self.user_profile,
-                plugin_meta=plugin,
-            )
-            if not plugin_controller or not plugin_controller.plugin:
-                raise PluginDataValueError(
-                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
-                )
-            self.plugins.append(plugin_controller.plugin)
-
-        # plugins for the smarter admin user profile
+        # plugins for this user profile, followed by those of the smarter admin user profile
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
-        for plugin in PluginMeta.objects.filter(user_profile=smarter_admin_user_profile):
+        for user_profile in (self.user_profile, smarter_admin_user_profile):
+            for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):
+                plugin = self.load_plugin(plugin_meta=plugin_meta, user_profile=user_profile)
+                if plugin is not None:
+                    self.plugins.append(plugin)
+
+    @staticmethod
+    def load_plugin(plugin_meta: PluginMeta, user_profile: UserProfile) -> Optional[PluginBase]:
+        """
+        Load a plugin, or log and skip it if it cannot be loaded.
+
+        One malformed plugin, for example one whose plugin data is missing,
+        should not prevent the others from being listed.
+
+        :param plugin_meta: The plugin's PluginMeta.
+        :type plugin_meta: PluginMeta
+        :param user_profile: The plugin's owner.
+        :type user_profile: Optional[UserProfile]
+        :returns: The plugin, or None if it cannot be loaded.
+        :rtype: Optional[PluginBase]
+        """
+        try:
             plugin_controller = PluginController(
-                user_profile=smarter_admin_user_profile,
-                plugin_meta=plugin,
+                user_profile=user_profile,
+                plugin_meta=plugin_meta,
             )
             if not plugin_controller or not plugin_controller.plugin:
                 raise PluginDataValueError(
-                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
+                    f"PluginController could not be created for plugin_id: {plugin_meta.id}, user_profile: {user_profile}"  # type: ignore[arg-type]
                 )
-            self.plugins.append(plugin_controller.plugin)
+            return plugin_controller.plugin
+        # pylint: disable=W0718
+        except Exception as e:
+            base_logger.warning(
+                "Plugins.load_plugin() skipping plugin %s (id: %s) for %s, which cannot be loaded: %s",
+                plugin_meta.name,
+                plugin_meta.id,  # type: ignore[reportAttributeAccessIssue]
+                user_profile,
+                e,
+            )
+            return None
 
     @property
     def data(self) -> list[dict]:

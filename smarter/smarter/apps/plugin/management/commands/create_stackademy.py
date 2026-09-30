@@ -57,7 +57,10 @@ class Command(SmarterCommand):
             logger.error("%s - account number is required.", logger_prefix)
             self.handle_completed_failure(msg="account number is required.")
             return
-        account = Account.get_cached_object(invalidate=False, account_number=account_number)
+        try:
+            account = Account.get_cached_object(invalidate=False, account_number=account_number)
+        except Account.DoesNotExist:
+            account = None
         if not account:
             logger.error("%s - Account with account number %s does not exist.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")

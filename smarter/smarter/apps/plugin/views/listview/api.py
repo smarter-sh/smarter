@@ -21,7 +21,9 @@ from smarter.apps.plugin.caching import (
     get_cached_plugins_shared_with_user_profile,
     invalidate_all_cached_plugins_for_user_profile,
 )
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.plugin.serializers import PluginSerializer
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
@@ -159,7 +161,15 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            cloned_llmclient = llmclient.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            # PluginMeta.clone() copies only the PluginMeta, whereas the plugin's
+            # clone() also copies its selector, prompt and data.
+            plugin = PluginController(user_profile=self.user_profile, plugin_meta=llmclient).plugin  # type: ignore[arg-type]
+            if not plugin or not plugin.ready:
+                raise SmarterPluginError(f"PluginMeta with id {llmclient_id} is not ready, and cannot be cloned.")
+            cloned_id = plugin.clone(new_name=new_name, user_profile=self.user_profile)
+            if not cloned_id:
+                raise SmarterPluginError(f"PluginMeta with id {llmclient_id} could not be cloned.")
+            cloned_llmclient = PluginMeta.objects.get(id=cloned_id)
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = PluginSerializer(cloned_llmclient).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
