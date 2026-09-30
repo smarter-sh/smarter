@@ -152,6 +152,9 @@ class SmarterWaffleSwitches:
     ENABLE_REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
     """Enables React app debug mode within the Smarter React Prompt component."""
 
+    ENABLE_PLUGIN_FUZZY_MATCHING = "enable_plugin_fuzzy_matching"
+    """Enables typo tolerant (Levenshtein distance) matching of plugin selector search terms."""
+
     ENABLE_NEW_USER_PASSWORD_EMAIL = "enable_new_user_password_email"
     """Enables sending textemail with password to new users."""
 
@@ -368,6 +371,11 @@ class SmarterWaffleSwitches:
             name=ENABLE_REACTAPP_DEBUG_MODE,
             comment="Enables React app debug mode within the Smarter React Prompt component.",
             default=False,
+        ),
+        ENABLE_PLUGIN_FUZZY_MATCHING: SmarterWaffleSwitch(
+            name=ENABLE_PLUGIN_FUZZY_MATCHING,
+            comment="Enables typo tolerant (Levenshtein distance) matching of plugin selector search terms.",
+            default=True,
         ),
         ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(
             name=ENABLE_NEW_USER_PASSWORD_EMAIL,

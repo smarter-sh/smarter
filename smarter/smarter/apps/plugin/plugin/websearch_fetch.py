@@ -413,3 +413,38 @@ def fetch_page(
         content_type=content_type,
         truncated=truncated,
     )
+
+
+# restricts the public api, and its Sphinx documentation, to this module's own
+# names, excluding those it imports, like bs4's Tag.
+__all__ = [
+    "ACCEPT",
+    "BLOCK_TAGS",
+    "BOILERPLATE_TAGS",
+    "HEADINGS",
+    "HTML_TYPES",
+    "JSON_TYPES",
+    "MAX_PAGE_BYTES",
+    "MAX_REDIRECTS",
+    "MAX_ROBOTS_BYTES",
+    "REMOVED_TAGS",
+    "ROBOTS_CACHE_TTL",
+    "SUPPORTED_TYPES",
+    "TEXT_TYPES",
+    "TRUNCATION_MARKER",
+    "USER_AGENT",
+    "USER_AGENT_TOKEN",
+    "XML_TYPES",
+    "FetchedPage",
+    "WebFetchError",
+    "collapse_whitespace",
+    "decode",
+    "fetch_page",
+    "html_to_markdown",
+    "make_redirect_policy",
+    "normalize_url",
+    "render",
+    "robots_permit",
+    "robots_rules",
+    "truncate",
+]

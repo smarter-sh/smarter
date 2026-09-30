@@ -12,6 +12,32 @@ lower_case_splitter:
     expected: [the, quick, brown, fox]
   - value: ""
     expected: []
+normalized_words:
+  - value: Who is Lawrence P. McDaniel?
+    expected: [who, is, lawrence, p, mcdaniel]
+  - value: "Gobstopper's -- price!"
+    expected: [gobstoppers, price]
+  - value: "?!"
+    expected: []
+word_matches:
+  - prompt_word: gobstopper
+    term_word: gobstopper
+    expected: true
+  - prompt_word: gobstoppers
+    term_word: gobstopper
+    expected: true
+  - prompt_word: gobstopper
+    term_word: gobstoppers
+    expected: true
+  - prompt_word: boxes
+    term_word: box
+    expected: true
+  - prompt_word: concatenate
+    term_word: cat
+    expected: false
+  - prompt_word: start
+    term_word: art
+    expected: false
 simple_search:
   - prompt: Find all weather plugins for New York
     search_term: weather plugins
@@ -23,35 +49,99 @@ simple_search:
     search_term: weather plugins
     expected: true
   - prompt: Find all weather plugins for New York
+    search_term: plugin
+    expected: true
+  - prompt: Tell me about Gobstoppers.
+    search_term: Gobstopper
+    expected: true
+  - prompt: Find all weather plugins for New York
     search_term: California
     expected: false
-# within_levenshtein_distance() lower cases the prompt's words before it
-# selects the title cased ones, so no word is ever selected, and it never
-# matches. These cases record that behavior, which contradicts the
-# function's docstring.
+  - prompt: How do I concatenate strings?
+    search_term: cat
+    expected: false
+  - prompt: How do I start?
+    search_term: art
+    expected: false
+  - prompt: Find all weather plugins for New York
+    search_term: ""
+    expected: false
+allowed_distance:
+  - search_term: API
+    expected: 0
+  - search_term: dev
+    expected: 0
+  - search_term: Wonka
+    expected: 1
+  - search_term: Wonka Bar
+    expected: 1
+  - search_term: lawrence
+    expected: 1
+  - search_term: Gobstopper
+    expected: 2
+  - search_term: Lawrence McDaniel
+    expected: 2
 within_levenshtein_distance:
-  - prompt: Find all plugins for Lawrance
-    search_term: Lawrence
-    threshold: 3
+  - prompt: I want a Gobbstopper
+    search_term: Gobstopper
+    expected: true
+  - prompt: I want a gobstoper
+    search_term: Gobstopper
+    expected: true
+  - prompt: Who is Lawrance McDaniel?
+    search_term: Lawrence McDaniel
+    expected: true
+  - prompt: I love a Wonka Bat
+    search_term: Wonka Bar
+    expected: true
+  - prompt: I want a Gobbstopper
+    search_term: Gobstopper
+    threshold: 0
     expected: false
-  - prompt: Find all plugins for Lawrance
-    search_term: lawrence
-    threshold: 3
+  - prompt: any ideas?
+    search_term: API
     expected: false
-  - prompt: nothing to see here
+  - prompt: a wonky car
+    search_term: Wonka Bar
+    expected: false
+  - prompt: a doorstopper
+    search_term: Gobstopper
+    expected: false
+  - prompt: larry
     search_term: lawrence
-    threshold: 3
+    expected: false
+  - prompt: dev
+    search_term: developer
+    expected: false
+  - prompt: Who is McDaniel?
+    search_term: Lawrence McDaniel
     expected: false
 does_refer_to:
   - prompt: WhoIsLawrenceMcDaniel
     search_term: Lawrence McDaniel
+    fuzzy: false
     expected: true
   - prompt: Tell me about the Everlasting Gobstopper.
     search_term: Gobstopper
+    fuzzy: false
     expected: true
   - prompt: Tell me about Gobstoppers
     search_term: Gobstopper
+    fuzzy: false
+    expected: true
+  - prompt: WhoIsLawranceMcDaniel
+    search_term: Lawrence McDaniel
+    fuzzy: false
+    expected: false
+  - prompt: WhoIsLawranceMcDaniel
+    search_term: Lawrence McDaniel
+    fuzzy: true
     expected: true
   - prompt: WhoIsLawrenceMcDaniel
     search_term: John Doe
+    fuzzy: true
+    expected: false
+  - prompt: any ideas?
+    search_term: API
+    fuzzy: true
     expected: false
