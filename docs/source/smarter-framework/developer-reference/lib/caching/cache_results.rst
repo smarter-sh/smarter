@@ -1,7 +1,7 @@
 Smarter cache_results Decorator
 ================================
 
-.. automodule:: smarter.lib.cache.cache_results
+.. automodule:: smarter.lib.cache.decorators
     :members:
     :undoc-members:
     :show-inheritance:
