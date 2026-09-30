@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.26](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.25...v0.15.0-alpha.26) (2026-09-30)
+
+### Bug Fixes
+
+* remap Django ORM fields to Typescript type structs for listview ([05197c5](https://github.com/smarter-sh/smarter/commit/05197c5237b824518aa80e6c2d56dcaaf81f18e2))
+
 ## [0.15.0-alpha.25](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.24...v0.15.0-alpha.25) (2026-09-30)
 
 ### Bug Fixes
