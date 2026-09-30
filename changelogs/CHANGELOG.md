@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.19](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.18...v0.15.0-alpha.19) (2026-09-30)
+
+### Bug Fixes
+
+* **plugin:** make plugin selector search term matching whole-word, and typo tolerant ([e66b442](https://github.com/smarter-sh/smarter/commit/e66b442601e7bb8564c7b6f551771c79c6f7fd4b))
+
 ## [0.15.0-alpha.18](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.17...v0.15.0-alpha.18) (2026-09-30)
 
 ### Bug Fixes
