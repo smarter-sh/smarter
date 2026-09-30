@@ -4,89 +4,87 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.15.0-alpha.24](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.23...v0.15.0-alpha.24) (2026-09-30)
 
 ### Bug Fixes
 
-* **plugin:** look up PluginDataBase by plugin FK, not by PluginMeta pk ([9a546e6](https://github.com/smarter-sh/smarter/commit/9a546e6793fe61163ee3e926a4b3553066947b46))
+- **plugin:** look up PluginDataBase by plugin FK, not by PluginMeta pk ([9a546e6](https://github.com/smarter-sh/smarter/commit/9a546e6793fe61163ee3e926a4b3553066947b46))
 
 ## [0.15.0-alpha.23](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.22...v0.15.0-alpha.23) (2026-09-30)
 
 ### Features
 
-* **guardrail:** implement manifest-declared guardrails for LLM prompts ([329527e](https://github.com/smarter-sh/smarter/commit/329527e8e607a9adf830b71518e385f812d1b9f7))
+- **guardrail:** implement manifest-declared guardrails for LLM prompts ([329527e](https://github.com/smarter-sh/smarter/commit/329527e8e607a9adf830b71518e385f812d1b9f7))
 
 ## [0.15.0-alpha.22](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.21...v0.15.0-alpha.22) (2026-09-30)
 
 ### Bug Fixes
 
-* type hints ([630deda](https://github.com/smarter-sh/smarter/commit/630deda12a79107fa5116e79af12a9a0cd3af77a))
+- type hints ([630deda](https://github.com/smarter-sh/smarter/commit/630deda12a79107fa5116e79af12a9a0cd3af77a))
 
 ## [0.15.0-alpha.21](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.20...v0.15.0-alpha.21) (2026-09-30)
 
 ### Features
 
-* **mcpclient:** add experimental MCPClient for remote Model Context Protocol servers ([86c0ecd](https://github.com/smarter-sh/smarter/commit/86c0ecdc9c88d3490f1d1e3a88df584a8f9ee77a))
+- **mcpclient:** add experimental MCPClient for remote Model Context Protocol servers ([86c0ecd](https://github.com/smarter-sh/smarter/commit/86c0ecdc9c88d3490f1d1e3a88df584a8f9ee77a))
 
 ## [0.15.0-alpha.20](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.19...v0.15.0-alpha.20) (2026-09-30)
 
 ### Bug Fixes
 
-* add step 'Install MariaDB Connector/C' ([2ebcf64](https://github.com/smarter-sh/smarter/commit/2ebcf640aec9609a642813c83a8ce6c053c86d24))
+- add step 'Install MariaDB Connector/C' ([2ebcf64](https://github.com/smarter-sh/smarter/commit/2ebcf640aec9609a642813c83a8ce6c053c86d24))
 
 ## [0.15.0-alpha.19](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.18...v0.15.0-alpha.19) (2026-09-30)
 
 ### Bug Fixes
 
-* **plugin:** make plugin selector search term matching whole-word, and typo tolerant ([e66b442](https://github.com/smarter-sh/smarter/commit/e66b442601e7bb8564c7b6f551771c79c6f7fd4b))
+- **plugin:** make plugin selector search term matching whole-word, and typo tolerant ([e66b442](https://github.com/smarter-sh/smarter/commit/e66b442601e7bb8564c7b6f551771c79c6f7fd4b))
 
 ## [0.15.0-alpha.18](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.17...v0.15.0-alpha.18) (2026-09-30)
 
 ### Bug Fixes
 
-* **plugin:** add tests for the plugin app's high level code, and fix the bugs they found ([6ed57ea](https://github.com/smarter-sh/smarter/commit/6ed57ea0060e7db0ee4ab3ce15dd2be902a5a86a))
+- **plugin:** add tests for the plugin app's high level code, and fix the bugs they found ([6ed57ea](https://github.com/smarter-sh/smarter/commit/6ed57ea0060e7db0ee4ab3ce15dd2be902a5a86a))
 
 ## [0.15.0-alpha.17](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.16...v0.15.0-alpha.17) (2026-09-30)
 
 ### Features
 
-* **plugin:** add experimental WebsearchPlugin for web search and reading web pages ([41caead](https://github.com/smarter-sh/smarter/commit/41caeada4f4cc1033941a36bdf6cb02d3cec5937))
+- **plugin:** add experimental WebsearchPlugin for web search and reading web pages ([41caead](https://github.com/smarter-sh/smarter/commit/41caeada4f4cc1033941a36bdf6cb02d3cec5937))
 
 ## [0.15.0-alpha.16](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.15...v0.15.0-alpha.16) (2026-09-30)
 
 ### Features
 
-* **plugin:** add SkillPlugin for Agent Skills (SKILL.md), verbatim or sourced from GitHub ([6acf1aa](https://github.com/smarter-sh/smarter/commit/6acf1aa28163b8079d22045326901d7723fb9205))
+- **plugin:** add SkillPlugin for Agent Skills (SKILL.md), verbatim or sourced from GitHub ([6acf1aa](https://github.com/smarter-sh/smarter/commit/6acf1aa28163b8079d22045326901d7723fb9205))
 
 ## [0.15.0-alpha.15](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.14...v0.15.0-alpha.15) (2026-09-30)
 
 ### Bug Fixes
 
-* **plugin:** fix SQL injection, stale caches and manifest round trips in plugins ([533f0c5](https://github.com/smarter-sh/smarter/commit/533f0c54c421293a59bbdd94827d7b3abe83ee30))
+- **plugin:** fix SQL injection, stale caches and manifest round trips in plugins ([533f0c5](https://github.com/smarter-sh/smarter/commit/533f0c54c421293a59bbdd94827d7b3abe83ee30))
 
 ## [0.15.0-alpha.14](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.13...v0.15.0-alpha.14) (2026-09-28)
 
 ### Bug Fixes
 
-* add /api/v1/cli/resources/ ([d3c3325](https://github.com/smarter-sh/smarter/commit/d3c33250c2cdcbaa8fce46543a22818c555808be))
-* add /api/v1/resources ([f837551](https://github.com/smarter-sh/smarter/commit/f837551ba4653cd8f1e0a05a565a2b5bdc92844d))
+- add /api/v1/cli/resources/ ([d3c3325](https://github.com/smarter-sh/smarter/commit/d3c33250c2cdcbaa8fce46543a22818c555808be))
+- add /api/v1/resources ([f837551](https://github.com/smarter-sh/smarter/commit/f837551ba4653cd8f1e0a05a565a2b5bdc92844d))
 
 ### Refactoring
 
-* move smarter-test-db into mariadb container ([6b1e8be](https://github.com/smarter-sh/smarter/commit/6b1e8bedc6e3b1b80af52e41499e85ef460a36c2))
-* swap mysql for mariadb in local environment ([f8ad88e](https://github.com/smarter-sh/smarter/commit/f8ad88eb47f013c99d2b41e5ea494859a2860ad7))
+- move smarter-test-db into mariadb container ([6b1e8be](https://github.com/smarter-sh/smarter/commit/6b1e8bedc6e3b1b80af52e41499e85ef460a36c2))
+- swap mysql for mariadb in local environment ([f8ad88e](https://github.com/smarter-sh/smarter/commit/f8ad88eb47f013c99d2b41e5ea494859a2860ad7))
 
 ## [0.15.0-alpha.13](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.12...v0.15.0-alpha.13) (2026-08-19)
 
 ### Bug Fixes
 
-* broken reverse url for charges_api_url ([22dbac1](https://github.com/smarter-sh/smarter/commit/22dbac1f47baf73d4e7a5dd9d7c449175b95882e))
+- broken reverse url for charges_api_url ([22dbac1](https://github.com/smarter-sh/smarter/commit/22dbac1f47baf73d4e7a5dd9d7c449175b95882e))
 
 ### Refactoring
 
-* move contracts to the providers app ([0d2b3f7](https://github.com/smarter-sh/smarter/commit/0d2b3f7888d6ee0176cb169c14406516c1fcbe8d))
+- move contracts to the providers app ([0d2b3f7](https://github.com/smarter-sh/smarter/commit/0d2b3f7888d6ee0176cb169c14406516c1fcbe8d))
 
 ## [0.15.0-alpha.12](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.11...v0.15.0-alpha.12) (2026-07-13)
 
