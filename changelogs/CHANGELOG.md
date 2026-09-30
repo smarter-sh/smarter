@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.17](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.16...v0.15.0-alpha.17) (2026-09-30)
+
+### Features
+
+* **plugin:** add experimental WebsearchPlugin for web search and reading web pages ([41caead](https://github.com/smarter-sh/smarter/commit/41caeada4f4cc1033941a36bdf6cb02d3cec5937))
+
 ## [0.15.0-alpha.16](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.15...v0.15.0-alpha.16) (2026-09-30)
 
 ### Features
