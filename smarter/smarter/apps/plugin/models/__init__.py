@@ -17,11 +17,12 @@ from .plugin_selector_history import (
 )
 from .validators import validate_openai_parameters_dict
 
-PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]
+PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql] | type[PluginDataSkill]
 PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
     SAMKinds.API_PLUGIN.value: PluginDataApi,
     SAMKinds.SQL_PLUGIN.value: PluginDataSql,
     SAMKinds.STATIC_PLUGIN.value: PluginDataStatic,
+    SAMKinds.SKILL_PLUGIN.value: PluginDataSkill,
 }
 
 

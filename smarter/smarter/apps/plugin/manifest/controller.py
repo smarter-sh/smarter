@@ -17,6 +17,7 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 # plugin
 from ..models import PluginMeta
 from ..plugin.api import ApiPlugin
+from ..plugin.skill import SkillPlugin
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
 
@@ -24,28 +25,37 @@ from ..plugin.static import StaticPlugin
 from .enum import SAMPluginCommonMetadataClassValues
 from .models.api_plugin.model import SAMApiPlugin
 from .models.common.plugin.model import SAMPluginCommon
+from .models.skill_plugin.model import SAMSkillPlugin
 from .models.sql_plugin.model import SAMSqlPlugin
 from .models.static_plugin.model import SAMStaticPlugin
 
-VALID_MANIFEST_KINDS = [SAMKinds.STATIC_PLUGIN.value, SAMKinds.SQL_PLUGIN.value, SAMKinds.API_PLUGIN.value]
-PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin]
-Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin]]
-SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin]
-SAMPlugins = Optional[Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin]]
+VALID_MANIFEST_KINDS = [
+    SAMKinds.STATIC_PLUGIN.value,
+    SAMKinds.SQL_PLUGIN.value,
+    SAMKinds.API_PLUGIN.value,
+    SAMKinds.SKILL_PLUGIN.value,
+]
+PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin] | type[SkillPlugin]
+Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin]]
+SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin] | type[SAMSkillPlugin]
+SAMPlugins = Optional[Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin, SAMSkillPlugin]]
 PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
+    SAMKinds.SKILL_PLUGIN.value: SkillPlugin,
 }
 PLUGIN_META_CLASS_MAP = {
     SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
     SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
     SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
+    SAMPluginCommonMetadataClassValues.SKILL.value: SkillPlugin,
 }
 SAM_MAP: dict[str, SAMPluginType] = {
     SAMKinds.API_PLUGIN.value: SAMApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SAMSqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: SAMStaticPlugin,
+    SAMKinds.SKILL_PLUGIN.value: SAMSkillPlugin,
 }
 
 
@@ -270,6 +280,8 @@ class PluginController(AbstractController):
             return SAMPluginCommonMetadataClassValues.SQL.value
         if self.manifest.kind == SmarterJournalThings.STATIC_PLUGIN.value:
             return SAMPluginCommonMetadataClassValues.STATIC.value
+        if self.manifest.kind == SmarterJournalThings.SKILL_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.SKILL.value
         return None
 
     @property

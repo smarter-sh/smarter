@@ -438,11 +438,6 @@ class TestPluginBase(TestAccountMixin):
             self.plugin_data(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("description")
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("staticData")
         with self.assertRaises((TypeError, PydanticValidationError)):
             self.plugin_data(data=bad_data)

@@ -31,7 +31,11 @@ from smarter.apps.plugin.models import (
     PluginDataSkill,
     PluginMeta,
 )
-from smarter.apps.plugin.plugin.skill import SkillPlugin
+from smarter.apps.plugin.plugin.skill import (
+    EXAMPLE_SKILL,
+    EXAMPLE_TEMPLATE,
+    SkillPlugin,
+)
 from smarter.apps.plugin.signals import broker_ready
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
@@ -59,9 +63,11 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
     and initializing the corresponding Pydantic model. It provides generic services for SkillPlugins,
     such as instantiation, creation, update, and deletion.
 
-    A SkillPlugin exposes a SKILL.md-format skill to the LLM: a YAML frontmatter block
-    (``name``, ``description``, optionally ``license`` and ``allowed-tools``) followed by a
-    Markdown body of instructions, plus any bundled resource file references.
+    A SkillPlugin provides an Agent Skill to the LLM: a SKILL.md document -- YAML frontmatter
+    (``name``, ``description``, and optionally ``license``, ``compatibility``, ``metadata`` and
+    ``allowed-tools``) followed by Markdown instructions -- plus any bundled files. The manifest
+    either contains the SKILL.md verbatim, in ``spec.skillData.skill``, or refers to it by URL,
+    in ``spec.skillData.source.url``.
 
     **Responsibilities:**
 
@@ -530,9 +536,9 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
         Convert plugin skill data from the Django ORM model format to the Pydantic manifest format.
 
         This method retrieves the skill plugin data associated with the current `plugin_meta` and
-        parses its raw ``skill_document`` (YAML frontmatter + Markdown body) into a `SkillData`
-        Pydantic model via `SkillData.from_skill_document()`. If no ORM data exists for this plugin,
-        None is returned.
+        converts it into a `SkillData` Pydantic model, as the manifest author wrote it: the
+        ``source`` of a remotely sourced skill, otherwise the verbatim ``skill`` and its bundled
+        ``resources``. If no ORM data exists for this plugin, None is returned.
 
         :return: The skill plugin data as a Pydantic model, or None if not available.
         :rtype: Optional[SkillData]
@@ -551,8 +557,8 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
         .. seealso::
 
             - `PluginDataSkill`
+            - `PluginDataSkill.manifest_data`
             - `SkillData`
-            - `SkillData.from_skill_document`
         """
         if self._plugin_skill_spec_data:
             return self._plugin_skill_spec_data
@@ -560,7 +566,7 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
             return None
         if not self.plugin_data:
             return None
-        self._plugin_skill_spec_data = SkillData.from_skill_document(self.plugin_data.skill_document)
+        self._plugin_skill_spec_data = SkillData(**self.plugin_data.manifest_data())
         return self._plugin_skill_spec_data
 
     def plugin_skill_spec_orm2pydantic(self) -> Optional[SAMSkillPluginSpec]:
@@ -659,47 +665,29 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
 
         manifest_meta = SAMPluginCommonMetadata(
-            name="pdf_form_filler",
-            description="Fill out a PDF form given a set of field values, using the pdf skill's fill-form workflow. Use this whenever the user provides a PDF form and asks to have it completed, signed, or populated with data.",
+            name="meeting_notes",
+            description="Turns raw meeting transcripts into structured notes with decisions and action items.",
             version="0.1.0",
-            tags=["pdf", "forms", "documents"],
+            tags=["productivity", "meetings"],
             annotations=[
                 {"smarter.sh/created_by": "smarter_skill_plugin_broker"},
-                {"smarter.sh/plugin": "pdf_form_filler"},
+                {"smarter.sh/plugin": "meeting_notes"},
             ],
             pluginClass=SAMPluginCommonMetadataClassValues.SKILL.value,
         )
         manifest_spec = SAMSkillPluginSpec(
             selector=SAMPluginCommonSpecSelector(
                 directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
-                searchTerms=[
-                    "pdf form",
-                    "fill out pdf",
-                    "pdf form filler",
-                    "complete pdf form",
-                ],
+                searchTerms=["meeting notes", "meeting transcript", "action items", "minutes"],
             ),
             prompt=SAMPluginCommonSpecPrompt(
                 provider=settings_defaults.LLM_DEFAULT_PROVIDER,
-                systemRole="You are a helpful assistant that fills out PDF forms accurately from the field values the user supplies. Whenever possible you should defer to the tool calls provided for filling and validating PDF form fields.",
+                systemRole="You are a helpful assistant that produces clear, accurate meeting notes.",
                 model=settings_defaults.LLM_DEFAULT_MODEL,
                 temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
                 maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
             ),
-            skillData=SkillData(
-                name="pdf-form-filler",
-                description="Fill out a PDF form given a set of field values.",
-                license="MIT",
-                allowedTools=["bash", "view", "str_replace"],
-                instructions=(
-                    "## Filling a PDF form\n\n"
-                    "1. Inspect the PDF to enumerate its form fields.\n"
-                    "2. Map each supplied value to its corresponding field name.\n"
-                    "3. Write the populated values back into the PDF, preserving formatting.\n"
-                    "4. Flatten the form if the user indicates the result should not be further editable.\n"
-                ),
-                resources=["scripts/fill_pdf_form.py", "references/pdf_field_types.md"],
-            ),
+            skillData=SkillData(skill=EXAMPLE_SKILL, resources={"assets/template.md": EXAMPLE_TEMPLATE}),
         )
         manifest_status = SAMPluginCommonStatus(
             accountNumber="1234-5678-9012",

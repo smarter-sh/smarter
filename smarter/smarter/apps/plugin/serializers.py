@@ -223,8 +223,13 @@ class PluginSkillSerializer(SmarterCamelCaseSerializer):
     :type metadata: dict
     :param allowed_tools: The list of tool names this skill is permitted to invoke.
     :type allowed_tools: list
-    :param resources: Relative paths to bundled files (scripts/, references/, assets/) shipped alongside this skill.
-    :type resources: list
+    :param resources: The skill's bundled files (scripts/, references/, assets/), keyed by path relative to
+        the skill root. A null value denotes a file whose contents are unavailable, such as a binary asset.
+    :type resources: dict
+    :param source_url: The URL from which the skill was retrieved, for remotely sourced skills.
+    :type source_url: str
+    :param source_retrieved_at: When a remotely sourced skill was last retrieved.
+    :type source_retrieved_at: datetime
 
     :return: Serialized skill plugin data.
     :rtype: dict
@@ -245,17 +250,27 @@ class PluginSkillSerializer(SmarterCamelCaseSerializer):
         print(serializer.data)
         # Output: {
         #   "description": "...",
-        #   "skillDocument": "---\\nname: pdf-form-filler\\n...",
-        #   "metadata": {"name": "pdf-form-filler", "description": "...", "allowed-tools": [...]},
-        #   "allowedTools": ["bash", "view", "str_replace"],
-        #   "resources": ["scripts/fill_pdf_form.py", "references/pdf_field_types.md"]
+        #   "skillDocument": "---\\nname: code-review\\n...",
+        #   "metadata": {"name": "code-review", "description": "...", "allowed-tools": "Read Grep"},
+        #   "allowedTools": ["Read", "Grep"],
+        #   "resources": {"references/checklist.md": "# Review checklist ..."},
+        #   "sourceUrl": null,
+        #   "sourceRetrievedAt": null
         # }
     """
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataSkill
-        fields = ["description", "skill_document", "metadata", "allowed_tools", "resources"]
+        fields = [
+            "description",
+            "skill_document",
+            "metadata",
+            "allowed_tools",
+            "resources",
+            "source_url",
+            "source_retrieved_at",
+        ]
 
 
 class PluginStaticSerializer(SmarterCamelCaseSerializer):

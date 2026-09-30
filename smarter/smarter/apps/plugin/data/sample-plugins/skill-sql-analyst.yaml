@@ -1,0 +1,81 @@
+---
+# A SkillPlugin for a data analysis use case. The skill teaches the LLM a
+# database schema and the house rules for writing SQL against it.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: sql_analyst
+  pluginClass: skill
+  description: Answers business questions by writing SQL against the Stackademy data warehouse.
+  version: 0.1.0
+  tags:
+    - data
+    - sql
+    - analytics
+  annotations:
+    - smarter.sh/sql-analyst/use-case: data analysis
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - sql
+      - query
+      - enrollments
+      - revenue
+      - report
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a careful data analyst who writes correct, efficient SQL.
+    model: gpt-4o-mini
+    temperature: 0.0
+    maxTokens: 2048
+  skillData:
+    skill: |
+      ---
+      name: sql-analyst
+      description: Writes and explains MySQL queries against the Stackademy data warehouse to answer questions about courses, enrollments and revenue. Use when the user asks a quantitative question about Stackademy's business, or asks for a SQL query or report.
+      compatibility: MySQL 8
+      ---
+
+      # Stackademy SQL analyst
+
+      Before writing a query, read [the schema](references/schema.md).
+
+      ## Rules
+
+      1. Only write SELECT statements. Never modify data.
+      2. Always qualify column names with a table alias.
+      3. Revenue is `enrollments.price_paid`, never `courses.cost`, which is the list price.
+      4. Exclude test accounts: `students.is_test = 0`.
+      5. Unless the user says otherwise, report on the last 12 complete calendar months.
+
+      ## Output
+
+      Give the query in a fenced `sql` code block, then explain in two or three sentences
+      what it computes, including any assumptions you made.
+    resources:
+      references/schema.md: |
+        # Schema
+
+        ## courses
+        | column | type | notes |
+        | ------ | ---- | ----- |
+        | course_id | int | primary key |
+        | course_code | varchar(16) | e.g. CS101 |
+        | cost | decimal(10,2) | list price |
+
+        ## students
+        | column | type | notes |
+        | ------ | ---- | ----- |
+        | student_id | int | primary key |
+        | is_test | tinyint | 1 for internal test accounts |
+
+        ## enrollments
+        | column | type | notes |
+        | ------ | ---- | ----- |
+        | enrollment_id | int | primary key |
+        | course_id | int | foreign key to courses |
+        | student_id | int | foreign key to students |
+        | enrolled_at | datetime | UTC |
+        | price_paid | decimal(10,2) | after discounts |

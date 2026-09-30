@@ -67,6 +67,7 @@ class SAMPluginSpecKeys(SmarterEnumAbstract):
     PROMPT = "prompt"
     DATA = "data"
     API_DATA = "apiData"
+    SKILL_DATA = "skillData"
     SQL_DATA = "sqlData"
     CONNECTION = "connection"
 
