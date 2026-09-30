@@ -68,8 +68,6 @@ Signals
 * llm_tool_responded
 """
 
-# standard Python library imports
-import logging
 from typing import Any, Optional
 
 # NumPy, Pandas, Google Maps API client, and OpenMeteo SDK imports
@@ -79,6 +77,9 @@ from googlemaps.exceptions import ApiError as GoogleMapsApiError
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
+
+# standard Python library imports
+from smarter.lib import logging
 
 try:
     from openmeteo_requests import OpenMeteoRequestsError  # type: ignore

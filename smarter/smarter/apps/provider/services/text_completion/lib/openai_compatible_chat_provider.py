@@ -2,7 +2,6 @@
 """Base class for prompt providers."""
 
 import ast
-import logging
 import re
 import time
 import traceback
@@ -22,6 +21,13 @@ from smarter.apps.account.models import (
     ChargeTypes,
     UserProfile,
 )
+from smarter.apps.guardrail.services import (
+    GuardrailBlockedError,
+    GuardrailPipeline,
+    GuardrailStage,
+    PipelineDisposition,
+)
+from smarter.apps.mcpclient.toolkit import MCPToolkit
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta, PluginPrompt
 from smarter.apps.plugin.plugin.base import PluginBase
@@ -67,7 +73,7 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -87,6 +93,10 @@ OPENAI_TOOL_CHOICE = "auto"
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+BLOCKED_MESSAGE_PLACEHOLDER = "[This message was blocked by a guardrail.]"
+"""What replaces a user message that an input guardrail blocked, in the conversation's history."""
 
 
 class OpenAISmarterClient(SmarterChatProviderBase):
@@ -122,6 +132,18 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     .. seealso::
         - https://developers.openai.com/api/reference/overview/prompt
         - :class:`SmarterChatProviderBase`
+    """
+
+    mcp_toolkit: Optional[MCPToolkit] = None
+    """The MCP tools of the current prompt.
+
+    See :meth:`handle_mcp_clients`.
+    """
+
+    guardrail_pipeline: Optional[GuardrailPipeline] = None
+    """The MCP tools of the current prompt.
+
+    See :meth:`handle_mcp_clients`.
     """
 
     @property
@@ -460,7 +482,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        resource_locators = [self.provider.record_locator, self.prompt.llm_client.record_locator]  # type: ignore[assignment]
+        resource_locators = [self.provider.record_locator, self.prompt.llmclient.record_locator]  # type: ignore[assignment]
         self._insert_charge_by_type(resource_locators, ChargeTypes.PROMPT_COMPLETION.value)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
@@ -504,7 +526,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             messages=self.messages,
         )
 
-    def handle_tool_called(self, function_name: str, function_args: str) -> None:
+    def handle_tool_called(
+        self, function_name: str, function_args: str, extra_resource_locators: Optional[list[str]] = None
+    ) -> None:
         """
         Handle a built-in tool call.
 
@@ -514,6 +538,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :type function_name: str
         :param function_args: The arguments passed to the tool function.
         :type function_args: str
+        :param extra_resource_locators: The record locators of any other resources that the tool
+            call used, e.g. an MCPClient, to include in the charge.
+        :type extra_resource_locators: Optional[list[str]]
 
         :returns: None
         :rtype: None
@@ -531,8 +558,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             response=response,
         )
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
-        if isinstance(self.prompt, Prompt) and self.prompt.llm_client:
-            resource_locators.append(self.prompt.llm_client.record_locator)
+        if isinstance(self.prompt, Prompt) and self.prompt.llmclient:
+            resource_locators.append(self.prompt.llmclient.record_locator)
+        resource_locators.extend(extra_resource_locators or [])
         self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
@@ -558,7 +586,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             input_text=self.input_text,
         )
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
-        resource_locators.append(self.prompt.llm_client.record_locator)  # type: ignore[union-attr]
+        resource_locators.append(self.prompt.llmclient.record_locator)  # type: ignore[union-attr]
         resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
         if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
             resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
@@ -603,8 +631,20 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.append_message_tool_called(tool_call=tool_call)
 
         function_response = None
+        extra_resource_locators: list[str] = []
         if function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
             function_response = function_to_call(tool_call=tool_call)
+
+        elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            mcpclient = self.mcp_toolkit.mcpclient_for(function_name)
+            function_response = self.mcp_toolkit.call(function_name, function_args)
+            if mcpclient is not None:
+                serialized_tool_call[_InternalKeys.SMARTER_MCPCLIENT_KEY] = {
+                    "id": mcpclient.id,  # type: ignore[attr-defined]
+                    "name": mcpclient.name,
+                    "tool": self.mcp_toolkit.functions[function_name].tool_name,
+                }
+                extra_resource_locators.append(mcpclient.record_locator)
 
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name[-4:])
@@ -662,7 +702,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
             )
         self.serialized_tool_calls.append(serialized_tool_call)
-        self.handle_tool_called(function_name=function_name, function_args=function_args)
+        self.handle_tool_called(
+            function_name=function_name,
+            function_args=function_args,
+            extra_resource_locators=extra_resource_locators,
+        )
         llm_tool_responded.send(
             sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
         )
@@ -704,6 +748,151 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
         llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
+
+    def append_guardrail_message(self, stage: str, result: Any) -> None:
+        """Append a Smarter message that summarizes what the guardrails of a stage did, if anything."""
+        triggered = [finding.guardrail_name for finding in result.triggered_findings]
+        failed = [outcome.guardrail_name for outcome in result.outcomes if outcome.error]
+        if not triggered and not failed:
+            return
+        content = f"Smarter {stage} guardrails: {result.disposition.value}."
+        if triggered:
+            content += f" Triggered: {', '.join(sorted(set(triggered)))}."
+        if failed:
+            content += f" Failed to run: {', '.join(sorted(set(failed)))}."
+        self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
+
+    def handle_input_guardrails(self) -> None:
+        """
+        Run the LLMClient's input guardrails on the user's message.
+
+        The guardrails are those listed in the LLMClient manifest's ``spec.guardrails``. If
+        they redact or transform the user's message, the message is replaced, so that the LLM,
+        the plugins and the persisted history see the changed message.
+
+        :raises GuardrailBlockedError: If a guardrail blocks the user's message.
+        """
+        self.guardrail_pipeline = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None or not isinstance(self.messages, list):
+            return
+        pipeline = GuardrailPipeline.for_llmclient(llmclient, session_key=self.prompt.session_key)  # type: ignore[union-attr]
+        if not pipeline.guardrails:
+            return
+        self.guardrail_pipeline = pipeline
+        result = pipeline.run_pre({"messages": self.messages})
+        if result.disposition in (PipelineDisposition.REDACTED, PipelineDisposition.TRANSFORMED):
+            self.messages = result.payload["messages"]
+            for message in reversed(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY:
+                    content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
+                    if isinstance(content, str):
+                        self.input_text = content
+                        if isinstance(self.request_meta_data, dict) and "input_text" in self.request_meta_data:
+                            self.request_meta_data["input_text"] = content
+                    break
+        if result.blocked:
+            # the blocked message is replaced in the conversation's history, so that it is
+            # not sent to the LLM with the history of the conversation's later prompts.
+            for message in reversed(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY:
+                    message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = BLOCKED_MESSAGE_PLACEHOLDER
+                    break
+            self.input_text = BLOCKED_MESSAGE_PLACEHOLDER
+            if isinstance(self.request_meta_data, dict) and "input_text" in self.request_meta_data:
+                self.request_meta_data["input_text"] = BLOCKED_MESSAGE_PLACEHOLDER
+        self.append_guardrail_message("input", result)
+        if result.blocked:
+            raise GuardrailBlockedError(result.fallback_message or "", None)
+
+    def handle_output_guardrails(self, response: ChatCompletion) -> ChatCompletion:
+        """
+        Run the LLMClient's output guardrails on the LLM's final reply.
+
+        :param response: The LLM's final response.
+        :returns: The response, with its reply redacted or transformed, or replaced with the
+            guardrail's message if a guardrail blocks it.
+        """
+        if self.guardrail_pipeline is None or not self.guardrail_pipeline.guardrails_for(GuardrailStage.POST):
+            return response
+        payload = json.loads(response.model_dump_json())
+        result = self.guardrail_pipeline.run_post(payload)
+        self.append_guardrail_message("output", result)
+        if result.blocked:
+            payload["choices"] = payload["choices"][:1]
+            message = payload["choices"][0]["message"]
+            message.update({"content": result.fallback_message, "refusal": None, "tool_calls": None})
+            payload["choices"][0]["finish_reason"] = "content_filter"
+            return ChatCompletion.model_validate(payload)
+        if result.disposition in (PipelineDisposition.REDACTED, PipelineDisposition.TRANSFORMED):
+            return ChatCompletion.model_validate(result.payload)
+        return response
+
+    def handle_mcp_clients(self) -> None:
+        """
+        Offer the LLM the tools of the LLMClient's MCP servers.
+
+        The LLMClient's active MCPClients, listed in its manifest's ``spec.mcpClients``, are
+        loaded into an :class:`~smarter.apps.mcpclient.toolkit.MCPToolkit`, whose tools are
+        added to the request, and whose servers' instructions are added to the system prompt.
+        An MCP server that cannot be reached is skipped, and reported in a Smarter message.
+
+        :returns: None
+        :rtype: None
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmclient.models import LLMClientMCPClients
+
+        self.mcp_toolkit = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None:
+            return
+        mcpclients = LLMClientMCPClients.mcpclients_for(llmclient)
+        if not mcpclients:
+            return
+        logger.debug(
+            "%s.handle_mcp_clients() loading MCPClients: %s",
+            self.formatted_class_name,
+            [mcpclient.name for mcpclient in mcpclients],
+        )
+        self.mcp_toolkit = MCPToolkit(mcpclients).load()
+        if self.mcp_toolkit.tools:
+            if self.tools is None:
+                self.tools = []
+            if self.available_functions is None:
+                self.available_functions = {}
+            self.tools.extend(self.mcp_toolkit.tools)
+            for function_name in self.mcp_toolkit.functions:
+                self.available_functions[function_name] = self.mcp_toolkit.call
+        instructions = self.mcp_toolkit.system_prompt()
+        if instructions and isinstance(self.messages, list):
+            for i, message in enumerate(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+                    content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
+                    self.messages[i] = {
+                        **message,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{instructions}",
+                    }
+                    break
+            else:
+                self.messages.insert(
+                    0,
+                    {
+                        OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: instructions,
+                    },
+                )
+        if self.mcp_toolkit.connected:
+            names = ", ".join(mcpclient.name for mcpclient in self.mcp_toolkit.connected)
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+                content=f"Smarter added the tools of these MCP servers: {names}",
+            )
+        for name, error in self.mcp_toolkit.errors.items():
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_ERROR_KEY,
+                content=f"Smarter could not use the {name} MCP server: {error}",
+            )
 
     def handle_function_provided(self, function: str) -> None:
         """
@@ -762,7 +951,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
             "first_iteration": json.loads(json.dumps(self.first_iteration)),
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            _InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],  # type: ignore[call-arg]
+            _InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins or []],  # type: ignore[call-arg]
             _InternalKeys.MESSAGES_KEY: self.new_messages,
         }
         if self.tools:
@@ -901,9 +1090,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         try:
             self.validate()
-            self.model = self.prompt.llm_client.default_model or self.default_model
-            self.temperature = self.prompt.llm_client.default_temperature or self.default_temperature
-            self.max_completion_tokens = self.prompt.llm_client.default_max_tokens or self.default_max_tokens
+            self.model = self.prompt.llmclient.default_model or self.default_model
+            self.temperature = self.prompt.llmclient.default_temperature or self.default_temperature
+            self.max_completion_tokens = self.prompt.llmclient.default_max_tokens or self.default_max_tokens
             if not self.data:
                 raise SmarterValueError(f"{self.formatted_class_name}: data is required")
             self.input_text = self.get_input_text_prompt(data=self.data)
@@ -927,13 +1116,20 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 # and a user_profile message.
                 self.messages = self.get_message_thread(data=self.data)
 
+            # run the llmclient's input guardrails on the user's message. A block raises
+            # GuardrailBlockedError, which is answered with the guardrail's message below.
+            self.handle_input_guardrails()
+
             # add plugins to the prompt if any are selected
             if self.plugins:
                 for plugin in self.plugins:
                     if plugin.selected(user=self.user_profile.user, input_text=self.input_text, messages=self.messages):
                         self.handle_plugin_selected(plugin=plugin)
 
-            # add all functions that are included in the llm_client definition
+            # add the tools and instructions of the llmclient's MCP servers
+            self.handle_mcp_clients()
+
+            # add all functions that are included in the llmclient definition
             if self.functions:
                 for function in self.functions:
                     self.handle_function_provided(function)
@@ -966,6 +1162,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 raise SmarterValueError(
                     f"{self.formatted_class_name}: first_response must be a ChatCompletion, got {type(self.first_response)}"
                 )
+            if self.first_response.choices and self.first_response.choices[0].message.tool_calls is None:
+                # this is the final response, so the output guardrails run on it
+                self.first_response = self.handle_output_guardrails(self.first_response)
             self.handle_response()
             self.append_openai_response(self.first_response)
             response_message = self.first_response.choices[0].message
@@ -1012,8 +1211,33 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     temperature=self.temperature,
                     max_completion_tokens=self.max_completion_tokens,
                 )
+                self.second_response = self.handle_output_guardrails(self.second_response)
                 self.append_openai_response(self.second_response)
                 self.handle_response()
+
+        # an input guardrail blocked the user's message, so the LLM is not called
+        except GuardrailBlockedError as blocked:
+            created_time = int(time.time())
+            self.iteration = 1
+            self.first_response = ChatCompletion(
+                id="guardrail_blocked",
+                model=self.model or "unknown",
+                choices=[
+                    Choice(
+                        message=ChatCompletionMessage(
+                            role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=blocked.message
+                        ),
+                        finish_reason="content_filter",
+                        index=0,
+                    )
+                ],
+                usage=CompletionUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+                system_fingerprint="guardrail_blocked_" + str(created_time),
+                created=created_time,
+                object="chat.completion",
+            )
+            self.handle_response()
+            self.append_openai_response(self.first_response)
 
         # handle anything that went wrong
         # pylint: disable=broad-exception-caught

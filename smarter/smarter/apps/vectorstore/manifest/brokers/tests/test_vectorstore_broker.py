@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMVectorstoreBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -14,7 +13,7 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.model import SAMVector
 from smarter.apps.vectorstore.manifest.models.vectorstore.spec import (
     SAMVectorstoreSpec,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,

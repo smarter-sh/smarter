@@ -23,7 +23,7 @@ For older versions.
   of technologies like [Calico](https://docs.tigera.io/calico/latest/about/)
   that make it easier to manage fine-grained cloud security policies by service.
 
-Add, we made improvements to the existing platform...
+And, we made improvements to the existing platform...
 
 #### Test Coverage
 

@@ -81,7 +81,6 @@ spec:
     temperature: 0.0
     maxTokens: 256
   data:
-    description: Get additional information about Lawrence McDaniel, full stack web developer and host of YouTube channel FullStackwithLawrence. returns a personal bio, contact information, marketing information, client list, education background, professional certifications, etc.
     staticData:
       contact_information:
         - name: Lawrence P. McDaniel

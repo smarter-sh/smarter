@@ -1,12 +1,11 @@
 # pylint: disable=W0613
 """Dashboard app signal receivers."""
 
-import logging
-
 from django.dispatch import receiver
 
 from smarter.apps.account.signals import cache_invalidate
 from smarter.common.helpers.console_helpers import formatted_text_blue
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 module_prefix = "dashboard.receivers"

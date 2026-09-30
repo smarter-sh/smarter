@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """Smarter API Prompt Manifest handler."""
 
-import logging
 import typing
 
 from django.core.handlers.asgi import ASGIRequest
@@ -13,6 +12,7 @@ from smarter.apps.prompt.manifest.models.prompt.model import SAMPrompt
 from smarter.apps.prompt.models import Prompt
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils.decorators import camel_case
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -300,7 +300,7 @@ class SAMPromptBroker(AbstractBroker):
         command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
         prompt: typing.Optional[str] = kwargs.get("prompt", None)
-        data = {"response": "Hello, I am an llm_client!", "prompt": prompt, "chat_id": "1234567890"}
+        data = {"response": "Hello, I am an llmclient!", "prompt": prompt, "chat_id": "1234567890"}
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

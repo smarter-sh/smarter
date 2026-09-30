@@ -1,6 +1,9 @@
 # pylint: disable=C0115
 """Serializer classes for the Vectorstore app."""
 
+from django.urls import reverse
+from rest_framework import serializers
+
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
@@ -25,6 +28,8 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
     provider = ProviderSerializer(read_only=True)
     provider_model = ProviderModelSerializer(read_only=True)
 
+    manifest_url = serializers.SerializerMethodField()
+
     class Meta:
         model = VectorstoreMeta
         fields = "__all__"
@@ -38,3 +43,13 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
             user_profile = UserProfile.get_cached_object(user=user)
             return VectorstoreMeta.get_cached_object(name=name, user_profile=user_profile, backend=backend)
         return VectorstoreMeta.objects.none()
+
+    def get_manifest_url(self, obj: VectorstoreMeta) -> str:
+        """The URL of the VectorstoreMeta's detail view, which renders its manifest."""
+        # pylint: disable=C0415
+        from .urls import VectorstoreReverseNames
+
+        return reverse(
+            f"{VectorstoreReverseNames.namespace}:{VectorstoreReverseNames.detailview}",
+            kwargs={"hashed_id": obj.hashed_id},
+        )

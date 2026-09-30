@@ -60,16 +60,40 @@ class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
-class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
+class DocsJsonSchemaPromptView(DocsJsonSchemaBaseView):
     """Prompt JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROMPT)
+
+
+class DocsJsonSchemaGuardrailView(DocsJsonSchemaBaseView):
+    """Guardrail JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.GUARDRAIL)
 
 
 class DocsJsonSchemaLLMClientView(DocsJsonSchemaBaseView):
     """LLMClient JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.LLM_CLIENT)
+
+
+class DocsJsonSchemaLLMHostView(DocsJsonSchemaBaseView):
+    """LLMHost JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST)
+
+
+class DocsJsonSchemaMCPClientView(DocsJsonSchemaBaseView):
+    """MCPClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.MCP_CLIENT)
+
+
+class DocsJsonSchemaOrchestratorView(DocsJsonSchemaBaseView):
+    """Orchestrator JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.ORCHESTRATOR)
 
 
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
@@ -82,6 +106,21 @@ class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
     """SqlConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
+
+
+class DocsJsonSchemaSkillView(DocsJsonSchemaBaseView):
+    """Plugin Skill JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
+
+
+class DocsJsonSchemaWebsearchView(DocsJsonSchemaBaseView):
+    """Plugin Websearch JSON Schema view.
+
+    Experimental.
+    """
+
+    kind = SAMKinds(SAMKinds.WEBSEARCH_PLUGIN)
 
 
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
@@ -106,6 +145,12 @@ class DocsJsonSchemaProviderView(DocsJsonSchemaBaseView):
     """Provider JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROVIDER)
+
+
+class DocsJsonSchemaVectorsearchView(DocsJsonSchemaBaseView):
+    """Vectorsearch JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSEARCH)
 
 
 class DocsJsonSchemaVectorstoreView(DocsJsonSchemaBaseView):

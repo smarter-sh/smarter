@@ -62,10 +62,11 @@ class ChargeTypes(SmarterEnumAbstract):
     This enumeration defines the different types of charges that can be associated with user profiles.
     Each charge type corresponds to a specific billing event, such as prompt completion, plugin usage, or tool usage.
 
-    Attributes:
-        PROMPT_COMPLETION: Represents a prompt completion charge type.
-        PLUGIN: Represents a plugin charge type.
-        TOOL: Represents a tool charge type.
+    The charge types are:
+
+    - ``PROMPT_COMPLETION``: a prompt completion charge.
+    - ``PLUGIN``: a plugin charge.
+    - ``TOOL``: a tool charge.
     """
 
     PROMPT_COMPLETION = "completion"

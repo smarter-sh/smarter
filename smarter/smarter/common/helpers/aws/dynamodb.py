@@ -1,7 +1,8 @@
 """AWS DynamoDB helper class."""
 
-import logging
 from typing import Optional
+
+from smarter.lib import logging
 
 from .aws import AWSBase
 

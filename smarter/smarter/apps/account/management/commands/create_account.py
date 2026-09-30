@@ -7,7 +7,7 @@ Command
     Implements logic for the ``manage.py create_account`` command.
 
 Command-line Arguments
-=====================
+=======================
 --account_number : str, optional
     The account number for the new account.
 --company_name : str, optional

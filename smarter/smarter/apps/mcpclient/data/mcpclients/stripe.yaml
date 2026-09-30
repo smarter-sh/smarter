@@ -1,0 +1,34 @@
+---
+# Query Stripe customers, products, prices, invoices and payments, with Stripe's official MCP server.
+# Documentation: https://docs.stripe.com/mcp
+#
+# Prerequisite: a Smarter Secret named stripe_restricted_api_key, containing a Stripe
+# restricted API key (rk_...) from https://dashboard.stripe.com/apikeys. Grant it
+# read-only permissions. allowedTools limits the LLM to the list, retrieve and search
+# tools.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: stripe
+  description: Query Stripe customers, products, prices, invoices and payments, with Stripe's official MCP server.
+  version: 1.0.0
+  tags:
+    - payments
+    - finance
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://docs.stripe.com/mcp
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.stripe.com
+    authType: bearer_token
+    credentials: stripe_restricted_api_key
+    allowedTools:                # glob patterns
+      - "list_*"
+      - "retrieve_*"
+      - "search_*"
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

@@ -15,6 +15,11 @@ updates:
       - "lpm0073"
   - package-ecosystem: "npm"
     directory: "/"
+    ignore:
+      # v10+ requires conventional-changelog-writer@9, but
+      # @semantic-release/release-notes-generator@14 still bundles writer@8.
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "javascript"

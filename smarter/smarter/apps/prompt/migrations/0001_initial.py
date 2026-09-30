@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("account", "0001_initial"),
-        ("llm_client", "0002_initial"),
+        ("llmclient", "0002_initial"),
         ("plugin", "0001_initial"),
         (
             "taggit",
@@ -90,10 +90,10 @@ class Migration(migrations.Migration):
                 ("user_agent", models.CharField(max_length=255)),
                 ("url", models.URLField()),
                 (
-                    "llm_client",
+                    "llmclient",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="llm_client.llmclient",
+                        to="llmclient.llmclient",
                     ),
                 ),
                 (

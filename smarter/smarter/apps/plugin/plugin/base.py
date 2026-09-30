@@ -4,7 +4,6 @@
 # python stuff
 import copy
 import datetime
-import logging
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property
@@ -56,7 +55,7 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -1607,12 +1606,14 @@ class PluginBase(ABC, AccountMixin):
         transaction.on_commit(committed)
         return True
 
-    def clone(self, new_name: Optional[str] = None):
+    def clone(self, new_name: Optional[str] = None, user_profile: Optional[UserProfile] = None):
         """
         Clone a plugin.
 
         :param new_name: The new name for the cloned plugin. If None, a name will be generated.
         :type new_name: Optional[str]
+        :param user_profile: The owner of the cloned plugin. If None, the clone has the same owner as the plugin.
+        :type user_profile: Optional[UserProfile]
         :return: The id of the cloned plugin if successful, False otherwise.
         :rtype: Optional[int]
         :raises SmarterPluginError: If the plugin is not ready.
@@ -1651,6 +1652,8 @@ class PluginBase(ABC, AccountMixin):
             if isinstance(plugin_meta_copy, PluginMeta):
                 plugin_meta_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
                 plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
+                if user_profile is not None:
+                    plugin_meta_copy.user_profile = user_profile
                 plugin_meta_copy.save()
                 if isinstance(self.plugin_meta, PluginMeta):
                     plugin_meta_copy.tags.set(self.plugin_meta.tags.all())
@@ -1674,7 +1677,12 @@ class PluginBase(ABC, AccountMixin):
 
             plugin_data_copy = copy.deepcopy(self.plugin_data)
             if isinstance(plugin_data_copy, self.plugin_data_class) and isinstance(plugin_meta_copy, PluginMeta):
+                # plugin data models use multi-table inheritance, so the pk is the
+                # parent link rather than id. both must be cleared, otherwise save()
+                # updates the original record and re-assigns it to the new plugin_meta.
+                plugin_data_copy.pk = None
                 plugin_data_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_data_copy._state.adding = True  # pylint: disable=protected-access
                 plugin_data_copy.plugin = plugin_meta_copy
                 plugin_data_copy.save()
 
@@ -1723,6 +1731,56 @@ class PluginBase(ABC, AccountMixin):
                 )
             retval["enum"] = enum
         return retval
+
+    @classmethod
+    def parameters_to_manifest(
+        cls, parameters: Optional[Union[dict[str, Any], list[dict[str, Any]]]]
+    ) -> Optional[list[dict[str, Any]]]:
+        """
+        Convert plugin parameters from the OpenAI function calling schema, as stored in the.
+
+        Django ORM, back to the list of parameters used in a plugin manifest.
+
+        This is the inverse of the recasting performed by ``plugin_data_django_model``
+        in the SqlPlugin and ApiPlugin subclasses.
+
+        :param parameters: The parameters in OpenAI function calling schema. A list is assumed to already be in manifest format.
+        :type parameters: Optional[Union[dict[str, Any], list[dict[str, Any]]]]
+        :return: A list of manifest parameters, or ``None`` if there are no parameters.
+        :rtype: Optional[list[dict[str, Any]]]
+
+        **Example:**
+
+        .. code-block:: python
+
+            PluginBase.parameters_to_manifest(
+                {
+                    "type": "object",
+                    "properties": {
+                        "unit": {"type": "string", "description": "The unit.", "enum": ["Celsius", "Fahrenheit"]}
+                    },
+                    "required": ["unit"],
+                    "additionalProperties": False,
+                }
+            )
+            # [{"name": "unit", "type": "string", "description": "The unit.", "required": True, "default": None, "enum": ["Celsius", "Fahrenheit"]}]
+        """
+        if not parameters:
+            return None
+        if isinstance(parameters, list):
+            return parameters
+        required = set(parameters.get("required") or [])
+        return [
+            cls.parameter_factory(
+                name=name,
+                data_type=definition.get("type"),
+                description=definition.get("description", ""),
+                enum=definition.get("enum"),
+                required=name in required,
+                default=definition.get("default"),
+            )
+            for name, definition in (parameters.get("properties") or {}).items()
+        ]
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
@@ -1803,6 +1861,15 @@ class PluginBase(ABC, AccountMixin):
                         else None
                     ),
                     "updated": (
+                        self.plugin_meta.updated_at.isoformat()
+                        if self.plugin_meta
+                        and self.plugin_meta.updated_at
+                        and isinstance(self.plugin_meta.updated_at, datetime.datetime)
+                        else None
+                    ),
+                    # required by SAMPluginCommonStatus
+                    "recordLocator": self.plugin_meta.record_locator if self.plugin_meta else None,
+                    "modified": (
                         self.plugin_meta.updated_at.isoformat()
                         if self.plugin_meta
                         and self.plugin_meta.updated_at

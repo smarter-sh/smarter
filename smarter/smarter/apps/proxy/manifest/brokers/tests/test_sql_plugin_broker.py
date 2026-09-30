@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMSqlPluginBroker."""
 
-import logging
 import os
 from typing import List
 
@@ -19,7 +18,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
 from smarter.apps.plugin.models import PluginDataSql
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )

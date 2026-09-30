@@ -78,16 +78,40 @@ class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
-class DocsExampleManifestChatView(DocsExampleManifestBaseView):
+class DocsExampleManifestPromptView(DocsExampleManifestBaseView):
     """Prompt JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROMPT)
+
+
+class DocsExampleManifestGuardrailView(DocsExampleManifestBaseView):
+    """Guardrail JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.GUARDRAIL)
 
 
 class DocsExampleManifestLLMClientView(DocsExampleManifestBaseView):
     """LLMClient JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.LLM_CLIENT)
+
+
+class DocsExampleManifestLLMHostView(DocsExampleManifestBaseView):
+    """LLMHost JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST)
+
+
+class DocsExampleManifestMCPClientView(DocsExampleManifestBaseView):
+    """MCPClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.MCP_CLIENT)
+
+
+class DocsExampleManifestOrchestratorView(DocsExampleManifestBaseView):
+    """Orchestrator JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.ORCHESTRATOR)
 
 
 class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
@@ -100,6 +124,21 @@ class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):
     """SqlConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
+
+
+class DocsExampleManifestSkillView(DocsExampleManifestBaseView):
+    """Plugin Skill JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
+
+
+class DocsExampleManifestWebsearchView(DocsExampleManifestBaseView):
+    """Plugin Websearch example manifest view.
+
+    Experimental.
+    """
+
+    kind = SAMKinds(SAMKinds.WEBSEARCH_PLUGIN)
 
 
 class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
@@ -124,6 +163,12 @@ class DocsExampleManifestProviderView(DocsExampleManifestBaseView):
     """Provider JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROVIDER)
+
+
+class DocsExampleManifestVectorsearchView(DocsExampleManifestBaseView):
+    """Vectorsearch JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSEARCH)
 
 
 class DocsExampleManifestVectorstoreView(DocsExampleManifestBaseView):

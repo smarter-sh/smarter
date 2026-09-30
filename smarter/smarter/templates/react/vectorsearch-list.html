@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_vectorsearch_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the vectorsearch list
+  see: smarter.apps.vectorsearch.templatetags.react_vectorsearch_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% vectorsearch_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/vectorsearch-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ vectorsearch_list.root_id }}"
+    django-csrf-cookie-name="{{ vectorsearch_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ vectorsearch_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ vectorsearch_list.cookie_domain }}"
+    smarter-vectorsearch-list-api-url="{{ vectorsearch_list.vectorsearch_list_api_url }}"
+    react-debug-mode="{{ vectorsearch_list.react_debug_mode }}"
+    smarter-request-id="{{ vectorsearch_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the vectorsearch list
+  see: smarter.apps.vectorsearch_list.templatetags.react_vectorsearch_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% vectorsearch_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/vectorsearch-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

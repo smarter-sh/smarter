@@ -1,0 +1,86 @@
+"""Test Api v1 CLI non-brokered prompt command."""
+
+from http import HTTPStatus
+from urllib.parse import urlencode
+
+from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.apps.llmclient.models import LLMClient
+from smarter.common.api import SmarterApiVersions
+from smarter.lib.django.shortcuts import reverse
+from smarter.lib.journal.enum import (
+    SCLIResponseMetadata,
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+    SmarterJournalThings,
+)
+
+
+class TestApiCliV1Chat(ApiV1CliTestBase):
+    """
+    Test Api v1 CLI non-brokered prompt command.
+
+    This class is a subclass of ApiV1TestBase, which gives us access to the
+    setUpClass and tearDownClass methods, which are used to uniformly
+    create and delete a user, account, user_profile and token record for
+    testing purposes. ApiV1CliTestBase gives us access to the abstract methods
+    that we need to implement in order to test the Api v1 CLI commands for
+    Account.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.kwargs = {"name": self.name}
+
+        self.query_params = urlencode({"uid": self.uid})
+
+        self.llmclient = self.llmclient_factory()
+
+    def tearDown(self):
+        if self.llmclient:
+            self.llmclient.delete()
+        super().tearDown()
+
+    def llmclient_factory(self):
+        llmclient = LLMClient.objects.create(
+            name=self.name,
+            user_profile=self.user_profile,
+            description="Test LLMClient",
+            version="1.0.0",
+            subdomain=None,
+            custom_domain=None,
+            deployed=False,
+            app_name="Smarter",
+            app_assistant="Smarty Pants",
+            app_welcome_message="Welcome to Smarter!",
+        )
+        return llmclient
+
+    def validate_response(self, response: dict) -> None:
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.PROMPT.value)
+        self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
+        self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
+
+    def validate_data(self, data: dict) -> None:
+        config_fields = [
+            "request",
+            "response",
+        ]
+        for field in config_fields:
+            assert field in data.keys(), f"{field} not found in data keys: {data.keys()}"
+
+    def test_chat(self) -> None:
+        """Test prompt command."""
+
+        data = {"prompt": "Hello, World!"}
+        path = reverse(self.namespace + ApiV1CliReverseViews.prompt, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params, data=data)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.validate_response(response)
+        data = response[SmarterJournalApiResponseKeys.DATA]
+        self.validate_data(data=data)
+        metadata = response[SmarterJournalApiResponseKeys.METADATA]
+        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.PROMPT.value

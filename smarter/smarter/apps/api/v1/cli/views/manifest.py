@@ -1,13 +1,12 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'example_manifest' view."""
 
-import logging
-
 from django.http import HttpResponseNotAllowed
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from smarter.common.const import SmarterHttpMethods
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

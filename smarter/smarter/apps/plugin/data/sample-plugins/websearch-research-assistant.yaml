@@ -1,0 +1,53 @@
+---
+# A WebsearchPlugin for general research: it searches the web with the Brave
+# Search API, reads the most relevant pages, and cites its sources. Low quality
+# websites are blocked, so that they are neither returned nor read.
+#
+# Prerequisite: a Smarter Secret named brave_search_api_key, containing a Brave
+# Search API key from https://brave.com/search/api/
+#
+# Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: research_assistant
+  pluginClass: websearch
+  description: Researches any topic on the open web, reads the most relevant pages, and cites its sources.
+  version: 0.1.0
+  tags:
+    - websearch
+    - research
+  annotations:
+    - smarter.sh/research-assistant/use-case: research
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - search the web
+      - look up
+      - research
+      - latest
+      - sources
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a careful research assistant. Search the web, read the most relevant
+      pages in full before answering, and cite the url of every source you use.
+    model: gpt-4o-mini
+    temperature: 0.2
+    maxTokens: 4096
+  websearchData:
+    search:
+      provider: brave
+      apiKey: brave_search_api_key
+      maxResults: 5
+      safeSearch: moderate
+    fetch:
+      maxCharacters: 20000
+      respectRobotsTxt: true
+    blockedDomains:
+      - pinterest.com
+      - quora.com
+    timeout: 15
+    cacheTtl: 900

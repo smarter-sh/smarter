@@ -4,7 +4,7 @@
  * Used to display a list of available vectorstores.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Vectorestore, VectorestoreListViewProps, VectorestoreCardViewProps } from "@/lib/Types";
@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "Vectorstores";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-vectorstore.html";
+  const helpText = "Vectorstores provide a robust service layer for managing vector databases, abstracting the complexities of provisioning, deleting, and interacting with various vector store backends.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="vectorstore-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={vectorstoreTabbedListViewContext} />
       </section>
     </>

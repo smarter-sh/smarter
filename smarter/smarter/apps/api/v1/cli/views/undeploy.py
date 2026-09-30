@@ -1,10 +1,11 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'undeploy' view"""
+"""Smarter API command-line interface 'undeploy' view."""
 
-import logging
 from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
+
+from smarter.lib import logging
 
 from .base import CliBaseApiView
 from .swagger import (
@@ -32,7 +33,8 @@ class ApiV1CliUndeployApiView(CliBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name

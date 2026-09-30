@@ -1,7 +1,5 @@
 """Command to create the Stackademy AI resources."""
 
-import logging
-
 from django.core.management import CommandError
 
 from smarter.apps.account.models import Account
@@ -11,6 +9,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.api.utils import apply_manifest_v2
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)
@@ -24,14 +23,14 @@ class Command(SmarterCommand):
     This command is used to create the Stackademy AI resources
     used for training and testing. It creates the following:
 
-    Sql-based llm_client
+    Sql-based llmclient
     --------------------
     - Secret for SqlConnection
     - SqlConnection
     - Stackademy SqlPlugin
     - LLMClient using the Stackademy SqlPlugin
 
-    Api-based llm_client
+    Api-based llmclient
     --------------------
     - Secret for ApiConnection
     - ApiConnection
@@ -58,7 +57,10 @@ class Command(SmarterCommand):
             logger.error("%s - account number is required.", logger_prefix)
             self.handle_completed_failure(msg="account number is required.")
             return
-        account = Account.get_cached_object(invalidate=False, account_number=account_number)
+        try:
+            account = Account.get_cached_object(invalidate=False, account_number=account_number)
+        except Account.DoesNotExist:
+            account = None
         if not account:
             logger.error("%s - Account with account number %s does not exist.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
@@ -90,7 +92,7 @@ class Command(SmarterCommand):
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-db.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml",
             ]
             for file_path in sql_file_paths:
                 apply(file_path)
@@ -102,7 +104,7 @@ class Command(SmarterCommand):
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-llm_client-api.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-llmclient-api.yaml",
             ]
             for file_path in api_file_paths:
                 apply(file_path)

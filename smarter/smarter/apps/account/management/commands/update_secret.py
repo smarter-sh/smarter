@@ -6,20 +6,20 @@ It allows administrators or users to update the encrypted value for a named Secr
 associated with a user's profile.
 
 Features
---------
+---------
 - Updates or sets a new encrypted value for an existing Secret belonging to a user.
 - Associates the Secret to the specified user or the current user if not explicitly provided.
 - If the value is not passed as an argument, it prompts securely for one at runtime.
 - Provides command-line feedback for errors such as missing users, user profiles, or secrets.
 
 Command-line Options
--------------------
+---------------------
 - ``--name``: The name of the Smarter Secret to update (required).
 - ``--username``: The username associated with the Secret. If not provided, will attempt to use the current user.
 - ``--value``: The value to encrypt and store. If not provided, you will be securely prompted for it.
 
 Typical Usage
--------------
+--------------
 Used by administrators or trusted users via ``manage.py update_secret`` to update account secrets,
 such as API keys, credentials, or private tokens.
 """

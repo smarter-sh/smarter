@@ -17,10 +17,10 @@ that comply with RFC 1034. It includes:
     from smarter.common.utils import rfc1034_compliant_str, rfc1034_compliant_to_snake
 
     label = rfc1034_compliant_str("My_LLMClient_2025")
-    print(label)  # Output: my-llm_client-2025
+    print(label)  # Output: my-llmclient-2025
 
     snake = rfc1034_compliant_to_snake(label)
-    print(snake)  # Output: my_llm_client_2025
+    print(snake)  # Output: my_llmclient_2025
 """
 
 import re
@@ -68,14 +68,14 @@ def rfc1034_compliant_str(val) -> str:
         from smarter.common.utils import rfc1034_compliant_str
 
         # Basic usage
-        print(rfc1034_compliant_str("My_LLMClient_2025"))  # Output: my-llm_client-2025
+        print(rfc1034_compliant_str("My_LLMClient_2025"))  # Output: my-llmclient-2025
 
         # With special characters
         print(rfc1034_compliant_str("My@Bot!_Name"))  # Output: my-bot-name
 
         # With long input
         long_name = "ThisIsAReallyLongLLMClientNameThatShouldBeTruncatedToSixtyThreeCharacters_Extra"
-        print(rfc1034_compliant_str(long_name))  # Output: thisisareallylongllm_clientnamethatshouldbetruncatedtosixtythreecharacters
+        print(rfc1034_compliant_str(long_name))  # Output: thisisareallylongllmclientnamethatshouldbetruncatedtosixtythreecharacters
     """
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
@@ -121,8 +121,8 @@ def rfc1034_compliant_to_snake(val) -> str:
         from smarter.common.utils import rfc1034_compliant_to_snake
 
         # Basic conversion
-        print(rfc1034_compliant_to_snake("my-llm_client-2025"))
-        # Output: my_llm_client_2025
+        print(rfc1034_compliant_to_snake("my-llmclient-2025"))
+        # Output: my_llmclient_2025
 
         # Input with no hyphens
         print(rfc1034_compliant_to_snake("simplelabel"))

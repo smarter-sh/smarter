@@ -1,12 +1,12 @@
 """Celery tasks for the vectorstore app."""
 
-import logging
 import os
 
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper, user_id_context
@@ -32,9 +32,9 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 @app.task(
     bind=True,
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def embed_and_load_pdf(self) -> bool:
     """Celery task to load pdf documents into a vectorstore."""

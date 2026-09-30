@@ -36,7 +36,7 @@
       "created_at": "2026-06-19T20:06:44.809930Z",
       "updated_at": "2026-06-19T20:06:44.935235Z",
       "name": "weather",
-      "description": "an llm_client that predicts the weather.",
+      "description": "an llmclient that predicts the weather.",
       "version": "0.1.0",
       "deployed": false,
       "provider": "openai",
@@ -377,7 +377,7 @@
         "created_at": "2026-06-19T20:06:44.809930Z",
         "updated_at": "2026-06-19T20:06:44.935235Z",
         "name": "weather",
-        "description": "an llm_client that predicts the weather.",
+        "description": "an llmclient that predicts the weather.",
         "version": "0.1.0",
         "tags": [
           "talk_talk_talk",
@@ -486,7 +486,7 @@
       "url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/config/?session_key=25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca",
       "url_path_parts": [
         "workbench",
-        "llm_clients",
+        "llmclients",
         "r_mt_aw_md_aw_nwx",
         "config"
       ],

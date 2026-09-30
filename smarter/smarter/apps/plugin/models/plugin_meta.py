@@ -66,9 +66,11 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     objects: MetaDataWithOwnershipModelManager["PluginMeta"] = MetaDataWithOwnershipModelManager()
 
     PLUGIN_CLASSES = [
-        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
-        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
         (SAMPluginCommonMetadataClassValues.API.value, SAMPluginCommonMetadataClassValues.API.value),
+        (SAMPluginCommonMetadataClassValues.SKILL.value, SAMPluginCommonMetadataClassValues.SKILL.value),
+        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
+        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
+        (SAMPluginCommonMetadataClassValues.WEBSEARCH.value, SAMPluginCommonMetadataClassValues.WEBSEARCH.value),
     ]
     """The classes of plugins supported by Smarter."""
 
@@ -144,15 +146,19 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return SAMKinds.SQL_PLUGIN
         elif self.plugin_class == SAMPluginCommonMetadataClassValues.API.value:
             return SAMKinds.API_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.SKILL.value:
+            return SAMKinds.SKILL_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.WEBSEARCH.value:
+            return SAMKinds.WEBSEARCH_PLUGIN
         else:
             raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
 
     @property
     def rfc1034_compliant_kind(self) -> Optional[str]:
         """
-        Returns a URL-friendly kind for the llm_client.
+        Returns a URL-friendly kind for the llmclient.
 
-        This is a convenience property that returns an RFC 1034-compliant kind for the llm_client,
+        This is a convenience property that returns an RFC 1034-compliant kind for the llmclient,
         suitable for use in URLs and DNS labels.
 
         **Example:**

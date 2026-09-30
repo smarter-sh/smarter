@@ -35,16 +35,16 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
+    rev: 7.4.1
     hooks:
       - id: flake8
   - repo: https://github.com/PyCQA/isort
-    rev: 9.0.0b5
+    rev: 9.0.2
     hooks:
       - id: isort
         args: ["--settings-path=pyproject.toml"]
   - repo: https://github.com/PyCQA/autoflake
-    rev: v2.3.3
+    rev: v2.4.0
     hooks:
       - id: autoflake
         args: [--remove-all-unused-imports]
@@ -80,7 +80,7 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.26.0
+    rev: v9.27.0
     hooks:
       - id: commitlint
         stages: [commit-msg]

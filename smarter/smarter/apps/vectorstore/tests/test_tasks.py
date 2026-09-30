@@ -2,7 +2,7 @@
 """Test Vectorstore tasks."""
 
 # python stuff
-import logging
+from smarter.lib import logging
 
 from .test_base import VectorstoreTestBase
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestVectorstoreTasks(VectorstoreTestBase):
-    """Test Vectorstore tasks"""
+    """Test Vectorstore tasks."""
 
     def test_load_pdf(self):
         pass

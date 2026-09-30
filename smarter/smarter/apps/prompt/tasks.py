@@ -7,13 +7,12 @@ Celery workers in order to avoid blocking the main app thread. This is advance w
 future high-traffic scenarios.
 """
 
-import logging
-
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -37,9 +36,9 @@ module_prefix = "smarter.apps.prompt.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_prompt_history(prompt_id, request, response, messages):
     logger.debug("%s prompt_id: %s", formatted_text(module_prefix + "create_prompt_history()"), prompt_id)
@@ -55,36 +54,36 @@ def create_prompt_history(prompt_id, request, response, messages):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def aggregate_prompt_history():
-    """Summarize detail llm_client history into aggregate records."""
+    """Summarize detail llmclient history into aggregate records."""
     logger.debug("%s", formatted_text(module_prefix + "aggregate_prompt_history()"))
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_prompt(session_key, llm_client_id):
+def create_prompt(session_key, llmclient_id):
     """
     Create prompt record with flattened LLM response.
 
     DELETE THIS? IT IS NOT USED.
     """
-    llm_client = LLMClient.objects.get(id=llm_client_id)
-    Prompt.objects.create(session_key=session_key, llm_client=llm_client)
+    llmclient = LLMClient.objects.get(id=llmclient_id)
+    Prompt.objects.create(session_key=session_key, llmclient=llmclient)
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
     """Create prompt tool call history record."""
@@ -115,9 +114,9 @@ def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, fu
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_prompt_plugin_usage(*args, **kwargs):
     """Create plugin usage record."""

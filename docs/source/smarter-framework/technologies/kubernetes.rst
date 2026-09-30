@@ -62,7 +62,7 @@ Examples
 Links
 ~~~~~~~~~~~~
 
-- `Helm Chart Source <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`_
+- `Helm Chart Source <https://github.com/smarter-sh/smarter-helm>`_
 - `Published Chart on Artifact Hub <https://artifacthub.io/packages/helm/project-smarter/smarter>`_
 - `DockerHub Repository <https://hub.docker.com/r/mcdaniel0073/smarter>`_
 

@@ -4,7 +4,7 @@
  * Used to display a list of available proxies.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Proxy, ProxyListViewProps, ProxyCardViewProps } from "@/lib/Types";
@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "Proxies";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-provider.html";
+  const helpText = "Smarter Proxy is a built-in service that provides seamless access to third-party LLM API backends. Smarter Resources route their LLM calls through the proxy rather than connecting to a provider directly; the proxy forwards each request to the appropriate backend and returns the response, presenting a consistent interface regardless of which provider sits underneath.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="proxy-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={proxyTabbedListViewContext} />
       </section>
     </>

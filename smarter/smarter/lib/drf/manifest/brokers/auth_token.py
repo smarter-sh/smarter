@@ -229,14 +229,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMSmarterAuthToken]:
         """
-        SAMSmarterAuthToken() is a Pydantic model.
+        SAMSmarterAuthToken() is a Pydantic model that is used to represent the Smarter API.
 
-        that is used to represent the Smarter API SAMSmarterAuthToken manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
+        SAMSmarterAuthToken manifest.
+
+        The Pydantic model is initialized with the data from the manifest loader, which is
+        generally passed to the model constructor as ``**data``. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
         are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        passing ``**data`` to each child's constructor.
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMSmarterAuthToken):

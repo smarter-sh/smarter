@@ -1,10 +1,10 @@
-"""Test Manifest pages"""
+"""Test Manifest pages."""
 
-import logging
 from http import HTTPStatus
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 from .base_class import ApiV1CliTestBase
@@ -13,14 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class TestDocsManifests(ApiV1CliTestBase):
-    """
-    Test Manifest pages
-    """
+    """Test Manifest pages."""
 
     base_path = "/api/v1/cli/schema/"
 
     def test_json_schemas(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
         i = 0
         for kind in SAMKinds.singular_slugs():
             i += 1

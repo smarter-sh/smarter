@@ -12,8 +12,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 from smarter.lib.celery_conf import APP as app
 
 app.conf.beat_schedule = {
-    "aggregate-llm_client-history": {
-        "task": "smarter.apps.llm_client.tasks.aggregate_llm_client_history",
+    "aggregate-llmclient-history": {
+        "task": "smarter.apps.llmclient.tasks.aggregate_llmclient_history",
         "schedule": timedelta(hours=12),
         "options": {"queue": "beat_tasks"},
     },
@@ -24,6 +24,16 @@ app.conf.beat_schedule = {
     },
     "aggregate-charges": {
         "task": "smarter.apps.account.tasks.aggregate_records",
+        "schedule": timedelta(hours=1),
+        "options": {"queue": "beat_tasks"},
+    },
+    "purge-guardrail-events": {
+        "task": "smarter.apps.guardrail.tasks.purge_guardrail_events",
+        "schedule": timedelta(days=1),
+        "options": {"queue": "beat_tasks"},
+    },
+    "refresh-mcpclients": {
+        "task": "smarter.apps.mcpclient.tasks.refresh_mcpclients",
         "schedule": timedelta(hours=1),
         "options": {"queue": "beat_tasks"},
     },

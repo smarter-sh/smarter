@@ -1,10 +1,11 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'deploy' view."""
 
-import logging
 from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
+
+from smarter.lib import logging
 
 from .base import CliBaseApiView
 from .swagger import (

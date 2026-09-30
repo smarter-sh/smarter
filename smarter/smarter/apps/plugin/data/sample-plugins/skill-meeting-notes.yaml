@@ -1,0 +1,82 @@
+---
+# A SkillPlugin whose SKILL.md is pasted verbatim into spec.skillData.skill,
+# along with a bundled template in spec.skillData.resources.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: meeting_notes
+  pluginClass: skill
+  description: Turns raw meeting transcripts into structured notes with decisions and action items.
+  version: 0.1.0
+  tags:
+    - productivity
+    - meetings
+  annotations:
+    - smarter.sh/meeting-notes/use-case: productivity
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - meeting notes
+      - meeting transcript
+      - action items
+      - minutes
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant that produces clear, accurate meeting notes.
+    model: gpt-4o-mini
+    temperature: 0.2
+    maxTokens: 2048
+  skillData:
+    skill: |
+      ---
+      name: meeting-notes
+      description: Turns raw meeting transcripts or rough notes into structured meeting notes with a summary, decisions, action items and open questions. Use when the user shares a meeting transcript, recording summary or rough notes and asks for notes, minutes, a recap or action items.
+      ---
+
+      # Meeting notes
+
+      ## Instructions
+
+      1. Read the entire transcript before writing anything.
+      2. Identify the attendees, the date, and the purpose of the meeting. If any of
+         these are missing, write "Not stated" rather than guessing.
+      3. Fill in [the notes template](assets/template.md), section by section.
+      4. Every action item must have an owner and, if one was stated, a due date.
+         Never invent an owner. Use "Unassigned" instead.
+      5. Quote decisions as closely to the attendees' own words as possible.
+
+      ## Guidelines
+
+      - Be concise. The summary is at most three sentences.
+      - Attribute statements to people only when the transcript makes the speaker clear.
+      - Omit small talk, and anything said off the record.
+
+      ## Example
+
+      **Input:** "Priya: let's ship Friday. Tom: I'll update the release notes by Thursday."
+
+      **Output:**
+
+      - Decision: ship on Friday.
+      - Action item: Tom updates the release notes (due Thursday).
+    resources:
+      assets/template.md: |
+        # {Meeting title}
+
+        **Date:** {date}  **Attendees:** {attendees}
+
+        ## Summary
+        {At most three sentences.}
+
+        ## Decisions
+        - {decision}
+
+        ## Action items
+        | Owner | Action | Due |
+        | ----- | ------ | --- |
+        | {owner} | {action} | {due date} |
+
+        ## Open questions
+        - {question}

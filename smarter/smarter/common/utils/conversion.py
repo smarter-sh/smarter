@@ -115,9 +115,7 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             if isinstance(value, dict) and is_recursive:
                 value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif isinstance(value, list) and is_recursive:
-                value = [
-                    to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive) for item in value
-                ]
+                value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif convert_values and isinstance(value, str):
                 value = _convert_snake_to_camel(value)
             retval[key] = value
@@ -206,9 +204,7 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             if isinstance(value, dict) and is_recursive:
                 value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif isinstance(value, list) and is_recursive:
-                value = [
-                    to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive) for item in value
-                ]
+                value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif convert_values and isinstance(value, str):
                 value = _convert_camel_to_snake(value)
             retval[key] = value
@@ -234,8 +230,8 @@ def search_replace(
     Notes:
         - This function will recursively search through nested dictionaries and lists within the input dictionary.
         - Only string keys and string values will be checked for replacements. Non-string types will be left unchanged.
-        - This is particularly useful for handling legacy datauration formats where certain keys or values need to be updated for compatibility reasons, such as replacing 'chatbot' with 'llm_client' in prompt datauration dictionaries to maintain
-    ·     compatibility with older versions of the React app that expect 'chatbot' instead of 'llm_client'.
+        - This is particularly useful for handling legacy datauration formats where certain keys or values need to be updated for compatibility reasons, such as replacing 'chatbot' with 'llmclient' in prompt datauration dictionaries to maintain
+    ·     compatibility with older versions of the React app that expect 'chatbot' instead of 'llmclient'.
     """
     if isinstance(data, dict):
         retval = {}

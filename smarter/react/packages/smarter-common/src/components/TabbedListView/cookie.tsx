@@ -16,30 +16,30 @@ export const getUrlPath = (url: string): string => {
 };
 
 /**
- * Sets a cookie to store the llm_client count for a given URL.
+ * Sets a cookie to store the llmclient count for a given URL.
  *
- * @param url - The unique identifier for the llm_client group.
- * @param llm_clientCount - The number of llm_clients to store.
+ * @param url - The unique identifier for the llmclient group.
+ * @param llmclientCount - The number of llmclients to store.
  * @param days - Number of days until the cookie expires.
  */
-export const setCookieForUrl = (url: string, llm_clientCount: number, days: number) => {
+export const setCookieForUrl = (url: string, llmclientCount: number, days: number) => {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const expires = new Date(Date.now() + days * MS_PER_DAY).toUTCString();
   const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;
-  const cookieValue = `${cookieName}=${llm_clientCount}; path=/; expires=${expires};`;
+  const cookieValue = `${cookieName}=${llmclientCount}; path=/; expires=${expires};`;
   try {
     document.cookie = cookieValue;
     console.debug(loggerPrefix, `setCookieForUrl(): ${cookieValue}`);
   } catch (e) {
-    console.warn(loggerPrefix, "setCookieForUrl(): Unable to set llm_client count cookie", e);
+    console.warn(loggerPrefix, "setCookieForUrl(): Unable to set llmclient count cookie", e);
   }
 };
 
 /**
- * Retrieves the llm_client count stored in a cookie for a given URL.
+ * Retrieves the llmclient count stored in a cookie for a given URL.
  *
- * @param url - The unique identifier for the llm_client group.
- * @returns The number of llm_clients stored in the cookie, or undefined if not found or invalid.
+ * @param url - The unique identifier for the llmclient group.
+ * @returns The number of llmclients stored in the cookie, or undefined if not found or invalid.
  */
 export const getCookieForUrl = (url: string): number | undefined => {
   const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;

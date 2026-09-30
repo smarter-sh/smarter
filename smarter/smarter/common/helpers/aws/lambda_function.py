@@ -1,6 +1,6 @@
 """AWS Lambda helper class."""
 
-import logging
+from smarter.lib import logging
 
 from .aws import AWSBase
 from .exceptions import AWSNotReadyError

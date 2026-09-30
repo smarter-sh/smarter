@@ -1,0 +1,43 @@
+---
+# A WebsearchPlugin for unit testing, which searches the web with the Brave
+# Search API, reads web pages, and blocks one domain. The unit tests create the
+# Secret test_brave_api_key, and serve the web from a FakeWebHost.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: test_websearch_plugin_broker
+  pluginClass: websearch
+  description: Researches any topic on the web, for unit testing.
+  version: 0.1.0
+  tags:
+    - websearch
+    - test
+  annotations:
+    - smarter.sh/websearch-test/purpose: unit testing
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - search the web
+      - look up
+  prompt:
+    provider: openai
+    systemRole: You are a research assistant for unit testing the WebsearchPlugin.
+    model: gpt-4o-mini
+    temperature: 0.0
+    maxTokens: 256
+  websearchData:
+    search:
+      provider: brave
+      apiKey: test_brave_api_key
+      maxResults: 3
+      safeSearch: moderate
+      country: us
+      language: en
+    fetch:
+      maxCharacters: 2000
+      respectRobotsTxt: true
+    blockedDomains:
+      - blocked.example
+    timeout: 10
+    cacheTtl: 900

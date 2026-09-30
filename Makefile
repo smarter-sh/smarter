@@ -166,24 +166,25 @@ docker-init:
 	@echo "==============================================================================="
 	make docker-check && \
 	docker-compose up -d && \
-	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec smarter-sqldb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
+	docker exec smarter-sqldb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec -i smarter-sqldb mariadb -u root -psmarter < scripts/smarter_test_db.sql && \
 	docker exec smarter-app bash -c "\
 		python manage.py reset_cache && \
 		python manage.py makemigrations && python manage.py migrate && \
 		python manage.py initialize_platform && \
 		python manage.py add_plugin_examples && \
 		python manage.py create_stackademy && \
-		python manage.py deploy_builtin_llm_clients && \
-		python manage.py deploy_example_llm_client" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.llm_client_llmclient SET deployed = 0;'
+		python manage.py deploy_builtin_llmclients && \
+		python manage.py deploy_example_llmclient" && \
+	docker exec smarter-sqldb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
+	docker exec smarter-sqldb mariadb -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
 	@echo "Docker and Smarter are initialized."
 	docker ps
 
 
 docker-shell:
 	make docker-check && \
-	docker exec -it smarter-app /bin/bash
 
 # An abbreviated build to improve developer workflow efficiency by skipping
 # static asset collection (including by not building the React frontend components)
@@ -213,7 +214,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.lib"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.api.v1.cli.views.nonbrokered.tests.test_resources"
 
 docker-prune:
 	@echo ""
@@ -225,7 +226,7 @@ docker-prune:
 	docker-compose down && \
 	docker builder prune -a -f && \
 	docker image prune -a -f
-	rm -rf ./mysql-data && \
+	rm -rf ./mariadb-data && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
 	docker system prune -a --volumes && \
 	docker volume prune -f && \
@@ -287,7 +288,8 @@ python-init:
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
-	$(PIP) install pip==25.3 setuptools wheel pip-tools && \
+	$(PIP) install --upgrade pip && \
+	$(PIP) install setuptools wheel pip-tools && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:
@@ -315,10 +317,11 @@ python-requirements:
 	@echo "==============================================================================="
 	@echo "Compiling and updating Python dependency files using pip-compile ..."
 	@echo "==============================================================================="
-	pip install pip==25.3 setuptools wheel pip-tools
+	pip install --upgrade setuptools wheel "pip-tools>=7.6.1"
 	pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+	pip-compile smarter/requirements/in/docs.in -o smarter/requirements/docs.txt --no-strip-extras
 
 
 # ---------------------------------------------------------
@@ -372,7 +375,7 @@ sphinx-linkcheck:
 
 sphinx-publish:
 	cd docs/build/html && \
-	aws s3 sync . s3://docs.smarter.sh/ --delete && \
+	aws s3 sync . s3://docs.smarter.sh/ --delete --acl public-read && \
 	aws cloudfront create-invalidation --distribution-id E3J3PFZATCQOFX --paths "/*"
 
 ######################

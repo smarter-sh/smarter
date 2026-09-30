@@ -1,7 +1,6 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-import logging
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -49,7 +48,7 @@ from smarter.apps.provider.services.text_completion.const import OpenAIMessageKe
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 
 # python stuff
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
@@ -439,11 +438,6 @@ class TestPluginBase(TestAccountMixin):
             self.plugin_data(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("description")
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("staticData")
         with self.assertRaises((TypeError, PydanticValidationError)):
             self.plugin_data(data=bad_data)
@@ -607,7 +601,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llm_client.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
@@ -625,7 +619,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llm_client.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

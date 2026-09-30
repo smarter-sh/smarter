@@ -1,0 +1,32 @@
+---
+# An MCPClient for the mcpclient app's tests. Its MCP server is the in-process
+# test server of ../base_classes.py, so endpointUrl is never contacted.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: test_mcpclient
+  description: An MCPClient for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+    - mcpclient
+  annotations:
+    - smarter.sh/mcpclient/test/purpose: unit testing
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.example.com/mcp
+    headers:
+      X-Client-Id: smarter-tests
+    timeout: 10
+    authType: none
+    allowedTools:
+      - echo
+      - add_*
+      - fail
+    allowedResources:
+      - docs://test/*
+    includeInstructions: true
+    cacheTtl: 300
+    isActive: true
+    priority: 10

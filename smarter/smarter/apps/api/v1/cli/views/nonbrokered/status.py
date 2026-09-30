@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'apply' view."""
 
-import logging
 import platform
 import traceback
 from http import HTTPStatus
@@ -13,6 +12,7 @@ from django_redis import get_redis_connection
 
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib import logging
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -80,7 +80,9 @@ class ApiV1CliStatusApiView(CliBaseApiView):
                 SmarterJournalApiResponseKeys.DATA: {
                     "infrastructures": {
                         "kubernetes": aws_helper.eks.get_kubernetes_info(),
-                        "mysql": aws_helper.rds.get_mysql_info(),
+                        # mcdaniel: remote mysql is not part of the platform. this
+                        # should not be here.
+                        # "mysql": aws_helper.rds.get_mysql_info(),
                         "redis": self.get_redis_info(),
                     },
                     "compute": {
@@ -110,6 +112,6 @@ class ApiV1CliStatusApiView(CliBaseApiView):
             )
 
     def post(self, request):
-        """Get method for PluginManifestView."""
+        """ApiV1CliStatusApiView post view."""
         response = self.status()
         return response

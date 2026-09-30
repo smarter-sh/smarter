@@ -1,9 +1,8 @@
 """Models for the vectorstore app."""
 
-import logging
-
 from django.db import models
 
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches

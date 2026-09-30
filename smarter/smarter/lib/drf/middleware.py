@@ -21,10 +21,7 @@ Features
 
 Classes
 -------
-.. autosummary::
-   :toctree:
-
-   SmarterTokenAuthenticationMiddleware
+- :class:`SmarterTokenAuthenticationMiddleware`
 
 Signals
 -------
