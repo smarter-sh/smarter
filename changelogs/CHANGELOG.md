@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.16](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.15...v0.15.0-alpha.16) (2026-09-30)
+
+### Features
+
+* **plugin:** add SkillPlugin for Agent Skills (SKILL.md), verbatim or sourced from GitHub ([6acf1aa](https://github.com/smarter-sh/smarter/commit/6acf1aa28163b8079d22045326901d7723fb9205))
+
 ## [0.15.0-alpha.15](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.14...v0.15.0-alpha.15) (2026-09-30)
 
 ### Bug Fixes
