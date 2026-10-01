@@ -4,9 +4,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@smarter/common && npm run build --workspaces --exclude=@smarter/common"
+    "build": "npm run build --workspace=@smarter/common && npm run build --workspaces --if-present"
   },
   "dependencies": {
-    "recharts": "^3.9.1"
+    "recharts": "^3.10.1"
   }
 }

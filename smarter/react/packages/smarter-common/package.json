@@ -29,28 +29,28 @@
     "react-dom": "^19"
   },
   "dependencies": {
-    "date-fns": "^4.2.1"
+    "date-fns": "^4.4.0"
   },
   "devDependencies": {
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "@eslint/js": "^10.0.1",
-    "@storybook/react": "^10.3.6",
-    "@types/node": "^24.12.4",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^10.2.1",
+    "@storybook/react": "^10.6.1",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.5.0",
+    "globals": "^17.13.0",
     "typescript": "~6.0.2",
-    "typescript-eslint": "^8.58.2",
-    "storybook": "^10.4.0",
-    "@chromatic-com/storybook": "^5.2.1",
-    "@storybook/addon-vitest": "^10.4.0",
-    "@storybook/addon-a11y": "^10.4.0",
-    "@storybook/addon-docs": "^10.4.0",
-    "@storybook/addon-onboarding": "^10.4.0",
-    "eslint-plugin-storybook": "^10.4.0",
-    "playwright": "^1.60.0"
+    "typescript-eslint": "^8.71.0",
+    "storybook": "^10.6.1",
+    "@chromatic-com/storybook": "^5.4.0",
+    "@storybook/addon-vitest": "^10.6.1",
+    "@storybook/addon-a11y": "^10.6.1",
+    "@storybook/addon-docs": "^10.6.1",
+    "@storybook/addon-onboarding": "^10.6.1",
+    "eslint-plugin-storybook": "^10.6.1",
+    "playwright": "^1.63.0"
   }
 }
