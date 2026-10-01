@@ -389,7 +389,7 @@ class Command(SmarterCommand):
             name=NAME,
             provider_configuration={
                 "description": "Meta AI provides a range of AI and machine learning services.",
-                "base_url": "https://metaai.com/api/",
+                "base_url": "https://api.llama.com/v1/",
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://ai.meta.com/",
@@ -459,7 +459,7 @@ class Command(SmarterCommand):
             name=NAME,
             provider_configuration={
                 "description": "TogetherAI provides advanced AI models and APIs.",
-                "base_url": "https://api.togai.com/v1/",
+                "base_url": "https://api.together.xyz/v1/",
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.together.ai/",

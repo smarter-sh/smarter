@@ -17,7 +17,7 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to Proxy,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
 export type ProxyTabbedViewContext = Omit<
@@ -42,9 +42,10 @@ interface AppProps {
 
 function App({ sessionContext }: AppProps) {
   const title = "Proxies";
-  const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-provider.html";
-  const helpText = "Smarter Proxy is a built-in service that provides seamless access to third-party LLM API backends. Smarter Resources route their LLM calls through the proxy rather than connecting to a provider directly; the proxy forwards each request to the appropriate backend and returns the response, presenting a consistent interface regardless of which provider sits underneath.";
+  const icon = "ki-data";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-proxy.html";
+  const helpText =
+    "A Proxy gives passthrough access to an LLM provider's API, e.g. OpenAI's or Anthropic's, with an API key that Smarter keeps as a Secret. Use the provider's own SDK, with the Proxy's URL as its base URL and a Smarter API key in place of the provider's: requests and responses pass through unchanged, the provider's API key is never exposed, and token usage is charged to your account.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="proxy-list">

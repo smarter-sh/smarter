@@ -5,7 +5,8 @@
  * It offers actions for opening, editing, cloning, renaming, and deleting a proxy, with modal dialogs for confirmation and error handling.
  *
  * Features:
- * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete proxy resources.
+ * - Action buttons for: Copy URL (the base URL for the provider's SDK), Edit (YAML manifest), Clone, Rename,
+ *   and Delete proxy resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
  * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
@@ -29,6 +30,7 @@ import type { SessionContext } from "@smarter/common";
 import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
+import { proxyUrl } from "@/lib/format";
 import type { Proxy } from "@/lib/Types";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
@@ -147,6 +149,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
   const [modal, setModal] = useState<{ type: ModalType; proxy: Proxy | null }>({ type: null, proxy: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [copied, setCopied] = useState<boolean>(false);
 
   const handleCloseModal = () => {
     setModal({ type: null, proxy: null });
@@ -184,17 +187,38 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
       });
   };
 
+  /** Copy the Proxy's URL, which callers use as the base URL of the provider's SDK, to the clipboard. */
+  const copyUrl = () => {
+    navigator.clipboard
+      .writeText(proxyUrl(proxy))
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((error) => {
+        console.error(loggerPrefix, "Error copying the proxy URL:", error);
+        setErrMessage(`Could not copy the URL to the clipboard: ${proxyUrl(proxy)}`);
+        setModal({ type: "error", proxy });
+      });
+  };
+
   return (
     <>
       <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
-        <a
-          href={proxy.manifestUrl}
+        <button
+          type="button"
           className="btn btn-icon btn-sm border"
-          title="Chat: Open the proxy workbench"
+          title={
+            proxy.url
+              ? `Copy URL: ${proxyUrl(proxy)}. Use it as the base URL of the provider's SDK, with a Smarter API key.`
+              : "The proxy endpoints are disabled. Set SMARTER_ENABLE_PROXY=true."
+          }
+          onClick={copyUrl}
+          disabled={!proxy.url}
           tabIndex={0}
         >
-          <i className="bi bi-chat-dots" />
-        </a>
+          <i className={copied ? "bi bi-clipboard-check text-success" : "bi bi-clipboard"} />
+        </button>
         <a
           href={proxy.manifestUrl}
           className="btn btn-icon btn-sm border"

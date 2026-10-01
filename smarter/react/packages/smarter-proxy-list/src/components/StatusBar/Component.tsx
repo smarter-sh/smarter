@@ -1,7 +1,7 @@
 /**
  *
- * StatusBar React component for displaying the status of a Proxy instance.
- * Shows readiness, deployment, authentication, DNS, TLS, subdomain, and custom domain status using icons and tooltips.
+ * StatusBar React component for displaying the state of a Proxy: whether it is active, whether
+ * it has an API key to send, and whether it restricts the paths that callers may use.
  *
  * Exports:
  *   - StatusBar: Functional component that takes a Proxy and renders its status indicators.
@@ -10,55 +10,46 @@
  *   <StatusBar proxy={proxy} />
  */
 import type { Proxy } from "@/lib/Types";
+import { formatAllowedPaths, formatApiKey } from "@/lib/format";
+
 interface StatusbarProps {
   proxy: Proxy;
 }
 
 export const StatusBar = ({ proxy }: StatusbarProps) => {
+  const restricted = proxy.allowedPaths?.length > 0;
   return (
     <div className="statusbar d-flex align-items-center gap-2">
-      {/* Ready */}
+      {/* Active */}
       <span
         className="status-icon"
-        title={proxy.ready ? "Ready: Proxy is ready to serve requests" : "Not ready: Proxy is initializing"}
+        title={proxy.isActive ? "Active: the Proxy forwards requests." : "Inactive: the Proxy refuses every request."}
       >
-        <i className={proxy.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
+        <i className={proxy.isActive ? "bi bi-check-circle text-success" : "bi bi-pause-circle text-secondary"} />
       </span>
-      {/* Deployed */}
-      <span className="status-icon" title="Deployed: Proxy is deployed">
-        <i className="bi bi-cloud-check" />
-      </span>
-      {/* Authentication Required */}
+      {/* API key */}
       <span
         className="status-icon"
-        title="Authentication required to access this proxy"
+        title={
+          proxy.apiKeySecretName
+            ? `API key: Secret ${formatApiKey(proxy)}, sent in ${proxy.authHeader}.`
+            : "No API key: set the Proxy's spec.apiKey, or its Provider's API key. Requests are refused."
+        }
       >
-        <i className="bi bi-lock" />
+        <i className={proxy.apiKeySecretName ? "bi bi-key text-success" : "bi bi-key text-danger"} />
       </span>
-      {/* DNS Verification */}
+      {/* Allowed paths */}
       <span
         className="status-icon"
-        title="DNS verified"
+        title={
+          restricted
+            ? `Allowed paths: ${proxy.allowedPaths.join(", ")}`
+            : "All paths are allowed: callers may use every endpoint of the provider's API with this API key."
+        }
       >
-        <i className="bi bi-globe" />
+        <i className={restricted ? "bi bi-shield-check text-info" : "bi bi-shield-exclamation text-warning"} />{" "}
+        <small>{formatAllowedPaths(proxy)}</small>
       </span>
-      {/* TLS Certificate */}
-      <span
-        className="status-icon"
-        title="TLS certificate issued"
-      >
-        <i
-          className="bi bi-shield-lock"
-        />
-      </span>
-      {/* Subdomain */}
-        <span className="status-icon" title={"Subdomain: example.com"}>
-          <i className="bi bi-link-45deg text-info" />
-        </span>
-      {/* Custom Domain */}
-        <span className="status-icon" title={"Custom domain: example.com"}>
-          <i className="bi bi-link text-info" />
-        </span>
     </div>
   );
 };

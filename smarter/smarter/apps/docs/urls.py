@@ -32,6 +32,7 @@ from .views.json_schema import (
     DocsJsonSchemaPluginView,
     DocsJsonSchemaPromptView,
     DocsJsonSchemaProviderView,
+    DocsJsonSchemaProxyView,
     DocsJsonSchemaSecretView,
     DocsJsonSchemaSkillView,
     DocsJsonSchemaSqlConnectionView,
@@ -55,6 +56,7 @@ from .views.manifest import (
     DocsExampleManifestPluginView,
     DocsExampleManifestPromptView,
     DocsExampleManifestProviderView,
+    DocsExampleManifestProxyView,
     DocsExampleManifestSecretView,
     DocsExampleManifestSkillView,
     DocsExampleManifestSqlConnectionView,
@@ -159,6 +161,11 @@ urlpatterns = [
         json_schema_path(SAMKinds.PROVIDER.value),
         DocsJsonSchemaProviderView.as_view(),
         name=json_schema_name(SAMKinds.PROVIDER.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.PROXY.value),
+        DocsJsonSchemaProxyView.as_view(),
+        name=json_schema_name(SAMKinds.PROXY.value),
     ),
     path(
         json_schema_path(SAMKinds.SECRET.value),
@@ -267,6 +274,11 @@ urlpatterns = [
         manifest_path(SAMKinds.PROVIDER.value),
         DocsExampleManifestProviderView.as_view(),
         name=manifest_name(SAMKinds.PROVIDER.value),
+    ),
+    path(
+        manifest_path(SAMKinds.PROXY.value),
+        DocsExampleManifestProxyView.as_view(),
+        name=manifest_name(SAMKinds.PROXY.value),
     ),
     path(
         manifest_path(SAMKinds.SECRET.value),

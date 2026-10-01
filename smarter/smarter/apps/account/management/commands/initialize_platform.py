@@ -43,7 +43,7 @@ class Command(SmarterCommand):
         4. Load example projects from GitHub.
         5. Add plugin examples.
         6. Deploy example llmclients.
-        7. Initialize providers.
+        7. Initialize providers, and the built-in Proxies of their APIs.
         8. Create StackAcademy SQL and API llmclients.
         9. Apply manifests and update secrets for database connections.
         """
@@ -127,6 +127,12 @@ class Command(SmarterCommand):
             call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
         except Exception as e:
             logger.error("Failed to initialize providers: %s", e)
+
+        try:
+            # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
+            call_command("add_builtin_proxies")
+        except Exception as e:
+            logger.error("Failed to initialize Proxies: %s", e)
 
         try:
             call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
