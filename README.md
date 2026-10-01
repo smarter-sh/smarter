@@ -195,7 +195,7 @@ Kubernetes, on-site in your data center or in the cloud.
 **Smarter** is cost effective when running at scale. It is extensible and
 architected on the philosophy of a compact core that does not require
 customization nor forking. It is horizontally scalable. It is natively
-multi-tenant, and can be installed alongside your existing systems. ## Quickstart
+multi-tenant, and can be installed alongside your existing systems.
 
 ## Helm Chart
 

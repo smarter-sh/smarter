@@ -15,7 +15,7 @@ description: >
   Open source with public documentation and rapid self-onboarding.
 type: application
 version: 9999.9999.9999.dev9999
-kubeVersion: ">=1.28.0-0"
+kubeVersion: ">=1.30.0-0"
 home: https://smarter.sh
 sources:
   - https://github.com/smarter-sh/smarter
@@ -29,7 +29,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 7.0.0
+    version: 7.3.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
@@ -37,7 +37,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 26.1.7
+    version: 28.1.1
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
@@ -45,7 +45,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 27.0.13
+    version: 28.3.1
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://cdn.smarter.sh/images/logo/smarter-crop.png
