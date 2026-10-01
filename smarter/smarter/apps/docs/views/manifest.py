@@ -108,6 +108,12 @@ class DocsExampleManifestLLMHostComputeView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.LLM_HOST_COMPUTE)
 
 
+class DocsExampleManifestProxyView(DocsExampleManifestBaseView):
+    """Proxy example manifest view."""
+
+    kind = SAMKinds(SAMKinds.PROXY)
+
+
 class DocsExampleManifestMCPClientView(DocsExampleManifestBaseView):
     """MCPClient JSON Schema view."""
 

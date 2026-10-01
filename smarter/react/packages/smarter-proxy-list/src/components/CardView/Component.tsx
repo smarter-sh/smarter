@@ -6,8 +6,8 @@
  *
  * Features:
  * - Displays proxy details in a visually distinct card format.
- * - Integrates action buttons for open, edit, clone, rename, and delete operations.
- * - Uses modal dialogs for clone, rename, and delete workflows (scaffolded for further logic).
+ * - Integrates action buttons for copy URL, edit, clone, rename, and delete operations.
+ * - Shows the Proxy's URL, which callers use as the base URL of the provider's SDK.
  * - Supports a custom detail row renderer for flexible display of proxy attributes.
  * - Accepts a custom CSS class for layout control.
  *
@@ -27,6 +27,7 @@ import { loggerPrefix } from "@/lib/const";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
+import { formatApiKey, formatAuth, proxyUrl } from "@/lib/format";
 
 import "./styles.css";
 
@@ -53,10 +54,17 @@ function CardView({ sessionContext, objects, onRequery }: ProxyCardViewProps) {
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", proxy.id, "number")}
-                    {renderDetailRow("Manifest URL", proxy.manifestUrl, "url")}
+                    {renderDetailRow("URL", proxyUrl(proxy), "string", "Use it as the base URL of the provider's SDK, with a Smarter API key.")}
+                    {renderDetailRow("Provider", proxy.providerName)}
+                    {renderDetailRow("Provider API", proxy.upstreamUrl, "string")}
+                    {renderDetailRow("API Key Secret", formatApiKey(proxy))}
+                    {renderDetailRow("Auth Header", formatAuth(proxy))}
+                    {renderDetailRow("Headers", Object.keys(proxy.headers || {}).length ? proxy.headers : null, "json")}
+                    {renderDetailRow("Allowed Paths", proxy.allowedPaths?.length ? proxy.allowedPaths : "All paths", "str[]")}
+                    {renderDetailRow("Timeout", `${proxy.timeout} seconds`)}
+                    {renderDetailRow("Active", proxy.isActive, "bool")}
+                    {renderDetailRow("Manifest", proxy.manifestUrl, "url")}
                     {renderDetailRow("Owner", proxy.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", proxy.userProfile?.user?.email)}
                     {renderDetailRow("Account Number", proxy.userProfile?.account?.accountNumber)}
                     {renderDetailRow("Created", proxy.createdAt, "dateTime")}
                     {renderDetailRow("Last Updated", proxy.updatedAt, "dateTime")}

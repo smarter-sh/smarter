@@ -1,0 +1,66 @@
+---
+# Provider responses, as the providers document them, for the usage tests.
+openai_chat_completion:
+  id: chatcmpl-123
+  object: chat.completion
+  model: gpt-4o-mini
+  choices:
+    - index: 0
+      message:
+        role: assistant
+        content: Hello!
+      finish_reason: stop
+  usage:
+    prompt_tokens: 12
+    completion_tokens: 3
+    total_tokens: 15
+openai_responses:
+  id: resp_123
+  object: response
+  output_text: Hello!
+  usage:
+    input_tokens: 20
+    output_tokens: 5
+    total_tokens: 25
+anthropic_message:
+  id: msg_123
+  type: message
+  role: assistant
+  content:
+    - type: text
+      text: Hello!
+  usage:
+    input_tokens: 10
+    cache_read_input_tokens: 4
+    output_tokens: 7
+gemini_generate_content:
+  candidates:
+    - content:
+        parts:
+          - text: Hello!
+  usageMetadata:
+    promptTokenCount: 8
+    candidatesTokenCount: 2
+    thoughtsTokenCount: 3
+    totalTokenCount: 13
+cohere_v1_chat:
+  text: Hello!
+  meta:
+    billed_units:
+      input_tokens: 6
+      output_tokens: 4
+cohere_v2_chat:
+  message:
+    role: assistant
+    content:
+      - type: text
+        text: Hello!
+  usage:
+    billed_units:
+      input_tokens: 9
+      output_tokens: 1
+models_list:
+  object: list
+  data:
+    - id: gpt-4o-mini
+      object: model

@@ -48,6 +48,7 @@ from smarter.apps.plugin.manifest.brokers.websearch_plugin import (
 )
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+from smarter.apps.proxy.manifest.brokers.proxy import SAMProxyBroker
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.vectorsearch.manifest.brokers.vectorsearch import (
     SAMVectorsearchBroker,
@@ -121,6 +122,7 @@ class Brokers:
         SAMKinds.MCP_CLIENT.value: SAMMCPClientBroker,
         SAMKinds.PROMPT.value: SAMPromptBroker,
         SAMKinds.PROVIDER.value: SAMProviderBroker,
+        SAMKinds.PROXY.value: SAMProxyBroker,
         SAMKinds.ORCHESTRATOR.value: SAMOrchestratorBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
         SAMKinds.SKILL_PLUGIN.value: SAMSkillPluginBroker,

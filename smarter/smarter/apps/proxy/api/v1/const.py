@@ -1,3 +1,3 @@
-"""Constants for the plugin API v1."""
+"""Constants for the Proxy API v1."""
 
 namespace = "v1"

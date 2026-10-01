@@ -15,14 +15,14 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING])
 
 
 class ProxyListView(SmarterAuthenticatedNeverCachedWebView):
     """
     Render the proxy list view for the Smarter Workbench web console.
 
-    This view displays all proxies available to the authenticated user as cards, providing a quick overview and access to proxy details.
+    This view renders the React app, @smarter/proxy-list, which lists the Proxies that the user may use, in a table or as cards.
 
     :param request: Django HTTP request object.
     :type request: ASGIRequest
@@ -31,7 +31,7 @@ class ProxyListView(SmarterAuthenticatedNeverCachedWebView):
     :param kwargs: Additional keyword arguments.
     :type kwargs: dict
 
-    :returns: Rendered HTML page with a card for each proxy, or a 404 error page if the user is not authenticated.
+    :returns: The rendered page.
     :rtype: HttpResponse
     """
 

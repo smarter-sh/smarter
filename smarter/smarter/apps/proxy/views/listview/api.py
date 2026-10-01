@@ -29,24 +29,21 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 DEFAULT_PAGE_SIZE = 25
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING])
 
 
 class ProxyListApiView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Render the proxy list view for the Smarter Workbench web console.
+    The JSON API of the web console's Proxy list view.
 
-    This view displays all proxies available to the authenticated user as cards, providing a quick overview and access to proxy details.
+    Returns a page of the Proxies that the user owns, that are shared with them, or both,
+    according to ``ownership_filter``: ``owned``, ``shared`` or ``all``.
 
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
+    Query parameters: ``page``, ``page_size`` and ``invalidate_cache``.
 
-    :returns: Rendered HTML page with a card for each proxy, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
+    :returns: ``{"user": ..., "admin": ..., "objects": [...]}``, where objects are serialized by
+        :class:`~smarter.apps.proxy.serializers.ProxySerializer`.
+    :rtype: JsonResponse
     """
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
@@ -57,7 +54,7 @@ class ProxyListApiView(SmarterAuthenticatedNeverCachedWebView):
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
 
         logger.debug(
-            "%s.get() Rendering proxy list view for user %s with args=%s, kwargs=%s.",
+            "%s.post() Rendering proxy list view for user %s with args=%s, kwargs=%s.",
             self.formatted_class_name,
             request.user.username if request.user else "None",  # type: ignore[union-attr]
             args,
@@ -107,7 +104,7 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         Validates input
         parameters, checks for the existence of the Proxy to be cloned, and
         creates a new Proxy with the specified name. Invalidates the cache
-        for the user's LLMClients after cloning.
+        for the user's Proxies after cloning.
 
         :param request: The HTTP request object containing the parameters for cloning.
         :type request: HttpRequest

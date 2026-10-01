@@ -1,0 +1,30 @@
+---
+# Passthrough access to the Fireworks AI inference API, which is OpenAI-compatible, with the
+# platform's API key. Use the OpenAI SDK, with this Proxy's URL as its base_url.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: fireworks
+  description: Passthrough access to the Fireworks AI API's OpenAI-compatible chat completions, completions, embeddings and models.
+  version: 1.0.0
+  tags:
+    - fireworks
+    - openai-compatible
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://docs.fireworks.ai/api-reference/introduction
+spec:
+  provider: fireworks
+  apiKey: fireworks_api_key
+  baseUrl: https://api.fireworks.ai/inference/v1/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - chat/completions
+    - completions
+    - embeddings
+    - models
+  timeout: 120
+  isActive: true

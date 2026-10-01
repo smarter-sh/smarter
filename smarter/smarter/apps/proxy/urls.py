@@ -1,4 +1,9 @@
-"""URL configuration for proxy app."""
+"""
+URL configuration for the proxy app's web console pages.
+
+These are mounted at ``/proxy/``. The Proxy passthrough itself is at ``/api/v1/proxy/``: see
+:mod:`smarter.apps.proxy.api.v1.urls`.
+"""
 
 from django.urls import path, re_path
 
@@ -26,7 +31,6 @@ class ProxyReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(ProxyListApiView.__name__)
     detailview = to_snake_case(ProxyDetailView.__name__)
 
     listview = to_snake_case(ProxyListView.__name__)
@@ -46,19 +50,19 @@ urlpatterns = [
         name=ProxyReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:proxy_id>/<str:new_name>/",
         ProxyListApiCloneView.as_view(),
         name=ProxyReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llmclient_id>/",
+        "react-integration/api/delete/<int:proxy_id>/",
         ProxyListApiDeleteView.as_view(),
         name=ProxyReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:proxy_id>/<str:new_name>/",
         ProxyListApiRenameView.as_view(),
         name=ProxyReverseNames.listview_api_rename,
     ),
-    path("secrets/<str:hashed_id>/", ProxyDetailView.as_view(), name=ProxyReverseNames.detailview),
+    path("proxies/<str:hashed_id>/", ProxyDetailView.as_view(), name=ProxyReverseNames.detailview),
 ]

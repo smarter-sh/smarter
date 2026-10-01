@@ -3,22 +3,22 @@
  *
  * Renders a responsive, table-based list of proxy resources with key details and actions.
  * Features:
- * - Displays proxy information in a styled table with columns for name, dates, provider, model, proxies, status, and actions.
- * - Integrates Toolbar for per-proxy actions (open, edit, clone, rename, delete).
- * - Formats dates and status using shared utilities.
+ * - Displays proxy information in a styled table with columns for name, provider, the provider's API host,
+ *   the API key's Secret, status, and actions.
+ * - Integrates Toolbar for per-proxy actions (copy URL, edit, clone, rename, delete).
  * - Shows skeleton (ghost) rows while loading, and supports incremental rendering for large lists.
  *
  * Props:
  * @param isLoading - Whether the proxy data is loading (shows skeleton rows if true).
  * @param ghostRows - Number of skeleton rows to display while loading.
  * @param sessionContext - Authentication and API context for actions.
- * @param proxies - Array of proxy objects to display.
+ * @param objects - Array of proxy objects to display.
  * @param onRequery - Callback to refresh proxy data.
  *
  * Usage:
  * <ListView
  *   sessionContext={sessionContext}
- *   proxies={proxies}
+ *   objects={proxies}
  *   isLoading={isLoading}
  *   ghostRows={ghostRows}
  *   onRequery={onRequery}
@@ -28,13 +28,14 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, Loading } from "@smarter/common";
+import { Loading } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import type { Proxy, ProxyListViewProps } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/lib/const";
+import { formatApiKey, upstreamHost } from "@/lib/format";
 
 import "./styles.css";
 
@@ -57,28 +58,14 @@ const TableHeader = () => {
     <thead className="table-light border-bottom-2">
       <tr className="">
         <th className=" p-1">Name</th>
-        <th className="d-none d-lg-table-cell width-100">Created</th>
-        <th className="d-none d-lg-table-cell width-100">Updated</th>
-        <th className="">Description</th>
+        <th className="">Provider</th>
+        <th className="d-none d-lg-table-cell">Provider API</th>
+        <th className="d-none d-lg-table-cell">API Key</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
       </tr>
     </thead>
   );
-};
-
-
-/**
- * CreatedDate and UpdatedDate
- *
- * Format a row's creation date, and its last update relative to its creation.
- */
-const CreatedDate = ({ date }: { date: string }) => {
-  return <span>{formatDateTime(date, "date")}</span>;
-};
-
-const UpdatedDate = ({ date, createdAt }: { date: string; createdAt: string }) => {
-  return <span>{formatDateTime(date, "relative", createdAt)}</span>;
 };
 
 /**
@@ -103,18 +90,18 @@ const ProxyRow = React.memo(function ProxyRow({
     <tr className="" key={proxy.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={proxy.manifestUrl}>{proxy.name}</a>
+        <a href={proxy.manifestUrl} title={proxy.description}>
+          {proxy.name}
+        </a>
       </td>
-      {/* Created Date */}
-      <td className="d-none d-lg-table-cell width-100">
-        <CreatedDate date={proxy.createdAt} />
+      {/* Provider */}
+      <td className="">{proxy.providerName}</td>
+      {/* Provider API */}
+      <td className="d-none d-lg-table-cell" title={proxy.upstreamUrl}>
+        {upstreamHost(proxy)}
       </td>
-      {/* Updated Date */}
-      <td className="d-none d-lg-table-cell width-100">
-        <UpdatedDate date={proxy.updatedAt} createdAt={proxy.createdAt} />
-      </td>
-      {/* Description */}
-      <td className="">{proxy.description}</td>
+      {/* API Key */}
+      <td className="d-none d-lg-table-cell">{formatApiKey(proxy)}</td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">
         <StatusBar proxy={proxy} />
@@ -131,7 +118,7 @@ const ProxyRow = React.memo(function ProxyRow({
  * ProxyRowGhost
  *
  * A skeleton row component to display while proxy data is loading.
- * It mimics the structure of a regular ProxyRow but with placeholder content.
+ * It has the same columns as ProxyRow, with placeholder content.
  */
 const ProxyRowGhost = React.memo(function ProxyRowGhost() {
   console.debug(`${loggerPrefix} Rendering ProxyRowGhost`);
@@ -141,18 +128,14 @@ const ProxyRowGhost = React.memo(function ProxyRowGhost() {
       <td className="p-1 m-0">
         <Loading />
       </td>
-      {/* Created Date */}
-      <td className="d-none d-lg-table-cell width-100">
+      {/* Provider */}
+      <td className="">
         <LoadingText />
       </td>
-      {/* Updated Date */}
-      <td className="d-none d-lg-table-cell width-100"></td>
-      {/* Kind */}
-      <td className=""></td>
-      {/* Description */}
-      <td className="min-width-150"></td>
-      {/* Selector */}
-      <td className="d-none d-xl-table-cell"></td>
+      {/* Provider API */}
+      <td className="d-none d-lg-table-cell"></td>
+      {/* API Key */}
+      <td className="d-none d-lg-table-cell"></td>
       {/* Status */}
       <td className="d-none d-md-table-cell "></td>
       {/* Actions */}
@@ -231,7 +214,7 @@ function ChunkedRows({
  * @param isLoading - Whether the proxy data is loading (shows skeleton rows if true).
  * @param ghostRows - Number of skeleton rows to display while loading.
  * @param sessionContext - Authentication and API context for actions.
- * @param proxies - Array of proxy objects to display.
+ * @param objects - Array of proxy objects to display.
  * @param onRequery - Callback to refresh proxy data.
  */
 export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: ProxyListViewProps) {

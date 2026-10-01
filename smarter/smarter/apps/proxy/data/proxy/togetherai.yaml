@@ -1,0 +1,30 @@
+---
+# Passthrough access to the Together AI API, which is OpenAI-compatible, with the platform's API
+# key. Use the Together or OpenAI SDK, with this Proxy's URL as its base_url.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: togetherai
+  description: Passthrough access to the Together AI API's OpenAI-compatible chat completions, completions, embeddings and models.
+  version: 1.0.0
+  tags:
+    - together
+    - openai-compatible
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://docs.together.ai/reference/chat-completions-1
+spec:
+  provider: togetherai
+  apiKey: togetherai_api_key
+  baseUrl: https://api.together.xyz/v1/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - chat/completions
+    - completions
+    - embeddings
+    - models
+  timeout: 120
+  isActive: true

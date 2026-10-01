@@ -134,10 +134,12 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         # raised by the default token authentication
         smarter_auth_token = SmarterAuthToken.objects.get(token_key=auth_token.token_key)
         if not smarter_auth_token.is_active:
+            error = AuthenticationFailed("Api key is not activated.")
             smarter_token_authentication_failure.send(
                 sender=self.__class__,
                 user=user,
                 token=masked_token,
+                error=error,
             )
             logger.warning(
                 "%s.authenticate_credentials() - token is not active for user %s, token: %s",
@@ -145,7 +147,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 user,
                 masked_token,
             )
-            raise AuthenticationFailed("Api key is not activated.")
+            raise error
 
         # update the last used time for the token
         smarter_auth_token.last_used_at = timezone.now()

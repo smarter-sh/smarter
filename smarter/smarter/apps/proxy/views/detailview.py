@@ -11,8 +11,6 @@ import yaml
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
@@ -38,7 +36,7 @@ class ProxyDetailView(DocsBaseView):
     :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (proxy name) and 'kind' (proxy type).
+    :param kwargs: Keyword arguments, must include 'hashed_id', the Proxy's hashed id.
     :type kwargs: dict
 
     :returns: Rendered HTML page with proxy manifest details, or a 404 error page if the proxy is not found or parameters are invalid.
@@ -46,7 +44,8 @@ class ProxyDetailView(DocsBaseView):
 
     .. note::
 
-        The proxy name and kind must be provided and valid. Otherwise, a "not found" response is returned.
+        The user may view their own Proxies, their account's, and the built-in Proxies. Otherwise, a
+        "not found" response is returned.
 
     .. seealso::
 
@@ -55,7 +54,7 @@ class ProxyDetailView(DocsBaseView):
 
     **Example usage**::
 
-        GET /proxy/detail/?name=my_proxy&kind=custom
+        GET /proxy/proxies/<hashed_id>/
     """
 
     template_path = "common/manifest_detail.html"
@@ -100,50 +99,20 @@ class ProxyDetailView(DocsBaseView):
             logger.error("%s.get() - Invalid or missing hashed_id: %s", self.formatted_class_name, hashed_id)
             return SmarterHttpResponseNotFound(request=request, error_message="Proxy not found")
 
-        try:
-            self.proxy = Proxy.objects.get(id=pk_id, user_profile=self.user_profile)
-            logger.debug(
-                "%s.get() Found proxy with id %s for user %s.",
-                self.formatted_class_name,
-                pk_id,
-                self.user_profile.user.username if self.user_profile else "unknown user",
-            )
-        except Proxy.DoesNotExist:
-            try:
-                if self.user_profile:
-
-                    admin_user = UserProfile.admin_for_account(self.user_profile.account)
-                    admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.proxy = Proxy.objects.get(id=pk_id, user_profile=admin_user_profile)
-                    logger.debug(
-                        "%s.get() Found proxy with id %s for admin user %s.",
-                        self.formatted_class_name,
-                        pk_id,
-                        admin_user if admin_user else "unknown admin user",
-                    )
-            except Proxy.DoesNotExist:
-                try:
-                    self.proxy = Proxy.objects.get(
-                        id=pk_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
-                    )
-                    logger.debug(
-                        "%s.get() Found proxy with id %s for smarter admin user %s.",
-                        self.formatted_class_name,
-                        pk_id,
-                        smarter_cached_objects.smarter_admin_user_profile.user,
-                    )
-                except Proxy.DoesNotExist:
-                    pass
+        # the user's own Proxies, their account's, and the built-in ones that the Smarter admin owns.
+        self.proxy = (
+            Proxy.objects.with_read_permission_for(request.user).filter(id=pk_id).first()  # type: ignore[attr-defined]
+        )
         if not self.proxy:
             logger.error(
-                "%s.get() - Proxy with id %s not found for user %s or admin users.",
+                "%s.get() - Proxy with id %s not found for user %s.",
                 self.formatted_class_name,
                 pk_id,
                 self.user_profile.user.username if self.user_profile else "unknown user",
             )
             return SmarterHttpResponseNotFound(request=request, error_message="Proxy not found")
 
-        self.kind = SAMKinds.SECRET
+        self.kind = SAMKinds.PROXY
 
         logger.debug(
             "%s.post() Rendering proxy detail view for %s, kwargs=%s.",

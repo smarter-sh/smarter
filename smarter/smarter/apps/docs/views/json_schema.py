@@ -90,6 +90,12 @@ class DocsJsonSchemaLLMHostComputeView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.LLM_HOST_COMPUTE)
 
 
+class DocsJsonSchemaProxyView(DocsJsonSchemaBaseView):
+    """Proxy JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.PROXY)
+
+
 class DocsJsonSchemaMCPClientView(DocsJsonSchemaBaseView):
     """MCPClient JSON Schema view."""
 
