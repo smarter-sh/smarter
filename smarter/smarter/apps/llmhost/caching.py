@@ -11,6 +11,8 @@ caching of LLMHost querysets. It includes utilities to:
 - Invalidate caches for owned, shared, and available LLMHosts
 - Invalidate all LLMHost-related caches for a user profile
 
+The same functions exist for LLMHostCompute, e.g. get_cached_llmhost_computes_owned_by_user_profile().
+
 Functions:
 
     - get_cached_llmhosts_owned_by_user_profile(user_profile)
@@ -37,8 +39,8 @@ from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .models import LLMHost
-from .serializers import LLMHostSerializer
+from .models import LLMHost, LLMHostCompute
+from .serializers import LLMHostComputeSerializer, LLMHostSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -207,3 +209,84 @@ def invalidate_all_cached_llmhosts_for_user_profile(user_profile: UserProfile) -
     invalidate_cached_llmhosts_owned_by_user_profile(user_profile=user_profile)
     invalidate_cached_llmhosts_shared_with_user_profile(user_profile=user_profile)
     invalidate_cached_llmhosts_available_to_user_profile(user_profile=user_profile)
+
+
+# ------------------------------------------------------------------------------
+# LLMHostCompute
+# ------------------------------------------------------------------------------
+
+
+@cache_results()
+def _get_cached_llmhost_computes_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[LLMHostCompute]:
+    user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
+    retval = LLMHostCompute.objects.owned_by(user_profile.user)  # type: ignore
+    logger.debug(
+        "%s.post() Fetching LLMHostComputes: %s",
+        logger_prefix,
+        logging.formatted_json(LLMHostComputeSerializer(retval, many=True).data),
+    )
+    return retval
+
+
+def get_cached_llmhost_computes_owned_by_user_profile(user_profile: UserProfile) -> models.QuerySet[LLMHostCompute]:
+    """Retrieve the LLMHostComputes owned by the given UserProfile, cached."""
+    return _get_cached_llmhost_computes_owned_by_user_profile(user_profile.id)  # type: ignore
+
+
+def invalidate_cached_llmhost_computes_owned_by_user_profile(user_profile: UserProfile) -> None:
+    _get_cached_llmhost_computes_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
+
+
+@cache_results()
+def _get_cached_llmhost_computes_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[LLMHostCompute]:
+    user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
+    retval = LLMHostCompute.objects.shared_with(user_profile.user)  # type: ignore
+    logger.debug(
+        "%s.post() Fetching LLMHostComputes: %s",
+        logger_prefix,
+        logging.formatted_json(LLMHostComputeSerializer(retval, many=True).data),
+    )
+    return retval
+
+
+def get_cached_llmhost_computes_shared_with_user_profile(user_profile: UserProfile) -> models.QuerySet[LLMHostCompute]:
+    """
+    Retrieve the LLMHostComputes shared with the given UserProfile, cached: e.g. the built-in.
+
+    ones, which the Smarter admin owns.
+    """
+    return _get_cached_llmhost_computes_shared_with_user_profile(user_profile.id)  # type: ignore
+
+
+def invalidate_cached_llmhost_computes_shared_with_user_profile(user_profile: UserProfile) -> None:
+    _get_cached_llmhost_computes_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
+
+
+@cache_results()
+def _get_cached_llmhost_computes_available_to_user_profile(user_profile_id) -> models.QuerySet[LLMHostCompute]:
+    user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
+    retval = LLMHostCompute.objects.with_read_permission_for(user_profile.user)  # type: ignore
+    logger.debug(
+        "%s.post() Fetching LLMHostComputes: %s",
+        logger_prefix,
+        logging.formatted_json(LLMHostComputeSerializer(retval, many=True).data),
+    )
+    return retval
+
+
+def get_cached_llmhost_computes_available_to_user_profile(
+    user_profile: UserProfile,
+) -> models.QuerySet[LLMHostCompute]:
+    """Retrieve the LLMHostComputes available to the given UserProfile, owned or shared, cached."""
+    return _get_cached_llmhost_computes_available_to_user_profile(user_profile.id)  # type: ignore
+
+
+def invalidate_cached_llmhost_computes_available_to_user_profile(user_profile: UserProfile) -> None:
+    _get_cached_llmhost_computes_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
+
+
+def invalidate_all_cached_llmhost_computes_for_user_profile(user_profile: UserProfile) -> None:
+    """Invalidate the owned, shared and available LLMHostCompute querysets of the given UserProfile."""
+    invalidate_cached_llmhost_computes_owned_by_user_profile(user_profile=user_profile)
+    invalidate_cached_llmhost_computes_shared_with_user_profile(user_profile=user_profile)
+    invalidate_cached_llmhost_computes_available_to_user_profile(user_profile=user_profile)

@@ -4,7 +4,7 @@ import { ResponsiveContainer, AreaChart, Area, Line, CartesianGrid, XAxis, YAxis
 import type { AreaSeries, LineSeries, TokenUsageChartProps, TokenUsageInterface } from "./types";
 import { loggerPrefix } from "@/const";
 
-export const areas: AreaSeries[] = [
+const areas: AreaSeries[] = [
   {
     key: "requestTokens",
     label: "Request",
@@ -17,7 +17,7 @@ export const areas: AreaSeries[] = [
   },
 ];
 
-export const lines: LineSeries[] = [
+const lines: LineSeries[] = [
   {
     key: "budgetTokens",
     label: "Limit",
@@ -55,13 +55,17 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
   const [tokenUsageData, setTokenUsageData] = useState<TokenUsageInterface[]>([]);
   const [periodicity, setPeriodicity] = useState("1_hour");
   const [errMessage, setErrMessage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
+  // loading until the first fetch completes, and again whenever the periodicity changes.
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handlePeriodicityChange = (value: string) => {
+    setPeriodicity(value);
+    setIsLoading(true);
+    setErrMessage("");
+  };
 
   useEffect(() => {
     const url = `${apiUrl}${encodeURIComponent(periodicity)}/`;
-
-    setIsLoading(true);
-    setErrMessage("");
 
     fetchDjangoUrl(sessionContext, url, JSON.stringify({}))
       .then((response) => {
@@ -95,7 +99,7 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
   return (
     <div>
       <div style={{ marginBottom: "1rem" }}>
-        <ChargesPeriodicityDropdown value={periodicity} onChange={setPeriodicity} />
+        <ChargesPeriodicityDropdown value={periodicity} onChange={handlePeriodicityChange} />
       </div>
 
       {errMessage && (

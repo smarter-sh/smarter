@@ -1,8 +1,4 @@
 
-export const ready_style = {
-  color: "inherit",
-  marginLeft: "10px",
-};
 
 export default function ReadyEmoji() {
 

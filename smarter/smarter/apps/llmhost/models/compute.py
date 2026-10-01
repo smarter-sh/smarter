@@ -86,6 +86,36 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
     def __str__(self) -> str:
         return f"{self.name}"
 
+    def clone(self, new_name=None, new_version=None, user_profile=None) -> "LLMHostCompute":
+        """
+        Clone the LLMHostCompute's spec, but not its node group: the clone is a new kind of node,.
+
+        whose node group Smarter creates when an LLMHost first needs one of its nodes.
+        """
+        clone = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)
+        clone.nodegroup_status = LLMHostComputeNodeGroupStatus.ABSENT
+        clone.desired_nodes = 0
+        clone.ready_nodes = 0
+        clone.status_message = ""
+        clone.last_reconciled_at = None
+        clone.save()
+        return clone  # type: ignore[return-value]
+
+    def rename(self, new_name: str) -> "LLMHostCompute":
+        """
+        Rename the LLMHostCompute.
+
+        Refused while its node group exists, whose name includes the
+        LLMHostCompute's, or while LLMHosts use it, whose spec.compute names it.
+
+        :raises ValueError: if it cannot be renamed.
+        """
+        if self.nodegroup_status != LLMHostComputeNodeGroupStatus.ABSENT:
+            raise ValueError(f"{self.name} cannot be renamed while its node group {self.nodegroup_name} exists.")
+        if self.pk and self.llmhosts.exists():  # type: ignore[attr-defined]
+            raise ValueError(f"{self.name} cannot be renamed while LLMHosts use it.")
+        return super().rename(new_name)  # type: ignore[return-value]
+
     @property
     def has_gpu(self) -> bool:
         return self.gpu_count > 0

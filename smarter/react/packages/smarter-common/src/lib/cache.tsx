@@ -10,9 +10,9 @@ import { packageName, packageVersion } from "./const";
 const CACHE_PREFIX = `${packageName}_v${packageVersion}_objects_v1`;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
-type CacheEntry = {
+type CacheEntry<T> = {
   ts: number;
-  objects: any[];
+  objects: T[];
 };
 
 /**
@@ -38,7 +38,7 @@ export const makeCacheKey = (apiUrl: string, slug: string) => {
  * @throws No exceptions are propagated. JSON parse errors, sessionStorage access
  * failures, and other runtime errors are caught and treated as a cache miss.
  */
-export const readCache = (key: string): any[] | null => {
+export const readCache = <T,>(key: string): T[] | null => {
   try {
     const raw = sessionStorage.getItem(key);
     if (!raw) {
@@ -46,7 +46,7 @@ export const readCache = (key: string): any[] | null => {
       return null;
     }
 
-    const parsed = JSON.parse(raw) as CacheEntry;
+    const parsed = JSON.parse(raw) as CacheEntry<T>;
     if (!parsed || typeof parsed.ts !== "number" || !Array.isArray(parsed.objects)) {
       console.debug(`${loggerPrefix} readCache() cache invalid for`, key);
       return null;
@@ -73,10 +73,10 @@ export const readCache = (key: string): any[] | null => {
  * @throws No exceptions are propagated. sessionStorage write failures (for
  * example quota exceeded or private mode restrictions) are caught and ignored.
  */
-export const writeCache = (key: string, objects: any[]) => {
+export const writeCache = <T,>(key: string, objects: T[]) => {
   try {
     console.debug(`${loggerPrefix} writeCache() writing sessionStorage cache for`, key, "with", objects.length, "objects");
-    const payload: CacheEntry = { ts: Date.now(), objects };
+    const payload: CacheEntry<T> = { ts: Date.now(), objects };
     sessionStorage.setItem(key, JSON.stringify(payload));
   } catch {
     // ignore quota/private-mode errors

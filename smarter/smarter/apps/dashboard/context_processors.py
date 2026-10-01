@@ -140,6 +140,7 @@ def sidebar_context() -> dict[str, Any]:
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
             ),
             "llmhost": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
+            "llmhostcompute": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview),
             "mcpclients": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
             "orchestrators": reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),

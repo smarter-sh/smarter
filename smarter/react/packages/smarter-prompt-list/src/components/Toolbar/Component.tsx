@@ -2,21 +2,25 @@
  * Toolbar React Component
  *
  * This component provides a toolbar for managing llmclient resources, used in both ListView and CardView displays.
- * It offers actions for opening, editing, cloning, renaming, and deleting an llmclient, with modal dialogs for confirmation and error handling.
+ * It offers actions for opening, editing, cloning, renaming, and deleting a llmclient, with modal dialogs for confirmation and error handling.
  *
  * Features:
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete llmclient resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - llmclient (LLMClient): The llmclient resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} llmclient={llmclient} />
+ * <Toolbar sessionContext={sessionContext} llmclient={llmclient} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each llmclient row or card in ListView and CardView.
  */
@@ -27,6 +31,110 @@ import { fetchDjangoUrl, Modal } from "@smarter/common";
 import { loggerPrefix } from "@/const";
 import type { LLMClient } from "@/lib/Types";
 
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  llmclient: LLMClient | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ llmclient, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone LLMClient" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone llmclient <strong>{llmclient?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned llmclient.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new llmclient name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ llmclient, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(llmclient?.name || "");
+  return (
+    <Modal show title="Rename LLMClient" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename llmclient <strong>{llmclient?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the llmclient.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new llmclient name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  llmclient,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  llmclient: LLMClient | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete LLMClient" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete llmclient <strong>{llmclient?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  llmclient,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  llmclient: LLMClient | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on llmclient <strong>{llmclient?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  llmclient,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  llmclient: LLMClient | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{llmclient?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
+
 interface ToolbarProps {
   sessionContext: SessionContext;
   llmclient: LLMClient;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    llmclient: LLMClient | null;
-  }>({ type: null, llmclient: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; llmclient: LLMClient | null }>({ type: null, llmclient: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,35 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
     onRequery();
   };
 
-  const handleCloneButtonClicked = (llmclient: LLMClient) => setModal({ type: "clone", llmclient });
-  const handleRenameButtonClicked = (llmclient: LLMClient) => setModal({ type: "rename", llmclient });
-  const handleDeleteButtonClicked = (llmclient: LLMClient) => setModal({ type: "delete", llmclient });
-
-  const handleError = (llmclient: LLMClient) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   *
+   * Unlike the other list apps, whose actions are siblings of the list endpoint (see actionUrl()
+   * in @smarter/common), the prompt app's actions are nested under it:
+   * /workbench/api/listview/clone/<id>/<new_name>/. See smarter.apps.prompt.urls.
+   */
+  const runAction = (target: LLMClient, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", llmclient });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone LLMClient"
-          onOk={() => handleCloneLLMClient(modal.llmclient!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone llmclient <strong>{modal.llmclient?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned llmclient.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new llmclient name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.llmclient?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename LLMClient"
-          onOk={() => handleRenameLLMClient(modal.llmclient!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename llmclient <strong>{modal.llmclient?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the llmclient.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new llmclient name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete LLMClient"
-          onOk={() => handleDeleteLLMClient(modal.llmclient!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete llmclient <strong>{modal.llmclient?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on llmclient <strong>{modal.llmclient?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.llmclient?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneLLMClient = async (llmclient: LLMClient, new_name: string) => {
-    // see: smarter.apps.prompt.urls for API urls
-    // path("api/clone/<int:llmclient_id>/<str:new_name>/", PromptListApiCloneView.as_view(), name=PromptReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + llmclient.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, sessionContext.ApiUrl + path, JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone llmclient (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone llmclient (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} llmclient (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: LLMClient) => {
-        console.debug(loggerPrefix, "Successfully cloned llmclient:", data);
-        setModal({ type: "confirmation", llmclient: data as LLMClient });
-        setSuccessMessage(`Successfully cloned llmclient`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d llmclient:`, data);
+        setSuccessMessage(`Successfully ${verb}d llmclient`);
+        // clone and rename return the resulting llmclient; delete returns a message.
+        setModal({ type: "confirmation", llmclient: data && data.id ? (data as LLMClient) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning llmclient:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} llmclient:`, error);
         setErrMessage(error.message);
-        handleError(llmclient);
+        setModal({ type: "error", llmclient: target });
       });
-    return true;
-  };
-
-  const handleRenameLLMClient = async (llmclient: LLMClient, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + llmclient.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename llmclient (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename llmclient (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: LLMClient) => {
-        console.debug(loggerPrefix, "Successfully renamed llmclient:", data);
-        setModal({ type: "confirmation", llmclient: data as LLMClient });
-        setSuccessMessage(`Successfully renamed llmclient`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming llmclient:", error);
-        setErrMessage(error.message);
-        handleError(llmclient);
-      });
-    return true;
-  };
-
-  const handleDeleteLLMClient = async (llmclient: LLMClient) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + llmclient.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete llmclient (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete llmclient (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted llmclient:", llmclient);
-        setModal({ type: "confirmation", llmclient });
-        setSuccessMessage(`Successfully deleted llmclient`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting llmclient:", error);
-        setErrMessage(error.message);
-        handleError(llmclient);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +210,7 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this llmclient resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(llmclient)}
+          onClick={() => setModal({ type: "clone", llmclient })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +219,7 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this llmclient resource"
-          onClick={() => handleRenameButtonClicked(llmclient)}
+          onClick={() => setModal({ type: "rename", llmclient })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +228,7 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this llmclient resource"
-          onClick={() => handleDeleteButtonClicked(llmclient)}
+          onClick={() => setModal({ type: "delete", llmclient })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +236,33 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            llmclient={modal.llmclient}
+            onOk={(newName) => runAction(modal.llmclient!, `clone/${modal.llmclient!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            llmclient={modal.llmclient}
+            onOk={(newName) => runAction(modal.llmclient!, `rename/${modal.llmclient!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          llmclient={modal.llmclient}
+          onOk={() => runAction(modal.llmclient!, `delete/${modal.llmclient!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} llmclient={modal.llmclient} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          llmclient={modal.llmclient}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete mcpclient resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - mcpclient (MCPClient): The mcpclient resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} mcpclient={mcpclient} />
+ * <Toolbar sessionContext={sessionContext} mcpclient={mcpclient} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each mcpclient row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { MCPClient } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  mcpclient: MCPClient | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ mcpclient, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone MCPClient" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone mcpclient <strong>{mcpclient?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned mcpclient.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new mcpclient name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ mcpclient, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(mcpclient?.name || "");
+  return (
+    <Modal show title="Rename MCPClient" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename mcpclient <strong>{mcpclient?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the mcpclient.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new mcpclient name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  mcpclient,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  mcpclient: MCPClient | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete MCPClient" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete mcpclient <strong>{mcpclient?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  mcpclient,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  mcpclient: MCPClient | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on mcpclient <strong>{mcpclient?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  mcpclient,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  mcpclient: MCPClient | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{mcpclient?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    mcpclient: MCPClient | null;
-  }>({ type: null, mcpclient: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; mcpclient: MCPClient | null }>({ type: null, mcpclient: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
     onRequery();
   };
 
-  const handleCloneButtonClicked = (mcpclient: MCPClient) => setModal({ type: "clone", mcpclient });
-  const handleRenameButtonClicked = (mcpclient: MCPClient) => setModal({ type: "rename", mcpclient });
-  const handleDeleteButtonClicked = (mcpclient: MCPClient) => setModal({ type: "delete", mcpclient });
-
-  const handleError = (mcpclient: MCPClient) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: MCPClient, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", mcpclient });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone MCPClient"
-          onOk={() => handleCloneMCPClient(modal.mcpclient!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone mcpclient <strong>{modal.mcpclient?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned mcpclient.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new mcpclient name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.mcpclient?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename MCPClient"
-          onOk={() => handleRenameMCPClient(modal.mcpclient!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename mcpclient <strong>{modal.mcpclient?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the mcpclient.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new mcpclient name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete MCPClient"
-          onOk={() => handleDeleteMCPClient(modal.mcpclient!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete mcpclient <strong>{modal.mcpclient?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on mcpclient <strong>{modal.mcpclient?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.mcpclient?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneMCPClient = async (mcpclient: MCPClient, new_name: string) => {
-    // see: smarter.apps.mcpclient.urls for API urls
-    // path("api/clone/<int:mcpclient_id>/<str:new_name>/", MCPClientListApiCloneView.as_view(), name=MCPClientReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + mcpclient.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone mcpclient (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone mcpclient (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} mcpclient (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: MCPClient) => {
-        console.debug(loggerPrefix, "Successfully cloned mcpclient:", data);
-        setModal({ type: "confirmation", mcpclient: data as MCPClient });
-        setSuccessMessage(`Successfully cloned mcpclient`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d mcpclient:`, data);
+        setSuccessMessage(`Successfully ${verb}d mcpclient`);
+        // clone and rename return the resulting mcpclient; delete returns a message.
+        setModal({ type: "confirmation", mcpclient: data && data.id ? (data as MCPClient) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning mcpclient:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} mcpclient:`, error);
         setErrMessage(error.message);
-        handleError(mcpclient);
+        setModal({ type: "error", mcpclient: target });
       });
-    return true;
-  };
-
-  const handleRenameMCPClient = async (mcpclient: MCPClient, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + mcpclient.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename mcpclient (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename mcpclient (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: MCPClient) => {
-        console.debug(loggerPrefix, "Successfully renamed mcpclient:", data);
-        setModal({ type: "confirmation", mcpclient: data as MCPClient });
-        setSuccessMessage(`Successfully renamed mcpclient`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming mcpclient:", error);
-        setErrMessage(error.message);
-        handleError(mcpclient);
-      });
-    return true;
-  };
-
-  const handleDeleteMCPClient = async (mcpclient: MCPClient) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + mcpclient.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete mcpclient (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete mcpclient (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted mcpclient:", mcpclient);
-        setModal({ type: "confirmation", mcpclient });
-        setSuccessMessage(`Successfully deleted mcpclient`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting mcpclient:", error);
-        setErrMessage(error.message);
-        handleError(mcpclient);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this mcpclient resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(mcpclient)}
+          onClick={() => setModal({ type: "clone", mcpclient })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this mcpclient resource"
-          onClick={() => handleRenameButtonClicked(mcpclient)}
+          onClick={() => setModal({ type: "rename", mcpclient })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this mcpclient resource"
-          onClick={() => handleDeleteButtonClicked(mcpclient)}
+          onClick={() => setModal({ type: "delete", mcpclient })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            mcpclient={modal.mcpclient}
+            onOk={(newName) => runAction(modal.mcpclient!, `clone/${modal.mcpclient!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            mcpclient={modal.mcpclient}
+            onOk={(newName) => runAction(modal.mcpclient!, `rename/${modal.mcpclient!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          mcpclient={modal.mcpclient}
+          onOk={() => runAction(modal.mcpclient!, `delete/${modal.mcpclient!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} mcpclient={modal.mcpclient} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          mcpclient={modal.mcpclient}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );
