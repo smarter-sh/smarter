@@ -9,7 +9,8 @@
  * - Optionally deploying built assets to S3 and invalidating CloudFront for production CDN usage.
  * - Proxying API and static asset requests to the Django development server during local development.
  * - Optimizing caching by bundling xterm.js separately from the main app code.
- * - Removing console.debug statements from production builds to avoid leaking sensitive info.
+ * - Removing console.debug statements from production builds via the Oxc minifier
+ *   to avoid leaking sensitive info.
  *
  * Usage:
  * - For development, run the Vite dev server. Static and API requests are proxied to Django.
@@ -99,12 +100,6 @@ const postBuildPlugin: PluginOption = {
  */
 export default defineConfig(({ command }: ConfigEnv) => ({
   plugins: [react(), postBuildPlugin, addCustomManifestData],
-  // We use esbuild to remove console.debug statements in production builds
-  // in order to avoid leaking potentially sensitive information in
-  // production environments.
-  esbuild: {
-    pure: ["console.debug"],
-  },
   // Builds are also saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
   // Django at runtime in local development environments. For development
@@ -120,7 +115,6 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     },
   },
   build: {
-    minify: "esbuild" as const,
     // ------------------------------------------------------------------------
     // The manifest is needed for hosting builds from Django (both dev and prod).
     // It is used by Django templatetags to determine the correct file names to include
@@ -144,7 +138,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     // to our application code, the xterm.js bundle can still be cached by the
     // browser and won't need to be re-downloaded.
     // ------------------------------------------------------------------------
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         entryFileNames: "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",
@@ -154,6 +148,17 @@ export default defineConfig(({ command }: ConfigEnv) => ({
             return "xterm";
           }
           return undefined;
+        },
+        // Vite 8 minifies with the Oxc minifier instead of esbuild, so esbuild's
+        // `pure` option no longer has any effect. This is the Oxc equivalent:
+        // mark console.debug() calls as side-effect-free so dead-code elimination
+        // strips them from production builds (avoids leaking sensitive info).
+        minify: {
+          compress: {
+            treeshake: {
+              manualPureFunctions: ["console.debug"],
+            },
+          },
         },
       },
     },

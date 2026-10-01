@@ -9,7 +9,8 @@
  * - Optionally deploying built assets to S3 and invalidating CloudFront for production CDN usage.
  * - Proxying API and static asset requests to the Django development server during local development.
  * - Optimizing caching by bundling xterm.js separately from the main app code.
- * - Removing console.debug statements from production builds to avoid leaking sensitive info.
+ * - Removing console.debug statements from production builds via the Oxc minifier
+ *   to avoid leaking sensitive info.
  *
  * Usage:
  * - For development, run the Vite dev server. Static and API requests are proxied to Django.
@@ -31,9 +32,9 @@ import packageJson from "./package.json" with { type: "json" };
 const packageName = packageJson.name;
 
 /**
- * Vite Secret: addCustomManifestData
+ * Vite Plugin: addCustomManifestData
  *
- * This secret injects custom metadata into the generated manifest.json file after each build.
+ * This plugin injects custom metadata into the generated manifest.json file after each build.
  * The metadata includes:
  *   - buildTime: ISO timestamp of the build
  *   - version: The version from package.json
@@ -61,13 +62,13 @@ const addCustomManifestData: PluginOption = {
 
 
 /**
- * Vite Secret: postBuildSecret
+ * Vite Plugin: postBuildPlugin
  *
- * After each build, this secret optionally uploads the built assets to S3 and triggers a CloudFront invalidation,
+ * After each build, this plugin optionally uploads the built assets to S3 and triggers a CloudFront invalidation,
  * ensuring the latest files are served in production. This workflow is enabled by the `cdnDeploy` flag in package.json
  * and allows Docker images to skip React build tools while supporting CDN-based static file serving.
  */
-const postBuildSecret: PluginOption = {
+const postBuildPlugin: PluginOption = {
   name: "post-build",
 
   closeBundle() {
@@ -88,23 +89,17 @@ const postBuildSecret: PluginOption = {
  * Main Vite Configuration Export
  *
  * This function exports the Vite configuration for the React app, dynamically adjusting
- * settings based on the build command (development or production). It sets up secrets, build output,
+ * settings based on the build command (development or production). It sets up plugins, build output,
  * asset handling, and development server proxying to integrate seamlessly with the Django backend.
  *
  * Key features:
- * - Uses custom secrets for manifest metadata and optional CDN deployment
+ * - Uses custom plugins for manifest metadata and optional CDN deployment
  * - Removes console.debug in production builds
  * - Outputs assets to Django's static directory for collectstatic
  * - Proxies API and static requests to Django during development
  */
 export default defineConfig(({ command }: ConfigEnv) => ({
-  secrets: [react(), postBuildSecret, addCustomManifestData],
-  // We use esbuild to remove console.debug statements in production builds
-  // in order to avoid leaking potentially sensitive information in
-  // production environments.
-  esbuild: {
-    pure: ["console.debug"],
-  },
+  plugins: [react(), postBuildPlugin, addCustomManifestData],
   // Builds are also saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
   // Django at runtime in local development environments. For development
@@ -120,7 +115,6 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     },
   },
   build: {
-    minify: "esbuild" as const,
     // ------------------------------------------------------------------------
     // The manifest is needed for hosting builds from Django (both dev and prod).
     // It is used by Django templatetags to determine the correct file names to include
@@ -144,7 +138,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     // to our application code, the xterm.js bundle can still be cached by the
     // browser and won't need to be re-downloaded.
     // ------------------------------------------------------------------------
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         entryFileNames: "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",
@@ -155,6 +149,17 @@ export default defineConfig(({ command }: ConfigEnv) => ({
           }
           return undefined;
         },
+        // Vite 8 minifies with the Oxc minifier instead of esbuild, so esbuild's
+        // `pure` option no longer has any effect. This is the Oxc equivalent:
+        // mark console.debug() calls as side-effect-free so dead-code elimination
+        // strips them from production builds (avoids leaking sensitive info).
+        minify: {
+          compress: {
+            treeshake: {
+              manualPureFunctions: ["console.debug"],
+            },
+          },
+        },
       },
     },
   },
@@ -163,11 +168,11 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   // so that these requests are served from the Django dev server instead
   // of the React dev server.
   //
-  // Most of these cases stem from <link> elements added to index.html
+  // Most of these cases stem from <link> elements added to this index.html
   // containing platform-wide stylesheets and scripts that originate from
   // and are served by the Django dev server. These are added to index.html
-  // in order to keep this React dev environment consistent with the Django
-  // runtime environment.
+  // in order to keep this React dev environment as close to the runtime
+  // environment as possible.
   server: {
     proxy: {
       "/api": "http://localhost:9357",
@@ -192,7 +197,6 @@ export default defineConfig(({ command }: ConfigEnv) => ({
         changeOrigin: true,
       },
       "/workbench/": "http://localhost:9357",
-      "/secret/": "http://localhost:9357",
     },
   },
 }));
