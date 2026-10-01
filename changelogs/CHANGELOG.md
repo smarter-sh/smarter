@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.1...v0.16.0-alpha.2) (2026-10-01)
+
+### Features
+
+* **proxy:** pass requests through to LLM provider APIs, with API keys kept as Smarter Secrets ([07a4220](https://github.com/smarter-sh/smarter/commit/07a42204cdfb8e48f51cdaa92b873f6a7efcb619))
+
 ## [0.16.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.15.1...v0.16.0-alpha.1) (2026-10-01)
 
 ### Features
