@@ -621,6 +621,53 @@ class Settings(BaseSettings):
 
         return v
 
+    llmhost_node_role_arn: Optional[str] = Field(
+        settings_defaults.LLMHOST_NODE_ROLE_ARN,
+        description="The IAM role of the node groups that Smarter creates for LLMHosts.",
+        examples=["arn:aws:iam::123456789012:role/eks-node-role"],
+        title="LLMHost Node Role ARN",
+    )
+    """
+    The IAM role of the EKS managed node groups that Smarter creates for LLMHostCompute.
+
+    If it is not set, Smarter uses the node role of the cluster's first managed node group
+    that it did not create, i.e. the node group that Smarter itself runs on.
+
+    :type: Optional[str]
+    :default: Value from ``settings_defaults.LLMHOST_NODE_ROLE_ARN``
+    """
+
+    llmhost_node_subnet_ids: List[str] = Field(
+        settings_defaults.LLMHOST_NODE_SUBNET_IDS,
+        description="The subnets of the node groups that Smarter creates for LLMHosts.",
+        examples=[["subnet-0123456789abcdef0"]],
+        title="LLMHost Node Subnet IDs",
+    )
+    """
+    The subnets of the EKS managed node groups that Smarter creates for LLMHostCompute, e.g.
+
+    ``subnet-0123,subnet-0456``. An LLMHostCompute's own subnet_ids take precedence.
+
+    If it is not set, Smarter uses the subnets of the cluster's first managed node group that it
+    did not create. A model volume is an EBS volume in one availability zone, so an LLMHost
+    whose retained volume is in one zone cannot be relaunched on a node in another: one subnet
+    per node group avoids this.
+
+    :type: List[str]
+    :default: Value from ``settings_defaults.LLMHOST_NODE_SUBNET_IDS``
+    """
+
+    @before_field_validator("llmhost_node_subnet_ids")
+    def validate_llmhost_node_subnet_ids(cls, v: Optional[Union[List[str], str]]) -> List[str]:
+        """Validates the `llmhost_node_subnet_ids` field: a list, or a comma-separated string."""
+        if v in THE_EMPTY_SET:
+            return []
+        if isinstance(v, str):
+            return [subnet.strip() for subnet in v.split(",") if subnet.strip()]
+        if not isinstance(v, list):
+            raise SmarterConfigurationError(f"llmhost_node_subnet_ids of type {type(v)} is not a list.")
+        return [str(subnet) for subnet in v]
+
     aws_db_instance_identifier: str = Field(
         settings_defaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
         description="The RDS database instance identifier used for the platform's primary database.",

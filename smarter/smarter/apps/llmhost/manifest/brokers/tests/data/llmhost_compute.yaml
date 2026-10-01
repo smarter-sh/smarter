@@ -1,0 +1,24 @@
+---
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: test_broker_compute
+  description: One NVIDIA L4 with 24 GB, 8 vCPUs and 32 GiB, for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+    - gpu
+spec:
+  node:
+    instanceType: g6.2xlarge
+    cpu: 8
+    memoryGb: 32
+    gpu:
+      type: L4
+      count: 1
+      memoryGb: 24
+    diskSizeGb: 100
+  nodeGroup:
+    maxNodes: 2
+  cost:
+    perHour: 0.9776

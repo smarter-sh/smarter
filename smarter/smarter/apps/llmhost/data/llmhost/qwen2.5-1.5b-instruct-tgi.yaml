@@ -1,0 +1,42 @@
+---
+# Alibaba Qwen2.5 1.5B Instruct, served by TGI. TGI does not authenticate requests,
+# so this LLMHost has no Ingress: it is reachable only inside the cluster, e.g. by LLMClients.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: qwen2_5_1_5b_instruct_tgi
+  description: Alibaba Qwen2.5 1.5B Instruct, served by Hugging Face Text Generation Inference on one NVIDIA L4,
+    inside the cluster.
+  version: 1.0.0
+  tags:
+  - qwen
+  - alibaba
+  - tgi
+  - chat
+  - small
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct
+spec:
+  model:
+    source: huggingface
+    repository: Qwen/Qwen2.5-1.5B-Instruct
+    revision: main
+    servedName: qwen2.5-1.5b-instruct
+    license: apache-2.0
+    architecture: qwen2
+    parameterCount: 1543714304
+    contextWindow: 32768
+    quantization: bf16
+  engine:
+    name: tgi
+    contextLength: 8192
+    maxConcurrentRequests: 128
+  compute: gpu_l4_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 4
+    cpu: '4'
+    memory: 8Gi

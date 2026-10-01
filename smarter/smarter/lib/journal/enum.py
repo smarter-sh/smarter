@@ -112,6 +112,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    LLMHOST_COMPUTE = "LLMHostCompute"
+    """Smarter LLMHostCompute resource: a kind of node, and node group, that LLMHosts run on.
+
+    A Django ORM model instance.
+    """
+
     MCPCLIENT = "MCPClient"
     """Smarter MCPClient resource.
 
