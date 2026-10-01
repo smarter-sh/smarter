@@ -25,7 +25,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
 
 class LLMHostDetailView(DocsBaseView):
@@ -145,7 +145,7 @@ class LLMHostDetailView(DocsBaseView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="LLMHost not found")
 
-        self.kind = SAMKinds.PROVIDER
+        self.kind = SAMKinds.LLM_HOST
 
         logger.debug(
             "%s.post() Rendering llmhost detail view for %s, kwargs=%s.",

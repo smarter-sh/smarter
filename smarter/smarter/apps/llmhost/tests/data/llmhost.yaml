@@ -1,0 +1,49 @@
+---
+# An LLMHost for the llmhost app's tests: a gated Hugging Face model, served by vLLM on
+# one GPU, with a public Ingress. Its Hugging Face token is the Secret test_llmhost_hf_token.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: test_llmhost
+  description: An LLMHost for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+    - vllm
+  annotations:
+    - smarter.sh/llmhost/test/purpose: unit testing
+spec:
+  model:
+    source: huggingface
+    repository: meta-llama/Llama-3.1-8B-Instruct
+    revision: main
+    servedName: llama-3.1-8b-instruct
+    tokenSecret: test_llmhost_hf_token
+    license: llama3.1
+    architecture: llama
+    parameterCount: 8030261248
+    contextWindow: 131072
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 16384
+    gpuMemoryUtilization: 0.9
+    args:
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - llama3_json
+  compute: gpu_a10g_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 21
+    cpu: "4"
+    memory: 24Gi
+  storage:
+    size: 50Gi
+  network:
+    ingress: true
+  healthCheck:
+    startupTimeoutSeconds: 1800
+    periodSeconds: 10

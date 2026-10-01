@@ -33,7 +33,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 DEFAULT_PAGE_SIZE = 25
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
 
 class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
@@ -191,7 +191,7 @@ class LLMHostListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         Validates input
         parameters, checks for the existence of the LLMHost to be deleted, and
         deletes the LLMHost if it exists. Invalidates the cache for the user's
-        LLMClients after deletion.
+        LLMHosts after deletion.
 
         :param request: The HTTP request object containing the parameters for deletion.
         :type request: HttpRequest
@@ -252,7 +252,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         Validates input
         parameters, checks for the existence of the LLMHost to be renamed, and
         renames the LLMHost if it exists. Invalidates the cache for the user's
-        LLMClients after renaming.
+        LLMHosts after renaming.
 
         :param request: The HTTP request object containing the parameters for renaming.
         :type request: HttpRequest

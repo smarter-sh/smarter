@@ -32,6 +32,16 @@ app.conf.beat_schedule = {
         "schedule": timedelta(days=1),
         "options": {"queue": "beat_tasks"},
     },
+    "refresh-llmhost-status": {
+        "task": "smarter.apps.llmhost.tasks.refresh_llmhost_status",
+        "schedule": timedelta(minutes=5),
+        "options": {"queue": "beat_tasks"},
+    },
+    "reconcile-llmhost-computes": {
+        "task": "smarter.apps.llmhost.tasks.reconcile_llmhost_computes",
+        "schedule": timedelta(minutes=5),
+        "options": {"queue": "beat_tasks"},
+    },
     "refresh-mcpclients": {
         "task": "smarter.apps.mcpclient.tasks.refresh_mcpclients",
         "schedule": timedelta(hours=1),

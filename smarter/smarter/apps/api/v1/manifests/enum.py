@@ -25,6 +25,9 @@ from smarter.apps.llmclient.manifest.models.llmclient.const import (
 from smarter.apps.llmhost.manifest.models.llmhost.const import (
     MANIFEST_KIND as LLM_HOST_MANIFEST_KIND,
 )
+from smarter.apps.llmhost.manifest.models.llmhost_compute.const import (
+    MANIFEST_KIND as LLM_HOST_COMPUTE_MANIFEST_KIND,
+)
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCP_CLIENT_MANIFEST_KIND,
 )
@@ -116,6 +119,7 @@ class SAMKinds(SmarterEnumAbstract):
         PROMPT: Prompt manifest.
         LLM_CLIENT: LLM client manifest.
         LLM_HOST: LLM host manifest.
+        LLM_HOST_COMPUTE: LLM host compute manifest: a kind of node, and node group.
         MCP_CLIENT: MCP client manifest.
         PROVIDER: AI provider manifest.
         PROXY: Proxy manifest.
@@ -169,6 +173,7 @@ class SAMKinds(SmarterEnumAbstract):
     PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
     LLM_HOST = LLM_HOST_MANIFEST_KIND
+    LLM_HOST_COMPUTE = LLM_HOST_COMPUTE_MANIFEST_KIND
     MCP_CLIENT = MCP_CLIENT_MANIFEST_KIND
     ORCHESTRATOR = ORCHESTRATOR_MANIFEST_KIND
 
