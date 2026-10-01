@@ -1,7 +1,11 @@
-import  TokenUsageChart from "./Chart";
+import { lazy, Suspense } from "react";
 import type { SessionContext } from "@smarter/common";
 
 import "./styles.css";
+
+// recharts is a large dependency and is only needed for this chart, so it's
+// loaded in its own chunk instead of bloating the main app bundle.
+const TokenUsageChart = lazy(() => import("./Chart"));
 
 interface UserUsageProps {
   sessionContext: SessionContext,
@@ -21,7 +25,9 @@ function UserCharges({ sessionContext, apiUrl }: UserUsageProps) {
             <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
               Token Usage
             </h6>
-            <TokenUsageChart sessionContext={sessionContext} apiUrl={apiUrl} />
+            <Suspense fallback={null}>
+              <TokenUsageChart sessionContext={sessionContext} apiUrl={apiUrl} />
+            </Suspense>
           </div>
         </div>
       </div>

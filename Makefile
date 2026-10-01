@@ -330,6 +330,9 @@ python-requirements:
 react-install:
 	cd smarter/react && npm install --include=dev
 
+react-update:
+	cd smarter/react && ncu --workspaces --root -u && npm install
+
 react-build:
 	@echo "==============================================================================="
 	@echo "Building and collecting React files on local filesystem ..."
