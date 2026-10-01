@@ -865,7 +865,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.3.3
+virtualenv==21.7.12
     # via
     #   pre-commit
     #   tox
