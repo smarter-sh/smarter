@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.15.1...v0.16.0-alpha.1) (2026-10-01)
+
+### Features
+
+* **console:** list LLMHostCompute in the web console, and fix the list pages' clone, rename and delete ([aaacc81](https://github.com/smarter-sh/smarter/commit/aaacc8194281851b593ca299b019e2217b062a27))
+* **llmhost:** run open-weight LLMs on our own Kubernetes cluster ([e77b3f4](https://github.com/smarter-sh/smarter/commit/e77b3f484af6a145637e52cb07fbe754664b2398))
+
 ## [0.15.1](https://github.com/smarter-sh/smarter/compare/v0.15.0...v0.15.1) (2026-10-01)
 
 ### Bug Fixes
