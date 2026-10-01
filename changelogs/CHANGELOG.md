@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.1](https://github.com/smarter-sh/smarter/compare/v0.15.0...v0.15.1) (2026-10-01)
+
+### Bug Fixes
+
+* **react:** migrate to Vite 8/Oxc, update workspace deps, fix build script ([27da1ca](https://github.com/smarter-sh/smarter/commit/27da1cacff80bdc683dfe31825e532a7630adca9))
+
 ## [0.15.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.15.0...v0.15.1-alpha.1) (2026-10-01)
 
 ### Bug Fixes
