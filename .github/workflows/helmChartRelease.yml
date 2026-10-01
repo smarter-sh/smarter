@@ -41,6 +41,19 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.PAT }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Get latest release version
+        id: get-latest-version-tag
+        shell: bash
+        run: |
+          VERSION_TAG=$(git describe --tags --abbrev=0)
+          echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+      - name: Set version
+        id: set-version
+        shell: bash
+        run: |
+          python scripts/bump_version.py $TAG --cicd
+
       - name: Package and Push Chart
         run: |
           cd helm/charts/smarter
