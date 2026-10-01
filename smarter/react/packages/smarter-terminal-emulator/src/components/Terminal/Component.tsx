@@ -71,7 +71,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
     term.loadAddon(fitAddon);
     term.open(terminalContainerRef.current);
     // defer fit until after browser layout
-    let rafId = requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       fitAddon.fit();
       term.write('\x1b[?7l');
     });
@@ -132,9 +132,10 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
     terminalRef.current.write(batchedOutput);
   }, [isInitializing, logs]);
 
+  // show the loading indicator only if initializing takes longer than 250ms. It is hidden as soon
+  // as initializing ends: see the render, which shows it only while isInitializing.
   useEffect(() => {
     if (!isInitializing) {
-      setShowLoading(false);
       return;
     }
 
@@ -144,6 +145,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
     return () => {
       window.clearTimeout(timeoutId);
+      setShowLoading(false);
     };
   }, [isInitializing]);
 
@@ -173,7 +175,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
         </div>
 
         <div className="terminal-window__body" role="log" aria-live="polite">
-          {showLoading && (
+          {isInitializing && showLoading && (
             <div className="terminal-window__loading" aria-label="Loading logs">
               <span className="terminal-window__loading-spinner" aria-hidden="true" />
               <span>Loading logs…</span>

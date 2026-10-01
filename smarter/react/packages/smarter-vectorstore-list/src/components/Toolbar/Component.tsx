@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete vectorstore resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - vectorstore (Vectorestore): The vectorstore resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} vectorstore={vectorstore} />
+ * <Toolbar sessionContext={sessionContext} vectorstore={vectorstore} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each vectorstore row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Vectorestore } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  vectorstore: Vectorestore | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Vectorestore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone vectorstore <strong>{vectorstore?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned vectorstore.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new vectorstore name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(vectorstore?.name || "");
+  return (
+    <Modal show title="Rename Vectorestore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename vectorstore <strong>{vectorstore?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the vectorstore.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new vectorstore name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  vectorstore,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  vectorstore: Vectorestore | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Vectorestore" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete vectorstore <strong>{vectorstore?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  vectorstore,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  vectorstore: Vectorestore | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on vectorstore <strong>{vectorstore?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  vectorstore,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  vectorstore: Vectorestore | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{vectorstore?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    vectorstore: Vectorestore | null;
-  }>({ type: null, vectorstore: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; vectorstore: Vectorestore | null }>({ type: null, vectorstore: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
     onRequery();
   };
 
-  const handleCloneButtonClicked = (vectorstore: Vectorestore) => setModal({ type: "clone", vectorstore });
-  const handleRenameButtonClicked = (vectorstore: Vectorestore) => setModal({ type: "rename", vectorstore });
-  const handleDeleteButtonClicked = (vectorstore: Vectorestore) => setModal({ type: "delete", vectorstore });
-
-  const handleError = (vectorstore: Vectorestore) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Vectorestore, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", vectorstore });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Vectorestore"
-          onOk={() => handleCloneVectorestore(modal.vectorstore!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone vectorstore <strong>{modal.vectorstore?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned vectorstore.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new vectorstore name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.vectorstore?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Vectorestore"
-          onOk={() => handleRenameVectorestore(modal.vectorstore!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename vectorstore <strong>{modal.vectorstore?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the vectorstore.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new vectorstore name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Vectorestore"
-          onOk={() => handleDeleteVectorestore(modal.vectorstore!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete vectorstore <strong>{modal.vectorstore?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on vectorstore <strong>{modal.vectorstore?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.vectorstore?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneVectorestore = async (vectorstore: Vectorestore, new_name: string) => {
-    // see: smarter.apps.vectorstore.urls for API urls
-    // path("api/clone/<int:vectorstore_id>/<str:new_name>/", VectorestoreListApiCloneView.as_view(), name=VectorestoreReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + vectorstore.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone vectorstore (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone vectorstore (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} vectorstore (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Vectorestore) => {
-        console.debug(loggerPrefix, "Successfully cloned vectorstore:", data);
-        setModal({ type: "confirmation", vectorstore: data as Vectorestore });
-        setSuccessMessage(`Successfully cloned vectorstore`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d vectorstore:`, data);
+        setSuccessMessage(`Successfully ${verb}d vectorstore`);
+        // clone and rename return the resulting vectorstore; delete returns a message.
+        setModal({ type: "confirmation", vectorstore: data && data.id ? (data as Vectorestore) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning vectorstore:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} vectorstore:`, error);
         setErrMessage(error.message);
-        handleError(vectorstore);
+        setModal({ type: "error", vectorstore: target });
       });
-    return true;
-  };
-
-  const handleRenameVectorestore = async (vectorstore: Vectorestore, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + vectorstore.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename vectorstore (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename vectorstore (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Vectorestore) => {
-        console.debug(loggerPrefix, "Successfully renamed vectorstore:", data);
-        setModal({ type: "confirmation", vectorstore: data as Vectorestore });
-        setSuccessMessage(`Successfully renamed vectorstore`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming vectorstore:", error);
-        setErrMessage(error.message);
-        handleError(vectorstore);
-      });
-    return true;
-  };
-
-  const handleDeleteVectorestore = async (vectorstore: Vectorestore) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + vectorstore.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete vectorstore (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete vectorstore (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted vectorstore:", vectorstore);
-        setModal({ type: "confirmation", vectorstore });
-        setSuccessMessage(`Successfully deleted vectorstore`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting vectorstore:", error);
-        setErrMessage(error.message);
-        handleError(vectorstore);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this vectorstore resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(vectorstore)}
+          onClick={() => setModal({ type: "clone", vectorstore })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this vectorstore resource"
-          onClick={() => handleRenameButtonClicked(vectorstore)}
+          onClick={() => setModal({ type: "rename", vectorstore })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this vectorstore resource"
-          onClick={() => handleDeleteButtonClicked(vectorstore)}
+          onClick={() => setModal({ type: "delete", vectorstore })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            vectorstore={modal.vectorstore}
+            onOk={(newName) => runAction(modal.vectorstore!, `clone/${modal.vectorstore!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            vectorstore={modal.vectorstore}
+            onOk={(newName) => runAction(modal.vectorstore!, `rename/${modal.vectorstore!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          vectorstore={modal.vectorstore}
+          onOk={() => runAction(modal.vectorstore!, `delete/${modal.vectorstore!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} vectorstore={modal.vectorstore} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          vectorstore={modal.vectorstore}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

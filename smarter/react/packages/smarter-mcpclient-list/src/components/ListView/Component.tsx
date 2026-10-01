@@ -69,6 +69,20 @@ const TableHeader = () => {
   );
 };
 
+
+/**
+ * CreatedDate and UpdatedDate
+ *
+ * Format a row's creation date, and its last update relative to its creation.
+ */
+const CreatedDate = ({ date }: { date: string }) => {
+  return <span>{formatDateTime(date, "date")}</span>;
+};
+
+const UpdatedDate = ({ date, createdAt }: { date: string | null; createdAt: string }) => {
+  return <span>{formatDateTime(date, "relative", createdAt)}</span>;
+};
+
 /**
  * MCPClientRow
  *
@@ -87,14 +101,6 @@ const MCPClientRow = React.memo(function MCPClientRow({
   sessionContext: SessionContext;
   onRequery: () => void;
 }) {
-  const CreatedDate = ({ date }: { date: string }) => {
-    return <span>{formatDateTime(date, "date")}</span>;
-  };
-
-  const UpdatedDate = ({ date, createdAt }: { date: string | null; createdAt: string }) => {
-    return <span>{formatDateTime(date, "relative", createdAt)}</span>;
-  };
-
   return (
     <tr className="" key={mcpclient.id}>
       {/* Name */}
@@ -203,17 +209,15 @@ function ChunkedRows({
 }) {
   const [visibleCount, setVisibleCount] = useState(chunkSize);
 
-  const schedule = window.requestIdleCallback || ((cb: Function) => setTimeout(cb, 0));
-  const cancel = window.cancelIdleCallback || clearTimeout;
-
   useEffect(() => {
-    let idleId: any = null;
-    if (visibleCount < mcpclients.length) {
-      idleId = schedule(() => {
-        setVisibleCount((c) => Math.min(c + chunkSize, mcpclients.length));
-      });
-      return () => cancel(idleId);
+    if (visibleCount >= mcpclients.length) return;
+    const next = () => setVisibleCount((c) => Math.min(c + chunkSize, mcpclients.length));
+    if (window.requestIdleCallback) {
+      const idleId = window.requestIdleCallback(next);
+      return () => window.cancelIdleCallback(idleId);
     }
+    const timeoutId = setTimeout(next, 0);
+    return () => clearTimeout(timeoutId);
   }, [visibleCount, mcpclients.length, chunkSize]);
   return (
     <>

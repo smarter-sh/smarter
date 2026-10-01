@@ -5,9 +5,6 @@
  * extension, including direct links to the Visual Studio Marketplace listing
  * and official documentation.
  *
- * :param props: Component props.
- * :type props: VSCodeExtensionProps
- *
  * :returns: A JSX fragment containing the VS Code extension call-to-action
  *     widget.
  * :rtype: JSX.Element
@@ -18,10 +15,7 @@
  */
 import "./styles.css";
 
-interface VSCodeExtensionProps {
-}
-
-function VSCodeExtension({  }: VSCodeExtensionProps) {
+function VSCodeExtension() {
   return (
     <>
       {/* begin::Download VS Code Extension widget 4 */}

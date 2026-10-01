@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete proxy resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - proxy (Proxy): The proxy resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} proxy={proxy} />
+ * <Toolbar sessionContext={sessionContext} proxy={proxy} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each proxy row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Proxy } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  proxy: Proxy | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ proxy, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Proxy" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone proxy <strong>{proxy?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned proxy.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new proxy name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ proxy, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(proxy?.name || "");
+  return (
+    <Modal show title="Rename Proxy" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename proxy <strong>{proxy?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the proxy.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new proxy name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  proxy,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  proxy: Proxy | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Proxy" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete proxy <strong>{proxy?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  proxy,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  proxy: Proxy | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on proxy <strong>{proxy?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  proxy,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  proxy: Proxy | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{proxy?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    proxy: Proxy | null;
-  }>({ type: null, proxy: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; proxy: Proxy | null }>({ type: null, proxy: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
     onRequery();
   };
 
-  const handleCloneButtonClicked = (proxy: Proxy) => setModal({ type: "clone", proxy });
-  const handleRenameButtonClicked = (proxy: Proxy) => setModal({ type: "rename", proxy });
-  const handleDeleteButtonClicked = (proxy: Proxy) => setModal({ type: "delete", proxy });
-
-  const handleError = (proxy: Proxy) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Proxy, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", proxy });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Proxy"
-          onOk={() => handleCloneProxy(modal.proxy!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone proxy <strong>{modal.proxy?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned proxy.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new proxy name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.proxy?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Proxy"
-          onOk={() => handleRenameProxy(modal.proxy!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename proxy <strong>{modal.proxy?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the proxy.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new proxy name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Proxy"
-          onOk={() => handleDeleteProxy(modal.proxy!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete proxy <strong>{modal.proxy?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on proxy <strong>{modal.proxy?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.proxy?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneProxy = async (proxy: Proxy, new_name: string) => {
-    // see: smarter.apps.proxy.urls for API urls
-    // path("api/clone/<int:proxy_id>/<str:new_name>/", ProxyListApiCloneView.as_view(), name=ProxyReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + proxy.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone proxy (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone proxy (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} proxy (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Proxy) => {
-        console.debug(loggerPrefix, "Successfully cloned proxy:", data);
-        setModal({ type: "confirmation", proxy: data as Proxy });
-        setSuccessMessage(`Successfully cloned proxy`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d proxy:`, data);
+        setSuccessMessage(`Successfully ${verb}d proxy`);
+        // clone and rename return the resulting proxy; delete returns a message.
+        setModal({ type: "confirmation", proxy: data && data.id ? (data as Proxy) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning proxy:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} proxy:`, error);
         setErrMessage(error.message);
-        handleError(proxy);
+        setModal({ type: "error", proxy: target });
       });
-    return true;
-  };
-
-  const handleRenameProxy = async (proxy: Proxy, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + proxy.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename proxy (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename proxy (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Proxy) => {
-        console.debug(loggerPrefix, "Successfully renamed proxy:", data);
-        setModal({ type: "confirmation", proxy: data as Proxy });
-        setSuccessMessage(`Successfully renamed proxy`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming proxy:", error);
-        setErrMessage(error.message);
-        handleError(proxy);
-      });
-    return true;
-  };
-
-  const handleDeleteProxy = async (proxy: Proxy) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + proxy.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete proxy (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete proxy (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted proxy:", proxy);
-        setModal({ type: "confirmation", proxy });
-        setSuccessMessage(`Successfully deleted proxy`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting proxy:", error);
-        setErrMessage(error.message);
-        handleError(proxy);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this proxy resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(proxy)}
+          onClick={() => setModal({ type: "clone", proxy })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this proxy resource"
-          onClick={() => handleRenameButtonClicked(proxy)}
+          onClick={() => setModal({ type: "rename", proxy })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this proxy resource"
-          onClick={() => handleDeleteButtonClicked(proxy)}
+          onClick={() => setModal({ type: "delete", proxy })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            proxy={modal.proxy}
+            onOk={(newName) => runAction(modal.proxy!, `clone/${modal.proxy!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            proxy={modal.proxy}
+            onOk={(newName) => runAction(modal.proxy!, `rename/${modal.proxy!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          proxy={modal.proxy}
+          onOk={() => runAction(modal.proxy!, `delete/${modal.proxy!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} proxy={modal.proxy} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          proxy={modal.proxy}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

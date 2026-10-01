@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete connection resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - connection (Connection): The connection resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} connection={connection} />
+ * <Toolbar sessionContext={sessionContext} connection={connection} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each connection row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { Modal, fetchDjangoUrl } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Connection } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  connection: Connection | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ connection, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Connection" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone connection <strong>{connection?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned connection.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new connection name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ connection, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(connection?.name || "");
+  return (
+    <Modal show title="Rename Connection" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename connection <strong>{connection?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the connection.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new connection name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  connection,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  connection: Connection | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Connection" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete connection <strong>{connection?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  connection,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  connection: Connection | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on connection <strong>{connection?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  connection,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  connection: Connection | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{connection?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    connection: Connection | null;
-  }>({ type: null, connection: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; connection: Connection | null }>({ type: null, connection: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
     onRequery();
   };
 
-  const handleCloneButtonClicked = (connection: Connection) => setModal({ type: "clone", connection });
-  const handleRenameButtonClicked = (connection: Connection) => setModal({ type: "rename", connection });
-  const handleDeleteButtonClicked = (connection: Connection) => setModal({ type: "delete", connection });
-
-  const handleError = (connection: Connection) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Connection, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", connection });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Connection"
-          onOk={() => handleCloneConnection(modal.connection!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone connection <strong>{modal.connection?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned connection.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new connection name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.connection?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Connection"
-          onOk={() => handleRenameConnection(modal.connection!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename connection <strong>{modal.connection?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the connection.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new connection name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Connection"
-          onOk={() => handleDeleteConnection(modal.connection!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete connection <strong>{modal.connection?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on connection <strong>{modal.connection?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.connection?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneConnection = async (connection: Connection, new_name: string) => {
-    // see: smarter.apps.connection.urls for API urls
-    // path("api/clone/<int:connection_id>/<str:new_name>/", ConnectionListApiCloneView.as_view(), name=ConnectionReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + connection.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone connection (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone connection (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} connection (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Connection) => {
-        console.debug(loggerPrefix, "Successfully cloned connection:", data);
-        setModal({ type: "confirmation", connection: data as Connection });
-        setSuccessMessage(`Successfully cloned connection`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d connection:`, data);
+        setSuccessMessage(`Successfully ${verb}d connection`);
+        // clone and rename return the resulting connection; delete returns a message.
+        setModal({ type: "confirmation", connection: data && data.id ? (data as Connection) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning connection:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} connection:`, error);
         setErrMessage(error.message);
-        handleError(connection);
+        setModal({ type: "error", connection: target });
       });
-    return true;
-  };
-
-  const handleRenameConnection = async (connection: Connection, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + connection.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename connection (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename connection (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Connection) => {
-        console.debug(loggerPrefix, "Successfully renamed connection:", data);
-        setModal({ type: "confirmation", connection: data as Connection });
-        setSuccessMessage(`Successfully renamed connection`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming connection:", error);
-        setErrMessage(error.message);
-        handleError(connection);
-      });
-    return true;
-  };
-
-  const handleDeleteConnection = async (connection: Connection) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + connection.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete connection (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete connection (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted connection:", connection);
-        setModal({ type: "confirmation", connection });
-        setSuccessMessage(`Successfully deleted connection`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting connection:", error);
-        setErrMessage(error.message);
-        handleError(connection);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this connection resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(connection)}
+          onClick={() => setModal({ type: "clone", connection })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this connection resource"
-          onClick={() => handleRenameButtonClicked(connection)}
+          onClick={() => setModal({ type: "rename", connection })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this connection resource"
-          onClick={() => handleDeleteButtonClicked(connection)}
+          onClick={() => setModal({ type: "delete", connection })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            connection={modal.connection}
+            onOk={(newName) => runAction(modal.connection!, `clone/${modal.connection!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            connection={modal.connection}
+            onOk={(newName) => runAction(modal.connection!, `rename/${modal.connection!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          connection={modal.connection}
+          onOk={() => runAction(modal.connection!, `delete/${modal.connection!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} connection={modal.connection} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          connection={modal.connection}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

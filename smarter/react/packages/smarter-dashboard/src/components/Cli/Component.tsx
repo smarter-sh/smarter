@@ -5,9 +5,6 @@
  * command-line interface, including links to download the CLI and open
  * documentation resources.
  *
- * :param props: Component props.
- * :type props: CliProps
- *
  * :returns: A JSX fragment containing the CLI promotion widget.
  * :rtype: JSX.Element
  *
@@ -17,10 +14,7 @@
  */
 import "./styles.css";
 
-interface CliProps {
-}
-
-function Cli({  }: CliProps) {
+function Cli() {
   return (
     <>
       <section id="cli" aria-label="CLI" className="col-xl-4 mb-5 mb-xl-10">

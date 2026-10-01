@@ -1,6 +1,6 @@
 
 import DropZoneModal from "./Component";
-import type { DropZoneModalProps } from "./Component";
+import type { ApplyResult, DropZoneModalProps } from "./Component";
 
-export type { DropZoneModalProps };
+export type { ApplyResult, DropZoneModalProps };
 export default DropZoneModal;

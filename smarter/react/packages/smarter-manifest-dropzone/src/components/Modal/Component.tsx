@@ -1,9 +1,20 @@
 
 
+/** The response of the Smarter API to an applied manifest: the parts that the modal shows. */
+export type ApplyResult = {
+  message?: string | null;
+  data?: {
+    data?: {
+      metadata?: { name?: string; version?: string; description?: string };
+    };
+  };
+};
+
 type ModalState = {
   open: boolean;
   title: string;
-  data?: any;
+  /** The apply result, or an error message. */
+  data?: ApplyResult | string | null;
   isError?: boolean;
 };
 
@@ -24,11 +35,12 @@ export default function DropZoneModal({
 
   console.debug("DropZoneModal data:", data);
 
+  const result = typeof data === "string" ? null : data;
   const response = {
-    name: data?.data?.data?.metadata.name ?? "Unknown",
-    version: data?.data?.data?.metadata.version ?? "Unknown",
-    description: data?.data?.data?.metadata.description ?? "No description provided",
-    message: data?.message ?? null,
+    name: result?.data?.data?.metadata?.name ?? "Unknown",
+    version: result?.data?.data?.metadata?.version ?? "Unknown",
+    description: result?.data?.data?.metadata?.description ?? "No description provided",
+    message: result?.message ?? null,
   };
 
   return (

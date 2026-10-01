@@ -18,7 +18,7 @@
  * - @/lib/cookie, @/lib/django — CSRF and fetch utilities
  * - ./templates, ./llmApis — request template and URL helpers
  */
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import type * as monaco from "monaco-editor";
 
 import { fetchDjangoUrl } from "@smarter/common";
@@ -52,51 +52,49 @@ function Prompt({
   const [isSending, setIsSending] = useState(false);
   const [apiResponse, setApiResponse] = useState<{
     status: number;
-    body: any;
+    body: unknown;
   } | null>(null);
 
   // LLM provider and template state
   const [providersJson, setProviders] = useState<LLMProvider[]>([]);
-  const [selectedProviderJson, setSelectedProviderJson] = useState<LLMProvider | null>(null);
   const [templateId, setTemplateId] = useState(defaultTemplateId ?? 1);
   const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? 1);
 
-  // Derived state, from llmProviderId
-  const [defaultModel, setDefaultModel] = useState("");
-  const [providerBaseUrl, setProviderBaseUrl] = useState("");
-  const [providerSlug, setProviderSlug] = useState("");
-  const [connectivityTestPath, setConnectivityTestPath] = useState("");
+  // Derived from providersJson and llmProviderId, during render.
+  const selectedProviderJson = providersJson.find((p) => p.id === llmProviderId) ?? null;
+  const defaultModel = selectedProviderJson?.defaultModel ?? "";
+  const providerBaseUrl = selectedProviderJson?.baseUrl ?? "";
+  const providerSlug = selectedProviderJson?.rfc1034CompliantName ?? "";
+  const connectivityTestPath = selectedProviderJson?.connectivityTestPath ?? "";
 
   // Final request JSON state (function of providersJson, llmProviderId, templateId, defaultModel)
   const [requestJson, setRequestJson] = useState("");
   const [activeTab, setActiveTab] = useState<"request" | "response">("request");
 
+  // when the providers arrive: select the default one, and generate the initial request JSON
+  // from it and the current template. An effect event, so that it reads the current templateId
+  // without the providers being fetched again whenever the template changes.
+  const onProvidersLoaded = useEffectEvent((providers: LLMProvider[]) => {
+    // set the provider list, and identify the default provider based on
+    // the "isDefault" flag (or fallback to first provider if none
+    // marked as default).
+    console.debug(loggerPrefix, "Fetched LLM providers from API:", providers);
+    setProviders(providers);
+    const default_provider = providers.filter((p) => Boolean(p.isDefault) === true)[0] || providers[0];
+    if (!default_provider) {
+      console.warn(loggerPrefix, "No LLM providers found from API");
+      return;
+    }
+    // selecting the default provider also selects its model, base URL, etc.: see the derived values above.
+    setLLMProvider(default_provider.id);
+    const templateJson = getPromptTemplate(templateId, default_provider.defaultModel);
+    setRequestJson(templateJson);
+  });
+
   useEffect(() => {
     const controller = new AbortController();
     LLMProviders(providerApiUrl, controller.signal)
-      .then((providers) => {
-        // set the provider list, and identify the default provider based on
-        // the "isDefault" flag (or fallback to first provider if none
-        // marked as default).
-        console.debug(loggerPrefix, "Fetched LLM providers from API:", providers);
-        setProviders(providers);
-        const default_provider = providers.filter((p) => Boolean(p.isDefault) === true)[0] || providers[0];
-        setSelectedProviderJson(default_provider);
-        if (!default_provider) {
-          console.warn(loggerPrefix, "No LLM providers found from API");
-          return;
-        }
-
-        // initialize all state that depends on the provider list
-        // and default provider.
-        setDefaultModel(default_provider.defaultModel);
-        setLLMProvider(default_provider.id);
-
-        // lastly, generate the initial request JSON based on the default
-        // provider and template.
-        const templateJson = getPromptTemplate(templateId, default_provider.defaultModel);
-        setRequestJson(templateJson);
-      })
+      .then((providers) => onProvidersLoaded(providers))
       .catch((err: Error) => {
         if (err.name !== "AbortError") {
           console.error(loggerPrefix, "Error fetching LLM providers:", err);
@@ -104,17 +102,6 @@ function Prompt({
       });
     return () => controller.abort();
   }, [providerApiUrl]);
-
-  useEffect(() => {
-    const provider = providersJson.find((p) => p.id === llmProviderId);
-    if (provider) {
-      setSelectedProviderJson(provider);
-      setProviderBaseUrl(provider.baseUrl);
-      setProviderSlug(provider.rfc1034CompliantName);
-      setConnectivityTestPath(provider.connectivityTestPath);
-      setDefaultModel(provider.defaultModel);
-    }
-  }, [providersJson, llmProviderId]);
 
   const handleEditorDidMount = (editorInstance: monaco.editor.IStandaloneCodeEditor) => {
     setEditor(editorInstance);
@@ -124,11 +111,6 @@ function Prompt({
     setLLMProvider(newId);
     const provider = providersJson.find((p) => p.id === newId);
     if (provider) {
-      setSelectedProviderJson(provider);
-      setProviderBaseUrl(provider.baseUrl);
-      setProviderSlug(provider.rfc1034CompliantName);
-      setConnectivityTestPath(provider.connectivityTestPath);
-      setDefaultModel(provider.defaultModel);
       const templateJson = getPromptTemplate(templateId, provider.defaultModel);
       setRequestJson(templateJson);
     }
