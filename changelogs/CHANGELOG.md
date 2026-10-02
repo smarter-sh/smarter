@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.3...v0.16.0-alpha.4) (2026-10-02)
+
+### Bug Fixes
+
+* **react:** replace __dirname in Vite configs, and fix the manifest.json path ([ef8929c](https://github.com/smarter-sh/smarter/commit/ef8929c6f62235ba46577d784d54d98b967546f6))
+
 ## [0.16.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.2...v0.16.0-alpha.3) (2026-10-02)
 
 ### Features
