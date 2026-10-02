@@ -2,8 +2,6 @@
 
 from http import HTTPStatus
 
-from django.test import tag
-
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.api import SmarterApiVersions
@@ -13,7 +11,6 @@ from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
-from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 
 class TestApiCliV1Status(ApiV1CliTestBase):
@@ -37,7 +34,6 @@ class TestApiCliV1Status(ApiV1CliTestBase):
         self.assertIsInstance(metadata, dict)
         self.assertEqual(metadata[SmarterJournalApiResponseKeys.THING], "None")
 
-    @tag(INFRASTRUCTURE)
     def test_status(self) -> None:
         """Test status command."""
 
@@ -47,6 +43,9 @@ class TestApiCliV1Status(ApiV1CliTestBase):
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertIn("infrastructures", data.keys())
+        # without AWS credentials, kubernetes is {"error": ...} instead of a failed request.
+        self.assertIn("kubernetes", data["infrastructures"].keys())
+        self.assertIn("redis", data["infrastructures"].keys())
         self.assertIn("compute", data.keys())
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]

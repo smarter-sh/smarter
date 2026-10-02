@@ -498,7 +498,7 @@ class Settings(BaseSettings):
             Optional[str]: The validated AWS region.
         """
 
-        valid_regions = values.data.get("aws_regions", ["us-east-1"])
+        valid_regions = values.data.get("aws_regions", AWS_REGIONS)
         if v in THE_EMPTY_SET:
             if settings_defaults.AWS_REGION == DEFAULT_MISSING_VALUE:
                 return None
