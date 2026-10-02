@@ -1,8 +1,11 @@
 """Account serializers for Smarter API."""
 
+from rest_framework import serializers
+
 from smarter.apps.account.models import (
     Account,
     AccountContact,
+    Budget,
     Charge,
     User,
     UserProfile,
@@ -119,6 +122,43 @@ class AccountSerializer(MetaDataModelSerializer):
     class Meta:
         model = Account
         fields = "__all__"
+
+
+class BudgetSerializer(MetaDataModelSerializer):
+    """
+    Serializer for the :class:`Budget` model, with the number of resources it is attached to, and of those it locks.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import BudgetSerializer
+        data = BudgetSerializer(budget).data
+    """
+
+    resources = serializers.SerializerMethodField()
+    locked = serializers.SerializerMethodField()
+    manifest_url = serializers.SerializerMethodField()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = Budget
+        fields = "__all__"
+
+    def get_resources(self, obj: Budget) -> int:
+        return obj.constraints.filter(is_active=True).count()  # type: ignore[attr-defined]
+
+    def get_manifest_url(self, obj: Budget) -> str:
+        """The URL of the Budget's detail view, which renders its manifest."""
+        # pylint: disable=C0415
+        from django.urls import reverse
+
+        from smarter.apps.account.views.budget.urls import BudgetReverseNames
+
+        return reverse(
+            f"{BudgetReverseNames.namespace}:{BudgetReverseNames.detailview}", kwargs={"hashed_id": obj.hashed_id}
+        )
+
+    def get_locked(self, obj: Budget) -> int:
+        return obj.constraints.filter(is_active=True, locks__isnull=False).distinct().count()  # type: ignore[attr-defined]
 
 
 class AccountMiniSerializer(SmarterCamelCaseSerializer):

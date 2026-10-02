@@ -9,8 +9,21 @@ from django.forms.models import model_to_dict
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .models import Account, Charge, User, UserProfile
+from .models import (
+    Account,
+    Budget,
+    Charge,
+    ResourceConstraint,
+    ResourceLock,
+    User,
+    UserProfile,
+    evaluate_resource_constraints,
+)
+from .models.budget import get_resource_lock_message
 from .signals import (
+    budget_exceeded,
+    budget_released,
+    budget_warning,
     cache_invalidate,
     charge_authorized,
     charge_declined,
@@ -47,6 +60,7 @@ def new_charge_created_receiver(sender, charge: Charge, **kwargs):
     Signal receiver for new_charge_created signal.
 
     - log the creation of a new charge.
+    - evaluate the budgets attached to the charged resource.
     """
     logger.debug(
         "%s New charge created: %s, id: %s",
@@ -54,6 +68,7 @@ def new_charge_created_receiver(sender, charge: Charge, **kwargs):
         charge,
         charge.id,  # type: ignore
     )
+    evaluate_resource_constraints(charge.resource_locator)
 
 
 @receiver(cache_invalidate)
@@ -76,7 +91,7 @@ def charge_authorized_receiver(sender, record_locator: str, charge: str, **kwarg
 
     - log the authorization of a charge.
     """
-    logger.info(
+    logger.debug(
         "%s Charge authorized: record_locator: %s, charge: %s",
         logging.formatted_text(f"{module_prefix}.charge_authorized()"),
         record_locator,
@@ -211,4 +226,67 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
         logging.formatted_text(f"{module_prefix}.charge_post_save()"),
         charge_json,
         created,
+    )
+
+
+@receiver(post_save, sender=Budget)
+def budget_post_save(sender: Budget, instance: Budget, created, **kwargs):
+    """Signal receiver for created/saved of Budget model.
+
+    Changed limits apply at once.
+    """
+    for constraint in instance.constraints.filter(is_active=True):  # type: ignore[attr-defined]
+        constraint.evaluate()
+
+
+@receiver(post_save, sender=ResourceConstraint)
+def resource_constraint_post_save(sender: ResourceConstraint, instance: ResourceConstraint, created, **kwargs):
+    """Signal receiver for created/saved of ResourceConstraint model.
+
+    A budget applies as soon as it is attached.
+    """
+    instance.evaluate()
+
+
+@receiver(post_save, sender=ResourceLock)
+@receiver(post_delete, sender=ResourceLock)
+def resource_lock_changed(sender: ResourceLock, instance: ResourceLock, **kwargs):
+    """Signal receiver for saved/deleted of ResourceLock model.
+
+    charge_authorization() sees the change at once.
+    """
+    get_resource_lock_message.invalidate(instance.resource_locator)
+
+
+@receiver(budget_warning)
+def budget_warning_receiver(sender, resource_constraint: ResourceConstraint, actual, limit, **kwargs):
+    """Signal receiver for budget_warning signal."""
+    logger.warning(
+        "%s Budget warning: %s has spent %s of its limit of %s.",
+        logging.formatted_text(f"{module_prefix}.budget_warning()"),
+        resource_constraint,
+        actual,
+        limit,
+    )
+
+
+@receiver(budget_exceeded)
+def budget_exceeded_receiver(sender, resource_constraint: ResourceConstraint, lock, reason: str, **kwargs):
+    """Signal receiver for budget_exceeded signal."""
+    logger.warning(
+        "%s Budget exceeded: %s %s %s",
+        logging.formatted_text(f"{module_prefix}.budget_exceeded()"),
+        resource_constraint,
+        "is locked." if lock else "is not locked, because the budget only warns.",
+        reason,
+    )
+
+
+@receiver(budget_released)
+def budget_released_receiver(sender, resource_constraint: ResourceConstraint, **kwargs):
+    """Signal receiver for budget_released signal."""
+    logger.info(
+        "%s Budget released: %s is no longer locked.",
+        logging.formatted_text(f"{module_prefix}.budget_released()"),
+        resource_constraint,
     )

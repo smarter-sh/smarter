@@ -1,10 +1,13 @@
 """Test the LLMHost service: :class:`smarter.apps.llmhost.services.LLMHostService`."""
 
+from decimal import Decimal
 from unittest.mock import MagicMock
 
+from smarter.apps.account.models import Budget, Charge, ChargeTypes
 from smarter.apps.llmhost.models import LLMHost, LLMHostEvent
 from smarter.apps.llmhost.services import (
     HealthProber,
+    LLMHostBudgetExceeded,
     LLMHostClusterError,
     LLMHostConfigurationError,
     LLMHostService,
@@ -164,6 +167,33 @@ class TestLLMHostService(LLMHostTestBase):
         self.cluster.ready = False
         with self.assertRaises(LLMHostClusterError):
             self.service.launch(llmhost)
+
+    def test_launch_budget_exceeded(self):
+        """Test that an LLMHost is not launched when its compute's budget is exceeded."""
+        failed = self.connect(llmhost_launch_failed)
+        llmhost = self.new_llmhost("test_service_budget")
+        budget = Budget.objects.create(
+            name=f"test_service_budget_{self.hash_suffix}", periodic_limit=Decimal("1.00"), message="Over budget."
+        )
+        self.addCleanup(budget.delete)
+        budget.attach(llmhost.compute)
+        charge = Charge.objects.create(
+            resource_locator=llmhost.compute.record_locator,  # type: ignore[union-attr]
+            charge_type=ChargeTypes.COMPUTE.value,
+            prompt_tokens=0,
+            completion_tokens=0,
+            total_tokens=0,
+            total_cost=Decimal("2.00"),
+        )
+        self.addCleanup(charge.delete)
+        with self.assertRaisesRegex(LLMHostBudgetExceeded, "Over budget."):
+            self.service.launch(llmhost)
+        self.assertEqual(self.cluster.applied, [])
+        llmhost.refresh_from_db()
+        self.assertEqual(llmhost.status, "error")
+        self.assertEqual(llmhost.status_message, "Over budget.")
+        self.assertEqual(self.events(llmhost), ["error"])
+        failed.assert_called_once()
 
     def test_launch_rejected(self):
         """Test that a rejected launch sets the error status, records it, and signals it."""

@@ -518,9 +518,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     def authorize(self) -> None:
         """
-        Authorizes the resource for use by checking if it is ready and if the user profile is valid.
+        Check that no budget forbids charges to this resource.
 
-        Raises a :class:`SmarterValueError` if the resource is not ready or if the user profile is invalid.
+        Call it before spending on it.
+
+        It is not called when the resource is looked up, or checked for readiness, so that a
+        resource whose budget is exceeded can still be viewed and managed.
+
+        :raises SmarterBudgetExceeded: if a budget's resource lock forbids charges to it.
         """
         if not self.is_billable_resource:
             return None
@@ -538,8 +543,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :rtype: bool
         """
         retval = super().ready and self.user_profile is not None
-        if retval and self.is_billable_resource:
-            self.authorize()
         return retval
 
     # pylint: disable=W0221
@@ -805,12 +808,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         if pk:
             retval = _get_object_by_pk(pk=pk, class_name=cls.__name__)
-            retval.authorize()
             return retval
 
         if session_key:
             retval = _get_object_by_session_key(session_key=session_key, class_name=cls.__name__)
-            retval.authorize()
             return retval
 
         try:
@@ -836,11 +837,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         if user_profile:
             # call this regardless of whether name is provided.
             retval = _get_object_by_name_and_user_profile(name=name, user_profile=user_profile, class_name=cls.__name__)
-            retval.authorize()
             return retval
         elif account:
             retval = _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
-            retval.authorize()
             return retval
 
         # no ownership info provided, so fall back to the super().

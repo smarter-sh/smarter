@@ -12,7 +12,6 @@ from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
 
 # our stuff
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.signals import new_user_created
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
@@ -664,11 +663,10 @@ class UserProfile(MetaDataModel):
             retval: UserProfile
             if user and account:
                 retval = _get_object_by_user_and_account(user, account, UserProfile.__name__)
-            if user:
+            elif user:
                 retval = _get_object_by_user(user=user, class_name=UserProfile.__name__)
-            if account:
+            else:
                 retval = _get_object_by_account(account=account, class_name=UserProfile.__name__)
-            charge_authorization(retval.record_locator, UserProfile.__name__)
             return retval
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]

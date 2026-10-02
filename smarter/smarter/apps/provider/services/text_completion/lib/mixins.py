@@ -7,7 +7,6 @@ from django.db.models.query import QuerySet
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Charge, UserProfile
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.prompt.models import (
     Prompt,
@@ -775,8 +774,9 @@ class ChatDbMixin(AccountMixin):
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 total_tokens=total_tokens,
+                provider=getattr(self, "provider_name", None),
+                model=getattr(self, "model", None),
             )
-        charge_authorization(resource_locators, charge_type)  # type: ignore
 
 
 __all__ = ["ChatDbMixin"]

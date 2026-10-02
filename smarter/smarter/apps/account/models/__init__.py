@@ -10,8 +10,20 @@ from .account import (
     welcome_email_context,
 )
 from .account_contact import AccountContact
-from .budget import Budget, ResourceConstraint, ResourceLock, charge_authorization
-from .charge import AggregatedCharges, Charge, ChargeTypes
+from .budget import (
+    Budget,
+    BudgetAction,
+    BudgetPeriod,
+    BudgetUnit,
+    ResourceConstraint,
+    ResourceLock,
+    SmarterBudgetExceeded,
+    SmarterChargeAuthorizationFailed,
+    charge_authorization,
+    evaluate_budgets,
+    evaluate_resource_constraints,
+)
+from .charge import Actuals, AggregatedCharges, Charge, ChargeTypes, get_actuals
 from .llm_prices import LLMPrices
 from .metadata_with_ownership import (
     MetaDataWithOwnershipModel,
@@ -23,10 +35,19 @@ from .user_profile import UserProfile
 __all__ = [
     "Account",
     "AccountContact",
+    "Actuals",
     "Budget",
+    "BudgetAction",
+    "BudgetPeriod",
+    "BudgetUnit",
     "ResourceConstraint",
     "ResourceLock",
+    "SmarterBudgetExceeded",
+    "SmarterChargeAuthorizationFailed",
     "charge_authorization",
+    "evaluate_budgets",
+    "evaluate_resource_constraints",
+    "get_actuals",
     "Charge",
     "AggregatedCharges",
     "ChargeTypes",

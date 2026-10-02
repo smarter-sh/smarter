@@ -20,6 +20,7 @@ from .cluster import (
 )
 from .discovery import ModelInfo, draft_manifest, estimate_vram_gb, get_catalog
 from .exceptions import (
+    LLMHostBudgetExceeded,
     LLMHostClusterError,
     LLMHostConfigurationError,
     LLMHostDiscoveryError,
@@ -35,6 +36,7 @@ __all__ = [
     "KubectlClusterBackend",
     "LLMHostClusterError",
     "LLMHostConfigurationError",
+    "LLMHostBudgetExceeded",
     "LLMHostDiscoveryError",
     "LLMHostObservation",
     "LLMHostService",

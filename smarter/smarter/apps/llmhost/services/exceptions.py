@@ -19,5 +19,9 @@ class LLMHostComputeError(LLMHostServiceError):
     """An LLMHost does not fit its compute, or the compute's node group cannot be managed."""
 
 
+class LLMHostBudgetExceeded(LLMHostServiceError):
+    """A budget's resource lock forbids charges to the LLMHost's compute, its owner, or their account."""
+
+
 class LLMHostDiscoveryError(LLMHostServiceError):
     """A model catalog is unavailable, or does not have the model."""

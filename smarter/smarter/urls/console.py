@@ -23,6 +23,8 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
+from smarter.apps.account.views.budget import urls as budget_urls
+from smarter.apps.account.views.budget.const import namespace as budget_namespace
 from smarter.apps.account.views.password_management import (
     PasswordConfirmView,
     PasswordResetRequestView,
@@ -173,6 +175,7 @@ urlpatterns = [
     path("admin/", admin.site.urls, name="django_admin"),
     path("api/", include(urls, namespace=api_namespace)),
     path("authtoken/", include(drf_urls, namespace=drf_namespace)),
+    path("budget/", include(budget_urls, namespace=budget_namespace)),
     path("connection/", include(connection_urls, namespace=connection_namespace)),
     path("guardrail/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),

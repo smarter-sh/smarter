@@ -84,6 +84,12 @@ class DocsExampleManifestPromptView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.PROMPT)
 
 
+class DocsExampleManifestBudgetView(DocsExampleManifestBaseView):
+    """Budget example manifest view."""
+
+    kind = SAMKinds(SAMKinds.BUDGET)
+
+
 class DocsExampleManifestGuardrailView(DocsExampleManifestBaseView):
     """Guardrail JSON Schema view."""
 

@@ -31,7 +31,7 @@ import ipaddress
 import socket
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Iterator, Mapping, Optional
 
 import httpx
@@ -200,6 +200,7 @@ class Usage:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+    model: Optional[str] = field(default=None, compare=False)
 
     def merge(self, other: Optional["Usage"]) -> "Usage":
         """
@@ -213,7 +214,12 @@ class Usage:
             return self
         prompt = max(self.prompt_tokens, other.prompt_tokens)
         completion = max(self.completion_tokens, other.completion_tokens)
-        return Usage(prompt, completion, max(self.total_tokens, other.total_tokens, prompt + completion))
+        return Usage(
+            prompt,
+            completion,
+            max(self.total_tokens, other.total_tokens, prompt + completion),
+            self.model or other.model,
+        )
 
     def __bool__(self) -> bool:
         return bool(self.prompt_tokens or self.completion_tokens or self.total_tokens)
@@ -265,6 +271,15 @@ def extract_usage(data: Any) -> Optional[Usage]:
         completion = _int(gemini, "candidatesTokenCount", "thoughtsTokenCount")
         total = _int(gemini, "totalTokenCount") or prompt + completion
         usage = usage.merge(Usage(prompt, completion, total))
+    if usage:
+        # the model that answered, to price the tokens. Gemini reports it as modelVersion.
+        for container in (data, data.get("message"), data.get("response")):
+            if isinstance(container, dict) and isinstance(container.get("model"), str):
+                usage.model = container["model"]
+                break
+        else:
+            if isinstance(data.get("modelVersion"), str):
+                usage.model = data["modelVersion"]
     return usage if usage else None
 
 
@@ -307,14 +322,14 @@ class SSEUsageReader:
 ###############################################################################
 def record_charges(proxy: Proxy, user_profile: UserProfile, usage: Usage) -> None:
     """
-    Charge a request's tokens to the Proxy, the caller, and the caller's account.
+    Charge a request's tokens to the Proxy, its Provider, the caller, and the caller's account.
 
     The charges are created by a Celery task. A failure is logged, and never fails the request.
     """
     # pylint: disable=C0415
     from smarter.apps.account.tasks import create_charge
 
-    for resource_locator in (proxy.record_locator, user_profile.record_locator, user_profile.account.record_locator):
+    for resource_locator in budget_resource_locators(proxy, user_profile):
         try:
             create_charge.delay(
                 resource_locator=resource_locator,
@@ -322,23 +337,31 @@ def record_charges(proxy: Proxy, user_profile: UserProfile, usage: Usage) -> Non
                 prompt_tokens=usage.prompt_tokens,
                 completion_tokens=usage.completion_tokens,
                 total_tokens=usage.total_tokens,
+                provider=proxy.provider.name if proxy.provider_id else None,  # type: ignore[attr-defined]
+                model=usage.model,
             )
         # pylint: disable=broad-except
         except Exception as e:
             logger.error("%s.record_charges() failed to charge %s: %s", logger_prefix, resource_locator, e)
 
 
+def budget_resource_locators(proxy: Proxy, user_profile: UserProfile) -> list[str]:
+    """The record locators of everything that a request is charged to, and whose budgets it must respect."""
+    retval = [proxy.record_locator]
+    if proxy.provider_id:  # type: ignore[attr-defined]
+        retval.append(proxy.provider.record_locator)
+    retval.extend([user_profile.record_locator, user_profile.account.record_locator])
+    return retval
+
+
 def check_budget(proxy: Proxy, user_profile: UserProfile) -> None:
     """
-    Refuse the request if a budget's resource lock forbids charges to the Proxy, the caller, or their account.
+    Refuse the request if a budget's resource lock forbids charges to the Proxy, its Provider, the caller, or their account.
 
     :raises ProxyBudgetExceeded: if one does.
     """
     try:
-        charge_authorization(
-            [proxy.record_locator, user_profile.record_locator, user_profile.account.record_locator],
-            ChargeTypes.PROMPT_COMPLETION.value,
-        )
+        charge_authorization(budget_resource_locators(proxy, user_profile), ChargeTypes.PROMPT_COMPLETION.value)
     except SmarterChargeAuthorizationFailed as e:
         raise ProxyBudgetExceeded(f"Proxy {proxy.name}: a budget forbids more charges. {e.message}") from e
 
@@ -572,6 +595,7 @@ __all__ = [
     "ProxyForwarder",
     "SSEUsageReader",
     "Usage",
+    "budget_resource_locators",
     "check_budget",
     "check_upstream_host",
     "configure_transport",

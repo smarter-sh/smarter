@@ -9,9 +9,14 @@ from http import HTTPStatus
 from typing import Any
 
 from django.core.handlers.asgi import ASGIRequest
+from django.http import JsonResponse
 from openai.types.chat.chat_completion import ChatCompletion
 
-from smarter.apps.account.models import UserProfile, charge_authorization
+from smarter.apps.account.models import (
+    SmarterBudgetExceeded,
+    UserProfile,
+    charge_authorization,
+)
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.protocols import (
     OpenAICompatiblePassthroughProtocol,
@@ -127,7 +132,15 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         provider API access.
         """
-        charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
+        try:
+            charge_authorization(
+                [self.user_profile.record_locator, self.user_profile.account.record_locator],  # type: ignore
+                self.__class__.__name__,
+            )
+        except SmarterBudgetExceeded as e:
+            return JsonResponse(  # type: ignore[return-value]
+                data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
+            )
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")
         kwargs.pop("provider_name")
         logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)

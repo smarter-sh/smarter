@@ -9,7 +9,8 @@ Classes & Constants
 -------------------
 
 - :class:`Charge`: Represents a single billing event for a user profile, including provider, charge type, token usage, and references.
-- :data:`ChargeTypes`: List of available charge types (completion, plugin, tool).
+- :data:`ChargeTypes`: List of available charge types (completion, plugin, tool, compute).
+- :class:`Actuals`, :func:`get_actuals`: what a resource has actually spent in a period of time.
 
 Key Features
 ------------
@@ -33,11 +34,13 @@ Example
     )
 """
 
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Optional
 
 from django.db import models, transaction
-from django.db.models import Count, Sum
+from django.db.models import BigIntegerField, Count, ExpressionWrapper, F, Max, Sum
 from django.db.models.functions import (
     ExtractDay,
     ExtractHour,
@@ -67,17 +70,20 @@ class ChargeTypes(SmarterEnumAbstract):
     - ``PROMPT_COMPLETION``: a prompt completion charge.
     - ``PLUGIN``: a plugin charge.
     - ``TOOL``: a tool charge.
+    - ``COMPUTE``: an hour of infrastructure, e.g. the nodes of an LLMHostCompute. It has no tokens.
     """
 
     PROMPT_COMPLETION = "completion"
     PLUGIN = "plugin"
     TOOL = "tool"
+    COMPUTE = "compute"
 
 
 CHARGE_TYPES = [
     (ChargeTypes.PROMPT_COMPLETION.value, "Prompt Completion"),
     (ChargeTypes.PLUGIN.value, "Plugin"),
     (ChargeTypes.TOOL.value, "Tool"),
+    (ChargeTypes.COMPUTE.value, "Compute"),
 ]
 
 
@@ -119,7 +125,7 @@ class Charge(TimestampedModel):
     prompt_tokens = models.IntegerField()
     completion_tokens = models.IntegerField()
     total_tokens = models.IntegerField()
-    total_cost = models.DecimalField(max_digits=10, decimal_places=8, default=Decimal("0"))
+    total_cost = models.DecimalField(max_digits=18, decimal_places=8, default=Decimal("0"))
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -172,7 +178,7 @@ class AggregatedCharges(TimestampedModel):
     prompt_tokens = models.IntegerField()
     completion_tokens = models.IntegerField()
     total_tokens = models.IntegerField()
-    total_cost = models.DecimalField(max_digits=10, decimal_places=5, default=Decimal("0"))
+    total_cost = models.DecimalField(max_digits=18, decimal_places=5, default=Decimal("0"))
 
 
 @transaction.atomic
@@ -185,7 +191,12 @@ def aggregate_charges() -> int:
 
     def aggregate_open_charges():
         """Aggregates open charges and creates corresponding AggregatedCharges entries."""
-        charges = Charge.objects.all()
+        # only the charges that exist now. Charges that Celery workers create while this runs
+        # are aggregated next time, rather than deleted without having been aggregated.
+        last_id = Charge.objects.aggregate(last_id=Max("id"))["last_id"]
+        if last_id is None:
+            return 0
+        charges = Charge.objects.filter(id__lte=last_id)
 
         aggregates = (
             charges.annotate(
@@ -277,6 +288,7 @@ def aggregate_charges() -> int:
                     year=row["created_year"],
                     month=row["created_month"],
                     day=row["created_day"],
+                    hour=0,
                 )
                 for row in aggregates
             ]
@@ -288,8 +300,74 @@ def aggregate_charges() -> int:
     return retval
 
 
+def _hour_key(when: datetime) -> int:
+    """The year, month, day and hour of a datetime as one sortable integer, e.g. 2026100113."""
+    when = timezone.localtime(when)
+    return when.year * 1000000 + when.month * 10000 + when.day * 100 + when.hour
+
+
+@dataclass
+class Actuals:
+    """What a resource has actually spent in a period of time."""
+
+    records: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    total_cost: Decimal = Decimal("0")
+
+    def add(self, row: dict) -> None:
+        """Add an aggregate row of Charge or AggregatedCharges sums."""
+        self.records += row.get("records") or 0
+        self.prompt_tokens += row.get("prompt_tokens") or 0
+        self.completion_tokens += row.get("completion_tokens") or 0
+        self.total_tokens += row.get("total_tokens") or 0
+        self.total_cost += row.get("total_cost") or Decimal("0")
+
+
+def get_actuals(resource_locator: str, start: Optional[datetime] = None, end: Optional[datetime] = None) -> Actuals:
+    """
+    What a resource has spent from start up to end, from its charges whether aggregated or not.
+
+    AggregatedCharges have the precision of an hour, so an hour is counted if it begins at or
+    after start, and before end. Charges of a previous month are rolled up into days.
+
+    :param resource_locator: The TimestampedModel.record_locator of the resource.
+    :param start: The beginning of the period. None means the beginning of time.
+    :param end: The end of the period, exclusive. None means now.
+    """
+    end = end or timezone.now()
+    retval = Actuals()
+    sums = {
+        "records": Count("id"),
+        "prompt_tokens": Sum("prompt_tokens"),
+        "completion_tokens": Sum("completion_tokens"),
+        "total_tokens": Sum("total_tokens"),
+        "total_cost": Sum("total_cost"),
+    }
+
+    charges = Charge.objects.filter(resource_locator=resource_locator, created_at__lt=end)
+    if start:
+        charges = charges.filter(created_at__gte=start)
+    retval.add(charges.aggregate(**sums))
+
+    aggregated = AggregatedCharges.objects.filter(resource_locator=resource_locator).annotate(
+        hour_key=ExpressionWrapper(
+            F("year") * 1000000 + F("month") * 10000 + F("day") * 100 + F("hour"), output_field=BigIntegerField()
+        )
+    )
+    aggregated = aggregated.filter(hour_key__lte=_hour_key(end - timedelta(microseconds=1)))
+    if start:
+        aggregated = aggregated.filter(hour_key__gte=_hour_key(start))
+    sums["records"] = Sum("records")
+    retval.add(aggregated.aggregate(**sums))
+    return retval
+
+
 __all__ = [
+    "Actuals",
     "Charge",
     "AggregatedCharges",
     "ChargeTypes",
+    "get_actuals",
 ]

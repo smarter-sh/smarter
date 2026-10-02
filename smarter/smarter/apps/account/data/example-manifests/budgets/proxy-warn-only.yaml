@@ -1,0 +1,27 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: openai_proxy_weekly_watch
+  description: |
+    An example Budget manifest: a budget that only warns. Requests through the openai Proxy are
+    never refused, but the budget_warning and budget_exceeded signals are sent when its spending
+    reaches $50, and then $100, in a week, e.g. to notify an administrator.
+  version: 1.0.0
+  tags:
+    - example
+    - proxy
+    - monitoring
+  annotations:
+    - smarter.sh/budget/purpose: spending alerts
+spec:
+  config:
+    unit: cost
+    period: week
+    periodicLimit: 100.00
+    absoluteLimit: 0
+    duration: 0
+    action: warn
+    warningThreshold: 50
+  resources:
+    - kind: Proxy
+      name: openai

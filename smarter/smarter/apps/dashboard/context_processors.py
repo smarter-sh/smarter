@@ -77,6 +77,7 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
+from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.dropzone.urls import DropzoneReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
@@ -147,6 +148,7 @@ def sidebar_context() -> dict[str, Any]:
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "guardrails": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
+            "budgets": reverse(BudgetReverseNames.namespace, BudgetReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
             "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),

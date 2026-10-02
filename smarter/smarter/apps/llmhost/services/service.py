@@ -32,7 +32,11 @@ from typing import Any, Iterable, Optional
 from django.utils import timezone
 from pydantic import ValidationError
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import (
+    SmarterBudgetExceeded,
+    UserProfile,
+    charge_authorization,
+)
 from smarter.apps.llmhost.const import (
     API_KEY_BYTES,
     API_KEY_SECRET_NAME,
@@ -64,6 +68,7 @@ from .compute import ComputeProvisioner, ComputeState, computes_for, resolve_com
 from .discovery import ModelInfo, draft_manifest, get_catalog
 from .engines import get_engine
 from .exceptions import (
+    LLMHostBudgetExceeded,
     LLMHostClusterError,
     LLMHostComputeError,
     LLMHostConfigurationError,
@@ -270,6 +275,25 @@ class LLMHostService:
             ctx, hf_token=REDACTED if ctx.hf_token else None, api_key=REDACTED if ctx.api_key else None
         )
 
+    def authorize_budgets(self, llmhost: LLMHost) -> None:
+        """
+        Refuse to launch an LLMHost whose compute, owner, or account a budget has locked.
+
+        Running nodes are not removed: the budget only stops more of them being added.
+
+        :raises LLMHostBudgetExceeded: if a budget's resource lock forbids charges to one of them.
+        """
+        resources = [llmhost.compute, llmhost.user_profile, llmhost.user_profile.account]
+        try:
+            charge_authorization([r.record_locator for r in resources if r is not None], self.__class__.__name__)
+        except SmarterBudgetExceeded as e:
+            llmhost.status = Status.ERROR.value
+            llmhost.status_message = e.message
+            llmhost.save(update_fields=["status", "status_message", "updated_at"])
+            llmhost.record_event(EventType.ERROR.value, f"Launch refused: {e.message}")
+            llmhost_launch_failed.send(sender=self.__class__, llmhost=llmhost, error=e.message)
+            raise LLMHostBudgetExceeded(e.message) from e
+
     def launch(self, llmhost: LLMHost) -> LLMHostObservation:
         """
         Launch the LLMHost: apply its Kubernetes resources, then give its compute's node group the.
@@ -287,7 +311,10 @@ class LLMHostService:
         :raises LLMHostClusterError: if the cluster is unavailable, or rejects the resources.
         :raises LLMHostComputeError: if the compute's node group cannot be scaled. The resources
             are applied, so launching again retries.
+        :raises LLMHostBudgetExceeded: if a budget forbids more charges to its compute, its owner,
+            or their account. Nothing is applied.
         """
+        self.authorize_budgets(llmhost)
         spec = self.spec_of(llmhost)
         if not self.cluster.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")

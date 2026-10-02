@@ -27,6 +27,16 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": {"queue": "beat_tasks"},
     },
+    "evaluate-budget-constraints": {
+        "task": "smarter.apps.account.tasks.evaluate_budget_constraints",
+        "schedule": timedelta(hours=1),
+        "options": {"queue": "beat_tasks"},
+    },
+    "charge-llmhost-computes": {
+        "task": "smarter.apps.llmhost.tasks.charge_llmhost_computes",
+        "schedule": timedelta(hours=1),
+        "options": {"queue": "beat_tasks"},
+    },
     "purge-guardrail-events": {
         "task": "smarter.apps.guardrail.tasks.purge_guardrail_events",
         "schedule": timedelta(days=1),
