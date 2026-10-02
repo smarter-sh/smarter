@@ -1,13 +1,33 @@
 ---
 #------------------------------------------------------------------------------
-# - Initialize the full local development environment via `make init`
+# - Initialize the full local development environment, as `make init` does
 # - Run the Smarter unit test suite inside the smarter-app container
 #
 # This workflow reproduces the local developer workflow from the Makefile:
-# `make init` (Python venv, React build, collectstatic, Docker build, MySQL
-# setup, migrations, platform initialization, example resources, pre-commit)
-# followed by `make docker-test`. The runner is first provisioned with the
-# prerequisites that `make init` assumes are already installed locally.
+# the sub-targets of `make init` (Python venv, React build, collectstatic,
+# Docker build, MySQL setup, migrations, platform initialization, example
+# resources) followed by `make docker-test`. The runner is first provisioned
+# with the prerequisites that `make init` assumes are already installed
+# locally.
+#
+# The sub-targets are called one at a time, rather than via `make init`, so
+# that each can be skipped when its output is restored from cache:
+#
+#   python-init    -> venv/                     key: Python version + local.txt
+#                     node_modules/             key: Node version + package-lock.json
+#   react-install  -> smarter/react/**/node_modules
+#   react-build    -> smarter/smarter/static/react/, smarter-common/dist/
+#                                               key: git tree hash of smarter/react
+#   docker-build   -> BuildKit layer cache (type=gha)
+#
+# Caches are restored and saved with actions/cache/restore and
+# actions/cache/save, so that they are saved as soon as they are built.
+# actions/cache only saves when the whole job succeeds, so a failing test
+# would otherwise prevent anything from ever being cached.
+#
+# pre-commit-init is skipped: it installs a git hook and runs
+# `pre-commit autoupdate`, which rewrites .pre-commit-config.yaml. Neither
+# affects the tests.
 #
 # Make sure the following secrets are configured in your
 # [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
@@ -15,8 +35,8 @@
 # AWS_ACCESS_KEY_ID
 # AWS_REGION
 # AWS_SECRET_ACCESS_KEY
-# SMARTER_OPENAI_API_KEY
-# SMARTER_GOOGLE_MAPS_API_KEY
+# OPENAI_API_KEY
+# GOOGLE_MAPS_API_KEY
 #
 # Unit tests that require connectivity to AWS or to LLM providers will be
 # skipped or fail if these are not set.
@@ -47,16 +67,29 @@ jobs:
       # Node/npm (python-init, react-install, react-build) and the
       # docker-compose v1 command name, which GitHub-hosted runners no longer
       # ship. The shim forwards to the Docker Compose v2 plugin.
+      #
+      # The exact Python and Node versions are part of the venv and
+      # node_modules cache keys: venv/bin/python is a symlink into the
+      # runner's tool cache, and native npm modules are built for one Node ABI.
       #------------------------------------------------------------------------
       - name: Set up Python
+        id: python
         uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
+      - name: Install Node
+        id: node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+
       #------------------------------------------------------------------------
       # The mariadb Python package has no Linux wheels on PyPI, so pip builds it
       # from source, which requires MariaDB Connector/C (mariadb_config).
-      # Mirrors the mariadb_connector stage of the Dockerfile.
+      # Mirrors the mariadb_connector stage of the Dockerfile. This runs even
+      # when the venv is restored from cache, because the compiled package
+      # links against libmariadb at runtime.
       #------------------------------------------------------------------------
       - name: Install MariaDB Connector/C
         shell: bash
@@ -71,30 +104,147 @@ jobs:
           sudo apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat
           mariadb_config --cc_version
 
-      - name: Install Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 25
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            smarter/react/package-lock.json
+      - name: Install docker-compose shim
+        shell: bash
+        run: |
+          printf '#!/bin/sh\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose > /dev/null
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
 
       #------------------------------------------------------------------------
-      # python-init deletes and recreates venv/ but installs with
-      # PIP_CACHE_DIR=.pypi_cache, so caching that directory makes the
-      # reinstall a local, offline-speed operation.
+      # The Makefile includes .env, and docker compose reads build args and
+      # container environment from it. Secrets are appended to the defaults
+      # from .env.example. This must run before the first `make` call, which
+      # would otherwise copy .env.example to .env itself.
+      #
+      # SMARTER_FERNET_ENCRYPTION_KEY must be set. Without it, every process
+      # (smarter-app, smarter-worker, the test runner, each manage.py call in
+      # `make docker-init`) generates its own random key, so a Secret encrypted
+      # by one process cannot be decrypted by another:
+      # cryptography.fernet.InvalidToken. A fresh key per run is fine because
+      # the database is created per run.
       #------------------------------------------------------------------------
-      - name: Cache pip downloads
-        uses: actions/cache@v5
+      - name: Create .env
+        shell: bash
+        run: |
+          FERNET_KEY="$(openssl rand -base64 32 | tr '+/' '-_')"
+          echo "::add-mask::${FERNET_KEY}"
+          cp .env.example .env
+          {
+            echo ""
+            echo "# --- added by GitHub Actions test.yml ---"
+            echo "ENVIRONMENT=${{ env.ENVIRONMENT }}"
+            echo "AWS_REGION=${{ secrets.AWS_REGION || env.AWS_REGION }}"
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            echo "SMARTER_OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+            echo "SMARTER_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}"
+            echo "SMARTER_FERNET_ENCRYPTION_KEY=${FERNET_KEY}"
+          } >> .env
+
+      #------------------------------------------------------------------------
+      # Locally, developers run `make init` with the venv activated. Putting
+      # venv/bin on the PATH up front has the same effect for the targets that
+      # call `python` directly (collectstatic) once the venv exists.
+      #------------------------------------------------------------------------
+      - name: Add venv to PATH
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/venv/bin" >> $GITHUB_PATH
+
+      #========================================================================
+      # make python-init
+      #
+      # The venv is only restored on an exact key match: a venv built from
+      # other requirements would keep packages that are no longer pinned.
+      # On a miss, python-init deletes and recreates venv/ and installs with
+      # PIP_CACHE_DIR=.pypi_cache, which is restored from the closest previous
+      # requirements so that only changed packages are downloaded.
+      #
+      # python-init also runs `npm install` in the repository root
+      # (semantic-release, prettier, gulp), so root node_modules is cached too.
+      #========================================================================
+      - name: Restore Python venv
+        id: venv
+        uses: actions/cache/restore@v5
+        with:
+          path: venv
+          key: venv-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}
+
+      - name: Restore pip downloads
+        id: pypi
+        if: steps.venv.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v5
         with:
           path: .pypi_cache
           key: pypi-${{ runner.os }}-py3.13-${{ hashFiles('smarter/requirements/local.txt') }}
           restore-keys: |
             pypi-${{ runner.os }}-py3.13-
 
-      #------------------------------------------------------------------------
-      # Docker layer caching for the `docker-compose build` inside `make init`.
+      - name: Restore root node_modules
+        id: root-node-modules
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: root-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            root-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-
+
+      - name: make python-init
+        if: steps.venv.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          make python-init
+
+      - name: npm install (python-init, venv restored from cache)
+        if: steps.venv.outputs.cache-hit == 'true' && steps.root-node-modules.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          npm install
+
+      - name: Save Python venv
+        if: steps.venv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: venv
+          key: ${{ steps.venv.outputs.cache-primary-key }}
+
+      - name: Save pip downloads
+        if: steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .pypi_cache
+          key: ${{ steps.pypi.outputs.cache-primary-key }}
+
+      - name: Save root node_modules
+        if: steps.root-node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.root-node-modules.outputs.cache-primary-key }}
+
+      #========================================================================
+      # make react-install && make react-build
+      #
+      # Shared with build.yml, so that both use the same cache entries. See
+      # .github/actions/react-build/action.yml.
+      #========================================================================
+      - name: Build React components
+        uses: ./.github/actions/react-build
+
+      #========================================================================
+      # make collectstatic
+      #
+      # Fast, and its output depends on both the Python packages and the
+      # React build, so it always runs.
+      #========================================================================
+      - name: make collectstatic
+        shell: bash
+        run: |
+          make collectstatic
+
+      #========================================================================
+      # make docker-build
       #
       # - setup-buildx-action makes a BuildKit builder the default, which
       #   Compose uses for its builds.
@@ -103,8 +253,12 @@ jobs:
       #   does this implicitly; Compose does not.
       # - A generated override file adds cache_from/cache_to to the three
       #   services that build the smarter image, and COMPOSE_FILE layers it on
-      #   top of docker-compose.yml so the Makefile runs unchanged.
-      #------------------------------------------------------------------------
+      #   top of docker-compose.yml so the Makefile runs unchanged. All three
+      #   build the identical image, so only smarter-app exports the cache.
+      #
+      # BuildKit exports the cache during the build itself, so it is saved
+      # even if a later step fails.
+      #========================================================================
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -134,56 +288,22 @@ jobs:
           EOF
           echo "COMPOSE_FILE=$GITHUB_WORKSPACE/docker-compose.yml:$OVERRIDE" >> $GITHUB_ENV
 
-      - name: Install docker-compose shim
+      - name: make docker-build
         shell: bash
         run: |
-          printf '#!/bin/sh\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose > /dev/null
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose version
+          make docker-build
 
-      #------------------------------------------------------------------------
-      # Locally, developers run `make init` with the venv activated. Putting
-      # venv/bin on the PATH up front has the same effect for the targets that
-      # call `python` and `pre-commit` directly (collectstatic,
-      # pre-commit-init) once python-init has created the venv.
-      #------------------------------------------------------------------------
-      - name: Add venv to PATH
+      #========================================================================
+      # make docker-init
+      #
+      # Starts the containers, creates the database, migrates, and initializes
+      # the platform and example resources. Not cacheable: it populates a
+      # fresh database for this run.
+      #========================================================================
+      - name: make docker-init
         shell: bash
         run: |
-          echo "$GITHUB_WORKSPACE/venv/bin" >> $GITHUB_PATH
-
-      #------------------------------------------------------------------------
-      # The Makefile includes .env, and docker compose reads build args and
-      # container environment from it. Secrets are appended to the defaults
-      # from .env.example.
-      #------------------------------------------------------------------------
-      # SMARTER_FERNET_ENCRYPTION_KEY must be set. Without it, every process
-      # (smarter-app, smarter-worker, the test runner, each manage.py call in
-      # `make init`) generates its own random key, so a Secret encrypted by one
-      # process cannot be decrypted by another: cryptography.fernet.InvalidToken.
-      # A fresh key per run is fine because the database is created per run.
-      - name: Create .env
-        shell: bash
-        run: |
-          FERNET_KEY="$(openssl rand -base64 32 | tr '+/' '-_')"
-          echo "::add-mask::${FERNET_KEY}"
-          cp .env.example .env
-          {
-            echo ""
-            echo "# --- added by GitHub Actions test.yml ---"
-            echo "ENVIRONMENT=${{ env.ENVIRONMENT }}"
-            echo "AWS_REGION=${{ secrets.AWS_REGION || env.AWS_REGION }}"
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-            echo "SMARTER_OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
-            echo "SMARTER_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}"
-            echo "SMARTER_FERNET_ENCRYPTION_KEY=${FERNET_KEY}"
-          } >> .env
-
-      - name: make init
-        shell: bash
-        run: |
-          make init
+          make docker-init
 
       # -----------------------------------------------------------------------
       # Equivalent to `make docker-test`

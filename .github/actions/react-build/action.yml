@@ -1,0 +1,105 @@
+---
+#------------------------------------------------------------------------------
+# Build the React frontend components, or restore them from cache.
+#
+# Equivalent to `make react-install && make react-build`. Shared by build.yml
+# and test.yml so that both read and write the same cache entries. actions/cache
+# includes the path list in the cache version, so the paths below must stay
+# identical for every caller.
+#
+# - The build output is keyed on the git tree hash of smarter/react, which
+#   changes whenever any tracked file under it changes, package-lock.json
+#   included. On a hit, Node, node_modules and the build are all skipped.
+# - On a miss, node_modules is restored from the closest previous lockfile, so
+#   `npm install` only reconciles the difference.
+# - Caches are saved as soon as they are built, rather than by actions/cache's
+#   post-job step, which only saves when the whole job succeeds.
+#
+# A cache is readable from the branch that saved it and from branches based on
+# it, and caches saved on the default branch are readable from every branch.
+#------------------------------------------------------------------------------
+name: React build
+description: "Build the React frontend components, or restore them from cache"
+branding:
+  icon: "package"
+  color: "blue"
+inputs:
+  node-version:
+    description: "The version of Node to build with"
+    required: false
+    type: string
+    default: "25"
+outputs:
+  hash:
+    description: "The git tree hash of smarter/react, which identifies the build"
+    value: ${{ steps.react-src.outputs.tree }}
+  cache-hit:
+    description: "'true' if the build was restored from cache"
+    value: ${{ steps.react-build.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Compute React source hash
+      id: react-src
+      shell: bash
+      run: |
+        echo "tree=$(git rev-parse HEAD:smarter/react)" >> $GITHUB_OUTPUT
+
+    - name: Restore React build
+      id: react-build
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          smarter/smarter/static/react
+          smarter/react/packages/smarter-common/dist
+        key: react-build-${{ runner.os }}-${{ steps.react-src.outputs.tree }}
+
+    - name: Install Node
+      id: node
+      if: steps.react-build.outputs.cache-hit != 'true'
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Restore React node_modules
+      id: react-node-modules
+      if: steps.react-build.outputs.cache-hit != 'true'
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          smarter/react/node_modules
+          smarter/react/packages/*/node_modules
+        key: react-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('smarter/react/package-lock.json') }}
+        restore-keys: |
+          react-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-
+
+    - name: make react-install
+      if: steps.react-build.outputs.cache-hit != 'true' && steps.react-node-modules.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        make react-install
+
+    - name: Save React node_modules
+      if: steps.react-build.outputs.cache-hit != 'true' && steps.react-node-modules.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          smarter/react/node_modules
+          smarter/react/packages/*/node_modules
+        key: ${{ steps.react-node-modules.outputs.cache-primary-key }}
+
+    - name: make react-build
+      if: steps.react-build.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        make react-build
+
+    - name: Save React build
+      if: steps.react-build.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          smarter/smarter/static/react
+          smarter/react/packages/smarter-common/dist
+        key: ${{ steps.react-build.outputs.cache-primary-key }}
