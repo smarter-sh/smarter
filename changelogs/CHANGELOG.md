@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.4...v0.16.0-alpha.5) (2026-10-02)
+
+### Features
+
+* **vectorstore:** manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone ([b904c24](https://github.com/smarter-sh/smarter/commit/b904c24c4590f7e493e23b8ef57b45966afddaed))
+
 ## [0.16.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.3...v0.16.0-alpha.4) (2026-10-02)
 
 ### Bug Fixes
