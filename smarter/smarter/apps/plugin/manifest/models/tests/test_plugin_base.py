@@ -1,6 +1,7 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
+import copy
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -375,11 +376,7 @@ class TestPluginBase(TestAccountMixin):
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.
         for plugin in plugins:
-            self.assertTrue(
-                PluginController(
-                    account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin
-                ).ready
-            )
+            self.assertTrue(PluginController(user_profile=self.user_profile, plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
@@ -387,31 +384,25 @@ class TestPluginBase(TestAccountMixin):
         with self.assertRaises((SmarterPluginError, SAMValidationError)):
             self.plugin_class(data={})
 
-        bad_data = self.data.copy()
-        bad_data.pop(SAMKeys.METADATA.value)
-        # the plugin reports a loader that is not ready as a SAMValidationError
-        with self.assertRaises((SAMLoaderError, SAMValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.SELECTOR.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.PROMPT.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.DATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.METADATA.value].pop("name")
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
+        # every malformed manifest must be rejected. Depending on where it is caught, that
+        # is the loader, the plugin (which reports a loader that is not ready as a
+        # SAMValidationError), or Pydantic. deepcopy, so that each case removes one thing.
+        rejected = (SAMLoaderError, SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
+        removals = [
+            (SAMKeys.METADATA.value,),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.DATA.value),
+            (SAMKeys.METADATA.value, "name"),
+        ]
+        for removal in removals:
+            bad_data = copy.deepcopy(self.data)
+            parent = bad_data
+            for key in removal[:-1]:
+                parent = parent[key]
+            parent.pop(removal[-1])
+            with self.subTest(removed=".".join(removal)), self.assertRaises(rejected):
+                self.plugin_class(data=bad_data)
 
     def test_pydantic_validation_errors(self):
         """Test that the StaticPlugin raises an error when given bad data."""

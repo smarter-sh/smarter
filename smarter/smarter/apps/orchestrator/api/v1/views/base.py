@@ -79,7 +79,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     """
 
     _orchestrator_id: Optional[int] = None
-    _orchestrator: Orchestrator
+    _orchestrator: Optional[Orchestrator] = None
     _name: Optional[str] = None
 
     http_method_names: list[str] = ["get", "post", "options"]
@@ -114,6 +114,14 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: The Orchestrator instance.
         :rtype: Optional[Orchestrator]
         """
+        if self._orchestrator is None:
+            # resolve it lazily from the id or name that dispatch() received
+            if self._orchestrator_id:
+                self._orchestrator = Orchestrator.objects.filter(pk=self._orchestrator_id).first()
+            elif self._name and self.account:
+                self._orchestrator = Orchestrator.objects.filter(
+                    user_profile__account=self.account, name=self._name
+                ).first()
         return self._orchestrator
 
     @property
