@@ -5,7 +5,6 @@ import google.auth.transport.requests
 import requests
 from google.auth.exceptions import GoogleAuthError
 from google.oauth2 import service_account
-from pydantic import SecretStr
 
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
@@ -210,13 +209,13 @@ def initialize_google_maps() -> None:
     API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
     API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
 
-    secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-    if not secret_string or not secret_string.get_secret_value():
+    api_key = get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True)
+    if not api_key:
         logger.error("Google Maps API key environment variable %s is not set.", API_KEY_ENV_VAR)
         return
 
     initialize_secret(
-        secret_string=secret_string.get_secret_value(),
+        secret_string=api_key,
         secret_name=API_KEY_NAME,
         description=f"API key for {NAME} services.",
         user_profile=smarter_cached_objects.smarter_admin_user_profile,

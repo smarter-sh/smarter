@@ -16,6 +16,7 @@
 # AWS_REGION
 # AWS_SECRET_ACCESS_KEY
 # SMARTER_OPENAI_API_KEY
+# SMARTER_GOOGLE_MAPS_API_KEY
 #
 # Unit tests that require connectivity to AWS or to LLM providers will be
 # skipped or fail if these are not set.
@@ -156,9 +157,16 @@ jobs:
       # container environment from it. Secrets are appended to the defaults
       # from .env.example.
       #------------------------------------------------------------------------
+      # SMARTER_FERNET_ENCRYPTION_KEY must be set. Without it, every process
+      # (smarter-app, smarter-worker, the test runner, each manage.py call in
+      # `make init`) generates its own random key, so a Secret encrypted by one
+      # process cannot be decrypted by another: cryptography.fernet.InvalidToken.
+      # A fresh key per run is fine because the database is created per run.
       - name: Create .env
         shell: bash
         run: |
+          FERNET_KEY="$(openssl rand -base64 32 | tr '+/' '-_')"
+          echo "::add-mask::${FERNET_KEY}"
           cp .env.example .env
           {
             echo ""
@@ -167,7 +175,9 @@ jobs:
             echo "AWS_REGION=${{ secrets.AWS_REGION || env.AWS_REGION }}"
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-            echo "SMARTER_OPENAI_API_KEY=${{ secrets.SMARTER_OPENAI_API_KEY }}"
+            echo "SMARTER_OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+            echo "SMARTER_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}"
+            echo "SMARTER_FERNET_ENCRYPTION_KEY=${FERNET_KEY}"
           } >> .env
 
       - name: make init
