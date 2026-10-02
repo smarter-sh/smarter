@@ -5,12 +5,18 @@ import os
 
 from django.http import HttpRequest
 
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.secret.manifest.models.secret.metadata import SAMSecretMetadata
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.apps.secret.manifest.models.secret.spec import (
     SAMSecretSpec,
     SAMSecretSpecConfig,
+)
+from smarter.apps.secret.models import Secret
+from smarter.apps.secret.tests.factories import (
+    factory_secret_teardown,
+    secret_factory,
 )
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
@@ -234,6 +240,32 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
             self.broker.manifest.spec.config.value, self.broker.secret.get_secret(update_last_accessed=False)
         )
         self.assertEqual(self.broker.manifest.spec.config.expiration_date, self.broker.secret.expires_at)
+
+    def test_apply_does_not_overwrite_platform_secret(self):
+        """
+        Test that apply() creates the user's own Secret when the Smarter platform.
+
+        admin already owns a Secret of the same name, leaving the platform's untouched.
+        """
+        name = self.broker.manifest.metadata.name
+        Secret.objects.filter(user_profile=self.user_profile, name=name).delete()
+        platform_secret = secret_factory(
+            user_profile=smarter_cached_objects.smarter_admin_user_profile,
+            name=name,
+            description="platform secret",
+            value="platform-value",
+        )
+        self.addCleanup(factory_secret_teardown, platform_secret)
+
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+
+        secret = Secret.objects.get(user_profile=self.user_profile, name=name)
+        self.assertNotEqual(secret.id, platform_secret.id)
+        self.assertEqual(secret.get_secret(update_last_accessed=False), self.broker.manifest.spec.config.value)
+        platform_secret.refresh_from_db()
+        self.assertEqual(platform_secret.user_profile, smarter_cached_objects.smarter_admin_user_profile)
+        self.assertEqual(platform_secret.get_secret(update_last_accessed=False), "platform-value")
 
     def test_describe(self):
         """
