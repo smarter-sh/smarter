@@ -132,7 +132,7 @@ urlpatterns = [
     path(
         json_schema_path(SAMKinds.GUARDRAIL.value),
         DocsJsonSchemaGuardrailView.as_view(),
-        name=manifest_name(SAMKinds.GUARDRAIL.value),
+        name=json_schema_name(SAMKinds.GUARDRAIL.value),
     ),
     path(
         json_schema_path(SAMKinds.LLM_CLIENT.value),

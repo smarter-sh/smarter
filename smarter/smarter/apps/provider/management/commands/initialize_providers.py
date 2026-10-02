@@ -18,6 +18,7 @@ from smarter.apps.provider.const import (
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
+from smarter.common.conf import smarter_settings
 from smarter.common.conf.const import get_env
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib import json, logging
@@ -254,6 +255,8 @@ class Command(SmarterCommand):
                     **COMMON_DEFAULTS,
                     **provider_configuration,
                     "api_key": secret,
+                    # the platform-wide default provider, e.g. for prompts that do not name one
+                    "is_default": name == smarter_settings.llm_default_provider,
                 },
             )
         # pylint: disable=broad-except

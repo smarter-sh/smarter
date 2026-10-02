@@ -48,9 +48,7 @@ VALID_ANNOTATION_VALUE_TYPES_SET = (
     list,
     dict,
 )
-"""
-Types allowed for annotation values in manifest metadata.
-"""
+"""Types allowed for annotation values in manifest metadata."""
 AnnotationValueType = Union[
     str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict
 ]
@@ -70,10 +68,13 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
 
     def __init__(self, **data):
         """
-        Add support for passing a 'user' argument when initializing the model,
+        Add support for passing a 'user' argument when initializing the model,.
+
         which will be stored in a private attribute.
         """
         user_profile = data.pop("user_profile", None)
+        user = data.pop("user", None)
+        super().__init__(**data)
         if isinstance(user_profile, UserProfile):
             self._user_profile = user_profile
             logger.debug(
@@ -81,24 +82,19 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
             )
             self._user = user_profile.user
             logger.debug("%s user set from user_profile: %s", logger_prefix + f".{self.__class__.__name__}", self._user)
-        else:
-            user = data.pop("user", None)
-            super().__init__(**data)
-            if user is not None:
-                user = get_resolved_user(user)
-                if is_authenticated_user(user):  # type: ignore
-                    self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
-                    if isinstance(self._user_profile, UserProfile):
-                        logger.debug(
-                            "%s initialized with user: %s, resolved user_profile: %s",
-                            logger_prefix + f".{self.__class__.__name__}",
-                            user,
-                            self._user_profile,
-                        )
-                        self._user = user_profile.user
-                        logger.debug(
-                            "%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user
-                        )
+        elif user is not None:
+            user = get_resolved_user(user)
+            if is_authenticated_user(user):  # type: ignore
+                self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+                if isinstance(self._user_profile, UserProfile):
+                    logger.debug(
+                        "%s initialized with user: %s, resolved user_profile: %s",
+                        logger_prefix + f".{self.__class__.__name__}",
+                        user,
+                        self._user_profile,
+                    )
+                    self._user = self._user_profile.user
+                    logger.debug("%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user)
 
     @model_validator(mode="before")
     def coerce_none_strings(cls, data):
@@ -206,6 +202,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     def validate_description(cls, v) -> Optional[str]:
         """
         Validates the ``description`` field for a manifest.
+
         This method ensures that the ``description`` attribute is present. If the value is missing,
         a ``SAMValidationError`` is raised.
 
@@ -221,6 +218,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     def validate_version(cls, v) -> Optional[str]:
         """
         Validates the ``version`` field for a manifest.
+
         This method ensures that the ``version`` attribute is present and follows semantic versioning
         rules. If the value is missing or invalid, a ``SAMValidationError`` is raised
 
@@ -242,6 +240,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     def validate_tags(cls, v) -> Optional[List[str]]:
         """
         Validates the ``tags`` field for a manifest.
+
         This method ensures that each tag in the ``tags`` list adheres to URL-friendly character
         rules. If any tag is invalid, a ``SAMValidationError`` is raised.
 
@@ -266,6 +265,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     def coerce_annotations_to_list(cls, v):
         """
         Pre-validator to coerce stringified JSON lists to Python lists for annotations.
+
         This ensures that if the input is a string (e.g., '[{"key": "value"}]'),
         it is parsed as a list before type validation.
         """
@@ -282,6 +282,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     def validate_annotations(cls, v) -> Optional[List[dict[str, AnnotationValueType]]]:
         """
         Validates the ``annotations`` field for a manifest.
+
         Accepts a list of dicts, where each dict can be a single key-value pair or a flat dict with multiple key-value pairs.
         Supports multi-line string values (YAML block scalars).
         Ensures each annotation key is URL-friendly and each value is a string or scalar (including multi-line strings).
@@ -331,11 +332,17 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
 
 
 class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
-    """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
+    """Pydantic Spec base class.
+
+    Expected to be subclassed by specific manifest classes.
+    """
 
 
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
-    """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
+    """Pydantic Status base class.
+
+    Expected to be subclassed by specific manifest classes.
+    """
 
     recordLocator: str = Field(
         ...,
@@ -376,7 +383,6 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
 
         Do not instantiate this class directly. Instead, create subclasses that define the
         required fields and any additional validation or methods specific to your manifest type.
-
     """
 
     apiVersion: str = Field(

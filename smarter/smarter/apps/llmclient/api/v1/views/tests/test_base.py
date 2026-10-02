@@ -50,7 +50,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        config_path = os.path.join(HERE, "data/llmclient.yaml")
+        config_path = os.path.join(HERE, "data/llm_client.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.loader = SAMLoader(manifest=cls.manifest)
 
@@ -85,9 +85,10 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
             super().tearDownClass()
 
     def test_base_class_properties(self):
-        base_class = LLMClientApiBaseViewSet(self.request)
+        base_class = LLMClientApiBaseViewSet()
 
-        # invoke dispatch method in order to set our class properties
+        # set up the view, as Django does, then invoke dispatch in order to set our class properties
+        base_class.setup(self.request, name=self.broker.llmclient.name)
         base_class.dispatch(self.request, name=self.broker.llmclient.name)
 
         logger.debug(f"test_base_class_properties() request={self.request} name={self.broker.llmclient.name}")

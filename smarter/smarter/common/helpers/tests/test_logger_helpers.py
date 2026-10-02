@@ -22,15 +22,17 @@ class TestLoggerHelpers(SmarterTestBase):
         now = datetime.datetime(2024, 1, 1, 12, 0, 0)
         data = {"now": now}
         result = formatted_json(data)
-        self.assertIn("2024-01-01T12:00:00", result)
+        self.assertIn("2024-01-01 12:00:00", result)
 
-    def test_formatted_json_type_error(self):
+    def test_formatted_json_unserializable(self):
+        """Logging should never fail: SmarterJSONEncoder stringifies what json cannot serialize."""
+
         class Foo:
             pass
 
         data = {"foo": Foo()}
-        with self.assertRaises(TypeError):
-            formatted_json(data)
+        result = formatted_json(data)
+        self.assertIn('"foo"', result)
 
     def test_formatted_text(self):
         text = "hello"

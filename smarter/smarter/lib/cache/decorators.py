@@ -1,5 +1,5 @@
 """
-smarter.lib.cache.cache_results
+Smarter.lib.cache.cache_results
 ===============================
 
 This module provides the ``@cache_results`` decorator and related utilities
@@ -83,9 +83,9 @@ def _generate_sorted_kwargs_cached(sorted_items: KwargsTupleType) -> KwargsTuple
 
 def _generate_sorted_kwargs(kwargs: dict[str, object]) -> KwargsTupleType:
     """
-    Sorts the keyword arguments for consistent generation of sha256 cache key,
-    which is created, in part, on the results of this function.
+    Sorts the keyword arguments for consistent generation of sha256 cache key,.
 
+    which is created, in part, on the results of this function.
 
     :param kwargs: The keyword arguments to sort.
     :return: A tuple of sorted keyword argument items.
@@ -131,7 +131,8 @@ def _json_cache_key_cached(key_tuple: tuple[KwargsTupleType, ...]) -> Union[byte
 
 def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[str, object]) -> Optional[bytes]:
     """
-    Generates a raw cache key based on the function name, arguments,
+    Generates a raw cache key based on the function name, arguments,.
+
     and sorted keyword arguments.
 
     :param func: The function for which to generate the key.
@@ -149,7 +150,8 @@ def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[st
 @lru_cache(maxsize=LRU_CACHE_MAXSIZE)
 def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
     """
-    Generates a deterministic cache key str based on
+    Generates a deterministic cache key str based on.
+
     the module name, function name and a 32-character hash of
     the complete set of key data.
 
@@ -163,7 +165,8 @@ def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
 
 def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional[str] = None, logging_enabled=False):
     """
-    A decorator that caches the result of a function based on the arguments
+    A decorator that caches the result of a function based on the arguments.
+
     passed to it.
 
     .. important::
@@ -233,7 +236,6 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             return result
 
         expensive_function.invalidate(1, 2)  # Invalidate cache for specific arguments
-
     """
 
     def decorator(func: Callable) -> Callable:
@@ -365,6 +367,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
         def invalidate(*args, **kwargs):
             """
             Invalidates the cached result for the given arguments.
+
             This method can be called on the decorated function to manually clear
             the cache for specific input parameters.
 
@@ -385,7 +388,9 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             :param kwargs: Keyword arguments for which to invalidate the cache.
             :type kwargs: dict
             """
-            cache_key = kwargs.pop("cache_key", None)
+            # the decorator's own cache_key, unless the caller passes one. (Assigning to
+            # cache_key here would shadow the decorator's, so that it could never be invalidated.)
+            explicit_cache_key = kwargs.pop("cache_key", None) or cache_key
             logger.debug(
                 "%s -> %s called with args: %s kwargs: %s",
                 logger_prefix_blue,
@@ -393,8 +398,8 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 args,
                 kwargs,
             )
-            if cache_key:
-                computed_cache_key = cache_key
+            if explicit_cache_key:
+                computed_cache_key = explicit_cache_key
             else:
                 key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
                 if key_data is None:

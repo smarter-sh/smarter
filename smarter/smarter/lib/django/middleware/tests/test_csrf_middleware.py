@@ -2,7 +2,7 @@
 
 # pylint: disable=W0718,W0212
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from django.test import override_settings
@@ -75,12 +75,13 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @patch("smarter.lib.django.middleware.csrf.waffle")
     def test_process_view_csrf_suppress_for_llmclients(self, mock_waffle, mock_smarter_settings):
         mock_smarter_settings.environment = "prod"
-        # First call for CSRF_SUPPRESS_FOR_LLM_CLIENTS, second for MIDDLEWARE_LOGGING
-        mock_waffle.switch_is_active.side_effect = [True, False]
-        # Set up smarter_request with is_llmclient = True
-        smarter_request_mock = MagicMock()
-        smarter_request_mock.is_llmclient = True
-        self.middleware.smarter_request = smarter_request_mock
+        mock_smarter_settings.internal_ip_prefixes = []
+        # ENABLE_MIDDLEWARE_CSRF and CSRF_SUPPRESS_FOR_LLM_CLIENTS
+        mock_waffle.switch_is_active.return_value = True
+        self.request.path = "/"
+        self.request.META["SERVER_NAME"] = "example.com"
+        self.request.META["SERVER_PORT"] = "443"
         setattr(self.middleware, "request", self.request)  # type: ignore
-        result = self.middleware.process_view(self.request, MagicMock(), (), {})
+        with patch.object(type(self.middleware), "is_llmclient", new_callable=PropertyMock, return_value=True):
+            result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)

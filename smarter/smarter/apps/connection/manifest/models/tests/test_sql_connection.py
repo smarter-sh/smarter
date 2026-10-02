@@ -297,7 +297,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid SQL connection engine: {invalid_db_engine}. Must be one of {DbEngines.all_values()}",
+            f"Invalid SQL connection engine: {invalid_db_engine}. Must be one of {DbEngines.all()}",
             str(context.exception),
         )
 
@@ -531,7 +531,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid authentication method: {invalid_auth_method}. Must be one of {DBMSAuthenticationMethods.all_values()}",
+            f"Invalid authentication method: {invalid_auth_method}. Must be one of {DBMSAuthenticationMethods.all()}",
             str(context.exception),
         )
 
@@ -543,7 +543,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         if not self.model:
             self.fail("Model should not be None after loading the manifest")
 
-        valid_auth_method = DBMSAuthenticationMethods.all_values()[0]
+        valid_auth_method = DBMSAuthenticationMethods.all()[0]
         self._manifest["spec"]["connection"]["authenticationMethod"] = valid_auth_method
         self._loader = None
         self._model = None  # type: ignore[assignment]

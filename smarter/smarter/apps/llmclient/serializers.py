@@ -74,7 +74,7 @@ class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):
         return fields
 
 
-class LLMClientCustomDomainSerializer(MetaDataWithOwnershipModelSerializer):
+class LLMClientCustomDomainSerializer(SmarterCamelCaseSerializer):
 
     class Meta:
         model = LLMClientCustomDomain

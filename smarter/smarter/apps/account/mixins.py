@@ -838,7 +838,8 @@ class AccountMixin(SmarterHelperMixin):
     @property
     def is_authenticated(self) -> bool:
         """Returns True if the user is authenticated and is associated with an Account."""
-        return bool(self._user) and self._user.is_authenticated and bool(self._account) and bool(self._user_profile)
+        # use the properties, which lazily resolve the account and user_profile from the user
+        return bool(self.user) and self.user.is_authenticated and bool(self.account) and bool(self.user_profile)
 
     def to_json(self):
         """Returns a JSON representation of the account, user, and user_profile."""

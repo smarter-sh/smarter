@@ -161,7 +161,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         )
 
         # load the manifest from the yaml file
-        loader = SAMLoader(file_path="smarter/apps/plugin/tests/mock_data/sql-connection.yaml")
+        loader = SAMLoader(file_path="smarter/apps/connection/tests/mock_data/sql-connection.yaml")
         self.assertTrue(loader.ready, msg="loader is not ready")
 
         # use the manifest to creata a new sqlconnection Pydantic model
