@@ -29,14 +29,17 @@
 # `pre-commit autoupdate`, which rewrites .pre-commit-config.yaml. Neither
 # affects the tests.
 #
-# Make sure the following secrets are configured in your
-# [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
+# The "Create .env" step passes the repository and organization secrets
+# to the containers under the names that a local .env uses. At a minimum:
 #
 # AWS_ACCESS_KEY_ID
 # AWS_REGION
 # AWS_SECRET_ACCESS_KEY
+# EKS_CLUSTER_NAME
 # OPENAI_API_KEY
 # GOOGLE_MAPS_API_KEY
+# SMTP_USERNAME
+# SMTP_PASSWORD
 #
 # Unit tests that require connectivity to AWS or to LLM providers will be
 # skipped or fail if these are not set.
@@ -49,6 +52,10 @@ on:
 env:
   AWS_REGION: ca-central-1
   ENVIRONMENT: "local"
+  # Not secrets. Match the local .env.
+  ROOT_DOMAIN: "smarter.sh"
+  SMTP_SENDER: "no-reply@smarter.sh"
+  SMTP_FROM_EMAIL: "no-reply@alpha.ubc.smarter.sh"
 
 jobs:
   test:
@@ -117,29 +124,117 @@ jobs:
       # from .env.example. This must run before the first `make` call, which
       # would otherwise copy .env.example to .env itself.
       #
-      # SMARTER_FERNET_ENCRYPTION_KEY must be set. Without it, every process
+      # Repository and organization secrets are named as in a local .env. The
+      # SMARTER_ prefix is optional: get_env() reads <NAME>, then SMARTER_<NAME>.
+      # Empty secrets are skipped, so the .env.example value or the default
+      # from smarter/common/conf/defaults.py applies. The one exception is
+      # EKS_CLUSTER_NAME, which the settings read as AWS_EKS_CLUSTER_NAME.
+      #
+      # With AWS credentials set, Django stores media files in the S3 bucket
+      # local.<ROOT_DOMAIN>, and the status and Kubernetes tests call the EKS
+      # cluster, so ROOT_DOMAIN and AWS_EKS_CLUSTER_NAME must name real
+      # resources. Their defaults (example.com, SET-ME-PLEASE) do not exist.
+      #
+      # FERNET_ENCRYPTION_KEY must be set. Without it, every process
       # (smarter-app, smarter-worker, the test runner, each manage.py call in
       # `make docker-init`) generates its own random key, so a Secret encrypted
       # by one process cannot be decrypted by another:
-      # cryptography.fernet.InvalidToken. A fresh key per run is fine because
-      # the database is created per run.
+      # cryptography.fernet.InvalidToken. If the secret is missing, a fresh
+      # key per run is fine because the database is created per run.
       #------------------------------------------------------------------------
       - name: Create .env
         shell: bash
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+          ROOT_DOMAIN: ${{ env.ROOT_DOMAIN }}
+          SMTP_SENDER: ${{ env.SMTP_SENDER }}
+          SMTP_FROM_EMAIL: ${{ env.SMTP_FROM_EMAIL }}
+          AWS_REGION: ${{ secrets.AWS_REGION || env.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+          FERNET_ENCRYPTION_KEY: ${{ secrets.FERNET_ENCRYPTION_KEY }}
+          AUTHENTICATION_BACKENDS: ${{ secrets.AUTHENTICATION_BACKENDS }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          # LLM, vector store and Google API keys
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_AI_STUDIO_KEY: ${{ secrets.GOOGLE_AI_STUDIO_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
+          LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TOGETHERAI_API_KEY: ${{ secrets.TOGETHERAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
+          MAILCHIMP_LIST_ID: ${{ secrets.MAILCHIMP_LIST_ID }}
+          # social auth
+          SOCIAL_AUTH_GITHUB_KEY: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
+          SOCIAL_AUTH_GITHUB_SECRET: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
+          SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
+          SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
+          SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
+          SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
+          # Smarter platform
+          SMARTER_EMAIL_ADMIN: ${{ secrets.SMARTER_EMAIL_ADMIN }}
+          SMARTER_LOGO: ${{ secrets.SMARTER_LOGO }}
+          SMARTER_MYSQL_TEST_DATABASE_PASSWORD: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}
+          SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME }}
+          SMARTER_TEST_DB_PASSWORD: ${{ secrets.SMARTER_TEST_DB_PASSWORD }}
+          SMARTER_SETTINGS_OUTPUT: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
+          # branding
+          SMARTER_BRANDING_ADDRESS1: ${{ secrets.SMARTER_BRANDING_ADDRESS1 }}
+          SMARTER_BRANDING_ADDRESS2: ${{ secrets.SMARTER_BRANDING_ADDRESS2 }}
+          SMARTER_BRANDING_CITY: ${{ secrets.SMARTER_BRANDING_CITY }}
+          SMARTER_BRANDING_CONTACT_URL: ${{ secrets.SMARTER_BRANDING_CONTACT_URL }}
+          SMARTER_BRANDING_CORPORATE_NAME: ${{ secrets.SMARTER_BRANDING_CORPORATE_NAME }}
+          SMARTER_BRANDING_COUNTRY: ${{ secrets.SMARTER_BRANDING_COUNTRY }}
+          SMARTER_BRANDING_CURRENCY: ${{ secrets.SMARTER_BRANDING_CURRENCY }}
+          SMARTER_BRANDING_POSTAL_CODE: ${{ secrets.SMARTER_BRANDING_POSTAL_CODE }}
+          SMARTER_BRANDING_STATE: ${{ secrets.SMARTER_BRANDING_STATE }}
+          SMARTER_BRANDING_SUPPORT_EMAIL: ${{ secrets.SMARTER_BRANDING_SUPPORT_EMAIL }}
+          SMARTER_BRANDING_SUPPORT_HOURS: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
+          SMARTER_BRANDING_SUPPORT_PHONE_NUMBER: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
+          SMARTER_BRANDING_TIMEZONE: ${{ secrets.SMARTER_BRANDING_TIMEZONE }}
+
         run: |
-          FERNET_KEY="$(openssl rand -base64 32 | tr '+/' '-_')"
-          echo "::add-mask::${FERNET_KEY}"
+          if [ -z "${FERNET_ENCRYPTION_KEY}" ]; then
+            FERNET_ENCRYPTION_KEY="$(openssl rand -base64 32 | tr '+/' '-_')"
+            echo "::add-mask::${FERNET_ENCRYPTION_KEY}"
+          fi
           cp .env.example .env
           {
             echo ""
             echo "# --- added by GitHub Actions test.yml ---"
-            echo "ENVIRONMENT=${{ env.ENVIRONMENT }}"
-            echo "AWS_REGION=${{ secrets.AWS_REGION || env.AWS_REGION }}"
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-            echo "SMARTER_OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
-            echo "SMARTER_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}"
-            echo "SMARTER_FERNET_ENCRYPTION_KEY=${FERNET_KEY}"
+            for name in \
+              ENVIRONMENT ROOT_DOMAIN SMTP_SENDER SMTP_FROM_EMAIL \
+              AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_EKS_CLUSTER_NAME \
+              FERNET_ENCRYPTION_KEY AUTHENTICATION_BACKENDS SMTP_USERNAME SMTP_PASSWORD \
+              ANTHROPIC_API_KEY COHERE_API_KEY FIREWORKS_API_KEY GEMINI_API_KEY \
+              GOOGLE_AI_STUDIO_KEY GOOGLE_MAPS_API_KEY GOOGLE_SERVICE_ACCOUNT_B64 \
+              LLAMA_API_KEY MISTRAL_API_KEY OPENAI_API_KEY TOGETHERAI_API_KEY \
+              PINECONE_API_KEY PINECONE_ENVIRONMENT MAILCHIMP_API_KEY MAILCHIMP_LIST_ID \
+              SOCIAL_AUTH_GITHUB_KEY SOCIAL_AUTH_GITHUB_SECRET \
+              SOCIAL_AUTH_GOOGLE_OAUTH2_KEY SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET \
+              SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET \
+              SMARTER_EMAIL_ADMIN SMARTER_LOGO \
+              SMARTER_MYSQL_TEST_DATABASE_PASSWORD SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME \
+              SMARTER_TEST_DB_PASSWORD SMARTER_SETTINGS_OUTPUT \
+              SMARTER_BRANDING_ADDRESS1 SMARTER_BRANDING_ADDRESS2 SMARTER_BRANDING_CITY \
+              SMARTER_BRANDING_CONTACT_URL SMARTER_BRANDING_CORPORATE_NAME \
+              SMARTER_BRANDING_COUNTRY SMARTER_BRANDING_CURRENCY SMARTER_BRANDING_POSTAL_CODE \
+              SMARTER_BRANDING_STATE SMARTER_BRANDING_SUPPORT_EMAIL SMARTER_BRANDING_SUPPORT_HOURS \
+              SMARTER_BRANDING_SUPPORT_PHONE_NUMBER SMARTER_BRANDING_TIMEZONE
+            do
+              if [ -n "${!name}" ]; then
+                echo "${name}=${!name}"
+              fi
+            done
           } >> .env
 
       #------------------------------------------------------------------------
