@@ -11,10 +11,12 @@ import re
 import sys
 
 # 3rd party stuff
+from django.test import tag
 from dotenv import load_dotenv
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
@@ -108,7 +110,8 @@ class TestConfiguration(SmarterTestBase):
         loaded = load_dotenv(env_path)
         self.assertTrue(loaded)
 
-        mock_settings = Settings(init_info="test_env_overrides()")
+        # aws_regions is the real region list only when AWS is reachable; otherwise ["us-east-1"].
+        mock_settings = Settings(aws_regions=["us-west-1"], init_info="test_env_overrides()")
 
         self.assertEqual(mock_settings.aws_region, "us-west-1")
         self.assertEqual(mock_settings.debug_mode, True)
@@ -120,7 +123,10 @@ class TestConfiguration(SmarterTestBase):
         """Test that we can set values with the class constructor."""
 
         mock_settings = Settings(
-            aws_region="eu-west-1", debug_mode=True, init_info="test_configure_with_class_constructor()"
+            aws_regions=["eu-west-1"],
+            aws_region="eu-west-1",
+            debug_mode=True,
+            init_info="test_configure_with_class_constructor()",
         )
 
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
@@ -138,7 +144,7 @@ class TestConfiguration(SmarterTestBase):
     def test_readonly_settings(self):
         """Test that we can't set readonly values with the class constructor."""
 
-        mock_settings = Settings(aws_region="eu-west-1")
+        mock_settings = Settings(aws_regions=["eu-west-1"], aws_region="eu-west-1")
         with self.assertRaises(PydanticValidationError):
             mock_settings.aws_region = "us-west-1"
 
@@ -169,6 +175,7 @@ class TestConfiguration(SmarterTestBase):
             debug_mode=False,
             dump_defaults=False,
             aws_profile="test-profile",
+            aws_regions=["eu-west-1"],
             aws_region="eu-west-1",
             root_domain="test-domain.com",
             langchain_memory_key="TEST_langchain_memory_key",
@@ -199,6 +206,7 @@ class TestConfiguration(SmarterTestBase):
         match = re.match(pattern, version)
         self.assertIsNotNone(match, f"{version} is not a valid semantic version")
 
+    @tag(INFRASTRUCTURE)
     def test_services(self):
         """Test that the services are valid."""
         services = Services()
@@ -209,6 +217,7 @@ class TestConfiguration(SmarterTestBase):
         self.assertIsInstance(services.to_dict(), dict)
         self.assertIn(services.AWS_CLI[0], services.enabled_services())
 
+    @tag(INFRASTRUCTURE)
     def test_settings_aws_account_info(self):
         """Test that the AWS account ID is valid."""
         mock_settings = Settings(init_info="test_settings_aws_account_id()")

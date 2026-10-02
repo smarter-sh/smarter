@@ -13,7 +13,7 @@ import os
 import subprocess
 import time
 from string import Template
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.test import tag
 
@@ -41,6 +41,10 @@ class TestKubernetesHelperUnit(SmarterTestBase):
         """Set up test fixtures."""
         super().setUp()
         self.helper = KubernetesHelper()
+        # kubectl is mocked, so don't require real AWS and EKS access.
+        ready = patch.object(KubernetesHelper, "ready", new_callable=PropertyMock, return_value=True)
+        ready.start()
+        self.addCleanup(ready.stop)
 
     @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
     @patch("smarter.common.helpers.k8s_helpers.logger")

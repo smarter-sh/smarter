@@ -4,6 +4,7 @@
 import re
 
 # 3rd party stuff
+from django.test import tag
 from pydantic import SecretStr
 
 # our stuff
@@ -11,6 +12,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,7 @@ class TestSettings(SmarterTestBase):
     ###########################################################################
     # Pydantic BaseSettings fields tests
     ###########################################################################
+    @tag(INFRASTRUCTURE)
     def test_ready(self):
         """Test settings are in a ready state."""
         self.assertTrue(smarter_settings.ready())
@@ -87,6 +90,7 @@ class TestSettings(SmarterTestBase):
     def test_aws_regions(self):
         self.assertIsNotNone(smarter_settings.aws_regions)
 
+    @tag(INFRASTRUCTURE)
     def test_aws_region(self):
         self.assertIsNotNone(smarter_settings.aws_region)
 
