@@ -63,3 +63,49 @@ Example::
 
     charge_declined.send(sender=self.__class__, record_locator=self.record_locator, charge=self)
 """
+
+budget_warning = Signal()
+"""
+Signal sent when a resource's spending reaches its budget's warning threshold.
+
+Sent once per billing period.
+
+Arguments:
+    resource_constraint (ResourceConstraint): The budget attached to the resource.
+    actual (Decimal): The resource's spending, in the budget's unit.
+    limit (Decimal): The limit whose threshold was reached.
+
+Example::
+
+    budget_warning.send(sender=self.__class__, resource_constraint=self, actual=actual, limit=limit)
+"""
+
+budget_exceeded = Signal()
+"""
+Signal sent when a resource's spending reaches a limit of its budget, or the budget's duration ends.
+
+Sent once per billing period.
+
+Arguments:
+    resource_constraint (ResourceConstraint): The budget attached to the resource.
+    lock (Optional[ResourceLock]): The lock that now refuses charges, or None if the budget only warns.
+    reason (str): Which limit was reached.
+    actual (Decimal): The resource's spending, in the budget's unit.
+    limit (Decimal): The limit that was reached.
+
+Example::
+
+    budget_exceeded.send(sender=self.__class__, resource_constraint=self, lock=lock, reason=reason, actual=actual, limit=limit)
+"""
+
+budget_released = Signal()
+"""
+Signal sent when a resource's lock is removed, e.g. at the end of its billing period.
+
+Arguments:
+    resource_constraint (ResourceConstraint): The budget attached to the resource.
+
+Example::
+
+    budget_released.send(sender=self.__class__, resource_constraint=self)
+"""

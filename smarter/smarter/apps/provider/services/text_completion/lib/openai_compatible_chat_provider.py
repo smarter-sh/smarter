@@ -19,7 +19,9 @@ from openai.types.completion_usage import CompletionUsage
 
 from smarter.apps.account.models import (
     ChargeTypes,
+    SmarterBudgetExceeded,
     UserProfile,
+    charge_authorization,
 )
 from smarter.apps.guardrail.services import (
     GuardrailBlockedError,
@@ -632,7 +634,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         function_response = None
         extra_resource_locators: list[str] = []
-        if function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
+        budget_refusal = self.tool_budget_refusal(function_name)
+        if budget_refusal is not None:
+            # a budget forbids charges to the plugin or MCP server, so the LLM is told why instead.
+            function_response = budget_refusal
+        elif function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
             function_response = function_to_call(tool_call=tool_call)
 
         elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
@@ -647,7 +653,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 extra_resource_locators.append(mcpclient.record_locator)
 
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
-            plugin_id = int(function_name[-4:])
+            plugin_id = int(function_name.rsplit("_", 1)[-1])
             try:
                 plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)
             except PluginMeta.DoesNotExist as e:
@@ -710,6 +716,45 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         llm_tool_responded.send(
             sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
         )
+
+    def authorize_budgets(self) -> None:
+        """
+        Check the budgets of everything that a prompt completion is charged to, before calling the LLM.
+
+        :raises SmarterBudgetExceeded: if a budget's resource lock forbids charges to the provider,
+            the llmclient, the user, or their account.
+        """
+        resources = [
+            getattr(self, "provider", None),
+            getattr(self.prompt, "llmclient", None),
+            self.user_profile,
+            getattr(self.user_profile, "account", None),
+        ]
+        charge_authorization(
+            [resource.record_locator for resource in resources if resource is not None], self.__class__.__name__
+        )
+
+    def tool_budget_refusal(self, function_name: str) -> Optional[str]:
+        """
+        Check the budget of the plugin or MCP server that a tool call would use.
+
+        :returns: The tool response that tells the LLM why the tool cannot be used, or None if it can.
+        """
+        resource = None
+        if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            resource = self.mcp_toolkit.mcpclient_for(function_name)
+        elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
+            try:
+                resource = PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1]))
+            except (PluginMeta.DoesNotExist, ValueError):
+                return None
+        if resource is None:
+            return None
+        try:
+            charge_authorization(resource.record_locator, self.__class__.__name__)
+        except SmarterBudgetExceeded as e:
+            return json.dumps({"error": "budget_exceeded", "message": e.message})
+        return None
 
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
         """
@@ -1090,6 +1135,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         try:
             self.validate()
+            self.authorize_budgets()
             self.model = self.prompt.llmclient.default_model or self.default_model
             self.temperature = self.prompt.llmclient.default_temperature or self.default_temperature
             self.max_completion_tokens = self.prompt.llmclient.default_max_tokens or self.default_max_tokens
@@ -1233,6 +1279,30 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 ],
                 usage=CompletionUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
                 system_fingerprint="guardrail_blocked_" + str(created_time),
+                created=created_time,
+                object="chat.completion",
+            )
+            self.handle_response()
+            self.append_openai_response(self.first_response)
+
+        # a budget forbids more charges, so the LLM is not called, and the person is told why.
+        except SmarterBudgetExceeded as exceeded:
+            created_time = int(time.time())
+            self.iteration = 1
+            self.first_response = ChatCompletion(
+                id="budget_exceeded",
+                model=self.model or "unknown",
+                choices=[
+                    Choice(
+                        message=ChatCompletionMessage(
+                            role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=exceeded.message
+                        ),
+                        finish_reason="stop",
+                        index=0,
+                    )
+                ],
+                usage=CompletionUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+                system_fingerprint="budget_exceeded_" + str(created_time),
                 created=created_time,
                 object="chat.completion",
             )

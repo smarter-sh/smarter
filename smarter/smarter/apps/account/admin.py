@@ -3,6 +3,7 @@
 
 from typing import Optional
 
+from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import FieldError
 from django.db.models import QuerySet
@@ -191,16 +192,35 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
         )
 
 
+class ResourceConstraintInline(admin.TabularInline):
+    """The resources that a budget is attached to."""
+
+    model = ResourceConstraint
+    extra = 0
+    fields = ("resource_locator", "is_active", "start_date", "warned_at", "exceeded_at")
+    readonly_fields = ("warned_at", "exceeded_at")
+
+
 class BudgetAdmin(SmarterSuperUserOnlyModelAdmin):
     """Budget model admin."""
 
     model = Budget
+    inlines = [ResourceConstraintInline]
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
-    list_display = ("name", "duration", "periodic_limit", "absolute_limit")
+    list_display = (
+        "name",
+        "unit",
+        "period",
+        "periodic_limit",
+        "absolute_limit",
+        "duration",
+        "action",
+        "warning_threshold",
+    )
 
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore
@@ -220,7 +240,9 @@ class ResourceConstraintAdmin(SmarterSuperUserOnlyModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = ("resource_locator", "duration", "periodic_limit", "absolute_limit")
+    list_display = ("resource_locator", "budget", "is_active", "start_date", "warned_at", "exceeded_at")
+    list_filter = ("is_active", "budget")
+    search_fields = ("resource_locator",)
 
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore
@@ -240,7 +262,8 @@ class ResourceLockAdmin(SmarterSuperUserOnlyModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = ("resource_locator", "resource_constraint", "expiration_date")
+    list_display = ("resource_locator", "resource_constraint", "expiration_date", "reason")
+    search_fields = ("resource_locator",)
 
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore

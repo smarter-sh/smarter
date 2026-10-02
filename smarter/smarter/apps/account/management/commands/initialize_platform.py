@@ -108,6 +108,11 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize Guardrails: %s", e)
 
         try:
+            call_command("add_builtin_budgets")  # Detached budgets, which superusers can attach to resources
+        except Exception as e:
+            logger.error("Failed to initialize Budgets: %s", e)
+
+        try:
             call_command("add_builtin_mcpclients")
         except Exception as e:
             logger.error("Failed to initialize MCPClients: %s", e)

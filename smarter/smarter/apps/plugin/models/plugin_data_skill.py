@@ -13,7 +13,6 @@ from typing import Any, Optional, Union
 
 from django.db import models
 
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.plugin.manifest.models.skill_plugin.document import (
     SkillDocument,
     SkillDocumentError,
@@ -414,10 +413,8 @@ class PluginDataSkill(PluginDataBase):
         retval: "PluginDataSkill"
         if pk:
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
-            charge_authorization(retval.record_locator, cls.__name__)
 
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
-            charge_authorization(retval.record_locator, cls.__name__)
 
         return retval

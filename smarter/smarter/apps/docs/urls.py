@@ -23,6 +23,7 @@ from .views.json_schema import (
     DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
     DocsJsonSchemaApiView,
+    DocsJsonSchemaBudgetView,
     DocsJsonSchemaGuardrailView,
     DocsJsonSchemaLLMClientView,
     DocsJsonSchemaLLMHostComputeView,
@@ -47,6 +48,7 @@ from .views.manifest import (
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
+    DocsExampleManifestBudgetView,
     DocsExampleManifestGuardrailView,
     DocsExampleManifestLLMClientView,
     DocsExampleManifestLLMHostComputeView,
@@ -121,6 +123,11 @@ urlpatterns = [
         json_schema_path(SAMKinds.AUTH_TOKEN.value),
         DocsJsonSchemaApiKeyView.as_view(),
         name=json_schema_name(SAMKinds.AUTH_TOKEN.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.BUDGET.value),
+        DocsJsonSchemaBudgetView.as_view(),
+        name=json_schema_name(SAMKinds.BUDGET.value),
     ),
     path(
         json_schema_path(SAMKinds.GUARDRAIL.value),
@@ -234,6 +241,11 @@ urlpatterns = [
         manifest_path(SAMKinds.AUTH_TOKEN.value),
         DocsExampleManifestApiKeyView.as_view(),
         name=manifest_name(SAMKinds.AUTH_TOKEN.value),
+    ),
+    path(
+        manifest_path(SAMKinds.BUDGET.value),
+        DocsExampleManifestBudgetView.as_view(),
+        name=manifest_name(SAMKinds.BUDGET.value),
     ),
     path(
         manifest_path(SAMKinds.GUARDRAIL.value),

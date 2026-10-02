@@ -47,7 +47,7 @@ class ProxyPathNotAllowed(ProxyError):
 
 
 class ProxyBudgetExceeded(ProxyError):
-    """A budget's resource lock forbids charges to the Proxy, the caller, or the caller's account."""
+    """A budget's resource lock forbids charges to the Proxy, its Provider, the caller, or the caller's account."""
 
     status = HTTPStatus.PAYMENT_REQUIRED
     code = "budget_exceeded"

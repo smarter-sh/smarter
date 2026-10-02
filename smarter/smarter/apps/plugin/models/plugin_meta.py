@@ -212,8 +212,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: bool
         """
         retval = super().ready  # type: ignore[return-value]
-        if retval and self.is_billable_resource:
-            self.authorize()
         return retval
 
     # pylint: disable=W0221

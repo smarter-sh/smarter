@@ -7,7 +7,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from pydantic import ValidationError
 
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.manifest.models.common import TestValue
 from smarter.common.exceptions import SmarterValueError
@@ -289,11 +288,9 @@ class PluginDataSql(PluginDataBase):
         retval: "PluginDataSql"
         if pk:
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
-            charge_authorization(retval.record_locator, cls.__name__)
 
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
-            charge_authorization(retval.record_locator, cls.__name__)
 
         return retval
 

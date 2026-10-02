@@ -1,0 +1,28 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: gpu_l4_monthly
+  description: |
+    An example Budget manifest: an infrastructure budget. The nodes of the gpu_l4_1x LLMHostCompute
+    are charged hourly, at its price per hour. When they have cost $500 in a month, no more
+    LLMHosts are launched on it until the next month. Nodes that are already running are not removed.
+  version: 1.0.0
+  tags:
+    - example
+    - llmhost
+    - compute
+  annotations:
+    - smarter.sh/budget/purpose: infrastructure budget
+spec:
+  config:
+    unit: cost
+    period: month
+    periodicLimit: 500.00
+    absoluteLimit: 0
+    duration: 0
+    action: block
+    warningThreshold: 80
+    message: The gpu_l4_1x compute has used this month's budget.
+  resources:
+    - kind: LLMHostCompute
+      name: gpu_l4_1x

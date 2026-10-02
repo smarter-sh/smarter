@@ -8,6 +8,8 @@ Celery tasks for the llmhost app.
 - :func:`reconcile_llmhost_compute`: give a compute's node group the nodes that its LLMHosts
   need. It runs again every 30 seconds until the node group is settled, i.e. while a node
   starts or is removed, and checks the status of the compute's LLMHosts each time.
+- :func:`charge_llmhost_computes`: charge an hour of each compute's running nodes, so that budgets
+  attached to a compute, its owner, or their account see the cost of the infrastructure.
 - :func:`reconcile_llmhost_computes`: reconcile every compute. Celery Beat runs it every few
   minutes, so that a node that is no longer needed is removed even if a reconcile failed.
 
@@ -202,7 +204,44 @@ def reconcile_llmhost_computes() -> dict[str, str]:
     return retval
 
 
+@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+def charge_llmhost_computes() -> dict[str, str]:
+    """
+    Charge an hour of each compute's ready nodes, at its price_per_hour, to the compute, its owner, and their account.
+
+    Celery Beat runs it hourly, so each charge is the hour that is beginning, at the number of
+    nodes that are ready now. A compute without a price is not charged.
+
+    :returns: Each charged compute's cost, by name.
+    """
+    # pylint: disable=C0415
+    from smarter.apps.account.models import Charge, ChargeTypes
+
+    computes = LLMHostCompute.objects.filter(ready_nodes__gt=0, price_per_hour__isnull=False).select_related(
+        "user_profile", "user_profile__account"
+    )
+    retval = {}
+    for compute in computes:
+        cost = compute.price_per_hour * compute.ready_nodes  # type: ignore[operator]
+        for resource in (compute, compute.user_profile, compute.user_profile.account):
+            try:
+                Charge.objects.create(
+                    resource_locator=resource.record_locator,
+                    charge_type=ChargeTypes.COMPUTE.value,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    total_tokens=0,
+                    total_cost=cost,
+                )
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("%s.charge_llmhost_computes() failed to charge %s: %s", logger_prefix, resource, e)
+        retval[compute.name] = str(cost)
+    return retval
+
+
 __all__ = [
+    "charge_llmhost_computes",
     "destroy_llmhost",
     "launch_llmhost",
     "reconcile_llmhost_compute",

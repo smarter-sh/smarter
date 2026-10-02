@@ -7,12 +7,16 @@ Celery workers in order to avoid blocking the main app thread. This is advance w
 future high-traffic scenarios.
 """
 
+from decimal import Decimal
+
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
+from .models.budget import evaluate_budgets
 from .models.charge import Charge, aggregate_charges
+from .models.llm_prices import LLMPrices
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
@@ -38,6 +42,9 @@ def create_charge(*args, **kwargs):
     :param prompt_tokens: Integer, optional. Number of prompt tokens used.
     :param completion_tokens: Integer, optional. Number of completion tokens used.
     :param total_tokens: Integer, optional. Total number of tokens used.
+    :param total_cost: Decimal or str, optional. The cost in USD, if the caller knows it, e.g. of compute.
+    :param provider: String, optional. The LLM provider's name, to price the tokens with LLMPrices.
+    :param model: String, optional. The LLM's name, to price the tokens with LLMPrices.
 
     **Example usage**::
 
@@ -50,7 +57,15 @@ def create_charge(*args, **kwargs):
     prompt_tokens = kwargs.get("prompt_tokens")
     completion_tokens = kwargs.get("completion_tokens")
     total_tokens = kwargs.get("total_tokens")
+    total_cost = kwargs.get("total_cost")
     prefix = logging.formatted_text(module_prefix + "create_charge()")
+    if total_cost is None:
+        total_cost = LLMPrices.cost_of(
+            charge_type=charge_type,
+            provider=kwargs.get("provider"),
+            model=kwargs.get("model"),
+            total_tokens=total_tokens or 0,
+        )
 
     logger.debug(
         "%s. resource_locator %s, charge_type %s, prompt_tokens %s, completion_tokens %s, total_tokens %s",
@@ -69,6 +84,7 @@ def create_charge(*args, **kwargs):
             completion_tokens=completion_tokens,
             prompt_tokens=prompt_tokens,
             total_tokens=total_tokens,
+            total_cost=Decimal(str(total_cost)),
         )
     # pylint: disable=W0703
     except Exception as e:
@@ -101,3 +117,24 @@ def aggregate_records():
     logger.info(prefix)
 
     aggregate_charges()
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+)
+def evaluate_budget_constraints() -> int:
+    """
+    Top-level Celery task for enforcing budgets.
+
+    Removes expired resource locks and re-evaluates every budget attached to a resource, so that
+    budgets roll over at the end of their billing period. Scheduled hourly via Celery Beat.
+
+    :returns: The number of locked resources.
+    """
+    prefix = logging.formatted_text(module_prefix + "evaluate_budget_constraints()")
+    retval = evaluate_budgets()
+    logger.info("%s %s resources are locked by a budget.", prefix, retval)
+    return retval

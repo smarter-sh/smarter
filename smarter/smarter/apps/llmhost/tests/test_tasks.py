@@ -3,14 +3,20 @@
 They are called directly, i.e. synchronously.
 """
 
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+from django.utils import timezone
+
+from smarter.apps.account.models import Charge, ChargeTypes
 from smarter.apps.llmhost import tasks
 from smarter.apps.llmhost.const import (
     RECONCILE_INTERVAL_SECONDS,
     RECONCILE_MAX_ATTEMPTS,
 )
+from smarter.apps.llmhost.models import LLMHostCompute
 from smarter.apps.llmhost.tasks import (
+    charge_llmhost_computes,
     destroy_llmhost,
     launch_llmhost,
     managed_hostname,
@@ -66,6 +72,24 @@ class TestLLMHostTasks(LLMHostTestBase):
         self.assertIsNone(reconcile_llmhost_compute(compute.pk, attempt=RECONCILE_MAX_ATTEMPTS))
         self.queued.assert_not_called()
         self.assertIsNone(reconcile_llmhost_compute(0))
+
+    def test_charge_llmhost_computes(self):
+        """Test that an hour of a compute's ready nodes is charged to the compute, its owner, and their account."""
+        started = timezone.now()
+        llmhost = self.new_llmhost("test_tasks_charge")
+        compute = llmhost.compute
+        price_per_hour = compute.price_per_hour  # type: ignore[union-attr]
+        LLMHostCompute.objects.filter(pk=compute.pk).update(ready_nodes=2, price_per_hour=Decimal("1.25"))  # type: ignore[union-attr]
+        self.addCleanup(
+            LLMHostCompute.objects.filter(pk=compute.pk).update, ready_nodes=0, price_per_hour=price_per_hour  # type: ignore[union-attr]
+        )
+        charges = Charge.objects.filter(charge_type=ChargeTypes.COMPUTE.value, created_at__gte=started)
+        self.addCleanup(charges.delete)
+        self.assertEqual(Decimal(charge_llmhost_computes()[compute.name]), Decimal("2.50"))  # type: ignore[union-attr]
+        compute.refresh_from_db()  # type: ignore[union-attr]
+        locators = [compute.record_locator, compute.user_profile.record_locator, compute.user_profile.account.record_locator]  # type: ignore[union-attr]
+        for locator in locators:
+            self.assertEqual(charges.get(resource_locator=locator).total_cost, Decimal("2.50"))
 
     def test_reconcile_computes(self):
         """Test that Celery Beat's reconcile removes the node of a destroyed LLMHost."""

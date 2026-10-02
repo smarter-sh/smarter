@@ -66,6 +66,12 @@ class DocsJsonSchemaPromptView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.PROMPT)
 
 
+class DocsJsonSchemaBudgetView(DocsJsonSchemaBaseView):
+    """Budget JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.BUDGET)
+
+
 class DocsJsonSchemaGuardrailView(DocsJsonSchemaBaseView):
     """Guardrail JSON Schema view."""
 

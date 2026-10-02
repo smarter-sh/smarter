@@ -36,14 +36,18 @@ class TestCharge(TestAccountMixin):
     def test_crud(self):
         """Test that we can do all crud operations."""
 
-        Charge.objects.create(
+        resource_locator = self.provider.record_locator
+        charge = Charge.objects.create(
+            resource_locator=resource_locator,
             charge_type=ChargeTypes.PROMPT_COMPLETION.value,
             prompt_tokens=10,
             completion_tokens=20,
             total_tokens=30,
         )
+        self.addCleanup(Charge.objects.filter(resource_locator=resource_locator).delete)
 
-        charge = Charge.objects.get(user_profile=self.user_profile, session_key="test_session_key")
+        charge = Charge.objects.get(pk=charge.pk)
+        self.assertEqual(charge.resource_locator, resource_locator)
         self.assertEqual(charge.charge_type, ChargeTypes.PROMPT_COMPLETION.value)
         self.assertEqual(charge.prompt_tokens, 10)
         self.assertEqual(charge.completion_tokens, 20)
@@ -55,9 +59,11 @@ class TestCharge(TestAccountMixin):
         charge.total_tokens = 40
         charge.save()
 
+        charge = Charge.objects.get(pk=charge.pk)
         self.assertEqual(charge.charge_type, ChargeTypes.PLUGIN.value)
         self.assertEqual(charge.prompt_tokens, 15)
         self.assertEqual(charge.completion_tokens, 25)
         self.assertEqual(charge.total_tokens, 40)
 
         charge.delete()
+        self.assertFalse(Charge.objects.filter(pk=charge.pk).exists())

@@ -7,6 +7,9 @@ import inflection
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
+from smarter.apps.account.manifest.models.budget.const import (
+    MANIFEST_KIND as BUDGET_MANIFEST_KIND,
+)
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
 )
@@ -113,6 +116,7 @@ class SAMKinds(SmarterEnumAbstract):
         SQL_CONNECTION: SQL connection manifest.
         ACCOUNT: Account manifest.
         AUTH_TOKEN: Authentication token manifest.
+        BUDGET: Budget manifest: spending limits enforced on the resources it lists.
         USER: User manifest.
         SECRET: Secret manifest.
         GUARDRAIL: Guardrail manifest.
@@ -164,6 +168,7 @@ class SAMKinds(SmarterEnumAbstract):
     # account resources
     ACCOUNT = ACCOUNT_MANIFEST_KIND
     AUTH_TOKEN = AUTH_TOKEN_MANIFEST_KIND
+    BUDGET = BUDGET_MANIFEST_KIND
     USER = USER_MANIFEST_KIND
     SECRET = SECRET_MANIFEST_KIND
 

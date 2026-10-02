@@ -21,6 +21,7 @@ from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
+from smarter.apps.account.manifest.brokers.budget import SAMBudgetBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.manifest.brokers.api_connection import (
@@ -115,6 +116,7 @@ class Brokers:
         SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
         SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.BUDGET.value: SAMBudgetBroker,
         SAMKinds.GUARDRAIL.value: SAMGuardrailBroker,
         SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
         SAMKinds.LLM_HOST.value: SAMLLMHostBroker,

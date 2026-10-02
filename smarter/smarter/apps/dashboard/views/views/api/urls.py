@@ -2,6 +2,10 @@
 
 from django.urls import path
 
+from smarter.apps.dashboard.views.views.api.budgets import (
+    BudgetSeriesView,
+    BudgetsView,
+)
 from smarter.apps.dashboard.views.views.api.charges import ChargesView
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
@@ -23,10 +27,18 @@ class DashboardApiReverseNames:
     my_resources = to_snake_case(MyResourcesView.__name__)
     service_health = to_snake_case(ServiceHealthView.__name__)
     token_charges = to_snake_case(ChargesView.__name__)
+    budgets = to_snake_case(BudgetsView.__name__)
+    budget_series = to_snake_case(BudgetSeriesView.__name__)
 
 
 urlpatterns = [
     path("my-resources/", MyResourcesView.as_view(), name=DashboardApiReverseNames.my_resources),
     path("service-health/", ServiceHealthView.as_view(), name=DashboardApiReverseNames.service_health),
     path("charges/<str:periodicity>/", ChargesView.as_view(), name=DashboardApiReverseNames.token_charges),
+    path("budgets/", BudgetsView.as_view(), name=DashboardApiReverseNames.budgets),
+    path(
+        "budgets/<str:resource_locator>/series/",
+        BudgetSeriesView.as_view(),
+        name=DashboardApiReverseNames.budget_series,
+    ),
 ]
