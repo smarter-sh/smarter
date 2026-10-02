@@ -1,0 +1,38 @@
+---
+# Passthrough access to Anthropic's Claude API, with the platform's API key.
+# Use the Anthropic SDK, with this Proxy's URL, without its v1/, as its base_url, and a Smarter
+# API key as its api_key, which the SDK sends in the x-api-key header:
+#
+#   client = Anthropic(base_url="https://<smarter>/api/v1/proxy/anthropic/", api_key="<Smarter API key>")
+#
+# The SDK adds /v1/ to its paths, so the Proxy's baseUrl does not include it. Anthropic expects
+# its API key in x-api-key, without a scheme, and requires the anthropic-version header.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: anthropic
+  description: Passthrough access to Anthropic's Messages API, for Claude.
+  version: 1.0.0
+  tags:
+    - anthropic
+    - claude
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://docs.claude.com/en/api/messages
+spec:
+  provider: anthropic
+  apiKey: anthropic_api_key
+  baseUrl: https://api.anthropic.com/
+  auth:
+    header: x-api-key
+    scheme: ""
+  headers:
+    anthropic-version: "2023-06-01"
+  allowedPaths:
+    - v1/messages
+    - v1/messages/count_tokens
+    - v1/models
+    - v1/models/*
+  timeout: 300
+  isActive: true

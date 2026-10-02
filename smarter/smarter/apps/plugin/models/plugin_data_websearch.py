@@ -13,7 +13,6 @@ from typing import Any, Optional, Union
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.plugin.manifest.models.websearch_plugin.const import (
     DEFAULT_CACHE_TTL,
     DEFAULT_FETCH_CHARACTERS,
@@ -351,8 +350,6 @@ class PluginDataWebsearch(PluginDataBase):
         retval: Optional[PluginDataBase] = None
         if pk:
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[assignment]
-            charge_authorization(retval.record_locator, cls.__name__)  # type: ignore[union-attr]
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[reportAttributeAccessIssue]
-            charge_authorization(retval.record_locator, cls.__name__)  # type: ignore[union-attr]
         return retval

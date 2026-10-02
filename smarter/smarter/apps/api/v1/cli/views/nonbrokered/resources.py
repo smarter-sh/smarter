@@ -122,6 +122,14 @@ retval = {
             "Deployable": False,
         },
         {
+            "Singular": "LLMHostCompute",
+            "Plural": "LLMHostComputes",
+            "APIKind": "LLMHostCompute",
+            "Display": "LLMHost Compute",
+            "DisplayPlural": "LLMHost Compute",
+            "Deployable": False,
+        },
+        {
             "Singular": "MCPClient",
             "Plural": "MCPClients",
             "APIKind": "MCPClient",

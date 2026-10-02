@@ -48,7 +48,6 @@ from django.db import models
 from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
@@ -457,12 +456,10 @@ class Account(MetaDataModel):
         retval: "Account"
         if account_number:
             retval = _get_account_by_number(account_number=account_number, class_name=Account.__name__)
-            charge_authorization(retval.record_locator, Account.__name__)
             return retval
 
         if company_name:
             retval = _get_account_by_company_name(company_name=company_name, class_name=Account.__name__)
-            charge_authorization(retval.record_locator, Account.__name__)
             return retval
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]

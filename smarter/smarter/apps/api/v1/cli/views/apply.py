@@ -85,7 +85,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         user = kwargs.pop("user", None)
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
-        if not self.broker:
+        if self.broker is None:
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.apply(
             request, user=user, account=account, user_profile=user_profile, args=args, kwargs=kwargs

@@ -96,13 +96,13 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
   } else if (dataType === "bool") {
     displayValue = value ? "Yes" : "No";
   } else if (dataType === "json") {
-    let jsonString = "";
+    let jsonString: string;
     if (typeof value === "object") {
       jsonString = JSON.stringify(value, null, 2);
     } else {
       try {
         jsonString = JSON.stringify(JSON.parse(String(value)), null, 2);
-      } catch (e) {
+      } catch {
         jsonString = String(value); // fallback to raw string if parsing fails
       }
     }

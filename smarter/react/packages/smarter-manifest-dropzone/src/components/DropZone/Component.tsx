@@ -20,6 +20,7 @@ import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 import DropZoneModal from "@/components/Modal";
+import type { ApplyResult } from "@/components/Modal";
 
 import "./styles.css";
 
@@ -27,12 +28,18 @@ type DropZoneProps = {
   sessionContext: SessionContext;
 };
 
-type Manifest = Record<string, any>;
+/** A Smarter API manifest: the fields that are validated before it is applied. */
+type Manifest = {
+  apiVersion?: string;
+  kind?: string;
+  metadata?: { name?: string };
+  [key: string]: unknown;
+};
 
 type ModalState = {
   open: boolean;
   title: string;
-  data?: any;
+  data?: ApplyResult | string | null;
   isError?: boolean;
 };
 
@@ -52,7 +59,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
 
   const openFileDialog = () => fileInputRef.current?.click();
 
-  const showModal = (title: string, data: any, isError = false) => {
+  const showModal = (title: string, data: ApplyResult | string | null, isError = false) => {
     setModal({
       open: true,
       title,

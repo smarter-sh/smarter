@@ -81,7 +81,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             user_profile=self.user_profile,
             name=self.name,
             kind=KIND,
-            description="local mysql test sqlconnection - ",
+            description="local mysql test sqlconnection",
             db_engine=DbEngines.MYSQL.value,
             authentication_method=DBMSAuthenticationMethods.TCPIP.value,
             timeout=300,
@@ -161,7 +161,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         )
 
         # load the manifest from the yaml file
-        loader = SAMLoader(file_path="smarter/apps/plugin/tests/mock_data/sql-connection.yaml")
+        loader = SAMLoader(file_path="smarter/apps/connection/tests/mock_data/sql-connection.yaml")
         self.assertTrue(loader.ready, msg="loader is not ready")
 
         # use the manifest to creata a new sqlconnection Pydantic model
@@ -248,8 +248,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         # validate top-level keys
         self.assertIn("message", response)
         self.assertEqual(response["message"], "SqlConnections got successfully")
-        self.assertIn("thing", response)
-        self.assertEqual(response["thing"], "SqlConnection")
+        self.assertEqual(response["metadata"]["thing"], "SqlConnection")
         self.assertIn("metadata", response.keys())
         self.assertIn(
             "count", response[SmarterJournalApiResponseKeys.DATA][SmarterJournalApiResponseKeys.METADATA].keys()
@@ -325,8 +324,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertIn("data", response)
         self.assertIn("message", response)
         self.assertEqual(response["message"], "SqlConnections got successfully")
-        self.assertIn("thing", response)
-        self.assertEqual(response["thing"], "SqlConnection")
+        self.assertEqual(response["metadata"]["thing"], "SqlConnection")
         self.assertIn("metadata", response)
 
         data = response["data"]
@@ -361,7 +359,9 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             {"name": "proxyUsername", "type": "CharField"},
             {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
         ]
-        self.assertEqual(data_data["titles"], expected_titles)
+        # the serializer has more fields than these, so check that they are all present
+        for title in expected_titles:
+            self.assertIn(title, data_data["titles"])
 
     def test_deploy(self) -> None:
         """Test deploy command."""

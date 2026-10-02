@@ -276,19 +276,23 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return self.llmclient_config.get("url_llmclient", None)
 
     @property
-    def prompt(self) -> Optional[Prompt]:
-        """The prompt object for the session_key."""
+    def chat(self) -> Optional[Prompt]:
+        """The Prompt object for the session_key.
+
+        (self.prompt is the prompt text.)
+        """
         if self._chat:
             return self._chat
         if self.session_key:
-            self._chat = Prompt.objects.get(session_key=self.session_key)
+            self._chat = Prompt.objects.filter(session_key=self.session_key).first()
+        return self._chat
 
     @property
     def prompt_history(self) -> Optional[PromptHistory]:
 
         if not self._chat_history:
-            if self.prompt:
-                self._chat_history = PromptHistory.objects.filter(prompt=self.prompt).latest()
+            if self.chat:
+                self._chat_history = PromptHistory.objects.filter(prompt=self.chat).latest()
         return self._chat_history
 
     @property
@@ -395,7 +399,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             self.new_session,
         )
 
-        chat_config: JsonResponse = PromptConfigView.as_view()(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
+        chat_config: JsonResponse = PromptConfigView.as_view(legacy_keys=False)(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
         if not isinstance(chat_config, JsonResponse):
             raise APIV1CLIChatViewError(
                 f"Internal error. Prompt config view did not return a JsonResponse. chat_config: {chat_config}"

@@ -1,0 +1,36 @@
+---
+# Passthrough access to the Google Gemini API's OpenAI-compatible endpoints, with the platform's
+# API key. Use the OpenAI SDK, with this Proxy's URL as its base_url:
+#
+#   client = OpenAI(base_url="https://<smarter>/api/v1/proxy/googleai_openai/", api_key="<Smarter API key>")
+#   client.chat.completions.create(model="gemini-2.5-flash", messages=[...])
+#
+# It is the same Provider as the googleai Proxy, with another baseUrl and auth.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: googleai_openai
+  description: Passthrough access to the Google Gemini API's OpenAI-compatible chat completions, embeddings and models.
+  version: 1.0.0
+  tags:
+    - google
+    - gemini
+    - openai-compatible
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://ai.google.dev/gemini-api/docs/openai
+spec:
+  provider: googleai
+  apiKey: gemini_api_key
+  baseUrl: https://generativelanguage.googleapis.com/v1beta/openai/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - chat/completions
+    - embeddings
+    - models
+    - models/*
+  timeout: 300
+  isActive: true

@@ -6,6 +6,10 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import (
+    factory_account_teardown,
+    mortal_user_factory,
+)
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib import logging
@@ -25,7 +29,7 @@ class TestAccountMixinInit(TestAccountMixin):
         self.assertEqual(mixin.user, self.admin_user)
         self.assertIsInstance(mixin.account, Account)
         self.assertIsInstance(mixin.user_profile, UserProfile)
-        self.assertTrue(mixin.is_accountmixin_ready)
+        self.assertTrue(mixin.am_ready)
 
     def test_init_with_account(self):
         mixin = AccountMixin(account=self.account)
@@ -68,6 +72,8 @@ class TestAccountMixinProperties(TestAccountMixin):
         mixin.account_number = self.account.account_number
         self.assertEqual(mixin.account.account_number, self.account.account_number)  # type: ignore
 
+        # resolve self.mixin's account, which is lazily set from its user
+        self.assertEqual(self.mixin.account, self.account)
         with self.assertRaises(SmarterBusinessRuleViolation):
             self.mixin.account_number = self.account.account_number
 
@@ -95,16 +101,16 @@ class TestAccountMixinProperties(TestAccountMixin):
             self.mixin.user_profile = None
 
     def test_is_accountmixin_ready(self):
-        self.assertTrue(self.mixin.ready)
+        self.assertTrue(self.mixin.am_ready)
         mixin = AccountMixin()
-        self.assertFalse(mixin.ready)
+        self.assertFalse(mixin.am_ready)
 
     def test_ready_and_ready_state(self):
         self.assertTrue(self.mixin.ready)
         self.assertEqual(self.formatted_state_ready, self.mixin.ready_state)
 
         mixin = AccountMixin()
-        self.assertFalse(mixin.ready)
+        self.assertFalse(mixin.am_ready)
         self.assertEqual(self.formatted_state_not_ready, mixin.ready_state)
 
     def test_is_authenticated(self):
@@ -130,7 +136,7 @@ class TestAccountMixinMethods(TestAccountMixin):
     def test_to_json(self):
         data = self.mixin.to_json()
         logger.debug("to_json: %s", logging.formatted_json(data))
-        self.assertTrue(data.get("ready", False))
+        self.assertTrue(data.get("am_ready", False))
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data.get("account"), dict)
         self.assertEqual(data["account"]["accountNumber"], self.account.account_number)
@@ -148,9 +154,9 @@ class TestAccountMixinMethods(TestAccountMixin):
 
     def test_log_account_mixin_ready_status(self):
         # Should not raise
-        self.mixin.log_account_mixin_ready_status()
+        self.mixin._am_log_ready_status()
         mixin = AccountMixin()
-        mixin.log_account_mixin_ready_status()
+        mixin._am_log_ready_status()
 
     def test_comparisons(self):
         mixin2 = AccountMixin(user=self.non_admin_user)
@@ -173,20 +179,25 @@ class TestAccountMixinMethods(TestAccountMixin):
         self.assertIn("user_profile", r)
 
     def test_accountmixin_logger_prefix_and_formatted_class_name(self):
-        prefix = self.mixin.account_mixin_logger_prefix
+        prefix = self.mixin._am_formatted_class_name
         name = self.mixin.formatted_class_name
         self.assertIsInstance(prefix, str)
         self.assertIsInstance(name, str)
 
     def test_accountmixin_ready_state(self):
-        state = self.mixin.accountmixin_ready_state
+        state = self.mixin._am_ready_state
         self.assertIsInstance(state, str)
         mixin = AccountMixin()
-        state2 = mixin.accountmixin_ready_state
+        state2 = mixin._am_ready_state
         self.assertIsInstance(state2, str)
 
     def test_set_account_with_invalid_user_profile(self):
         # Should raise if user is not associated with account
-        mixin = AccountMixin(user=self.admin_user)
-        with self.assertRaises(SmarterBusinessRuleViolation):
-            mixin.account = self.non_admin_user_profile.account
+        # the non-admin user is in self.account too, so use a user in another account
+        other_user, other_account, other_user_profile = mortal_user_factory()
+        try:
+            mixin = AccountMixin(user=self.admin_user)
+            with self.assertRaises(SmarterBusinessRuleViolation):
+                mixin.account = other_account
+        finally:
+            factory_account_teardown(user=other_user, account=other_account, user_profile=other_user_profile)

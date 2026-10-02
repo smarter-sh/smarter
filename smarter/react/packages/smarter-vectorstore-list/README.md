@@ -1,17 +1,17 @@
-# Smarter Vectorestores List React App
+# Smarter Vectorstores List React App
 
-This is the source code for the Vectorestores List app located
+This is the source code for the Vectorstores List app located
 at [http://localhost:9357/vectorstore/](http://localhost:9357/vectorstore/).
 
 This component is served by Django. See also:
 
-- [smarter.apps.vectorstore.views.listview.view.VectorestoreListView](../../smarter/apps/vectorstore/views/listview/view.py)
+- [smarter.apps.vectorstore.views.listview.view.VectorstoreListView](../../smarter/apps/vectorstore/views/listview/view.py)
 - [smarter.apps.vectorstore.templatetags.react_vectorstore_list.vectorstore_list_react_assets](../../smarter/apps/vectorstore/templatetags/react_vectorstore_list.py)
 - [templates/react/vectorstore-list.html](../../smarter/templates/react/vectorstore-list.html)
 
 ## Screen Shot
 
-![Vectorestore List Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/vectorstore-list-screenshot.png)
+![Vectorstore List Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/vectorstore-list-screenshot.png)
 
 ## Setup
 

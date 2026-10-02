@@ -1,72 +1,100 @@
-"""Initialize Smarter vectorstore providers."""
+"""Create the ApiConnections of the managed vector database services: Pinecone, and Qdrant Cloud."""
 
-from pathlib import Path
-
-from pydantic import SecretStr
+import os
+from typing import Optional
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.secret.models import Secret
-from smarter.apps.vectorstore.const import PINECONE_API_KEY_SECRET_NAME
-from smarter.common.conf.const import get_env
+from smarter.apps.vectorstore.const import (
+    PINECONE_API_KEY_SECRET_NAME,
+    PINECONE_API_URL,
+    PINECONE_CONNECTION_NAME,
+    QDRANT_CLOUD_API_KEY_SECRET_NAME,
+    QDRANT_CLOUD_CONNECTION_NAME,
+)
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)
 
-HERE = Path(__file__).resolve().parent
-
 
 class Command(SmarterCommand):
     """
-    Django manage.py initialize_providers.py command.
+    Django manage.py initialize_vectorstore_providers command.
 
-    This command is used to create/update the principal
-    vectorstore providers that are preloaded on all platforms.
+    For each managed vector database service whose environment variables are set, it creates, or
+    updates, a Secret with its API key, and an ApiConnection, owned by the Smarter admin, which the
+    built-in Vectorstore manifests use:
 
-    This runs during deployment.
+    - Pinecone: ``PINECONE_API_KEY``. The ApiConnection ``pinecone``.
+    - Qdrant Cloud: ``QDRANT_CLOUD_URL`` and ``QDRANT_CLOUD_API_KEY``. The ApiConnection ``qdrant_cloud``.
+
+    A self-hosted Qdrant database needs neither: Smarter runs it, and generates its API key.
     """
 
-    user_profile: UserProfile
+    help = "Create the ApiConnections of Pinecone and Qdrant Cloud, from PINECONE_API_KEY, QDRANT_CLOUD_URL and QDRANT_CLOUD_API_KEY."
 
-    def initialize_pinecone(self):
-        """Initialize Pinecone provider."""
-        API_KEY_ENV_VAR = "PINECONE_API_KEY"
-
-        logger.info("initialize_pinecone")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_pinecone: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_pinecone: {API_KEY_ENV_VAR} is not set. Cannot initialize Pinecone provider."
-                    f"Get your API key from https://www.pinecone.io/start/ and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        Secret.objects.update_or_create(
-            name=PINECONE_API_KEY_SECRET_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Pinecone services.",
-                "user_profile": self.user_profile,
-            },
+    def connection(
+        self, user_profile: UserProfile, name: str, base_url: str, secret_name: str, api_key: str, description: str
+    ) -> ApiConnection:
+        """Create or update a Secret with an API key, and an ApiConnection that uses it."""
+        secret = Secret.objects.filter(user_profile=user_profile, name=secret_name).first() or Secret(
+            user_profile=user_profile, name=secret_name
         )
+        secret.description = f"The API key of {description}."
+        secret.encrypted_value = Secret.encrypt(api_key)
+        secret.save()
+        connection = ApiConnection.objects.filter(user_profile=user_profile, name=name).first() or ApiConnection(
+            user_profile=user_profile, name=name
+        )
+        connection.kind = SAMKinds.API_CONNECTION.value
+        connection.description = description
+        connection.base_url = base_url
+        connection.api_key = secret
+        connection.auth_method = "token"
+        connection.save()
+        return connection
+
+    def initialize(
+        self,
+        user_profile: UserProfile,
+        name: str,
+        url: Optional[str],
+        api_key_var: str,
+        secret_name: str,
+        description: str,
+    ) -> None:
+        api_key = os.environ.get(api_key_var)
+        if not api_key or not url:
+            self.stdout.write(self.style.WARNING(f"Skipped {description}: {api_key_var} is not set."))
+            return
+        self.connection(user_profile, name, url, secret_name, api_key, description)
+        self.stdout.write(self.style.SUCCESS(f"Created the ApiConnection {name}, for {description}."))
 
     def handle(self, *args, **options):
-        """Initialize all built-in providers."""
         self.handle_begin()
-
+        user_profile = smarter_cached_objects.smarter_admin_user_profile
         try:
-            self.user_profile = smarter_cached_objects.smarter_admin_user_profile
-            self.initialize_pinecone()
-        # pylint: disable=broad-except
-        except Exception as exc:
-            self.handle_completed_failure(msg=f"initialize_providers: Error initializing providers: {exc}")
+            self.initialize(
+                user_profile,
+                PINECONE_CONNECTION_NAME,
+                PINECONE_API_URL,
+                "PINECONE_API_KEY",
+                PINECONE_API_KEY_SECRET_NAME,
+                "Pinecone",
+            )
+            self.initialize(
+                user_profile,
+                QDRANT_CLOUD_CONNECTION_NAME,
+                os.environ.get("QDRANT_CLOUD_URL"),
+                "QDRANT_CLOUD_API_KEY",
+                QDRANT_CLOUD_API_KEY_SECRET_NAME,
+                "Qdrant Cloud",
+            )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            self.handle_completed_failure(exc, f"initialize_vectorstore_providers: {exc}")
             return
-
         self.handle_completed_success()

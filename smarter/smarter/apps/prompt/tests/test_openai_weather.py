@@ -29,19 +29,15 @@ class TestLambdaOpenaiFunctionWeather(SmarterTestBase):
 
     # pylint: disable=broad-exception-caught
     def test_get_current_weather(self):
-        """Test default return value of get_current_weather()"""
-        location = "London, UK"
-        unit = "METRIC"
-        function = Function(
-            name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
-        )
+        """Test default return value of get_current_weather()."""
+        function = Function(name="get_current_weather", arguments='{"location": "London, UK", "unit": "METRIC"}')
         tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
 
-        retval = get_current_weather(tool_call=tool_call, location=location, unit=unit)
+        retval = get_current_weather(tool_call=tool_call)
         self.assertIsInstance(retval, list)
 
     def test_weather_tool_factory(self):
-        """Test integrity weather_tool_factory()"""
+        """Test integrity weather_tool_factory()."""
         wtf = weather_tool_factory()
         self.assertIsInstance(wtf, dict)
 

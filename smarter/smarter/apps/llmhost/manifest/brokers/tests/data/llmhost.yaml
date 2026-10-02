@@ -1,41 +1,38 @@
+---
+# An LLMHost for the broker's tests: an ungated Hugging Face model, served by vLLM on one GPU.
 apiVersion: smarter.sh/v1
 kind: LLMHost
 metadata:
-  description:
-    To create and deploy an example Smarter llmhost. Prompt with example
-    function calling to trigger the example Static Plugin
-  name: example_llmhost
-  version: 0.1.0
+  name: test_broker_llmhost
+  description: An LLMHost for testing the SAMLLMHostBroker.
+  version: 1.0.0
+  tags:
+    - test
+    - qwen
+  annotations:
+    - smarter.sh/llmhost/test/purpose: broker unit testing
 spec:
-  apiKey: null
-  config:
-    appAssistant: Elle
-    appBackgroundImageUrl: https://example.com/background-image.jpg
-    appExamplePrompts:
-      - What is the weather in New York?
-      - Tell me a joke
-      - what's the current price of Apple stock?
-      - How many days ago was 29-Feb-1972?
-    appFileAttachment: false
-    appInfoUrl: https://example.com
-    appLogoUrl: https://example.com/logo.png
-    appName: Example LLMHost
-    appPlaceholder: Ask me anything...
-    appWelcomeMessage: Welcome to the Example LLMHost! How can I help you today?
-    customDomain: null
-    defaultMaxTokens: 2048
-    defaultModel: gpt-4o-mini
-    defaultSystemRole:
-      You are a helpful llmhost. When given the opportunity to utilize
-      function calling, you should always do so. This will allow you to provide the
-      best possible responses to the user. If you are unable to provide a response,
-      you should prompt the user for more information. If you are still unable to
-      provide a response, you should inform the user that you are unable to help them
-      at this time.
-    defaultTemperature: 0.5
-    deployed: false
-    dnsVerificationStatus: Not Verified
-    llmhost: openai
-    subdomain: null
-  functions: null
-  plugins: null
+  model:
+    source: huggingface
+    repository: Qwen/Qwen2.5-7B-Instruct
+    revision: main
+    servedName: qwen2.5-7b-instruct
+    license: apache-2.0
+    architecture: qwen2
+    parameterCount: 7615616512
+    contextWindow: 32768
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 16384
+    args:
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - hermes
+  compute: gpu_a10g_1x
+  resources:
+    gpuCount: 1
+    cpu: "4"
+    memory: 24Gi

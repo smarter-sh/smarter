@@ -13,9 +13,7 @@ logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterCachedObjects(SmarterTestBase):
-    """
-    Test that smarter_cached_objects returns the expected instances.
-    """
+    """Test that smarter_cached_objects returns the expected instances."""
 
     def test_smarter_account(self):
         self.assertIsInstance(smarter_cached_objects.smarter_account, Account)
@@ -34,31 +32,26 @@ class TestSmarterCachedObjects(SmarterTestBase):
 
 
 class TestGetCachedDefaultAccount(TestAccountMixin):
-    """
-    Test that get_cached_default_account returns the expected default account instance and handles errors properly.
-    """
+    """Test that get_cached_default_account returns the expected default account instance and handles errors properly."""
 
     def test_get_default(self):
-        """
-        Test that get_cached_default_account returns the default account instance.
-        """
+        """Test that get_cached_default_account returns the default account instance."""
         account = utils.get_cached_default_account()
         self.assertIsInstance(account, Account)
 
     def test_no_default_raises(self):
-        """
-        Test that get_cached_default_account raises if no default account is configured.
-        """
+        """Test that get_cached_default_account raises if no default account is configured."""
         account = utils.get_cached_default_account(invalidate=True)
         self.assertIsInstance(account, Account)
         account.is_default_account = False
         account.save()
-        with self.assertRaises(SmarterConfigurationError):
-            utils.get_cached_default_account(invalidate=True)
-
-        # restore the default account for other tests
-        account.is_default_account = True
-        account.save()
+        try:
+            with self.assertRaises(SmarterConfigurationError):
+                utils.get_cached_default_account(invalidate=True)
+        finally:
+            # restore the default account for other tests, even if the assertion fails
+            account.is_default_account = True
+            account.save()
 
         account_invalidated = utils.get_cached_default_account(invalidate=True)
         self.assertEqual(account, account_invalidated)
@@ -72,9 +65,7 @@ class TestGetCachedDefaultAccount(TestAccountMixin):
 
 
 class TestGetCachedAccountForUser(TestAccountMixin):
-    """
-    Test that get_cached_account_for_user returns the expected account for a given user and handles edge cases.
-    """
+    """Test that get_cached_account_for_user returns the expected account for a given user and handles edge cases."""
 
     def test_get_account_for_user(self):
         account = utils.get_cached_account_for_user(user=self.admin_user, invalidate=True)
@@ -91,9 +82,7 @@ class TestGetCachedAccountForUser(TestAccountMixin):
 
 
 class TestGetCachedUserForUserId(TestAccountMixin):
-    """
-    Test that get_cached_user_for_user_id returns the expected user for a given user ID and handles edge cases.
-    """
+    """Test that get_cached_user_for_user_id returns the expected user for a given user ID and handles edge cases."""
 
     def test_get_user(self):
         user = utils.get_cached_user_for_user_id(user_id=self.non_admin_user.id, invalidate=True)  # type: ignore
@@ -108,9 +97,7 @@ class TestGetCachedUserForUserId(TestAccountMixin):
 
 
 class TestGetCachedUserForUsername(TestAccountMixin):
-    """
-    Test that get_cached_user_for_username returns the expected user for a given username and handles edge cases.
-    """
+    """Test that get_cached_user_for_username returns the expected user for a given username and handles edge cases."""
 
     def test_get_user(self):
         username = self.non_admin_user.username
@@ -126,9 +113,7 @@ class TestGetCachedUserForUsername(TestAccountMixin):
 
 
 class TestGetCachedAdminUserForAccount(TestAccountMixin):
-    """
-    Test that get_cached_admin_user_for_account returns the expected admin user for a given account and handles edge cases.
-    """
+    """Test that get_cached_admin_user_for_account returns the expected admin user for a given account and handles edge cases."""
 
     def test_get_admin_user(self):
         admin = utils.get_cached_admin_user_for_account(account=self.account, invalidate=True)
@@ -143,9 +128,7 @@ class TestGetCachedAdminUserForAccount(TestAccountMixin):
 
 
 class TestAccountNumberFromUrl(SmarterTestBase):
-    """
-    Test that account_number_from_url correctly extracts account numbers from URLs and handles edge cases.
-    """
+    """Test that account_number_from_url correctly extracts account numbers from URLs and handles edge cases."""
 
     def test_valid_url(self):
         url = "https://hr.3141-5926-5359.alpha.api.example.com/"
@@ -161,9 +144,7 @@ class TestAccountNumberFromUrl(SmarterTestBase):
 
 
 class TestGetUsersForAccount(TestAccountMixin):
-    """
-    Test that get_users_for_account returns the expected list of users for a given account and handles edge cases.
-    """
+    """Test that get_users_for_account returns the expected list of users for a given account and handles edge cases."""
 
     def test_get_users(self):
         users = utils.get_users_for_account(self.account)
@@ -178,9 +159,7 @@ class TestGetUsersForAccount(TestAccountMixin):
 
 
 class TestGetUserProfilesForAccount(TestAccountMixin):
-    """
-    Test that get_user_profiles_for_account returns the expected list of user profiles for a given account and handles edge cases.
-    """
+    """Test that get_user_profiles_for_account returns the expected list of user profiles for a given account and handles edge cases."""
 
     def test_get_profiles(self):
         profiles = utils.get_user_profiles_for_account(self.account)

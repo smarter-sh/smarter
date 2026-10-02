@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete secret resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - secret (Secret): The secret resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} secret={secret} />
+ * <Toolbar sessionContext={sessionContext} secret={secret} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each secret row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Secret } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  secret: Secret | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ secret, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Secret" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone secret <strong>{secret?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned secret.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new secret name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ secret, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(secret?.name || "");
+  return (
+    <Modal show title="Rename Secret" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename secret <strong>{secret?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the secret.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new secret name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  secret,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  secret: Secret | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Secret" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete secret <strong>{secret?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  secret,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  secret: Secret | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on secret <strong>{secret?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  secret,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  secret: Secret | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{secret?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    secret: Secret | null;
-  }>({ type: null, secret: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; secret: Secret | null }>({ type: null, secret: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
     onRequery();
   };
 
-  const handleCloneButtonClicked = (secret: Secret) => setModal({ type: "clone", secret });
-  const handleRenameButtonClicked = (secret: Secret) => setModal({ type: "rename", secret });
-  const handleDeleteButtonClicked = (secret: Secret) => setModal({ type: "delete", secret });
-
-  const handleError = (secret: Secret) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Secret, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", secret });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Secret"
-          onOk={() => handleCloneSecret(modal.secret!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone secret <strong>{modal.secret?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned secret.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new secret name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.secret?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Secret"
-          onOk={() => handleRenameSecret(modal.secret!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename secret <strong>{modal.secret?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the secret.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new secret name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Secret"
-          onOk={() => handleDeleteSecret(modal.secret!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete secret <strong>{modal.secret?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on secret <strong>{modal.secret?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.secret?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneSecret = async (secret: Secret, new_name: string) => {
-    // see: smarter.apps.secret.urls for API urls
-    // path("api/clone/<int:secret_id>/<str:new_name>/", SecretListApiCloneView.as_view(), name=SecretReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + secret.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone secret (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone secret (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} secret (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Secret) => {
-        console.debug(loggerPrefix, "Successfully cloned secret:", data);
-        setModal({ type: "confirmation", secret: data as Secret });
-        setSuccessMessage(`Successfully cloned secret`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d secret:`, data);
+        setSuccessMessage(`Successfully ${verb}d secret`);
+        // clone and rename return the resulting secret; delete returns a message.
+        setModal({ type: "confirmation", secret: data && data.id ? (data as Secret) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning secret:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} secret:`, error);
         setErrMessage(error.message);
-        handleError(secret);
+        setModal({ type: "error", secret: target });
       });
-    return true;
-  };
-
-  const handleRenameSecret = async (secret: Secret, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + secret.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename secret (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename secret (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Secret) => {
-        console.debug(loggerPrefix, "Successfully renamed secret:", data);
-        setModal({ type: "confirmation", secret: data as Secret });
-        setSuccessMessage(`Successfully renamed secret`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming secret:", error);
-        setErrMessage(error.message);
-        handleError(secret);
-      });
-    return true;
-  };
-
-  const handleDeleteSecret = async (secret: Secret) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + secret.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete secret (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete secret (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted secret:", secret);
-        setModal({ type: "confirmation", secret });
-        setSuccessMessage(`Successfully deleted secret`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting secret:", error);
-        setErrMessage(error.message);
-        handleError(secret);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this secret resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(secret)}
+          onClick={() => setModal({ type: "clone", secret })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this secret resource"
-          onClick={() => handleRenameButtonClicked(secret)}
+          onClick={() => setModal({ type: "rename", secret })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this secret resource"
-          onClick={() => handleDeleteButtonClicked(secret)}
+          onClick={() => setModal({ type: "delete", secret })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            secret={modal.secret}
+            onOk={(newName) => runAction(modal.secret!, `clone/${modal.secret!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            secret={modal.secret}
+            onOk={(newName) => runAction(modal.secret!, `rename/${modal.secret!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          secret={modal.secret}
+          onOk={() => runAction(modal.secret!, `delete/${modal.secret!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} secret={modal.secret} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          secret={modal.secret}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

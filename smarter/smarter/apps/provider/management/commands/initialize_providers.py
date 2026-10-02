@@ -18,6 +18,7 @@ from smarter.apps.provider.const import (
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
+from smarter.common.conf import smarter_settings
 from smarter.common.conf.const import get_env
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib import json, logging
@@ -254,6 +255,8 @@ class Command(SmarterCommand):
                     **COMMON_DEFAULTS,
                     **provider_configuration,
                     "api_key": secret,
+                    # the platform-wide default provider, e.g. for prompts that do not name one
+                    "is_default": name == smarter_settings.llm_default_provider,
                 },
             )
         # pylint: disable=broad-except
@@ -389,7 +392,7 @@ class Command(SmarterCommand):
             name=NAME,
             provider_configuration={
                 "description": "Meta AI provides a range of AI and machine learning services.",
-                "base_url": "https://metaai.com/api/",
+                "base_url": "https://api.llama.com/v1/",
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://ai.meta.com/",
@@ -459,7 +462,7 @@ class Command(SmarterCommand):
             name=NAME,
             provider_configuration={
                 "description": "TogetherAI provides advanced AI models and APIs.",
-                "base_url": "https://api.togai.com/v1/",
+                "base_url": "https://api.together.xyz/v1/",
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.together.ai/",

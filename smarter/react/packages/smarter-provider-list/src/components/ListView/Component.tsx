@@ -69,6 +69,20 @@ const TableHeader = () => {
   );
 };
 
+
+/**
+ * CreatedDate and UpdatedDate
+ *
+ * Format a row's creation date, and its last update relative to its creation.
+ */
+const CreatedDate = ({ date }: { date: string }) => {
+  return <span>{formatDateTime(date, "date")}</span>;
+};
+
+const UpdatedDate = ({ date, createdAt }: { date: string | null; createdAt: string }) => {
+  return <span>{formatDateTime(date, "relative", createdAt)}</span>;
+};
+
 /**
  * ProviderRow
  *
@@ -87,14 +101,6 @@ const ProviderRow = React.memo(function ProviderRow({
   sessionContext: SessionContext;
   onRequery: () => void;
 }) {
-  const CreatedDate = ({ date }: { date: string }) => {
-    return <span>{formatDateTime(date, "date")}</span>;
-  };
-
-  const UpdatedDate = ({ date, createdAt }: { date: string | null; createdAt: string }) => {
-    return <span>{formatDateTime(date, "relative", createdAt)}</span>;
-  };
-
   return (
     <tr className="" key={provider.id}>
       {/* Name */}
@@ -205,17 +211,15 @@ function ChunkedRows({
 }) {
   const [visibleCount, setVisibleCount] = useState(chunkSize);
 
-  const schedule = window.requestIdleCallback || ((cb: Function) => setTimeout(cb, 0));
-  const cancel = window.cancelIdleCallback || clearTimeout;
-
   useEffect(() => {
-    let idleId: any = null;
-    if (visibleCount < providers.length) {
-      idleId = schedule(() => {
-        setVisibleCount((c) => Math.min(c + chunkSize, providers.length));
-      });
-      return () => cancel(idleId);
+    if (visibleCount >= providers.length) return;
+    const next = () => setVisibleCount((c) => Math.min(c + chunkSize, providers.length));
+    if (window.requestIdleCallback) {
+      const idleId = window.requestIdleCallback(next);
+      return () => window.cancelIdleCallback(idleId);
     }
+    const timeoutId = setTimeout(next, 0);
+    return () => clearTimeout(timeoutId);
   }, [visibleCount, providers.length, chunkSize]);
   return (
     <>

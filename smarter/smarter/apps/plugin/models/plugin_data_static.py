@@ -4,7 +4,6 @@ from typing import Any, Optional, Union
 
 from django.db import models
 
-from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
@@ -276,10 +275,8 @@ class PluginDataStatic(PluginDataBase):
         retval: "PluginDataStatic"
         if pk:
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
-            charge_authorization(retval.record_locator, cls.__name__)
 
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
-            charge_authorization(retval.record_locator, cls.__name__)
 
         return retval

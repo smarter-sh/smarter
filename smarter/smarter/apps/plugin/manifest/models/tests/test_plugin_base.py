@@ -1,6 +1,7 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
+import copy
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -45,6 +46,7 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 
 # python stuff
@@ -353,6 +355,17 @@ class TestPluginBase(TestAccountMixin):
     def test_add_sample_plugins(self):
         """Test utility function to add sample plugins to a user account."""
 
+        # the WebsearchPlugin examples need their search provider's api key Secret.
+        for secret_name in ("brave_search_api_key", "tavily_api_key"):
+            if not Secret.objects.filter(user_profile=self.user_profile, name=secret_name).exists():
+                secret = Secret.objects.create(
+                    user_profile=self.user_profile,
+                    name=secret_name,
+                    description="placeholder web search api key for unit tests",
+                    encrypted_value=Secret.encrypt(value="not-a-real-api-key"),
+                )
+                self.addCleanup(secret.delete)
+
         # add the sample plugins to the user account
         add_example_plugins(user_profile=self.user_profile)
 
@@ -363,11 +376,7 @@ class TestPluginBase(TestAccountMixin):
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.
         for plugin in plugins:
-            self.assertTrue(
-                PluginController(
-                    account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin
-                ).ready
-            )
+            self.assertTrue(PluginController(user_profile=self.user_profile, plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
@@ -375,30 +384,25 @@ class TestPluginBase(TestAccountMixin):
         with self.assertRaises((SmarterPluginError, SAMValidationError)):
             self.plugin_class(data={})
 
-        bad_data = self.data.copy()
-        bad_data.pop(SAMKeys.METADATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.SELECTOR.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.PROMPT.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.DATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.METADATA.value].pop("name")
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
+        # every malformed manifest must be rejected. Depending on where it is caught, that
+        # is the loader, the plugin (which reports a loader that is not ready as a
+        # SAMValidationError), or Pydantic. deepcopy, so that each case removes one thing.
+        rejected = (SAMLoaderError, SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
+        removals = [
+            (SAMKeys.METADATA.value,),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.DATA.value),
+            (SAMKeys.METADATA.value, "name"),
+        ]
+        for removal in removals:
+            bad_data = copy.deepcopy(self.data)
+            parent = bad_data
+            for key in removal[:-1]:
+                parent = parent[key]
+            parent.pop(removal[-1])
+            with self.subTest(removed=".".join(removal)), self.assertRaises(rejected):
+                self.plugin_class(data=bad_data)
 
     def test_pydantic_validation_errors(self):
         """Test that the StaticPlugin raises an error when given bad data."""

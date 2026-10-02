@@ -1,7 +1,10 @@
 """Secret API views."""
 
+from django.db.models import QuerySet
 from django.http.response import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
+from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.secret.models import Secret
@@ -27,20 +30,33 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
+def secrets_for_user(user) -> QuerySet[Secret]:
+    """The Secrets that belong to any of the user's accounts."""
+    if not isinstance(user, User):
+        return Secret.objects.none()
+    accounts = UserProfile.objects.filter(user=user).values("account")
+    return Secret.objects.filter(user_profile__account__in=accounts)
+
+
 class SecretView(SmarterAdminAPIView):
     """Class for secret views."""
 
     serializer_class = SecretSerializer
 
     def get_queryset(self):
-        return Secret.objects.all()
+        return secrets_for_user(self.request.user)
 
-    def dispatch(self, request: Request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if response.status_code < 300 and isinstance(request.user, User):
-            # we now have to consider superuser secrets that are associated with multiple secrets
-            self.user_profile = UserProfile.objects.filter(user=request.user).first()
-        return response
+    def get(self, request: Request, secret_id: int, *args, **kwargs):
+        """Return the Secret, without its value."""
+        secret = get_object_or_404(self.get_queryset(), pk=secret_id)
+        return Response(SecretSerializer(secret).data)
+
+    def post(self, request: Request, secret_id: int, *args, **kwargs):
+        """Same as get().
+
+        Smarter detail views are also served by POST.
+        """
+        return self.get(request, secret_id, *args, **kwargs)
 
 
 class SecretListView(SmarterAdminListAPIView):
@@ -49,7 +65,7 @@ class SecretListView(SmarterAdminListAPIView):
     serializer_class = SecretSerializer
 
     def get_queryset(self):
-        return Secret.objects.all()
+        return secrets_for_user(self.request.user)
 
     def dispatch(self, request: Request, *args, **kwargs):
         try:
@@ -66,9 +82,6 @@ class SecretListView(SmarterAdminListAPIView):
             request,
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
         )
-        if response.status_code < 300 and isinstance(request.user, User):
-            # we now have to consider superuser secrets that are associated with multiple secrets
-            self.user_profile = UserProfile.objects.filter(user=request.user).first()
         return response
 
     def setup(self, request: Request, *args, **kwargs):

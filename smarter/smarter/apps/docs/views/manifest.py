@@ -84,6 +84,12 @@ class DocsExampleManifestPromptView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.PROMPT)
 
 
+class DocsExampleManifestBudgetView(DocsExampleManifestBaseView):
+    """Budget example manifest view."""
+
+    kind = SAMKinds(SAMKinds.BUDGET)
+
+
 class DocsExampleManifestGuardrailView(DocsExampleManifestBaseView):
     """Guardrail JSON Schema view."""
 
@@ -100,6 +106,18 @@ class DocsExampleManifestLLMHostView(DocsExampleManifestBaseView):
     """LLMHost JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.LLM_HOST)
+
+
+class DocsExampleManifestLLMHostComputeView(DocsExampleManifestBaseView):
+    """LLMHostCompute example manifest view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST_COMPUTE)
+
+
+class DocsExampleManifestProxyView(DocsExampleManifestBaseView):
+    """Proxy example manifest view."""
+
+    kind = SAMKinds(SAMKinds.PROXY)
 
 
 class DocsExampleManifestMCPClientView(DocsExampleManifestBaseView):

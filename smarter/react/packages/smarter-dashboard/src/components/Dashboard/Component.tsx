@@ -45,6 +45,7 @@ import SelfHost from "../SelfHost/Component";
 import Contribute from "../Contribute/Component";
 import YTVideo from "../YTVideo/Component";
 import UserCharges from "../TokenUsage/";
+import BudgetVsActual from "../BudgetVsActual/";
 
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
   return (
@@ -67,6 +68,12 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
               <UserCharges sessionContext={appContext.sessionContext} apiUrl={appContext.chargesApiUrl} />
             </div>
           </div>
+
+          {appContext.budgetsApiUrl && (
+            <div className="row g-5 g-xl-10">
+              <BudgetVsActual sessionContext={appContext.sessionContext} apiUrl={appContext.budgetsApiUrl} />
+            </div>
+          )}
 
           <div className="row g-5 g-xl-10 align-items-stretch">
             <Sdk />

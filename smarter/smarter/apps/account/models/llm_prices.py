@@ -27,8 +27,10 @@ Example
 
     markup = LLMPrices.objects.get(provider="openai", model="gpt-4").price
     account_charge = provider_cost * markup * account_usage_ratio
-
 """
+
+from decimal import Decimal
+from typing import Optional
 
 # django stuff
 from django.db import models
@@ -50,7 +52,7 @@ class LLMPrices(TimestampedModel):
     :param charge_type: String. The type of charge (e.g., completion, plugin, tool).
     :param provider: String. The LLM provider (e.g., OpenAI, Meta AI).
     :param model: String. The model name.
-    :param price: Decimal. The markup price to apply.
+    :param price: Decimal. The price in USD per million tokens, markup included. :meth:`cost_of` uses it to price charges, which budgets that measure cost compare to their limits.
 
     .. note::
 
@@ -82,6 +84,27 @@ class LLMPrices(TimestampedModel):
 
     def __str__(self):
         return f"{self.charge_type} - {self.provider} - {self.model} - {self.price}"
+
+    @classmethod
+    def cost_of(
+        cls, charge_type: Optional[str], provider: Optional[str], model: Optional[str], total_tokens: int
+    ) -> Decimal:
+        """
+        The cost in USD of total_tokens, where price is USD per million tokens.
+
+        Budgets that measure cost use it. Without a price for the charge type, provider and
+        model, the cost is 0.
+        """
+        if not (charge_type and provider and model and total_tokens):
+            return Decimal("0")
+        price = (
+            cls.objects.filter(charge_type=charge_type, provider__iexact=provider, model=model)
+            .values_list("price", flat=True)
+            .first()
+        )
+        if price is None:
+            return Decimal("0")
+        return (Decimal(total_tokens) * price / Decimal(1000000)).quantize(Decimal("0.00000001"))
 
 
 __all__ = ["LLMPrices"]

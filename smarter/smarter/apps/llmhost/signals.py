@@ -1,22 +1,41 @@
-"""Signals for llmhost app.
+"""
+Signals of the llmhost app.
 
-These signals are used to notify various events in the llmhost lifecycle,
-such as deployment, DNS verification, and API management.
+They are sent by :class:`smarter.apps.llmhost.services.LLMHostService` at each step of an
+LLMHost's lifecycle. Each has the arguments ``llmhost`` (LLMHost), plus those listed.
+
+Example::
+
+    from django.dispatch import receiver
+    from smarter.apps.llmhost.signals import llmhost_status_changed
+
+    @receiver(llmhost_status_changed)
+    def notify(sender, llmhost, old_status, new_status, **kwargs):
+        ...
 """
 
 from django.dispatch import Signal
 
-llmhost_called = Signal()
+llmhost_launched = Signal()
+"""Sent when an LLMHost's Kubernetes resources are applied.
+
+Arguments: llmhost, resources (list[dict]).
 """
-Signal triggered when a llmhost is called.
 
-Arguments:
-    llmhost (LLMHost): The llmhost instance.
-    request (HttpRequest): The HTTP request object.
-    args: Positional arguments.
-    kwargs: Keyword arguments.
+llmhost_launch_failed = Signal()
+"""Sent when an LLMHost cannot be launched.
 
-Example::
+Arguments: llmhost, error (str).
+"""
 
-    llmhost_called.send(sender=self.__class__, llmhost=self.llmhost, request=request, args=args, kwargs=kwargs)
+llmhost_status_changed = Signal()
+"""Sent when a status check changes an LLMHost's status.
+
+Arguments: llmhost, old_status, new_status, observation.
+"""
+
+llmhost_destroyed = Signal()
+"""Sent when an LLMHost's Kubernetes resources are deleted.
+
+Arguments: llmhost, purge (bool).
 """

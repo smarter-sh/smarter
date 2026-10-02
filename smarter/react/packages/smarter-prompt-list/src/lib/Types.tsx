@@ -48,8 +48,8 @@ export type LLMClient = {
   userProfile: UserProfile;
   functions: Function[];
   plugins: Array<Plugin>;
-  customDomains: any[];
-  apiKeys: any[];
+  customDomains: unknown[];
+  apiKeys: unknown[];
   rfc1034CompliantName: string;
   defaultSystemRole: string;
   baseApiDomain: string;

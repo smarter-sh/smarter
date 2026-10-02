@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete provider resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - provider (Provider): The provider resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} provider={provider} />
+ * <Toolbar sessionContext={sessionContext} provider={provider} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each provider row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Provider } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  provider: Provider | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ provider, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Provider" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone provider <strong>{provider?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned provider.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new provider name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ provider, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(provider?.name || "");
+  return (
+    <Modal show title="Rename Provider" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename provider <strong>{provider?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the provider.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new provider name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  provider,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  provider: Provider | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Provider" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete provider <strong>{provider?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  provider,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  provider: Provider | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on provider <strong>{provider?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  provider,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  provider: Provider | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{provider?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    provider: Provider | null;
-  }>({ type: null, provider: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; provider: Provider | null }>({ type: null, provider: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
     onRequery();
   };
 
-  const handleCloneButtonClicked = (provider: Provider) => setModal({ type: "clone", provider });
-  const handleRenameButtonClicked = (provider: Provider) => setModal({ type: "rename", provider });
-  const handleDeleteButtonClicked = (provider: Provider) => setModal({ type: "delete", provider });
-
-  const handleError = (provider: Provider) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Provider, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", provider });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Provider"
-          onOk={() => handleCloneProvider(modal.provider!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone provider <strong>{modal.provider?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned provider.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new provider name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.provider?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Provider"
-          onOk={() => handleRenameProvider(modal.provider!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename provider <strong>{modal.provider?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the provider.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new provider name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Provider"
-          onOk={() => handleDeleteProvider(modal.provider!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete provider <strong>{modal.provider?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on provider <strong>{modal.provider?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.provider?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneProvider = async (provider: Provider, new_name: string) => {
-    // see: smarter.apps.provider.urls for API urls
-    // path("api/clone/<int:provider_id>/<str:new_name>/", ProviderListApiCloneView.as_view(), name=ProviderReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + provider.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone provider (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone provider (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} provider (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Provider) => {
-        console.debug(loggerPrefix, "Successfully cloned provider:", data);
-        setModal({ type: "confirmation", provider: data as Provider });
-        setSuccessMessage(`Successfully cloned provider`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d provider:`, data);
+        setSuccessMessage(`Successfully ${verb}d provider`);
+        // clone and rename return the resulting provider; delete returns a message.
+        setModal({ type: "confirmation", provider: data && data.id ? (data as Provider) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning provider:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} provider:`, error);
         setErrMessage(error.message);
-        handleError(provider);
+        setModal({ type: "error", provider: target });
       });
-    return true;
-  };
-
-  const handleRenameProvider = async (provider: Provider, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + provider.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename provider (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename provider (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Provider) => {
-        console.debug(loggerPrefix, "Successfully renamed provider:", data);
-        setModal({ type: "confirmation", provider: data as Provider });
-        setSuccessMessage(`Successfully renamed provider`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming provider:", error);
-        setErrMessage(error.message);
-        handleError(provider);
-      });
-    return true;
-  };
-
-  const handleDeleteProvider = async (provider: Provider) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + provider.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete provider (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete provider (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted provider:", provider);
-        setModal({ type: "confirmation", provider });
-        setSuccessMessage(`Successfully deleted provider`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting provider:", error);
-        setErrMessage(error.message);
-        handleError(provider);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this provider resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(provider)}
+          onClick={() => setModal({ type: "clone", provider })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this provider resource"
-          onClick={() => handleRenameButtonClicked(provider)}
+          onClick={() => setModal({ type: "rename", provider })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this provider resource"
-          onClick={() => handleDeleteButtonClicked(provider)}
+          onClick={() => setModal({ type: "delete", provider })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            provider={modal.provider}
+            onOk={(newName) => runAction(modal.provider!, `clone/${modal.provider!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            provider={modal.provider}
+            onOk={(newName) => runAction(modal.provider!, `rename/${modal.provider!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          provider={modal.provider}
+          onOk={() => runAction(modal.provider!, `delete/${modal.provider!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} provider={modal.provider} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          provider={modal.provider}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

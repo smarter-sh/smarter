@@ -41,9 +41,9 @@ def plugin_meta_factory(plugin_class: str, account: Account, user_profile: Optio
         user = get_cached_admin_user_for_account(account=account)
         user_profile = UserProfile.get_cached_object(user=user)
 
-    if not plugin_class in SAMPluginCommonMetadataClassValues.all_values():
+    if not plugin_class in SAMPluginCommonMetadataClassValues.all():
         raise SmarterValueError(
-            f"Invalid plugin class: {plugin_class}. should be one of {SAMPluginCommonMetadataClassValues.all_values()}"
+            f"Invalid plugin class: {plugin_class}. should be one of {SAMPluginCommonMetadataClassValues.all()}"
         )
 
     meta_data = PluginMeta(

@@ -3,7 +3,7 @@
 
 from datetime import datetime
 from logging import getLogger
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 from urllib.parse import ParseResult
 
 from django.conf import settings
@@ -1235,7 +1235,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertIn("llmclient_id", json_dump)
         self.assertIn("llmclient_name", json_dump)
 
-        with patch.object(mixin, "is_requestmixin_ready", False):
+        with patch.object(type(mixin), "srm_ready", new_callable=PropertyMock, return_value=False):
             json_dump = mixin.to_json()
             self.assertIsInstance(json_dump, dict)
             self.assertIn("session_key", json_dump)

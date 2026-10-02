@@ -2,30 +2,138 @@
  * Toolbar React Component
  *
  * This component provides a toolbar for managing orchestrator resources, used in both ListView and CardView displays.
- * It offers actions for opening, editing, cloning, renaming, and deleting a orchestrator, with modal dialogs for confirmation and error handling.
+ * It offers actions for opening, editing, cloning, renaming, and deleting an orchestrator, with modal dialogs for confirmation and error handling.
  *
  * Features:
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete orchestrator resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - orchestrator (Orchestrator): The orchestrator resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} orchestrator={orchestrator} />
+ * <Toolbar sessionContext={sessionContext} orchestrator={orchestrator} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each orchestrator row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Orchestrator } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  orchestrator: Orchestrator | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ orchestrator, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Orchestrator" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone orchestrator <strong>{orchestrator?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned orchestrator.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new orchestrator name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ orchestrator, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(orchestrator?.name || "");
+  return (
+    <Modal show title="Rename Orchestrator" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename orchestrator <strong>{orchestrator?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the orchestrator.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new orchestrator name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  orchestrator,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  orchestrator: Orchestrator | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Orchestrator" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete orchestrator <strong>{orchestrator?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  orchestrator,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  orchestrator: Orchestrator | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on orchestrator <strong>{orchestrator?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  orchestrator,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  orchestrator: Orchestrator | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{orchestrator?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    orchestrator: Orchestrator | null;
-  }>({ type: null, orchestrator: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; orchestrator: Orchestrator | null }>({ type: null, orchestrator: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
     onRequery();
   };
 
-  const handleCloneButtonClicked = (orchestrator: Orchestrator) => setModal({ type: "clone", orchestrator });
-  const handleRenameButtonClicked = (orchestrator: Orchestrator) => setModal({ type: "rename", orchestrator });
-  const handleDeleteButtonClicked = (orchestrator: Orchestrator) => setModal({ type: "delete", orchestrator });
-
-  const handleError = (orchestrator: Orchestrator) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Orchestrator, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", orchestrator });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Orchestrator"
-          onOk={() => handleCloneOrchestrator(modal.orchestrator!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone orchestrator <strong>{modal.orchestrator?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned orchestrator.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new orchestrator name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.orchestrator?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Orchestrator"
-          onOk={() => handleRenameOrchestrator(modal.orchestrator!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename orchestrator <strong>{modal.orchestrator?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the orchestrator.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new orchestrator name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Orchestrator"
-          onOk={() => handleDeleteOrchestrator(modal.orchestrator!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete orchestrator <strong>{modal.orchestrator?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on orchestrator <strong>{modal.orchestrator?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.orchestrator?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneOrchestrator = async (orchestrator: Orchestrator, new_name: string) => {
-    // see: smarter.apps.orchestrator.urls for API urls
-    // path("api/clone/<int:orchestrator_id>/<str:new_name>/", OrchestratorListApiCloneView.as_view(), name=OrchestratorReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + orchestrator.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone orchestrator (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone orchestrator (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} orchestrator (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Orchestrator) => {
-        console.debug(loggerPrefix, "Successfully cloned orchestrator:", data);
-        setModal({ type: "confirmation", orchestrator: data as Orchestrator });
-        setSuccessMessage(`Successfully cloned orchestrator`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d orchestrator:`, data);
+        setSuccessMessage(`Successfully ${verb}d orchestrator`);
+        // clone and rename return the resulting orchestrator; delete returns a message.
+        setModal({ type: "confirmation", orchestrator: data && data.id ? (data as Orchestrator) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning orchestrator:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} orchestrator:`, error);
         setErrMessage(error.message);
-        handleError(orchestrator);
+        setModal({ type: "error", orchestrator: target });
       });
-    return true;
-  };
-
-  const handleRenameOrchestrator = async (orchestrator: Orchestrator, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + orchestrator.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename orchestrator (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename orchestrator (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Orchestrator) => {
-        console.debug(loggerPrefix, "Successfully renamed orchestrator:", data);
-        setModal({ type: "confirmation", orchestrator: data as Orchestrator });
-        setSuccessMessage(`Successfully renamed orchestrator`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming orchestrator:", error);
-        setErrMessage(error.message);
-        handleError(orchestrator);
-      });
-    return true;
-  };
-
-  const handleDeleteOrchestrator = async (orchestrator: Orchestrator) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + orchestrator.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete orchestrator (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete orchestrator (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted orchestrator:", orchestrator);
-        setModal({ type: "confirmation", orchestrator });
-        setSuccessMessage(`Successfully deleted orchestrator`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting orchestrator:", error);
-        setErrMessage(error.message);
-        handleError(orchestrator);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this orchestrator resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(orchestrator)}
+          onClick={() => setModal({ type: "clone", orchestrator })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this orchestrator resource"
-          onClick={() => handleRenameButtonClicked(orchestrator)}
+          onClick={() => setModal({ type: "rename", orchestrator })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this orchestrator resource"
-          onClick={() => handleDeleteButtonClicked(orchestrator)}
+          onClick={() => setModal({ type: "delete", orchestrator })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            orchestrator={modal.orchestrator}
+            onOk={(newName) => runAction(modal.orchestrator!, `clone/${modal.orchestrator!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            orchestrator={modal.orchestrator}
+            onOk={(newName) => runAction(modal.orchestrator!, `rename/${modal.orchestrator!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          orchestrator={modal.orchestrator}
+          onOk={() => runAction(modal.orchestrator!, `delete/${modal.orchestrator!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} orchestrator={modal.orchestrator} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          orchestrator={modal.orchestrator}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

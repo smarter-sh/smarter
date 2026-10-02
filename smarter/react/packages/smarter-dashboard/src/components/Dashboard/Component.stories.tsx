@@ -1,5 +1,5 @@
 import type { SessionContext } from "@smarter/common";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import Dashboard from "./Component";
 import type { AppContextInterface } from "@/main";
@@ -19,6 +19,7 @@ const appContext: AppContextInterface = {
   myResourcesApiUrl: "https://customer.smarter.sh/dashboard/api/my-resources",
   serviceHealthApiUrl: "https://customer.smarter.sh/dashboard/api/service-health",
   chargesApiUrl: "https://customer.smarter.sh/dashboard/api/charges",
+  budgetsApiUrl: "https://customer.smarter.sh/dashboard/api/budgets/",
   sessionContext: sessionContext,
 };
 

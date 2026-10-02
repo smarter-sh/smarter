@@ -21,6 +21,7 @@ from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
+from smarter.apps.account.manifest.brokers.budget import SAMBudgetBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.manifest.brokers.api_connection import (
@@ -32,6 +33,9 @@ from smarter.apps.connection.manifest.brokers.sql_connection import (
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmhost.manifest.brokers.llmhost import SAMLLMHostBroker
+from smarter.apps.llmhost.manifest.brokers.llmhost_compute import (
+    SAMLLMHostComputeBroker,
+)
 from smarter.apps.mcpclient.manifest.brokers.mcpclient import SAMMCPClientBroker
 from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
     SAMOrchestratorBroker,
@@ -45,6 +49,7 @@ from smarter.apps.plugin.manifest.brokers.websearch_plugin import (
 )
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+from smarter.apps.proxy.manifest.brokers.proxy import SAMProxyBroker
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.vectorsearch.manifest.brokers.vectorsearch import (
     SAMVectorsearchBroker,
@@ -111,12 +116,15 @@ class Brokers:
         SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
         SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.BUDGET.value: SAMBudgetBroker,
         SAMKinds.GUARDRAIL.value: SAMGuardrailBroker,
         SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
         SAMKinds.LLM_HOST.value: SAMLLMHostBroker,
+        SAMKinds.LLM_HOST_COMPUTE.value: SAMLLMHostComputeBroker,
         SAMKinds.MCP_CLIENT.value: SAMMCPClientBroker,
         SAMKinds.PROMPT.value: SAMPromptBroker,
         SAMKinds.PROVIDER.value: SAMProviderBroker,
+        SAMKinds.PROXY.value: SAMProxyBroker,
         SAMKinds.ORCHESTRATOR.value: SAMOrchestratorBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
         SAMKinds.SKILL_PLUGIN.value: SAMSkillPluginBroker,

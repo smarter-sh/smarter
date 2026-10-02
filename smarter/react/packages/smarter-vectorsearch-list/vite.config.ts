@@ -45,7 +45,7 @@ const packageName = packageJson.name;
 const addCustomManifestData: PluginOption = {
   name: "add-custom-manifest-data",
   writeBundle() {
-    const manifestPath = path.resolve(__dirname, `../../smarter/static/react/${packageName}/manifest.json`);
+    const manifestPath = path.resolve(import.meta.dirname, `../../../smarter/static/react/${packageName}/manifest.json`);
     if (fs.existsSync(manifestPath)) {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
       manifest._custom = {
@@ -116,7 +116,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   base: command === "serve" ? "/" : `/static/react/${packageName}/`,
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   build: {

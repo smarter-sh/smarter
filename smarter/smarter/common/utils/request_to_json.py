@@ -1,5 +1,5 @@
 """
-smarter.common.utils.request_to_json
+Smarter.common.utils.request_to_json
 ====================================
 
 Utility for converting Django ASGIRequest objects to JSON-serializable dictionaries.
@@ -23,21 +23,19 @@ serialization. If a dictionary or list is provided, it is returned as-is.
     # Example with dictionary
     data = request_to_json({"foo": "bar"})
     print(data)  # Output: {'foo': 'bar'}
-
 """
 
 from typing import Any, Optional, TypedDict, Union
 
 from django.core.handlers.asgi import ASGIRequest
+from django.http import HttpRequest
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
 
 class RequestData(TypedDict):
-    """
-    TypedDict representing the relevant data extracted from a request object.
-    """
+    """TypedDict representing the relevant data extracted from a request object."""
 
     method: str
     url: str
@@ -78,10 +76,10 @@ def request_to_json(request: ASGIRequest | dict | list) -> Union[RequestData, AS
         # Example with dictionary
         data = request_to_json({"foo": "bar"})
         print(data)  # Output: {'foo': 'bar'}
-
     """
 
-    if isinstance(request, ASGIRequest):
+    # any Django request: ASGIRequest in production, WSGIRequest under the test client and runserver
+    if isinstance(request, HttpRequest):
         body_str = request.body.decode("utf-8") if request.body else None
         body_json = None
         if body_str:
@@ -102,7 +100,7 @@ def request_to_json(request: ASGIRequest | dict | list) -> Union[RequestData, AS
     elif isinstance(request, (dict, list)):
         return request
 
-    raise SmarterValueError(f"Unsupported request type: {type(request)}. Expected ASGIRequest, dict, or list.")
+    raise SmarterValueError(f"Unsupported request type: {type(request)}. Expected HttpRequest, dict, or list.")
 
 
 __all__ = ["RequestData", "request_to_json"]

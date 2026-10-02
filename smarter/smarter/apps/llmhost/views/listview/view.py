@@ -9,13 +9,13 @@ from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
 from django.shortcuts import render
 
-from smarter.apps.llmhost.models import LLMHost
+from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
 
 class LLMHostListView(SmarterAuthenticatedNeverCachedWebView):
@@ -55,6 +55,55 @@ class LLMHostListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "llmhost_list_api_url": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview_api_all),
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.generate_smarter_request_id(),
+            }
+        }
+
+        logger.debug(
+            "%s.get() called for %s with args %s, kwargs %s with context %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+            logging.formatted_json(context),
+        )
+        return render(request, template_name=self.template_path, context=context)
+
+
+class LLMHostComputeListView(SmarterAuthenticatedNeverCachedWebView):
+    """
+    Render the LLMHostCompute list view for the Smarter Workbench web console.
+
+    It displays the LLMHostComputes available to the authenticated user: the kinds of node, and
+    node groups, that their LLMHosts can run on.
+
+    :returns: Rendered HTML page, in which the React app @smarter/llmhost-compute-list renders the list.
+    :rtype: HttpResponse
+    """
+
+    template_path = "react/llmhost-compute-list.html"
+    computes: list[LLMHostCompute]
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{LLMHostComputeListView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    def get(self, request: ASGIRequest, *args, **kwargs):
+        # pylint: disable=C0415
+        from smarter.apps.llmhost.urls import LLMHostReverseNames
+
+        context = {
+            "llmhost_compute_list": {
+                "root_id": "smarter-llmhost-compute-list-root",
+                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
+                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
+                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                "llmhost_compute_list_api_url": reverse(
+                    LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview_api_all
+                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

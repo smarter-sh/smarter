@@ -89,7 +89,7 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
         {'userName': 'alice', 'userProfile': {'firstName': 'Alice', 'lastName': 'Smith'}}
 
         # Convert a list of strings
-        >>> to_camel_case(["first_name", "last_name"])
+        >>> to_camel_case(["first_name", "last_name"], convert_values=True)
         ['firstName', 'lastName']
 
         # Convert values as well
@@ -175,7 +175,7 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
         {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
 
         # Convert a list of strings
-        >>> to_snake_case(["firstName", "lastName"])
+        >>> to_snake_case(["firstName", "lastName"], convert_values=True)
         ['first_name', 'last_name']
 
     .. caution::

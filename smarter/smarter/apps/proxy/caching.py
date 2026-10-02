@@ -41,7 +41,7 @@ from .models import Proxy
 from .serializers import ProxySerializer
 
 logger = logging.getSmarterLogger(
-    __name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
+    __name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
 logger_prefix = logging.formatted_text(__name__)
 
@@ -76,8 +76,8 @@ def get_cached_proxies_owned_by_user_profile(user_profile: UserProfile) -> model
 
         >>> user_profile = UserProfile.objects.get(pk=1)
         >>> proxies = get_cached_proxies_owned_by_user_profile(user_profile)
-        >>> for bot in proxies:
-        ...     print(bot.name)
+        >>> for proxy in proxies:
+        ...     print(proxy.name)
 
     .. seealso::
 
@@ -120,8 +120,8 @@ def get_cached_proxies_shared_with_user_profile(user_profile: UserProfile) -> mo
 
         >>> user_profile = UserProfile.objects.get(pk=1)
         >>> shared_proxies = get_cached_proxies_shared_with_user_profile(user_profile)
-        >>> for bot in shared_proxies:
-        ...     print(bot.name)
+        >>> for proxy in shared_proxies:
+        ...     print(proxy.name)
 
     .. seealso::
 
@@ -165,8 +165,8 @@ def get_cached_proxies_available_to_user_profile(user_profile: UserProfile) -> m
 
         >>> user_profile = UserProfile.objects.get(pk=1)
         >>> available_proxies = get_cached_proxies_available_to_user_profile(user_profile)
-        >>> for bot in available_proxies:
-        ...     print(bot.name)
+        >>> for proxy in available_proxies:
+        ...     print(proxy.name)
 
     .. seealso::
 

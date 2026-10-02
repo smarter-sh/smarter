@@ -632,6 +632,129 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             return False
         return True
 
+    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[dict]:
+        """
+        Get a resource from the cluster.
+
+        command:
+        - kubectl get deployment llmhost-1-example -n smarter-platform-prod -o json
+
+        :param kind: The resource kind, e.g. deployment.
+        :type kind: str
+        :param name: The name of the resource.
+        :type name: str
+        :param namespace: The namespace of the resource.
+        :type namespace: str
+        :return: The resource, or None if it does not exist or the cluster is unavailable.
+        :rtype: Optional[dict]
+        """
+        if not self.ready:
+            return None
+        command = ["kubectl", "get", kind, name, "-n", namespace, "-o", "json", "--ignore-not-found"]
+        try:
+            output = subprocess.check_output(command, text=True)
+        except subprocess.CalledProcessError as e:
+            logger.warning("%s.get_resource() failed to get %s %s %s: %s", module_prefix, kind, name, namespace, e)
+            return None
+        if not output.strip():
+            return None
+        try:
+            return json.loads(output)
+        except json.JSONDecodeError as e:
+            logger.error("%s.get_resource() failed to parse %s %s: %s", module_prefix, kind, name, e)
+            return None
+
+    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
+        """
+        List resources in the cluster, optionally filtered by a label selector.
+
+        command:
+        - kubectl get pods -n smarter-platform-prod -l smarter.sh/llmhost=llmhost-1-example -o json
+
+        :param kind: The resource kind, e.g. pods.
+        :type kind: str
+        :param namespace: The namespace of the resources.
+        :type namespace: str
+        :param selector: A label selector, e.g. app=example.
+        :type selector: Optional[str]
+        :return: The resources, or an empty list if there are none or the cluster is unavailable.
+        :rtype: list[dict]
+        """
+        if not self.ready:
+            return []
+        command = ["kubectl", "get", kind, "-n", namespace, "-o", "json"]
+        if selector:
+            command += ["-l", selector]
+        try:
+            output = subprocess.check_output(command, text=True)
+            return json.loads(output).get("items", [])
+        except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+            logger.warning(
+                "%s.list_resources() failed to list %s %s %s: %s", module_prefix, kind, namespace, selector, e
+            )
+            return []
+
+    def delete_resources(self, kinds: list[str], namespace: str, selector: str) -> bool:
+        """
+        Delete the resources of several kinds that match a label selector.
+
+        Resources that do not exist are ignored, so that deletion is idempotent.
+
+        command:
+        - kubectl delete deployment,service,ingress -n smarter-platform-prod -l smarter.sh/llmhost=llmhost-1-example --ignore-not-found
+
+        :param kinds: The resource kinds, e.g. ["deployment", "service"].
+        :type kinds: list[str]
+        :param namespace: The namespace of the resources.
+        :type namespace: str
+        :param selector: A label selector. Required, so that a namespace is never emptied by mistake.
+        :type selector: str
+        :return: True if the resources were deleted, False otherwise.
+        :rtype: bool
+        """
+        if not kinds or not selector:
+            raise KubernetesHelperException("delete_resources() requires kinds and a label selector.")
+        if not self.ready:
+            return False
+        command = ["kubectl", "delete", ",".join(kinds), "-n", namespace, "-l", selector, "--ignore-not-found"]
+        try:
+            subprocess.check_call(command)
+        except subprocess.CalledProcessError as e:
+            logger.error("%s.delete_resources() failed to delete %s %s: %s", module_prefix, kinds, selector, e)
+            return False
+        return True
+
+    def get_pod_logs(
+        self, namespace: str, selector: str, container: Optional[str] = None, tail: int = 200
+    ) -> Optional[str]:
+        """
+        Get the most recent log lines of the pods that match a label selector.
+
+        command:
+        - kubectl logs -n smarter-platform-prod -l smarter.sh/llmhost=llmhost-1-example --tail 200 --prefix
+
+        :param namespace: The namespace of the pods.
+        :type namespace: str
+        :param selector: A label selector.
+        :type selector: str
+        :param container: The container, if the pods have several.
+        :type container: Optional[str]
+        :param tail: The number of lines, per pod.
+        :type tail: int
+        :return: The log lines, or None if the cluster is unavailable.
+        :rtype: Optional[str]
+        """
+        if not self.ready:
+            return None
+        command = ["kubectl", "logs", "-n", namespace, "-l", selector, "--tail", str(tail), "--prefix"]
+        if container:
+            command += ["-c", container]
+        try:
+            return subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            logger.warning("%s.get_pod_logs() failed for %s %s: %s", module_prefix, selector, namespace, e)
+            return e.output if isinstance(e.output, str) else None
+
     def get_namespaces(self) -> Union[dict, None]:
         """
         Get all namespaces in the Kubernetes cluster.

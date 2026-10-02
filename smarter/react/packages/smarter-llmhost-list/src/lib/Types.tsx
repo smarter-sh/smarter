@@ -19,15 +19,14 @@ import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/co
 // LLMHost Definition
 // ----------------------------------------------------------------------------
 
-/** Model-serving backend responsible for loading weights and exposing an API. */
+/** Inference server that loads the weights and exposes an API. */
 export type InferenceEngine =
   | "vllm"
   | "tgi"
-  | "ollama"
-  | "llama_cpp"
   | "sglang"
-  | "transformers"
-  | "triton"
+  | "llama_cpp"
+  | "ollama"
+  | "tei"
   | "custom";
 
 /** Wire-protocol contract the LLMHost endpoint speaks, independent of engine. */
@@ -37,37 +36,36 @@ export type ApiFormat =
   | "ollama_native"
   | "custom";
 
+/** Where the model weights come from. */
+export type ModelSource = "huggingface" | "ollama" | "s3" | "url" | "pvc";
+
+/** What the model does. */
+export type ModelTask = "text-generation" | "embedding";
+
 /** Numeric precision / compression scheme applied to the model's weights. */
 export type Quantization =
   | "none"
+  | "fp32"
   | "fp16"
   | "bf16"
+  | "fp8"
+  | "mxfp4"
   | "int8"
   | "int4"
   | "gguf"
   | "awq"
   | "gptq";
 
-/** Infrastructure substrate the LLMHost is deployed on. */
-export type DeploymentType =
-  | "docker"
-  | "kubernetes"
-  | "bare_metal"
-  | "cloud_instance";
-
-/** Cloud (or non-cloud) provider hosting the deployment. Required when deploymentType is "cloud_instance". */
-export type CloudProvider = "aws" | "gcp" | "azure" | "on_prem" | "other";
-
 /** Lifecycle state of the LLMHost deployment. */
 export type HostStatus =
+  | "provisioning"
   | "pending"
   | "downloading"
   | "deploying"
   | "active"
   | "degraded"
   | "inactive"
-  | "error"
-  | "deprecated";
+  | "error";
 
 export type LLMHost = {
   id: number;
@@ -85,13 +83,17 @@ export type LLMHost = {
   ready: boolean;
   rfc1034CompliantName: string | null;
 
-  // --- Provenance ---
-  huggingfaceRepoId: string;
-  huggingfaceRevision: string;
+  /** The manifest's spec, in camelCase: the source of truth for launching the LLMHost. */
+  spec: Record<string, unknown>;
+
+  // --- Model ---
+  modelSource: ModelSource;
+  modelRepository: string;
+  modelRevision: string;
+  modelTask: ModelTask;
+  servedModelName: string;
   license: string;
   modelArchitecture: string;
-
-  // --- Characteristics ---
   parameterCount: number | null;
   contextWindow: number | null;
   quantization: Quantization;
@@ -99,31 +101,37 @@ export type LLMHost = {
   supportsStreaming: boolean;
   supportsFunctionCalling: boolean;
   supportsVision: boolean;
+  supportsReasoning: boolean;
 
   // --- Serving ---
   inferenceEngine: InferenceEngine;
   apiFormat: ApiFormat;
-  endpointUrl: string;
-  /** Secret reference, not a plaintext credential — resolved server-side against the account's secret store. */
-  apiKey: string;
-  engineConfig: Record<string, unknown>;
+  /** The id of the Smarter Secret with the API key, if any. Never the key itself. */
+  apiKeySecret: number | null;
 
   // --- Infrastructure ---
-  deploymentType: DeploymentType;
-  cloudProvider: CloudProvider | "";
-  region: string;
-  instanceType: string;
+  /** The id of the LLMHostCompute, the node group, that the LLMHost runs on. */
+  compute: number | null;
   gpuType: string;
   gpuCount: number;
   vramRequiredGb: number | null;
-  costPerHour: number | null;
+  replicas: number;
+  /** The cost per hour of one replica, its share of its compute's node, a decimal string, e.g. "1.2120". */
+  costPerHour: string | null;
 
-  // --- Health / lifecycle ---
-  /** Renamed from the spec's `status` to avoid colliding with the LLMConnectionStatus field above. */
-  hostStatus: HostStatus;
+  // --- Observed state ---
+  status: HostStatus;
+  statusMessage: string;
   isActive: boolean;
+  readyReplicas: number;
+  /** The base URL inside the cluster. */
+  endpointUrl: string;
+  /** The base URL of the Ingress, if any. */
+  publicUrl: string;
   healthCheckUrl: string;
+  lastHealthCheckAt: string | null;
   lastHealthOk: boolean | null;
+  deployedAt: string | null;
 };
 
 

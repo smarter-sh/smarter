@@ -1,6 +1,4 @@
-"""
-Module for enumerations related to vector store backends.
-"""
+"""Module for enumerations related to vector store backends."""
 
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterValueError
@@ -17,26 +15,16 @@ class SmarterVectorStoreBackends(SmarterEnumAbstract):
     typed object.
 
     Attributes:
-        QDRANT: Represents the Qdrant vector store backend.
-        WEAVIATE: Represents the Weaviate vector store backend.
-        PINECONE: Represents the Pinecone vector store backend.
-
-    Methods:
-        str_to_backend(cls, backend_str: str) -> "SmarterVectorStoreBackends":
-            Convert a string to a SmarterVectorStoreBackends enumeration value.
-        all_backends(cls) -> list:
-            Return a list of all vector store backends.
+        QDRANT: `Qdrant <https://qdrant.tech/>`__, self-hosted on Kubernetes, or Qdrant Cloud.
+        PINECONE: `Pinecone <https://www.pinecone.io/>`__, a managed service.
     """
 
     QDRANT = "qdrant"
-    WEAVIATE = "weaviate"
     PINECONE = "pinecone"
 
     @classmethod
     def str_to_backend(cls, backend_str: str) -> "SmarterVectorStoreBackends":
-        """
-        Convert a string to a SmarterVectorStoreBackends enumeration value.
-        """
+        """Convert a string to a SmarterVectorStoreBackends enumeration value."""
         if isinstance(backend_str, bytes):
             backend_str = backend_str.decode("utf-8")
 
@@ -46,3 +34,26 @@ class SmarterVectorStoreBackends(SmarterEnumAbstract):
                 return member
 
         raise SmarterValueError(f"Invalid SmarterVectorStoreBackends value: {backend_str}.")
+
+
+class VectorstoreHosting(SmarterEnumAbstract):
+    """
+    Who runs a vector database.
+
+    - ``self_hosted``: Smarter runs it on its Kubernetes cluster. Qdrant only.
+    - ``managed``: a service, e.g. Pinecone or Qdrant Cloud, reached through an ApiConnection.
+    """
+
+    SELF_HOSTED = "self_hosted"
+    MANAGED = "managed"
+
+
+class VectorstoreMetric(SmarterEnumAbstract):
+    """The distance metric of similarity search."""
+
+    COSINE = "cosine"
+    EUCLIDEAN = "euclidean"
+    DOTPRODUCT = "dotproduct"
+
+
+__all__ = ["SmarterVectorStoreBackends", "VectorstoreHosting", "VectorstoreMetric"]

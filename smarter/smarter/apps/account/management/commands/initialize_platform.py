@@ -30,6 +30,7 @@ class Command(SmarterCommand):
             help="The value to encrypt and persist. If not provided and you are running locally, the default 'smarter' will be used.",
         )
 
+    # pylint: disable=broad-except
     def handle(self, *args, **options):
         """
         Initialize the Smarter platform.
@@ -42,7 +43,7 @@ class Command(SmarterCommand):
         4. Load example projects from GitHub.
         5. Add plugin examples.
         6. Deploy example llmclients.
-        7. Initialize providers.
+        7. Initialize providers, and the built-in Proxies of their APIs.
         8. Create StackAcademy SQL and API llmclients.
         9. Apply manifests and update secrets for database connections.
         """
@@ -98,39 +99,60 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         try:
             call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize Waffle switches: %s", e)
 
         try:
             call_command("add_builtin_guardrails")
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize Guardrails: %s", e)
 
         try:
+            call_command("add_builtin_budgets")  # Detached budgets, which superusers can attach to resources
+        except Exception as e:
+            logger.error("Failed to initialize Budgets: %s", e)
+
+        try:
             call_command("add_builtin_mcpclients")
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize MCPClients: %s", e)
 
         try:
+            call_command("add_builtin_llmhost_compute")
+        except Exception as e:
+            logger.error("Failed to initialize LLMHostCompute: %s", e)
+
+        try:
+            # after LLMHostCompute: each built-in LLMHost's spec.compute must exist.
+            call_command("add_builtin_llmhost")
+        except Exception as e:
+            logger.error("Failed to initialize LLMHosts: %s", e)
+
+        try:
             call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize providers: %s", e)
 
         try:
+            # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
+            call_command("add_builtin_proxies")
+        except Exception as e:
+            logger.error("Failed to initialize Proxies: %s", e)
+
+        try:
             call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize vectorstore providers: %s", e)
+
+        try:
+            call_command("add_builtin_vectorstores")  # Applied, not deployed: example vector databases
+        except Exception as e:
+            logger.error("Failed to apply the built-in vectorstores: %s", e)
 
         try:
             call_command(
                 "verify_dns_configuration"
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to verify DNS configuration: %s", e)
 

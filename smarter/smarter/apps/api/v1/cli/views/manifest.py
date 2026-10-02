@@ -73,7 +73,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind, *args, **kwargs):
-        if not self.broker:
+        if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         return self.broker.example_manifest(request=request, kwargs=kwargs)
 
@@ -108,7 +108,7 @@ The response from this endpoint is a JSON object containing an example manifest 
             )
             return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
 
-        if not self.broker:
+        if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
 
         response = self.broker.example_manifest(request=request, kwargs=kwargs)
