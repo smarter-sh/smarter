@@ -44,7 +44,7 @@
 # Unit tests that require connectivity to AWS are tagged `infrastructure`
 # and skipped by default.
 #------------------------------------------------------------------------------
-name: Test
+name: Tests
 
 on:
   workflow_dispatch:
