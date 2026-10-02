@@ -1,5 +1,5 @@
 /**
- * Main entry point for the Smarter Vectorestore List React application.
+ * Main entry point for the Smarter Vectorstore List React application.
  * This module joins the DOM to the React component tree and provides
  * the necessary session context for API interactions.
  *
@@ -29,7 +29,7 @@ const smarterClient = projectName;
 const smarterClientVersion = projectVersion;
 
 
-if (!ApiUrl) throw new Error("Vectorestore list API URL not found in root element attributes");
+if (!ApiUrl) throw new Error("Vectorstore list API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
 if (!djangoSessionCookieName) throw new Error("Django session cookie name not found in root element attributes");
 if (!cookieDomain) throw new Error("Cookie domain not found in root element attributes");

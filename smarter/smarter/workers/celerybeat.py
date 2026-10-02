@@ -52,6 +52,16 @@ app.conf.beat_schedule = {
         "schedule": timedelta(minutes=5),
         "options": {"queue": "beat_tasks"},
     },
+    "reconcile-vectorstores": {
+        "task": "smarter.apps.vectorstore.tasks.reconcile_vectorstores",
+        "schedule": timedelta(minutes=5),
+        "options": {"queue": "beat_tasks"},
+    },
+    "maintain-vectorstores": {
+        "task": "smarter.apps.vectorstore.tasks.maintain_vectorstores",
+        "schedule": timedelta(hours=1),
+        "options": {"queue": "beat_tasks"},
+    },
     "refresh-mcpclients": {
         "task": "smarter.apps.mcpclient.tasks.refresh_mcpclients",
         "schedule": timedelta(hours=1),

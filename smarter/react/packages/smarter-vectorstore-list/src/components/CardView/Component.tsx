@@ -14,23 +14,24 @@
  * Props:
  * - sessionContext (SessionContext): Authentication and API context for actions.
  * - title (string): Title displayed above the card list.
- * - vectorstores (Vectorestore[]): Array of vectorstore objects to display.
+ * - vectorstores (Vectorstore[]): Array of vectorstore objects to display.
  * - renderDetailRow (function): Function to render detail rows for vectorstore attributes.
  *
  * Usage:
- * <CardView sessionContext={sessionContext} title="Your Vectorestores" objects={vectorstores} renderDetailRow={renderDetailRow} />
+ * <CardView sessionContext={sessionContext} title="Your Vectorstores" objects={vectorstores} renderDetailRow={renderDetailRow} />
  *
  * This component is intended for use in views where objects are presented in a card/grid format.
  */
-import type { VectorestoreCardViewProps } from "@/lib/Types";
+import type { VectorstoreCardViewProps } from "@/lib/Types";
 import { loggerPrefix } from "@/lib/const";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
+import { databaseLabel, formatCount } from "@/lib/format";
 
 import "./styles.css";
 
-function CardView({ sessionContext, objects, onRequery }: VectorestoreCardViewProps) {
+function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -55,13 +56,30 @@ function CardView({ sessionContext, objects, onRequery }: VectorestoreCardViewPr
                   <tbody>
                     {renderDetailRow("ID", vectorstore.id, "number")}
                     {renderDetailRow("Manifest URL", vectorstore.manifestUrl, "url")}
+                    {renderDetailRow("Description", vectorstore.description)}
+                    {renderDetailRow("Database", databaseLabel(vectorstore))}
+                    {renderDetailRow("Status", vectorstore.status)}
+                    {renderDetailRow("Status Message", vectorstore.statusMessage)}
+                    {renderDetailRow("Active", vectorstore.isActive, "bool")}
+                    {renderDetailRow("Index or Collection", vectorstore.indexName)}
+                    {renderDetailRow("Endpoint", vectorstore.endpointUrl)}
+                    {renderDetailRow("ApiConnection", vectorstore.connection)}
+                    {renderDetailRow("API Key Secret", vectorstore.apiKeySecret)}
+                    {renderDetailRow("Embeddings", vectorstore.embeddingsProvider ? `${vectorstore.embeddingsProvider} / ${vectorstore.embeddingsModel}` : vectorstore.embeddingsModel)}
+                    {renderDetailRow("Dimensions", vectorstore.dimension, "number")}
+                    {renderDetailRow("Metric", vectorstore.metric)}
+                    {renderDetailRow("Deletion Protection", vectorstore.deletionProtection, "bool")}
+                    {renderDetailRow("Vectors", formatCount(vectorstore.vectorCount))}
+                    {renderDetailRow("Documents", formatCount(vectorstore.documentCount))}
+                    {renderDetailRow("Snapshots", formatCount(vectorstore.snapshotCount))}
+                    {renderDetailRow("Deployed", vectorstore.deployedAt, "dateTime")}
+                    {renderDetailRow("Last Checked", vectorstore.lastCheckedAt, "dateTime")}
+                    {renderDetailRow("Last Snapshot", vectorstore.lastSnapshotAt, "dateTime")}
                     {renderDetailRow("Owner", vectorstore.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", vectorstore.userProfile?.user?.email)}
                     {renderDetailRow("Account Number", vectorstore.userProfile?.account?.accountNumber)}
                     {renderDetailRow("Created", vectorstore.createdAt, "dateTime")}
                     {renderDetailRow("Last Updated", vectorstore.updatedAt, "dateTime")}
                     {renderDetailRow("Version", vectorstore.version)}
-                    {renderDetailRow("Description", vectorstore.description)}
                     {renderDetailRow("Tags", vectorstore.tags, "str[]")}
                     {renderDetailRow("Annotations", vectorstore.annotations, "json")}
                   </tbody>

@@ -145,6 +145,11 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize vectorstore providers: %s", e)
 
         try:
+            call_command("add_builtin_vectorstores")  # Applied, not deployed: example vector databases
+        except Exception as e:
+            logger.error("Failed to apply the built-in vectorstores: %s", e)
+
+        try:
             call_command(
                 "verify_dns_configuration"
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
