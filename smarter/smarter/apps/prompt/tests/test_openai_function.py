@@ -39,6 +39,8 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 CELERY_WAIT = 1
+CELERY_TIMEOUT = 30
+"""Seconds to wait for the smarter-worker container to write a PromptHistory record."""
 
 
 def handler(prompt: Prompt, data, plugins, user):
@@ -275,8 +277,12 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for prompt history
-        # TODO: THIS SELECTION CRITERIA IS PATHETIC.
-        prompt = PromptHistory.objects.order_by("-id").first()
+        # PromptHistory is written by a Celery task in the smarter-worker container.
+        deadline = time.monotonic() + CELERY_TIMEOUT
+        prompt = PromptHistory.objects.filter(prompt=self.prompt).order_by("-id").first()
+        while prompt is None and time.monotonic() < deadline:
+            sleep(CELERY_WAIT)
+            prompt = PromptHistory.objects.filter(prompt=self.prompt).order_by("-id").first()
         self.assertIsNotNone(prompt)
         url = reverse("api:v1:prompt:chathistory", kwargs={"pk": prompt.id})
         response = self.client.get(url)

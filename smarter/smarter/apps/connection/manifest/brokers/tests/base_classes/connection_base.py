@@ -56,7 +56,10 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         super().setUpClass()
         logger.debug("%s.setUpClass()", cls.test_smarter_connection_broker_base_logger_prefix)
         test_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD)
-        apply_manifest(username=cls.admin_user.username, manifest=test_secret_loader.yaml_data, verbose=True)
+        if not apply_manifest(username=cls.admin_user.username, manifest=test_secret_loader.yaml_data, verbose=True):
+            raise SmarterValueError(
+                f"Failed to apply Secret manifest {test_secret_loader.manifest_metadata.get('name')}."
+            )
 
         # this should match spec.connection.password in ../data/sql-connection.yaml
         # assumed to be: smarter_test_user
@@ -64,11 +67,10 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         if not cls.test_secret_name:
             raise SmarterValueError("Failed to get test secret name from manifest metadata.")
         try:
-            cls.secret = (
-                Secret.objects.filter(name=cls.test_secret_name).with_read_permission_for(cls.user_profile.user).first()
+            cls.secret = Secret.objects.get(
+                user_profile=cls.user_profile,
+                name=cls.test_secret_name,
             )
-            if not cls.secret:
-                raise Secret.DoesNotExist()
             cls.test_secret_value = cls.secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(f"Failed to get test secret '{cls.test_secret_name}' from database.") from e
@@ -80,7 +82,12 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         )
 
         test_proxy_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_PROXY_PASSWORD)
-        apply_manifest(username=cls.admin_user.username, manifest=test_proxy_secret_loader.yaml_data, verbose=True)
+        if not apply_manifest(
+            username=cls.admin_user.username, manifest=test_proxy_secret_loader.yaml_data, verbose=True
+        ):
+            raise SmarterValueError(
+                f"Failed to apply Secret manifest {test_proxy_secret_loader.manifest_metadata.get('name')}."
+            )
 
         # this should match spec.connection.proxyPassword
         # in ../data/sql-connection.yaml. if the parameter
@@ -90,13 +97,10 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
             raise SmarterValueError("Failed to get test proxy secret name from manifest metadata.")
 
         try:
-            cls.proxy_secret = (
-                Secret.objects.filter(name=cls.test_proxy_secret_name)
-                .with_read_permission_for(cls.user_profile.user)
-                .first()
+            cls.proxy_secret = Secret.objects.get(
+                user_profile=cls.user_profile,
+                name=cls.test_proxy_secret_name,
             )
-            if not cls.proxy_secret:
-                raise Secret.DoesNotExist()
             cls.test_proxy_secret_value = cls.proxy_secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(
