@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.5...v0.16.0-alpha.6) (2026-10-02)
+
+### Bug Fixes
+
+* annotation keys, scaffolded api viewsets, secret api, and remaining tests ([de2f3f7](https://github.com/smarter-sh/smarter/commit/de2f3f70b0bccf7e37603e1ca6e9c8f041200734))
+
 ## [0.16.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.4...v0.16.0-alpha.5) (2026-10-02)
 
 ### Features
