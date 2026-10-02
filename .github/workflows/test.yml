@@ -1,0 +1,178 @@
+---
+#------------------------------------------------------------------------------
+# - Initialize the full local development environment via `make init`
+# - Run the Smarter unit test suite inside the smarter-app container
+#
+# This workflow reproduces the local developer workflow from the Makefile:
+# `make init` (Python venv, React build, collectstatic, Docker build, MySQL
+# setup, migrations, platform initialization, example resources, pre-commit)
+# followed by `make docker-test`. The runner is first provisioned with the
+# prerequisites that `make init` assumes are already installed locally.
+#
+# Make sure the following secrets are configured in your
+# [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
+#
+# AWS_ACCESS_KEY_ID
+# AWS_REGION
+# AWS_SECRET_ACCESS_KEY
+# SMARTER_OPENAI_API_KEY
+#
+# Unit tests that require connectivity to AWS or to LLM providers will be
+# skipped or fail if these are not set.
+#------------------------------------------------------------------------------
+name: Test
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ca-central-1
+  ENVIRONMENT: "local"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Ensures all history and tags are fetched
+          fetch-tags: true
+
+      #------------------------------------------------------------------------
+      # Prerequisites for `make init`: python3.13 (check-python, python-init),
+      # Node/npm (python-init, react-install, react-build) and the
+      # docker-compose v1 command name, which GitHub-hosted runners no longer
+      # ship. The shim forwards to the Docker Compose v2 plugin.
+      #------------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            smarter/react/package-lock.json
+
+      #------------------------------------------------------------------------
+      # python-init deletes and recreates venv/ but installs with
+      # PIP_CACHE_DIR=.pypi_cache, so caching that directory makes the
+      # reinstall a local, offline-speed operation.
+      #------------------------------------------------------------------------
+      - name: Cache pip downloads
+        uses: actions/cache@v5
+        with:
+          path: .pypi_cache
+          key: pypi-${{ runner.os }}-py3.13-${{ hashFiles('smarter/requirements/local.txt') }}
+          restore-keys: |
+            pypi-${{ runner.os }}-py3.13-
+
+      #------------------------------------------------------------------------
+      # Docker layer caching for the `docker-compose build` inside `make init`.
+      #
+      # - setup-buildx-action makes a BuildKit builder the default, which
+      #   Compose uses for its builds.
+      # - ghaction-github-runtime exposes the ACTIONS_* runtime variables that
+      #   BuildKit needs for the GitHub Actions cache backend. build-push-action
+      #   does this implicitly; Compose does not.
+      # - A generated override file adds cache_from/cache_to to the three
+      #   services that build the smarter image, and COMPOSE_FILE layers it on
+      #   top of docker-compose.yml so the Makefile runs unchanged.
+      #------------------------------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Expose GitHub runtime for BuildKit cache
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Enable Docker layer cache for docker-compose
+        shell: bash
+        run: |
+          OVERRIDE="$RUNNER_TEMP/docker-compose.cache.yml"
+          cat > "$OVERRIDE" <<'EOF'
+          services:
+            smarter-app:
+              build:
+                cache_from:
+                  - type=gha,scope=smarter-test
+                cache_to:
+                  - type=gha,scope=smarter-test,mode=max
+            smarter-worker:
+              build:
+                cache_from:
+                  - type=gha,scope=smarter-test
+            smarter-beat:
+              build:
+                cache_from:
+                  - type=gha,scope=smarter-test
+          EOF
+          echo "COMPOSE_FILE=$GITHUB_WORKSPACE/docker-compose.yml:$OVERRIDE" >> $GITHUB_ENV
+
+      - name: Install docker-compose shim
+        shell: bash
+        run: |
+          printf '#!/bin/sh\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose > /dev/null
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
+
+      #------------------------------------------------------------------------
+      # Locally, developers run `make init` with the venv activated. Putting
+      # venv/bin on the PATH up front has the same effect for the targets that
+      # call `python` and `pre-commit` directly (collectstatic,
+      # pre-commit-init) once python-init has created the venv.
+      #------------------------------------------------------------------------
+      - name: Add venv to PATH
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/venv/bin" >> $GITHUB_PATH
+
+      #------------------------------------------------------------------------
+      # The Makefile includes .env, and docker compose reads build args and
+      # container environment from it. Secrets are appended to the defaults
+      # from .env.example.
+      #------------------------------------------------------------------------
+      - name: Create .env
+        shell: bash
+        run: |
+          cp .env.example .env
+          {
+            echo ""
+            echo "# --- added by GitHub Actions test.yml ---"
+            echo "ENVIRONMENT=${{ env.ENVIRONMENT }}"
+            echo "AWS_REGION=${{ secrets.AWS_REGION || env.AWS_REGION }}"
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            echo "SMARTER_OPENAI_API_KEY=${{ secrets.SMARTER_OPENAI_API_KEY }}"
+          } >> .env
+
+      - name: make init
+        shell: bash
+        run: |
+          make init
+
+      # -----------------------------------------------------------------------
+      # Equivalent to `make docker-test`
+      # -----------------------------------------------------------------------
+      - name: Run unit tests
+        shell: bash
+        run: |
+          docker exec smarter-app bash -c "python manage.py test smarter"
+
+      - name: Dump container logs
+        if: failure()
+        shell: bash
+        run: |
+          docker compose logs --no-color --tail=500
+
+      - name: Tear down
+        if: always()
+        shell: bash
+        run: |
+          docker compose down -v
