@@ -7,7 +7,10 @@ import os
 import sys
 from pathlib import Path
 
+from django.test import tag
+
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent)
@@ -18,6 +21,7 @@ if PYTHON_ROOT not in sys.path:
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
+@tag(INFRASTRUCTURE)
 class TestAWSInfrastructure(SmarterTestBase):
     """Test AWS infrastructure."""
 

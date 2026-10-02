@@ -30,6 +30,35 @@ To run the test suite locally, use the following command from the project root:
   # or
   make test
 
+Infrastructure Tests
+--------------------
+
+Some tests use real infrastructure: they deploy LLMClients to the Kubernetes cluster, and create
+DNS records and TLS certificates in AWS. They are slow, e.g. a deploy waits up to 40 minutes for a
+certificate that a local cluster never issues, and they need live credentials. They are tagged
+``infrastructure``, and skipped unless they are asked for:
+
+.. code-block:: console
+
+  python manage.py test                                    # everything else
+  python manage.py test --tag infrastructure               # only the infrastructure tests
+  SMARTER_TEST_INFRASTRUCTURE=true python manage.py test   # everything
+
+Tag a test, or a whole TestCase, that uses real infrastructure, with
+:mod:`smarter.lib.unittest.runner`'s ``INFRASTRUCTURE`` tag:
+
+.. code-block:: python
+
+  from django.test import tag
+  from smarter.lib.unittest.runner import INFRASTRUCTURE
+
+  @tag(INFRASTRUCTURE)
+  class TestDeploy(TestAccountMixin):
+      ...
+
+Prefer a fake, though: the LLMHost and Vectorstore tests replace the cluster with an in-memory
+backend, so that they test the same code in seconds.
+
 Coverage Report
 -----------------
 
