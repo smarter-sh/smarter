@@ -79,7 +79,7 @@ class VectorsearchApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     """
 
     _vectorsearch_id: Optional[int] = None
-    _vectorsearch: Vectorsearch
+    _vectorsearch: Optional[Vectorsearch] = None
     _name: Optional[str] = None
 
     http_method_names: list[str] = ["get", "post", "options"]
@@ -114,6 +114,14 @@ class VectorsearchApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: The Vectorsearch instance.
         :rtype: Optional[Vectorsearch]
         """
+        if self._vectorsearch is None:
+            # resolve it lazily from the id or name that dispatch() received
+            if self._vectorsearch_id:
+                self._vectorsearch = Vectorsearch.objects.filter(pk=self._vectorsearch_id).first()
+            elif self._name and self.account:
+                self._vectorsearch = Vectorsearch.objects.filter(
+                    user_profile__account=self.account, name=self._name
+                ).first()
         return self._vectorsearch
 
     @property
