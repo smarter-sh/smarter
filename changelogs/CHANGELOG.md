@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.2...v0.16.0-alpha.3) (2026-10-02)
+
+### Features
+
+* **account:** enforce budgets on any resource, with Budget manifests and budget vs actual charts ([ab24142](https://github.com/smarter-sh/smarter/commit/ab24142d299c37a0b0719c9fe80b04d4b5fdda28))
+
 ## [0.16.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.16.0-alpha.1...v0.16.0-alpha.2) (2026-10-01)
 
 ### Features
