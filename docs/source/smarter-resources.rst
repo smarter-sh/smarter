@@ -32,7 +32,9 @@ the platform:
 **Access & Governance**
    :doc:`smarter-resources/smarter-account` and :doc:`smarter-resources/smarter-secret` establish who
    is acting, what they're permitted to access and spend, and how credentials are stored and retrieved without
-   ever appearing in plaintext. Every other resource operates within the boundaries these two sets.
+   ever appearing in plaintext. :doc:`smarter-resources/smarter-budget` caps what any user, account, or
+   resource may spend, and :doc:`smarter-resources/smarter-proxy` gives governed access to a provider's own
+   API without handing out its key. Every other resource operates within the boundaries these set.
 
 **Model Connectivity**
    :doc:`smarter-resources/smarter-provider` and :doc:`smarter-resources/smarter-llmhost` are the two
@@ -81,6 +83,7 @@ toward different parts of the stack, without needing to understand the whole thi
 
    smarter-resources/smarter-account
    smarter-resources/smarter-authtoken
+   smarter-resources/smarter-budget
    smarter-resources/smarter-connection
    smarter-resources/smarter-guardrail
    smarter-resources/smarter-llmclient
