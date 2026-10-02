@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.3](https://github.com/smarter-sh/smarter/compare/v0.16.2...v0.16.3) (2026-10-02)
+
+### Bug Fixes
+
+* **tests:** run create_prompt_history inline in test_handler_gobstoppers ([be4974d](https://github.com/smarter-sh/smarter/commit/be4974ded1dc62b212fa097d09f4e81950fb0f60))
+
 ## [0.16.2](https://github.com/smarter-sh/smarter/compare/v0.16.1...v0.16.2) (2026-10-02)
 
 ### Bug Fixes
