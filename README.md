@@ -1,6 +1,7 @@
 # The Smarter Project
 
 [![Latest Release](https://img.shields.io/github/v/release/smarter-sh/smarter?label=release)](https://github.com/smarter-sh/smarter/releases)
+![Test Status](https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main)
 ![Build Status](https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main)
 [![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
 [![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
