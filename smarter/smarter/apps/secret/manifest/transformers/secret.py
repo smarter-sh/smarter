@@ -415,7 +415,10 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        self._secret = Secret.objects.filter(name=self.name).with_read_permission_for(self.user_profile.user).first()
+        # Only the user_profile's own Secret. A read-permission lookup would also
+        # return another account's or the platform's Secret of the same name, which
+        # create() would then overwrite and describe() would reveal.
+        self._secret = Secret.objects.filter(name=self.name, user_profile=self.user_profile).first()
         if self._secret:
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
