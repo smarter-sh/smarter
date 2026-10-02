@@ -50,7 +50,7 @@ injection and data leaks is described in one short YAML file, and deployed with 
 .. admonition:: Quick Start: up and running on your desktop in about 10 minutes
    :class: tip
 
-   With `Docker Desktop <https://docs.docker.com/desktop/>`__ installed:
+   With `make <https://www.youtube.com/watch?v=j5gJJe_0zP4>`__ and `Docker Desktop <https://docs.docker.com/desktop/>`__ installed:
 
    .. code-block:: console
 
