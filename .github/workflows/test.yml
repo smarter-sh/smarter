@@ -52,6 +52,24 @@ jobs:
         with:
           python-version: "3.13"
 
+      #------------------------------------------------------------------------
+      # The mariadb Python package has no Linux wheels on PyPI, so pip builds it
+      # from source, which requires MariaDB Connector/C (mariadb_config).
+      # Mirrors the mariadb_connector stage of the Dockerfile.
+      #------------------------------------------------------------------------
+      - name: Install MariaDB Connector/C
+        shell: bash
+        env:
+          MARIADB_VERSION: "12.2"
+        run: |
+          curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+          chmod +x mariadb_repo_setup
+          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}"
+          rm -f mariadb_repo_setup
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat
+          mariadb_config --cc_version
+
       - name: Install Node
         uses: actions/setup-node@v6
         with:
