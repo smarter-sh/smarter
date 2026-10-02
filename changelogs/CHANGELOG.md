@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.1](https://github.com/smarter-sh/smarter/compare/v0.16.0...v0.16.1) (2026-10-02)
+
+### Bug Fixes
+
+* **tests:** make four CI-only test failures deterministic ([b26fadd](https://github.com/smarter-sh/smarter/commit/b26fadd39476ce8ff324290f911c1f578aebf99b))
+
 ## [0.16.0](https://github.com/smarter-sh/smarter/compare/v0.15.1...v0.16.0) (2026-10-02)
 
 ### Features
