@@ -60,7 +60,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
-        if not self.broker:
+        if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.delete(request=request, kwargs=kwargs)
         return response

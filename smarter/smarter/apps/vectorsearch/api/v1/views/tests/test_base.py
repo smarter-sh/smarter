@@ -11,6 +11,7 @@ from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.vectorsearch.manifest.brokers.vectorsearch import (
     SAMVectorsearchBroker,
 )
+from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -73,6 +74,14 @@ class TestVectorsearchApiBaseViewSet(TestAccountMixin):
         # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
 
+        # the Vectorstore that the manifest refers to by name. Saving one only
+        # invalidates caches; nothing is deployed.
+        cls.vectorstore, _ = VectorstoreMeta.objects.get_or_create(
+            name="test_vectorsearch_vectorstore",
+            user_profile=cls.user_profile,
+            defaults={"description": "Test Vectorsearch vectorstore", "version": "1.0.0", "backend": "qdrant"},
+        )
+
         cls.broker.apply(request=cls.request, kwargs=cls.kwargs)
 
     @classmethod
@@ -80,6 +89,11 @@ class TestVectorsearchApiBaseViewSet(TestAccountMixin):
         """Tear down test fixtures."""
         try:
             cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        try:
+            cls.vectorstore.delete()
         # pylint: disable=W0718
         except Exception:
             pass

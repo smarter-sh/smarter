@@ -71,6 +71,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)
 
+    @override_settings(ALLOWED_HOSTS=["example.com"])
     @patch("smarter.lib.django.middleware.csrf.smarter_settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
     def test_process_view_csrf_suppress_for_llmclients(self, mock_waffle, mock_smarter_settings):

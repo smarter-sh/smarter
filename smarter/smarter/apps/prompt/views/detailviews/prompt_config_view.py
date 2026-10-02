@@ -144,6 +144,11 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
     thing: Optional[SmarterJournalThings] = None
     command: Optional[SmarterJournalCliCommands] = None
     session: Optional[SmarterPromptSession] = None
+    legacy_keys: bool = True
+    """Rename keys for older versions of the React app ('llmclient' to 'chatbot').
+
+    The cli passes as_view(legacy_keys=False).
+    """
     llmclient_name: Optional[str] = None
     _llmclient_helper: Optional[LLMClientHelper] = None
     _llmclient: Optional[LLMClient] = None
@@ -360,8 +365,9 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         # 'chatbot' instead of 'llmclient'
         # ---------------------------------------------------------------------
         retval = self.to_snake_case(retval)
-        retval = self.legacy_config(retval, replace_str="llmclient", with_str="chatbot")
-        retval = self.legacy_config(retval, replace_str="account_number", with_str="accountNumber")
+        if self.legacy_keys:
+            retval = self.legacy_config(retval, replace_str="llmclient", with_str="chatbot")
+            retval = self.legacy_config(retval, replace_str="account_number", with_str="accountNumber")
         prompt_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
         return retval
 

@@ -113,15 +113,19 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token
+        if isinstance(self._orm_meta_instance, SmarterAuthToken):
+            # the same instance that orm_meta_instance_setter() retrieved, so that both stay in sync
+            self._smarter_auth_token = self._orm_meta_instance
+            return self._smarter_auth_token
 
-        if not self.manifest:
+        username = self.token_username
+        if not username:
             logger.debug(
-                "%s.smarter_auth_token() Manifest not set. Cannot retrieve SmarterAuthToken.",
+                "%s.smarter_auth_token() neither a manifest nor a user is set. Cannot retrieve SmarterAuthToken.",
                 self.formatted_class_name,
             )
             return None
 
-        username = self.manifest.spec.config.username
         try:
             logger.debug(
                 "%s.smarter_auth_token() Retrieving SmarterAuthToken for user %s with name %s",
@@ -143,6 +147,21 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 SmarterAuthToken.objects.all(),
             )
         return self._smarter_auth_token
+
+    @property
+    def token_username(self) -> Optional[str]:
+        """
+        The username of the SmarterAuthToken's owner.
+
+        This is the manifest's spec.config.username when there is a manifest. Otherwise,
+        for the cli commands that only pass a name (describe, delete, deploy, undeploy),
+        it is the user who made the request.
+        """
+        if self.manifest:
+            return self.manifest.spec.config.username
+        if isinstance(self.user, User):
+            return self.user.username
+        return None
 
     @smarter_auth_token.setter
     def smarter_auth_token(self, value: SmarterAuthToken) -> None:
@@ -405,9 +424,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
             self._orm_meta_instance = self._orm_instance
             return
-        if not self._manifest:
+        username = self.token_username
+        if not username:
             logger.debug(
-                "%s.orm_meta_instance_setter() - manifest is not set. Cannot retrieve ORM meta instance for %s.",
+                "%s.orm_meta_instance_setter() - neither a manifest nor a user is set. Cannot retrieve ORM meta instance for %s.",
                 self.formatted_class_name,
                 SmarterAuthToken.__name__,
             )
@@ -423,9 +443,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
         self._orm_meta_instance = None
         try:
-            self._orm_meta_instance = SmarterAuthToken.objects.get(
-                user__username=self._manifest.spec.config.username, name=self.name
-            )
+            self._orm_meta_instance = SmarterAuthToken.objects.get(user__username=username, name=self.name)
             logger.debug(
                 "%s.orm_meta_instance_setter() - initialized ORM meta: %s",
                 self.formatted_class_name,

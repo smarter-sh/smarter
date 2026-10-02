@@ -7,6 +7,7 @@ from django.test import RequestFactory
 from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
     SAMOrchestratorBroker,
 )
@@ -73,6 +74,13 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
         # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
 
+        # the LLMClient that the manifest's harness refers to by name
+        cls.harness_llmclient, _ = LLMClient.objects.get_or_create(
+            name="test_orchestrator_harness",
+            user_profile=cls.user_profile,
+            defaults={"description": "Test Orchestrator harness", "version": "1.0.0"},
+        )
+
         cls.broker.apply(request=cls.request, kwargs=cls.kwargs)
 
     @classmethod
@@ -80,6 +88,11 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
         """Tear down test fixtures."""
         try:
             cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        try:
+            cls.harness_llmclient.delete()
         # pylint: disable=W0718
         except Exception:
             pass

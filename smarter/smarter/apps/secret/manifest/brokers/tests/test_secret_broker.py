@@ -287,9 +287,10 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_describe_secret_not_found(self):
         """Test describe method raises not found for missing secret."""
-        self.broker.user = None
+        # the broker's user is immutable, so ask for a secret that does not exist instead.
+        kwargs = {**self.kwargs, "name": f"nonexistent_secret_{self.hash_suffix}"}
         with self.assertRaises(SAMBrokerErrorNotFound):
-            self.broker.describe(self.request, **self.kwargs)
+            self.broker.describe(self.request, **kwargs)
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""

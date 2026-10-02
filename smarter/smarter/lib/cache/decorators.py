@@ -44,6 +44,7 @@ for persistent, argument-based function result caching in the Smarter framework.
 """
 
 import hashlib
+import inspect
 from functools import lru_cache, wraps
 from typing import Callable, Optional, Union
 
@@ -142,6 +143,15 @@ def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[st
     :rtype: Optional[bytes]
     """
 
+    # bind the arguments to the function's signature, so that f(1, b=2), f(a=1, b=2) and f(1)
+    # (when b defaults to 2) produce the same key. Otherwise a function and its invalidate()
+    # can silently compute different keys depending on how each was called.
+    try:
+        bound = inspect.signature(func).bind(*args, **kwargs)
+        bound.apply_defaults()
+        args, kwargs = (), dict(bound.arguments)
+    except (TypeError, ValueError):
+        pass
     sorted_kwargs = _generate_sorted_kwargs(kwargs)
     key_tuple = (func.__name__, args, sorted_kwargs)
     return _json_cache_key_cached(key_tuple)

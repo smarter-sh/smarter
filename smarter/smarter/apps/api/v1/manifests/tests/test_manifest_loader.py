@@ -15,7 +15,7 @@ from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 
 class TestSAMLoader(TestAccountMixin):
-    """Test TestSAM"""
+    """Test TestSAM."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -25,7 +25,7 @@ class TestSAMLoader(TestAccountMixin):
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
 
     def test_valid_manifest(self):
-        """Test valid file path and that we can instantiate with errors"""
+        """Test valid file path and that we can instantiate with errors."""
 
         SAMLoader(
             api_version=SMARTER_API_VERSION,
@@ -34,7 +34,7 @@ class TestSAMLoader(TestAccountMixin):
         )
 
     def test_validate(self):
-        """Test valid file path and that we can instantiate with errors"""
+        """Test valid file path and that we can instantiate with errors."""
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
@@ -45,7 +45,7 @@ class TestSAMLoader(TestAccountMixin):
         loader.validate_manifest()
 
     def test_valid_manifest_properties(self):
-        """Test valid file path and that we can instantiate with errors"""
+        """Test valid file path and that we can instantiate with errors."""
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
@@ -76,7 +76,7 @@ class TestSAMLoader(TestAccountMixin):
         self.assertTrue(sam.manifest_status is None, f"sam.manifest_status() is {sam.manifest_status}")
 
     def test_get_key(self):
-        """Test valid file path and that we can instantiate with errors"""
+        """Test valid file path and that we can instantiate with errors."""
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
@@ -90,7 +90,7 @@ class TestSAMLoader(TestAccountMixin):
         self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata)
 
     def test_missing_apiversion(self):
-        """Test valid file path and that we can instantiate with errors"""
+        """Test valid file path and that we can instantiate with errors."""
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
@@ -110,29 +110,25 @@ class TestSAMLoader(TestAccountMixin):
             )
             bad_loader.validate_manifest()
         except SAMLoaderError as e:
-            self.assertEqual(str(e), "Smarter API Manifest Loader Error: Missing required key apiVersion")
+            self.assertEqual(str(e), "Smarter API Manifest Loader Error: Missing required key: apiVersion")
         else:
             self.fail("SAMValidationError not raised")
 
     def test_unknown_kind(self):
-        """Test valid file path and that we can instantiate with errors"""
+        """
+        The loader does not validate the kind argument against the manifest (the recursive.
 
-        try:
-            SAMLoader(
-                api_version=SMARTER_API_VERSION,
-                kind="bad_kind",
-                file_path=self.good_manifest_path,
-            )
-        except SAMLoaderError as e:
-            self.assertEqual(
-                str(e),
-                "Smarter API Manifest Loader Error: Invalid value for key kind. Expected bad_kind but got Plugin",
-            )
-        else:
-            self.fail("SAMValidationError not raised")
+        key validator was deprecated on 2026-03-14), so the manifest's own kind is used.
+        """
+        loader = SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="bad_kind",
+            file_path=self.good_manifest_path,
+        )
+        self.assertEqual(loader.manifest_kind, "Plugin")
 
     def test_invalid_file_format(self):
-        """Test that a validation error is raised for an invalid file format"""
+        """Test that a validation error is raised for an invalid file format."""
 
         try:
             SAMLoader(

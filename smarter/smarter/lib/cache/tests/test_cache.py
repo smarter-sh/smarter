@@ -189,3 +189,21 @@ class TestCacheResults(SmarterTestBase):
         self.assertEqual(len(calls), 2)
         self.assertEqual(f(2, 3), 6)
         self.assertEqual(len(calls), 2)
+
+    def test_cache_invalidate_matches_call_style(self):
+        """Invalidate() clears the entry whether arguments are passed positionally, by keyword or by default."""
+        calls = []
+
+        @cache_results(timeout=60)
+        def lookup(name, class_name="Account"):
+            calls.append((name, class_name))
+            return f"{class_name}:{name}"
+
+        self.assertEqual(lookup("x"), "Account:x")
+        self.assertEqual(lookup("x", class_name="Account"), "Account:x")
+        self.assertEqual(lookup(name="x", class_name="Account"), "Account:x")
+        self.assertEqual(len(calls), 1)
+
+        lookup.invalidate("x", "Account")
+        self.assertEqual(lookup("x"), "Account:x")
+        self.assertEqual(len(calls), 2)

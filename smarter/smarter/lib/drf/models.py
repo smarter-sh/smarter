@@ -31,7 +31,9 @@ logger = getLogger(__name__)
 
 class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
     """
-    API Key manager. This is a custom manager derived from a combination of
+    API Key manager.
+
+    This is a custom manager derived from a combination of
     Knox's AuthTokenManager and and Smarter's SmarterQuerySetWithPermissions
     Queryset to provide both knox token management functionality as well as
     Smarter's permission-based querying behavior.
@@ -126,7 +128,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
     - ``User``: The owner of the API key.
     - ``MetaDataModel``: Provides created/modified timestamps and SAM metadata.
-
     """
 
     objects = SmarterAuthTokenManager()
@@ -140,6 +141,38 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     tags = models.JSONField(default=list, blank=True)
+
+    @property
+    def record_locator(self) -> str:
+        """
+        Returns the record locator, which is derived from key_id.
+
+        The primary key of a knox AuthToken is a digest string, not an integer id,
+        so the TimestampedModel hashed_id-based record locator cannot be used.
+        """
+        return f"{self.__class__.__name__.lower()}-{self.key_id}"
+
+    @property
+    def tags_list(self) -> list[str]:
+        """Returns the tag names.
+
+        tags is a JSONField list here, not a taggit manager.
+        """
+        tags = self.tags
+        if not isinstance(tags, list):
+            return []
+        return [str(tag) for tag in tags]
+
+    @classmethod
+    def get_object_by_locator(cls, locator: str) -> Optional["SmarterAuthToken"]:
+        """Retrieves a SmarterAuthToken from a record locator created by record_locator."""
+        prefix = f"{cls.__name__.lower()}-"
+        if not locator.startswith(prefix):
+            return None
+        try:
+            return cls.objects.get(key_id=uuid.UUID(locator[len(prefix) :]))
+        except (ValueError, cls.DoesNotExist):
+            return None
 
     @property
     def identifier(self):
@@ -208,7 +241,8 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         **kwargs,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
-        Retrieve API keys with caching based on user profile and optional name
+        Retrieve API keys with caching based on user profile and optional name.
+
         filter using caching.
 
         :param invalidate: If True, invalidate the cache for this query.

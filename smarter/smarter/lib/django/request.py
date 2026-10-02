@@ -28,6 +28,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, QueryDict
 from django.http.request import RawPostDataException
+from rest_framework.exceptions import ParseError
 from rest_framework.request import Request as RestFrameworkRequest
 
 from smarter.apps.account.mixins import AccountMixin, UserType
@@ -1229,6 +1230,16 @@ class SmarterRequestMixin(AccountMixin):
                 self.smarter_request,
             )
             return None
+        if isinstance(self.smarter_request, RestFrameworkRequest) and "multipart" not in (
+            self.smarter_request.content_type or ""
+        ):
+            # DRF's .data consumes the request stream. Read the raw body first, which Django
+            # caches, so that plan-B below can still parse it if DRF's parser rejects it.
+            # For example, the cli sends yaml manifests with a json content type.
+            try:
+                self.smarter_request.body  # pylint: disable=pointless-statement
+            except RawPostDataException:
+                pass
         try:
             # plan-A is to use .data attribute if available (DRF Request)
             # and created with our custom smarter.lib.drf.parsers.YAMLParser()
@@ -1240,9 +1251,12 @@ class SmarterRequestMixin(AccountMixin):
                 type(body_str),
                 body_str,
             )
-        except AttributeError:
+        except (AttributeError, ParseError):
+            body_str = None
+        if not body_str and "multipart" not in (getattr(self.smarter_request, "content_type", None) or ""):
+            # after a ParseError, DRF caches empty data, so later calls get {} instead of an error.
             verbose_logger.debug(
-                "%s.data() - request %s has no .data attribute. Falling back to .body attribute.",
+                "%s.data() - request %s has no parseable .data attribute. Falling back to .body attribute.",
                 self.srm_formatted_class_name,
                 self.smarter_request,
             )
@@ -2438,7 +2452,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: The modified Django request object.
         :rtype: HttpRequest
         """
-        if not isinstance(request, HttpRequest):
+        if not isinstance(request, (HttpRequest, RestFrameworkRequest)):
             raise SmarterValueError(f"Expected request to be an instance of HttpRequest, got {type(request).__name__}")
 
         logger.debug(
@@ -2448,6 +2462,9 @@ class SmarterRequestMixin(AccountMixin):
             value,
         )
         setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, value)
+        if isinstance(request, RestFrameworkRequest):
+            # a DRF Request that is passed on to a nested Django view: flag the wrapped HttpRequest too.
+            setattr(request._request, SMARTER_IS_INTERNAL_API_REQUEST, value)  # pylint: disable=protected-access
         return request
 
     @property

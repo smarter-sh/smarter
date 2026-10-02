@@ -766,7 +766,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: True if the AccountMixin is am_ready to be used.
         :rtype: bool
         """
-        if self._am_ready:
+        if getattr(self, "_am_ready", False):
             return True
         try:
             if not super().ready:

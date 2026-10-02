@@ -278,7 +278,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         # TODO: THIS SELECTION CRITERIA IS PATHETIC.
         prompt = PromptHistory.objects.order_by("-id").first()
         self.assertIsNotNone(prompt)
-        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": prompt.id})
+        url = reverse("api:v1:prompt:chathistory", kwargs={"pk": prompt.id})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
