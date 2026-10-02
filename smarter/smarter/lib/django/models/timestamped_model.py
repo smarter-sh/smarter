@@ -594,7 +594,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
             raise cls.DoesNotExist(f"Must provide a 'pk' to retrieve a {cls.__name__} object.")
 
-        return _get_model_by_pk(pk, class_name=cls.__name__)
+        # same args as invalidate() above, so that both produce the same cache key
+        return _get_model_by_pk(pk, cls.__name__)
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:

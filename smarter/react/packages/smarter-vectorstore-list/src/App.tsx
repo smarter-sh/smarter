@@ -1,35 +1,35 @@
 /**
  *
- * Smarter Vectorestore List React App.
+ * Smarter Vectorstore List React App.
  * Used to display a list of available vectorstores.
  *
  */
 import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Vectorestore, VectorestoreListViewProps, VectorestoreCardViewProps } from "@/lib/Types";
+import type { Vectorstore, VectorstoreListViewProps, VectorstoreCardViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your Vectorestores" },
-  { key: "shared" as TabKey, label: "Shared Vectorestores" },
+  { key: "owned" as TabKey, label: "Your Vectorstores" },
+  { key: "shared" as TabKey, label: "Shared Vectorstores" },
 ];
 
-// Set the TabbedViewContext generic object type to Vectorestore,
+// Set the TabbedViewContext generic object type to Vectorstore,
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type VectorestoreTabbedViewContext = Omit<
-  TabbedViewContext<Vectorestore>,
+export type VectorstoreTabbedViewContext = Omit<
+  TabbedViewContext<Vectorstore>,
   "ListView" | "CardView"
 > & {
-  ListView: React.ComponentType<VectorestoreListViewProps>;
-  CardView: React.ComponentType<VectorestoreCardViewProps>;
+  ListView: React.ComponentType<VectorstoreListViewProps>;
+  CardView: React.ComponentType<VectorstoreCardViewProps>;
 };
 
-const vectorstoreTabbedListViewContext: VectorestoreTabbedViewContext = {
-  objectType: {} as Vectorestore,
+const vectorstoreTabbedListViewContext: VectorstoreTabbedViewContext = {
+  objectType: {} as Vectorstore,
   objectTypeName: "vectorstore",
   tabs: tabs,
   ListView: ListView,
@@ -42,9 +42,9 @@ interface AppProps {
 
 function App({ sessionContext }: AppProps) {
   const title = "Vectorstores";
-  const icon = "ki-book-open";
+  const icon = "ki-data";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-vectorstore.html";
-  const helpText = "Vectorstores provide a robust service layer for managing vector databases, abstracting the complexities of provisioning, deleting, and interacting with various vector store backends.";
+  const helpText = "A Vectorstore is a vector database for retrieval-augmented generation (RAG): documents, such as PDFs, are split into chunks, embedded, and loaded into it, and searched by meaning. Smarter runs Qdrant on its own Kubernetes cluster, or connects to Pinecone or Qdrant Cloud. It creates and destroys the database, loads and removes documents, and takes scheduled snapshots. Create one with a Vectorstore manifest.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="vectorstore-list">

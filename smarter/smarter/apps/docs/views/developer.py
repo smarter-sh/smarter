@@ -4,7 +4,6 @@ Django REST framework views for the API admin app.
 
 To-do:
  - import markdown, and render the markdown files in the /docs folder.
-
 """
 
 from .base import MarkdownBaseView, TxtBaseView
@@ -14,7 +13,7 @@ from .base import MarkdownBaseView, TxtBaseView
 # Public Access text file Views
 # ------------------------------------------------------------------------------
 class DeveloperDocsRequirementsView(TxtBaseView):
-    """Developer docs base requirements view"""
+    """Developer docs base requirements view."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -33,7 +32,7 @@ class DeveloperDocsRequirementsView(TxtBaseView):
 
 
 class DeveloperDocsDockerfileView(TxtBaseView):
-    """Developer docs Dockerfile view"""
+    """Developer docs Dockerfile view."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -47,7 +46,7 @@ class DeveloperDocsDockerfileView(TxtBaseView):
 
 
 class DeveloperDocsMakefileView(TxtBaseView):
-    """Developer docs Makefile view"""
+    """Developer docs Makefile view."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -61,12 +60,12 @@ class DeveloperDocsMakefileView(TxtBaseView):
 
 
 class DeveloperDocsWeatherFunctionView(TxtBaseView):
-    """Developer docs Weather function calling view"""
+    """Developer docs Weather function calling view."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/home/smarter_user/smarter/smarter/apps/prompt/functions/function_weather.py"
-        self.title = "function_weather.py"
+        self.text_file = "/home/smarter_user/smarter/smarter/apps/prompt/functions/function_weather/protocol.py"
+        self.title = "function_weather/protocol.py"
         self.leader = """
         This is Smarter's implementation of the Python function 'get_current_weather()' referenced in
         OpenAI API 'Function Calling' documentation: https://platform.openai.com/docs/guides/function-calling which
@@ -83,7 +82,7 @@ class DeveloperDocsWeatherFunctionView(TxtBaseView):
 
 
 class DeveloperDocsDockerComposeView(TxtBaseView):
-    """Developer docs docker-compose.yml view"""
+    """Developer docs docker-compose.yml view."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -102,7 +101,7 @@ class DeveloperDocsDockerComposeView(TxtBaseView):
 
 
 class DeveloperDocsReadme(MarkdownBaseView):
-    """Developer README.md view"""
+    """Developer README.md view."""
 
     def dispatch(self, request, *args, **kwargs):
         self.markdown_file = "README.md"
@@ -110,7 +109,7 @@ class DeveloperDocsReadme(MarkdownBaseView):
 
 
 class DeveloperDocsChangelog(MarkdownBaseView):
-    """Developer CHANGELOG.md view"""
+    """Developer CHANGELOG.md view."""
 
     def dispatch(self, request, *args, **kwargs):
         self.markdown_file = "CHANGELOG.md"
@@ -118,7 +117,7 @@ class DeveloperDocsChangelog(MarkdownBaseView):
 
 
 class DeveloperDocsCodeOfConduct(MarkdownBaseView):
-    """Developer CODE_OF_CONDUCT.md view"""
+    """Developer CODE_OF_CONDUCT.md view."""
 
     def dispatch(self, request, *args, **kwargs):
         self.markdown_file = "CODE_OF_CONDUCT.md"

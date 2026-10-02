@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import "./styles.css";
 
 
-export const success_style = {
-  color: "green",
-  marginLeft: "10px",
-};
+
+const successEmojis = [
+  "🎉", "🥳", "🚀", "🌟", "🏆", "🥇", "🎊", "🍾", "😸", "💯",
+  "🤩", "🥂", "🎈", "🦄", "🕺", "💃", "🤗", "🥰", "😻", "👑", "🧁", "🍀", "🥒"
+];
 
 export default function SuccessEmoji() {
   const [show, setShow] = useState(false);
@@ -15,12 +16,8 @@ export default function SuccessEmoji() {
     return () => clearTimeout(timer);
   }, []);
 
-  const successEmojis = [
-    "🎉", "🥳", "🚀", "🌟", "🏆", "🥇", "🎊", "🍾", "😸", "💯",
-    "🤩", "🥂", "🎈", "🦄", "🕺", "💃", "🤗", "🥰", "😻", "👑", "🧁", "🍀", "🥒"
-  ];
-
-  const randomEmoji = successEmojis[Math.floor(Math.random() * successEmojis.length)];
+  // picked once, so that it does not change when `show` re-renders the component.
+  const [randomEmoji] = useState(() => successEmojis[Math.floor(Math.random() * successEmojis.length)]);
 
   return (
     <span

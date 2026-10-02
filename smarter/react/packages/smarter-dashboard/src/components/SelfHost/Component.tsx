@@ -5,9 +5,6 @@
  * including installation guidance and deployment option links for Docker,
  * Kubernetes, and Terraform.
  *
- * :param props: Component props.
- * :type props: SelfHostProps
- *
  * :returns: A JSX fragment containing the self-hosting engagement widget.
  * :rtype: JSX.Element
  *
@@ -17,10 +14,7 @@
  */
 import "./styles.css";
 
-interface SelfHostProps {
-}
-
-function SelfHost({  }: SelfHostProps) {
+function SelfHost() {
   return (
     <>
         {/* begin::Engage widget 4 */}

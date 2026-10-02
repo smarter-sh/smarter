@@ -96,10 +96,14 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
             "appBackgroundImageUrl",
             "appLogoUrl",
             "appFileAttachment",
-            "dnsVerificationStatus",
         ]
         for field in config_fields:
             assert field in config.keys(), f"{field} not found in config keys: {config.keys()}"
+
+        # dnsVerificationStatus is read-only, so it is in the status, not in spec.config.
+        status = data.get(SAMKeys.STATUS.value)
+        if status:
+            self.assertIn("dnsVerificationStatus", status.keys())
 
     def test_example_manifest(self) -> None:
         """Test example-manifest command."""

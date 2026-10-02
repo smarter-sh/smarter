@@ -8,24 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete guardrail resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - guardrail (Guardrail): The guardrail resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} guardrail={guardrail} />
+ * <Toolbar sessionContext={sessionContext} guardrail={guardrail} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each guardrail row or card in ListView and CardView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Guardrail } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  guardrail: Guardrail | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ guardrail, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Guardrail" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone guardrail <strong>{guardrail?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned guardrail.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new guardrail name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ guardrail, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(guardrail?.name || "");
+  return (
+    <Modal show title="Rename Guardrail" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename guardrail <strong>{guardrail?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the guardrail.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new guardrail name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  guardrail,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  guardrail: Guardrail | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Guardrail" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete guardrail <strong>{guardrail?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  guardrail,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  guardrail: Guardrail | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on guardrail <strong>{guardrail?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  guardrail,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  guardrail: Guardrail | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{guardrail?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -35,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    guardrail: Guardrail | null;
-  }>({ type: null, guardrail: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; guardrail: Guardrail | null }>({ type: null, guardrail: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -53,230 +156,32 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
     onRequery();
   };
 
-  const handleCloneButtonClicked = (guardrail: Guardrail) => setModal({ type: "clone", guardrail });
-  const handleRenameButtonClicked = (guardrail: Guardrail) => setModal({ type: "rename", guardrail });
-  const handleDeleteButtonClicked = (guardrail: Guardrail) => setModal({ type: "delete", guardrail });
-
-  const handleError = (guardrail: Guardrail) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Guardrail, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", guardrail });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Guardrail"
-          onOk={() => handleCloneGuardrail(modal.guardrail!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone guardrail <strong>{modal.guardrail?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned guardrail.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new guardrail name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.guardrail?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Guardrail"
-          onOk={() => handleRenameGuardrail(modal.guardrail!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename guardrail <strong>{modal.guardrail?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the guardrail.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new guardrail name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Guardrail"
-          onOk={() => handleDeleteGuardrail(modal.guardrail!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete guardrail <strong>{modal.guardrail?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on guardrail <strong>{modal.guardrail?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.guardrail?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleCloneGuardrail = async (guardrail: Guardrail, new_name: string) => {
-    // see: smarter.apps.guardrail.urls for API urls
-    // path("api/clone/<int:guardrail_id>/<str:new_name>/", GuardrailListApiCloneView.as_view(), name=GuardrailReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + guardrail.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone guardrail (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone guardrail (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} guardrail (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Guardrail) => {
-        console.debug(loggerPrefix, "Successfully cloned guardrail:", data);
-        setModal({ type: "confirmation", guardrail: data as Guardrail });
-        setSuccessMessage(`Successfully cloned guardrail`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d guardrail:`, data);
+        setSuccessMessage(`Successfully ${verb}d guardrail`);
+        // clone and rename return the resulting guardrail; delete returns a message.
+        setModal({ type: "confirmation", guardrail: data && data.id ? (data as Guardrail) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning guardrail:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} guardrail:`, error);
         setErrMessage(error.message);
-        handleError(guardrail);
+        setModal({ type: "error", guardrail: target });
       });
-    return true;
-  };
-
-  const handleRenameGuardrail = async (guardrail: Guardrail, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + guardrail.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename guardrail (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename guardrail (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Guardrail) => {
-        console.debug(loggerPrefix, "Successfully renamed guardrail:", data);
-        setModal({ type: "confirmation", guardrail: data as Guardrail });
-        setSuccessMessage(`Successfully renamed guardrail`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming guardrail:", error);
-        setErrMessage(error.message);
-        handleError(guardrail);
-      });
-    return true;
-  };
-
-  const handleDeleteGuardrail = async (guardrail: Guardrail) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + guardrail.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete guardrail (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete guardrail (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted guardrail:", guardrail);
-        setModal({ type: "confirmation", guardrail });
-        setSuccessMessage(`Successfully deleted guardrail`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting guardrail:", error);
-        setErrMessage(error.message);
-        handleError(guardrail);
-      });
-    return true;
   };
 
   return (
@@ -302,7 +207,7 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this guardrail resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(guardrail)}
+          onClick={() => setModal({ type: "clone", guardrail })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -311,7 +216,7 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this guardrail resource"
-          onClick={() => handleRenameButtonClicked(guardrail)}
+          onClick={() => setModal({ type: "rename", guardrail })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -320,7 +225,7 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this guardrail resource"
-          onClick={() => handleDeleteButtonClicked(guardrail)}
+          onClick={() => setModal({ type: "delete", guardrail })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -328,11 +233,33 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            guardrail={modal.guardrail}
+            onOk={(newName) => runAction(modal.guardrail!, `clone/${modal.guardrail!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            guardrail={modal.guardrail}
+            onOk={(newName) => runAction(modal.guardrail!, `rename/${modal.guardrail!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          guardrail={modal.guardrail}
+          onOk={() => runAction(modal.guardrail!, `delete/${modal.guardrail!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} guardrail={modal.guardrail} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          guardrail={modal.guardrail}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

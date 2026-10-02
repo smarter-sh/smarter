@@ -1,215 +1,165 @@
 """
-Base class for vector store backends.
+The interface of vector database backends.
 
-This class defines the interface that all
-vectorstore backends must implement. It includes methods for creating, deleting,
-upserting, querying, and getting stats for vector databases. Each backend should
-inherit from this class and provide concrete implementations for these methods
-based on the specific vector store being used (e.g., Pinecone, Weaviate, etc.).
+A backend runs one vectorstore's database operations: its lifecycle, its data, and its dumps.
+Lifecycle, status and scheduling are the job of
+:class:`~smarter.apps.vectorstore.service.VectorstoreService`, which calls a backend.
 """
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from langchain_core.documents import Document
-from langchain_core.embeddings.embeddings import Embeddings
-from langchain_core.vectorstores import VectorStore
+from langchain_core.embeddings import Embeddings
 
 from smarter.apps.vectorstore.models import VectorstoreMeta
-from smarter.apps.vectorstore.signals import connected
 from smarter.common.exceptions import SmarterException
-from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import logging
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-# pylint: disable=unused-argument
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.VECTORSTORE_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+SEARCH_TYPES = ("similarity", "similarity_score_threshold", "mmr")
 
 
 class VectorStoreBackendError(SmarterException):
-    """Exception raised when there is an error with the vector store backend."""
+    """A vector database operation failed."""
 
 
-class VectorStoreBackendConnectionError(SmarterException):
-    """Exception raised when there is an error with the vector store backend connection."""
+class VectorStoreBackendConnectionError(VectorStoreBackendError):
+    """The vector database cannot be reached."""
 
 
-class VectorStoreBackendConnection(SmarterHelperMixin):
-    """Represents a connection to a vector store backend."""
+@dataclass
+class SearchResult:
+    """A chunk that a search found."""
 
-    _connection: Optional[object]
-
-    @property
-    def ready(self) -> bool:
-        """Check if the connection is ready for operations."""
-        return super().ready
-
-    def connect(self):
-        """Establish the connection to the vector store backend."""
-        connected.send(sender=self.__class__, instance=self, connection=self._connection)
+    id: Optional[str]
+    text: str
+    metadata: dict[str, Any] = field(default_factory=dict)
+    score: Optional[float] = None
 
 
-class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
+@dataclass
+class SnapshotInfo:
+    """A Qdrant snapshot, or a Pinecone backup."""
+
+    name: str
+    size_bytes: Optional[int] = None
+    ready: bool = True
+
+
+class SmarterVectorstoreBackend(ABC):
     """
-    Abstract base class for vector store backends.
+    Abstract base class of the vector database backends.
 
-    This class defines the service interface that all vector store backends must implement.
-    All concrete backends (e.g., Pinecone, Weaviate, etc.) should inherit from this
-    class and provide implementations for all abstract methods. The backend is responsible
-    for managing the connection, storing and retrieving vectors, and handling database operations.
-
-    Parameters
-    ----------
-    db : VectorstoreMeta
-        The vector database instance to use.
-    embeddings : Optional[Embeddings], optional
-        The embeddings model to use for vectorization (default is None).
-    vector_store : Optional[VectorStore], optional
-        The vector store object (default is None).
-
-    Methods
-    -------
-    add_documents(documents, embeddings)
-        Add documents with their corresponding embeddings to the vector store.
-    initialize()
-        Initialize the backend, setting up any necessary connections or configurations.
-    create()
-        Provision a new vector database in the backend.
-    delete()
-        Delete the vector database from the backend.
-    upsert(vectors)
-        Upsert vectors into the vector database in the backend.
-    query(query_vector, top_k=10)
-        Query the vector database in the backend.
-    connect()
-        Establish a connection to the vector database in the backend.
-    disconnect()
-        Disconnect from the vector database in the backend.
-    load(embeddings)
-        Load vectors into the vector database from a list of embeddings.
-
-    Properties
-    ----------
-    index_stats : str
-        Get statistics about the vector database in the backend.
-    vector_store : object
-        Get the vector store object for the backend.
-    embeddings : Embeddings
-        Get the embeddings model.
-    connection : VectorStoreBackendConnection
-        Get or establish the connection to the vector database in the backend.
-    is_connected : bool
-        Check if there is an active connection to the vector database in the backend.
-    ready : bool
-        Check if the backend is ready for operations.
+    :param vectorstore: The vectorstore.
+    :param embeddings: Its embeddings model. Required for :meth:`upsert` and :meth:`search`.
     """
 
-    # Internal state variables for lazy initialization
-    _connection: Optional[VectorStoreBackendConnection] = None
-    _embeddings: Optional[Embeddings] = None
-    _vector_store: Optional[VectorStore] = None
-
-    db: VectorstoreMeta
-
-    def __init__(
-        self,
-        *args,
-        db: VectorstoreMeta,
-        embeddings: Optional[Embeddings] = None,
-        vector_store: Optional[VectorStore] = None,
-        **kwargs,
-    ):
-        SmarterHelperMixin.__init__(self)
-        self.db = db
-        self._connection = None
+    def __init__(self, vectorstore: VectorstoreMeta, embeddings: Optional[Embeddings] = None):
+        self.vectorstore = vectorstore
         self._embeddings = embeddings
-        self._vector_store = vector_store
-
-        logger.debug("%s.__init__() Initializing backend for database: %s", self.formatted_class_name, db)
-
-    @property
-    def index_stats(self) -> str:
-        """Get statistics about the vector database in the backend."""
-        raise NotImplementedError("Index stats method not implemented for this backend")
-
-    @property
-    def vector_store(self) -> object:
-        """Get the vector store object for the backend."""
-        if self._vector_store is None:
-            raise NotImplementedError("Vector store property not implemented for this backend")
-        return self._vector_store
 
     @property
     def embeddings(self) -> Embeddings:
-        """Get the embeddings."""
         if self._embeddings is None:
-            raise NotImplementedError("Embeddings property not implemented for this backend")
+            raise VectorStoreBackendError(f"Vectorstore {self.vectorstore.name} has no embeddings model.")
         return self._embeddings
 
     @property
-    def connection(self) -> VectorStoreBackendConnection:
+    def index_name(self) -> str:
+        return self.vectorstore.index_name or self.vectorstore.default_index_name()
+
+    # --- lifecycle --------------------------------------------------------------
+    def provision(self) -> None:
+        """Create the database's infrastructure, if Smarter runs it.
+
+        It returns without waiting for it.
         """
-        Get the connection to the vector database in the backend, establishing.
 
-        it if it doesn't already exist.
+    def infrastructure_ready(self) -> tuple[bool, str]:
+        """Whether the infrastructure that Smarter runs is ready, and why not.
+
+        A managed service always is.
         """
-        if self._connection is None:
-            self._connection = self.connect()
-        return self._connection
+        return True, ""
 
-    @property
-    def is_connected(self) -> bool:
-        """Check if there is an active connection to the vector database in the backend."""
-        return self._connection is not None and self._connection.ready
-
-    @property
-    def ready(self) -> bool:
-        """Check if the backend is ready for operations."""
-        return super().ready and self.is_connected
-
-    ###########################################################################
-    # Abstract methods that must be implemented by all backends
-    ###########################################################################
-    @abstractmethod
-    def add_documents(self, documents: list[Document], embeddings: list[Any]) -> bool:
-        """Add documents with their corresponding embeddings to the vector store."""
-        raise NotImplementedError("Add documents method not implemented for this backend")
+    def stop(self) -> None:
+        """Stop the infrastructure that Smarter runs, keeping its data."""
 
     @abstractmethod
-    def connect(self) -> VectorStoreBackendConnection:
-        """Establish a connection to the vector database in the backend."""
-        raise NotImplementedError("Connect method not implemented for this backend")
+    def exists(self) -> bool:
+        """Whether the index or collection exists."""
 
     @abstractmethod
-    def create(self):
-        """Provision a new vector database in the backend."""
-        raise NotImplementedError("Create method not implemented for this backend")
+    def create(self) -> None:
+        """Create the index or collection."""
 
     @abstractmethod
-    def delete(self):
-        """Delete the vector database from the backend."""
-        raise NotImplementedError("Delete method not implemented for this backend")
+    def drop(self) -> None:
+        """Delete the index or collection, and its data."""
+
+    def destroy(self) -> None:
+        """Delete the index or collection, and any infrastructure that Smarter runs."""
+        self.drop()
 
     @abstractmethod
-    def disconnect(self) -> None:
-        """Disconnect from the vector database in the backend."""
-        raise NotImplementedError("Disconnect method not implemented for this backend")
+    def stats(self) -> dict[str, Any]:
+        """The database's statistics.
+
+        It includes vector_count.
+        """
+
+    # --- data -------------------------------------------------------------------
+    @abstractmethod
+    def upsert(self, ids: list[str], texts: list[str], metadatas: list[dict[str, Any]], batch_size: int = 64) -> None:
+        """Embed and insert, or replace, chunks."""
 
     @abstractmethod
-    def initialize(self):
-        """Initialize the backend, setting up any necessary connections or configurations."""
-        raise NotImplementedError("Initialize method not implemented for this backend")
+    def delete(self, ids: list[str]) -> None:
+        """Delete chunks.
+
+        Ids that do not exist are ignored.
+        """
 
     @abstractmethod
-    def query(self, query_vector: Any, top_k: int = 10):
-        """Query the vector database in the backend."""
-        raise NotImplementedError("Query method not implemented for this backend")
+    def search(  # pylint: disable=too-many-positional-arguments,too-many-arguments
+        self,
+        query: str,
+        k: int = 4,
+        search_type: str = "similarity",
+        score_threshold: Optional[float] = None,
+        fetch_k: Optional[int] = None,
+        lambda_mult: Optional[float] = None,
+        metadata_filter: Optional[dict[str, Any]] = None,
+    ) -> list[SearchResult]:
+        """
+        Find the chunks that are closest in meaning to a query.
+
+        :param search_type: similarity, similarity_score_threshold, or mmr (maximal marginal relevance).
+        :param metadata_filter: chunks whose metadata has these values, e.g. {"source": "faq"}.
+        """
+
+    # --- dumps ------------------------------------------------------------------
+    @abstractmethod
+    def create_snapshot(self, name: str) -> SnapshotInfo:
+        """Take a snapshot, or backup."""
+
+    @abstractmethod
+    def delete_snapshot(self, name: str) -> None:
+        """Delete a snapshot, or backup."""
+
+    @abstractmethod
+    def restore_snapshot(self, name: str) -> None:
+        """Replace the index or collection's data with a snapshot's."""
+
+    def logs(self, tail: int = 200) -> Optional[str]:  # pylint: disable=unused-argument
+        """The database server's logs, if Smarter runs it."""
+        return None
+
+
+__all__ = [
+    "SEARCH_TYPES",
+    "SearchResult",
+    "SmarterVectorstoreBackend",
+    "SnapshotInfo",
+    "VectorStoreBackendConnectionError",
+    "VectorStoreBackendError",
+]

@@ -5,9 +5,6 @@
  * assets, including references to the React NPM package and Python PyPI
  * library.
  *
- * :param props: Component props.
- * :type props: SdkProps
- *
  * :returns: A JSX fragment containing SDK resource links and supporting banner
  *     content.
  * :rtype: JSX.Element
@@ -18,10 +15,7 @@
  */
 import "./styles.css";
 
-interface SdkProps {
-}
-
-function Sdk({  }: SdkProps) {
+function Sdk() {
   return (
     <>
       <div id="sdk" aria-label="SDK" className="col-xl-4 mb-5 mb-xl-10">

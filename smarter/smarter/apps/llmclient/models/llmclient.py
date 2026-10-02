@@ -669,7 +669,6 @@ class LLMClient(MetaDataWithOwnershipModel):
             logger.warning("LLMClient %s is not ready. It is not deployed.", self.rfc1034_compliant_name)
             return False
 
-        self.authorize()  # type: ignore
         return True
 
     @cached_property

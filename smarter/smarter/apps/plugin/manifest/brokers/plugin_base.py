@@ -1011,9 +1011,6 @@ class SAMPluginBaseBroker(AbstractBroker):
         # iterate over the QuerySet and use a serializer to create a model dump for each LLMClient
         for plugin in plugins:
             try:
-                self.plugin_init()
-                self.plugin_meta = plugin
-
                 model_dump = PluginSerializer(plugin).data
                 camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)

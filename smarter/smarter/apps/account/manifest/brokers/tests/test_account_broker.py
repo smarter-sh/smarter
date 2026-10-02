@@ -14,6 +14,7 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpec,
     SAMAccountSpecConfig,
 )
+from smarter.apps.account.models import Account, UserProfile
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
@@ -230,6 +231,18 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
+        # apply() creates the manifest's Account, and UserProfile.admin_for_account() then adds
+        # the platform admin to it. Delete both, or the admin user is left with a second account.
+        account_name = self.broker.manifest.metadata.name
+        if not Account.objects.filter(name=account_name).exists():
+
+            def delete_applied_account():
+                for account in Account.objects.filter(name=account_name):
+                    UserProfile.objects.filter(account=account).delete()
+                    account.delete()
+
+            self.addCleanup(delete_applied_account)
+
         response = self.broker.apply(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)

@@ -877,6 +877,10 @@ which defines the URL patterns for the Smarter web platform console.
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#root-urlconf
 """
 
+TEST_RUNNER = "smarter.lib.unittest.runner.SmarterTestRunner"
+"""Skips the tests tagged infrastructure, which use real Kubernetes and AWS, unless they are asked for."""
+
+
 DEFAULT_HOST = smarter_settings.platform_subdomain
 """
 The default host name for django-hosts.

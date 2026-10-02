@@ -1,64 +1,48 @@
 /**
+ * StatusBar React component: a Vectorstore's status, and indicators of how it is run.
  *
- * StatusBar React component for displaying the status of a Vectorestore instance.
- * Shows readiness, deployment, authentication, DNS, TLS, subdomain, and custom domain status using icons and tooltips.
- *
- * Exports:
- *   - StatusBar: Functional component that takes a Vectorestore and renders its status indicators.
+ * - its lifecycle status: pending, provisioning, ready, stopped, failed or deleting;
+ * - deletion protection;
+ * - whether it is inactive;
+ * - scheduled snapshots, or backups.
  *
  * Usage:
  *   <StatusBar vectorstore={vectorstore} />
  */
-import type { Vectorestore } from "@/lib/Types";
+import type { Vectorstore } from "@/lib/Types";
+import { STATUS_BADGES } from "@/lib/format";
+
 interface StatusbarProps {
-  vectorstore: Vectorestore;
+  vectorstore: Vectorstore;
 }
 
 export const StatusBar = ({ vectorstore }: StatusbarProps) => {
+  const badge = STATUS_BADGES[vectorstore.status] ?? STATUS_BADGES.pending;
+  const maintenance = (vectorstore.spec?.maintenance ?? {}) as { snapshots?: boolean };
+  const title = vectorstore.statusMessage ? `${badge.help} ${vectorstore.statusMessage}` : badge.help;
   return (
     <div className="statusbar d-flex align-items-center gap-2">
-      {/* Ready */}
-      <span
-        className="status-icon"
-        title={vectorstore.ready ? "Ready: Vectorestore is ready to serve requests" : "Not ready: Vectorestore is initializing"}
-      >
-        <i className={vectorstore.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
+      <span className={`badge ${badge.className}`} title={title}>
+        {badge.label}
       </span>
-      {/* Deployed */}
-      <span className="status-icon" title="Deployed: Vectorestore is deployed">
-        <i className="bi bi-cloud-check" />
-      </span>
-      {/* Authentication Required */}
-      <span
-        className="status-icon"
-        title="Authentication required to access this vectorstore"
-      >
-        <i className="bi bi-lock" />
-      </span>
-      {/* DNS Verification */}
-      <span
-        className="status-icon"
-        title="DNS verified"
-      >
-        <i className="bi bi-globe" />
-      </span>
-      {/* TLS Certificate */}
-      <span
-        className="status-icon"
-        title="TLS certificate issued"
-      >
-        <i
-          className="bi bi-shield-lock"
-        />
-      </span>
-      {/* Subdomain */}
-        <span className="status-icon" title={"Subdomain: example.com"}>
-          <i className="bi bi-link-45deg text-info" />
+      {!vectorstore.isActive && (
+        <span className="status-icon" title="Inactive: it may not be used.">
+          <i className="bi bi-pause-circle text-secondary" />
         </span>
-      {/* Custom Domain */}
-        <span className="status-icon" title={"Custom domain: example.com"}>
-          <i className="bi bi-link text-info" />
+      )}
+      {vectorstore.deletionProtection && (
+        <span className="status-icon" title="Deletion protection: its database cannot be destroyed.">
+          <i className="bi bi-shield-lock text-primary" />
         </span>
+      )}
+      {maintenance.snapshots !== false && (
+        <span
+          className="status-icon"
+          title={`Scheduled snapshots: ${vectorstore.snapshotCount} kept${vectorstore.lastSnapshotAt ? `, the last at ${vectorstore.lastSnapshotAt}` : ""}.`}
+        >
+          <i className="bi bi-clock-history text-info" />
+        </span>
+      )}
     </div>
   );
 };

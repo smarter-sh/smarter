@@ -1,0 +1,48 @@
+---
+# Google Gemma 3 27B Instruct, sharded across 2 GPUs.
+# Gated: accept the Gemma terms of use, and store a Hugging Face token in the Secret huggingface_token.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: gemma_3_27b_it
+  description: Google Gemma 3 27B Instruct, a vision-language model, served by vLLM across two NVIDIA L40S GPUs.
+  version: 1.0.0
+  tags:
+  - gemma
+  - google
+  - vllm
+  - chat
+  - vision
+  - large
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/google/gemma-3-27b-it
+spec:
+  model:
+    source: huggingface
+    repository: google/gemma-3-27b-it
+    revision: main
+    servedName: gemma-3-27b-it
+    tokenSecret: huggingface_token
+    license: gemma
+    architecture: gemma3
+    parameterCount: 27432406640
+    contextWindow: 131072
+    quantization: bf16
+    capabilities:
+      vision: true
+  engine:
+    name: vllm
+    contextLength: 32768
+    tensorParallelSize: 2
+  compute: gpu_l40s_4x
+  resources:
+    gpuCount: 2
+    vramRequiredGb: 69
+    cpu: '6'
+    memory: 70Gi
+    shmSize: 16Gi
+  storage:
+    size: 100Gi

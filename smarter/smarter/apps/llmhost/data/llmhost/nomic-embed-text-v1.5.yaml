@@ -1,0 +1,44 @@
+---
+# Nomic nomic-embed-text-v1.5: 768-dimensional embeddings, for inputs of up to 8192 tokens.
+# Prefix inputs with 'search_query: ' or 'search_document: ', as its model card explains.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: nomic_embed_text_v1_5
+  description: Nomic nomic-embed-text-v1.5, a long-context embedding model, served by Text Embeddings Inference
+    on CPU.
+  version: 1.0.0
+  tags:
+  - embedding
+  - nomic
+  - tei
+  - cpu
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/nomic-ai/nomic-embed-text-v1.5
+spec:
+  model:
+    source: huggingface
+    repository: nomic-ai/nomic-embed-text-v1.5
+    revision: main
+    task: embedding
+    license: apache-2.0
+    architecture: nomic_bert
+    parameterCount: 136731648
+    contextWindow: 8192
+    embeddingDimensions: 768
+    quantization: fp32
+    capabilities:
+      streaming: false
+  engine:
+    name: tei
+    maxConcurrentRequests: 256
+  compute: cpu_medium
+  resources:
+    gpuCount: 0
+    cpu: '6'
+    memory: 4Gi
+    shmSize: 1Gi
+  storage:
+    size: 5Gi

@@ -614,32 +614,16 @@ class SAMSecretBroker(AbstractBroker):
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
 
-        if not isinstance(self.manifest, SAMSecret):
-            raise SAMSecretBrokerError(
-                f"Manifest must be of type {SAMSecret.__name__} to get data, got {type(self.manifest)}: {self.manifest}",
-                thing=self.kind,
-                command=command,
-            )
-
         if name:
             secrets = Secret.objects.filter(user_profile=self.user_profile, name=name)
         else:
             secrets = Secret.objects.filter(user_profile=self.user_profile)
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
+        # iterate over the QuerySet and serialize each Secret. Its items must match the titles
+        # from the same serializer, and must never include the secret's value.
         for secret in secrets:
             try:
-                self.init_secret()
-                if not isinstance(self.user_profile, UserProfile):
-                    raise SAMSecretBrokerError(
-                        message="User profile not set for broker. Cannot create SecretTransformer.",
-                        thing=self.kind,
-                        command=command,
-                    )
-                self._secret_transformer = SecretTransformer(
-                    user_profile=self.user_profile, name=secret.name, secret_id=secret.id, secret=secret  # type: ignore
-                )
-                model_dump = self.manifest.model_dump()
+                model_dump = SecretSerializer(secret).data
                 if not model_dump:
                     raise SAMSecretBrokerError(
                         f"Model dump failed for {self.kind} {secret}", thing=self.kind, command=command

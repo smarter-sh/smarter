@@ -1,16 +1,11 @@
-
-export const failure_style = {
-  color: "red",
-  marginLeft: "10px",
-};
+import { useState } from "react";
+const failureEmojis = [
+  "💥", "😵‍💫", "🧨", "😿", "🥀", "🫠", "🧟", "🫤"
+];
 
 export default function FailureEmoji() {
-
-  const failureEmojis = [
-    "💥", "😵‍💫", "🧨", "😿", "🥀", "🫠", "🧟", "🫤"
-  ];
-
-  const randomEmoji = failureEmojis[Math.floor(Math.random() * failureEmojis.length)];
+  // picked once, so that it does not change when the component re-renders.
+  const [randomEmoji] = useState(() => failureEmojis[Math.floor(Math.random() * failureEmojis.length)]);
 
   return (
     <span role="img" aria-label="failure">

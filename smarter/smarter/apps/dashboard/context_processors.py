@@ -77,6 +77,7 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
+from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.dropzone.urls import DropzoneReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
@@ -140,12 +141,14 @@ def sidebar_context() -> dict[str, Any]:
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
             ),
             "llmhost": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
+            "llmhostcompute": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview),
             "mcpclients": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
             "orchestrators": reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "guardrails": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
+            "budgets": reverse(BudgetReverseNames.namespace, BudgetReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
             "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),

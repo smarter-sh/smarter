@@ -10,7 +10,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
-from smarter.apps.account.models.budget import charge_authorization
+from smarter.apps.account.models.budget import (
+    SmarterBudgetExceeded,
+    charge_authorization,
+)
 from smarter.apps.orchestrator.exceptions import SmarterOrchestratorException
 from smarter.apps.orchestrator.models import (
     Orchestrator,
@@ -76,7 +79,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     """
 
     _orchestrator_id: Optional[int] = None
-    _orchestrator: Orchestrator
+    _orchestrator: Optional[Orchestrator] = None
     _name: Optional[str] = None
 
     http_method_names: list[str] = ["get", "post", "options"]
@@ -111,6 +114,14 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: The Orchestrator instance.
         :rtype: Optional[Orchestrator]
         """
+        if self._orchestrator is None:
+            # resolve it lazily from the id or name that dispatch() received
+            if self._orchestrator_id:
+                self._orchestrator = Orchestrator.objects.filter(pk=self._orchestrator_id).first()
+            elif self._name and self.account:
+                self._orchestrator = Orchestrator.objects.filter(
+                    user_profile__account=self.account, name=self._name
+                ).first()
         return self._orchestrator
 
     @property
@@ -264,7 +275,15 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
 
         if self.orchestrator:
-            charge_authorization(self.orchestrator.record_locator, self.__class__.__name__)  # type: ignore
+            try:
+                charge_authorization(
+                    [r.record_locator for r in (self.orchestrator, self.user_profile, self.account) if r is not None],  # type: ignore
+                    self.__class__.__name__,
+                )
+            except SmarterBudgetExceeded as e:
+                return JsonResponse(
+                    data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
+                )
             orchestrator_called.send(
                 sender=self.__class__,
                 orchestrator=self.orchestrator,

@@ -16,16 +16,17 @@
  * - In production usage, these values should come from API call state/props.
  */
 import "./styles.css";
-import SuccessEmoji, {success_style} from "./status_success";
-import FailureEmoji, {failure_style} from "./status_failure";
-import WorkingEmoji, {working_style} from "./status_working";
-import ReadyEmoji, {ready_style} from "./status_ready";
+import SuccessEmoji from "./status_success";
+import FailureEmoji from "./status_failure";
+import WorkingEmoji from "./status_working";
+import ReadyEmoji from "./status_ready";
+import { failure_style, ready_style, success_style, working_style } from "./status_styles";
 
 function LLMProviderPassthroughResponse({
   apiResponse,
   isProcessing = false,
 }: {
-  apiResponse: { status: number; body: any } | null;
+  apiResponse: { status: number; body: unknown } | null;
   isProcessing?: boolean;
 }) {
   const responseJson = apiResponse?.body ?? null;

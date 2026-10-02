@@ -31,7 +31,6 @@ from smarter.apps.account.utils import (
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils.decorators import snake_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -715,7 +714,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             logger.warning("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
         return self._name
 
-    @snake_case()
     def manifest_to_django_orm(self) -> dict[str, Any]:
         """
         Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM LLMClient model.
@@ -745,7 +743,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 command=SmarterJournalCliCommands.APPLY,
             )
         metadata = self.manifest.metadata.model_dump()
+        # annotation keys are user data, such as "smarter.sh/created-by", so they keep their case.
+        has_annotations = "annotations" in metadata
+        annotations = metadata.pop("annotations", None)
         metadata = self.to_snake_case(metadata)
+        if has_annotations and isinstance(metadata, dict):
+            metadata["annotations"] = annotations
         if not isinstance(metadata, dict):
             raise SAMBrokerError(
                 message=f"Manifest metadata could not be converted to a dictionary. Expected a dictionary after to_snake_case transformation, but got {type(metadata)}",
@@ -1959,7 +1962,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         fields_and_types: list[dict[str, str]] = []
         for field_name, field in serializer.fields.items():
-            item = self.to_camel_case({"name": field_name, "type": type(field).__name__}, convert_values=False)
+            # the field name is camelCased to match the keys of the camelCased items that get() returns
+            item = {"name": self.to_camel_case(field_name), "type": type(field).__name__}
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
             else:

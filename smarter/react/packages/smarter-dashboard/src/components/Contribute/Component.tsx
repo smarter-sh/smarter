@@ -5,9 +5,6 @@
  * participation in the Smarter project, highlights repository activity badges,
  * and presents supporting visual illustration content.
  *
- * :param props: Component props.
- * :type props: ContributeProps
- *
  * :returns: A JSX fragment containing the contribution engagement widget.
  * :rtype: JSX.Element
  *
@@ -17,10 +14,7 @@
  */
 import "./styles.css";
 
-interface ContributeProps {
-}
-
-function Contribute({  }: ContributeProps) {
+function Contribute() {
   return (
     <>
       {/* begin::Engage widget 4 */}

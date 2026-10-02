@@ -17,7 +17,6 @@ from smarter.lib.drf.token_authentication import (
 )
 
 from .models import Account, User, UserProfile
-from .models.budget import charge_authorization
 from .serializers import (
     AccountMiniSerializer,
     UserMiniSerializer,
@@ -767,7 +766,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: True if the AccountMixin is am_ready to be used.
         :rtype: bool
         """
-        if self._am_ready:
+        if getattr(self, "_am_ready", False):
             return True
         try:
             if not super().ready:
@@ -794,8 +793,6 @@ class AccountMixin(SmarterHelperMixin):
                     self._am_formatted_class_name,
                 )
                 self._account = self.user_profile.cached_account
-            charge_authorization(self.user_profile.record_locator, self.__class__.__name__)
-            charge_authorization(self.user_profile.account.record_locator, self.__class__.__name__)
             self._am_ready = True
             self._am_log_ready_status()
             return self._am_ready
@@ -841,7 +838,8 @@ class AccountMixin(SmarterHelperMixin):
     @property
     def is_authenticated(self) -> bool:
         """Returns True if the user is authenticated and is associated with an Account."""
-        return bool(self._user) and self._user.is_authenticated and bool(self._account) and bool(self._user_profile)
+        # use the properties, which lazily resolve the account and user_profile from the user
+        return bool(self.user) and self.user.is_authenticated and bool(self.account) and bool(self.user_profile)
 
     def to_json(self):
         """Returns a JSON representation of the account, user, and user_profile."""

@@ -7,6 +7,9 @@ import inflection
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
+from smarter.apps.account.manifest.models.budget.const import (
+    MANIFEST_KIND as BUDGET_MANIFEST_KIND,
+)
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
 )
@@ -24,6 +27,9 @@ from smarter.apps.llmclient.manifest.models.llmclient.const import (
 )
 from smarter.apps.llmhost.manifest.models.llmhost.const import (
     MANIFEST_KIND as LLM_HOST_MANIFEST_KIND,
+)
+from smarter.apps.llmhost.manifest.models.llmhost_compute.const import (
+    MANIFEST_KIND as LLM_HOST_COMPUTE_MANIFEST_KIND,
 )
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCP_CLIENT_MANIFEST_KIND,
@@ -110,12 +116,14 @@ class SAMKinds(SmarterEnumAbstract):
         SQL_CONNECTION: SQL connection manifest.
         ACCOUNT: Account manifest.
         AUTH_TOKEN: Authentication token manifest.
+        BUDGET: Budget manifest: spending limits enforced on the resources it lists.
         USER: User manifest.
         SECRET: Secret manifest.
         GUARDRAIL: Guardrail manifest.
         PROMPT: Prompt manifest.
         LLM_CLIENT: LLM client manifest.
         LLM_HOST: LLM host manifest.
+        LLM_HOST_COMPUTE: LLM host compute manifest: a kind of node, and node group.
         MCP_CLIENT: MCP client manifest.
         PROVIDER: AI provider manifest.
         PROXY: Proxy manifest.
@@ -160,6 +168,7 @@ class SAMKinds(SmarterEnumAbstract):
     # account resources
     ACCOUNT = ACCOUNT_MANIFEST_KIND
     AUTH_TOKEN = AUTH_TOKEN_MANIFEST_KIND
+    BUDGET = BUDGET_MANIFEST_KIND
     USER = USER_MANIFEST_KIND
     SECRET = SECRET_MANIFEST_KIND
 
@@ -169,6 +178,7 @@ class SAMKinds(SmarterEnumAbstract):
     PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
     LLM_HOST = LLM_HOST_MANIFEST_KIND
+    LLM_HOST_COMPUTE = LLM_HOST_COMPUTE_MANIFEST_KIND
     MCP_CLIENT = MCP_CLIENT_MANIFEST_KIND
     ORCHESTRATOR = ORCHESTRATOR_MANIFEST_KIND
 

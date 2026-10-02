@@ -297,7 +297,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         self.assertIn(SmarterJournalApiResponseKeys.MESSAGE, response.keys())
         self.assertIn(SmarterJournalApiResponseKeys.API, response.keys())
-        self.assertIn(SmarterJournalApiResponseKeys.THING, response.keys())
+        self.assertIn(SmarterJournalApiResponseKeys.THING, response[SmarterJournalApiResponseKeys.METADATA])
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, response.keys())
 
         # validate the data that we just modified and applied

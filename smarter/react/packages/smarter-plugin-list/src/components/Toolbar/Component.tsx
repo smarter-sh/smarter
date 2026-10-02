@@ -8,26 +8,132 @@
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete plugin resources.
  * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
  * - Ensures only one modal is open at a time for clear user interaction.
- * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure,
+ *   including the server's error message.
  * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * The modals are defined outside of Toolbar, so that React does not recreate, and reset, them
+ * each time Toolbar renders.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
  * - plugin (Plugin): The plugin resource to manage.
  *
  * Usage:
- * <Toolbar sessionContext={sessionContext} plugin={plugin} />
+ * <Toolbar sessionContext={sessionContext} plugin={plugin} onRequery={onRequery} />
  *
  * This component is intended to be embedded in each plugin row or card in ListView and CardView.
  */
 import { useState } from "react";
-
 import type { SessionContext } from "@smarter/common";
-import { Modal } from "@smarter/common";
-import { fetchDjangoUrl } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Plugin } from "@/lib/Types";
+
+type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
+
+interface NameModalProps {
+  plugin: Plugin | null;
+  onOk: (newName: string) => void;
+  onCancel: () => void;
+}
+
+/** Asks for the name of the clone. It is mounted only while open, so it starts empty. */
+const ModalClone = ({ plugin, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState("");
+  return (
+    <Modal show title="Clone Plugin" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Clone plugin <strong>{plugin?.name}</strong> to a new resource owned by you.
+      </p>
+      <p>
+        <em>Provide the new name for the cloned plugin.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new plugin name" />
+    </Modal>
+  );
+};
+
+/** Asks for the new name. It is mounted only while open, so it starts with the current name. */
+const ModalRename = ({ plugin, onOk, onCancel }: NameModalProps) => {
+  const [inputValue, setInputValue] = useState(plugin?.name || "");
+  return (
+    <Modal show title="Rename Plugin" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>
+        Rename plugin <strong>{plugin?.name}</strong>.
+      </p>
+      <p>
+        <em>Provide the new name for the plugin.</em>
+      </p>
+      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new plugin name" />
+    </Modal>
+  );
+};
+
+/** Confirms the deletion. */
+const ModalDelete = ({
+  show,
+  plugin,
+  onOk,
+  onCancel,
+}: {
+  show: boolean;
+  plugin: Plugin | null;
+  onOk: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal show={show} title="Delete Plugin" onOk={onOk} onCancel={onCancel}>
+    <p>
+      Are you sure you want to delete plugin <strong>{plugin?.name}</strong>?
+    </p>
+    <p>
+      <em>Data is not recoverable.</em>
+    </p>
+  </Modal>
+);
+
+/** Shows the error message. */
+const ModalError = ({
+  show,
+  plugin,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  plugin: Plugin | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="❌ Error" onClose={onClose}>
+    <p>
+      An error occurred while performing the operation on plugin <strong>{plugin?.name}</strong>.
+    </p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+  </Modal>
+);
+
+/** Confirms that the operation succeeded. */
+const ModalConfirmation = ({
+  show,
+  plugin,
+  message,
+  onClose,
+}: {
+  show: boolean;
+  plugin: Plugin | null;
+  message: string;
+  onClose: () => void;
+}) => (
+  <Modal show={show} title="✅ Success" onClose={onClose}>
+    <p>
+      {message} <strong>{plugin?.name}</strong>.
+    </p>
+    <p>
+      <em>Operation completed successfully.</em>
+    </p>
+  </Modal>
+);
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -37,13 +143,8 @@ interface ToolbarProps {
 
 export const Toolbar = ({ sessionContext, plugin, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
-  // it ensures that only one modal can be open at a time, and simplifies
-  // the logic for opening and closing any of the four modals.
-  // url: string, csrfToken: string, djangoSessionCookieName: string, csrfCookieName: string, cookieDomain: string
-  const [modal, setModal] = useState<{
-    type: null | "clone" | "rename" | "delete" | "confirmation" | "error";
-    plugin: Plugin | null;
-  }>({ type: null, plugin: null });
+  // it ensures that only one modal can be open at a time.
+  const [modal, setModal] = useState<{ type: ModalType; plugin: Plugin | null }>({ type: null, plugin: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -55,230 +156,32 @@ export const Toolbar = ({ sessionContext, plugin, onRequery }: ToolbarProps) => 
     onRequery();
   };
 
-  const handleCloneButtonClicked = (plugin: Plugin) => setModal({ type: "clone", plugin });
-  const handleRenameButtonClicked = (plugin: Plugin) => setModal({ type: "rename", plugin });
-  const handleDeleteButtonClicked = (plugin: Plugin) => setModal({ type: "delete", plugin });
-
-  const handleError = (plugin: Plugin) => {
+  /**
+   * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
+   * confirmation modal on success, else the error modal with the server's error message.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
+   */
+  const runAction = (target: Plugin, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    setModal({ type: "error", plugin });
-  };
-
-  const ModalClone = () => {
-    const [inputValue, setInputValue] = useState("");
-    return (
-      <>
-        <Modal
-          show={modal.type === "clone"}
-          title="Clone Plugin"
-          onOk={() => handleClonePlugin(modal.plugin!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Clone plugin <strong>{modal.plugin?.name}</strong> to a new resource owned by you.
-          </p>
-          <p>
-            <em>Provide the new name for the cloned plugin.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new plugin name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalRename = () => {
-    const [inputValue, setInputValue] = useState(modal.plugin?.name || "");
-    return (
-      <>
-        <Modal
-          show={modal.type === "rename"}
-          title="Rename Plugin"
-          onOk={() => handleRenamePlugin(modal.plugin!, inputValue)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Rename plugin <strong>{modal.plugin?.name}</strong>.
-          </p>
-          <p>
-            <em>Provide the new name for the plugin.</em>
-          </p>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter new plugin name"
-          />
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalDelete = () => {
-    return (
-      <>
-        <Modal
-          show={modal.type === "delete"}
-          title="Delete Plugin"
-          onOk={() => handleDeletePlugin(modal.plugin!)}
-          onCancel={handleCloseModal}
-        >
-          <p>
-            Are you sure you want to delete plugin <strong>{modal.plugin?.name}</strong>?
-          </p>
-          <p>
-            <em>Data is not recoverable.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalError = () => {
-    return (
-      <>
-        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
-          <p>
-            An error occurred while performing the operation on plugin <strong>{modal.plugin?.name}</strong>.
-          </p>
-          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
-        </Modal>
-      </>
-    );
-  };
-
-  const ModalConfirmation = () => {
-    return (
-      <>
-        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
-          <p>
-            {successMessage} <strong>{modal.plugin?.name}</strong>.
-          </p>
-          <p>
-            <em>Operation completed successfully.</em>
-          </p>
-        </Modal>
-      </>
-    );
-  };
-
-  const handleClonePlugin = async (plugin: Plugin, new_name: string) => {
-    // see: smarter.apps.plugin.urls for API urls
-    // path("api/clone/<int:plugin_id>/<str:new_name>/", PluginListApiCloneView.as_view(), name=PluginReverseNames.listview_api_clone),
-    //
-    // implement the clone logic here, e.g. call an API route to perform the clone operation.
-    // return a success or failure result.
-
-    const url = sessionContext.ApiUrl + "clone/" + plugin.id + "/" + new_name + "/";
-    handleCloseModal();
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              setErrMessage(errorMessage);
-              throw new Error(`Failed to clone plugin (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to clone plugin (${response.status}): ${response.statusText}`);
-            });
+          throw new Error(`Failed to ${verb} plugin (${response.status}): ${data.error || response.statusText}`);
         }
-        return response.json();
+        return data;
       })
-      .then((data: Plugin) => {
-        console.debug(loggerPrefix, "Successfully cloned plugin:", data);
-        setModal({ type: "confirmation", plugin: data as Plugin });
-        setSuccessMessage(`Successfully cloned plugin`);
+      .then((data) => {
+        console.debug(loggerPrefix, `Successfully ${verb}d plugin:`, data);
+        setSuccessMessage(`Successfully ${verb}d plugin`);
+        // clone and rename return the resulting plugin; delete returns a message.
+        setModal({ type: "confirmation", plugin: data && data.id ? (data as Plugin) : target });
       })
       .catch((error) => {
-        console.error(loggerPrefix, "Error cloning plugin:", error);
+        console.error(loggerPrefix, `Error trying to ${verb} plugin:`, error);
         setErrMessage(error.message);
-        handleError(plugin);
+        setModal({ type: "error", plugin: target });
       });
-    return true;
-  };
-
-  const handleRenamePlugin = async (plugin: Plugin, newName: string) => {
-    // implement the rename logic here, e.g. call an API route to perform the rename operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "rename/" + plugin.id + "/" + newName + "/";
-
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to rename plugin (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to rename plugin (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then((data: Plugin) => {
-        console.debug(loggerPrefix, "Successfully renamed plugin:", data);
-        setModal({ type: "confirmation", plugin: data as Plugin });
-        setSuccessMessage(`Successfully renamed plugin`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error renaming plugin:", error);
-        setErrMessage(error.message);
-        handleError(plugin);
-      });
-    return true;
-  };
-
-  const handleDeletePlugin = async (plugin: Plugin) => {
-    // implement the delete logic here, e.g. call an API route to perform the delete operation.
-    // return a success or failure result.
-    handleCloseModal();
-    const url = sessionContext.ApiUrl + "delete/" + plugin.id + "/";
-    fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    )
-      .then((response) => {
-        if (!response.ok) {
-          return response
-            .json()
-            .then((errorData) => {
-              const errorMessage = errorData.error || response.statusText;
-              throw new Error(`Failed to delete plugin (${response.status}): ${errorMessage}`);
-            })
-            .catch(() => {
-              throw new Error(`Failed to delete plugin (${response.status}): ${response.statusText}`);
-            });
-        }
-        return response.json();
-      })
-      .then(() => {
-        console.debug(loggerPrefix, "Successfully deleted plugin:", plugin);
-        setModal({ type: "confirmation", plugin });
-        setSuccessMessage(`Successfully deleted plugin`);
-      })
-      .catch((error) => {
-        console.error(loggerPrefix, "Error deleting plugin:", error);
-        setErrMessage(error.message);
-        handleError(plugin);
-      });
-    return true;
   };
 
   return (
@@ -304,7 +207,7 @@ export const Toolbar = ({ sessionContext, plugin, onRequery }: ToolbarProps) => 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Clone: Clone this plugin resource to a new resource owned by you"
-          onClick={() => handleCloneButtonClicked(plugin)}
+          onClick={() => setModal({ type: "clone", plugin })}
           tabIndex={0}
         >
           <i className="bi bi-files" />
@@ -313,7 +216,7 @@ export const Toolbar = ({ sessionContext, plugin, onRequery }: ToolbarProps) => 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Rename: Rename this plugin resource"
-          onClick={() => handleRenameButtonClicked(plugin)}
+          onClick={() => setModal({ type: "rename", plugin })}
           tabIndex={0}
         >
           <i className="bi bi-pencil" />
@@ -322,7 +225,7 @@ export const Toolbar = ({ sessionContext, plugin, onRequery }: ToolbarProps) => 
           type="button"
           className="btn btn-icon btn-sm border"
           title="Delete: Delete this plugin resource"
-          onClick={() => handleDeleteButtonClicked(plugin)}
+          onClick={() => setModal({ type: "delete", plugin })}
           tabIndex={0}
         >
           <i className="bi bi-trash" />
@@ -330,11 +233,33 @@ export const Toolbar = ({ sessionContext, plugin, onRequery }: ToolbarProps) => 
       </div>
 
       <div>
-        <ModalClone />
-        <ModalRename />
-        <ModalDelete />
-        <ModalError />
-        <ModalConfirmation />
+        {modal.type === "clone" && (
+          <ModalClone
+            plugin={modal.plugin}
+            onOk={(newName) => runAction(modal.plugin!, `clone/${modal.plugin!.id}/${newName}/`, "clone")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        {modal.type === "rename" && (
+          <ModalRename
+            plugin={modal.plugin}
+            onOk={(newName) => runAction(modal.plugin!, `rename/${modal.plugin!.id}/${newName}/`, "rename")}
+            onCancel={handleCloseModal}
+          />
+        )}
+        <ModalDelete
+          show={modal.type === "delete"}
+          plugin={modal.plugin}
+          onOk={() => runAction(modal.plugin!, `delete/${modal.plugin!.id}/`, "delete")}
+          onCancel={handleCloseModal}
+        />
+        <ModalError show={modal.type === "error"} plugin={modal.plugin} message={errMessage} onClose={handleCloseModal} />
+        <ModalConfirmation
+          show={modal.type === "confirmation"}
+          plugin={modal.plugin}
+          message={successMessage}
+          onClose={handleCloseModalWithRequery}
+        />
       </div>
     </>
   );

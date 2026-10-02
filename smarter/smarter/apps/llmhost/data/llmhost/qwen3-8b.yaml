@@ -1,0 +1,50 @@
+---
+# Alibaba Qwen3 8B: thinks before it answers, unless the prompt says /no_think.
+# The reasoning parser returns the thinking separately, as reasoning_content.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: qwen3_8b
+  description: Alibaba Qwen3 8B, a hybrid reasoning model, served by vLLM on one NVIDIA L40S, with tool calling.
+  version: 1.0.0
+  tags:
+  - qwen
+  - alibaba
+  - vllm
+  - chat
+  - reasoning
+  - tool-calling
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/Qwen/Qwen3-8B
+spec:
+  model:
+    source: huggingface
+    repository: Qwen/Qwen3-8B
+    revision: main
+    servedName: qwen3-8b
+    license: apache-2.0
+    architecture: qwen3
+    parameterCount: 8190735360
+    contextWindow: 32768
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+      reasoning: true
+  engine:
+    name: vllm
+    contextLength: 32768
+    args:
+    - --enable-auto-tool-choice
+    - --tool-call-parser
+    - hermes
+    - --reasoning-parser
+    - qwen3
+  compute: gpu_l40s_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 21
+    cpu: '4'
+    memory: 24Gi

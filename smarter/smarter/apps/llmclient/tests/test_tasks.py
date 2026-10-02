@@ -3,6 +3,8 @@
 
 import time
 
+from django.test import tag
+
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
@@ -18,10 +20,12 @@ from smarter.common.helpers.aws_helpers import aws_helper
 # python stuff
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 logger = logging.getLogger(__name__)
 
 
+@tag(INFRASTRUCTURE)
 class TestLLMClientTasks(TestAccountMixin):
     """Test LLMClient tasks."""
 

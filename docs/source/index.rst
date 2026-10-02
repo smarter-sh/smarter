@@ -50,7 +50,7 @@ injection and data leaks is described in one short YAML file, and deployed with 
 .. admonition:: Quick Start: up and running on your desktop in about 10 minutes
    :class: tip
 
-   With `Docker Desktop <https://docs.docker.com/desktop/>`__ installed:
+   With `make <https://www.youtube.com/watch?v=j5gJJe_0zP4>`__ and `Docker Desktop <https://docs.docker.com/desktop/>`__ installed:
 
    .. code-block:: console
 
@@ -116,7 +116,9 @@ that you declare in a manifest, and none of them requires you to write code:
 - **Expertise**: a :doc:`SkillPlugin <smarter-resources/plugin/plugin/skill>` packages instructions
   and reference material that teach a model how to do a specific job well.
 - **Your own documents**: a :doc:`Vectorstore <smarter-resources/smarter-vectorstore>` provides
-  semantic search over the content that you load into it.
+  semantic search over your PDFs, manuals and other proprietary content. Smarter runs the vector
+  database for you, Qdrant on your own Kubernetes cluster, or Pinecone or Qdrant Cloud, loads and
+  removes your documents, and takes scheduled snapshots.
 
 Governed from the first prompt
 ------------------------------
@@ -158,13 +160,18 @@ makes the dangerous actions impossible:
   :doc:`Account <smarter-resources/smarter-account>` and user, to each individual Resource.
   A model can use only the plugins, MCP clients, and connections that its manifest names,
   and a manifest can name only the Resources that its author is permitted to use.
-- **Credentials the model never holds.** API keys and passwords are stored as encrypted
+- **Credentials that nobody holds.** API keys and passwords are stored as encrypted
   :doc:`Secrets <smarter-resources/smarter-secret>`, and are applied by the platform when it
-  makes a request. They never appear in a prompt.
+  makes a request. They never appear in a prompt, and they are never handed out to people
+  either: developers who call a provider's API directly, with the OpenAI, Anthropic, or Google
+  SDK that they already know, do so unchanged through a :doc:`Proxy <smarter-resources/smarter-proxy>`,
+  with a Smarter API key in place of the provider's. Smarter adds the provider's key, restricts
+  the endpoints that may be used, and charges every token to the person who used it.
 - **Guardrails on both sides of the model**, which stop prompt injection and jailbreaks on the way
   in, and stop leaked secrets and personal data on the way out.
-- **Budgets and a complete audit trail.** Every request is authorized against the account's
-  :doc:`budget <smarter-platform/cost-accounting>`, and every prompt, tool call, and guardrail
+- **Budgets and a complete audit trail.** Every request is authorized against the
+  :doc:`budgets <smarter-resources/smarter-budget>` of the user, account, and resources that it
+  would be charged to, and every prompt, tool call, and guardrail
   intervention is recorded in the :doc:`Smarter Journal <smarter-framework/developer-reference/smarter-journal>`.
 
 See :doc:`Security <smarter-platform/security>` for details.
@@ -200,8 +207,13 @@ stay in :doc:`Secrets <smarter-resources/smarter-secret>` rather than in anyone'
 your team can start from a library of ready-made building blocks. Permissions are enforced by the
 platform itself, in every query, for the :doc:`web console <smarter-platform/smarter-web-console>`,
 the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`CLI <smarter-platform/cli>`
-alike, and usage is charged to the account's budget, so it is always clear who built what, who
-can change it, and who is paying for it.
+alike. Every token is charged to the person, the application, and the account that used it, and
+:doc:`Budgets <smarter-resources/smarter-budget>` set spending limits, in dollars or in tokens, per
+hour, day, week or month, and in total, on anything that spends: a user, a whole account, an
+application, a provider, a proxy, or a GPU node group. When a limit is reached, requests are refused
+with your own message, in the chat window, until the limit renews, and a Budget vs Actual chart on
+the dashboard shows where the money goes. It is always clear who built what, who can change it,
+and who is paying for it.
 
 Runs at scale, on your infrastructure
 -------------------------------------
@@ -215,13 +227,20 @@ The same manifests that you wrote on your laptop run unchanged in a production c
 serves your whole organization. There is no managed-service dependency and no vendor lock-in.
 You own the deployment, the data, and the infrastructure that it runs on.
 
+That includes the models. With :doc:`LLMHost <smarter-resources/smarter-llmhost>`, you deploy
+freely downloadable models, such as Llama, Qwen, Gemma, Mistral or gpt-oss, to your Kubernetes
+cluster with one manifest, served by vLLM, SGLang, TGI, llama.cpp or Ollama. Smarter adds the GPU
+or CPU nodes that a model needs, removes them when it no longer does, and monitors its health.
+LLMClients use a self-hosted model the same way as a commercial one, and your prompts never leave
+your network.
+
 At a glance
 -----------
 
 - **Get started** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
 - **Platform**
 
-  - A proxy server that gives secure, governed, auditable access to AI providers and resources, without exposing secrets or the underlying vendor accounts.
+  - A :doc:`proxy server <smarter-resources/smarter-proxy>` that gives secure, governed, auditable access to AI providers and resources, without exposing secrets or the underlying vendor accounts.
   - Build every :doc:`AI resource <smarter-resources>` with declarative :doc:`YAML manifests <smarter-framework/smarter-manifests>`, with no Python programming, much as you would with `Kubernetes <https://kubernetes.io/>`_.
   - Manage resources with the :doc:`web console <smarter-platform/smarter-web-console>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line interface <smarter-platform/cli>`.
   - Built for teams: every resource has an owner, and is shared with everyone in the owner's :doc:`Account <smarter-resources/smarter-account>`.
@@ -238,10 +257,11 @@ At a glance
 
   - Input and output :doc:`Guardrails <smarter-resources/smarter-guardrail>` for moderation, self-harm, personal data, data subject requests, leaked secrets, profanity, fabricated citations, prompt injection, jailbreaks, and code injection.
   - End-to-end audit, from each :doc:`Prompt <smarter-resources/smarter-prompt>` back to the Account that authorized it.
+  - Spending limits with :doc:`Budgets <smarter-resources/smarter-budget>`, on users, accounts, applications, providers, and GPU infrastructure, with budget versus actual charts.
 
 - **Models and workflows**
 
-  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>`, including `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, and `DeepSeek <https://api-docs.deepseek.com/>`_, as well as self-hosted models with :doc:`LLMHost <smarter-resources/smarter-llmhost>`.
+  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>`, including `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, and `DeepSeek <https://api-docs.deepseek.com/>`_, as well as open models that you host on your own Kubernetes cluster with :doc:`LLMHost <smarter-resources/smarter-llmhost>`.
   - Multi-agent workflows with :doc:`Orchestrator <smarter-resources/smarter-orchestrator>`.
   - A :doc:`prompt engineering workbench <smarter-framework/developer-reference/react-integration/smarter-chat>` for testing applications before you deploy them.
 

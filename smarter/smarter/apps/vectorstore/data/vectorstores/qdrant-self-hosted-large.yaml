@@ -1,0 +1,38 @@
+# A larger self-hosted Qdrant vector database, for an organization's policies and contracts:
+# text-embedding-3-large, shortened to 1024 dimensions, which halves the vectors' size with
+# little loss of accuracy. Its data is protected from deletion, and it is snapshotted every
+# 6 hours, keeping a week of snapshots.
+apiVersion: smarter.sh/v1
+kind: Vectorstore
+metadata:
+  name: example_policies
+  description: A self-hosted Qdrant vector database of company policies and contracts, protected from deletion.
+  version: 1.0.0
+  tags:
+    - example
+    - rag
+    - qdrant
+    - self-hosted
+  annotations:
+    - smarter.sh/vectorstore/builtin: "true"
+spec:
+  backend: qdrant
+  hosting: self_hosted
+  index:
+    dimension: 1024
+    metric: cosine
+    deletionProtection: true
+  embeddings:
+    provider: openai
+    model: text-embedding-3-large
+    dimensions: 1024           # text-embedding-3 models can return shorter vectors
+    chunkSize: 1500
+    chunkOverlap: 300
+  selfHosted:
+    storage: 50Gi
+    cpu: "1"
+    memory: 4Gi
+  maintenance:
+    snapshots: true
+    snapshotIntervalHours: 6
+    snapshotRetention: 28

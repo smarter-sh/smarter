@@ -1,0 +1,32 @@
+---
+# Passthrough access to Meta's Llama API, with the platform's API key. Use the Llama API SDK,
+# or the OpenAI SDK with this Proxy's URL plus compat/v1/ as its base_url.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: metaai
+  description: Passthrough access to Meta's Llama API chat completions, moderations and models, native and OpenAI-compatible.
+  version: 1.0.0
+  tags:
+    - meta
+    - llama
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://llama.developer.meta.com/docs/api
+spec:
+  provider: metaai
+  apiKey: llama_api_key
+  baseUrl: https://api.llama.com/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - v1/chat/completions
+    - v1/moderations
+    - v1/models
+    - v1/models/*
+    - compat/v1/chat/completions
+    - compat/v1/models
+  timeout: 120
+  isActive: true

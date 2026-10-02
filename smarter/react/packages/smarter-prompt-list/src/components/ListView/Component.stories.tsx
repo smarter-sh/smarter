@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import type { SessionContext } from "@smarter/common";
 import type { LLMClient } from "@/lib/Types";
@@ -150,7 +150,7 @@ const createMockClient = (id: number, overrides: Partial<LLMClient> = {}): LLMCl
         accountNumber,
       },
     },
-    functions: exampleLLMClientObject.functions.map((fn: any, index: number) => ({
+    functions: exampleLLMClientObject.functions.map((fn, index) => ({
       id: fn.id + id * 100 + index,
       createdAt: fn.createdAt,
       updatedAt: fn.updatedAt,

@@ -1,5 +1,5 @@
 import type { SessionContext } from "@smarter/common";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import DropZone from "./Component";
 

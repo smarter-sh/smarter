@@ -5,4 +5,5 @@ Pydantic Models
    :maxdepth: 2
 
    models/account
+   models/budget
    models/user

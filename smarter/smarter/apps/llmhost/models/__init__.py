@@ -1,5 +1,6 @@
 """All models for the LLMHost app."""
 
-from .llmhost import LLMHost
+from .compute import LLMHostCompute
+from .llmhost import LLMHost, LLMHostEvent
 
-__all__ = ["LLMHost"]
+__all__ = ["LLMHost", "LLMHostCompute", "LLMHostEvent"]

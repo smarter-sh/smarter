@@ -10,7 +10,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
-from smarter.apps.account.models.budget import charge_authorization
+from smarter.apps.account.models.budget import (
+    SmarterBudgetExceeded,
+    charge_authorization,
+)
 from smarter.apps.vectorsearch.exceptions import SmarterVectorsearchException
 from smarter.apps.vectorsearch.models import (
     Vectorsearch,
@@ -76,7 +79,7 @@ class VectorsearchApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     """
 
     _vectorsearch_id: Optional[int] = None
-    _vectorsearch: Vectorsearch
+    _vectorsearch: Optional[Vectorsearch] = None
     _name: Optional[str] = None
 
     http_method_names: list[str] = ["get", "post", "options"]
@@ -111,6 +114,14 @@ class VectorsearchApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: The Vectorsearch instance.
         :rtype: Optional[Vectorsearch]
         """
+        if self._vectorsearch is None:
+            # resolve it lazily from the id or name that dispatch() received
+            if self._vectorsearch_id:
+                self._vectorsearch = Vectorsearch.objects.filter(pk=self._vectorsearch_id).first()
+            elif self._name and self.account:
+                self._vectorsearch = Vectorsearch.objects.filter(
+                    user_profile__account=self.account, name=self._name
+                ).first()
         return self._vectorsearch
 
     @property
@@ -264,7 +275,15 @@ class VectorsearchApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
 
         if self.vectorsearch:
-            charge_authorization(self.vectorsearch.record_locator, self.__class__.__name__)  # type: ignore
+            try:
+                charge_authorization(
+                    [r.record_locator for r in (self.vectorsearch, self.user_profile, self.account) if r is not None],  # type: ignore
+                    self.__class__.__name__,
+                )
+            except SmarterBudgetExceeded as e:
+                return JsonResponse(
+                    data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
+                )
             vectorsearch_called.send(
                 sender=self.__class__,
                 vectorsearch=self.vectorsearch,

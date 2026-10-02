@@ -66,6 +66,12 @@ class DocsJsonSchemaPromptView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.PROMPT)
 
 
+class DocsJsonSchemaBudgetView(DocsJsonSchemaBaseView):
+    """Budget JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.BUDGET)
+
+
 class DocsJsonSchemaGuardrailView(DocsJsonSchemaBaseView):
     """Guardrail JSON Schema view."""
 
@@ -82,6 +88,18 @@ class DocsJsonSchemaLLMHostView(DocsJsonSchemaBaseView):
     """LLMHost JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.LLM_HOST)
+
+
+class DocsJsonSchemaLLMHostComputeView(DocsJsonSchemaBaseView):
+    """LLMHostCompute JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST_COMPUTE)
+
+
+class DocsJsonSchemaProxyView(DocsJsonSchemaBaseView):
+    """Proxy JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.PROXY)
 
 
 class DocsJsonSchemaMCPClientView(DocsJsonSchemaBaseView):

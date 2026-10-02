@@ -4,6 +4,7 @@
 import time
 
 from django.core.management import call_command
+from django.test import tag
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -20,6 +21,7 @@ from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
@@ -142,6 +144,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         time.sleep(1)
         self.assertTrue(self.signals["llmclient_dns_verification_status_changed"])
 
+    @tag(INFRASTRUCTURE)
     def test_deploy_and_undeploy(self):
         """Test deploy_llmclient and undeploy_llmclient commands."""
 
@@ -211,6 +214,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
             resolved_llmclient_domain = aws_helper.aws.domain_resolver(llmclient_default_host)
             self.assertEqual(str(a_record["Name"]).rstrip("."), str(resolved_llmclient_domain).rstrip("."))
 
+    @tag(INFRASTRUCTURE)
     def test_deploy_demo_api(self):
         """Test deploy_example_llmclient command."""
         call_command("deploy_example_llmclient")
@@ -256,6 +260,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
             "2",
         )
 
+    @tag(INFRASTRUCTURE)
     def test_verify_api_infrastructure(self):
         """Test verify_dns_configuration command."""
 

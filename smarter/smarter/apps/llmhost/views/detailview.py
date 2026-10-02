@@ -5,7 +5,7 @@ This module contains views to implement the LLMHost.
 card-style detail view in the Smarter Dashboard.
 """
 
-from typing import Optional
+from typing import Optional, Union
 
 import yaml
 from django.http import HttpResponse
@@ -16,7 +16,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
-from smarter.apps.llmhost.models import LLMHost
+from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
@@ -25,7 +25,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
 
 class LLMHostDetailView(DocsBaseView):
@@ -59,7 +59,14 @@ class LLMHostDetailView(DocsBaseView):
     """
 
     template_path = "common/manifest_detail.html"
-    llmhost: Optional[LLMHost] = None
+    model: type[Union[LLMHost, LLMHostCompute]] = LLMHost
+    """The resource's model.
+
+    The view finds it by hashed id, among the user's, their account admin's and the Smarter admin's.
+    """
+    manifest_kind: SAMKinds = SAMKinds.LLM_HOST
+    llmhost: Optional[Union[LLMHost, LLMHostCompute]] = None
+    """The resource whose manifest is rendered."""
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
@@ -95,38 +102,38 @@ class LLMHostDetailView(DocsBaseView):
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 
         hashed_id = kwargs.pop("hashed_id")
-        pk_id = LLMHost.id_from_hashed_id(hashed_id)
+        pk_id = self.model.id_from_hashed_id(hashed_id)
         if not pk_id:
             logger.error(
                 "%s.get() Invalid hashed_id provided: %s. Unable to convert to llmhost ID.",
                 self.formatted_class_name,
                 hashed_id,
             )
-            return SmarterHttpResponseNotFound(request=request, error_message="LLMHost not found")
+            return SmarterHttpResponseNotFound(request=request, error_message=f"{self.model.__name__} not found")
         try:
-            self.llmhost = LLMHost.objects.get(id=pk_id, user_profile=self.user_profile)
+            self.llmhost = self.model.objects.get(id=pk_id, user_profile=self.user_profile)
             logger.debug(
                 "%s.get() Found llmhost with id %s for user %s.",
                 self.formatted_class_name,
                 pk_id,
                 self.user_profile.user.username if self.user_profile else "unknown user",
             )
-        except LLMHost.DoesNotExist:
+        except self.model.DoesNotExist:
             try:
                 if self.user_profile:
 
                     admin_user = UserProfile.admin_for_account(self.user_profile.account)
                     admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.llmhost = LLMHost.objects.get(id=pk_id, user_profile=admin_user_profile)
+                    self.llmhost = self.model.objects.get(id=pk_id, user_profile=admin_user_profile)
                     logger.debug(
                         "%s.get() Found llmhost with id %s for admin user %s.",
                         self.formatted_class_name,
                         pk_id,
                         admin_user if admin_user else "unknown admin user",
                     )
-            except LLMHost.DoesNotExist:
+            except self.model.DoesNotExist:
                 try:
-                    self.llmhost = LLMHost.objects.get(
+                    self.llmhost = self.model.objects.get(
                         id=pk_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
                     )
                     logger.debug(
@@ -134,7 +141,7 @@ class LLMHostDetailView(DocsBaseView):
                         self.formatted_class_name,
                         pk_id,
                     )
-                except LLMHost.DoesNotExist:
+                except self.model.DoesNotExist:
                     pass
         if not self.llmhost:
             logger.error(
@@ -143,9 +150,9 @@ class LLMHostDetailView(DocsBaseView):
                 pk_id,
                 self.user_profile.user.username if self.user_profile else "unknown user",
             )
-            return SmarterHttpResponseNotFound(request=request, error_message="LLMHost not found")
+            return SmarterHttpResponseNotFound(request=request, error_message=f"{self.model.__name__} not found")
 
-        self.kind = SAMKinds.PROVIDER
+        self.kind = self.manifest_kind
 
         logger.debug(
             "%s.post() Rendering llmhost detail view for %s, kwargs=%s.",
@@ -204,3 +211,16 @@ class LLMHostDetailView(DocsBaseView):
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response
+
+
+class LLMHostComputeDetailView(LLMHostDetailView):
+    """
+    Renders the manifest of an LLMHostCompute, with its node group's status, in YAML.
+
+    **Example usage**::
+
+        GET /llmhost/compute/<hashed_id>/
+    """
+
+    model = LLMHostCompute
+    manifest_kind = SAMKinds.LLM_HOST_COMPUTE

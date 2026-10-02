@@ -1,0 +1,29 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: student_monthly_allowance
+  description: Each student may spend $10 a month on AI, and $100 in total.
+  version: 1.0.0
+  tags:
+    - education
+  annotations:
+    - smarter.sh/budget/purpose: example
+spec:
+  config:
+    unit: cost # cost, in USD, or tokens
+    period: month # hour, day, week or month
+    periodicLimit: 10.00 # the most that may be spent in a billing period. 0 means no limit.
+    absoluteLimit: 100.00 # the most that may be spent in total. 0 means no limit.
+    duration: 0 # billing periods after which the budget no longer applies. 0 means never.
+    action: block # block further charges, or warn only
+    warningThreshold: 80 # the percentage of a limit at which a warning is sent. 0 means never.
+    message: You have used this month's AI allowance. It renews on the 1st of next month.
+  resources:
+    - kind: User
+      name: student1
+    - kind: User
+      name: student2
+    - kind: LLMClient
+      name: stackademy_sql
+      accountNumber: "3141-5926-5359" # optional. Defaults to your own account.
+    - recordLocator: provider-rc2x # any resource, by its record locator

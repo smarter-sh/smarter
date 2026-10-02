@@ -1,0 +1,24 @@
+---
+apiVersion: smarter.sh/v1
+kind: Orchestrator
+metadata:
+  name: test_orchestrator
+  description: orchestrator for running unit test
+  version: 1.0.0
+  tags:
+    - red
+    - green
+    - blue
+  annotations:
+    - smarter.sh/tests/owner: test bank
+    - smarter.sh/tests/purpose: Provide an Orchestrator for the OrchestratorApiBaseViewSet unit tests.
+spec:
+  config:
+    strategy: sequential
+    maxIterations: 10
+    isActive: true
+    harnesses:
+      # created by the test's setUpClass()
+      - llmClientName: test_orchestrator_harness
+        role: executor
+        executionOrder: 0

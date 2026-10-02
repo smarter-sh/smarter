@@ -66,7 +66,10 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.PROMPT_CONFIG.value)
+        self.assertEqual(
+            response[SmarterJournalApiResponseKeys.METADATA][SmarterJournalApiResponseKeys.THING],
+            SmarterJournalThings.PROMPT_CONFIG.value,
+        )
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
@@ -256,16 +259,21 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
 
         # add assertions for existence of the top-level keys
         self.assertIn(SmarterJournalApiResponseKeys.API, response)
-        self.assertIn(SmarterJournalApiResponseKeys.THING, response)
+        self.assertIn(SmarterJournalApiResponseKeys.THING, response[SmarterJournalApiResponseKeys.METADATA])
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response)
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, response)
 
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.API], str)
-        self.assertIsInstance(response[SmarterJournalApiResponseKeys.THING], str)
+        self.assertIsInstance(
+            response[SmarterJournalApiResponseKeys.METADATA][SmarterJournalApiResponseKeys.THING], str
+        )
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.PROMPT_CONFIG.value)
+        self.assertEqual(
+            response[SmarterJournalApiResponseKeys.METADATA][SmarterJournalApiResponseKeys.THING],
+            SmarterJournalThings.PROMPT_CONFIG.value,
+        )
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
         metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.PROMPT_CONFIG.value

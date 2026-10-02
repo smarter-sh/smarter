@@ -143,7 +143,7 @@ class VectorstoreDetailView(DocsBaseView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="Vectorstore not found")
 
-        self.kind = SAMKinds.SECRET
+        self.kind = SAMKinds.VECTORSTORE
 
         logger.debug(
             "%s.post() Rendering vectorstore detail view for %s, kwargs=%s.",

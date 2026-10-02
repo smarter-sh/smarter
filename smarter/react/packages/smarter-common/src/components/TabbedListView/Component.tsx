@@ -30,7 +30,6 @@
  * - errorMessage: Error text for failed requests.
  * - userListObjects: Owned llmclient list.
  * - sharedListObjects: Shared llmclient list.
- * - invalidateCacheFlag: Indicates whether backend cache should be invalidated on load.
  * - viewMode: Current display mode ("list" or "thumbnail").
  * - activeTab: Current tab ("user" or "shared").
  *
@@ -51,7 +50,7 @@
  * Usage:
  * <TabbedListView sessionContext={sessionContext} />
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
 import { load } from "../../lib/load";
@@ -86,10 +85,13 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   // the skeletons make use of cookie-backed counts to size themselves to whatever
   // they'd most recently been, which should help prevent jarring resizing when
   // the real data loads.
-  const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(false);
-  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(false);
-  const [userListObjects, setUserListObjects] = useState<TObject[]>(readCache(ownedListCacheKey) || []);
-  const [sharedListObjects, setSharedListObjects] = useState<TObject[]>(readCache(sharedListCacheKey) || []);
+  // A list is loading until the first load completes, unless its cache already has its objects.
+  const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(() => readCache<TObject>(ownedListCacheKey) === null);
+  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(() => readCache<TObject>(sharedListCacheKey) === null);
+  const [userListObjects, setUserListObjects] = useState<TObject[]>(() => readCache<TObject>(ownedListCacheKey) || []);
+  const [sharedListObjects, setSharedListObjects] = useState<TObject[]>(
+    () => readCache<TObject>(sharedListCacheKey) || [],
+  );
 
   // for sizing the skeleton loaders that are rendered if no cached data is available
   const maxGhostRows = 25;
@@ -97,10 +99,6 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   const userGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
   const sharedGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
 
-
-  // controls whether to invalidate backend (Django-Redis) cache on next load
-  // toggled by requery action.
-  const [invalidateCacheFlag, setInvalidateCacheFlag] = useState<boolean>(false);
 
   // define 2-tab layout with cookie-based persistent active tab state
   const [activeTab, setActiveTab] = useState<TabKey>("owned");
@@ -117,33 +115,36 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   const REQUERY_THROTTLE_MS = 2000;
   const requeryRef = useRef<number | null>(null);
 
-  // initiate load of both owned and shared lists on component mount and whenever session context changes
-  const handleLoad = async () => {
-    console.debug(`${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCacheFlag=${invalidateCacheFlag}`);
-
-    const ownedObjects = await load<TObject>(sessionContext, invalidateCacheFlag, "owned", setErrorMessage);
-    console.debug(`${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`, ownedObjects);
-    setUserListObjects(ownedObjects);
-    writeCache(ownedListCacheKey, ownedObjects);
-    console.debug(`${loggerPrefix} handleLoad() setting isLoadingOwned to false`);
-    setIsLoadingOwned(false);
-
-    const sharedObjects = await load<TObject>(
-      sessionContext,
-      invalidateCacheFlag,
-      "shared",
-      setErrorMessage,
-    );
-    console.debug(`${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`, sharedObjects);
-    setSharedListObjects(sharedObjects);
-    writeCache(sharedListCacheKey, sharedObjects);
-    console.debug(`${loggerPrefix} handleLoad() setting isLoadingShared to false`);
-    setIsLoadingShared(false);
-  };
+  // load both owned and shared lists, on mount, whenever the session context changes, and on requery.
+  // invalidateCache: whether the backend (Django-Redis) cache should be invalidated, e.g. after a
+  // clone, rename or delete. It is a parameter, rather than state, so that a requery's load sees it.
+  // isActive: whether the results are still wanted; a load that a newer one replaced, or that
+  // finishes after the component unmounts, is ignored.
+  const handleLoad = useCallback(
+    (invalidateCache: boolean, isActive: () => boolean = () => true): Promise<void> => {
+      console.debug(`${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCache=${invalidateCache}`);
+      return load<TObject>(sessionContext, invalidateCache, "owned", setErrorMessage)
+        .then((ownedObjects) => {
+          if (!isActive()) return;
+          console.debug(`${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`, ownedObjects);
+          setUserListObjects(ownedObjects);
+          writeCache(ownedListCacheKey, ownedObjects);
+          setIsLoadingOwned(false);
+          return load<TObject>(sessionContext, invalidateCache, "shared", setErrorMessage);
+        })
+        .then((sharedObjects) => {
+          if (!sharedObjects || !isActive()) return;
+          console.debug(`${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`, sharedObjects);
+          setSharedListObjects(sharedObjects);
+          writeCache(sharedListCacheKey, sharedObjects);
+          setIsLoadingShared(false);
+        });
+    },
+    [sessionContext, ownedListCacheKey, sharedListCacheKey],
+  );
 
   const onRequery = () => {
-    console.debug(`${loggerPrefix} onRequery() called, setting invalidateCacheFlag to true and reloading data`);
-    setInvalidateCacheFlag(true);
+    console.debug(`${loggerPrefix} onRequery() called, reloading data and invalidating the backend cache`);
     if (isLoadingOwned || isLoadingShared) {
       return;
     }
@@ -153,35 +154,19 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
       return;
     }
     requeryRef.current = now;
-    handleLoad();
+    void handleLoad(true);
   };
 
+  // the cached objects, if any, are shown at once (see the state initializers above), and
+  // replaced by the freshly loaded ones.
   useEffect(() => {
-    console.debug(`${loggerPrefix} useEffect() triggered on mount/sessionContext change, checking cache and loading data with handleLoad()`);
-
-    const ownedCached = readCache(ownedListCacheKey);
-    if (ownedCached) {
-      console.debug(`${loggerPrefix} useEffect() found cached owned objects, calling setUserListObjects(), setting isLoadingOwned to false:`, ownedCached);
-      setUserListObjects(ownedCached);
-      setIsLoadingOwned(false);
-    } else {
-      console.debug(`${loggerPrefix} useEffect() did not find cached owned objects, setting isLoadingOwned to true`);
-      setIsLoadingOwned(true);
-    }
-
-
-    const sharedCached = readCache(sharedListCacheKey);
-    if (sharedCached) {
-      console.debug(`${loggerPrefix} useEffect() found cached shared objects, calling setSharedListObjects(), setting isLoadingShared to false:`, sharedCached);
-      setSharedListObjects(sharedCached);
-      setIsLoadingShared(false);
-    } else {
-      console.debug(`${loggerPrefix} useEffect() did not find cached shared objects, setting isLoadingShared to true`);
-      setIsLoadingShared(true);
-    }
-
-    void handleLoad();
-  }, [sessionContext]);
+    console.debug(`${loggerPrefix} useEffect() triggered on mount/sessionContext change, loading data with handleLoad()`);
+    let active = true;
+    void handleLoad(false, () => active);
+    return () => {
+      active = false;
+    };
+  }, [handleLoad]);
 
   if (errorMessage) {
     return <div className="alert alert-danger">{errorMessage}</div>;

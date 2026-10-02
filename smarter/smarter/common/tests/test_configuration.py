@@ -12,7 +12,6 @@ import sys
 
 # 3rd party stuff
 from dotenv import load_dotenv
-from pydantic import SecretStr
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -67,15 +66,7 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.langchain_memory_key, settings_defaults.LANGCHAIN_MEMORY_KEY)
         self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
         self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
-        # pylint: disable=no-member
-        self.assertEqual(
-            mock_settings.openai_api_key.get_secret_value(), settings_defaults.OPENAI_API_KEY.get_secret_value()
-        )
         self.assertEqual(mock_settings.openai_api_organization, settings_defaults.OPENAI_API_ORGANIZATION)
-        # pylint: disable=no-member
-        self.assertEqual(
-            mock_settings.pinecone_api_key.get_secret_value(), settings_defaults.PINECONE_API_KEY.get_secret_value()
-        )
 
     def test_conf_defaults_secrets(self):
         """Test that settings == settings_defaults when no .env is in use."""
@@ -85,11 +76,7 @@ class TestConfiguration(SmarterTestBase):
         os.environ.clear()
         mock_settings = Settings(init_info="test_conf_defaults_secrets()")
 
-        # pylint: disable=no-member
-        self.assertEqual(mock_settings.openai_api_key.get_secret_value(), None)
         self.assertEqual(mock_settings.openai_api_organization, None)
-        # pylint: disable=no-member
-        self.assertEqual(mock_settings.pinecone_api_key.get_secret_value(), None)
 
     def test_env_legal_nulls(self):
         """Test that settings handles missing .env values."""
@@ -186,10 +173,8 @@ class TestConfiguration(SmarterTestBase):
             root_domain="test-domain.com",
             langchain_memory_key="TEST_langchain_memory_key",
             openai_api_organization="TEST_openai_api_organization",
-            openai_api_key=SecretStr("TEST_openai_api_key"),
             openai_endpoint_image_n=100,
             openai_endpoint_image_size="TEST_image_size",
-            pinecone_api_key=SecretStr("TEST_pinecone_api_key"),
             shared_resource_identifier="TEST_shared_resource_identifier",
             init_info="test_initialize_with_values()",
         )
@@ -200,19 +185,17 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.root_domain, "test-domain.com")
         self.assertEqual(mock_settings.langchain_memory_key, "TEST_langchain_memory_key")
         self.assertEqual(mock_settings.openai_api_organization, "TEST_openai_api_organization")
-        # pylint: disable=no-member
-        self.assertEqual(mock_settings.openai_api_key.get_secret_value(), "TEST_openai_api_key")
         self.assertEqual(mock_settings.openai_endpoint_image_n, 100)
         self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
-        # pylint: disable=no-member
-        self.assertEqual(mock_settings.pinecone_api_key.get_secret_value(), "TEST_pinecone_api_key")
         self.assertEqual(mock_settings.shared_resource_identifier, "TEST_shared_resource_identifier")
 
     def test_semantic_version(self):
         """Test that the semantic version conforms to a valid pattern."""
         version = get_semantic_version()
         self.assertIsNotNone(version)
-        pattern = r"^\d+\.\d+\.\d+(-[0-9A-Za-z-\.]+)?(\+[0-9A-Za-z-\.]+)?$"
+        # semver, or a PEP 440 development release such as the 9999.9999.9999.dev9999 placeholder
+        # in the source tree, which the release pipeline replaces.
+        pattern = r"^\d+\.\d+\.\d+((-[0-9A-Za-z-\.]+)?(\+[0-9A-Za-z-\.]+)?|\.dev\d+)$"
         match = re.match(pattern, version)
         self.assertIsNotNone(match, f"{version} is not a valid semantic version")
 

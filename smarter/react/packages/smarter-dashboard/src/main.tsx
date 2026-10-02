@@ -16,6 +16,7 @@ const serviceHealthApiUrl = rootEl.getAttribute("smarter-service-health-api-url"
 const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
 const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
 const chargesApiUrl = rootEl.getAttribute("smarter-charges-api-url") || "";
+const budgetsApiUrl = rootEl.getAttribute("smarter-budgets-api-url") || "";
 
 const smarterClient = projectName;
 const smarterClientVersion = projectVersion;
@@ -45,6 +46,7 @@ export interface AppContextInterface {
   myResourcesApiUrl: string;
   serviceHealthApiUrl: string;
   chargesApiUrl: string;
+  budgetsApiUrl: string;
 }
 
 const appContext: AppContextInterface = {
@@ -52,6 +54,7 @@ const appContext: AppContextInterface = {
   myResourcesApiUrl,
   serviceHealthApiUrl,
   chargesApiUrl,
+  budgetsApiUrl,
 };
 console.debug(loggerPrefix, "appContext initialized with values:", appContext);
 createRoot(rootEl).render(<App appContext={appContext} />);
