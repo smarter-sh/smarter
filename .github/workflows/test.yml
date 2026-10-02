@@ -32,17 +32,17 @@
 # The "Create .env" step passes the repository and organization secrets
 # to the containers under the names that a local .env uses. At a minimum:
 #
-# AWS_ACCESS_KEY_ID
-# AWS_REGION
-# AWS_SECRET_ACCESS_KEY
-# EKS_CLUSTER_NAME
 # OPENAI_API_KEY
 # GOOGLE_MAPS_API_KEY
 # SMTP_USERNAME
 # SMTP_PASSWORD
 #
-# Unit tests that require connectivity to AWS or to LLM providers will be
-# skipped or fail if these are not set.
+# AWS credentials, ROOT_DOMAIN and EKS_CLUSTER_NAME are deliberately NOT
+# passed. With them, `make docker-init` deploys the example LLMClients to
+# real infrastructure: Route53 A records under api.local.<ROOT_DOMAIN> and
+# ingress manifests in the smarter-local namespace of the EKS cluster.
+# Unit tests that require connectivity to AWS are tagged `infrastructure`
+# and skipped by default.
 #------------------------------------------------------------------------------
 name: Test
 
@@ -52,7 +52,6 @@ on:
 env:
   AWS_REGION: ca-central-1
   ENVIRONMENT: "local"
-  ROOT_DOMAIN: "smarter.sh"
   SMTP_SENDER: "no-reply@smarter.sh"
   SMTP_FROM_EMAIL: "no-reply@alpha.ubc.smarter.sh"
   MARKETING_SITE_URL: https://smarter.sh
@@ -127,13 +126,10 @@ jobs:
       # Repository and organization secrets are named as in a local .env. The
       # SMARTER_ prefix is optional: get_env() reads <NAME>, then SMARTER_<NAME>.
       # Empty secrets are skipped, so the .env.example value or the default
-      # from smarter/common/conf/defaults.py applies. The one exception is
-      # EKS_CLUSTER_NAME, which the settings read as AWS_EKS_CLUSTER_NAME.
+      # from smarter/common/conf/defaults.py applies.
       #
-      # With AWS credentials set, Django stores media files in the S3 bucket
-      # local.<ROOT_DOMAIN>, and the status and Kubernetes tests call the EKS
-      # cluster, so ROOT_DOMAIN and AWS_EKS_CLUSTER_NAME must name real
-      # resources. Their defaults (example.com, SET-ME-PLEASE) do not exist.
+      # Do not add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ROOT_DOMAIN or
+      # AWS_EKS_CLUSTER_NAME here. See the note at the top of this file.
       #
       # FERNET_ENCRYPTION_KEY must be set. Without it, every process
       # (smarter-app, smarter-worker, the test runner, each manage.py call in
@@ -146,13 +142,9 @@ jobs:
         shell: bash
         env:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
-          ROOT_DOMAIN: ${{ env.ROOT_DOMAIN }}
           SMTP_SENDER: ${{ env.SMTP_SENDER }}
           SMTP_FROM_EMAIL: ${{ env.SMTP_FROM_EMAIL }}
           AWS_REGION: ${{ secrets.AWS_REGION || env.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
           FERNET_ENCRYPTION_KEY: ${{ secrets.FERNET_ENCRYPTION_KEY }}
           AUTHENTICATION_BACKENDS: ${{ secrets.AUTHENTICATION_BACKENDS }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
@@ -213,8 +205,7 @@ jobs:
             echo ""
             echo "# --- added by GitHub Actions test.yml ---"
             for name in \
-              ENVIRONMENT ROOT_DOMAIN SMTP_SENDER SMTP_FROM_EMAIL \
-              AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_EKS_CLUSTER_NAME \
+              ENVIRONMENT SMTP_SENDER SMTP_FROM_EMAIL AWS_REGION \
               FERNET_ENCRYPTION_KEY AUTHENTICATION_BACKENDS SMTP_USERNAME SMTP_PASSWORD \
               ANTHROPIC_API_KEY COHERE_API_KEY FIREWORKS_API_KEY GEMINI_API_KEY \
               GOOGLE_AI_STUDIO_KEY GOOGLE_MAPS_API_KEY GOOGLE_SERVICE_ACCOUNT_B64 \
