@@ -50,7 +50,6 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: ca-central-1
   ENVIRONMENT: "local"
   SMTP_SENDER: "no-reply@smarter.sh"
   SMTP_FROM_EMAIL: "no-reply@alpha.ubc.smarter.sh"
@@ -144,7 +143,6 @@ jobs:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
           SMTP_SENDER: ${{ env.SMTP_SENDER }}
           SMTP_FROM_EMAIL: ${{ env.SMTP_FROM_EMAIL }}
-          AWS_REGION: ${{ secrets.AWS_REGION || env.AWS_REGION }}
           FERNET_ENCRYPTION_KEY: ${{ secrets.FERNET_ENCRYPTION_KEY }}
           AUTHENTICATION_BACKENDS: ${{ secrets.AUTHENTICATION_BACKENDS }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
@@ -205,7 +203,7 @@ jobs:
             echo ""
             echo "# --- added by GitHub Actions test.yml ---"
             for name in \
-              ENVIRONMENT SMTP_SENDER SMTP_FROM_EMAIL AWS_REGION \
+              ENVIRONMENT SMTP_SENDER SMTP_FROM_EMAIL \
               FERNET_ENCRYPTION_KEY AUTHENTICATION_BACKENDS SMTP_USERNAME SMTP_PASSWORD \
               ANTHROPIC_API_KEY COHERE_API_KEY FIREWORKS_API_KEY GEMINI_API_KEY \
               GOOGLE_AI_STUDIO_KEY GOOGLE_MAPS_API_KEY GOOGLE_SERVICE_ACCOUNT_B64 \
