@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django_redis import get_redis_connection
 
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
+from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.journal.enum import (
@@ -51,6 +52,22 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         except ClientError as e:
             return {"error": str(e)}
 
+    def get_kubernetes_info(self) -> dict:
+        """
+        Return Kubernetes cluster information.
+
+        Without AWS credentials there is no EKS cluster to report on, so the
+        status shows the error instead of the whole status request failing.
+
+        :return: Kubernetes cluster information, or {"error": ...} if AWS is not configured
+        :rtype: dict
+        """
+        try:
+            return aws_helper.eks.get_kubernetes_info()
+        except AWSNotReadyError as e:
+            logger.warning("%s.get_kubernetes_info() %s", self.formatted_class_name, e)
+            return {"error": str(e)}
+
     def get_redis_info(self):
         """
         Return Redis server information.
@@ -79,7 +96,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
             data = {
                 SmarterJournalApiResponseKeys.DATA: {
                     "infrastructures": {
-                        "kubernetes": aws_helper.eks.get_kubernetes_info(),
+                        "kubernetes": self.get_kubernetes_info(),
                         # mcdaniel: remote mysql is not part of the platform. this
                         # should not be here.
                         # "mysql": aws_helper.rds.get_mysql_info(),

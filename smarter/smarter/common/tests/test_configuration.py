@@ -110,7 +110,7 @@ class TestConfiguration(SmarterTestBase):
         loaded = load_dotenv(env_path)
         self.assertTrue(loaded)
 
-        # aws_regions is the real region list only when AWS is reachable; otherwise ["us-east-1"].
+        # aws_regions is the real region list only when AWS is reachable; otherwise AWS_REGIONS.
         mock_settings = Settings(aws_regions=["us-west-1"], init_info="test_env_overrides()")
 
         self.assertEqual(mock_settings.aws_region, "us-west-1")

@@ -125,7 +125,28 @@ class Services:
         ]
 
 
-AWS_REGIONS = ["us-east-1"]
+# The regions that AWS enables by default on every account (no opt-in required).
+# Used when AWS is not reachable; otherwise replaced by ec2.describe_regions().
+# us-east-1 must stay first: AWS_REGION defaults to AWS_REGIONS[0].
+AWS_REGIONS = [
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2",
+    "ca-central-1",
+    "sa-east-1",
+    "eu-central-1",
+    "eu-north-1",
+    "eu-west-1",
+    "eu-west-2",
+    "eu-west-3",
+    "ap-northeast-1",
+    "ap-northeast-2",
+    "ap-northeast-3",
+    "ap-south-1",
+    "ap-southeast-1",
+    "ap-southeast-2",
+]
 AWS_REGION = get_env("AWS_REGION", default=AWS_REGIONS[0])
 if Services.enabled(Services.AWS_EC2):
     try:
