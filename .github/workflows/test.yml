@@ -52,10 +52,10 @@ on:
 env:
   AWS_REGION: ca-central-1
   ENVIRONMENT: "local"
-  # Not secrets. Match the local .env.
   ROOT_DOMAIN: "smarter.sh"
   SMTP_SENDER: "no-reply@smarter.sh"
   SMTP_FROM_EMAIL: "no-reply@alpha.ubc.smarter.sh"
+  MARKETING_SITE_URL: https://smarter.sh
 
 jobs:
   test:
@@ -201,6 +201,7 @@ jobs:
           SMARTER_BRANDING_SUPPORT_HOURS: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
           SMARTER_BRANDING_SUPPORT_PHONE_NUMBER: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
           SMARTER_BRANDING_TIMEZONE: ${{ secrets.SMARTER_BRANDING_TIMEZONE }}
+          SMARTER_MARKETING_SITE_URL: ${{ env.MARKETING_SITE_URL }}
 
         run: |
           if [ -z "${FERNET_ENCRYPTION_KEY}" ]; then
@@ -229,7 +230,7 @@ jobs:
               SMARTER_BRANDING_CONTACT_URL SMARTER_BRANDING_CORPORATE_NAME \
               SMARTER_BRANDING_COUNTRY SMARTER_BRANDING_CURRENCY SMARTER_BRANDING_POSTAL_CODE \
               SMARTER_BRANDING_STATE SMARTER_BRANDING_SUPPORT_EMAIL SMARTER_BRANDING_SUPPORT_HOURS \
-              SMARTER_BRANDING_SUPPORT_PHONE_NUMBER SMARTER_BRANDING_TIMEZONE
+              SMARTER_BRANDING_SUPPORT_PHONE_NUMBER SMARTER_BRANDING_TIMEZONE SMARTER_MARKETING_SITE_URL
             do
               if [ -n "${!name}" ]; then
                 echo "${name}=${!name}"

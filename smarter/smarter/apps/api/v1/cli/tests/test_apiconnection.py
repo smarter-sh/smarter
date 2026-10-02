@@ -304,7 +304,12 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
         metadata = data[SAMKeys.METADATA.value]
         self.assertIn("count", metadata.keys())
-        self.assertEqual(metadata["count"], 1)
+        # the admin user is a superuser, so get() also returns the ApiConnections of
+        # other accounts, such as the platform sample connections from docker-init.
+        self.assertEqual(
+            metadata["count"], ApiConnection.objects.with_read_permission_for(user=self.admin_user).count()
+        )
+        self.assertIn(self.name, [item.get("name") for item in data["data"]["items"]])
 
         # validate the response data dict, that it has both titles and items
         self.assertIn("data", data.keys())
