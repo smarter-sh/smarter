@@ -9,7 +9,10 @@ import os
 # python stuff
 import sys
 
+from django.test import tag
+
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
@@ -47,18 +50,20 @@ class TestAWSConfiguration(SmarterTestBase):
         self.assertFalse(aws_base.ready)
 
     def test_configure_with_class_constructor(self):
-        """test that we can set values with the class constructor"""
+        """Test that we can set values with the class constructor."""
 
         mock_aws = AWSBase(aws_region="eu-west-1", debug_mode=True, init_info="test_configure_with_class_constructor()")
 
         self.assertEqual(mock_aws.aws_region, "eu-west-1")
         self.assertEqual(mock_aws.debug_mode, True)
 
+    @tag(INFRASTRUCTURE)
     def test_settings_aws_account_id(self):
         """Test that the AWS account ID is valid."""
         mock_aws_base = AWSBase(init_info="test_settings_aws_account_id()")
         self.assertIsNotNone(mock_aws_base.aws_account_id)
 
+    @tag(INFRASTRUCTURE)
     def test_settings_aws_session(self):
         """Test that the AWS session is valid."""
         mock_aws_base = AWSBase(init_info="test_settings_aws_session()")

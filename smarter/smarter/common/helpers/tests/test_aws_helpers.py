@@ -14,6 +14,10 @@ class TestAWSInfrastructureConfig(SmarterTestBase):
         super().setUp()
         # Clear singleton instance for each test
         AWSInfrastructureConfig._instances = {}
+        # The service classes are mocked, so don't require real AWS credentials.
+        ready = patch.object(AWSInfrastructureConfig, "ready", return_value=True)
+        ready.start()
+        self.addCleanup(ready.stop)
 
     @patch("smarter.common.helpers.aws_helpers.AWSBase")
     def test_aws_property_lazy(self, mock_awsbase):
