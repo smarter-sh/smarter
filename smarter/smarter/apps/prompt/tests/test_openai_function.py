@@ -8,7 +8,7 @@ import secrets
 import sys
 import time
 from pathlib import Path
-from time import sleep
+from unittest.mock import patch
 
 from django.test import Client, RequestFactory
 
@@ -24,6 +24,7 @@ from smarter.apps.prompt.signals import (
     prompt_finished,
     prompt_started,
 )
+from smarter.apps.prompt.tasks import create_prompt_history
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
@@ -39,8 +40,6 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 CELERY_WAIT = 1
-CELERY_TIMEOUT = 30
-"""Seconds to wait for the smarter-worker container to write a PromptHistory record."""
 
 
 def handler(prompt: Prompt, data, plugins, user):
@@ -254,11 +253,13 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         response = None
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
+        # The smarter-worker container writes to the real database, not to this test's database,
+        # so create_prompt_history runs here instead of being queued for it.
         try:
-            response = handler(
-                prompt=self.prompt, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
-            )
-            sleep(1)
+            with patch.object(create_prompt_history, "delay", side_effect=create_prompt_history):
+                response = handler(
+                    prompt=self.prompt, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
+                )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -277,12 +278,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for prompt history
-        # PromptHistory is written by a Celery task in the smarter-worker container.
-        deadline = time.monotonic() + CELERY_TIMEOUT
         prompt = PromptHistory.objects.filter(prompt=self.prompt).order_by("-id").first()
-        while prompt is None and time.monotonic() < deadline:
-            sleep(CELERY_WAIT)
-            prompt = PromptHistory.objects.filter(prompt=self.prompt).order_by("-id").first()
         self.assertIsNotNone(prompt)
         url = reverse("api:v1:prompt:chathistory", kwargs={"pk": prompt.id})
         response = self.client.get(url)
