@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.2](https://github.com/smarter-sh/smarter/compare/v0.16.1...v0.16.2) (2026-10-02)
+
+### Bug Fixes
+
+* **conf:** accept the default-enabled AWS regions when AWS is not reachable ([6ba1f38](https://github.com/smarter-sh/smarter/commit/6ba1f383476751c888792fa1c2b498ecb5612351))
+
 ## [0.16.1](https://github.com/smarter-sh/smarter/compare/v0.16.0...v0.16.1) (2026-10-02)
 
 ### Bug Fixes
