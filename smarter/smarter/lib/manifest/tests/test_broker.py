@@ -248,10 +248,8 @@ class TestAbstractBrokerClass(TestAccountMixin):
             raise ValueError("Broker is not initialized")
         try:
             self.broker.apply(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
-        except SAMBrokerReadOnlyError as e:
-            self.assertEqual(
-                e.get_formatted_err_message, "Smarter API Plugin manifest broker: apply() not implemented error."
-            )
+        except SAMBrokerErrorNotImplemented as e:
+            self.assertIn("apply() not implemented", e.get_formatted_err_message)
 
     def test_chat(self) -> None:
         # 293,

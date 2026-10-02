@@ -15,6 +15,8 @@ import time
 from string import Template
 from unittest.mock import MagicMock, patch
 
+from django.test import tag
+
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.aws_helpers import AWSRoute53, aws_helper
@@ -26,13 +28,90 @@ from smarter.common.helpers.k8s_helpers import (
 )
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+class TestKubernetesHelperUnit(SmarterTestBase):
+    """Unit tests of KubernetesHelper, with kubectl mocked."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        super().setUp()
+        self.helper = KubernetesHelper()
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.Popen")
+    def test_apply_manifest_success(self, mock_popen, mock_logger, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        process = MagicMock()
+        process.communicate.return_value = (b"", b"")
+        process.returncode = 0
+        mock_popen.return_value.__enter__.return_value = process
+        self.helper._configured = True
+        self.helper.apply_manifest("apiVersion: v1\nkind: Pod\n")
+        process.communicate.assert_called()
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.Popen")
+    def test_apply_manifest_failure(self, mock_popen, mock_logger, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        process = MagicMock()
+        process.communicate.return_value = (b"", b"error")
+        process.returncode = 1
+        mock_popen.return_value.__enter__.return_value = process
+        self.helper._configured = True
+        with self.assertRaises(Exception):
+            self.helper.apply_manifest("apiVersion: v1\nkind: Pod\n")
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_ingress_success(self, mock_check_output, mock_logger, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.return_value = b'{"kind": "Ingress"}'
+        self.helper._configured = True
+        result = self.helper.verify_ingress("ingress", "ns")
+        self.assertTrue(result)
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_ingress_not_found(self, mock_check_output, mock_logger, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
+        self.helper._configured = True
+        result = self.helper.verify_ingress("ingress", "ns")
+        self.assertFalse(result)
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_secret_success(self, mock_check_output, mock_logger, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.return_value = b'{"kind": "Secret"}'
+        self.helper._configured = True
+        result = self.helper.verify_secret("secret", "ns")
+        self.assertTrue(result)
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_secret_not_found(self, mock_check_output, mock_logger, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
+        self.helper._configured = True
+        result = self.helper.verify_secret("secret", "ns")
+        self.assertFalse(result)
+
+
+@tag(INFRASTRUCTURE)
 class Testk8sHelpers(SmarterTestBase):
-    """Test Account model."""
+    """Test KubernetesHelper against the live cluster, and AWS Route53."""
 
     @classmethod
     def setUpClass(cls):
@@ -78,78 +157,6 @@ class Testk8sHelpers(SmarterTestBase):
         msg = "-" * 35 + f" End Test: {self._testMethodName} " + "-" * 35
         logger.info(msg)
         super().tearDown()
-
-    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
-    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
-    @patch("smarter.common.helpers.k8s_helpers.logger")
-    @patch("smarter.common.helpers.k8s_helpers.subprocess.Popen")
-    def test_apply_manifest_success(self, mock_popen, mock_logger, mock_formatted_text, mock_settings):
-        mock_settings.aws_eks_cluster_name = "test"
-        process = MagicMock()
-        process.communicate.return_value = (b"", b"")
-        process.returncode = 0
-        mock_popen.return_value.__enter__.return_value = process
-        self.helper._configured = True
-        self.helper.apply_manifest("apiVersion: v1\nkind: Pod\n")
-        process.communicate.assert_called()
-
-    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
-    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
-    @patch("smarter.common.helpers.k8s_helpers.logger")
-    @patch("smarter.common.helpers.k8s_helpers.subprocess.Popen")
-    def test_apply_manifest_failure(self, mock_popen, mock_logger, mock_formatted_text, mock_settings):
-        mock_settings.aws_eks_cluster_name = "test"
-        process = MagicMock()
-        process.communicate.return_value = (b"", b"error")
-        process.returncode = 1
-        mock_popen.return_value.__enter__.return_value = process
-        self.helper._configured = True
-        with self.assertRaises(Exception):
-            self.helper.apply_manifest("apiVersion: v1\nkind: Pod\n")
-
-    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
-    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
-    @patch("smarter.common.helpers.k8s_helpers.logger")
-    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
-    def test_verify_ingress_success(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
-        mock_settings.aws_eks_cluster_name = "test"
-        mock_check_output.return_value = b'{"kind": "Ingress"}'
-        self.helper._configured = True
-        result = self.helper.verify_ingress("ingress", "ns")
-        self.assertTrue(result)
-
-    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
-    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
-    @patch("smarter.common.helpers.k8s_helpers.logger")
-    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
-    def test_verify_ingress_not_found(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
-        mock_settings.aws_eks_cluster_name = "test"
-        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
-        self.helper._configured = True
-        result = self.helper.verify_ingress("ingress", "ns")
-        self.assertFalse(result)
-
-    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
-    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
-    @patch("smarter.common.helpers.k8s_helpers.logger")
-    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
-    def test_verify_secret_success(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
-        mock_settings.aws_eks_cluster_name = "test"
-        mock_check_output.return_value = b'{"kind": "Secret"}'
-        self.helper._configured = True
-        result = self.helper.verify_secret("secret", "ns")
-        self.assertTrue(result)
-
-    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
-    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
-    @patch("smarter.common.helpers.k8s_helpers.logger")
-    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
-    def test_verify_secret_not_found(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
-        mock_settings.aws_eks_cluster_name = "test"
-        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
-        self.helper._configured = True
-        result = self.helper.verify_secret("secret", "ns")
-        self.assertFalse(result)
 
     def test_kubeconfig(self):
         """Test kubeconfig property."""
@@ -219,6 +226,7 @@ class Testk8sHelpers(SmarterTestBase):
             "environment_namespace": self.namespace,
             "domain": self.hostname,
             "service_name": smarter_settings.platform_name,
+            "app_name": smarter_settings.platform_name,
         }
 
         # create and apply the ingress manifest
@@ -244,6 +252,7 @@ class Testk8sHelpers(SmarterTestBase):
             "environment_namespace": self.namespace,
             "domain": bad_hostname,
             "service_name": smarter_settings.platform_name,
+            "app_name": smarter_settings.platform_name,
         }
 
         # create and apply the ingress manifest

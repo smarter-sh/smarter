@@ -335,7 +335,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
-        valid_methods = AuthMethods.all_values()
+        valid_methods = AuthMethods.all()
         self.assertIn(
             f"Invalid authentication method: {invalid_auth_method}. Must be one of {valid_methods}.",
             str(context.exception),

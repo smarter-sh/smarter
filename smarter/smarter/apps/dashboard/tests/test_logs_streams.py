@@ -36,7 +36,7 @@ class TestLogStreams(TestAccountMixin):
         fake_cache.pubsub.return_value = fake_pubsub
 
         with (
-            patch.object(streams.smarter_settings, "enable_dashboard_server_logs", True),
+            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
             patch.object(streams, "get_resolved_user", return_value=self.non_admin_user),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
         ):
@@ -55,25 +55,24 @@ class TestLogStreams(TestAccountMixin):
         fake_pubsub.get_message.return_value = None
         fake_cache = MagicMock()
         fake_cache.pubsub.return_value = fake_pubsub
-        fake_cache.xrange.side_effect = [
+        fake_cache.xrevrange.side_effect = [
             [(b"1714690000000-0", {b"data": b'{"message":"before connect"}'})],
             [],
         ]
 
         with (
-            patch.object(streams.smarter_settings, "enable_dashboard_server_logs", True),
+            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
             patch.object(streams, "get_resolved_user", return_value=self.non_admin_user),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
         ):
             response = streams.stream_user_logs(request)
-            chunks = asyncio.run(self._collect_stream_chunks(response))
+            chunks = asyncio.run(self._collect_stream_chunks(response, limit=2))
 
         self.assertEqual(chunks[0], "retry: 3000\n\n")
-        self.assertEqual(chunks[1], 'data: {"message":"before connect"}\n')
-        self.assertEqual(chunks[2], "\n")
-        fake_cache.xrange.assert_any_call(
+        self.assertEqual(chunks[1], 'event: bulk\ndata: [{"message": "before connect"}]\n\n')
+        fake_cache.xrevrange.assert_any_call(
             stream_key(channel),
-            min="-",
             max="+",
-            count=streams.STREAM_REPLAY_BATCH_SIZE,
+            min="-",
+            count=min(streams.STREAM_REPLAY_BATCH_SIZE, streams.STREAM_REPLAY_MAX_ENTRIES),
         )

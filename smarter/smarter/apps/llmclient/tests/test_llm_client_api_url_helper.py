@@ -39,7 +39,6 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
         )
 
         self.custom_domain = LLMClientCustomDomain.objects.create(
-            user_profile=self.user_profile,
             domain_name=self.domain_name,
             aws_hosted_zone_id="TEST_HOSTED_ZONE_ID",
             is_verified=True,

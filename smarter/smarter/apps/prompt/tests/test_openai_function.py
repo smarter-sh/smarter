@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from time import sleep
 
-from django.test import Client
+from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
@@ -40,7 +40,13 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 CELERY_WAIT = 1
 
-handler = smarter_compatible_client.openai_handler
+
+def handler(prompt: Prompt, data, plugins, user):
+    """The default provider's Smarter prompt handler, called as the user."""
+    request = RequestFactory().get("/")
+    request.user = user
+    harness = smarter_compatible_client.get_smarter_harness(request=request)
+    return harness(user_profile=prompt.user_profile, prompt=prompt, data=data, plugins=plugins)
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes

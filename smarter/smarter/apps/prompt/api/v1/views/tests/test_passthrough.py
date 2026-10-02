@@ -56,9 +56,13 @@ class TestPassthroughView(TestAccountMixin):
 
         for provider in self.providers:
             provider = provider.lower()
-            url, prompt_data = get_provider_config(provider)
-            response = self.client.post(url, data=prompt_data, content_type="application/json")
-            self.assertEqual(response.status_code, 200)
+            # only the providers that have a test prompt in ./data
+            if not os.path.exists(os.path.join(HERE, "data", f"{provider}_passthrough_prompt.json")):
+                continue
+            with self.subTest(provider=provider):
+                url, prompt_data = get_provider_config(provider)
+                response = self.client.post(url, data=prompt_data, content_type="application/json")
+                self.assertEqual(response.status_code, 200)
 
     def test_illegal_key(self):
         """Test that we get a 400 response if we include an illegal key in the request."""

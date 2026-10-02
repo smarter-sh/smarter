@@ -17,7 +17,7 @@ class TestConversionUtils(SmarterTestBase):
         self.assertEqual(to_snake_case("camelCase"), "camel_case")
         self.assertEqual(to_snake_case("CamelCase"), "camel_case")
         self.assertEqual(to_snake_case("Camel Case"), "camel_case")
-        self.assertEqual(to_snake_case("LLMClient"), "llmclient")
+        self.assertEqual(to_snake_case("LLMClient"), "llm_client")
         self.assertEqual(to_snake_case("MyEverlastingSUPERDUPERGobstopper"), "my_everlasting_superduper_gobstopper")
         self.assertEqual(to_snake_case("already_snake_case"), "already_snake_case")
         self.assertEqual(to_snake_case(""), "")
@@ -33,7 +33,9 @@ class TestConversionUtils(SmarterTestBase):
 
     def test_snake_to_camel(self):
         self.assertEqual(to_camel_case("user_name"), "userName")
-        self.assertEqual(to_camel_case(["first_name", "last_name"]), ["firstName", "lastName"])
+        # strings in lists are values, so they are only converted with convert_values
+        self.assertEqual(to_camel_case(["first_name", "last_name"]), ["first_name", "last_name"])
+        self.assertEqual(to_camel_case(["first_name", "last_name"], convert_values=True), ["firstName", "lastName"])
         self.assertEqual(
             to_camel_case({"user_name": "alice", "user_profile": {"first_name": "Alice"}}, convert_values=True),
             {"userName": "alice", "userProfile": {"firstName": "Alice"}},
@@ -51,4 +53,6 @@ class TestConversionUtils(SmarterTestBase):
         class DummyClassName:
             pass
 
-        self.assertEqual(to_snake_case(DummyClassName), "dummy_class_name")
+        self.assertEqual(to_snake_case(DummyClassName.__name__), "dummy_class_name")
+        # anything but a str, dict or list is returned unchanged
+        self.assertIs(to_snake_case(DummyClassName), DummyClassName)

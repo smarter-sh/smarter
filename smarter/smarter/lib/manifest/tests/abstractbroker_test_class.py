@@ -58,6 +58,10 @@ class SAMTestBroker(AbstractBroker):
     def username(self) -> Optional[str]:
         return self._username
 
+    def apply(self, request, *args, **kwargs):
+        """Not implemented: the abstract broker's apply() raises SAMBrokerErrorNotImplemented."""
+        return super().apply(request, *args, **kwargs)
+
     def manifest_to_django_orm(self) -> dict:
         """Transform the Smarter API User manifest into a Django ORM model."""
         config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
