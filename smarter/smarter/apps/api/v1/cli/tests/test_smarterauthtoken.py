@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for SmarterAuthToken"""
+"""Test Api v1 CLI commands for SmarterAuthToken."""
 
 from http import HTTPStatus
 from typing import Tuple
@@ -28,7 +28,7 @@ logger = logging.getSmarterLogger(
 
 class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
     """
-    Test Api v1 CLI commands for SmarterAuthToken
+    Test Api v1 CLI commands for SmarterAuthToken.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -62,7 +62,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         super().tearDown()
 
     def auth_token_factory(self) -> Tuple[SmarterAuthToken, str]:
-        """Create a SmarterAuthToken record for testing"""
+        """Create a SmarterAuthToken record for testing."""
 
         auth_token_record, secret_token = SmarterAuthToken.objects.create(
             user_profile=self.user_profile,
@@ -102,7 +102,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
             assert field in config.keys(), f"{field} not found in config keys"
 
     def test_example_manifest(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
 
         # pylint: disable=W0612
         expected_output = {
@@ -132,7 +132,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_describe(self) -> None:
-        """Test describe command"""
+        """Test describe command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -167,7 +167,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_apply(self) -> None:
-        """Test apply command"""
+        """Test apply command."""
 
         # load the manifest from the yaml file
         loader = SAMLoader(file_path="smarter/lib/drf/tests/data/auth-token.yaml")
@@ -211,7 +211,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
             self.fail("Test auth test_token was not created")
 
     def test_get(self) -> None:
-        """Test get command"""
+        """Test get command."""
 
         def validate_titles(data):
             if "titles" not in data:
@@ -315,7 +315,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
             self.fail(f"Items are not valid: {data}")
 
     def test_deploy(self) -> None:
-        """Test deploy command"""
+        """Test deploy command."""
         kwargs = {"kind": KIND}
         path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=kwargs)
         query_params = urlencode({"name": self.test_token_record.name})
@@ -374,7 +374,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertTrue(response[SmarterJournalApiResponseKeys.DATA]["orm_instance"]["fields"]["is_active"])
 
     def test_undeploy(self) -> None:
-        """Test undeploy command"""
+        """Test undeploy command."""
         kwargs = {"kind": KIND}
         path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=kwargs)
         query_params = urlencode({"name": self.test_token_record.name})
@@ -432,7 +432,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertFalse(response[SmarterJournalApiResponseKeys.DATA]["orm_instance"]["fields"]["is_active"])
 
     def test_delete(self) -> None:
-        """Test delete command"""
+        """Test delete command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -447,7 +447,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIn("deleted successfully", response["message"])
-        self.assertEqual(response["thing"], "AuthToken")
+        self.assertEqual(response["metadata"]["thing"], "SmarterAuthToken")
         self.assertEqual(response["api"], "smarter.sh/v1")
         self.assertIn("metadata", response)
 
@@ -459,7 +459,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
             pass
 
     def test_logs(self) -> None:
-        """Test logs command"""
+        """Test logs command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)

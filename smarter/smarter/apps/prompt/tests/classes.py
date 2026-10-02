@@ -376,7 +376,7 @@ class ProviderBaseClass(TestAccountMixin):
 
         # test url api endpoint for prompt history
         prompt = PromptHistory.objects.order_by("-id").first()
-        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": prompt.id if prompt else 1})  # type: ignore[union-attr]
+        url = reverse("api:v1:prompt:chathistory", kwargs={"pk": prompt.id if prompt else 1})  # type: ignore[union-attr]
         response = self.client.get(url)  # type: ignore[union-attr]
 
         self.assertEqual(response.status_code, 200)

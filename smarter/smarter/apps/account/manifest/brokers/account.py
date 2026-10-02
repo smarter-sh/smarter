@@ -535,6 +535,9 @@ class SAMAccountBroker(AbstractBroker):
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         Account.get_cached_object(invalidate=True, pk=self.brokered_account.id)  # type: ignore
+        # brokered_account is retrieved by name, which is cached separately from pk.
+        Account.get_cached_object(invalidate=True, name=self.brokered_account.name)  # type: ignore
+        Account.get_cached_object(invalidate=True, account_number=self.brokered_account.account_number)  # type: ignore
         UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
         return super().cache_invalidations()
 

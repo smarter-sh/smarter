@@ -1149,8 +1149,9 @@ class SAMLLMClientBroker(AbstractBroker):
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if self.llmclient:
             try:
-                self.llmclient.delete()
+                # invalidate first: the llmclient no longer has an id once it is deleted.
                 self.cache_invalidations()
+                self.llmclient.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(

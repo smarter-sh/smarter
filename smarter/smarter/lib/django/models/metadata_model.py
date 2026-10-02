@@ -4,8 +4,11 @@ from functools import cached_property
 from logging import getLogger
 from typing import Optional
 
+from django.apps import apps
 from django.db import models
 from django.db.models.query import QuerySet
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from taggit.managers import TaggableManager
 
 from smarter.common.conf import smarter_settings
@@ -30,6 +33,18 @@ def should_log_verbose(level):
 
 
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
+
+
+@cache_results(timeout=smarter_settings.cache_expiration)
+def _get_tags_by_model_and_pk(model_label: str, pk: int) -> list[str]:
+    """Return the tag names of a MetaDataModel instance.
+
+    Invalidated by tags_changed() below.
+    """
+    model = apps.get_model(model_label)
+    retval = [tag.name for tag in model.objects.get(pk=pk).tags.all()]
+    verbose_logger.debug("tags_list - fetched and cached tags for %s with pk=%s from database", model_label, pk)
+    return retval
 
 
 class MetaDataModel(TimestampedModel):
@@ -175,21 +190,7 @@ class MetaDataModel(TimestampedModel):
         :returns: List of tag names.
         :rtype: list[str]
         """
-
-        # pylint: disable=W0613
-        @cache_results(timeout=self.cache_expiration)
-        def _get_tags_by_class_and_pk(cls_name: str, pk: int) -> list[str]:
-            """Helper to cache tags retrieval."""
-            retval = [tag.name for tag in self.tags.all()]
-            verbose_logger.debug(
-                "%s.tags_list - fetched and cached tags for %s with pk=%d from database",
-                self.formatted_class_name,
-                cls_name,
-                pk,
-            )
-            return retval
-
-        return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
+        return _get_tags_by_model_and_pk(self._meta.label, self.pk)
 
     @classmethod
     def get_cached_object(
@@ -270,7 +271,8 @@ class MetaDataModel(TimestampedModel):
             _get_object_by_name.invalidate(name, cls.__name__)
 
         if name:
-            return _get_object_by_name(name)
+            # same args as invalidate() above, so that both produce the same cache key
+            return _get_object_by_name(name, cls.__name__)
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
@@ -356,3 +358,12 @@ class MetaDataModel(TimestampedModel):
 
 
 __all__ = ["MetaDataModel"]
+
+
+# pylint: disable=W0613
+@receiver(m2m_changed)
+def tags_changed(sender, instance, action, **kwargs):
+    """Invalidate tags_list when the tags of a MetaDataModel instance change."""
+    if action in ("post_add", "post_remove", "post_clear") and isinstance(instance, MetaDataModel) and instance.pk:
+        instance.__dict__.pop("tags_list", None)
+        _get_tags_by_model_and_pk.invalidate(instance._meta.label, instance.pk)

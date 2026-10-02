@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class TestSecretAPIUrls(TestAccountMixin):
     """Test Secret API end points."""
 
-    namespace = "secret:api:v1:"
+    namespace = "api:v1:secret:"
 
     def setUp(self):
         """Set up test fixtures."""

@@ -14,7 +14,7 @@ ALL_KINDS = SAMKinds.singular_slugs()
 
 
 class TestApiDocsManifests(TestAccountMixin):
-    """Test Account model"""
+    """Test Account model."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -32,19 +32,23 @@ class TestApiDocsManifests(TestAccountMixin):
 
     def test_get_unauthenticated_manifests(self):
         """
-        Test all docs//manifests/ endpoints with an unauthenticated user
-        to ensure that we get a 200 response
+        Test all docs/manifests/ endpoints with an unauthenticated user.
+
+        to ensure that we are redirected to the login page. (docs views require
+        authentication since 2026-01-31.)
         """
 
         for kind in ALL_KINDS:
             reverse_name = f"{namespace}:{manifest_name(kind)}"
             url = reverse(reverse_name)
             response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/login/", response.url)
 
     def test_get_authenticated_manifests(self):
         """
-        Test all docs//manifests/ endpoints with an authenticated user
+        Test all docs//manifests/ endpoints with an authenticated user.
+
         to ensure that we get a 200 response
         """
         self.client.force_login(self.non_admin_user)

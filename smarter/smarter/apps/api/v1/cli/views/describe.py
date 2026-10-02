@@ -53,7 +53,7 @@ The response from this endpoint is a JSON object containing a representation of 
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
-        if not self.broker:
+        if self.broker is None:
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.describe(request, *args, **kwargs)
         return response
@@ -84,7 +84,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         logger.debug(
             "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
-        if not self.broker:
+        if self.broker is None:
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.describe(request, *args, **kwargs)
         return response

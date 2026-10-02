@@ -45,6 +45,7 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 
 # python stuff
@@ -353,6 +354,17 @@ class TestPluginBase(TestAccountMixin):
     def test_add_sample_plugins(self):
         """Test utility function to add sample plugins to a user account."""
 
+        # the WebsearchPlugin examples need their search provider's api key Secret.
+        for secret_name in ("brave_search_api_key", "tavily_api_key"):
+            if not Secret.objects.filter(user_profile=self.user_profile, name=secret_name).exists():
+                secret = Secret.objects.create(
+                    user_profile=self.user_profile,
+                    name=secret_name,
+                    description="placeholder web search api key for unit tests",
+                    encrypted_value=Secret.encrypt(value="not-a-real-api-key"),
+                )
+                self.addCleanup(secret.delete)
+
         # add the sample plugins to the user account
         add_example_plugins(user_profile=self.user_profile)
 
@@ -377,7 +389,8 @@ class TestPluginBase(TestAccountMixin):
 
         bad_data = self.data.copy()
         bad_data.pop(SAMKeys.METADATA.value)
-        with self.assertRaises(SAMLoaderError):
+        # the plugin reports a loader that is not ready as a SAMValidationError
+        with self.assertRaises((SAMLoaderError, SAMValidationError)):
             self.plugin_class(data=bad_data)
 
         bad_data = self.data.copy()

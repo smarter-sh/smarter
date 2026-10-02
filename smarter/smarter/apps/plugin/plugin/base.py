@@ -268,7 +268,11 @@ class PluginBase(ABC, AccountMixin):
         elif plugin_meta:
             self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
         elif name and self.user_profile:
-            self._plugin_meta = PluginMeta.get_cached_object(invalidate=True, account=self.user_profile.cached_account, name=name)  # type: ignore[attr-defined]
+            try:
+                self._plugin_meta = PluginMeta.get_cached_object(invalidate=True, account=self.user_profile.cached_account, name=name)  # type: ignore[attr-defined]
+            except PluginMeta.DoesNotExist:
+                # a plugin that does not exist yet, for example one that is about to be applied from a manifest
+                self._plugin_meta = None
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -1485,6 +1489,10 @@ class PluginBase(ABC, AccountMixin):
                     if attr not in read_only_attrs:
                         setattr(self.plugin_meta, attr, value)
                 self.plugin_meta.save()
+                # as in create(): tags are a TaggableManager, so they are set separately
+                if self.manifest:
+                    tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+                    self.plugin_meta.tags.set(tags)
             else:
                 raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")
 
