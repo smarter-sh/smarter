@@ -17,7 +17,7 @@
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
- * - vectorstore (Vectorestore): The vectorstore resource to manage.
+ * - vectorstore (Vectorstore): The vectorstore resource to manage.
  *
  * Usage:
  * <Toolbar sessionContext={sessionContext} vectorstore={vectorstore} onRequery={onRequery} />
@@ -29,12 +29,12 @@ import type { SessionContext } from "@smarter/common";
 import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
-import type { Vectorestore } from "@/lib/Types";
+import type { Vectorstore } from "@/lib/Types";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 
 interface NameModalProps {
-  vectorstore: Vectorestore | null;
+  vectorstore: Vectorstore | null;
   onOk: (newName: string) => void;
   onCancel: () => void;
 }
@@ -43,7 +43,7 @@ interface NameModalProps {
 const ModalClone = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone Vectorestore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title="Clone Vectorstore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
         Clone vectorstore <strong>{vectorstore?.name}</strong> to a new resource owned by you.
       </p>
@@ -59,7 +59,7 @@ const ModalClone = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(vectorstore?.name || "");
   return (
-    <Modal show title="Rename Vectorestore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title="Rename Vectorstore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
         Rename vectorstore <strong>{vectorstore?.name}</strong>.
       </p>
@@ -79,16 +79,16 @@ const ModalDelete = ({
   onCancel,
 }: {
   show: boolean;
-  vectorstore: Vectorestore | null;
+  vectorstore: Vectorstore | null;
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete Vectorestore" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title="Delete Vectorstore" onOk={onOk} onCancel={onCancel}>
     <p>
       Are you sure you want to delete vectorstore <strong>{vectorstore?.name}</strong>?
     </p>
     <p>
-      <em>Data is not recoverable.</em>
+      <em>Its database, its documents and its snapshots are destroyed, and cannot be recovered. A vectorstore with deletion protection cannot be deleted.</em>
     </p>
   </Modal>
 );
@@ -101,7 +101,7 @@ const ModalError = ({
   onClose,
 }: {
   show: boolean;
-  vectorstore: Vectorestore | null;
+  vectorstore: Vectorstore | null;
   message: string;
   onClose: () => void;
 }) => (
@@ -121,7 +121,7 @@ const ModalConfirmation = ({
   onClose,
 }: {
   show: boolean;
-  vectorstore: Vectorestore | null;
+  vectorstore: Vectorstore | null;
   message: string;
   onClose: () => void;
 }) => (
@@ -137,14 +137,14 @@ const ModalConfirmation = ({
 
 interface ToolbarProps {
   sessionContext: SessionContext;
-  vectorstore: Vectorestore;
+  vectorstore: Vectorstore;
   onRequery: () => void;
 }
 
 export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time.
-  const [modal, setModal] = useState<{ type: ModalType; vectorstore: Vectorestore | null }>({ type: null, vectorstore: null });
+  const [modal, setModal] = useState<{ type: ModalType; vectorstore: Vectorstore | null }>({ type: null, vectorstore: null });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -161,7 +161,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
    * confirmation modal on success, else the error modal with the server's error message.
    * See actionUrl() in @smarter/common for how the action's URL is built.
    */
-  const runAction = (target: Vectorestore, path: string, verb: "clone" | "rename" | "delete") => {
+  const runAction = (target: Vectorstore, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
     fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
       .then(async (response) => {
@@ -175,7 +175,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
         console.debug(loggerPrefix, `Successfully ${verb}d vectorstore:`, data);
         setSuccessMessage(`Successfully ${verb}d vectorstore`);
         // clone and rename return the resulting vectorstore; delete returns a message.
-        setModal({ type: "confirmation", vectorstore: data && data.id ? (data as Vectorestore) : target });
+        setModal({ type: "confirmation", vectorstore: data && data.id ? (data as Vectorstore) : target });
       })
       .catch((error) => {
         console.error(loggerPrefix, `Error trying to ${verb} vectorstore:`, error);

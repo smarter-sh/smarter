@@ -1,55 +1,68 @@
-# pylint: disable=C0302,W0718
-"""Smarter API User Manifest handler."""
+# pylint: disable=W0718,R0904
+"""
+Smarter API Vectorstore Manifest handler.
+
+The broker converts between Vectorstore manifests and the
+:class:`~smarter.apps.vectorstore.models.VectorstoreMeta` model, and implements the ``smarter``
+CLI commands for Vectorstores:
+
+- ``apply``: create or update the Vectorstore. It does not create the database.
+- ``deploy``: create the database: a self-hosted Qdrant server, or a managed index.
+- ``undeploy``: stop serving. A self-hosted server's data is kept.
+- ``delete``: destroy the database and all of its data, unless deletionProtection is enabled,
+  then delete the Vectorstore.
+- ``describe``, ``get``, ``logs`` and ``example_manifest``.
+
+Account admins, i.e. staff, may apply, deploy, undeploy and delete their own Vectorstores.
+Anyone may describe and get the Vectorstores that are shared with them.
+"""
 
 import datetime
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
-from langchain_community.vectorstores.utils import DistanceStrategy
-from pinecone.db_control.enums import DeletionProtection, Metric, VectorType
-from pinecone.db_control.models import ServerlessSpec
+from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.models import User
-from smarter.apps.account.models.user_profile import UserProfile
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.connection.models import ApiConnection
-from smarter.apps.provider.models import Provider, ProviderModel
+from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.provider.models import Provider
+from smarter.apps.vectorstore.caching import (
+    invalidate_all_cached_vectorstores_for_user_profile,
+)
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
     SAMVectorstoreMetadata,
 )
 from smarter.apps.vectorstore.manifest.models.vectorstore.model import SAMVectorstore
 from smarter.apps.vectorstore.manifest.models.vectorstore.spec import (
-    SAMEmbeddingsInterface,
-    SAMIndexModelInterface,
-    SAMVectorstoreInterface,
+    SAMVectorstoreEmbeddings,
+    SAMVectorstoreIndex,
+    SAMVectorstoreMaintenance,
+    SAMVectorstoreSelfHosted,
     SAMVectorstoreSpec,
 )
 from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
     SAMVectorstoreStatus,
 )
 from smarter.apps.vectorstore.models import (
-    EmbeddingsInterface,
-    IndexModelInterface,
-    VectorstoreInterface,
+    VectorstoreDocumentStatus,
     VectorstoreMeta,
+    VectorstoreStatus,
 )
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
-from smarter.common.conf.settings import smarter_settings
+from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.lib import logging
-from smarter.lib.django import waffle
-from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
-    SAMBrokerInternalError,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -58,24 +71,21 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.VECTORSTORE_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
+)
 
 MAX_RESULTS = 1000
-"""
-Maximum number of results to return for list operations.
-
-This limit helps prevent performance issues and excessive data retrieval.
-
-TODO: Make this configurable via smarter_settings.
-"""
+IMMUTABLE_WHILE_DEPLOYED = {
+    # what cannot change once the database exists, because it would no longer match it.
+    "backend": lambda spec: spec.backend,
+    "hosting": lambda spec: spec.hosting,
+    "index.name": lambda spec: spec.index.name,
+    "index.dimension": lambda spec: spec.index.dimension,
+    "index.metric": lambda spec: spec.index.metric,
+    "selfHosted.storage": lambda spec: spec.selfHosted.storage if spec.selfHosted else None,
+    "pinecone": lambda spec: spec.pinecone.model_dump() if spec.pinecone else None,
+}
 
 
 class SAMVectorstoreBrokerError(SAMBrokerError):
@@ -87,490 +97,205 @@ class SAMVectorstoreBrokerError(SAMBrokerError):
 
 
 class SAMVectorstoreBroker(AbstractBroker):
-    """
-    Smarter API Vectorstore Manifest Broker.
+    """Broker for Vectorstore manifests.
 
-    This class manages the lifecycle of Smarter API Vectorstore manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
-    **Responsibilities:**
-      - Load and validate Smarter API YAML Vectorstore manifests.
-      - Parse manifests and initialize the corresponding Pydantic model (`SAMVectorstore`).
-      - Interact with Django ORM models representing vectorstore manifests.
-      - Create, update, delete, and query Django ORM models.
-      - Transform Django ORM models into Pydantic models for serialization/deserialization.
-
-    **Example Usage:**
-
-      .. code-block:: python
-
-         broker = SAMVectorstoreBroker()
-         manifest = broker.manifest
-         if manifest:
-             print(manifest.apiVersion, manifest.kind)
-
-    .. warning::
-
-       If the manifest loader or manifest metadata is missing, the manifest may not be initialized and `None` may be returned.
-
-    .. seealso::
-
-       - `SAMVectorstore` (Pydantic model)
-       - Django ORM models: `smarter.apps.vectorstore.models.Vectorstore`
-
-    .. todo::
-
-       Make the maximum results for list operations configurable via `smarter_settings`.
+    See the module's documentation.
     """
 
-    # override the base abstract manifest model with the Vectorstore model
     _manifest: Optional[SAMVectorstore] = None
     _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
-
-    # our ORM models.
-    _vectorstore_meta: Optional[VectorstoreMeta] = None
-    _index_model_interface: Optional[IndexModelInterface] = None
-    _vectorstore_interface: Optional[VectorstoreInterface] = None
-    _embeddings_interface: Optional[EmbeddingsInterface] = None
+    _vectorstore: Optional[VectorstoreMeta] = None
+    _name: Optional[str] = None
+    _ready: bool = False
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        logger.info(msg)
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+        )
 
     @property
-    def vectorstore_meta(self) -> Optional[VectorstoreMeta]:
-        """
-        Return the VectorstoreMeta associated with this broker, if available.
-
-        :returns: The `VectorstoreMeta` instance, or `None` if not set.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           vectorstore_meta = broker.vectorstore_meta
-           if vectorstore_meta:
-               print(f"VectorstoreMeta name: {vectorstore_meta.name}")
-
-        See Also:
-
-           - :class:`smarter.apps.vectorstore.models.VectorstoreMeta`
-        """
-        name = self._manifest.metadata.name if self._manifest else self._name
-        if not self._vectorstore_meta and (isinstance(name, str) and isinstance(self.user_profile, UserProfile)):
-            with transaction.atomic():
-                try:
-                    self._vectorstore_meta = VectorstoreMeta.objects.get(user_profile=self.user_profile, name=name)
-                except VectorstoreMeta.DoesNotExist:
-                    # It's possible the manifest exists but the corresponding database entry does not, so we return None in that case
-                    return self._vectorstore_meta
-
-                try:
-                    self._index_model_interface = IndexModelInterface.objects.get(vectorstore=self._vectorstore_meta)
-                except IndexModelInterface.DoesNotExist as e:
-                    raise SAMBrokerInternalError(
-                        f"Failed to describe {self.kind} {name}. IndexModelInterface not found",
-                        thing=self.kind,
-                        command=None,
-                    ) from e
-
-                try:
-                    self._vectorstore_interface = VectorstoreInterface.objects.get(vectorstore=self._vectorstore_meta)
-                except VectorstoreInterface.DoesNotExist as e:
-                    raise SAMBrokerInternalError(
-                        f"Failed to describe {self.kind} {name}. VectorstoreInterface not found",
-                        thing=self.kind,
-                        command=None,
-                    ) from e
-
-                try:
-                    self._embeddings_interface = EmbeddingsInterface.objects.get(vectorstore=self._vectorstore_meta)
-                except EmbeddingsInterface.DoesNotExist as e:
-                    raise SAMBrokerInternalError(
-                        f"Failed to describe {self.kind} {name}. EmbeddingsInterface not found",
-                        thing=self.kind,
-                        command=None,
-                    ) from e
-
-                logger.debug(
-                    "%s.vectorstore_meta() initialized ORM objects: %s",
-                    self.formatted_class_name,
-                    self._vectorstore_meta,
-                )
-
-        return self._vectorstore_meta
+    def SerializerClass(self) -> Type[ModelSerializer]:
+        return VectorstoreSerializer
 
     @property
-    def index_model_interface(self) -> Optional[IndexModelInterface]:
-        """
-        Return the IndexModelInterface associated with this broker, if available.
-
-        :returns: The `IndexModelInterface` instance, or `None` if not set.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           index_model_interface = broker.index_model_interface()
-           if index_model_interface:
-               print(f"IndexModelInterface dimension: {index_model_interface.dimension}")
-
-        See Also:
-
-           - :class:`smarter.apps.vectorstore.models.IndexModelInterface`
-        """
-        return self._index_model_interface
+    def ready(self) -> bool:
+        """A broker is ready if it has a manifest, or an account."""
+        if self._ready:
+            return self._ready
+        if not super().ready:
+            return False
+        if self.manifest is not None or self.account is not None:
+            self._ready = True
+            broker_ready.send(sender=self.__class__, broker=self)
+        return self._ready
 
     @property
-    def vectorstore_interface(self) -> Optional[VectorstoreInterface]:
+    def vectorstore(self) -> Optional[VectorstoreMeta]:
+        """The user's own Vectorstore with the broker's name, else one shared with them.
+
+        It is never created here.
         """
-        Return the VectorstoreInterface associated with this broker, if available.
-
-        :returns: The `VectorstoreInterface` instance, or `None` if not set.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           vectorstore_interface = broker.vectorstore_interface()
-           if vectorstore_interface:
-               print(f"VectorstoreInterface namespace: {vectorstore_interface.namespace}")
-
-        See Also:
-
-           - :class:`smarter.apps.vectorstore.models.VectorstoreInterface`
-        """
-        return self._vectorstore_interface
-
-    @property
-    def embeddings_interface(self) -> Optional[EmbeddingsInterface]:
-        """
-        Return the EmbeddingsInterface associated with this broker, if available.
-
-        :returns: The `EmbeddingsInterface` instance, or `None` if not set.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           embeddings_interface = broker.embeddings_interface()
-           if embeddings_interface:
-               print(f"EmbeddingsInterface provider: {embeddings_interface.provider}")
-
-        See Also:
-
-           - :class:`smarter.apps.vectorstore.models.EmbeddingsInterface`
-        """
-        return self._embeddings_interface
-
-    def manifest_to_django_orm(self) -> dict:
-        raise NotImplementedError(
-            "manifest_to_django_orm is not implemented for SAMVectorstoreBroker. Use django_meta_orm_to_manifest.model_dump() instead."
+        if self._vectorstore:
+            return self._vectorstore
+        if not self.user_profile or not self.name:
+            return None
+        self._vectorstore = (
+            VectorstoreMeta.objects.filter(user_profile=self.user_profile, name=self.name).first()
+            or VectorstoreMeta.objects.filter(name=self.name)
+            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .order_by("-updated_at")
+            .first()
         )
+        return self._vectorstore
 
-    def django_meta_orm_to_manifest(self) -> SAMVectorstoreMetadata:
-        """
-        Convert the Django ORM `VectorstoreMeta` model instance into a.
-
-        `SAMVectorstoreMetadata` Pydantic model for manifest serialization.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-              If `self.vectorstore_meta` is not set or is not an instance of `VectorstoreMeta`.
-
-        :returns: A `SAMVectorstoreMetadata` instance representing the manifest metadata.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-            metadata = broker.django_meta_orm_to_manifest()
-            print(metadata.name, metadata.description)
-        """
-
-        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
+    def owned_vectorstore(self, command: SmarterJournalCliCommands) -> VectorstoreMeta:
+        """The Vectorstore, if the user is staff and owns it."""
+        if not self.user_profile:
+            raise SAMBrokerErrorNotReady("user_profile is not set.", thing=self.kind, command=command)
+        if not (self.user_profile.user.is_staff or self.user_profile.user.is_superuser):
             raise SAMVectorstoreBrokerError(
-                f"Expected type VectorstoreMeta but got {type(self.vectorstore_meta)}", thing=self.kind
+                f"Only account admins may {command.value} a {self.kind}.", thing=self.kind, command=command
             )
+        vectorstore = self.vectorstore
+        if vectorstore is None or (
+            vectorstore.user_profile_id != self.user_profile.pk  # type: ignore[attr-defined]
+            and not self.user_profile.user.is_superuser
+        ):
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        return vectorstore
 
-        return SAMVectorstoreMetadata(
-            name=self.vectorstore_meta.name,
-            description=self.vectorstore_meta.description,
-            version=self.vectorstore_meta.version,
-            tags=self.vectorstore_meta.tags_list,
-            annotations=self.vectorstore_meta.annotations,
+    # -------------------------------------------------------------------------
+    # resolving names
+    # -------------------------------------------------------------------------
+    def resolve_provider(self, name: str) -> Provider:
+        """Spec.embeddings.provider: the user's own Provider, else the most recently updated one shared with them."""
+        assert self.user_profile is not None
+        provider = Provider.objects.filter(name=name, user_profile=self.user_profile).first() or (
+            Provider.objects.filter(name=name)
+            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .order_by("-updated_at")
+            .first()
         )
-
-    def django_vector_interface_to_manifest(self) -> SAMVectorstoreInterface:
-        """
-        Convert the Django ORM `VectorstoreInterface` model instance into a.
-
-        `SAMVectorstoreInterface` Pydantic model for manifest serialization.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-              If `self.vectorstore_interface` is not set or is not an instance of `VectorstoreInterface`.
-
-        :returns: A `SAMVectorstoreInterface` instance representing the manifest interface.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-            interface = broker.django_vector_interface_to_manifest()
-            print(interface.textKey, interface.namespace)
-        """
-
-        if not isinstance(self.vectorstore_interface, VectorstoreInterface):
-            raise SAMVectorstoreBrokerError(
-                f"Expected type VectorstoreInterface for vectorstore_interface but got {type(self._vectorstore_interface)}",
+        if provider is None:
+            raise SAMBrokerErrorNotFound(
+                f"spec.embeddings.provider: Provider {name} not found, or not shared with you.",
                 thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
             )
+        return provider
 
-        # see langchain_core.vectorstores.base.VectorStoreRetriever and
-        # langchain_core.embeddings.openai.OpenAIEmbeddings for
-        # inspiration on how to structure these interfaces
-        return SAMVectorstoreInterface(
-            textKey=self.vectorstore_interface.text_key,
-            namespace=self.vectorstore_interface.namespace,
-            distanceStrategy=self.vectorstore_interface.distance_strategy,
+    def resolve_connection(self, name: Optional[str]) -> Optional[ApiConnection]:
+        """Spec.connection: the user's own ApiConnection, else one shared with them."""
+        if not name:
+            return None
+        assert self.user_profile is not None
+        connection = ApiConnection.objects.filter(name=name, user_profile=self.user_profile).first() or (
+            ApiConnection.objects.filter(name=name)
+            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .order_by("-updated_at")
+            .first()
         )
-
-    def django_embeddings_interface_to_manifest(self) -> SAMEmbeddingsInterface:
-        """
-        Convert the Django ORM `EmbeddingsInterface` model instance into a.
-
-        `SAMEmbeddingsInterface` Pydantic model for manifest serialization.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-              If `self.embeddings_interface` is not set or is not an instance of `EmbeddingsInterface`.
-
-        :returns: A `SAMEmbeddingsInterface` instance representing the manifest interface.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-            embeddings = broker.django_embeddings_interface_to_manifest()
-            print(embeddings.provider, embeddings.providerModel)
-        """
-        if not isinstance(self.embeddings_interface, EmbeddingsInterface):
-            raise SAMVectorstoreBrokerError(
-                f"Expected type EmbeddingsInterface for embeddings_interface but got {type(self._embeddings_interface)}",
+        if connection is None:
+            raise SAMBrokerErrorNotFound(
+                f"spec.connection: ApiConnection {name} not found, or not shared with you.",
                 thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
             )
+        return connection
 
-        # see langchain_core.vectorstores.base.VectorStoreRetriever and
-        # langchain_core.embeddings.openai.OpenAIEmbeddings for
-        # inspiration on how to structure these interfaces
-        return SAMEmbeddingsInterface(
-            provider=self.embeddings_interface.provider,
-            providerModel=self.embeddings_interface.provider_model,
-            dimensions=self.embeddings_interface.dimensions,
-            deployment=self.embeddings_interface.deployment,
-            apiVersion=self.embeddings_interface.api_version,
-            baseUrl=self.embeddings_interface.base_url,
-            openaiApiType=self.embeddings_interface.openai_api_type,
-            openaiProxy=self.embeddings_interface.openai_api_proxy,
-            embeddingCtxLength=self.embeddings_interface.embedding_ctx_length,
-            apiKey=self.embeddings_interface.api_key,
-            organization=self.embeddings_interface.organization,
-            allowedSpecial=self.embeddings_interface.allowed_special,
-            disallowedSpecial=self.embeddings_interface.disallowed_special,
-            chunkSize=self.embeddings_interface.chunk_size,
-            maxRetries=self.embeddings_interface.max_retries,
-            timeout=self.embeddings_interface.timeout,
-            headers=self.embeddings_interface.headers,
-            tiktokenEnabled=self.embeddings_interface.tiktoken_enabled,
-            tiktokenModelName=self.embeddings_interface.tiktoken_model_name,
-            showProgressBar=self.embeddings_interface.show_progress_bar,
-            modelKwargs=self.embeddings_interface.model_kwargs,
-            skipEmpty=self.embeddings_interface.skip_empty,
-            defaultHeaders=self.embeddings_interface.default_headers,
-            defaultQuery=self.embeddings_interface.default_query,
-            retryMinSeconds=self.embeddings_interface.retry_min_seconds,
-            retryMaxSeconds=self.embeddings_interface.retry_max_seconds,
-            checkEmbeddingCtxLength=self.embeddings_interface.check_ctx_length,
+    # -------------------------------------------------------------------------
+    # conversions
+    # -------------------------------------------------------------------------
+    def manifest_to_django_orm(self) -> dict[str, Any]:
+        """The VectorstoreMeta fields of the manifest."""
+        if not self.manifest:
+            raise SAMBrokerErrorNotReady(f"Manifest not loaded for {self.kind} broker.", thing=self.kind)
+        spec = self.manifest.spec
+        retval = {**super().manifest_to_django_orm()}
+        retval.update(
+            {
+                "spec": spec.model_dump(mode="json"),
+                "backend": spec.backend,
+                "hosting": spec.hosting,
+                "is_active": spec.isActive,
+                "dimension": spec.index.dimension,
+                "metric": spec.index.metric,
+                "deletion_protection": spec.index.deletionProtection,
+                "embeddings_model": spec.embeddings.model,
+            }
         )
+        return retval
 
-    def django_index_model_to_manifest(self) -> SAMIndexModelInterface:
-        """
-        Convert the Django ORM `IndexModelInterface` model instance into a.
+    def spec_of(self, vectorstore: VectorstoreMeta) -> SAMVectorstoreSpec:
+        """The Vectorstore's spec, as it was applied."""
+        data = dict(vectorstore.spec or {})
+        if not data:
+            data = {
+                "backend": vectorstore.backend,
+                "hosting": vectorstore.hosting,
+                "connection": vectorstore.connection.name if vectorstore.connection else None,
+                "index": {"dimension": vectorstore.dimension, "metric": vectorstore.metric},
+                "embeddings": {
+                    "provider": vectorstore.embeddings_provider.name if vectorstore.embeddings_provider else "",
+                    "model": vectorstore.embeddings_model,
+                },
+            }
+        return SAMVectorstoreSpec(**data)
 
-        `SAMIndexModelInterface` Pydantic model for manifest serialization.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-              If `self.index_model_interface` is not set or is not an instance of `IndexModelInterface`.
-
-        :returns: A `SAMIndexModelInterface` instance representing the manifest interface.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-            index_model = broker.django_index_model_to_manifest()
-            print(index_model.spec, index_model.dimension)
-        """
-        if not isinstance(self.index_model_interface, IndexModelInterface):
-            raise SAMVectorstoreBrokerError(
-                f"Expected type IndexModelInterface for index_model_interface but got {type(self._index_model_interface)}",
-                thing=self.kind,
-            )
-
-        # see pinecone.db_control.models.IndexModel
-        return SAMIndexModelInterface(
-            spec=self.index_model_interface.spec,
-            dimension=self.index_model_interface.dimension,
-            metric=self.index_model_interface.metric,
-            timeout=self.index_model_interface.timeout,
-            deletionProtection=self.index_model_interface.deletion_protection,
-            vectorType=self.index_model_interface.vector_type,
-        )
-
-    def django_orm_to_manifest(self) -> SAMVectorstore:
-        """
-        Convert a Django ORM `Vectorstore` model instance into a dictionary formatted for Pydantic manifest consumption.
-
-        :returns: A `SAMVectorstore` instance representing the Smarter API Vectorstore manifest.
-
-        .. note::
-
-           Field names are automatically converted from snake_case to camelCase for compatibility with Pydantic models.
-
-        :raises: :class:`SAMVectorstoreBrokerError` if `self.user` is not set.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           manifest_dict = broker.django_orm_to_manifest()
-           if manifest_dict:
-               print(manifest_dict.model_dump())
-
-        See Also:
-
-           - :class:`SAMVectorstore`
-           - :class:`smarter.apps.account.models.Vectorstore`
-           - :class:`smarter.lib.manifest.enum.SamKeys`
-           - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
-           - :class:`smarter.lib.manifest.enumSAMVectorstoreSpecKeys`
-        """
-        logger.debug(
-            "%s.django_orm_to_manifest() called for %s %s", self.formatted_class_name, self.name, self.user_profile
-        )
-
-        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
-            raise SAMVectorstoreBrokerError(
-                f"Expected type VectorstoreMeta but got {type(self.vectorstore_meta)}", thing=self.kind
-            )
-
-        if not isinstance(self.vectorstore_meta.connection, ApiConnection):
-            raise SAMVectorstoreBrokerError(
-                f"Expected type ApiConnection for connection but got {type(self.vectorstore_meta.connection)}",
-                thing=self.kind,
-            )
-        if not isinstance(self.vectorstore_meta.connection.name, str):
-            raise SAMVectorstoreBrokerError(
-                f"Expected type str for connection.name but got {type(self.vectorstore_meta.connection.name)}",
-                thing=self.kind,
-            )
-
-        metadata = self.django_meta_orm_to_manifest()
-
-        spec = SAMVectorstoreSpec(
-            connection=self.vectorstore_meta.connection.name,
-            backend=self.vectorstore_meta.backend,
-            vectorstore=self.django_vector_interface_to_manifest(),
-            embeddings=self.django_embeddings_interface_to_manifest(),
-            indexModel=self.django_index_model_to_manifest(),
+    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+        """The Vectorstore as a manifest, with its status."""
+        vectorstore = self.vectorstore
+        if not vectorstore:
+            return None
+        meta = SAMVectorstoreMetadata(
+            name=vectorstore.name,
+            description=vectorstore.description,
+            version=vectorstore.version,
+            tags=vectorstore.tags_list,
+            annotations=vectorstore.annotations if isinstance(vectorstore.annotations, list) else [],
         )
         status = SAMVectorstoreStatus(
-            recordLocator=self.vectorstore_meta.record_locator,
-            created=self.vectorstore_meta.created_at,
-            modified=self.vectorstore_meta.updated_at,
-            vectorstore_status=self.vectorstore_meta.status,
+            accountNumber=vectorstore.user_profile.account.account_number,
+            username=vectorstore.user_profile.user.username,
+            recordLocator=vectorstore.record_locator,
+            created=vectorstore.created_at,
+            modified=vectorstore.updated_at,
+            vectorstoreStatus=vectorstore.status,
+            message=vectorstore.status_message or None,
+            indexName=vectorstore.index_name or None,
+            endpoint=vectorstore.endpoint_url or None,
+            apiKeySecret=vectorstore.api_key_secret.name if vectorstore.api_key_secret else None,
+            vectorCount=vectorstore.vector_count,
+            documentCount=vectorstore.documents.count(),  # type: ignore[attr-defined]
+            snapshotCount=vectorstore.snapshots.count(),  # type: ignore[attr-defined]
+            deployedAt=vectorstore.deployed_at,
+            lastCheckedAt=vectorstore.last_checked_at,
+            lastSnapshotAt=vectorstore.last_snapshot_at,
+            lastMaintenanceAt=vectorstore.last_maintenance_at,
         )
-
         model = SAMVectorstore(
-            apiVersion=self.api_version,
-            kind=self.kind,
-            metadata=metadata,
-            spec=spec,
-            status=status,
+            apiVersion=self.api_version, kind=self.kind, metadata=meta, spec=self.spec_of(vectorstore), status=status
         )
-
-        return model
+        return model.model_dump(mode="json")
 
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def SerializerClass(self) -> Type[VectorstoreSerializer]:
-        """
-        Get the Django REST Framework serializer class for the Smarter API Vectorstore.
-
-        :returns: The `VectorstoreSerializer` class.
-        :rtype: Type[ModelSerializer]
-        """
-        return VectorstoreSerializer
-
-    @property
     def formatted_class_name(self) -> str:
-        """
-        Return a formatted class name string for logging and diagnostics.
-
-        :returns: A string representing the fully qualified class name, including the parent class.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           logger.debug(broker.formatted_class_name)
-        """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMVectorstoreBroker.__name__}[{id(self)}]"
+        return self.formatted_text(f"{SAMVectorstoreBroker.__name__}[{id(self)}]")
 
     @property
     def kind(self) -> str:
-        """
-        Return the manifest kind string for the Smarter API Vectorstore.
-
-        :returns: The manifest kind as a string (e.g., ``"Vectorstore"``).
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           if broker.kind == "Vectorstore":
-               print("This broker handles Vectorstore manifests.")
-        """
         return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMVectorstore]:
-        """
-        Get the manifest for the Smarter API Vectorstore as a Pydantic model.
-
-        :returns: A `SAMVectorstore` Pydantic model instance representing the Smarter API Vectorstore manifest, or None if not initialized.
-
-        .. note::
-
-           The top-level manifest model (`SAMVectorstore`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
-
-        .. warning::
-
-           If the manifest loader or manifest metadata is missing, the manifest will not be initialized and None may be returned.
-
-        **Example usage**::
-
-            # Access the manifest property
-            manifest = broker.manifest
-            if manifest:
-                print(manifest.apiVersion, manifest.kind)
-        """
+        """The Vectorstore manifest, as a Pydantic model, from the manifest loader."""
         if self._manifest:
             if not isinstance(self._manifest, SAMVectorstore):
-                raise SAMVectorstoreBrokerError(
-                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
-                    thing=self.kind,
-                )
+                raise SAMVectorstoreBrokerError("Cached manifest is not a SAMVectorstore instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMVectorstore(
@@ -581,729 +306,271 @@ class SAMVectorstoreBroker(AbstractBroker):
             )
         return self._manifest
 
-    ###########################################################################
-    # Smarter manifest abstract method implementations
-    ###########################################################################
     @property
     def ORMMetaModelClass(self) -> Type[VectorstoreMeta]:
-        """
-        Return the Django ORM meta model class for the broker.
-
-        :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[VectorstoreMeta]
-        """
         return VectorstoreMeta
 
     @property
     def ORMModelClass(self) -> Type[VectorstoreMeta]:
-        """
-        Return the model class associated with the Smarter API Vectorstore.
-
-        :returns: The `VectorstoreMeta` model class.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           model_cls = broker.ORMModelClass
-           provider_instance = model_cls.objects.get(name="example_provider")
-
-        .. seealso::
-
-           - :class:`smarter.apps.vectorstore.models.VectorstoreMeta`
-        """
         return VectorstoreMeta
 
+    @property
+    def orm_meta_instance(self) -> Optional[VectorstoreMeta]:  # type: ignore[override]
+        return self.vectorstore
+
+    @property
+    def orm_instance(self) -> Optional[VectorstoreMeta]:  # type: ignore[override]
+        return self.vectorstore
+
+    def cache_invalidations(self) -> None:
+        if self.user_profile:
+            invalidate_all_cached_vectorstores_for_user_profile(self.user_profile)
+        if self._vectorstore:
+            VectorstoreMeta.get_cached_object(pk=self._vectorstore.pk, invalidate=True)
+        return super().cache_invalidations()
+
+    ###########################################################################
+    # Smarter manifest abstract method implementations
+    ###########################################################################
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Return the Django model class associated with the Smarter API Vectorstore manifest.
-
-        :returns: The Django `VectorstoreMeta` model class.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           user_cls = broker.ORMModelClass
-           user = user_cls.objects.get(username="example_user")
-
-        .. seealso::
-
-           - :class:`smarter.apps.account.models.VectorstoreMeta`
-           - :meth:`django_orm_to_manifest`
-           - :class:`smarter.apps.SamKeys`
-           - :class:`SAMMetadataKeys`
-           - :class:`SAMVectorstoreSpecKeys`
-        """
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
-
-        logger.debug("%s.example_manifest() called", self.formatted_class_name)
-
-        metadata = SAMVectorstoreMetadata(
-            name="acme_llm_company",
-            description="an example vectorstore manifest for the Smarter API Vectorstore",
-            version="1.0.0",
-            tags=["example", "vectorstore", "smarter-api"],
-            annotations=[
-                {f"{smarter_settings.root_domain}/vectorstore": "example_provider"},
-                {f"{smarter_settings.root_domain}/created_by": "smarter_provider_broker"},
-            ],
-        )
-        spec_vectorstore_interface = SAMVectorstoreInterface(
-            textKey="example_key_id",
-            namespace="example_namespace",
-            distanceStrategy=DistanceStrategy.COSINE.value,
-        )
-        spec_embeddings_interface = SAMEmbeddingsInterface(
-            provider="openai",
-            providerModel="text-embedding-ada-002",
-            dimensions=1536,
-            deployment="example_deployment",
-            apiVersion="2024-01-01",
-            baseUrl="https://api.example-embeddings.com",
-            openaiApiType="example_api_type",
-            openaiProxy="https://proxy.example.com",
-            embeddingCtxLength=8191,
-            apiKey="example_api_key",
-            organization="example_org",
-            allowedSpecial={"<special1>", "<special2>"},
-            disallowedSpecial={"<disallowed1>", "<disallowed2>"},
-            chunkSize=1000,
-            maxRetries=2,
-            timeout=30,
-            headers={"Custom-Header": "Value"},
-            tiktokenEnabled=True,
-            tiktokenModelName="example-tiktoken-model",
-            showProgressBar=False,
-            modelKwargs={"param1": "value1", "param2": "value2"},
-            skipEmpty=False,
-            defaultHeaders={"Default-Header": "DefaultValue"},
-            defaultQuery={"default_param": "default_value"},
-            retryMinSeconds=4,
-            retryMaxSeconds=20,
-            checkEmbeddingCtxLength=True,
-        )
-        spec = ServerlessSpec(
-            cloud="AWS",
-            region="us-east-1",
-        ).asdict()
-        spec_index_model = SAMIndexModelInterface(
-            spec=spec.get("serverless"),
-            dimension=1536,
-            metric=Metric.COSINE.value,
-            timeout=30,
-            deletionProtection=DeletionProtection.DISABLED.value,
-            vectorType=VectorType.SPARSE.value,
-        )
-        spec = SAMVectorstoreSpec(
-            connection="example_api_connection",
-            backend="pinecone",
-            isActive=True,
-            vectorstore=spec_vectorstore_interface,
-            embeddings=spec_embeddings_interface,
-            indexModel=spec_index_model,
-        )
-        status = SAMVectorstoreStatus(
-            recordLocator="example_record_locator",
-            created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            modified=datetime.datetime(2024, 1, 15, 12, 0, 0, tzinfo=datetime.timezone.utc),
-        )
-
+        """An example Vectorstore manifest: a self-hosted Qdrant database for a knowledge base."""
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
         model = SAMVectorstore(
             apiVersion=self.api_version,
             kind=self.kind,
-            metadata=metadata,
-            spec=spec,
-            status=status,
+            metadata=SAMVectorstoreMetadata(
+                name="example_knowledge_base",
+                description="A self-hosted Qdrant vector database of a company's product documentation.",
+                version="1.0.0",
+                tags=["example", "rag", "qdrant"],
+                annotations=[{"smarter.sh/vectorstore/purpose": "example"}],
+            ),
+            spec=SAMVectorstoreSpec(
+                backend="qdrant",
+                hosting="self_hosted",
+                index=SAMVectorstoreIndex(dimension=1536, metric="cosine"),
+                embeddings=SAMVectorstoreEmbeddings(provider="openai", model="text-embedding-3-small"),
+                selfHosted=SAMVectorstoreSelfHosted(storage="10Gi"),
+                maintenance=SAMVectorstoreMaintenance(snapshotIntervalHours=24, snapshotRetention=7),
+            ),
+            status=SAMVectorstoreStatus(
+                accountNumber=smarter_cached_objects.smarter_account.account_number,
+                username=smarter_cached_objects.smarter_admin.username,
+                recordLocator="vectorstoremeta-abc123",
+                created=datetime.datetime.now(),
+                modified=datetime.datetime.now(),
+                vectorstoreStatus=VectorstoreStatus.PENDING.value,
+            ),
         )
-
-        return self.json_response_ok(command=command, data=model.model_dump())
+        return self.json_response_ok(command=command, data=model.model_dump(mode="json"))
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Retrieve Smarter API Vectorstore manifests as a list of serialized Pydantic models.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments, including optional filter parameters.
-
-        :returns: A `SmarterJournaledJsonResponse` containing a list of user manifests and metadata.
-
-        .. note::
-
-           If a vectorstore name is provided in `kwargs`, only manifests for that vectorstore are returned; otherwise, all manifests for the account are listed.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-           If serialization fails for any vectorstore
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           response = broker.get(request, name="openai")
-           print(response.data["spec"]["items"])
-
-        See Also:
-
-           - :class:`smarter.apps.vectorstore.serializers.VectorstoreSerializer`
-           - :meth:`django_orm_to_manifest`
-           - :class:`smarter.lib.manifest.response.SmarterJournaledJsonResponse`
-           - :class:`smarter.lib.manifest.enum.SamKeys`
-           - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
-           - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
-           - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
-        """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
-        name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
-        data = []
-
-        logger.debug("%s.get() called with name: %s %s", self.formatted_class_name, name, self.user_profile)
-
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-
+        """The Vectorstores that the user may read, optionally filtered by name."""
+        command = SmarterJournalCliCommands(self.get.__name__)
+        name = self.clean_cli_param(
+            param=kwargs.get(SAMMetadataKeys.NAME.value, None),
+            param_name="name",
+            url=self.smarter_build_absolute_uri(request),
+        )
+        if self.user_profile is None:
+            raise SAMBrokerErrorNotReady("user_profile is not set.")
+        vectorstores = VectorstoreMeta.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
-            vectorstores = VectorstoreMeta.objects.filter(name=name).with_read_permission_for(self.user_profile.user)[
-                :MAX_RESULTS
-            ]
-        else:
-            vectorstores = VectorstoreMeta.objects.with_read_permission_for(self.user_profile.user)[:MAX_RESULTS]
-
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for vectorstore in vectorstores:
-            try:
-                self._vectorstore_meta = vectorstore
-                model = self.django_meta_orm_to_manifest()
-                model_dump = model.model_dump()
-                if not model_dump:
-                    raise SAMVectorstoreBrokerError(
-                        f"Model dump failed for {self.kind} {vectorstore.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
-            except Exception as e:
-                raise SAMVectorstoreBrokerError(
-                    f"Model dump failed for {self.kind} {vectorstore.name}", thing=self.kind, command=command
-                ) from e
+            vectorstores = vectorstores.filter(name=name)
+        items = [
+            self.to_camel_case(VectorstoreSerializer(vectorstore).data)
+            for vectorstore in vectorstores.order_by("name")[:MAX_RESULTS]
+        ]
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: self.params,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(items)},
+            SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=VectorstoreSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(  # pylint: disable=too-many-locals
+        self, request: HttpRequest, *args, **kwargs
+    ) -> SmarterJournaledJsonResponse:
         """
-        Apply the manifest data to the Django ORM `Vectorstore` model and persist changes to the database.
+        Create or update the Vectorstore.
 
-        .. note::
+        It does not create its database: deploy does.
 
-            tags are handled separately because they are of type TaggableManager and
-            require a different method to set them.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments.
-
-        :returns: A `SmarterJournaledJsonResponse` containing the updated user manifest.
-
-        .. attention::
-
-           Fields in the manifest that are not editable (e.g., ``id``, ``date_joined``, ``last_login``, ``username``, ``is_superuser``) are removed before saving to the ORM model.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-           If the user instance is not set or is invalid
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           response = broker.apply(request)
-           print(response.data)
-
-        See Also:
-
-           - :class:`smarter.apps.vectorstore.models.Vectorstore`
-           - :class:`SAMVectorstoreBrokerError`
+        Once it is deployed, its backend, hosting, index, and self-hosted storage cannot change,
+        because the database would no longer match. If its embeddings model changes, its loaded
+        documents are loaded again.
         """
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
-
-        logger.debug("%s.apply() called with: %s %s", self.formatted_class_name, self.name, self.user_profile)
-
-        if not isinstance(self._manifest, SAMVectorstore):
-            raise SAMVectorstoreBrokerError(
-                f"Invalid manifest type or manifest is not set: {type(self._manifest)}",
-                thing=self.kind,
-                command=command,
+        command = SmarterJournalCliCommands(self.apply.__name__)
+        if not self.ready or not self.manifest:
+            raise SAMBrokerErrorNotReady(
+                f"{self.kind} {self.name} broker is not ready", thing=self.kind, command=command
             )
-        if not isinstance(self.user, User):
-            raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-
-        if not self.user.is_staff:
+        if not self.user_profile:
+            raise SAMBrokerErrorNotReady("user_profile is not set.", thing=self.kind, command=command)
+        if not (self.user_profile.user.is_staff or self.user_profile.user.is_superuser):
             raise SAMVectorstoreBrokerError(
-                message="Only account admins can apply vectorstore manifests.",
-                thing=self.kind,
-                command=command,
+                f"Only account admins may apply a {self.kind}.", thing=self.kind, command=command
             )
+        spec = self.manifest.spec
+        provider = self.resolve_provider(spec.embeddings.provider)
+        connection = self.resolve_connection(spec.connection)
+        data = self.manifest_to_django_orm()
+        tags = data.pop("tags", None) or []
+        for field in ("id", "created_at", "updated_at"):
+            data.pop(field, None)
 
-        name = self._manifest.metadata.name
-        readonly_fields = [
-            "id",
-            "user_profile",
-        ]
-        logger.debug("%s.apply() called with manifest: %s %s", self.formatted_class_name, name, self.user_profile)
-
-        def _map_fields(
-            data: dict, instance: VectorstoreMeta, exclusions: Optional[list[str]] = None
-        ) -> TimestampedModel:
-            """
-            Map fields from a dictionary to a Django ORM model instance, excluding read-only fields and any additional specified exclusions.
-
-            :param data: A dictionary of field names and values to map to the model instance.
-            :param instance: The Django ORM model instance to update.
-            :param exclusions: An optional list of additional field names to exclude from mapping.
-
-            :returns: The updated model instance with fields mapped from the data dictionary.
-            """
-            for field in readonly_fields + (exclusions or []):
-                data.pop(field, None)
-            for key, value in data.items():
-                setattr(instance, key, value)
-            return instance
-
-        def _apply_vectorstore_meta():
-            """
-            Apply the vectorstore metadata from the manifest to the Django ORM model instance.
-
-            :raises: :class:`SAMVectorstoreBrokerError`
-                If the manifest type is invalid or if there is an error applying the metadata.
-            """
-            if not isinstance(self._manifest, SAMVectorstore):
+        existing = VectorstoreMeta.objects.filter(
+            user_profile=self.user_profile, name=self.manifest.metadata.name
+        ).first()
+        reload_documents = False
+        if existing and existing.status != VectorstoreStatus.PENDING:
+            previous = self.spec_of(existing)
+            changed = [field for field, value in IMMUTABLE_WHILE_DEPLOYED.items() if value(previous) != value(spec)]
+            if changed:
                 raise SAMVectorstoreBrokerError(
-                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    f"{self.kind} {existing.name} is deployed, so {', '.join(changed)} cannot change. "
+                    "Delete it, and apply it again, to change them.",
                     thing=self.kind,
                     command=command,
                 )
-            try:
-                self._vectorstore_meta, created = VectorstoreMeta.objects.get_or_create(
-                    user_profile=self.user_profile, name=self._manifest.metadata.name
-                )
-                if created:
-                    logger.debug(
-                        "%s.apply() created new %s '%s'", self.formatted_class_name, self.kind, self._vectorstore_meta
-                    )
-
-                # unpack the manifest into a snake_case dictionary and map it to the ORM model
-                metadata = super().manifest_to_django_orm()
-                dump = self.manifest.spec.vectorstore.model_dump()  # type: ignore[return-value]
-                dump = self.to_snake_case(dump)
-                if not isinstance(metadata, dict) or not isinstance(dump, dict):
-                    raise SAMVectorstoreBrokerError(
-                        f"Expected metadata and dump to be dictionaries for {self.kind} {name} but got {type(metadata)} and {type(dump)}",
-                        thing=self.kind,
-                        command=command,
-                    )
-                data = {**metadata, **dump}
-
-                tags = data.get("tags", [])
-                self._vectorstore_meta = _map_fields(data, self._vectorstore_meta)  # type: ignore
-                if not isinstance(self.vectorstore_meta, VectorstoreMeta):
-                    raise SAMVectorstoreBrokerError(
-                        f"Vectorstore is not set for {self.kind} {name}", thing=self.kind, command=command
-                    )
-                self.vectorstore_meta.save()
-                self.vectorstore_meta.tags.set(tags)
-            except Exception as e:
-                raise SAMVectorstoreBrokerError(
-                    f"Failed to apply {self.kind} {name}",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-
-        def _apply_index_model_interface():
-            """
-            Apply the index model interface from the manifest to the Django ORM model instance.
-
-            :raises: :class:`SAMBrokerInternalError`
-                If there is an error applying the index model interface.
-            """
-            try:
-                self._index_model_interface, _ = IndexModelInterface.objects.get_or_create(
-                    vectorstore=self._vectorstore_meta
-                )
-                dump = self.manifest.spec.indexModel.model_dump()  # type: ignore[return-value]
-                dump = self.to_snake_case(dump)
-                if not isinstance(dump, dict):
-                    raise SAMBrokerInternalError(
-                        f"Expected dump to be a dictionary for {self.kind} {name} but got {type(dump)}",
-                        thing=self.kind,
-                        command=command,
-                    )
-                data = {**dump}
-                self._index_model_interface = _map_fields(data, self._index_model_interface)  # type: ignore
-                if not isinstance(self._index_model_interface, IndexModelInterface):
-                    raise SAMBrokerInternalError(
-                        f"IndexModelInterface is not set for {self.kind} {name}", thing=self.kind, command=command
-                    )
-                self._index_model_interface.save()
-            except Exception as e:
-                raise SAMBrokerInternalError(
-                    f"Failed to apply {IndexModelInterface.__class__.__name__} for {self.kind} {name}",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-
-        def _apply_vectorstore_interface():
-            """
-            Apply the vectorstore interface from the manifest to the Django ORM model instance.
-
-            :raises: :class:`SAMBrokerInternalError`
-                If there is an error applying the vectorstore interface.
-            """
-            try:
-                self._vectorstore_interface, _ = VectorstoreInterface.objects.get_or_create(
-                    vectorstore=self._vectorstore_meta
-                )
-                dump = self._manifest.spec.vectorstore.model_dump()  # type: ignore[return-value]
-                dump = self.to_snake_case(dump)
-                if not isinstance(dump, dict):
-                    raise SAMBrokerInternalError(
-                        f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
-                    )
-                data = {**dump}
-                self._vectorstore_interface = _map_fields(data, self._vectorstore_interface)  # type: ignore
-                if not isinstance(self._vectorstore_interface, VectorstoreInterface):
-                    raise SAMBrokerInternalError(
-                        f"VectorstoreInterface is not set for {self.kind} {name}", thing=self.kind, command=command
-                    )
-                self._vectorstore_interface.save()
-            except Exception as e:
-                raise SAMBrokerInternalError(
-                    f"Failed to apply {VectorstoreInterface.__class__.__name__} for {self.kind} {name}",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-
-        def _apply_embeddings_interface():
-            """
-            Apply the embeddings interface from the manifest to the Django ORM model instance.
-
-            - get the EmbeddingsInterface instance associated with the vectorstore, or create it if it doesn't exist
-            - map the fields from the manifest to the EmbeddingsInterface instance, excluding read-only fields and
-                foreign key relationships (provider and provider_model).
-            - set the provider foreign key relationship based on the provider field in the manifest.
-            - set the provider_model foreign key relationship based on the provider_model field in the manifest, if it is provided.
-
-            :raises: :class:`SAMBrokerInternalError`
-                If there is an error applying the embeddings interface.
-            """
-            if not isinstance(self._manifest, SAMVectorstore):
-                raise SAMVectorstoreBrokerError(
-                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
-                    thing=self.kind,
-                    command=command,
-                )
-
-            # get an instance of the EmbeddingsInterface associated with the
-            # vectorstore, or create it if it doesn't exist. Then map the
-            # fields from the manifest to the instance, excluding read-only
-            # fields and foreign key relationships (provider and provider_model).
-            try:
-                self._embeddings_interface, _ = EmbeddingsInterface.objects.get_or_create(
-                    vectorstore=self._vectorstore_meta
-                )
-                dump = self._manifest.spec.embeddings.model_dump()  # type: ignore[return-value]
-                dump = self.to_snake_case(dump)
-                if not isinstance(dump, dict):
-                    raise SAMBrokerInternalError(
-                        f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
-                    )
-                data = {**dump}
-                exclusions = ["provider", "provider_model"]  # these fields are foreign key relationships and
-                self._embeddings_interface = _map_fields(data, self._embeddings_interface, exclusions=exclusions)  # type: ignore
-                # should not be set directly on the EmbeddingsInterface model
-                if not isinstance(self._embeddings_interface, EmbeddingsInterface):
-                    raise SAMBrokerInternalError(
-                        f"Expected type EmbeddingsInterface for embeddings_interface but got {type(self._embeddings_interface)}",
-                        thing=self.kind,
-                        command=command,
-                    )
-            except Exception as e:
-                raise SAMBrokerInternalError(
-                    f"Failed to apply {EmbeddingsInterface.__class__.__name__} for {self.kind} {name}",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-
-            # set the provider foreign key relationship based on the provider
-            # field in the manifest.
-            try:
-                provider = Provider.objects.get(
-                    name=self._manifest.spec.embeddings.provider, user_profile=self.user_profile
-                )
-                self._embeddings_interface.provider = provider
-            except Provider.DoesNotExist as e:
-                raise SAMBrokerInternalError(
-                    f"Provider '{self._manifest.spec.embeddings.provider}' not found for {self.kind} {name}",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-            if not isinstance(self._embeddings_interface, EmbeddingsInterface):
-                raise SAMBrokerInternalError(
-                    f"EmbeddingsInterface is not set for {self.kind} {name}", thing=self.kind, command=command
-                )
-
-            # set the provider_model foreign key relationship based on the
-            # provider_model field in the manifest, if it is provided.
-            if self._manifest.spec.embeddings.provider_model:
-                try:
-                    provider_model = ProviderModel.objects.get(
-                        name=self._manifest.spec.embeddings.provider_model, user_profile=self.user_profile
-                    )
-                    self._embeddings_interface.provider_model = provider_model
-                except ProviderModel.DoesNotExist as e:
-                    raise SAMBrokerInternalError(
-                        f"ProviderModel '{self._manifest.spec.embeddings.provider_model}' not found for {self.kind} {name}",
-                        thing=self.kind,
-                        command=command,
-                    ) from e
-
-            if not isinstance(self._embeddings_interface, EmbeddingsInterface):
-                raise SAMBrokerInternalError(
-                    f"EmbeddingsInterface is not set for {self.kind} {name}", thing=self.kind, command=command
-                )
-            self._embeddings_interface.save()
+            reload_documents = (
+                previous.embeddings.provider,
+                previous.embeddings.model,
+                previous.embeddings.chunkSize,
+            ) != (
+                spec.embeddings.provider,
+                spec.embeddings.model,
+                spec.embeddings.chunkSize,
+            )
 
         with transaction.atomic():
-            _apply_vectorstore_meta()
-            _apply_index_model_interface()
-            _apply_vectorstore_interface()
-            _apply_embeddings_interface()
+            vectorstore = existing or VectorstoreMeta(user_profile=self.user_profile)
+            for key, value in data.items():
+                setattr(vectorstore, key, value)
+            vectorstore.embeddings_provider = provider
+            vectorstore.connection = connection
+            if not vectorstore.index_name or vectorstore.status == VectorstoreStatus.PENDING:
+                vectorstore.index_name = spec.index.name or vectorstore.default_index_name()
+            try:
+                vectorstore.save()
+                vectorstore.tags.set(tags)
+            except Exception as e:
+                raise SAMVectorstoreBrokerError(
+                    f"Failed to apply {self.kind} {self.manifest.metadata.name}: {e}", thing=self.kind, command=command
+                ) from e
+        self._vectorstore = vectorstore
 
-        logger.debug("%s.apply() successfully applied manifest for %s '%s'", self.formatted_class_name, self.kind, name)
-
+        if (
+            existing
+            and existing.is_self_hosted
+            and existing.status in (VectorstoreStatus.PROVISIONING, VectorstoreStatus.READY)
+        ):
+            # e.g. its cpu or memory changed.
+            VectorstoreService(vectorstore).backend.provision()
+        if reload_documents:
+            self.reload_documents(vectorstore)
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
+    @staticmethod
+    def reload_documents(vectorstore: VectorstoreMeta) -> int:
+        """Load the loaded documents again, e.g. with a new embeddings model."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.vectorstore.tasks import load_vectorstore_document
+
+        documents = list(vectorstore.documents.filter(status=VectorstoreDocumentStatus.LOADED))  # type: ignore[attr-defined]
+        for document in documents:
+            document.status = VectorstoreDocumentStatus.PENDING
+            document.save(update_fields=["status", "updated_at"])
+            if vectorstore.status == VectorstoreStatus.READY:
+                load_vectorstore_document.delay(document.pk)
+        return len(documents)
+
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        .. attention::
-
-            this is not implemented for the Smarter API Vectorstore manifest.
-
-        :raises: :class:`SAMBrokerErrorNotImplemented`
-            Always raised to indicate that the prompt operation is not implemented for this manifest type.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments.
-
-        :returns: Never returns; always raises an exception.
-        """
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Describe the Smarter API Vectorstore manifest by retrieving the corresponding Django ORM `Vectorstore` model instance.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments, including the username to describe.
-
-        :returns: A `SmarterJournaledJsonResponse` containing the user manifest data.
-
-        :raises: :class:`SAMBrokerErrorNotFound`
-           If the vectorstore with the specified name does not exist or is not associated with the account.
-        :raises: :class:`SAMVectorstoreBrokerError`
-           If serialization fails for the vectorstore.
-
-        _index_model_interface: Optional[IndexModelInterface]
-        _vectorstore_interface: Optional[VectorstoreInterface]
-        _embeddings_interface: Optional[EmbeddingsInterface]
-        """
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-
-        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
-
-        logger.debug("%s.describe() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
-
-        if not isinstance(self.vectorstore_meta, VectorstoreMeta) or self.vectorstore_meta.name != self.name:
-            raise SAMBrokerErrorNotFound(
-                f"Failed to describe {self.kind} {self.name}. Not found or not associated with account",
-                thing=self.kind,
-                command=command,
-            )
-
-        if self.vectorstore_meta:
-            try:
-                model = self.django_orm_to_manifest()
-                data = model.model_dump()
-                return self.json_response_ok(command=command, data=data)
-            except Exception as e:
-                raise SAMVectorstoreBrokerError(
-                    f"Failed to describe {self.kind} {self.vectorstore_meta.name}", thing=self.kind, command=command
-                ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
+        """The Vectorstore as a manifest, with its status."""
+        command = SmarterJournalCliCommands(self.describe.__name__)
+        if self.name is None:
+            raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
+        if not self.vectorstore:
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        try:
+            data = self.django_orm_to_manifest_dict()
+        except Exception as e:
+            raise SAMVectorstoreBrokerError(
+                f"Failed to describe {self.kind} {self.name}: {e}", thing=self.kind, command=command
+            ) from e
+        return self.json_response_ok(command=command, data=data)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Delete the Smarter API Vectorstore manifest by removing the corresponding Django ORM `Vectorstore` model instance.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments, including the username to delete.
-
-        :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
-
-        :raises: :class:`SAMBrokerErrorNotFound`
-           If the vectorstore with the specified name does not exist.
-        :raises: :class:`SAMVectorstoreBrokerError`
-           If deletion fails for the vectorstore.
-        """
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
-
-        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
-
-        logger.debug("%s.delete() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
-
-        if not self.name:
-            raise SAMVectorstoreBrokerError(
-                "Name parameter is required for delete operation", thing=self.kind, command=command
-            )
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-        if not (self.user_profile.user.is_staff or self.user_profile.user.is_superuser):
-            raise SAMVectorstoreBrokerError(
-                message="Only account admins can delete providers.",
-                thing=self.kind,
-                command=command,
-            )
-
-        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
-            raise SAMBrokerErrorNotFound(
-                f"Failed to delete {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
-                thing=self.kind,
-                command=command,
-            )
+        """Destroy the database and its data, unless deletionProtection is enabled, then delete the Vectorstore."""
+        command = SmarterJournalCliCommands(self.delete.__name__)
+        vectorstore = self.owned_vectorstore(command)
+        service = VectorstoreService(vectorstore)
         try:
-            with transaction.atomic():
-                if self.index_model_interface:
-                    self.index_model_interface.delete()
-                if self.vectorstore_interface:
-                    self.vectorstore_interface.delete()
-                if self.embeddings_interface:
-                    self.embeddings_interface.delete()
-                self.vectorstore_meta.delete()
-            return self.json_response_ok(command=command, data={})
+            if vectorstore.deployed_at:
+                service.destroy()
+            elif vectorstore.deletion_protection:
+                service.destroy()  # raises
+            secret = vectorstore.api_key_secret
+            vectorstore.delete()
+            if secret is not None:
+                secret.delete()
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to delete {self.kind} {self.name}", thing=self.kind, command=command
+                f"Failed to delete {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
+        self._vectorstore = None
+        self.cache_invalidations()
+        return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """Create the database.
+
+        A self-hosted server takes a minute or two to become ready: follow it with describe.
         """
-        Deploy the Smarter API Vectorstore manifest by activating the corresponding Django ORM `Vectorstore` model instance.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-           If deployment fails for the user.
-
-        :returns: A `SmarterJournaledJsonResponse` indicating the result of the deploy operation.
-        """
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
-        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
-
-        logger.debug("%s.deploy() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
-
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
-            raise SAMBrokerErrorNotFound(
-                f"Failed to deploy {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
-                thing=self.kind,
-                command=command,
-            )
-
+        command = SmarterJournalCliCommands(self.deploy.__name__)
+        vectorstore = self.owned_vectorstore(command)
         try:
-            self.vectorstore_meta.is_active = True
-            self.vectorstore_meta.save()
-            return self.json_response_ok(command=command, data={})
+            VectorstoreService(vectorstore).deploy()
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to deploy {self.kind} {self.name}", thing=self.kind, command=command
+                f"Failed to deploy {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
+        self.cache_invalidations()
+        return self.json_response_ok(command=command, data=self.django_orm_to_manifest_dict() or {})
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """Stop serving.
+
+        A self-hosted server's data is kept, and a managed index is left as it is.
         """
-        Undeploy the Smarter API Vectorstore manifest by deactivating the corresponding Django ORM `Vectorstore` model instance.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments.
-
-        :raises: :class:`SAMVectorstoreBrokerError`
-           If undeployment fails for the user.
-        """
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
-        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
-
-        logger.debug("%s.undeploy() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
-
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
-            raise SAMBrokerErrorNotFound(
-                f"Failed to undeploy {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
-                thing=self.kind,
-                command=command,
-            )
-
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
+        vectorstore = self.owned_vectorstore(command)
         try:
-            self.vectorstore_meta.is_active = False
-            self.vectorstore_meta.save()
-            return self.json_response_ok(command=command, data={})
+            VectorstoreService(vectorstore).undeploy()
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to undeploy {self.kind} {self.name}", thing=self.kind, command=command
+                f"Failed to undeploy {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
+        self.cache_invalidations()
+        return self.json_response_ok(command=command, data=self.django_orm_to_manifest_dict() or {})
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Retrieve logs related to the Smarter API Vectorstore manifest.
-
-        :param request: The Django `HttpRequest` object.
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments.
-
-        :returns: A `SmarterJournaledJsonResponse` containing log data.
-        """
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
-        data = {}
-
-        logger.debug("%s.logs() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
-
-        return self.json_response_ok(command=command, data=data)
+        """A self-hosted Qdrant server's recent logs."""
+        command = SmarterJournalCliCommands(self.logs.__name__)
+        vectorstore = self.owned_vectorstore(command)
+        logs = VectorstoreService(vectorstore).backend.logs() if vectorstore.is_self_hosted else None
+        return self.json_response_ok(command=command, data={"logs": logs or ""})
 
 
 __all__ = ["SAMVectorstoreBroker", "SAMVectorstoreBrokerError"]

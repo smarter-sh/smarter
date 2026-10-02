@@ -116,7 +116,9 @@ that you declare in a manifest, and none of them requires you to write code:
 - **Expertise**: a :doc:`SkillPlugin <smarter-resources/plugin/plugin/skill>` packages instructions
   and reference material that teach a model how to do a specific job well.
 - **Your own documents**: a :doc:`Vectorstore <smarter-resources/smarter-vectorstore>` provides
-  semantic search over the content that you load into it.
+  semantic search over your PDFs, manuals and other proprietary content. Smarter runs the vector
+  database for you, Qdrant on your own Kubernetes cluster, or Pinecone or Qdrant Cloud, loads and
+  removes your documents, and takes scheduled snapshots.
 
 Governed from the first prompt
 ------------------------------
