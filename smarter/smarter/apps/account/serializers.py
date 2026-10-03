@@ -1,17 +1,21 @@
 """Account serializers for Smarter API."""
 
+from typing import List
+
 from rest_framework import serializers
 
 from smarter.apps.account.models import (
     Account,
     AccountContact,
     Budget,
-    Charge,
     User,
     UserProfile,
 )
+from smarter.lib import logging
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class UserSerializer(MetaDataModelSerializer):
@@ -296,9 +300,16 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
 
 
 class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
-    """Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field."""
+    """Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+
+    It also adds ``can_delete``, which is True if the authenticated user may delete the resource
+    now: they have ownership permission for it, and no other resource depends on it. Subclasses
+    set ``Meta.kind`` to the resource's SAM kind, which ``can_delete`` needs to find its broker.
+    Every subclass includes it, whatever its ``Meta.fields``.
+    """
 
     user_profile = UserProfileSerializer(read_only=True)
+    can_delete = serializers.SerializerMethodField()
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataModelSerializer.Meta):
@@ -311,3 +322,64 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
         # ----------------------------------------------------------------------------------------
         # model = MetaDataModel
         # abstract = True
+
+    def get_field_names(self, declared_fields, info) -> List[str]:
+        """
+        Return the field names to serialize, always including ``can_delete``.
+
+        DRF omits an inherited declared field from a subclass whose ``Meta.fields`` is a list
+        that does not name it, so ``can_delete`` is added here for every subclass.
+        """
+        field_names = list(super().get_field_names(declared_fields, info))
+        if "can_delete" not in field_names:
+            field_names.append("can_delete")
+        return field_names
+
+    def get_can_delete(self, obj) -> bool:
+        """
+        Return True if the authenticated user may delete the resource now.
+
+        The user can delete the object if a.) they have permission and b.)
+        no dependencies existing on the object based on the SAMBroker
+        enforcement rules.
+
+        The user must have ownership permission for the resource, as in
+        :meth:`MetaDataWithOwnershipModelManager.with_ownership_permission_for`, and no other
+        resource may depend on it, as in :meth:`AbstractBroker.dependencies`.
+
+        .. note::
+
+            This builds a broker, and queries its dependencies, for each resource that the user
+            may delete. Serializing a long list of resources is correspondingly slower.
+
+        :param obj: The resource.
+        :type obj: MetaDataWithOwnershipModel
+        :return: Whether the user may delete the resource, or None if the serializer has no request
+            in its context, or does not know the resource's kind.
+        :rtype: Optional[bool]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        # the serializer's Meta.kind, or the resource's own kind, e.g. a PluginMeta's enum or a ConnectionBase's str.
+        obj_kind = getattr(obj, "kind", None)
+        kind = getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
+        broker_class = Brokers.get_broker(kind) if kind else None
+        if request is None or broker_class is None:
+            return False
+        if not isinstance(user, User):
+            return False
+        if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
+            return False
+        try:
+            broker = broker_class(None, name=obj.name, kind=kind, user_profile=obj.user_profile)
+            return not broker.dependencies()
+        # an incomplete resource, e.g. a plugin without its plugin data, can fail to initialize its broker.
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning(
+                "%s.get_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
+            )
+            return False

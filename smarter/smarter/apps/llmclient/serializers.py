@@ -7,6 +7,9 @@ from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
 )
+from smarter.apps.llmclient.manifest.models.llmclient.const import (
+    MANIFEST_KIND as LLMCLIENT_KIND,
+)
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
@@ -49,6 +52,7 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LLMClient
+        kind = LLMCLIENT_KIND
         fields = "__all__"
 
     def get_fields(self):
@@ -153,6 +157,7 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = LLMClient
+        kind = LLMCLIENT_KIND
         fields = "__all__"
 
     def get_fields(self):

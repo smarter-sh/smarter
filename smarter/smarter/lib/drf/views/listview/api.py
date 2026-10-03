@@ -104,7 +104,7 @@ class AuthTokenListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": AuthTokenSerializer(authtokens, many=True).data,
+            "objects": AuthTokenSerializer(authtokens, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -163,7 +163,7 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_authtoken = authtoken.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_authtokens_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = AuthTokenSerializer(cloned_authtoken).data
+            data = AuthTokenSerializer(cloned_authtoken, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -292,7 +292,7 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             authtoken.rename(new_name=new_name)
             invalidate_all_cached_authtokens_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = AuthTokenSerializer(authtoken).data
+            data = AuthTokenSerializer(authtoken, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

@@ -71,6 +71,7 @@ export type Guardrail = {
   tags: Tags;
   annotations: Annotations;
   manifestUrl: string;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
   rfc1034CompliantName: string | null;
 

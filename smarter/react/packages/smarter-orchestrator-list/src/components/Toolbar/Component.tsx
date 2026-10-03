@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this orchestrator resource"
+          title={
+            orchestrator.canDelete === false
+              ? "Delete: You can't delete this orchestrator, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this orchestrator resource"
+          }
           onClick={() => setModal({ type: "delete", orchestrator })}
+          disabled={orchestrator.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

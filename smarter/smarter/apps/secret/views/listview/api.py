@@ -96,7 +96,7 @@ class SecretListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": SecretSerializer(secrets, many=True).data,
+            "objects": SecretSerializer(secrets, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -147,7 +147,7 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_secret = secret.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = SecretSerializer(cloned_secret).data
+            data = SecretSerializer(cloned_secret, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -258,7 +258,7 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             secret.rename(new_name=new_name)
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = SecretSerializer(secret).data
+            data = SecretSerializer(secret, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

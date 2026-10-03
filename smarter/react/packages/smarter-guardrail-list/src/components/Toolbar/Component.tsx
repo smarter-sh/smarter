@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this guardrail resource"
+          title={
+            guardrail.canDelete === false
+              ? "Delete: You can't delete this guardrail, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this guardrail resource"
+          }
           onClick={() => setModal({ type: "delete", guardrail })}
+          disabled={guardrail.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

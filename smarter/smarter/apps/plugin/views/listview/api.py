@@ -104,7 +104,7 @@ class PluginListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": PluginSerializer(plugins, many=True).data,
+            "objects": PluginSerializer(plugins, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -171,7 +171,7 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
                 raise SmarterPluginError(f"PluginMeta with id {llmclient_id} could not be cloned.")
             cloned_llmclient = PluginMeta.objects.get(id=cloned_id)
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = PluginSerializer(cloned_llmclient).data
+            data = PluginSerializer(cloned_llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -300,7 +300,7 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             llmclient.rename(new_name=new_name)
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = PluginSerializer(llmclient).data
+            data = PluginSerializer(llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

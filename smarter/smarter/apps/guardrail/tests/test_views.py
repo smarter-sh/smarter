@@ -18,6 +18,7 @@ from smarter.apps.guardrail.caching import (
 )
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.urls import GuardrailReverseNames as Names
+from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
 
 from .base_classes import GuardrailTestBase
@@ -57,6 +58,19 @@ class TestGuardrailViews(GuardrailTestBase):
         """Test that the list api returns the user's Guardrails."""
         data = self.post(url(Names.listview_api_all))
         self.assertIn(self.guardrail.name, [item["name"] for item in data["objects"]])
+
+    def test_listview_api_can_delete(self):
+        """Test that the list api reports canDelete, which is false while an LLMClient uses the Guardrail."""
+
+        def can_delete() -> bool:
+            data = self.post(url(Names.listview_api_all))
+            return next(item["canDelete"] for item in data["objects"] if item["name"] == self.guardrail.name)
+
+        self.assertIs(can_delete(), True)
+        llmclient = LLMClient.objects.create(name="test_views_can_delete", user_profile=self.user_profile)
+        self.addCleanup(llmclient.delete)
+        LLMClientGuardrails.objects.create(llmclient=llmclient, guardrail=self.guardrail)
+        self.assertIs(can_delete(), False)
 
     def test_clone_rename_delete(self):
         """Test the clone, rename and delete apis, which used the wrong url parameter name."""

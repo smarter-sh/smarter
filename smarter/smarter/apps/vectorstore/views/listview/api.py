@@ -68,7 +68,7 @@ class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
             {
                 "user": UserProfileSerializer(self.user_profile).data,
                 "admin": UserProfileSerializer(smarter_cached_objects.smarter_admin_user_profile).data,
-                "objects": VectorstoreSerializer(vectorstores, many=True).data,
+                "objects": VectorstoreSerializer(vectorstores, many=True, context={"request": request}).data,
             }
         )
 
@@ -110,7 +110,7 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             clone.save()
             clone.tags.set(source.tags_list)
         invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
-        return JsonResponse(VectorstoreSerializer(clone).data, status=HTTPStatus.OK)
+        return JsonResponse(VectorstoreSerializer(clone, context={"request": request}).data, status=HTTPStatus.OK)
 
 
 class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
@@ -162,4 +162,4 @@ class VectorstoreListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse({"error": f"A vectorstore named {new_name} exists."}, status=HTTPStatus.CONFLICT)
         vectorstore.rename(new_name=new_name)
         invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
-        return JsonResponse(VectorstoreSerializer(vectorstore).data, status=HTTPStatus.OK)
+        return JsonResponse(VectorstoreSerializer(vectorstore, context={"request": request}).data, status=HTTPStatus.OK)

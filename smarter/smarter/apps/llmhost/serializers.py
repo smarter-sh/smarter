@@ -5,6 +5,12 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.llmhost.manifest.models.llmhost.const import (
+    MANIFEST_KIND as LLMHOST_KIND,
+)
+from smarter.apps.llmhost.manifest.models.llmhost_compute.const import (
+    MANIFEST_KIND as LLMHOST_COMPUTE_KIND,
+)
 
 from .models import LLMHost, LLMHostCompute
 
@@ -16,6 +22,7 @@ class LLMHostSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = LLMHost
+        kind = LLMHOST_KIND
         fields = "__all__"
 
     def get_fields(self):
@@ -43,6 +50,7 @@ class LLMHostComputeSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = LLMHostCompute
+        kind = LLMHOST_COMPUTE_KIND
         fields = "__all__"
 
     def get_fields(self):

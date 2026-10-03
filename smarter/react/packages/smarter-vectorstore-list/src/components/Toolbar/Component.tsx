@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this vectorstore resource"
+          title={
+            vectorstore.canDelete === false
+              ? "Delete: You can't delete this vectorstore, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this vectorstore resource"
+          }
           onClick={() => setModal({ type: "delete", vectorstore })}
+          disabled={vectorstore.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

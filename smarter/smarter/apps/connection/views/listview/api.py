@@ -110,7 +110,7 @@ class ConnectionListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": ConnectionSerializer(connections, many=True).data,
+            "objects": ConnectionSerializer(connections, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -175,7 +175,7 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
                 if connection.kind == SAMKinds.SQL_CONNECTION.value:
                     try:
                         sql_connection = SqlConnection.objects.get(id=connection.id)  # type: ignore
-                        sql_data = SqlConnectionSerializer(sql_connection).data
+                        sql_data = SqlConnectionSerializer(sql_connection, context={"request": request}).data
                         return JsonResponse(sql_data, status=HTTPStatus.OK)  # type: ignore
                     except SqlConnection.DoesNotExist:
                         logger.error(
@@ -189,7 +189,7 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
                 elif connection.kind == SAMKinds.API_CONNECTION.value:
                     try:
                         api_connection = ApiConnection.objects.get(id=connection.id)  # type: ignore
-                        api_data = ApiConnectionSerializer(api_connection).data
+                        api_data = ApiConnectionSerializer(api_connection, context={"request": request}).data
                         return JsonResponse(api_data, status=HTTPStatus.OK)  # type: ignore
                     except ApiConnection.DoesNotExist:
                         logger.error(
@@ -337,7 +337,7 @@ class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             connection.rename(new_name=new_name)
             invalidate_all_cached_connections_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = ConnectionSerializer(connection).data
+            data = ConnectionSerializer(connection, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

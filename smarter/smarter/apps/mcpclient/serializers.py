@@ -5,6 +5,9 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
+    MANIFEST_KIND as MCPCLIENT_KIND,
+)
 
 from .models import MCPClient
 
@@ -24,6 +27,7 @@ class MCPClientSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = MCPClient
+        kind = MCPCLIENT_KIND
         fields = "__all__"
 
     def get_fields(self):

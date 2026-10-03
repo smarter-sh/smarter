@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this mcpclient resource"
+          title={
+            mcpclient.canDelete === false
+              ? "Delete: You can't delete this mcpclient, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this mcpclient resource"
+          }
           onClick={() => setModal({ type: "delete", mcpclient })}
+          disabled={mcpclient.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

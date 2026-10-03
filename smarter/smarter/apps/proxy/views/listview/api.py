@@ -89,7 +89,7 @@ class ProxyListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": ProxySerializer(proxies, many=True).data,
+            "objects": ProxySerializer(proxies, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -140,7 +140,7 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_proxy = proxy.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_proxies_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = ProxySerializer(cloned_proxy).data
+            data = ProxySerializer(cloned_proxy, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -251,7 +251,7 @@ class ProxyListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             proxy.rename(new_name=new_name)
             invalidate_all_cached_proxies_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = ProxySerializer(proxy).data
+            data = ProxySerializer(proxy, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

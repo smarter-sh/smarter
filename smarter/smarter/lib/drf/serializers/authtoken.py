@@ -1,4 +1,4 @@
-"""Account serializers for smarter api"""
+"""Account serializers for smarter api."""
 
 import sys
 from typing import Optional
@@ -12,6 +12,9 @@ from smarter.apps.account.serializers import (
 )
 from smarter.common.utils import to_camel_case, to_snake_case
 from smarter.lib import logging
+from smarter.lib.drf.manifest.models.auth_token.const import (
+    MANIFEST_KIND as AUTH_TOKEN_KIND,
+)
 from smarter.lib.drf.models import SmarterAuthToken
 
 logger = logging.getSmarterLogger(__name__)
@@ -65,6 +68,7 @@ class SmarterAuthTokenSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = SmarterAuthToken
+        kind = AUTH_TOKEN_KIND
         fields = [
             "id",
             "hashed_id",

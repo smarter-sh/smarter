@@ -30,6 +30,7 @@ export type Proxy = {
   userProfile: UserProfile;
   /** The URL of the Proxy's detail view in the web console, which renders its manifest. */
   manifestUrl: string;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
 
   // --- Where it forwards to ---
   /** The id of the Provider whose API the Proxy forwards to. */

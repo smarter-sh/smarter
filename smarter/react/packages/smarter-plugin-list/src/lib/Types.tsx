@@ -74,6 +74,7 @@ export type Plugin = {
   createdAt: string;
   updatedAt: string;
   manifestUrl: string;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
   name: string;
   kind: string;
   userProfile: UserProfile;

@@ -67,6 +67,7 @@ export type LLMClient = {
   urlChatapp: string;
   urlManifest: string; // ADD ME PLEASE
   ready: boolean;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
   deployed: boolean;
   provider: string;
   defaultModel: string;

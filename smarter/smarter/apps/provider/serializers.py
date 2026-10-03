@@ -1,7 +1,5 @@
 # pylint: disable=C0115
-"""
-Serializer classes for the Provider app.
-"""
+"""Serializer classes for the Provider app."""
 
 from rest_framework import serializers
 
@@ -10,6 +8,9 @@ from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserMiniSerializer,
     UserProfileSerializer,
+)
+from smarter.apps.provider.manifest.models.provider.const import (
+    MANIFEST_KIND as PROVIDER_KIND,
 )
 from smarter.apps.secret.serializers import SecretMiniSerializer
 from smarter.common.exceptions import SmarterException
@@ -39,6 +40,7 @@ class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = Provider
+        kind = PROVIDER_KIND
         fields = [
             "id",
             "created_at",

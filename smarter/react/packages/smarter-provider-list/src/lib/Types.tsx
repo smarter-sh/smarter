@@ -37,6 +37,7 @@ export type Provider = {
   tags: Tags;
   annotations: Annotations;
   manifestUrl: string;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
   isDefault: boolean;
   isActive: boolean;

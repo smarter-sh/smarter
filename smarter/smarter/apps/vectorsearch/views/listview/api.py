@@ -102,7 +102,7 @@ class VectorsearchListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": VectorsearchSerializer(vectorsearchs, many=True).data,
+            "objects": VectorsearchSerializer(vectorsearchs, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -163,7 +163,7 @@ class VectorsearchListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_vectorsearch = vectorsearch.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_vectorsearchs_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = VectorsearchSerializer(cloned_vectorsearch).data
+            data = VectorsearchSerializer(cloned_vectorsearch, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -298,7 +298,7 @@ class VectorsearchListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             vectorsearch.rename(new_name=new_name)
             invalidate_all_cached_vectorsearchs_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = VectorsearchSerializer(vectorsearch).data
+            data = VectorsearchSerializer(vectorsearch, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
