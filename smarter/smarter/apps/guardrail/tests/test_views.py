@@ -90,6 +90,9 @@ class TestGuardrailViews(GuardrailTestBase):
         content = response.content.decode()
         self.assertIn(self.guardrail.name, content)
         self.assertIn("Guardrail", content)
+        # the manifest editor's root element, and its manifest, as json_script data.
+        self.assertIn('id="smarter-manifest-editor-root"', content)
+        self.assertIn('<script id="smarter-manifest-editor-data" type="application/json">', content)
         self.assertEqual(
             self.client.get(url(Names.detailview, hashed_id="not-a-hash")).status_code, HTTPStatus.NOT_FOUND
         )
