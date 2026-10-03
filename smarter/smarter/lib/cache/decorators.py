@@ -49,6 +49,7 @@ from functools import lru_cache, wraps
 from typing import Callable, Optional, Union
 
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.console_helpers import SmarterFormattedTextColorCodes
 from smarter.lib import json, logging
 
 from .cache_sentinel import CACHE_MISS_SENTINEL, CACHE_NONE_SENTINEL
@@ -56,9 +57,14 @@ from .lazy_cache import lazy_cache
 
 logger = logging.getLogger(__name__)
 logger_prefix_normal = logging.formatted_text(f"{__name__}.@cache_results()")
-logger_prefix_green = logging.formatted_text_green(f"{__name__}.@cache_results()")
-logger_prefix_red = logging.formatted_text_red(f"{__name__}.@cache_results()")
-logger_prefix_blue = logging.formatted_text_blue(f"{__name__}.@cache_results()")
+logger_prefix_green = logging.formatted_text(
+    f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.REGULAR_GREEN
+)
+logger_prefix_red = logging.formatted_text(f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.DARK_RED)
+logger_prefix_blue = logging.formatted_text(
+    f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.BOLD_DARK_BLUE
+)
+logger_prefix_gray = logging.formatted_text(f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.LIGHT_GRAY)
 
 LRU_CACHE_MAXSIZE = 128
 KwargsTupleType = tuple[tuple[str, object], ...]
@@ -404,7 +410,9 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             logger.debug(
                 "%s -> %s called with args: %s kwargs: %s",
                 logger_prefix_blue,
-                logging.formatted_text_blue(func.__name__ + "().invalidate()"),
+                logging.formatted_text(
+                    func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.BOLD_DARK_BLUE
+                ),
                 args,
                 kwargs,
             )
@@ -420,14 +428,22 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 lazy_cache.delete(computed_cache_key)
                 logger.info(
                     "%s - invalidated %s - %s",
-                    logger_prefix_green + logging.formatted_text_green(func.__name__ + "().invalidate()"),
+                    logger_prefix_gray
+                    + "."
+                    + logging.formatted_text(
+                        func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY
+                    ),
                     type(cached_value).__name__,
                     computed_cache_key,
                 )
             else:
                 logger.debug(
                     "%s - no cache entry found for %s (nothing to invalidate)",
-                    logger_prefix_red + logging.formatted_text_red(func.__name__ + "().invalidate()"),
+                    logger_prefix_red
+                    + "."
+                    + logging.formatted_text(
+                        func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.DARK_RED
+                    ),
                     computed_cache_key,
                 )
 

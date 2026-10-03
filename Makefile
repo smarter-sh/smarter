@@ -120,7 +120,8 @@ coverage:
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
-	docker exec smarter-app bash -c "coverage run --source=smarter.apps.account manage.py test smarter.apps.account && coverage report -m"
+	docker exec smarter-app bash -c "coverage run --source=smarter.apps manage.py test smarter.apps && coverage report -m && coverage xml"
+
 
 change-log:
 	@echo "==============================================================================="
