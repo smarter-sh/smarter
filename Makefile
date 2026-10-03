@@ -167,7 +167,7 @@ docker-init:
 	make docker-check && \
 	docker-compose up -d && \
 	docker exec smarter-mariadb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
-	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' && \
 	docker exec -i smarter-mariadb mariadb -u root -psmarter < scripts/smarter_test_db.sql && \
 	docker exec smarter-app bash -c "\
 		python manage.py reset_cache && \
