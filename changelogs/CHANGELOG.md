@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.16.7-alpha.2...v0.17.0-alpha.1) (2026-10-03)
+
+### Features
+
+* edit, validate, save, clone and delete manifests in the web console's manifest editor ([b78b1d2](https://github.com/smarter-sh/smarter/commit/b78b1d200ac905d7a1aa3fb22ae2dd25b4e77e81))
+
 ## [0.16.7-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.16.7-alpha.1...v0.16.7-alpha.2) (2026-10-03)
 
 ### Bug Fixes
