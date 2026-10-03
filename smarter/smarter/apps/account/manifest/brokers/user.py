@@ -519,7 +519,8 @@ class SAMUserBroker(AbstractBroker):
                     command=SmarterJournalCliCommands.APPLY,
                 )
             return self._manifest
-        if not self.account:
+        # an unauthenticated request, e.g. for the example manifest, has no account, but may have a brokered user.
+        if not self.account and not self.brokered_user:
             logger.warning("%s.manifest called with no account", self.formatted_class_name)
             return None
         # 1.) prioritize manifest loader data if available. if it was provided
@@ -563,7 +564,8 @@ class SAMUserBroker(AbstractBroker):
                     )
                 ),
                 status=SAMUserStatus(
-                    account_number=self.account.account_number,
+                    # the brokered user's account, which is not necessarily the requester's.
+                    account_number=self.brokered_user_profile.account.account_number,
                     recordLocator=f"user-{self.brokered_user.id}-###-###-###",  # type: ignore
                     username=self.brokered_user.username,
                     created=self.brokered_user.date_joined,
