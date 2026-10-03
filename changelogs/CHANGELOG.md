@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.7](https://github.com/smarter-sh/smarter/compare/v0.16.6...v0.16.7) (2026-10-03)
+
+### Bug Fixes
+
+* disable the delete button in list views when a resource cannot be deleted ([f8baeaa](https://github.com/smarter-sh/smarter/commit/f8baeaab40141be9617f732294ba13c004226ed6))
+
 ## [0.16.6](https://github.com/smarter-sh/smarter/compare/v0.16.5...v0.16.6) (2026-10-03)
 
 ### Bug Fixes
