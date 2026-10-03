@@ -85,7 +85,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             db_engine=DbEngines.MYSQL.value,
             authentication_method=DBMSAuthenticationMethods.TCPIP.value,
             timeout=300,
-            hostname="smarter-sqldb",
+            hostname="smarter-mariadb",
             port=3306,
             database="smarter",
             username="smarter",
@@ -219,7 +219,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
                         {
                             "name": "smarter_test_base_7e1abbdf13b16e06",
                             "description": "local mysql test sqlconnection - ",
-                            "hostname": "smarter-sqldb",
+                            "hostname": "smarter-mariadb",
                             "port": 3306,
                             "database": "smarter",
                             "username": "smarter",
@@ -301,7 +301,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
                         {
                             "name": "smarter_test_base_21b4ec52db9ba67b",
                             "description": "local mysql test sqlconnection - ",
-                            "hostname": "smarter-sqldb",
+                            "hostname": "smarter-mariadb",
                             "port": 3306,
                             "database": "smarter",
                             "username": "smarter",

@@ -925,7 +925,7 @@ DATABASES = {
         "NAME": "smarter",
         "USER": "smarter",
         "PASSWORD": "smarter",
-        "HOST": "smarter-sqldb",  # Or an IP Address that your DB is hosted on
+        "HOST": "smarter-mariadb",  # Or an IP Address that your DB is hosted on
         "PORT": "3306",
     }
 }

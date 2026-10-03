@@ -2837,7 +2837,7 @@ class Settings(BaseSettings):
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
         description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
-        examples=["smarter-sqldb-test-db-secret"],
+        examples=["smarter-mariadb-test-db-secret"],
         title="Smarter MySQL Test Database Secret Name",
     )
     """

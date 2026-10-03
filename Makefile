@@ -166,9 +166,9 @@ docker-init:
 	@echo "==============================================================================="
 	make docker-check && \
 	docker-compose up -d && \
-	docker exec smarter-sqldb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
-	docker exec smarter-sqldb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
-	docker exec -i smarter-sqldb mariadb -u root -psmarter < scripts/smarter_test_db.sql && \
+	docker exec smarter-mariadb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
+	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec -i smarter-mariadb mariadb -u root -psmarter < scripts/smarter_test_db.sql && \
 	docker exec smarter-app bash -c "\
 		python manage.py reset_cache && \
 		python manage.py makemigrations && python manage.py migrate && \
@@ -177,8 +177,8 @@ docker-init:
 		python manage.py create_stackademy && \
 		python manage.py deploy_builtin_llmclients && \
 		python manage.py deploy_example_llmclient" && \
-	docker exec smarter-sqldb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
-	docker exec smarter-sqldb mariadb -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
+	docker exec smarter-mariadb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
+	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
 	@echo "Docker and Smarter are initialized."
 	docker ps
 
