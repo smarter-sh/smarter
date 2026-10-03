@@ -27,6 +27,7 @@ import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { LLMHostCompute } from "@/lib/Types";
+import "./styles.css";
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -201,7 +202,7 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
           title="Manifest: Open the YAML manifest that defines this LLMHostCompute, with its node group's status"
           tabIndex={0}
         >
-          <i className="bi bi-pencil-square" />
+          <i className="bi bi-pencil-square md-blue" />
         </a>
         <button
           type="button"
@@ -210,7 +211,7 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
           onClick={() => setModal({ type: "clone", compute })}
           tabIndex={0}
         >
-          <i className="bi bi-files" />
+          <i className="bi bi-files md-green" />
         </button>
         <button
           type="button"
@@ -219,7 +220,7 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
           onClick={() => setModal({ type: "rename", compute })}
           tabIndex={0}
         >
-          <i className="bi bi-pencil" />
+          <i className="bi bi-pencil md-blue" />
         </button>
         <button
           type="button"
@@ -233,7 +234,7 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
           disabled={compute.canDelete === false}
           tabIndex={0}
         >
-          <i className="bi bi-trash" />
+          <i className="bi bi-trash md-red" />
         </button>
       </div>
 

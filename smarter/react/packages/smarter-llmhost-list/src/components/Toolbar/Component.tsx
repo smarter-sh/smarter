@@ -30,6 +30,7 @@ import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { LLMHost } from "@/lib/Types";
+import "./styles.css";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 
@@ -193,7 +194,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           title="Chat: Open the llmhost workbench"
           tabIndex={0}
         >
-          <i className="bi bi-chat-dots" />
+          <i className="bi bi-chat-dots md-teal" />
         </a>
         <a
           href={llmhost.manifestUrl}
@@ -201,7 +202,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           title="Edit: Open the YAML manifest that defines this llmhost resource"
           tabIndex={0}
         >
-          <i className="bi bi-pencil-square" />
+          <i className="bi bi-pencil-square md-blue" />
         </a>
         <button
           type="button"
@@ -210,7 +211,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           onClick={() => setModal({ type: "clone", llmhost })}
           tabIndex={0}
         >
-          <i className="bi bi-files" />
+          <i className="bi bi-files md-green" />
         </button>
         <button
           type="button"
@@ -219,7 +220,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           onClick={() => setModal({ type: "rename", llmhost })}
           tabIndex={0}
         >
-          <i className="bi bi-pencil" />
+          <i className="bi bi-pencil md-blue" />
         </button>
         <button
           type="button"
@@ -233,7 +234,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           disabled={llmhost.canDelete === false}
           tabIndex={0}
         >
-          <i className="bi bi-trash" />
+          <i className="bi bi-trash md-red" />
         </button>
       </div>
 
