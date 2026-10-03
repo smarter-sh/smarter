@@ -148,7 +148,7 @@ class PluginDataSql(PluginDataBase):
                     },
                     'test_values': 'admin',
                     'limit': 1,
-                    'connection': <SqlConnection: test_sql_connection - django.db.backends.mysql://smarter:******@smarter-sqldb:3306/smarter>
+                    'connection': <SqlConnection: test_sql_connection - django.db.backends.mysql://smarter:******@smarter-mariadb:3306/smarter>
                 }
 
         :raises SmarterValueError: If a placeholder in the SQL query is not defined in the parameters.

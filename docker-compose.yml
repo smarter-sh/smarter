@@ -6,8 +6,8 @@
 # will be available at http://localhost:9357.
 #------------------------------------------------------------------------------
 services:
-  smarter-sqldb:
-    container_name: smarter-sqldb
+  smarter-mariadb:
+    container_name: smarter-mariadb
     mem_limit: 2g
     cpus: 0.5
     image: mariadb:latest
@@ -60,7 +60,7 @@ services:
     ports:
       - 9357:9357
     depends_on:
-      - smarter-sqldb
+      - smarter-mariadb
       - smarter-redis
     env_file:
       - ./.env
@@ -90,7 +90,7 @@ services:
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
-      - smarter-sqldb
+      - smarter-mariadb
       - smarter-redis
       - smarter-app
     env_file:
@@ -131,7 +131,7 @@ services:
     image: smarter
     command: celery -A smarter.workers.celerybeat beat --loglevel=info
     depends_on:
-      - smarter-sqldb
+      - smarter-mariadb
       - smarter-redis
       - smarter-app
     env_file:
