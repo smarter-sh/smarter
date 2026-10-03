@@ -1,7 +1,8 @@
 ---
 #------------------------------------------------------------------------------
 # - Initialize the full local development environment, as `make init` does
-# - Run the Smarter unit test suite inside the smarter-app container
+# - Run the Smarter unit test suite inside the smarter-app container, with
+#   coverage.py, and upload the coverage report to Codecov
 #
 # This workflow reproduces the local developer workflow from the Makefile:
 # the sub-targets of `make init` (Python venv, React build, collectstatic,
@@ -36,6 +37,8 @@
 # GOOGLE_MAPS_API_KEY
 # SMTP_USERNAME
 # SMTP_PASSWORD
+#
+# The "Upload coverage to Codecov" step uses the CODECOV_TOKEN secret.
 #
 # AWS credentials, ROOT_DOMAIN and EKS_CLUSTER_NAME are deliberately NOT
 # passed. With them, `make docker-init` deploys the example LLMClients to
@@ -390,13 +393,33 @@ jobs:
         run: |
           make docker-init
 
-      # -----------------------------------------------------------------------
-      # Equivalent to `make docker-test`
-      # -----------------------------------------------------------------------
-      - name: Run unit tests
+      #========================================================================
+      # Run the unit tests with coverage
+      #
+      # Runs the same tests as `make docker-test`, under coverage.py. Coverage
+      # is measured for all of smarter, the same suite that the tests cover,
+      # rather than just smarter.apps as `make coverage` does. Tests and
+      # migrations are omitted. .coveragerc is excluded by .dockerignore, so
+      # the options are passed on the command line. coverage run exits with
+      # the test runner's exit code, so a failing test still fails this step.
+      #
+      # coverage.xml is written inside the container and then copied to the
+      # workspace for the Codecov upload. Its paths are container paths,
+      # /home/smarter_user/smarter/smarter/..., which codecov.yml maps back
+      # to the repository's smarter/smarter/....
+      #========================================================================
+      - name: Run unit tests with coverage
         shell: bash
         run: |
-          docker exec smarter-app bash -c "python manage.py test smarter"
+          docker exec smarter-app bash -c "coverage run --source=smarter --omit='*/tests/*,*/migrations/*' manage.py test smarter && coverage report && coverage xml -o coverage.xml"
+          docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Dump container logs
         if: failure()
