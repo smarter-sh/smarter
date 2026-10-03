@@ -248,8 +248,13 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this proxy resource"
+          title={
+            proxy.canDelete === false
+              ? "Delete: You can't delete this proxy, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this proxy resource"
+          }
           onClick={() => setModal({ type: "delete", proxy })}
+          disabled={proxy.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

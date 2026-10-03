@@ -177,6 +177,7 @@ const createMockClient = (id: number, overrides: Partial<LLMClient> = {}): LLMCl
     urlChatapp: `${workbenchBase}/chat/`,
     urlManifest: `${workbenchBase}/manifest/`,
     ready: exampleLLMClientObject.ready,
+    canDelete: true,
     deployed: exampleLLMClientObject.deployed,
     provider: exampleLLMClientObject.provider,
     defaultModel: exampleLLMClientObject.defaultModel,

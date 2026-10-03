@@ -5,6 +5,9 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.orchestrator.manifest.models.orchestrator.const import (
+    MANIFEST_KIND as ORCHESTRATOR_KIND,
+)
 
 from .models import Orchestrator
 
@@ -16,6 +19,7 @@ class OrchestratorSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = Orchestrator
+        kind = ORCHESTRATOR_KIND
         fields = "__all__"
 
     def get_fields(self):

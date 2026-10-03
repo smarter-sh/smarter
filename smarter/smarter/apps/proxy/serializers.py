@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.proxy.manifest.models.proxy.const import MANIFEST_KIND as PROXY_KIND
 from smarter.apps.proxy.models import Proxy
 
 
@@ -22,6 +23,7 @@ class ProxySerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = Proxy
+        kind = PROXY_KIND
         fields = "__all__"
 
     def get_fields(self):

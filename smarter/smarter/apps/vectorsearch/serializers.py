@@ -5,6 +5,9 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import (
+    MANIFEST_KIND as VECTORSEARCH_KIND,
+)
 
 from .models import Vectorsearch
 
@@ -16,6 +19,7 @@ class VectorsearchSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = Vectorsearch
+        kind = VECTORSEARCH_KIND
         fields = "__all__"
 
     def get_fields(self):

@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this connection resource"
+          title={
+            connection.canDelete === false
+              ? "Delete: You can't delete this connection, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this connection resource"
+          }
           onClick={() => setModal({ type: "delete", connection })}
+          disabled={connection.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, authtoken, onRequery }: ToolbarProps) 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this authtoken resource"
+          title={
+            authtoken.canDelete === false
+              ? "Delete: You can't delete this authtoken, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this authtoken resource"
+          }
           onClick={() => setModal({ type: "delete", authtoken })}
+          disabled={authtoken.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

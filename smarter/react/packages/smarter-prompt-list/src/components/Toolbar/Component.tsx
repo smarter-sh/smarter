@@ -227,8 +227,13 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this llmclient resource"
+          title={
+            llmclient.canDelete === false
+              ? "Delete: You can't delete this llmclient, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this llmclient resource"
+          }
           onClick={() => setModal({ type: "delete", llmclient })}
+          disabled={llmclient.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

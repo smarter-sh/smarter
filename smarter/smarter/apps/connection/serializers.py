@@ -7,6 +7,12 @@ from rest_framework import serializers
 from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
 )
+from smarter.apps.connection.manifest.models.api_connection.const import (
+    MANIFEST_KIND as API_CONNECTION_KIND,
+)
+from smarter.apps.connection.manifest.models.sql_connection.const import (
+    MANIFEST_KIND as SQL_CONNECTION_KIND,
+)
 from smarter.apps.connection.models import (
     ApiConnection,
     ConnectionBase,
@@ -53,7 +59,6 @@ class SqlConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     connection details and optional proxy settings. It is used to serialize and deserialize
     SQL connection information.
 
-
     :return: Serialized SQL connection configuration.
     :rtype: dict
 
@@ -82,12 +87,12 @@ class SqlConnectionSerializer(MetaDataWithOwnershipModelSerializer):
         #   "hostname": "...",
         #  .....
         # }
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = SqlConnection
+        kind = SQL_CONNECTION_KIND
         fields = [
             "name",
             "description",
@@ -159,7 +164,6 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
         #   "proxyUsername": "...",
         #   "proxyPassword": "..."
         # }
-
     """
 
     user_profile = serializers.SlugRelatedField(slug_field="name", read_only=True)
@@ -169,6 +173,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = ApiConnection
+        kind = API_CONNECTION_KIND
         fields = [
             "user_profile",
             "name",

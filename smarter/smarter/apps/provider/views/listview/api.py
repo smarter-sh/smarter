@@ -102,7 +102,7 @@ class ProviderListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": ProviderSerializer(providers, many=True).data,
+            "objects": ProviderSerializer(providers, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -161,7 +161,7 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_provider = provider.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_providers_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = ProviderSerializer(cloned_provider).data
+            data = ProviderSerializer(cloned_provider, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -290,7 +290,7 @@ class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             provider.rename(new_name=new_name)
             invalidate_all_cached_providers_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = ProviderSerializer(provider).data
+            data = ProviderSerializer(provider, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

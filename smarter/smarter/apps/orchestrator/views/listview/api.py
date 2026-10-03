@@ -102,7 +102,7 @@ class OrchestratorListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": OrchestratorSerializer(orchestrators, many=True).data,
+            "objects": OrchestratorSerializer(orchestrators, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -163,7 +163,7 @@ class OrchestratorListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_orchestrator = orchestrator.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_orchestrators_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = OrchestratorSerializer(cloned_orchestrator).data
+            data = OrchestratorSerializer(cloned_orchestrator, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -298,7 +298,7 @@ class OrchestratorListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             orchestrator.rename(new_name=new_name)
             invalidate_all_cached_orchestrators_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = OrchestratorSerializer(orchestrator).data
+            data = OrchestratorSerializer(orchestrator, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

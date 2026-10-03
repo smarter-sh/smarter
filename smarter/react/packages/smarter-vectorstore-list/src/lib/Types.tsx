@@ -27,6 +27,7 @@ export type Vectorstore = {
   annotations: Annotations;
   userProfile: UserProfile;
   manifestUrl: string;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
 
   // --- the manifest ---
   spec: Record<string, unknown>;

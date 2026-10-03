@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this LLMHostCompute and its node group"
+          title={
+            compute.canDelete === false
+              ? "Delete: You can't delete this LLMHostCompute, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this LLMHostCompute and its node group"
+          }
           onClick={() => setModal({ type: "delete", compute })}
+          disabled={compute.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

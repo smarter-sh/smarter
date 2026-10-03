@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this secret resource"
+          title={
+            secret.canDelete === false
+              ? "Delete: You can't delete this secret, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this secret resource"
+          }
           onClick={() => setModal({ type: "delete", secret })}
+          disabled={secret.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

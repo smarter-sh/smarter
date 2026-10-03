@@ -10,6 +10,9 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
+    MANIFEST_KIND as VECTORSTORE_KIND,
+)
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import VectorstoreDocument, VectorstoreMeta, VectorstoreSnapshot
@@ -30,6 +33,7 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = VectorstoreMeta
+        kind = VECTORSTORE_KIND
         fields = "__all__"
 
     def get_fields(self):

@@ -102,7 +102,7 @@ class GuardrailListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": GuardrailSerializer(guardrails, many=True).data,
+            "objects": GuardrailSerializer(guardrails, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -161,7 +161,7 @@ class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_guardrail = guardrail.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_guardrails_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = GuardrailSerializer(cloned_guardrail).data
+            data = GuardrailSerializer(cloned_guardrail, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -290,7 +290,7 @@ class GuardrailListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             guardrail.rename(new_name=new_name)
             invalidate_all_cached_guardrails_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = GuardrailSerializer(guardrail).data
+            data = GuardrailSerializer(guardrail, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

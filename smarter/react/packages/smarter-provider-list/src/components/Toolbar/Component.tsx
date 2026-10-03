@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this provider resource"
+          title={
+            provider.canDelete === false
+              ? "Delete: You can't delete this provider, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this provider resource"
+          }
           onClick={() => setModal({ type: "delete", provider })}
+          disabled={provider.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

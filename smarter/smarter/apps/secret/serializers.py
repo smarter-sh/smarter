@@ -1,8 +1,11 @@
-"""Account serializers for Smarter API"""
+"""Account serializers for Smarter API."""
 
 from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
+)
+from smarter.apps.secret.manifest.models.secret.const import (
+    MANIFEST_KIND as SECRET_KIND,
 )
 from smarter.apps.secret.models import Secret
 
@@ -34,7 +37,6 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
     .. seealso::
 
             For user profile details, see :class:`UserProfileSerializer`.
-
     """
 
     user_profile = UserProfileSerializer()
@@ -42,6 +44,7 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
+        kind = SECRET_KIND
         fields = [
             "id",
             "created_at",
@@ -84,12 +87,12 @@ class SecretMiniSerializer(MetaDataWithOwnershipModelSerializer):
         from smarter.apps.account.serializers import SecretMiniSerializer
         serializer = SecretMiniSerializer(secret_instance)
         data = serializer.data
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
+        kind = SECRET_KIND
         fields = ["id", "name", "manifest_url", "ready"]
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "id",

@@ -196,7 +196,7 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMClientSerializer(llmclients, many=True).data,
+            "objects": LLMClientSerializer(llmclients, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -283,7 +283,7 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_llmclient = llmclient.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = LLMClientSerializer(cloned_llmclient).data
+            data = LLMClientSerializer(cloned_llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -420,7 +420,7 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             llmclient.rename(new_name=new_name)
             invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = LLMClientSerializer(llmclient).data
+            data = LLMClientSerializer(llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:

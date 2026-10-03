@@ -106,7 +106,7 @@ class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMHostSerializer(llmhosts, many=True).data,
+            "objects": LLMHostSerializer(llmhosts, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -163,7 +163,7 @@ class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned_llmhost = llmhost.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_llmhosts_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = LLMHostSerializer(cloned_llmhost).data
+            data = LLMHostSerializer(cloned_llmhost, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -292,7 +292,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             llmhost.rename(new_name=new_name)
             invalidate_all_cached_llmhosts_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = LLMHostSerializer(llmhost).data
+            data = LLMHostSerializer(llmhost, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
@@ -368,7 +368,7 @@ class LLMHostComputeListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMHostComputeSerializer(computes, many=True).data,
+            "objects": LLMHostComputeSerializer(computes, many=True, context={"request": request}).data,
         }
         return JsonResponse(retval)
 
@@ -419,7 +419,7 @@ class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             new_name = self.to_snake_case(new_name.strip())
             cloned = compute.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_llmhost_computes_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            return JsonResponse(LLMHostComputeSerializer(cloned).data, status=HTTPStatus.OK)  # type: ignore
+            return JsonResponse(LLMHostComputeSerializer(cloned, context={"request": request}).data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
@@ -547,7 +547,7 @@ class LLMHostComputeListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             compute.rename(new_name=self.to_snake_case(new_name.strip()))
             invalidate_all_cached_llmhost_computes_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            return JsonResponse(LLMHostComputeSerializer(compute).data, status=HTTPStatus.OK)  # type: ignore
+            return JsonResponse(LLMHostComputeSerializer(compute, context={"request": request}).data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(

@@ -32,6 +32,7 @@ export type Connection = {
   lastAccessed: string | null;
   expiresAt: string | null;
   manifestUrl: string;
+  canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
 };
 

@@ -224,8 +224,13 @@ export const Toolbar = ({ sessionContext, vectorsearch, onRequery }: ToolbarProp
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Delete: Delete this vectorsearch resource"
+          title={
+            vectorsearch.canDelete === false
+              ? "Delete: You can't delete this vectorsearch, because other resources depend on it, or you don't have permission to delete it"
+              : "Delete: Delete this vectorsearch resource"
+          }
           onClick={() => setModal({ type: "delete", vectorsearch })}
+          disabled={vectorsearch.canDelete === false}
           tabIndex={0}
         >
           <i className="bi bi-trash" />

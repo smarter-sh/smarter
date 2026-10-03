@@ -5,6 +5,9 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.guardrail.manifest.models.guardrail.const import (
+    MANIFEST_KIND as GUARDRAIL_KIND,
+)
 
 from .models import Guardrail, GuardrailEvent
 
@@ -21,6 +24,7 @@ class GuardrailSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = Guardrail
+        kind = GUARDRAIL_KIND
         fields = "__all__"
 
     def get_fields(self):
