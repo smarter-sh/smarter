@@ -44,6 +44,7 @@ Dependencies
 
 from __future__ import annotations
 
+import inspect
 import traceback
 from collections.abc import Awaitable
 from datetime import timedelta
@@ -124,7 +125,11 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
     async def __acall__(self, request: Request):
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        return await sync_to_async(self.process_request)(request)
+        # process_request() returns get_response()'s coroutine, in async mode, which must be awaited.
+        response = await sync_to_async(self.process_request)(request)
+        if inspect.isawaitable(response):
+            response = await response
+        return response
 
     def process_request(self, request: Request):
 

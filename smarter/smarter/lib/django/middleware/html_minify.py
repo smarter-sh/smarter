@@ -245,12 +245,11 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return self.get_response(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
-        callback = super().__acall__
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
-            return await sync_to_async(callback)(request)  # type: ignore
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await sync_to_async(callback)(request)
+        response = await super().__acall__(request)
         response = await self.async_process_response(request, response)
         return response
 

@@ -101,7 +101,7 @@ class SmarterCommand(BaseCommand):
         logger.error("-" * 80)
         if msg:
             logger.error("%s", msg)
-        msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
+        msg = f"{self.__module__} failed" + (f" with error: {err}" if err else ".")
         logger.error("%s", msg)
         if err:
             tb = traceback.format_exc()

@@ -8,7 +8,12 @@ from smarter.lib import logging
 
 # our stuff
 from .aws import AWSBase
-from .exceptions import AWSACMVerificationFailed, AWSNotReadyError
+from .exceptions import (
+    AWSACMCertificateNotFound,
+    AWSACMVerificationFailed,
+    AWSACMVerificationTimeout,
+    AWSNotReadyError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -102,11 +107,17 @@ class AWSCertificateManager(AWSBase):
                             return certificate_detail
                 logger.debug("Waiting for DNS records to be generated for ACM certificate ARN: %s", certificate_arn)
                 attempts += 1
+                if attempts >= max_attempts:
+                    raise AWSACMVerificationTimeout(
+                        f"Timed out waiting for the DNS records of AWS ACM certificate ARN {certificate_arn}"
+                    )
                 time.sleep(sleep_interval)
             except self.client.exceptions.ResourceNotFoundException as e:
                 attempts += 1
                 if attempts >= max_attempts:
-                    raise e(f"Failed to get certificate details for AWS ACM certificate ARN {certificate_arn}") from e
+                    raise AWSACMCertificateNotFound(
+                        f"Failed to get certificate details for AWS ACM certificate ARN {certificate_arn}"
+                    ) from e
                 # Wait for a while before describing the certificate
                 # as it can take a few seconds for ACM to generate the DNS records
                 time.sleep(sleep_interval)

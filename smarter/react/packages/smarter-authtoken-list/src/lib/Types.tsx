@@ -19,7 +19,7 @@ import type { SessionContext, Annotations, UserProfile } from "@smarter/common";
 // AuthToken Definition
 // ----------------------------------------------------------------------------
 export type AuthToken = {
-  id: number;
+  id: string; // the token's key_id, a UUID: a token has no integer id
   hashedId: string;
   createdAt: string;
   updatedAt: string;

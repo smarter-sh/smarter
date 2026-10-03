@@ -5,12 +5,16 @@ from typing import Any, Optional
 import botocore.exceptions
 from botocore.config import Config
 
-from smarter.common.conf import settings_defaults
 from smarter.lib import logging
 
 from .aws import AWSBase, SmarterAWSException
 
 logger = logging.getLogger(__name__)
+
+#: The API Gateway client's timeouts, in seconds, and retries: botocore's defaults.
+AWS_APIGATEWAY_READ_TIMEOUT = 60
+AWS_APIGATEWAY_CONNECT_TIMEOUT = 60
+AWS_APIGATEWAY_MAX_ATTEMPTS = 3
 
 
 class AWSAPIGateway(AWSBase):
@@ -28,24 +32,27 @@ class AWSAPIGateway(AWSBase):
     @property
     def client(self):
         """Return the AWS API Gateway client."""
-        if self.client:
-            return self.client
+        if self._client:
+            return self._client
 
         if not self.ready:
             logger.error("%s.client() AWS session is not ready", self.formatted_class_name)
             return None
         try:
             config = Config(
-                read_timeout=settings_defaults.AWS_APIGATEWAY_READ_TIMEOUT,
-                connect_timeout=settings_defaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
-                retries={"max_attempts": settings_defaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
+                read_timeout=AWS_APIGATEWAY_READ_TIMEOUT,
+                connect_timeout=AWS_APIGATEWAY_CONNECT_TIMEOUT,
+                retries={"max_attempts": AWS_APIGATEWAY_MAX_ATTEMPTS},
             )
-            self.client = self.aws_session.client(self._client_type, config=config)
+            if self.aws_session is None:
+                logger.error("%s.client() AWS session is not available", self.formatted_class_name)
+                return None
+            self._client = self.aws_session.client(self._client_type, config=config)
             logger.debug("%s.client() AWS API Gateway client created successfully", self.formatted_class_name)
         except botocore.exceptions.BotoCoreError as e:
             logger.error("%s.client() Failed to create AWS API Gateway client: %s", self.formatted_class_name, str(e))
             return None
-        return self.client
+        return self._client
 
     @property
     def name(self) -> Optional[str]:

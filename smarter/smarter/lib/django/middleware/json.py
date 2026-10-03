@@ -214,11 +214,10 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
-            return await sync_to_async(self.get_response)(request)
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        callback = super().__acall__
-        response = await sync_to_async(callback)(request)  # type: ignore
+        response = await super().__acall__(request)
         response = await self.async_process_response(request, response)  # type: ignore
 
         return response

@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the AuthToken
+This module contains views to implement the AuthToken.
+
 card-style detail view in the Smarter Dashboard.
 """
 
@@ -55,7 +56,6 @@ class AuthTokenDetailView(DocsBaseView):
     **Example usage**::
 
         GET /authtoken/detail/?name=my_authtoken&kind=custom
-
     """
 
     template_path = "common/manifest_detail.html"
@@ -64,6 +64,7 @@ class AuthTokenDetailView(DocsBaseView):
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the authtoken manifest detail view.
+
         This method processes the incoming request to retrieve the
         specified authtoken's manifest details and renders them in a
         user-friendly format. It performs validation on the provided authtoken
@@ -95,22 +96,22 @@ class AuthTokenDetailView(DocsBaseView):
 
         authtoken_id = kwargs.pop("authtoken_id")
         try:
-            self.authtoken = AuthToken.objects.get(id=authtoken_id, user_profile=self.user_profile)
+            self.authtoken = AuthToken.objects.get(key_id=authtoken_id, user_profile=self.user_profile)
         except AuthToken.DoesNotExist:
             try:
                 if self.user_profile:
 
                     admin_user = UserProfile.admin_for_account(self.user_profile.account)
                     admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.authtoken = AuthToken.objects.get(id=authtoken_id, user_profile=admin_user_profile)
+                    self.authtoken = AuthToken.objects.get(key_id=authtoken_id, user_profile=admin_user_profile)
             except AuthToken.DoesNotExist:
                 try:
                     self.authtoken = AuthToken.objects.get(
-                        id=authtoken_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                        key_id=authtoken_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
                     )
                 except AuthToken.DoesNotExist:
                     pass
-        self.kind = SAMKinds.SECRET
+        self.kind = SAMKinds.AUTH_TOKEN
 
         logger.debug(
             "%s.post() Rendering authtoken detail view for %s, kwargs=%s.",
