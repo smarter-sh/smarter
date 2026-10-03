@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.4](https://github.com/smarter-sh/smarter/compare/v0.16.3...v0.16.4) (2026-10-03)
+
+### Bug Fixes
+
+* revert sql service name change back to smarter-mariadb ([cf569bb](https://github.com/smarter-sh/smarter/commit/cf569bbf9cdb1adaefb71e0ce72cc7cce2f177a8))
+
 ## [0.16.3](https://github.com/smarter-sh/smarter/compare/v0.16.2...v0.16.3) (2026-10-02)
 
 ### Bug Fixes
