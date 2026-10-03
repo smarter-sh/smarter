@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.5](https://github.com/smarter-sh/smarter/compare/v0.16.4...v0.16.5) (2026-10-03)
+
+### Bug Fixes
+
+* use utf8mb4 for MariaDB databases and decouple init job from backup flag ([1d4fe11](https://github.com/smarter-sh/smarter/commit/1d4fe1159803a3621c50354362fc9946abda6475))
+
 ## [0.16.4](https://github.com/smarter-sh/smarter/compare/v0.16.3...v0.16.4) (2026-10-03)
 
 ### Bug Fixes
