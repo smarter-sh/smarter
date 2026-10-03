@@ -24,6 +24,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
     SAMBrokerReadOnlyError,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -314,9 +315,21 @@ class SAMPromptBroker(AbstractBroker):
                 raise SAMPromptBrokerError(f"Failed to describe {self.kind}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="Prompt not found", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> typing.List[AbstractBroker]:
+        """Return brokers for the resources that depend on this Prompt.
+
+        A Prompt is a chat session. Orchestration runs refer to it as history, which is deleted with it.
+
+        :return: An empty list.
+        :rtype: typing.List[AbstractBroker]
+        """
+        return []
+
     def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.verify_no_dependencies(command)
         if self.chat_object:
             try:
                 self.chat_object.delete()

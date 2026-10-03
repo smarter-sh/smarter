@@ -10,7 +10,7 @@ Smarter API Guardrail Manifest handler.
 """
 
 import datetime
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.db import transaction
 from django.db.models import Count, Max, Q
@@ -56,6 +56,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -181,10 +182,10 @@ class SAMGuardrailBroker(AbstractBroker):
         return retval
 
     def status_for(self, guardrail: Guardrail) -> dict[str, Any]:
-        """Return the LLMClients that use a Guardrail, and its events of the last 30 days."""
-        # pylint: disable=import-outside-toplevel
-        from smarter.apps.llmclient.models import LLMClientGuardrails
+        """Return a Guardrail's events of the last 30 days.
 
+        The LLMClients that use it are reported in ``status.dependencies``.
+        """
         since = timezone.now() - datetime.timedelta(days=STATUS_DAYS)
         counts = GuardrailEvent.objects.filter(guardrail=guardrail, created_at__gte=since).aggregate(
             triggered=Count("id", filter=~Q(disposition=GuardrailDisposition.ERROR)),
@@ -192,11 +193,7 @@ class SAMGuardrailBroker(AbstractBroker):
             errors=Count("id", filter=Q(disposition=GuardrailDisposition.ERROR)),
             last=Max("created_at", filter=~Q(disposition=GuardrailDisposition.ERROR)),
         )
-        llmclients = sorted(
-            LLMClientGuardrails.objects.filter(guardrail=guardrail).values_list("llmclient__name", flat=True)
-        )
         return {
-            "llmClients": llmclients,
             "triggered": counts["triggered"],
             "blocked": counts["blocked"],
             "errors": counts["errors"],
@@ -405,14 +402,34 @@ class SAMGuardrailBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the LLMClients that use this Guardrail.
+
+        :return: A broker for each LLMClient that lists this Guardrail in its ``spec.guardrails``.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
+
+        guardrail = self.guardrail
+        if not guardrail:
+            return []
+        llmclients = LLMClient.objects.filter(
+            id__in=LLMClientGuardrails.objects.filter(guardrail=guardrail).values("llmclient_id")
+        )
+        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the Guardrail.
 
-        It is also detached from any LLMClients.
+        Refused while LLMClients use it.
         """
         command = SmarterJournalCliCommands(self.delete.__name__)
         if self.name is None or not self.guardrail:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         try:
             self.cache_invalidations()
             self.guardrail.delete()

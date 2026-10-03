@@ -15,7 +15,7 @@ The broker implements the ``smarter`` CLI commands for LLMHosts:
 """
 
 import datetime
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -57,6 +57,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -424,12 +425,24 @@ class SAMLLMHostBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that depend on this LLMHost.
+
+        No other resource refers to an LLMHost.
+
+        :return: An empty list.
+        :rtype: List[AbstractBroker]
+        """
+        return []
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Destroy the LLMHost's Kubernetes resources, including its model volume, then delete it."""
         command = SmarterJournalCliCommands(self.delete.__name__)
         llmhost = self.llmhost
         if self.name is None or not llmhost:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         # pylint: disable=import-outside-toplevel
         from smarter.apps.llmhost.tasks import destroy_dns_record
 

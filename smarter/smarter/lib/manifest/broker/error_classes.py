@@ -102,6 +102,17 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
         return msg
 
 
+class SAMBrokerErrorDependencies(SAMBrokerError):
+    """Error for deleting a resource that other resources depend on."""
+
+    @property
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() dependency error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
+
+
 class SAMBrokerInternalError(SAMBrokerError):
     """
     Error for broker operations that result in an internal error,.
@@ -123,5 +134,6 @@ __all__ = [
     "SAMBrokerErrorNotImplemented",
     "SAMBrokerErrorNotReady",
     "SAMBrokerErrorNotFound",
+    "SAMBrokerErrorDependencies",
     "SAMBrokerInternalError",
 ]

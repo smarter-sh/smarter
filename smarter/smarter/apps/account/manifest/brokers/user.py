@@ -1,7 +1,7 @@
 # pylint: disable=W0718,C0302
 """Smarter API User Manifest handler."""
 
-from typing import TYPE_CHECKING, Any, Optional, Type
+from typing import TYPE_CHECKING, Any, List, Optional, Type
 
 from django.core import serializers
 from django.db import transaction
@@ -28,6 +28,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -1006,6 +1007,57 @@ class SAMUserBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that this User owns.
+
+        Deleting a User also deletes every resource that it owns, so they must be deleted, or
+        moved to another owner, first.
+
+        :return: A broker for each resource that the User owns.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.connection.models import ApiConnection, SqlConnection
+        from smarter.apps.guardrail.models import Guardrail
+        from smarter.apps.llmclient.models import LLMClient
+        from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
+        from smarter.apps.mcpclient.models import MCPClient
+        from smarter.apps.orchestrator.models import Orchestrator
+        from smarter.apps.plugin.models import PluginMeta
+        from smarter.apps.provider.models import Provider
+        from smarter.apps.proxy.models import Proxy
+        from smarter.apps.secret.models import Secret
+        from smarter.apps.vectorsearch.models import Vectorsearch
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+        from smarter.lib.drf.models import SmarterAuthToken
+
+        user = self.brokered_user
+        if not user:
+            return []
+        retval: List[AbstractBroker] = []
+        for kind, model in (
+            (SAMKinds.API_CONNECTION, ApiConnection),
+            (SAMKinds.SQL_CONNECTION, SqlConnection),
+            (SAMKinds.GUARDRAIL, Guardrail),
+            (SAMKinds.LLM_CLIENT, LLMClient),
+            (SAMKinds.LLM_HOST, LLMHost),
+            (SAMKinds.LLM_HOST_COMPUTE, LLMHostCompute),
+            (SAMKinds.MCP_CLIENT, MCPClient),
+            (SAMKinds.ORCHESTRATOR, Orchestrator),
+            (SAMKinds.PROVIDER, Provider),
+            (SAMKinds.PROXY, Proxy),
+            (SAMKinds.SECRET, Secret),
+            (SAMKinds.VECTORSEARCH, Vectorsearch),
+            (SAMKinds.VECTORSTORE, VectorstoreMeta),
+            (SAMKinds.AUTH_TOKEN, SmarterAuthToken),
+        ):
+            retval += self.dependency_brokers(kind.value, model.objects.filter(user_profile__user=user))
+        for plugin_meta in PluginMeta.objects.filter(user_profile__user=user):
+            retval.append(self.dependency_broker(plugin_meta.kind.value, plugin_meta))
+        return retval
+
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the Smarter API User manifest by removing the corresponding Django ORM `User` model instance.
@@ -1052,6 +1104,8 @@ class SAMUserBroker(AbstractBroker):
                 f"Failed to delete {self.kind} {username}. Not found", thing=self.kind, command=command
             ) from e
 
+        self._brokered_user = user
+        self.verify_no_dependencies(command)
         if user:
             try:
                 user.delete()

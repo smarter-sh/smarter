@@ -3,7 +3,7 @@
 
 import traceback
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Optional, Type
+from typing import TYPE_CHECKING, Any, List, Optional, Type
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
@@ -37,6 +37,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -832,6 +833,48 @@ class SAMSecretBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotFound(f"{self.kind} not ready", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that use this Secret.
+
+        :return: A broker for each ApiConnection, SqlConnection, Provider, Proxy, LLMHost,
+            MCPClient, WebsearchPlugin, Vectorstore and Vectorsearch that refers to this Secret.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from django.db.models import Q
+
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.connection.models import ApiConnection, SqlConnection
+        from smarter.apps.llmhost.models import LLMHost
+        from smarter.apps.mcpclient.models import MCPClient
+        from smarter.apps.plugin.models import PluginDataWebsearch, PluginMeta
+        from smarter.apps.provider.models import Provider
+        from smarter.apps.proxy.models import Proxy
+        from smarter.apps.vectorsearch.models import Vectorsearch
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+
+        secret = self.secret
+        if not secret:
+            return []
+        plugins = PluginMeta.objects.filter(
+            id__in=PluginDataWebsearch.objects.filter(search_api_key=secret).values("plugin_id")
+        )
+        retval: List[AbstractBroker] = []
+        for kind, queryset in (
+            (SAMKinds.API_CONNECTION, ApiConnection.objects.filter(Q(api_key=secret) | Q(proxy_password=secret))),
+            (SAMKinds.SQL_CONNECTION, SqlConnection.objects.filter(Q(password=secret) | Q(proxy_password=secret))),
+            (SAMKinds.PROVIDER, Provider.objects.filter(api_key=secret)),
+            (SAMKinds.PROXY, Proxy.objects.filter(api_key_secret=secret)),
+            (SAMKinds.LLM_HOST, LLMHost.objects.filter(api_key_secret=secret)),
+            (SAMKinds.MCP_CLIENT, MCPClient.objects.filter(credentials=secret)),
+            (SAMKinds.WEBSEARCH_PLUGIN, plugins),
+            (SAMKinds.VECTORSTORE, VectorstoreMeta.objects.filter(api_key_secret=secret)),
+            (SAMKinds.VECTORSEARCH, Vectorsearch.objects.filter(auth_secret=secret)),
+        ):
+            retval += self.dependency_brokers(kind.value, queryset)
+        return retval
+
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the Smarter API Secret manifest from the database.
@@ -867,6 +910,7 @@ class SAMSecretBroker(AbstractBroker):
                 command=command,
             )
 
+        self.verify_no_dependencies(command)
         if self.secret:
             try:
                 self.secret.delete()

@@ -338,6 +338,20 @@ class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
     """
 
 
+class SAMDependency(SmarterBasePydanticModel):
+    """A resource that depends on the resource that a manifest describes."""
+
+    kind: str = Field(
+        ...,
+        description="kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+    )
+
+    name: str = Field(
+        ...,
+        description="name[String]: The name of the resource that depends on this resource. Read only.",
+    )
+
+
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class.
 
@@ -357,6 +371,14 @@ class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     modified: datetime.datetime = Field(
         ...,
         description="The date in which this resource was most recently changed. Read only.",
+    )
+
+    dependencies: Optional[List[SAMDependency]] = Field(
+        default=None,
+        description=(
+            "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop "
+            "referring to it, before it can be deleted. Lists only the resources that you can read. Read only."
+        ),
     )
 
 

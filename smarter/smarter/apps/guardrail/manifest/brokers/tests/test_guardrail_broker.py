@@ -14,9 +14,12 @@ import os
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.manifest.models.guardrail.model import SAMGuardrail
 from smarter.apps.guardrail.models import Guardrail, GuardrailEvent
+from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
+from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
+    SAMBrokerErrorDependencies,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
@@ -126,7 +129,7 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
         self.assertEqual(config["replacement"], "[REDACTED {label}]")
         self.assertEqual(data["status"]["triggered"], 1)
         self.assertEqual(data["status"]["blocked"], 0)
-        self.assertEqual(data["status"]["llmClients"], [])
+        self.assertEqual(data["status"]["dependencies"], [])
         SAMGuardrail(**data)
 
     def test_describe_not_found(self):
@@ -150,6 +153,66 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
         self.assertFalse(Guardrail.objects.filter(user_profile=self.user_profile, name=GUARDRAIL_NAME).exists())
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker_for("guardrail.yaml").delete(self.request, **self.kwargs)
+
+    def attach_to_llmclient(self, name: str = "test_guardrail_dependency") -> LLMClient:
+        """Return a new LLMClient that uses the Guardrail."""
+        llmclient = LLMClient.objects.create(name=name, user_profile=self.user_profile)
+        self.addCleanup(llmclient.delete)
+        LLMClientGuardrails.objects.create(llmclient=llmclient, guardrail=self.guardrail())
+        return llmclient
+
+    def test_dependencies_none(self):
+        """Test that dependencies() is empty for a Guardrail that no LLMClient uses."""
+        self.broker.apply(self.request, **self.kwargs)
+        self.assertEqual(self.broker_for("guardrail.yaml").dependencies(), [])
+
+    def test_dependencies(self):
+        """Test that dependencies() returns a broker for each LLMClient that uses the Guardrail."""
+        self.broker.apply(self.request, **self.kwargs)
+        llmclient = self.attach_to_llmclient()
+        dependencies = self.broker_for("guardrail.yaml").dependencies()
+        self.assertEqual(len(dependencies), 1)
+        self.assertIsInstance(dependencies[0], SAMLLMClientBroker)
+        self.assertEqual(dependencies[0].name, llmclient.name)
+        self.assertEqual(dependencies[0].llmclient, llmclient)
+
+    def test_dependencies_memoized(self):
+        """Test that dependencies() queries once per broker instance."""
+        self.broker.apply(self.request, **self.kwargs)
+        broker = self.broker_for("guardrail.yaml")
+        dependencies = broker.dependencies()
+        self.attach_to_llmclient()
+        self.assertIs(broker.dependencies(), dependencies)
+        self.assertEqual(len(self.broker_for("guardrail.yaml").dependencies()), 1)
+
+    def test_delete_ignores_memoized_dependencies(self):
+        """Test that delete() checks the current dependencies, not those memoized before an LLMClient used it."""
+        self.broker.apply(self.request, **self.kwargs)
+        broker = self.broker_for("guardrail.yaml")
+        self.assertEqual(broker.dependencies(), [])
+        self.attach_to_llmclient()
+        with self.assertRaises(SAMBrokerErrorDependencies):
+            broker.delete(self.request, **self.kwargs)
+
+    def test_describe_dependencies(self):
+        """Test that describe() reports the LLMClients that use the Guardrail in status.dependencies."""
+        self.broker.apply(self.request, **self.kwargs)
+        response = self.broker_for("guardrail.yaml").describe(self.request, **self.kwargs)
+        self.assertEqual(json.loads(response.content)["data"]["status"]["dependencies"], [])
+        llmclient = self.attach_to_llmclient()
+        response = self.broker_for("guardrail.yaml").describe(self.request, **self.kwargs)
+        data = json.loads(response.content)["data"]
+        self.assertEqual(data["status"]["dependencies"], [{"kind": "LLMClient", "name": llmclient.name}])
+        SAMGuardrail(**data)
+
+    def test_delete_refused_while_used(self):
+        """Test that delete() refuses to delete a Guardrail that an LLMClient uses, and names the LLMClient."""
+        self.broker.apply(self.request, **self.kwargs)
+        llmclient = self.attach_to_llmclient()
+        with self.assertRaises(SAMBrokerErrorDependencies) as context:
+            self.broker_for("guardrail.yaml").delete(self.request, **self.kwargs)
+        self.assertIn(f"LLMClient {llmclient.name}", str(context.exception))
+        self.assertTrue(Guardrail.objects.filter(user_profile=self.user_profile, name=GUARDRAIL_NAME).exists())
 
     def test_not_implemented(self):
         """Test that deploy, undeploy and prompt are not implemented."""

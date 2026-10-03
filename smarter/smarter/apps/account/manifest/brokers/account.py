@@ -3,7 +3,7 @@
 
 import datetime
 import traceback
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from django.core import serializers
 from rest_framework.serializers import ModelSerializer
@@ -28,6 +28,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -846,6 +847,27 @@ class SAMAccountBroker(AbstractBroker):
             return self.json_response_ok(command=command, data=data)
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
+
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the Users that belong to this Account.
+
+        :return: A User broker for each of the Account's users.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+
+        account = self.brokered_account
+        if not account:
+            return []
+        user_profiles = UserProfile.objects.filter(account=account).select_related("user")
+        return [
+            self.dependency_broker(
+                SAMKinds.USER.value, user_profile.user, name=user_profile.user.username, user_profile=user_profile
+            )
+            for user_profile in user_profiles
+        ]
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

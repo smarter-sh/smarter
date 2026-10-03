@@ -903,6 +903,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=command,
             )
+        self.verify_no_dependencies(command)
         if self.plugin.ready:
             try:
                 self.plugin.delete()

@@ -817,6 +817,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             raise SAMBrokerErrorNotReady(
                 f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
             )
+        self.verify_no_dependencies(command)
         try:
             self.plugin.delete()
             return self.json_response_ok(command=command, data={})

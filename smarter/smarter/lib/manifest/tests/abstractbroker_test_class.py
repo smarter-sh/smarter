@@ -1,7 +1,7 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler."""
 
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -257,6 +257,9 @@ class SAMTestBroker(AbstractBroker):
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().describe(request=request, kwargs=kwargs)
+
+    def dependencies(self) -> List[AbstractBroker]:
+        return []
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().delete(request=request, kwargs=kwargs)
