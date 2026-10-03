@@ -383,7 +383,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     async def __acall__(self, request: HttpRequest) -> HttpResponse:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
-            return await sync_to_async(super().__call__)(request)  # type: ignore
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await sync_to_async(self._inspect_request)(request)

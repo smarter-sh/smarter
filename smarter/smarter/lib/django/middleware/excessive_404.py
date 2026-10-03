@@ -147,7 +147,6 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from http import HTTPStatus
 
-from asgiref.sync import sync_to_async
 from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
@@ -202,18 +201,17 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         if self.deserves_amnesty(request.path):
             return response
 
-        self.process_response(request, response)  # type: ignore
-        return response
+        # process_response() returns a 403 for a client that has exceeded the limit.
+        return self.process_response(request, response)  # type: ignore
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
-            return await sync_to_async(self.get_response)(request)
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await super().__acall__(request)
-        await self.async_process_response(request, response)
-        return response
+        return await self.async_process_response(request, response)
 
     @property
     def formatted_class_name(self) -> str:

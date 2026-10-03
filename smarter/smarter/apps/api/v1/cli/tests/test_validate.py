@@ -1,6 +1,7 @@
 """Test the cli 'validate' command, :class:`smarter.apps.api.v1.cli.views.validate.ApiV1CliValidateApiView`."""
 
 import copy
+import json
 import os
 from http import HTTPStatus
 
@@ -86,3 +87,40 @@ class TestApiCliV1Validate(ApiV1CliTestBase):
         self.assertFalse(data["valid"])
         self.assertEqual(self.locs(data), [["kind"]])
         self.assertIn("Guardrail", data["errors"][0]["message"])
+
+    def test_missing_kind(self):
+        """Test that a manifest without a kind is reported as an error of kind."""
+        manifest = copy.deepcopy(self.manifest)
+        del manifest["kind"]
+        data = self.validate(manifest)
+        self.assertFalse(data["valid"])
+        self.assertEqual(
+            data["errors"], [{"loc": ["kind"], "message": data["errors"][0]["message"], "type": "invalid_kind"}]
+        )
+
+    def test_kind_is_case_insensitive(self):
+        """Test that the kind's broker is found case insensitively, like the other cli commands."""
+        manifest = copy.deepcopy(self.manifest)
+        manifest["kind"] = "guardrail"
+        data = self.validate(manifest)
+        self.assertNotIn(["kind"], [error["loc"] for error in data["errors"] if error["type"] == "invalid_kind"])
+
+    def test_not_an_object(self):
+        """Test that a manifest that is not a JSON object is reported as an invalid manifest, with an empty loc."""
+        response, status = self.get_response(path=self.path, manifest=json.dumps(["not", "a", "manifest"]))
+        self.assertEqual(status, HTTPStatus.OK, response)
+        data = response[SmarterJournalApiResponseKeys.DATA]
+        self.assertFalse(data["valid"])
+        self.assertEqual(len(data["errors"]), 1)
+        self.assertEqual(data["errors"][0]["loc"], [])
+        self.assertEqual(data["errors"][0]["type"], "invalid_manifest")
+
+    def test_message(self):
+        """Test that the response's message counts the errors."""
+        response, _ = self.get_response(path=self.path, data=self.manifest)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.MESSAGE], "Manifest is valid")
+        manifest = copy.deepcopy(self.manifest)
+        del manifest["metadata"]["version"]
+        response, _ = self.get_response(path=self.path, data=manifest)
+        errors = response[SmarterJournalApiResponseKeys.DATA]["errors"]
+        self.assertEqual(response[SmarterJournalApiResponseKeys.MESSAGE], f"Manifest has {len(errors)} error(s)")

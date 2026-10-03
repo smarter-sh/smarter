@@ -14,14 +14,21 @@ from smarter.lib.django.middleware.cors import SmarterCorsMiddleware
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
-@unittest.skipUnless(
-    waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS), "CORS middleware is not enabled"
-)
 class TestSmarterCorsMiddleware(TestAccountMixin):
     """Test the SmarterCorsMiddleware class."""
 
+    # The middleware is tested with its waffle switch on, whatever the switch's value in the database.
+    switch = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS
+
     def setUp(self):
         super().setUp()
+        original = waffle.switch_is_active
+        patcher = patch(
+            "smarter.lib.django.waffle.switch_is_active",
+            side_effect=lambda name: True if name == self.switch else original(name),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.middleware = SmarterCorsMiddleware(get_response=MagicMock())
         self.request = MagicMock()
         self.request.build_absolute_uri.return_value = "https://example.com/foo"

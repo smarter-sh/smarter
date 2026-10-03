@@ -1,8 +1,12 @@
 """Knox TokenAuthentication subclass that checks if the token is active."""
 
+from hmac import compare_digest
+
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
+from knox import crypto
 from knox.auth import TokenAuthentication
+from knox.settings import CONSTANTS
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
@@ -186,22 +190,22 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 logger_prefix,
             )
             return SmarterAnonymousUser()
-        token_key = auth_header.split("Token ")[1]
-        # If your tokens are bytes, decode as needed
-        # token = token.encode()  # if needed
-        try:
-            auth_token = SmarterAuthToken.objects.get(token_key=token_key)
-            logger.debug(
-                "%s.get_user_from_request() retrieved user %s for token_key: %s",
-                logger_prefix,
-                auth_token.user,
-                token_key,
-            )
-            return auth_token.user
-        except SmarterAuthToken.DoesNotExist:
-            logger.warning(
-                "%s.get_user_from_request() failed to retrieve user for token_key: %s. Returning SmarterAnonymousUser.",
-                logger_prefix,
-                token_key,
-            )
-            return SmarterAnonymousUser()
+        token = auth_header.split("Token ")[1].strip()
+        # As knox does: token_key holds only the token's first characters, so the
+        # token is looked up by them, and verified by comparing its hash with the digest.
+        digest = crypto.hash_token(token)
+        for auth_token in SmarterAuthToken.objects.filter(token_key=token[: CONSTANTS.TOKEN_KEY_LENGTH]):
+            if compare_digest(digest, auth_token.digest) and auth_token.is_active:
+                logger.debug(
+                    "%s.get_user_from_request() retrieved user %s for token_key: %s",
+                    logger_prefix,
+                    auth_token.user,
+                    auth_token.token_key,
+                )
+                return auth_token.user
+        logger.warning(
+            "%s.get_user_from_request() failed to retrieve an active token for token_key: %s. Returning SmarterAnonymousUser.",
+            logger_prefix,
+            token[: CONSTANTS.TOKEN_KEY_LENGTH],
+        )
+        return SmarterAnonymousUser()

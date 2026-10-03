@@ -724,7 +724,8 @@ class SmarterValidator:
             if not hostname:
                 raise SmarterValueError("Invalid hostname . (dot only)")
         if ":" in hostname:
-            hostname, port = hostname.split(":")
+            # rsplit: a value with more than one colon, e.g. "::1", is refused below, not by a ValueError.
+            hostname, port = hostname.rsplit(":", 1)
             if not port.isdigit() or not 0 <= int(port) <= 65535:
                 raise SmarterValueError(f"Invalid port {port}")
         if len(hostname) > 255:

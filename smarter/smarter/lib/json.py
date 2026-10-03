@@ -130,7 +130,7 @@ class SmarterJSONEncoder(json.JSONEncoder):
         elif isinstance(o, set):
             return list(o)
         elif isinstance(o, HttpUrl):
-            str(o)
+            return str(o)
         else:
             # Handle Django's GenericRelatedObjectManager and Django's
             # TaggableManager without importing them directly in order to avoid
@@ -142,6 +142,9 @@ class SmarterJSONEncoder(json.JSONEncoder):
                 return list(o.all())
 
             # Handle TaggedItem
+            if type(o).__name__ == "Tag" and getattr(type(o), "__module__", None) == "taggit.models":
+                # e.g. a TaggableManager field of model_to_dict(), which is a list of Tags.
+                return o.name
             if type(o).__name__ == "TaggedItem" and getattr(type(o), "__module__", None) == "taggit.models":
                 retval = o.tag.name
                 logger.debug("%s.default() Serializing TaggedItem with tag: %s", formatted_logger_prefix, retval)
@@ -188,7 +191,7 @@ def dumps(
         check_circular=check_circular,
         allow_nan=allow_nan,
         cls=cls or SmarterJSONEncoder,
-        indent=indent or 2,
+        indent=2 if indent is None else indent,
         separators=separators,
         default=default or str,
         sort_keys=sort_keys,
