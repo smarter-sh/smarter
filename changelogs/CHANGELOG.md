@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.4...v0.17.0-alpha.5) (2026-10-03)
+
+### Bug Fixes
+
+* **plugin:** fix plugin updates through the api and boolean function parameters, remove the unused plugin api urls, and raise the plugin app's test coverage ([f34214e](https://github.com/smarter-sh/smarter/commit/f34214eab7b18b1548556fc14ae81021aad0765f))
+
 ## [0.17.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.3...v0.17.0-alpha.4) (2026-10-03)
 
 ### Bug Fixes
