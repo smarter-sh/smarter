@@ -1,7 +1,7 @@
 # pylint: disable=W0718,C0302
 """Smarter API SqlPlugin Manifest handler."""
 
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -37,7 +37,11 @@ from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    memoized_dependencies,
+)
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
@@ -371,6 +375,25 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.user_profile,
             )
         return self._plugin
+
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the LLMClients that use this plugin.
+
+        :return: A broker for each LLMClient that lists this plugin in its ``spec.plugins``.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
+
+        plugin_meta = self.plugin_meta
+        if not plugin_meta:
+            return []
+        llmclients = LLMClient.objects.filter(
+            id__in=LLMClientPlugin.objects.filter(plugin_meta=plugin_meta).values("llmclient_id")
+        )
+        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:

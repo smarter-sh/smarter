@@ -15,7 +15,7 @@ Proxies are not deployed: they work as soon as they are applied. So ``deploy``, 
 """
 
 import datetime
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 from urllib.parse import urljoin
 
 from django.db import transaction
@@ -50,6 +50,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -452,6 +453,17 @@ class SAMProxyBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that depend on this Proxy.
+
+        No other resource refers to a Proxy.
+
+        :return: An empty list.
+        :rtype: List[AbstractBroker]
+        """
+        return []
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the user's Proxy.
 
@@ -461,6 +473,7 @@ class SAMProxyBroker(AbstractBroker):
         proxy = self.proxy
         if self.name is None or not proxy:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         try:
             self.cache_invalidations()
             proxy.delete()

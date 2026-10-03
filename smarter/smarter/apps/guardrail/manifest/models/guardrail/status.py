@@ -17,8 +17,8 @@ class SAMGuardrailStatus(AbstractSAMStatusBase):
     """
     Smarter API Guardrail Manifest - Status class.
 
-    Read only. Besides ownership, it reports the LLMClients that use the guardrail, and its
-    events of the last 30 days.
+    Read only. Besides ownership, it reports the guardrail's events of the last 30 days. The
+    LLMClients that use it are reported in ``dependencies``.
     """
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
@@ -29,11 +29,6 @@ class SAMGuardrailStatus(AbstractSAMStatusBase):
 
     username: str = Field(
         description=f"{class_identifier}.username: The Smarter user who created this {MANIFEST_KIND}. Read only.",
-    )
-
-    llmClients: Optional[list[str]] = Field(
-        default=None,
-        description=f"{class_identifier}.llmClients: the names of the LLMClients that use this {MANIFEST_KIND}. Read only.",
     )
 
     triggered: Optional[int] = Field(

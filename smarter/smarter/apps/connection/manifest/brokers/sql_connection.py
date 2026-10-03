@@ -2,7 +2,7 @@
 """Smarter Api SqlConnection Manifest handler."""
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from smarter.apps.connection.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
@@ -35,9 +35,11 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
+    AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -1100,6 +1102,25 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         model = self.manifest.model_dump()
         return self.json_response_ok(command=command, data=model)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the SqlPlugins that use this SqlConnection.
+
+        :return: A broker for each SqlPlugin whose ``spec.connection`` is this SqlConnection.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.plugin.models import PluginDataSql, PluginMeta
+
+        connection = self.connection
+        if not connection:
+            return []
+        plugins = PluginMeta.objects.filter(
+            id__in=PluginDataSql.objects.filter(connection=connection).values("plugin_id")
+        )
+        return self.dependency_brokers(SAMKinds.SQL_PLUGIN.value, plugins)
+
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the current SQL connection from the database.
@@ -1146,6 +1167,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.verify_no_dependencies(command)
         if self.connection:
             try:
                 self.connection.delete()

@@ -4,8 +4,9 @@
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
+from functools import wraps
 from http import HTTPStatus
-from typing import Any, Optional, Type, Union
+from typing import Any, Callable, Iterable, List, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -46,14 +47,17 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
 from .error_classes import (
     SAMBrokerError,
+    SAMBrokerErrorDependencies,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMBrokerInternalError,
     SAMBrokerReadOnlyError,
 )
 
@@ -71,6 +75,38 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+def memoized_dependencies(func: Callable[..., List["AbstractBroker"]]) -> Callable[..., List["AbstractBroker"]]:
+    """Memoize a broker's :meth:`AbstractBroker.dependencies` for the life of the broker instance.
+
+    The dependencies are queried, and their brokers built, once per broker instance.
+    :meth:`AbstractBroker.verify_no_dependencies` clears the memo before it checks, so that
+    a delete always sees the current dependencies.
+
+    Example:
+
+    .. code-block:: python
+
+        class SAMGuardrailBroker(AbstractBroker):
+
+            @memoized_dependencies
+            def dependencies(self) -> List[AbstractBroker]:
+                ...
+
+    :param func: The broker's ``dependencies()`` method.
+    :type func: Callable[..., List[AbstractBroker]]
+    :return: The memoized method.
+    :rtype: Callable[..., List[AbstractBroker]]
+    """
+
+    @wraps(func)
+    def wrapper(self: "AbstractBroker") -> List["AbstractBroker"]:
+        if self._dependencies is None:
+            self._dependencies = func(self)
+        return self._dependencies
+
+    return wrapper
 
 
 class AbstractBroker(ABC, SmarterRequestMixin):
@@ -111,6 +147,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _orm_instance: Optional[MetaDataWithOwnershipModel] = None
     _ready: bool = False
     _is_ready_abstract_broker: bool = False
+    _dependencies: Optional[List["AbstractBroker"]] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -1490,6 +1527,139 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
+    def dependencies(self) -> List["AbstractBroker"]:
+        """Return brokers for the resources that depend on this resource.
+
+        A resource depends on this resource when it refers to it, so that deleting this resource
+        would break it, or would delete it too. For example, an LLMClient that lists a Guardrail
+        in its ``spec.guardrails`` depends on that Guardrail. The dependents are queried from the
+        Django ORM, and may belong to other users. :meth:`verify_no_dependencies` uses them to
+        refuse to delete a resource that is still in use.
+
+        Example:
+
+        .. code-block:: python
+
+            broker = SAMGuardrailBroker(request=request, name="stupid_input", kind="Guardrail")
+            for dependency in broker.dependencies():
+                print(dependency.kind, dependency.name)
+            # LLMClient smarter_example
+
+        :return: A broker for each resource that depends on this resource, or an empty list.
+        :rtype: List[AbstractBroker]
+        """
+        raise SAMBrokerErrorNotImplemented(message="dependencies() not implemented", thing=self.thing)
+
+    def dependency_broker(
+        self,
+        kind: str,
+        instance: models.Model,
+        name: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "AbstractBroker":
+        """Return a broker for a resource that depends on this resource.
+
+        The broker is initialized from the ORM, for the resource's own owner, which may be
+        another user than this broker's.
+
+        :param kind: The SAM kind of the resource, e.g. ``SAMKinds.LLM_CLIENT.value``.
+        :type kind: str
+        :param instance: The resource's Django ORM instance. It has a ``user_profile``.
+        :type instance: models.Model
+        :param name: The resource's manifest name. Defaults to ``instance.name``.
+        :type name: Optional[str]
+        :param user_profile: The resource's owner. Defaults to ``instance.user_profile``.
+        :type user_profile: Optional[UserProfile]
+        :return: A broker for the resource.
+        :rtype: AbstractBroker
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        broker_class = Brokers.get_broker(kind)
+        if broker_class is None:
+            raise SAMBrokerInternalError(f"No broker for kind {kind}", thing=self.thing)
+        return broker_class(
+            None,
+            name=name or getattr(instance, "name"),
+            kind=kind,
+            user_profile=user_profile or getattr(instance, "user_profile"),
+        )
+
+    def dependency_brokers(self, kind: str, instances: Iterable[models.Model]) -> List["AbstractBroker"]:
+        """Return a broker for each resource that depends on this resource.
+
+        :param kind: The SAM kind of the resources, e.g. ``SAMKinds.LLM_CLIENT.value``.
+        :type kind: str
+        :param instances: The resources' Django ORM instances.
+        :type instances: Iterable[models.Model]
+        :return: A broker for each resource, without duplicates.
+        :rtype: List[AbstractBroker]
+        """
+        unique = {instance.pk: instance for instance in instances}
+        return [self.dependency_broker(kind, instance) for instance in unique.values()]
+
+    def verify_no_dependencies(self, command: Optional[SmarterJournalCliCommands] = None) -> None:
+        """Raise an error if other resources depend on this resource.
+
+        Call this in :meth:`delete`, before deleting anything.
+
+        :param command: The command that is being processed.
+        :type command: Optional[SmarterJournalCliCommands]
+        :raises SAMBrokerErrorDependencies: If :meth:`dependencies` returns any brokers.
+        """
+        # query the current dependencies, not those memoized by @memoized_dependencies.
+        self._dependencies = None
+        dependencies = self.dependencies()
+        if dependencies:
+            visible = self.visible_dependencies(dependencies)
+            names = sorted(f"{dependency.kind} {dependency.name}" for dependency in visible)
+            hidden = len(dependencies) - len(visible)
+            if hidden:
+                names.append(f"{hidden} {inflect_engine.plural('resource', hidden)} in other accounts")
+            raise SAMBrokerErrorDependencies(
+                f"Cannot delete {self.kind} {self.name}, because these resources depend on it: {', '.join(names)}. "
+                "Delete them, or remove their references to it, first.",
+                thing=self.kind,
+                command=command,
+            )
+
+    def visible_dependencies(self, dependencies: Optional[List["AbstractBroker"]] = None) -> List["AbstractBroker"]:
+        """Return the dependencies that the authenticated user may read.
+
+        A dependency may belong to another account, e.g. an LLMClient that uses a built-in
+        Guardrail. Superusers may read every dependency. Other users may read those of their
+        own account.
+
+        :param dependencies: The dependencies to filter. Defaults to :meth:`dependencies`.
+        :type dependencies: Optional[List[AbstractBroker]]
+        :return: The dependencies that the authenticated user may read.
+        :rtype: List[AbstractBroker]
+        """
+        dependencies = self.dependencies() if dependencies is None else dependencies
+        if self.user is not None and getattr(self.user, "is_superuser", False):
+            return dependencies
+        return [dependency for dependency in dependencies if self.account and dependency.account == self.account]
+
+    def dependencies_status(self) -> List[dict]:
+        """Return the ``status.dependencies`` of a manifest: the kind and name of each visible dependency.
+
+        Example:
+
+        .. code-block:: python
+
+            broker.dependencies_status()
+            # [{"kind": "LLMClient", "name": "smarter_example"}]
+
+        :return: A dict with the ``kind`` and ``name`` of each dependency that the authenticated user may read.
+        :rtype: List[dict]
+        """
+        return [
+            {"kind": dependency.kind, "name": dependency.name}
+            for dependency in sorted(self.visible_dependencies(), key=lambda d: (str(d.kind), str(d.name)))
+        ]
+
+    @abstractmethod
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete a resource.
 
@@ -1767,6 +1937,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         else:
             kind = self.kind
             message = message or f"{kind} {self.name} {operated} successfully"
+        if command == SmarterJournalCliCommands.DESCRIBE and isinstance(data.get(SAMKeys.STATUS.value), dict):
+            try:
+                data[SAMKeys.STATUS.value]["dependencies"] = self.dependencies_status()
+            except SAMBrokerError as e:
+                logger.warning(
+                    "%s.json_response_ok() could not add the dependencies of %s %s to its status: %s",
+                    self.abstract_broker_logger_prefix,
+                    self.kind,
+                    self.name,
+                    e,
+                )
         retval = self._retval(data=data, message=message)
         return SmarterJournaledJsonResponse(
             request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
@@ -2122,6 +2303,9 @@ class BrokerNotImplemented(AbstractBroker):
 
     def prompt(self, request: SmarterRequest, *args, **kwargs):
         super().prompt(request, args, kwargs)
+
+    def dependencies(self) -> List[AbstractBroker]:
+        return super().dependencies()
 
     def delete(self, request: SmarterRequest, *args, **kwargs):
         super().delete(request, args, kwargs)

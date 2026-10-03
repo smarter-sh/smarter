@@ -2,7 +2,7 @@
 """Smarter API Vectorsearch Manifest handler."""
 
 import datetime
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -40,6 +40,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -780,11 +781,23 @@ class SAMVectorsearchBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that depend on this Vectorsearch.
+
+        No other resource refers to a Vectorsearch.
+
+        :return: An empty list.
+        :rtype: List[AbstractBroker]
+        """
+        return []
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         if self.vectorsearch:
             try:
                 self.vectorsearch.delete()

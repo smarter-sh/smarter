@@ -2,7 +2,7 @@
 """Smarter Api ApiConnection Manifest handler."""
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.connection.manifest.models.api_connection.const import MANIFEST_KIND
@@ -32,8 +32,10 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
+    AbstractBroker,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -1002,6 +1004,28 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the ApiPlugins and Vectorstores that use this ApiConnection.
+
+        :return: A broker for each ApiPlugin and Vectorstore whose ``spec.connection`` is this ApiConnection.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.plugin.models import PluginDataApi, PluginMeta
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+
+        connection = self.connection
+        if not connection:
+            return []
+        plugins = PluginMeta.objects.filter(
+            id__in=PluginDataApi.objects.filter(connection=connection).values("plugin_id")
+        )
+        return self.dependency_brokers(SAMKinds.API_PLUGIN.value, plugins) + self.dependency_brokers(
+            SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(connection=connection)
+        )
+
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the current API connection and return a JSON response indicating the result.
@@ -1053,6 +1077,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 command=command,
             )
 
+        self.verify_no_dependencies(command)
         if self.connection:
             try:
                 self.connection.delete()

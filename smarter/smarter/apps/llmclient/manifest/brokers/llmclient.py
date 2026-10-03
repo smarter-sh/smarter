@@ -49,6 +49,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -1142,11 +1143,33 @@ class SAMLLMClientBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the Orchestrators that use this LLMClient.
+
+        An LLMClient's Prompts are its chat history, not dependencies, so they are deleted with it.
+
+        :return: A broker for each Orchestrator that lists this LLMClient in its ``spec.llmClients``.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.orchestrator.models import Orchestrator, OrchestratorHarness
+
+        llmclient = self.llmclient
+        if not llmclient:
+            return []
+        orchestrators = Orchestrator.objects.filter(
+            id__in=OrchestratorHarness.objects.filter(llmclient=llmclient).values("orchestrator_id")
+        )
+        return self.dependency_brokers(SAMKinds.ORCHESTRATOR.value, orchestrators)
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         if self.llmclient:
             try:
                 # invalidate first: the llmclient no longer has an id once it is deleted.

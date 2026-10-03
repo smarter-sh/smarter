@@ -18,7 +18,7 @@ Anyone may describe and get the Vectorstores that are shared with them.
 """
 
 import datetime
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -63,6 +63,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -511,10 +512,29 @@ class SAMVectorstoreBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the Vectorsearches that search this Vectorstore.
+
+        :return: A broker for each Vectorsearch whose ``spec.vectorstore`` is this Vectorstore.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.vectorsearch.models import Vectorsearch
+
+        vectorstore = self.vectorstore
+        if not vectorstore:
+            return []
+        return self.dependency_brokers(
+            SAMKinds.VECTORSEARCH.value, Vectorsearch.objects.filter(vectorstore=vectorstore)
+        )
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Destroy the database and its data, unless deletionProtection is enabled, then delete the Vectorstore."""
         command = SmarterJournalCliCommands(self.delete.__name__)
         vectorstore = self.owned_vectorstore(command)
+        self.verify_no_dependencies(command)
         service = VectorstoreService(vectorstore)
         try:
             if vectorstore.deployed_at:

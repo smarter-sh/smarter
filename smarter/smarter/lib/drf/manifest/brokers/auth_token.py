@@ -2,7 +2,7 @@
 """Smarter API SmarterAuthToken Manifest handler."""
 
 import traceback
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.core import serializers
 from django.core.handlers.asgi import ASGIRequest
@@ -32,6 +32,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -671,6 +672,25 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the LLMClients that use this auth token.
+
+        :return: A broker for each LLMClient that lists this auth token in its ``spec.apiKey``.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
+
+        smarter_auth_token = self.smarter_auth_token
+        if not smarter_auth_token:
+            return []
+        llmclients = LLMClient.objects.filter(
+            id__in=LLMClientAPIKey.objects.filter(api_key=smarter_auth_token).values("llmclient_id")
+        )
+        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+
     def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
             "%s.delete() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
@@ -693,6 +713,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 command=command,
             )
 
+        self.verify_no_dependencies(command)
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()

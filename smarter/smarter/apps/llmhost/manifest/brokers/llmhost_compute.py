@@ -16,7 +16,7 @@ The broker implements the ``smarter`` CLI commands for LLMHostComputes:
 """
 
 import datetime
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.db import transaction
 from django.db.models import ProtectedError
@@ -57,6 +57,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -401,6 +402,21 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the LLMHosts that run on this LLMHostCompute.
+
+        :return: A broker for each LLMHost whose ``spec.compute`` is this LLMHostCompute.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+
+        compute = self.compute
+        if not compute:
+            return []
+        return self.dependency_brokers(SAMKinds.LLM_HOST.value, compute.llmhosts.all())  # type: ignore[attr-defined]
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the LLMHostCompute, and its node group.
 
@@ -410,14 +426,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         compute = self.compute
         if self.name is None or not compute:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
-        names = sorted(compute.llmhosts.values_list("name", flat=True))  # type: ignore[attr-defined]
-        if names:
-            raise SAMLLMHostComputeBrokerError(
-                f"Failed to delete {self.kind} {self.name}: LLMHosts use it: {names}. Delete them, or change their "
-                "spec.compute, first.",
-                thing=self.kind,
-                command=command,
-            )
+        self.verify_no_dependencies(command)
         try:
             self.cache_invalidations()
             # the pre_delete receiver deletes the node group.

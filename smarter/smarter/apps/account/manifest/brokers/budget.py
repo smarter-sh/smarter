@@ -8,7 +8,7 @@ describe the budgets that are attached to a resource that they may see.
 
 import datetime
 from decimal import Decimal
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.apps import apps
 from django.db import transaction
@@ -47,6 +47,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -493,6 +494,18 @@ class SAMBudgetBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that depend on this Budget.
+
+        No resource refers to a Budget. A Budget refers to the resources that it constrains, and deleting
+        it detaches it from them.
+
+        :return: An empty list.
+        :rtype: List[AbstractBroker]
+        """
+        return []
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the Budget, which detaches it from its resources and removes their locks.
 
@@ -503,6 +516,7 @@ class SAMBudgetBroker(AbstractBroker):
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if not self.is_superuser:
             raise SAMBudgetBrokerError(f"Only superusers may delete a {self.kind}.", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         try:
             self.budget.delete()
             self._budget = None

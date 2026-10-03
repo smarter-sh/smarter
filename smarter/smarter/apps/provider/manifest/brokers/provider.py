@@ -2,7 +2,7 @@
 """Smarter API Provider Manifest handler."""
 
 import datetime
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.http import HttpRequest
 
@@ -31,6 +31,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -667,6 +668,51 @@ class SAMProviderBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that use this Provider.
+
+        Proxies and Vectorstores refer to the Provider itself. LLMClients, plugins and Guardrails
+        refer to a Provider by name, so they only depend on this Provider when no other active
+        Provider has the same name.
+
+        :return: A broker for each Proxy, Vectorstore, LLMClient, plugin and Guardrail that uses this Provider.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.guardrail.models import Guardrail
+        from smarter.apps.llmclient.models import LLMClient
+        from smarter.apps.plugin.models import PluginMeta, PluginPrompt
+        from smarter.apps.proxy.models import Proxy
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+
+        provider = self.provider
+        if not provider and self.name and self.user_profile:
+            provider = Provider.objects.filter(user_profile=self.user_profile, name=self.name).first()
+        if not provider:
+            return []
+        retval = self.dependency_brokers(SAMKinds.PROXY.value, Proxy.objects.filter(provider=provider))
+        retval += self.dependency_brokers(
+            SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(embeddings_provider=provider)
+        )
+        name = provider.name
+        if Provider.objects.filter(name__iexact=name, is_active=True).exclude(pk=provider.pk).exists():
+            return retval
+        retval += self.dependency_brokers(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(provider__iexact=name))
+        plugins = PluginMeta.objects.filter(
+            id__in=PluginPrompt.objects.filter(provider__iexact=name).values("plugin_id")
+        )
+        for plugin_meta in plugins:
+            retval.append(self.dependency_broker(plugin_meta.kind.value, plugin_meta))
+        guardrails = [
+            guardrail
+            for guardrail in Guardrail.objects.all()
+            if str((guardrail.config or {}).get("provider") or "").lower() == name.lower()
+        ]
+        retval += self.dependency_brokers(SAMKinds.GUARDRAIL.value, guardrails)
+        return retval
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the Smarter API Provider manifest by removing the corresponding Django ORM `Provider` model instance.
@@ -708,6 +754,8 @@ class SAMProviderBroker(AbstractBroker):
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
 
+        self._provider = provider
+        self.verify_no_dependencies(command)
         if provider:
             try:
                 provider.delete()

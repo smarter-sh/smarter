@@ -10,7 +10,7 @@ Smarter API MCPClient Manifest handler.
 """
 
 import datetime
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -49,6 +49,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -477,14 +478,34 @@ class SAMMCPClientBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the LLMClients that use this MCPClient.
+
+        :return: A broker for each LLMClient that lists this MCPClient in its ``spec.mcpClients``.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient, LLMClientMCPClients
+
+        mcpclient = self.mcpclient
+        if not mcpclient:
+            return []
+        llmclients = LLMClient.objects.filter(
+            id__in=LLMClientMCPClients.objects.filter(mcpclient=mcpclient).values("llmclient_id")
+        )
+        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the MCPClient.
 
-        It is also detached from any LLMClients.
+        Refused while LLMClients use it.
         """
         command = SmarterJournalCliCommands(self.delete.__name__)
         if self.name is None or not self.mcpclient:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        self.verify_no_dependencies(command)
         try:
             self.cache_invalidations()
             self.mcpclient.delete()
