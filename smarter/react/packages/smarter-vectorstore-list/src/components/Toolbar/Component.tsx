@@ -30,6 +30,7 @@ import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Vectorstore } from "@/lib/Types";
+import "./styles.css";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 
@@ -193,7 +194,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           title="Chat: Open the vectorstore workbench"
           tabIndex={0}
         >
-          <i className="bi bi-chat-dots" />
+          <i className="bi bi-chat-dots md-teal" />
         </a>
         <a
           href={vectorstore.manifestUrl}
@@ -201,7 +202,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           title="Edit: Open the YAML manifest that defines this vectorstore resource"
           tabIndex={0}
         >
-          <i className="bi bi-pencil-square" />
+          <i className="bi bi-pencil-square md-blue" />
         </a>
         <button
           type="button"
@@ -210,7 +211,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           onClick={() => setModal({ type: "clone", vectorstore })}
           tabIndex={0}
         >
-          <i className="bi bi-files" />
+          <i className="bi bi-files md-green" />
         </button>
         <button
           type="button"
@@ -219,7 +220,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           onClick={() => setModal({ type: "rename", vectorstore })}
           tabIndex={0}
         >
-          <i className="bi bi-pencil" />
+          <i className="bi bi-pencil md-blue" />
         </button>
         <button
           type="button"
@@ -233,7 +234,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           disabled={vectorstore.canDelete === false}
           tabIndex={0}
         >
-          <i className="bi bi-trash" />
+          <i className="bi bi-trash md-red" />
         </button>
       </div>
 

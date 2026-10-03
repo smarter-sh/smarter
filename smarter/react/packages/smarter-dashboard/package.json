@@ -1,7 +1,7 @@
 {
   "name": "@smarter/dashboard",
   "description": "React-based dashboard for the Smarter web console.",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "type": "module",
   "config": {
     "cdnDeploy": false,
@@ -17,7 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@smarter/common": "^0.1.0",
+    "@smarter/common": "^0.2.0",
     "@monaco-editor/react": "^4.7.0",
     "process": "^0.11.10",
     "react": "^19.3.0",
