@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.16.6](https://github.com/smarter-sh/smarter/compare/v0.16.5...v0.16.6) (2026-10-03)
+
+### Bug Fixes
+
+* refuse to delete resources that other resources depend on ([c8e8b1d](https://github.com/smarter-sh/smarter/commit/c8e8b1d3659d384909f8d917d9a4b18f18b69dc6))
+
 ## [0.16.5](https://github.com/smarter-sh/smarter/compare/v0.16.4...v0.16.5) (2026-10-03)
 
 ### Bug Fixes
