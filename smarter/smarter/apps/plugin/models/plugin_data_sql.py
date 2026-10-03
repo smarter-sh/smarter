@@ -59,7 +59,7 @@ class PluginDataSql(PluginDataBase):
         STR = "string"
         NUMBER = "number"
         INT = "integer"
-        BOOL = "bool"
+        BOOL = "boolean"
         OBJECT = "object"
         ARRAY = "array"
         NULL = "null"

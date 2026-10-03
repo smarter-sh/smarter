@@ -14,6 +14,7 @@ class SmarterFormattedTextColorCodes:
     REGULAR_GREEN = "\033[32m"
     DARK_RED = "\033[31m"
     BOLD_DARK_BLUE = "\033[1;34m"
+    LIGHT_GRAY = "\033[37m"
     DEFAULT = "\033[1;31m"  # Default to bold dark red for emphasis in logs
     RESET = "\033[0m"
 
@@ -64,3 +65,9 @@ def formatted_text_red(text: str) -> str:
 def formatted_text_blue(text: str) -> str:
 
     return formatted_text(text, SmarterFormattedTextColorCodes.BOLD_DARK_BLUE)
+
+
+@deprecated("Use formatted_text with color_code parameter instead")
+def formatted_text_gray(text: str) -> str:
+
+    return formatted_text(text, SmarterFormattedTextColorCodes.LIGHT_GRAY)

@@ -15,8 +15,11 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
+from smarter.apps.plugin.manifest.controller import (
+    PLUGIN_MAP,
+    SAM_MAP,
+    PluginController,
+)
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
@@ -52,14 +55,18 @@ class PluginView(SmarterAuthenticatedAPIView):
 
         return get_plugin(request, plugin_id)
 
-    def put(self, request: ASGIRequest):
+    def put(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        if plugin_id is not None:
+            return update_plugin(request, plugin_id)
         return create_plugin(request)
 
-    def post(self, request: ASGIRequest):
+    def post(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        if plugin_id is not None:
+            return update_plugin(request, plugin_id)
         return create_plugin(request)
 
-    def patch(self, request: ASGIRequest):
-        return update_plugin(request)
+    def patch(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        return update_plugin(request, plugin_id)
 
     def delete(self, request: ASGIRequest, plugin_id):
         return delete_plugin(request, plugin_id)
@@ -242,52 +249,67 @@ def create_plugin(request, data: Optional[dict] = None):
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 
 
-def update_plugin(request: ASGIRequest):
-    """Update a plugin from a json representation in the body of the request."""
-    user = get_resolved_user(request.user)
-    data: str
+def update_plugin(request: ASGIRequest, plugin_id: Optional[int] = None):
+    """
+    Update a plugin from a json representation in the body of the request.
 
+    :param plugin_id: The id of the plugin to update, from the url. If provided, it must
+        be the plugin that the manifest names.
+    """
+    user = get_resolved_user(request.user)
     if not user:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
     try:
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-
-    try:
-        data = request.body.decode("utf-8")
-        if not isinstance(data, dict):
-            return JsonResponse(
-                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        data["user_profile"] = user_profile
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-
-    try:
-        data = json.loads(data)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON format"}, status=HTTPStatus.BAD_REQUEST)
-
     if not user_profile:
         return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.UNAUTHORIZED)
+
     try:
-        plugin_controller = PluginController(
-            user_profile=user_profile,
-            manifest=SAMPluginCommon(**data),  # type: ignore[arg-type]
+        # a DRF request has already parsed its body; a plain django request has not.
+        data = getattr(request, "data", None)
+        if data is None:
+            data = PluginUploadView.parse_yaml_file(request.body.decode("utf-8"))
+    except Exception as e:
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+    if not isinstance(data, dict) or not data:
+        return JsonResponse(
+            {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+            status=HTTPStatus.BAD_REQUEST,
         )
-        if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
-                f"PluginController could not be created for data: {data}, user_profile: {user_profile}"
-            )
-        plugin = plugin_controller.plugin
-        if not plugin:
+    data = dict(data)
+
+    kind = data.get("kind")
+    if kind not in PLUGIN_MAP:
+        return JsonResponse(
+            {"error": f"Invalid manifest kind {kind}. Expected one of: {list(PLUGIN_MAP)}"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    manifest_name = (data.get("metadata") or {}).get("name")
+
+    if plugin_id is not None:
+        try:
+            plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)  # type: ignore[attr-defined]
+        except PluginMeta.DoesNotExist:
+            plugin_meta = None
+        if not plugin_meta:
             return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
-        if not data:
-            return JsonResponse({"error": "No data provided for update"}, status=HTTPStatus.BAD_REQUEST)
-        plugin.update()
+        if manifest_name != plugin_meta.name:
+            return JsonResponse(
+                {"error": f"Manifest name {manifest_name} does not match plugin {plugin_id}: {plugin_meta.name}"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    elif not PluginMeta.objects.filter(name=manifest_name, user_profile=user_profile).exists():
+        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+
+    try:
+        manifest = SAM_MAP[kind](**data)  # type: ignore[arg-type]
+        # a PluginController prefers the stored PluginMeta to the manifest, so
+        # the plugin is instantiated from the manifest, which updates it.
+        plugin = PLUGIN_MAP[kind](manifest=manifest, user_profile=user_profile)  # type: ignore[call-arg]
+        if not plugin or not plugin.ready:
+            raise PluginDataValueError(f"Plugin {manifest_name} is not ready after update.")
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
