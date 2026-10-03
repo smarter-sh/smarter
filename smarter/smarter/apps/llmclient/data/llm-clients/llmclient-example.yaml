@@ -48,3 +48,7 @@ spec:
   plugins:
     - everlasting_gobstopper
     - example_configuration
+  guardrails:
+    - prompt_injection_keyword_input
+    - moderation_input
+    - moderation_output

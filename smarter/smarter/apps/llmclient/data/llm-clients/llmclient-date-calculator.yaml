@@ -42,3 +42,5 @@ spec:
     subdomain: null
   functions:
     - date_calculator
+  guardrails:
+    - prompt_injection_keyword_input

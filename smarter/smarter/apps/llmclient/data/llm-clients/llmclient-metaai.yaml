@@ -41,3 +41,7 @@ spec:
   functions:
     - get_current_weather
   plugins: []
+  guardrails:
+    - moderation_input
+    - self_harm_input
+    - moderation_output

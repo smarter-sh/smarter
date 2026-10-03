@@ -47,3 +47,5 @@ spec:
     subdomain: null
   functions:
     - get_current_weather
+  guardrails:
+    - prompt_injection_keyword_input

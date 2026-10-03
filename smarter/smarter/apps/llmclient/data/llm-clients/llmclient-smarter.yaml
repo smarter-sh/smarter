@@ -70,3 +70,10 @@ spec:
   functions: []
   plugins:
     - about_smarter
+  # pii_leak_output is omitted on purpose, because this agent shares the contact details in its system prompt.
+  guardrails:
+    - prompt_injection_keyword_input
+    - jailbreak_semantic_input
+    - moderation_input
+    - profanity_output
+    - script_injection_output
