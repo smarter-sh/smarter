@@ -40,3 +40,7 @@ spec:
     subdomain: null
   functions: []
   plugins: []
+  guardrails:
+    - moderation_input
+    - self_harm_input
+    - moderation_output
