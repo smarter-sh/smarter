@@ -22,6 +22,11 @@ from .base import AccountListViewBase, AccountViewBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
+#: The fields of a new user that the request body may set.
+USER_CREATE_FIELDS = ("username", "password", "email", "first_name", "last_name")
+#: The fields of a user that the request body may update.
+USER_UPDATE_FIELDS = ("username", "email", "first_name", "last_name", "is_active")
+
 # -----------------------------------------------------------------------
 # handlers for users
 # -----------------------------------------------------------------------
@@ -52,12 +57,12 @@ def validate_request_body(request: Request):
 def eval_permissions(request, user_to_update: User, user_to_update_profile: Optional[UserProfile] = None):
     logger.debug("%s.eval_permissions() - request: %s", __name__, request)
     user = get_resolved_user(request.user)
-    if user is None:
+    if user is None or not getattr(user, "is_authenticated", False):
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
     if not user.is_superuser:
         # if the user is not a superuser then they need to have a UserProfile
         try:
-            request_user_account = UserProfile.objects.get(user=request.user).account
+            request_user_account = UserProfile.objects.get(user=user).account
         except UserProfile.DoesNotExist:
             return JsonResponse(
                 {"error": "You are not authorized to modify Smarter user accounts."},
@@ -155,12 +160,12 @@ def create_user(request: Request):
         logger.debug("UserListView.get_queryset() - unauthorized access attempt for user: %s", user)
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
-    validate_request_body(request)
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        logger.debug("UserListView.get_queryset() - invalid JSON format in request body: %s", request.body)
-        return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
+    invalid = validate_request_body(request)
+    if invalid:
+        return invalid
+    data = json.loads(request.body)
+    # only these fields: the request body must not set e.g. is_superuser or is_staff.
+    data = {key: value for key, value in data.items() if key in USER_CREATE_FIELDS}
 
     # the new user will be associated with the account of the current user
     try:
@@ -182,21 +187,26 @@ def create_user(request: Request):
 
 
 def update_user(request: Request, user_id: int):
-    """update an account from a json representation in the body of the request."""
+    """Update an account from a json representation in the body of the request."""
     logger.debug("%s.update_user() - user_id: %s, request: %s", request, user_id, request)
     data: dict
 
-    validate_request_body(request)
+    # a partial update: the body needn't have the username and password that validate_request_body() requires.
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         logger.debug("UserListView.get_queryset() - invalid JSON format in request body: %s", request.body)
         return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
-    user_to_update, user_to_update_profile = get_user_for_operation(request, user_id)
-    if isinstance(user_to_update, JsonResponse):
-        return user_to_update
-    if isinstance(user_to_update_profile, JsonResponse):
-        return user_to_update_profile
+    if not isinstance(data, dict):
+        return JsonResponse(
+            {"error": "Invalid request data. Was expecting a dictionary."}, status=HTTPStatus.BAD_REQUEST.value
+        )
+
+    # an error is a single JsonResponse, not a (user, user_profile) tuple.
+    result = get_user_for_operation(request, user_id)
+    if isinstance(result, JsonResponse):
+        return result
+    user_to_update, user_to_update_profile = result
 
     if not isinstance(user_to_update, User):
         logger.debug("UserListView.get_queryset() - user not found for request: %s", request)
@@ -204,11 +214,14 @@ def update_user(request: Request, user_id: int):
     if not isinstance(user_to_update_profile, UserProfile):
         logger.debug("UserListView.get_queryset() - user profile not found for user: %s", user_to_update)
         return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.BAD_REQUEST.value)
-    eval_permissions(request, user_to_update, user_to_update_profile)
+    forbidden = eval_permissions(request, user_to_update, user_to_update_profile)
+    if forbidden:
+        return forbidden
 
     try:
         for key, value in data.items():
-            if hasattr(user_to_update, key):
+            # only these fields: the request body must not set e.g. is_superuser, or the password hash.
+            if key in USER_UPDATE_FIELDS:
                 setattr(user_to_update, key, value)
         user_to_update.save()
         logger.debug("UserListView.get_queryset() - user updated successfully: %s", user_to_update)
@@ -225,7 +238,7 @@ def update_user(request: Request, user_id: int):
 
 
 def delete_user(request: Request, user_id: Optional[int] = None):
-    """delete a user by id."""
+    """Delete a user by id."""
     logger.debug("%s.delete_user() - user_id: %s, request: %s", __name__, user_id, request)
     try:
         if user_id:
@@ -235,6 +248,10 @@ def delete_user(request: Request, user_id: Optional[int] = None):
     except User.DoesNotExist:
         logger.debug("%s.delete_user() - user not found for request: %s", __name__, request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
+
+    forbidden = eval_permissions(request, user, UserProfile.objects.filter(user=user).first())
+    if forbidden:
+        return forbidden
 
     try:
         with transaction.atomic():
@@ -294,7 +311,9 @@ class UserListView(AccountListViewBase):
 
     def setup(self, request: Request, *args, **kwargs):
         """
-        Setup the view. This is called by Django before dispatch() and is used to
+        Setup the view.
+
+        This is called by Django before dispatch() and is used to
         initialize attributes that require the request object.
         """
         super().setup(request, *args, **kwargs)
@@ -328,9 +347,7 @@ class UserListView(AccountListViewBase):
             return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     def get_list(self, request: Request):
-        """
-        Get a list of all users the requesting user has access to.
-        """
+        """Get a list of all users the requesting user has access to."""
         logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
         queryset = self.get_queryset()
         if isinstance(queryset, Response):
@@ -340,15 +357,11 @@ class UserListView(AccountListViewBase):
         return response
 
     def get(self, request: Request, *args, **kwargs):
-        """
-        Handle GET requests to retrieve the list of users.
-        """
+        """Handle GET requests to retrieve the list of users."""
         logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
         return self.get_list(request)
 
     def post(self, request, *args, **kwargs):
-        """
-        Handle POST requests to create a new user.
-        """
+        """Handle POST requests to create a new user."""
         logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
         return self.get_list(request)

@@ -1,7 +1,5 @@
 # pylint: disable=unused-argument
-"""
-Authentication pipeline functions for account management.
-"""
+"""Authentication pipeline functions for account management."""
 
 from collections.abc import Awaitable, Callable
 from typing import cast
@@ -32,7 +30,8 @@ AsyncGetResponseCallable = Callable[[HttpRequest], Awaitable[HttpResponse]]
 
 class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, SmarterMiddlewareMixin):
     """
-    Custom Social Auth Exception Middleware to handle specific exceptions
+    Custom Social Auth Exception Middleware to handle specific exceptions.
+
     during the social authentication pipeline.
     """
 
@@ -72,7 +71,8 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
 
 def create_user(strategy, details, backend, *args, user=None, **kwargs):
     """
-    Custom user creation function to replace the default one in the
+    Custom user creation function to replace the default one in the.
+
     social auth pipeline. This allows for additional customization
     during user creation if needed.
 
@@ -84,19 +84,19 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
         'first_name': 'Lawrence',
         'last_name': 'McDaniel'
     }
-
     """
     if user:
         logger.debug("%s.create_user() User already exists: %s", logger_prefix, user)
         return {"is_new": False, "user": user}
 
+    # a provider may leave out the user's names, e.g. GitHub, but the auth_user table's are not null.
     fields = {
         "username": details.get("username"),
         "email": details.get("email"),
-        "first_name": details.get("first_name"),
-        "last_name": details.get("last_name"),
+        "first_name": details.get("first_name") or "",
+        "last_name": details.get("last_name") or "",
     }
-    if not fields:
+    if not fields["username"]:
         logger.error(
             "%s.create_user() No fields available to create user. Received the following: strategy=%s, details=%s, backend=%s, user=%s, kwargs=%s",
             logger_prefix,
@@ -120,10 +120,10 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
 
 def user_details(strategy, details, backend, *args, user=None, **kwargs):
     """
-    Custom user details update function to replace the default one in the
+    Custom user details update function to replace the default one in the.
+
     social auth pipeline. This allows for updating additional fields
     during user details update if needed.
-
     """
     if user is None:
         logger.debug("%s.user_details() No user provided to update.", logger_prefix)
@@ -189,7 +189,8 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
 
 def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
     """
-    A pipeline function to redirect users with inactive accounts
+    A pipeline function to redirect users with inactive accounts.
+
     (e.g., payment inactive) to a custom page.
     This is used in settings.SOCIAL_AUTH_PIPELINE for the following:
 
@@ -197,8 +198,6 @@ def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
        redirect the user to a custom page instead of allowing login.
 
     2. when a user.is_active is False, redirect to a custom page.
-
-
     """
     logger.debug(
         "%s.redirect_inactive_account() called with strategy=%s, details=%s, user=%s, kwargs=%s",
