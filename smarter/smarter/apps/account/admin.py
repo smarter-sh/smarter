@@ -54,19 +54,16 @@ def smarter_filter_queryset_for_user_profile(
         smarter.apps.account.models.MetaDataWithOwnershipModel
     """
     logger_prefix = logging.formatted_text(f"{__file__}.smarter_filter_queryset_for_user_profile()")
+    # 1.) no user_profile, no queryset. This is checked first: the logging below reads user_profile.user.
+    if not user_profile:
+        logger.debug("%s: No user profile, returning empty queryset", logger_prefix)
+        return qs.none()
     logger.debug(
         "%s: Filtering queryset for user %s with role %s",
         logger_prefix,
         user_profile.user,
         "superuser" if user_profile.user.is_superuser else "staff" if user_profile.user.is_staff else "customer",
     )
-
-    # 1.) no user_profile, no queryset.
-    if not user_profile:
-        logger.debug(
-            "%s: No user profile found for user %s, returning empty queryset", logger_prefix, user_profile.user
-        )
-        return qs.none()
 
     # 2.) if the user is a superuser, return all llmclients.
     if user_profile.user.is_superuser:
