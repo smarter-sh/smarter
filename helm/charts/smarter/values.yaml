@@ -256,7 +256,7 @@ externalDatabase:
 
 mysql:
   enabled: false
-  fullnameOverride: "smarter-mariadb"
+  nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -299,6 +299,7 @@ mysql:
 
 mariadb:
   enabled: true
+  nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
   primary:
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
