@@ -338,13 +338,13 @@ react-build:
 	@echo "Building and collecting React files on local filesystem ..."
 	@echo "==============================================================================="
 	cd smarter/react && NODE_ENV=production npm run build
+	make collectstatic
+	make build
 
 react-build-ci:
 	cd smarter/react && \
 	NODE_ENV=production npm ci --include=dev && \
 	NODE_ENV=production npm run build
-	make collectstatic
-	make build
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation

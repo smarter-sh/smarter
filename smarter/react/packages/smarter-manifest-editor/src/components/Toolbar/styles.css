@@ -1,0 +1,26 @@
+/* The same "Copied to clipboard" message as @smarter/prompt-passthrough's toolbar. */
+.manifest-editor-copied {
+  position: absolute;
+  top: -2.5rem;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  background: #222;
+  color: #fff;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  text-align: center;
+  opacity: 0.95;
+  transition: opacity 0.2s;
+}
+
+/* Disabled buttons keep their tooltip, which says why they are disabled. */
+.manifest-editor-toolbar .btn:disabled {
+  pointer-events: auto;
+  cursor: not-allowed;
+}
