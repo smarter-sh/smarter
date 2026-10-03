@@ -927,6 +927,7 @@ DATABASES = {
         "PASSWORD": "smarter",
         "HOST": "smarter-mariadb",  # Or an IP Address that your DB is hosted on
         "PORT": "3306",
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 """

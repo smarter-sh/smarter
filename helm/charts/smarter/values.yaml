@@ -243,6 +243,9 @@ hpa:
 # -----------------------------------------------------------------------------
 # Backing Services Configuration
 # -----------------------------------------------------------------------------
+databaseInit:
+  enabled: true   # post-install/post-upgrade Job: create db + user, migrate, initialize platform
+
 databaseScheduledBackup:
   enabled: true
   schedule: "0 2 * * *" # Every day at 2am UTC

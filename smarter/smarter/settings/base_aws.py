@@ -47,6 +47,7 @@ DATABASES = {
         "PASSWORD": os.getenv("SMARTER_MYSQL_PASSWORD"),
         "HOST": os.getenv("SMARTER_MYSQL_HOST"),
         "PORT": os.getenv("SMARTER_MYSQL_PORT", "3306"),  # default MySQL port
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 

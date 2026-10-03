@@ -12,6 +12,7 @@
 # between backing services. If the label is missing then the network policies are
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
+{{- if .Values.databaseScheduledBackup.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -100,3 +101,4 @@ spec:
                 {{- end }}
 
           restartPolicy: OnFailure
+{{- end }}
