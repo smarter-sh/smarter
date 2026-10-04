@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.7...v0.17.2-alpha.8) (2026-10-04)
+
+### Bug Fixes
+
+* **dashboard:** live service health, activity, budget alerts, onboarding and quick actions ([a7d449d](https://github.com/smarter-sh/smarter/commit/a7d449d7d8e40603de32330da983b33ebaaace37))
+
 ## [0.17.2-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.6...v0.17.2-alpha.7) (2026-10-04)
 
 ### Bug Fixes
