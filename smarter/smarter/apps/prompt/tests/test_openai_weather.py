@@ -1,25 +1,12 @@
-# pylint: disable=wrong-import-position
 # pylint: disable=R0801
 """Test lambda_openai_v2 function."""
-
-import os
-import sys
-from pathlib import Path
 
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
     Function,
 )
 
-# python stuff
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
-
 
 from ..functions.function_weather import get_current_weather, weather_tool_factory
 

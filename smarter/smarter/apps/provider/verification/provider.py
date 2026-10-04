@@ -12,7 +12,6 @@ from smarter.apps.provider.models import (
     ProviderVerificationTypes,
 )
 from smarter.apps.provider.signals import (
-    provider_activated,
     provider_verification_failure,
     provider_verification_success,
 )
@@ -223,21 +222,17 @@ def verify_provider(provider_id, **kwargs):
     success = success and verify_provider_tos_accepted(provider=provider)
     success = success and verify_provider_production_api_key(provider=provider)
 
-    if not provider.can_activate:
-        logger.error("%s Provider %s cannot be activated.", prefix, provider.name)
-        success = False
-
     if success:
-        provider_verification_success.send(sender=Provider, provider=provider)
+        # can_activate requires the status VERIFIED, so it is checked only after it is set.
         provider.status = ProviderStatus.VERIFIED
         provider.is_verified = True
-        if provider.can_activate:
-            try:
-                provider.activate()
-                provider.save(update_fields=["status", "is_verified"])
-                provider_activated.send(sender=Provider, provider=provider)
-            except SmarterValueError as exc:
-                logger.error("%s Activation failed for provider: %s, error: %s", prefix, provider.name, exc)
+        provider.save(update_fields=["status", "is_verified"])
+        provider_verification_success.send(sender=Provider, provider=provider)
+        try:
+            # activate() sends provider_activated.
+            provider.activate()
+        except SmarterValueError as exc:
+            logger.error("%s Activation failed for provider: %s, error: %s", prefix, provider.name, exc)
     else:
         provider.status = ProviderStatus.FAILED
         provider.is_verified = False

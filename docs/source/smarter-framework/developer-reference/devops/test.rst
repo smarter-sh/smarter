@@ -1,8 +1,8 @@
 Unit Testing
 ============
 
-Smarter takes code quality and testing seriously. As of version 0.16 there are 2,900 tests in
-the test suite. Pull requests must pass all tests before they can be merged. Moreover,
+Smarter takes code quality and testing seriously. As of version 0.17 there are 3,800 tests in
+the full test suite and a coverage ratio of approximately 90%. Pull requests must pass all tests before they can be merged. Moreover,
 code coverage is monitored on pull requests to ensure that new code is adequately tested. While 100% coverage is not
 patently unrealistic for this project, we strive to maintain high coverage across the codebase. In parts of the
 codebase that we consider 'core', we aim for at least 90% coverage.

@@ -70,7 +70,7 @@ class VectorsearchSerializer(ModelSerializer):
     # pylint: disable=C0115
     class Meta:
         model = Vectorsearch
-        fields = ["__all__"]
+        fields = "__all__"
 
 
 class SAMVectorsearchBroker(AbstractBroker):
@@ -374,11 +374,6 @@ class SAMVectorsearchBroker(AbstractBroker):
         vectorsearch_dict["auth_secret_name"] = (
             self.vectorsearch.auth_secret.name if self.vectorsearch.auth_secret else None
         )
-        vectorsearch_dict = self.to_camel_case(vectorsearch_dict)
-        if not isinstance(vectorsearch_dict, dict):
-            raise SAMVectorsearchBrokerError(
-                f"Failed to convert {self.kind} {self.vectorsearch.name} to dict", thing=self.kind
-            )
 
         meta = SAMVectorsearchMetadata(
             name=self.vectorsearch.name,
@@ -800,8 +795,8 @@ class SAMVectorsearchBroker(AbstractBroker):
         self.verify_no_dependencies(command)
         if self.vectorsearch:
             try:
-                self.vectorsearch.delete()
                 self.cache_invalidations()
+                self.vectorsearch.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(

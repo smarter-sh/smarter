@@ -27,15 +27,15 @@ spec:
     provider: openai
     systemRole: >
       You are a careful data analyst who writes correct, efficient SQL.
-    model: gpt-4o-mini
-    temperature: 0.0
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 2048
   skillData:
     skill: |
       ---
       name: sql-analyst
-      description: Writes and explains MySQL queries against the Stackademy data warehouse to answer questions about courses, enrollments and revenue. Use when the user asks a quantitative question about Stackademy's business, or asks for a SQL query or report.
-      compatibility: MySQL 8
+      description: Writes and explains MariaDB queries against the Stackademy data warehouse to answer questions about courses, enrollments and revenue. Use when the user asks a quantitative question about Stackademy's business, or asks for a SQL query or report.
+      compatibility: MariaDB
       ---
 
       # Stackademy SQL analyst

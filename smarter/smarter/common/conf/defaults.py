@@ -134,6 +134,9 @@ class SettingsDefaults:
         "LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF", True
     )
     LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: str = get_env("LLM_CLIENT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
+    INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: str = get_env(
+        "INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE", "infrastructure_celery_task_queue"
+    )
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
@@ -186,7 +189,7 @@ class SettingsDefaults:
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")
 
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4o-mini"
+    LLM_DEFAULT_MODEL = "gpt-6-luna"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful llmclient. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "

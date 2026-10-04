@@ -32,7 +32,7 @@ spec:
     appWelcomeMessage: Hi! I'm Sam from ACME Cloud, and I'm here to help. What can I do for you today?
     customDomain: null
     defaultMaxTokens: 1024
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole:
       You are a friendly and professional customer support agent for ACME Cloud, a web
       hosting company. Draft every support reply in the company's brand voice, following the
@@ -45,7 +45,7 @@ spec:
       service credits, restoration times or exceptions to policy. Instead, tell the customer
       that a member of the support team will confirm them. Never ask the customer for passwords or
       full payment card numbers.
-    defaultTemperature: 0.3
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

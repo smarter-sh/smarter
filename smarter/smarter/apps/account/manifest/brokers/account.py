@@ -564,13 +564,10 @@ class SAMAccountBroker(AbstractBroker):
 
         metadata = SAMAccountMetadata(
             name="example_account",
-            description="Example database connection",
+            description="An example Smarter API manifest for an Account",
             version="0.1.0",
-            tags=["example", "sql", "connection"],
-            annotations=[
-                {"smarter.sh/connection": "example_connection"},
-                {"smarter.sh/created_by": "smarter_sql_connection_broker"},
-            ],
+            tags=["example"],
+            annotations=[],
             accountNumber="123456789",
         )
         spec = SAMAccountSpec(

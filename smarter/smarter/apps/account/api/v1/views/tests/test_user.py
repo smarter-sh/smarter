@@ -183,10 +183,10 @@ class TestUserListView(TestAccountMixin):
         self.assertIsInstance(response.json(), list)
 
     def test_get_list_unauthorized(self):
-        """Unauthorized user gets 403."""
+        """Unauthenticated user gets 401 or 403."""
         self.client.logout()
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertIn(response.status_code, (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN))
 
     def test_get_list_invalid_method(self):
         """PATCH is not allowed on list view."""

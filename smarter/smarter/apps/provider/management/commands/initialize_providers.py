@@ -15,6 +15,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.provider.const import (
     GOOGLE_MAPS_API_KEY_SECRET_NAME,
     GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
+    TAVILY_API_KEY_SECRET_NAME,
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
@@ -86,7 +87,11 @@ class Command(SmarterCommand):
         """
         try:
             svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
-            secret_string = SecretStr(json.loads(base64.b64decode(svc_acct_b64).decode("utf-8")))
+            svc_acct_json = base64.b64decode(svc_acct_b64).decode("utf-8")
+            # parsed only to validate it: the Secret stores the json string, which
+            # get_google_service_account_bearer_token() parses.
+            json.loads(svc_acct_json)
+            secret_string = SecretStr(svc_acct_json)
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             logger.error("Failed to load Google service account: %s", e)
             logger.error(
@@ -381,6 +386,36 @@ class Command(SmarterCommand):
             user_profile=self.user_profile,
         )
 
+    def initialize_tavily(self):
+        """
+        Initialize the Tavily web search api key Secret.
+
+        The built-in WebsearchPlugin smarter_project_websearch, which the smarter LLMClient uses,
+        reads its api key from this Secret. Unlike the provider api keys, a missing key is not
+        stored: the Secret is skipped, so that applying the plugin reports the missing Secret.
+        """
+        NAME = "tavily"
+        API_KEY_ENV_VAR = "TAVILY_API_KEY"
+
+        # placeholders, such as .env.example's SET-ME-PLEASE, and helm/charts/smarter/values.yaml's
+        # SET-ME-IN-helm/charts/smarter/values.yaml, which a deployment without the key falls back to.
+        api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
+        if not api_key or str(api_key).startswith("SET-ME"):
+            logger.warning(
+                "initialize_tavily: %s is not set. The %s Secret is not created, so WebsearchPlugins that use it, "
+                "such as smarter_project_websearch, cannot be applied.",
+                API_KEY_ENV_VAR,
+                TAVILY_API_KEY_SECRET_NAME,
+            )
+            return
+
+        initialize_secret(
+            secret_string=api_key,
+            secret_name=TAVILY_API_KEY_SECRET_NAME,
+            description=f"API key for {NAME} web search.",
+            user_profile=self.user_profile,
+        )
+
     def initialize_metaai(self):
         """Initialize Meta AI provider and its models."""
         API_KEY_ENV_VAR = "LLAMA_API_KEY"
@@ -432,7 +467,7 @@ class Command(SmarterCommand):
         """Initialize OpenAI provider and its models."""
         API_KEY_ENV_VAR = "OPENAI_API_KEY"
         NAME = "openai"
-        DEFAULT_MODEL = "gpt-4o-mini"
+        DEFAULT_MODEL = "gpt-6-luna"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
@@ -455,7 +490,7 @@ class Command(SmarterCommand):
         """Initialize TogetherAI provider and its models."""
         API_KEY_ENV_VAR = "TOGETHERAI_API_KEY"
         NAME = "togetherai"
-        DEFAULT_MODEL = "gpt-4o-mini"
+        DEFAULT_MODEL = "gpt-6-luna"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
@@ -492,6 +527,7 @@ class Command(SmarterCommand):
             self.initialize_google_service_account()
             self.initialize_googleai()
             self.initialize_google_maps()
+            self.initialize_tavily()
             self.initialize_metaai()
             self.initialize_mistral()
             self.initialize_openai()

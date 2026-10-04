@@ -83,7 +83,7 @@ class TestMCPClientPromptIntegration(MCPClientTestBase):
             provider_name="openai",
             base_url="https://api.example.com/v1/",
             api_key=SecretStr("sk-test"),
-            default_model="gpt-4o-mini",
+            default_model="gpt-6-luna",
         )
         provider.prompt = self.prompt
         provider.messages = [

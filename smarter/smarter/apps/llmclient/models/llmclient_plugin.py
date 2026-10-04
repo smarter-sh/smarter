@@ -8,7 +8,6 @@ from smarter.apps.account.models import (
     UserProfile,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.exceptions import SmarterValueError
@@ -87,7 +86,8 @@ class LLMClientPlugin(TimestampedModel):
         :returns: Plugin instance or None
         :rtype: Optional[PluginBase]
         """
-        if not self.llmclient:
+        # llmclient_id, because reading self.llmclient when it is not set raises RelatedObjectDoesNotExist.
+        if not self.llmclient_id:
             return None
         admin_user = UserProfile.admin_for_account(self.llmclient.user_profile.cached_account)
         if admin_user is None:
@@ -104,10 +104,8 @@ class LLMClientPlugin(TimestampedModel):
         ) -> PluginController:
 
             retval = PluginController(
-                account=self.llmclient.user_profile.cached_account,
-                user=admin_user,
-                plugin_meta=self.plugin_meta,
                 user_profile=user_profile,
+                plugin_meta=self.plugin_meta,
             )
             logger.debug(
                 "%s.get_cached_plugin_controller() fetched and cached plugin controller for llmclient_id: %s, plugin_meta_id: %s",
@@ -149,8 +147,9 @@ class LLMClientPlugin(TimestampedModel):
             raise SmarterValueError("LLMClientPlugin.plugin() failed to find admin user for llmclient account")
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
         loader = SAMLoader(manifest=data)
-        manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
-        plugin_controller = PluginController(user_profile=user_profile, manifest=manifest)
+        # PluginController converts the manifest dict to the model of its kind, e.g. SAMStaticPlugin,
+        # which the plugin classes require, rather than the SAMPluginCommon base model.
+        plugin_controller = PluginController(user_profile=user_profile, manifest=loader.json_data)
         plugin = plugin_controller.plugin
         if not plugin or plugin.plugin_meta is None:
             raise SmarterValueError("LLMClientPlugin.load() failed to load plugin from data file")

@@ -272,7 +272,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             return False
         return True
 
-    def verify_ingress_resources(self, hostname: str, namespace: str) -> Tuple[bool, bool, bool]:
+    def verify_ingress_resources(
+        self, hostname: str, namespace: str, max_attempts: int = 30
+    ) -> Tuple[bool, bool, bool]:
         """
         Verify that an ingress and all child resources exist in the.
 
@@ -287,6 +289,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :type hostname: str
         :param namespace: The namespace of the ingress.
         :type namespace: str
+        :param max_attempts: How many times to check the certificate, a minute apart. A Celery task
+            passes 1, and checks again later, so that it does not block its worker while it waits.
+        :type max_attempts: int
         :return: A tuple of booleans indicating whether the ingress, certificate, and secret were verified.
         :rtype: Tuple[bool, bool, bool]
         """
@@ -305,12 +310,20 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         secret_verified = self.verify_secret(secret_name, namespace)
 
         certificate_name = secret_name
-        max_attempts = 30
         sleep_time = 60
-        # attempt to verify the certificate once per minute for up to a half hour.
-        for _ in range(max_attempts):
+        certificate_verified = False
+        # attempt to verify the certificate once per minute, by default for up to a half hour.
+        for attempt in range(max(1, max_attempts)):
             certificate_verified = self.verify_certificate(certificate_name, namespace)
             if certificate_verified:
+                break
+            if attempt + 1 >= max_attempts:
+                # no sleep after the last attempt.
+                logger.error(
+                    "%s.verify_ingress_resources() certificate not ready after %s attempts",
+                    module_prefix,
+                    max_attempts,
+                )
                 break
             logger.debug(
                 "%s.verify_ingress_resources() certificate %s %s not ready, sleeping for %s seconds",
@@ -320,12 +333,6 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
                 sleep_time,
             )
             time.sleep(sleep_time)
-        else:
-            logger.error(
-                "%s.verify_ingress_resources() certificate not ready after %s attempts",
-                module_prefix,
-                max_attempts,
-            )
 
         return ingress_verified, certificate_verified, secret_verified
 
@@ -497,9 +504,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete an ingress and all child resources from the cluster.
 
         commands:
-        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
-        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
-        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod --ignore-not-found
+        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
+        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
 
         :param hostname: The hostname of the ingress.
         :type hostname: str
@@ -532,7 +539,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete an Ingress resource from the cluster.
 
         command:
-        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
+        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod --ignore-not-found
 
         :param ingress_name: The name of the ingress.
         :type ingress_name: str
@@ -550,7 +557,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         if not self.ready:
             return False
-        command = ["kubectl", "delete", "ingress", ingress_name, "-n", namespace]
+        # --ignore-not-found: a resource that is already gone counts as deleted.
+        command = ["kubectl", "delete", "ingress", ingress_name, "-n", namespace, "--ignore-not-found"]
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
@@ -567,7 +575,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete a cert-manager certificate resource from the cluster.
 
         command:
-        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
 
         :param certificate_name: The name of the certificate.
         :type certificate_name: str
@@ -585,7 +593,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         if not self.ready:
             return False
-        command = ["kubectl", "delete", "certificate", certificate_name, "-n", namespace]
+        # --ignore-not-found: a resource that is already gone counts as deleted.
+        command = ["kubectl", "delete", "certificate", certificate_name, "-n", namespace, "--ignore-not-found"]
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
@@ -602,7 +611,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete a secret resource from the cluster.
 
         commands:
-        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
 
         :param secret_name: The name of the secret.
         :type secret_name: str
@@ -620,7 +629,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         if not self.ready:
             return False
-        command = ["kubectl", "delete", "secret", secret_name, "-n", namespace]
+        # --ignore-not-found: a resource that is already gone counts as deleted.
+        command = ["kubectl", "delete", "secret", secret_name, "-n", namespace, "--ignore-not-found"]
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:

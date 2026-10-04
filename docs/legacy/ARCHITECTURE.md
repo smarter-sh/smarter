@@ -16,7 +16,7 @@ The principal technologies in the **Smarter** platform stack include:
 - Amazon Web Services
 - Debian, Ubuntu or Amazon Linux
 - Docker/Kubernetes/Helm
-- MySQL
+- MariaDB
 - Redis
 - Terraform/awscli/Boto3
 - Python/Django

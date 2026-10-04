@@ -107,6 +107,7 @@ class ProviderVerificationTypes(models.TextChoices):
     SUPPORT_EMAIL = "support_email", "Support Email"
     WEBSITE_URL = "website_url", "Website URL"
     TOS_URL = "tos_url", "Terms of Service URL"
+    DOCS_URL = "docs_url", "Documentation URL"
     PRIVACY_POLICY_URL = "privacy_policy_url", "Privacy Policy URL"
     TOS_ACCEPTANCE = "tos_acceptance", "Terms of Service Acceptance"
     PRODUCTION_API_KEY = "production_api_key", "Production API Key"
@@ -290,8 +291,10 @@ class Provider(MetaDataWithOwnershipModel):
     @property
     def authorization_header(self) -> dict:
         """Return the authorization header for the provider."""
-        if self.production_api_key(mask=False) is not None:
+        try:
             return {"Authorization": f"Bearer {self.production_api_key(mask=False)}"}
+        except SmarterConfigurationError:
+            pass
         if self.api_key:
             return {"Authorization": f"Bearer {self.api_key.get_secret()}"}
         return {}
@@ -561,8 +564,8 @@ class Provider(MetaDataWithOwnershipModel):
             )
             return []
 
-        if invalidate and user_profile and user_profile.account:
-            cached_providers_by_user_id.invalidate(user_profile.account.id)
+        if invalidate and user_profile:
+            cached_providers_by_user_id.invalidate(user_profile.user.id)
 
         if user_profile:
             return cached_providers_by_user_id(user_profile.user.id)
@@ -679,7 +682,7 @@ class ProviderVerification(TimestampedModel):
     @property
     def next_verification(self) -> datetime.datetime:
         """Get the next verification time."""
-        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+        return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self):
         """String representation of the verification."""
@@ -715,7 +718,7 @@ class ProviderModelVerification(TimestampedModel):
     @property
     def next_verification(self) -> datetime.datetime:
         """Get the next verification time."""
-        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+        return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self):
         """String representation of the verification."""

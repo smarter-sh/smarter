@@ -13,7 +13,6 @@ from django.core.validators import MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
-from django.urls import reverse
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
@@ -141,7 +140,7 @@ class SqlConnection(ConnectionBase):
     ]
     """The supported authentication methods for SQL connections."""
     db_engine = models.CharField(
-        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+        help_text="The type of database management system. Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         default=DbEngines.MYSQL.value,
         max_length=255,
         choices=DBMS_CHOICES,
@@ -151,7 +150,7 @@ class SqlConnection(ConnectionBase):
     """
     The type of database management system.
 
-    Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
+    Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
     """
     authentication_method = models.CharField(
         help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
@@ -203,16 +202,16 @@ class SqlConnection(ConnectionBase):
     Should be a valid internet domain name.
     """
     port = models.IntegerField(
-        default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.", blank=True, null=True
+        default=3306, help_text="The port of the SQL connection. example: 3306 for MariaDB.", blank=True, null=True
     )
     """
     The port of the SQL connection.
 
-    example: 3306 for MySQL.
+    example: 3306 for MariaDB.
     5432 for PostgreSQL, 1521 for Oracle, 1433 for MS SQL Server.
     5000 for Sybase.
     1234 for SQLite (not commonly used).
-    3306 is a reasonable default as MySQL is widely used.
+    3306 is a reasonable default as MariaDB is widely used.
     5432 could also be a reasonable default as PostgreSQL is also widely used.
     """
     database = models.CharField(max_length=255, help_text="The name of the database to connect to.")
@@ -300,31 +299,6 @@ class SqlConnection(ConnectionBase):
 
     Usually comes from ~/.ssh/known_hosts.
     """
-
-    @property
-    def manifest_url(self) -> str:
-        """
-        Returns the URL to the plugin's manifest.
-
-        Adds the manifest kind as a slug to the base manifest URL defined in the parent class.
-        For example, if the base manifest URL is "/plugins/{hashed_id}" and the manifest
-        kind is "sql_connection", the resulting manifest URL would be "/plugins/{hashed_id}/sql_connection/".
-
-        **Example:**
-
-        .. code-block:: python
-
-            self.rfc1034_compliant_kind  # 'sql-connection'
-            self.rfc1034_compliant_name  # 'smarter-test-sql
-            self.manifest_url  # 'http://localhost:9357/connection/connections/sql-connection/smarter-test-sql/'
-        """
-        # pylint: disable=C0415
-        from smarter.apps.connection.urls import ConnectionReverseNames
-
-        return reverse(
-            f"{ConnectionReverseNames.namespace}:{ConnectionReverseNames.sql_detailview}",
-            kwargs={"name": self.rfc1034_compliant_name},
-        )
 
     @property
     def connection(self) -> Optional[BaseDatabaseWrapper]:

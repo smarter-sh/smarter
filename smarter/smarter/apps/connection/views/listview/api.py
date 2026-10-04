@@ -169,39 +169,18 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         try:
             new_name = self.to_snake_case(new_name.strip())
+            # clone the concrete ApiConnection or SqlConnection, so that the clone has its subclass row.
+            if connection.kind == SAMKinds.SQL_CONNECTION.value:
+                model, serializer_class = SqlConnection, SqlConnectionSerializer
+            elif connection.kind == SAMKinds.API_CONNECTION.value:
+                model, serializer_class = ApiConnection, ApiConnectionSerializer
+            else:
+                raise ValueError(f"Unsupported connection kind: {connection.kind}")
             with transaction.atomic():
-                connection.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+                clone = model.objects.get(id=connection.id).clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
                 invalidate_all_cached_connections_for_user_profile(user_profile=self.user_profile)  # type: ignore
-                if connection.kind == SAMKinds.SQL_CONNECTION.value:
-                    try:
-                        sql_connection = SqlConnection.objects.get(id=connection.id)  # type: ignore
-                        sql_data = SqlConnectionSerializer(sql_connection, context={"request": request}).data
-                        return JsonResponse(sql_data, status=HTTPStatus.OK)  # type: ignore
-                    except SqlConnection.DoesNotExist:
-                        logger.error(
-                            "%s.post() SqlConnection with id %s not found for cloning.",
-                            self.formatted_class_name,
-                            connection_id,
-                        )
-                        return JsonResponse(
-                            {"error": f"SqlConnection with id {connection_id} not found."}, status=HTTPStatus.NOT_FOUND
-                        )
-                elif connection.kind == SAMKinds.API_CONNECTION.value:
-                    try:
-                        api_connection = ApiConnection.objects.get(id=connection.id)  # type: ignore
-                        api_data = ApiConnectionSerializer(api_connection, context={"request": request}).data
-                        return JsonResponse(api_data, status=HTTPStatus.OK)  # type: ignore
-                    except ApiConnection.DoesNotExist:
-                        logger.error(
-                            "%s.post() ApiConnection with id %s not found for cloning.",
-                            self.formatted_class_name,
-                            connection_id,
-                        )
-                        return JsonResponse(
-                            {"error": f"ApiConnection with id {connection_id} not found."}, status=HTTPStatus.NOT_FOUND
-                        )
-                else:
-                    raise ValueError(f"Unsupported connection kind: {connection.kind}")
+            data = serializer_class(clone, context={"request": request}).data
+            return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(

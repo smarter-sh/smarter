@@ -231,3 +231,67 @@ def ensure_system_role_present(
             },
         )
     return messages
+
+
+def pair_tool_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Return the messages with every tool call paired with its tool reply, as OpenAI requires.
+
+    The OpenAI chat completions API refuses, with a 400, a ``tool`` message that does not answer a
+    ``tool_calls`` entry of the assistant message immediately before it, and an assistant ``tool_calls``
+    entry that no ``tool`` message answers. A message thread can break this rule when it comes from a
+    client, such as the chat window, that keeps the tool replies but not the assistant's ``tool_calls``,
+    which happens when the prompt history has not been persisted yet. So:
+
+    - a ``tool`` message is kept only if it answers a tool call of the preceding assistant message.
+    - a tool call that no ``tool`` message answers is removed from its assistant message.
+
+    The messages themselves are not modified: an assistant message that changes is copied.
+
+    :param messages: The message thread.
+    :return: The message thread, in which every tool call is paired with its reply.
+    """
+    role_key, tool_calls_key = OpenAIMessageKeys.MESSAGE_ROLE_KEY, "tool_calls"
+    retval: list[dict[str, Any]] = []
+    i = 0
+    while i < len(messages):
+        message = messages[i]
+        role = message.get(role_key)
+        if role == OpenAIMessageKeys.TOOL_MESSAGE_KEY:
+            # an orphan: it does not follow an assistant message with tool calls.
+            logger.warning(
+                "pair_tool_messages() removed a tool message without a tool call: %s", message.get("tool_call_id")
+            )
+            i += 1
+            continue
+        tool_calls = message.get(tool_calls_key) if role == OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY else None
+        if not tool_calls:
+            retval.append(message)
+            i += 1
+            continue
+
+        # the tool messages that immediately follow the assistant message
+        j = i + 1
+        replies: list[dict[str, Any]] = []
+        while j < len(messages) and messages[j].get(role_key) == OpenAIMessageKeys.TOOL_MESSAGE_KEY:
+            replies.append(messages[j])
+            j += 1
+        call_ids = [call.get("id") for call in tool_calls if isinstance(call, dict)]
+        replies = [reply for reply in replies if reply.get("tool_call_id") in call_ids]
+        answered = {reply.get("tool_call_id") for reply in replies}
+        paired_calls = [call for call in tool_calls if isinstance(call, dict) and call.get("id") in answered]
+        if len(paired_calls) != len(tool_calls):
+            logger.warning(
+                "pair_tool_messages() removed %s tool calls without a tool message", len(tool_calls) - len(paired_calls)
+            )
+            message = dict(message)
+            if paired_calls:
+                message[tool_calls_key] = paired_calls
+            else:
+                del message[tool_calls_key]
+                if message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) is None:
+                    message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = ""
+        retval.append(message)
+        retval.extend(replies)
+        i = j
+    return retval

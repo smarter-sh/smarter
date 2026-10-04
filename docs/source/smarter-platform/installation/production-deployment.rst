@@ -300,7 +300,10 @@ III. Smarter Platform Application
 The Smarter Platform application is deployed to Kubernetes using the `official Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
 The application itself consists of a Python-Django backend that supports an
 API and a Web Console frontend. This single code base is deployed to Kubernetes as
-an application server and also as a Celery worker and a Celery Beat worker.
+an application server, two Celery workers, and a Celery Beat worker. One Celery worker runs the
+operational tasks, such as recording prompts and charges, and the other runs the infrastructure
+tasks, which deploy and verify DNS records, certificates and node groups, so that a deployment never
+delays the operational tasks. See :doc:`ADR-030 <../../adr/030-task-queues>`.
 The application follows 12-factor app principles and is designed to be horizontally
 scalable and resilient to failure.
 

@@ -8,10 +8,9 @@ from urllib.parse import ParseResult, urlparse
 
 from django.contrib.auth.models import User
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.response import Response
 
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
@@ -490,7 +489,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             self.formatted_class_name,
             self.llmclient_helper.url if self.llmclient_helper else "(Missing LLMClientHelper.url)",
         )
-        response = Response()
+        response = HttpResponse()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "origin, content-type, accept"

@@ -41,6 +41,8 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
+from urllib.parse import urlparse
+
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.signals import (
     post_undeploy_default_api,
@@ -51,6 +53,7 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
+from .destroy_domain_a_record import destroy_domain_A_record
 from .utils import is_taskable
 
 logger = logging.getSmarterLogger(
@@ -63,7 +66,7 @@ logger_prefix = logging.formatted_text(__name__)
     autoretry_for=(Exception,),
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
 )
 def undeploy_default_api(llmclient_id: int):
     """
@@ -73,8 +76,9 @@ def undeploy_default_api(llmclient_id: int):
     1. Sends a pre-undeploy signal for the llmclient API.
     2. Logs the undeployment request.
     3. Retrieves the LLMClient instance by ID.
-    4. Marks the llmclient as not deployed and resets DNS verification status.
-    5. Saves the llmclient state and sends a post-undeploy signal.
+    4. Destroys the Route53 A record of the llmclient's default api domain.
+    5. Marks the llmclient as not deployed and resets DNS verification status.
+    6. Saves the llmclient state and sends a post-undeploy signal.
 
     Parameters
     ----------
@@ -110,6 +114,9 @@ def undeploy_default_api(llmclient_id: int):
         logger.error("%s LLMClient %s not found. task_id: %s", prefix, llmclient_id, task_id)
         post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id)
         return None
+
+    hostname = urlparse(llmclient.default_url).netloc
+    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
 
     llmclient.deployed = False
     llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.NOT_VERIFIED

@@ -89,6 +89,7 @@ env:
   SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: "3"
   SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
   SMARTER_LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
+  SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: "infrastructure_celery_task_queue"
   SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
   SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
   SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
@@ -128,6 +129,7 @@ env:
   SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_TAVILY_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_TOGETHERAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMTP_HOST: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMTP_PORT: "587"
@@ -189,6 +191,18 @@ service:
 
 worker:
   replicaCount: 2
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+# The Celery worker of the infrastructure queue, which deploys, verifies and destroys
+# cloud, Kubernetes and DNS resources. See templates/deployment-worker-infrastructure.yaml.
+workerInfrastructure:
+  replicaCount: 1
   resources:
     requests:
       cpu: "250m"

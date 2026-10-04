@@ -4,6 +4,7 @@ from typing import Any, Union
 
 from django.http import HttpResponseBase, HttpResponseForbidden
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -233,6 +234,15 @@ class SmarterAdminAPIMixin(SmarterRequestMixin):
             return False
         return True
 
+    def check_superuser(self) -> None:
+        """Refuse the request unless the authenticated user is a superuser.
+
+        Raises:
+            PermissionDenied: Raised when the authenticated user is not a superuser.
+        """
+        if not self.is_superuser():
+            raise PermissionDenied(f"User {self.user_profile} does not have superuser privileges.")
+
     def is_staff(self) -> bool:
         """Check if the authenticated user is a staff member.
 
@@ -326,8 +336,23 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
             self.user_profile,
         )
 
+    def initial(self, request: Request, *args, **kwargs):
+        """Extend DRF initial() to limit access to superusers.
+
+        The check runs here, after DRF has authenticated the request, so that a
+        request authenticated with an api key, rather than a session, is recognized.
+
+        Args:
+            request (Request): The incoming HTTP request.
+
+        Raises:
+            PermissionDenied: Raised when the authenticated user is not a superuser.
+        """
+        super().initial(request, *args, **kwargs)
+        self.check_superuser()
+
     def dispatch(self, request: Request, *args, **kwargs) -> Union[HttpResponseBase, HttpResponseForbidden, Response]:
-        """Extend DRF dispatch() to add authentication check.
+        """Extend DRF dispatch() to add logging and signals.
 
         Args:
             request (Request): The incoming HTTP request.
@@ -336,9 +361,6 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
             AuthenticationFailed: Raised when authentication fails.
             SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
         """
-        if not self.is_superuser():
-            return HttpResponseForbidden("Forbidden: User %s does not have superuser privileges.", self.user_profile)
-
         logger.debug(
             "%s.dispatch() - called by user_profile: %s and ready to process request: %s",
             self.formatted_class_name,
@@ -425,14 +447,6 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
-        if not self.is_superuser():
-            logger.warning(
-                "%s.setup() - request user %s is not superuser",
-                self.formatted_class_name,
-                self.user,
-            )
-            return HttpResponseForbidden(f"Forbidden: User {self.user} does not have admin privileges.")
-
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
@@ -444,12 +458,19 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
         )
 
     def initial(self, request: Request, *args, **kwargs):
-        """Extend DRF initial() to add app logging.
+        """Extend DRF initial() to limit access to superusers, and to add app logging.
+
+        The check runs here, after DRF has authenticated the request, so that a
+        request authenticated with an api key, rather than a session, is recognized.
 
         Args:
             request (Request): The incoming HTTP request.
+
+        Raises:
+            PermissionDenied: Raised when the authenticated user is not a superuser.
         """
         super().initial(request, *args, **kwargs)
+        self.check_superuser()
         logger.debug(
             "%s.initial() - running for request: %s, user: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -472,9 +493,6 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
             AuthenticationFailed: Raised when authentication fails.
             SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
         """
-        if not self.is_superuser():
-            return HttpResponseForbidden("Forbidden: %s does not have superuser privileges.", self.user_profile)
-
         logger.debug(
             "%s.dispatch() - called for request: %s user: %s",
             self.formatted_class_name,

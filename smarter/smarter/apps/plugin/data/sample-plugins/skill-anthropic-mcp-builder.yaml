@@ -26,8 +26,8 @@ spec:
     provider: openai
     systemRole: >
       You are an expert software engineer who builds Model Context Protocol servers.
-    model: gpt-4o-mini
-    temperature: 0.0
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 4096
   skillData:
     source:

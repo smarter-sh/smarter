@@ -6,7 +6,6 @@ connection list and its api, and :mod:`smarter.apps.connection.views.detailview`
 The class fixture ``connection_django_model`` is owned by the account's admin user.
 """
 
-import unittest
 from http import HTTPStatus
 
 from django.test import Client
@@ -115,62 +114,47 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
     # -------------------------------------------------------------------------
     # ConnectionListApiCloneView, ConnectionListApiDeleteView, ConnectionListApiRenameView
     # -------------------------------------------------------------------------
-    @unittest.expectedFailure
     def test_clone(self):
-        """
-        Test that the clone api creates an ApiConnection named new_name, and returns it.
-
-        Expected to fail: the url passes the connection's id as llmclient_id, but the view
-        reads connection_id, so every request is refused with a 400.
-        """
+        """Test that the clone api creates an ApiConnection named new_name, and returns it."""
         clone_name = "test_connection_views_clone"
         self.addCleanup(ApiConnection.objects.filter(name=clone_name).delete)
         url = self.url(
             ConnectionReverseNames.listview_api_clone,
-            llmclient_id=self.connection_django_model.id,  # type: ignore[union-attr]
+            connection_id=self.connection_django_model.id,  # type: ignore[union-attr]
             new_name=clone_name,
         )
         data = self.post(url)
         self.assertEqual(data["name"], clone_name)
         self.assertTrue(ApiConnection.objects.filter(name=clone_name, user_profile=self.user_profile).exists())
 
-    @unittest.expectedFailure
     def test_delete(self):
-        """Test that the delete api deletes the connection.
-
-        Expected to fail: see test_clone().
-        """
+        """Test that the delete api deletes the connection."""
         connection = self.new_connection("test_connection_views_delete")
-        self.post(self.url(ConnectionReverseNames.listview_api_delete, llmclient_id=connection.id))
+        self.post(self.url(ConnectionReverseNames.listview_api_delete, connection_id=connection.id))
         self.assertFalse(ApiConnection.objects.filter(pk=connection.pk).exists())
 
-    @unittest.expectedFailure
     def test_rename(self):
-        """Test that the rename api renames the connection.
-
-        Expected to fail: see test_clone().
-        """
+        """Test that the rename api renames the connection."""
         connection = self.new_connection("test_connection_views_rename")
         new_name = "test_connection_views_renamed"
         self.addCleanup(ApiConnection.objects.filter(name=new_name).delete)
         data = self.post(
-            self.url(ConnectionReverseNames.listview_api_rename, llmclient_id=connection.id, new_name=new_name)
+            self.url(ConnectionReverseNames.listview_api_rename, connection_id=connection.id, new_name=new_name)
         )
         self.assertEqual(data["name"], new_name)
         self.assertEqual(ApiConnection.objects.get(pk=connection.pk).name, new_name)
 
-    def test_clone_delete_rename_refused_without_connection_id(self):
-        """Test that the clone, delete and rename apis refuse a request that has no connection_id."""
-        connection_id = self.connection_django_model.id  # type: ignore[union-attr]
+    def test_clone_delete_rename_unknown_connection(self):
+        """Test that the clone, delete and rename apis answer an unknown connection_id with a 404."""
+        connection_id = 999999999
         for url in (
-            self.url(ConnectionReverseNames.listview_api_clone, llmclient_id=connection_id, new_name="x"),
-            self.url(ConnectionReverseNames.listview_api_delete, llmclient_id=connection_id),
-            self.url(ConnectionReverseNames.listview_api_rename, llmclient_id=connection_id, new_name="x"),
+            self.url(ConnectionReverseNames.listview_api_clone, connection_id=connection_id, new_name="x"),
+            self.url(ConnectionReverseNames.listview_api_delete, connection_id=connection_id),
+            self.url(ConnectionReverseNames.listview_api_rename, connection_id=connection_id, new_name="x"),
         ):
             with self.subTest(url=url):
-                data = self.post(url, status=HTTPStatus.BAD_REQUEST)
+                data = self.post(url, status=HTTPStatus.NOT_FOUND)
                 self.assertIn("error", data)
-        self.assertTrue(ApiConnection.objects.filter(pk=connection_id).exists())
 
 
 class TestApiConnectionDetailView(ViewTestMixin, ApiConnectionTestMixin):
@@ -179,15 +163,8 @@ class TestApiConnectionDetailView(ViewTestMixin, ApiConnectionTestMixin):
     def detail_url(self, hashed_id: str) -> str:
         return self.url(ConnectionReverseNames.api_detailview, hashed_id=hashed_id)
 
-    @unittest.expectedFailure
     def test_detail(self):
-        """
-        Test that the detail view renders the connection's manifest.
-
-        Expected to fail: the fixture has a proxy password, and SAMApiConnectionBroker.manifest
-        passes the proxy password's Secret object, rather than a string, to the pydantic model,
-        so describing any ApiConnection with a proxy password raises a ValidationError, a 500.
-        """
+        """Test that the detail view renders the connection's manifest, which has a proxy password."""
         response = self.client.get(self.detail_url(self.connection_django_model.hashed_id))  # type: ignore[union-attr]
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertIn(self.connection_django_model.name.encode(), response.content)  # type: ignore[union-attr]

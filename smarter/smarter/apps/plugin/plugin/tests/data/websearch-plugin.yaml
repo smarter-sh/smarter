@@ -23,8 +23,8 @@ spec:
   prompt:
     provider: openai
     systemRole: You are a research assistant for unit testing the WebsearchPlugin.
-    model: gpt-4o-mini
-    temperature: 0.0
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 256
   websearchData:
     search:

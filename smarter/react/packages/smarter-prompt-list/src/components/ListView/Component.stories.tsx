@@ -96,7 +96,7 @@ const exampleLLMClientObject =     {
       "isAuthenticationRequired": false,
       "deployed": false,
       "provider": "openai",
-      "defaultModel": "gpt-4o-mini",
+      "defaultModel": "gpt-6-luna",
       "defaultTemperature": 0.5,
       "defaultMaxTokens": 2048,
       "appName": "Smarter Demo",

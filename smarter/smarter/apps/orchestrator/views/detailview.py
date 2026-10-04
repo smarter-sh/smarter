@@ -145,7 +145,7 @@ class OrchestratorDetailView(DocsBaseView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="Orchestrator not found")
 
-        self.kind = SAMKinds.PROVIDER
+        self.kind = SAMKinds.ORCHESTRATOR
 
         logger.debug(
             "%s.post() Rendering orchestrator detail view for %s, kwargs=%s.",

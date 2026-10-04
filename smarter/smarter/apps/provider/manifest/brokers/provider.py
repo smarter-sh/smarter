@@ -18,6 +18,7 @@ from smarter.apps.provider.manifest.models.provider.spec import (
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.apps.secret.models import Secret
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -132,6 +133,8 @@ class SAMProviderBroker(AbstractBroker):
 
            - :class:`smarter.apps.provider.models.Provider`
         """
+        if self._provider is None and self.name and self.account:
+            self._provider = Provider.objects.filter(user_profile__account=self.account, name=self.name).first()
         return self._provider
 
     def manifest_to_django_orm(self) -> dict:
@@ -173,7 +176,8 @@ class SAMProviderBroker(AbstractBroker):
             raise SAMProviderBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
             )
-        return {**metadata, **dump}
+        # the metadata name, rather than the spec's, identifies the Provider, as with every other kind.
+        return {**dump, **metadata}
 
     @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
@@ -593,15 +597,31 @@ class SAMProviderBroker(AbstractBroker):
             SAMProviderSpecKeys.TOS_ACCEPTED_BY.value,
             "tags",
         ]
+        data = self.manifest_to_django_orm()
+        # the manifest's api key is the name of a Secret, rather than the Secret itself.
+        api_key_name = data.pop(SAMProviderSpecKeys.API_KEY.value, None)
+        api_key: Optional[Secret] = None
+        if api_key_name:
+            try:
+                api_key = Secret.get_cached_object(invalidate=True, name=api_key_name, user_profile=self.user_profile)
+            except Secret.DoesNotExist as e:
+                raise SAMBrokerErrorNotFound(
+                    f"Failed to apply {self.kind} {self.name}. Secret {api_key_name} not found",
+                    thing=self.kind,
+                    command=command,
+                ) from e
         try:
-            data = self.manifest_to_django_orm()
             tags = data.get("tags", [])
             for field in readonly_fields:
                 data.pop(field, None)
+            if self.provider is None:
+                self._provider = Provider(user_profile=self.user_profile)
             for key, value in data.items():
                 setattr(self.provider, key, value)
             if not isinstance(self.provider, Provider):
                 raise SAMProviderBrokerError("Provider is not set", thing=self.kind, command=command)
+            if api_key:
+                self.provider.api_key = api_key
             self.provider.save()
             self.provider.tags.set(tags)
         except Exception as e:
@@ -650,7 +670,7 @@ class SAMProviderBroker(AbstractBroker):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
-        name = kwargs.get("name")
+        name = self.name or kwargs.get("name")
         try:
             self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
         except Provider.DoesNotExist as e:

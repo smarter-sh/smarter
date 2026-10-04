@@ -120,6 +120,8 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
      - API key for Google AI Studio services
    * - GOOGLE_MAPS_API_KEY
      - API key for Google Maps integrations (for getweather() LLM tool)
+   * - TAVILY_API_KEY
+     - API key for Tavily web search, stored as the Secret tavily_api_key, which the built-in smarter_project_websearch plugin of the smarter LLMClient uses. See :doc:`Tavily <../smarter-framework/technologies/tavily>`
    * - GOOGLE_SERVICE_ACCOUNT_B64
      - Base64-encoded Google service account credentials
    * - LLAMA_API_KEY
@@ -137,7 +139,7 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
    * - PINECONE_ENVIRONMENT
      - (optional) Pinecone environment name
    * - SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-     - Password for MySQL test database
+     - Password for MariaDB test database
    * - SMTP_PASSWORD
      - SMTP server password for outgoing email
    * - SMTP_USERNAME
@@ -196,7 +198,7 @@ Smarter currently relies on four primary mechanisms for secrets management:
         sudo apt-get update
         sudo apt-get install -y jq
 
-    - name: Configure MySQL from Kubernetes secret
+    - name: Configure MariaDB from Kubernetes secret
       id: get-mysql-secret
       uses: ./.github/actions/k8s-get-secret
       with:

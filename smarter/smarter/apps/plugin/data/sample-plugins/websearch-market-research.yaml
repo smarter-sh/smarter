@@ -36,8 +36,8 @@ spec:
       You are a market research analyst. Prefer primary sources, such as company
       websites, press releases and filings. Compare findings in a table, and cite
       the url of every claim.
-    model: gpt-4o-mini
-    temperature: 0.2
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 4096
   websearchData:
     search:

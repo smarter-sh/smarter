@@ -22,8 +22,8 @@ spec:
     systemRole: >
       You are a friendly, knowledgeable customer support agent for Stackademy, an online
       school of computer science.
-    model: gpt-4o-mini
-    temperature: 0.5
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 1024
   skillData:
     skill: |

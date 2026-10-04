@@ -26,8 +26,8 @@ spec:
     provider: openai
     systemRole: >
       You are a helpful assistant that writes clear, well-organized internal communications.
-    model: gpt-4o-mini
-    temperature: 0.5
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 2048
   skillData:
     source:

@@ -66,6 +66,19 @@ class OrchestratorApiV1ReverseViews:
 
 urlpatterns = [
     path("", OrchestratorListView.as_view(), name=OrchestratorApiV1ReverseViews.orchestrator_list_view),
+    # the paths by id come first: an id is also a str, so <str:hashed_id> would match it,
+    # but a hashed id, which starts with 'r', never matches <int:...>.
+    # --------------------------------------------------------------------------
+    # paths by orchestrator_id
+    # --------------------------------------------------------------------------
+    path(
+        "<int:orchestrator_id>/", OrchestratorView.as_view(), name=OrchestratorApiV1ReverseViews.orchestrator_view_by_id
+    ),
+    path(
+        "<int:orchestrator_id>/orchestrator/",
+        DefaultOrchestratorApiView.as_view(),
+        name=OrchestratorApiV1ReverseViews.default_orchestrator_api_view_by_id,
+    ),
     # --------------------------------------------------------------------------
     # paths by hashed_id
     # --------------------------------------------------------------------------
@@ -78,16 +91,5 @@ urlpatterns = [
         "<str:hashed_id>/orchestrator/",
         DefaultOrchestratorApiView.as_view(),
         name=OrchestratorApiV1ReverseViews.default_orchestrator_api_view_by_hashed_id,
-    ),
-    # --------------------------------------------------------------------------
-    # paths by orchestrator_id
-    # --------------------------------------------------------------------------
-    path(
-        "<int:orchestrator_id>/", OrchestratorView.as_view(), name=OrchestratorApiV1ReverseViews.orchestrator_view_by_id
-    ),
-    path(
-        "<int:orchestrator_id>/orchestrator/",
-        DefaultOrchestratorApiView.as_view(),
-        name=OrchestratorApiV1ReverseViews.default_orchestrator_api_view_by_id,
     ),
 ]

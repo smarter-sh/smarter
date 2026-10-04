@@ -12,3 +12,4 @@ Technologies
    technologies/python
    technologies/pydantic
    technologies/smtp
+   technologies/tavily

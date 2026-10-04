@@ -575,7 +575,9 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.create() Secret manifest is not set. Cannot create secret.", self.formatted_class_name)
             return False
 
-        if self._secret and self._secret.id:  # type: ignore[union-attr]
+        # self.secret, rather than self._secret, so that a Secret that exists, but
+        # has not been loaded yet, is found by its name and updated rather than created again.
+        if self.secret and self.secret.id:  # type: ignore[union-attr]
             self.id = self.secret.id  # type: ignore[assignment]
             logger.debug(
                 "%s.create() Secret %s already exists. Updating secret %s instead.",

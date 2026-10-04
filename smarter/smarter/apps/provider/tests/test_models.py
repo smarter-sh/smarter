@@ -5,7 +5,6 @@ api keys and connectivity test, its cached getters, and the verification models.
 """
 
 import os
-import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -31,6 +30,12 @@ class ProviderTestBase(TestAccountMixin):
 
     def setUp(self):
         super().setUp()
+        # creating a ProviderModel queues verify_provider_model. Celery is not eager in tests, so,
+        # unpatched, it runs in the live worker, which writes ProviderModelVerifications while the test
+        # deletes the model, and the delete fails. Tests that verify a model call the checks themselves.
+        patcher = patch("smarter.apps.provider.tasks.verify_provider_model")
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.provider = self.new_provider("test_provider_models")
 
     def new_provider(self, name: str, **kwargs) -> Provider:
@@ -143,16 +148,8 @@ class TestProviderApiKeys(ProviderTestBase):
             with self.assertRaises(SmarterConfigurationError):
                 self.provider.production_api_key()
 
-    @unittest.expectedFailure
     def test_authorization_header_with_api_key(self):
-        """
-        Test that the authorization header uses the provider's api key, when there is no production api key.
-
-        Expected to fail: authorization_header calls production_api_key(), which raises
-        SmarterConfigurationError when its environment variable is not set, rather than
-        falling back to the provider's api key, so test_connectivity() raises for any
-        provider that has an api key.
-        """
+        """Test that the authorization header uses the provider's api key, when there is no production api key."""
         self.provider.api_key = Secret.objects.create(
             name=f"test_provider_models_key_{self.hash_suffix}",
             user_profile=self.user_profile,
@@ -200,14 +197,8 @@ class TestProviderProperties(ProviderTestBase):
     def test_get_cached_providers_for_user(self):
         self.assertIn(self.provider, Provider.get_cached_providers_for_user(invalidate=True, user=self.admin_user))
 
-    @unittest.expectedFailure
     def test_get_cached_providers_for_user_invalidate(self):
-        """
-        Test that invalidate=True shows a new provider.
-
-        Expected to fail: get_cached_providers_for_user() caches the list by the user's id,
-        but invalidates it by the account's id, so invalidate=True does not invalidate it.
-        """
+        """Test that invalidate=True shows a new provider."""
         Provider.get_cached_providers_for_user(user=self.admin_user)
         provider = self.new_provider("test_provider_models_newer")
         self.assertIn(provider, Provider.get_cached_providers_for_user(invalidate=True, user=self.admin_user))
@@ -228,14 +219,8 @@ class TestVerificationModels(ProviderTestBase):
         verification.refresh_from_db()
         self.assertFalse(verification.is_valid)
 
-    @unittest.expectedFailure
     def test_next_verification(self):
-        """
-        Test that next_verification is a datetime.
-
-        Expected to fail: it adds VERIFICATION_LIFETIME and VERIFICATION_LEAD_TIME, which
-        are numbers of seconds, to updated_at, a datetime, which raises TypeError.
-        """
+        """Test that next_verification is a datetime."""
         verification = ProviderVerification.objects.create(
             provider=self.provider, verification_type=ProviderVerificationTypes.LOGO, is_successful=True
         )

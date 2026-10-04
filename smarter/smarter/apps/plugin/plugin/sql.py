@@ -426,7 +426,7 @@ class SqlPlugin(PluginBase):
                     provider: openai
                     systemRole: >
                     You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
-                    model: gpt-4o-mini
+                    model: gpt-6-luna
                     temperature: 0.0
                     maxTokens: 256
                 connection: test_sql_connection

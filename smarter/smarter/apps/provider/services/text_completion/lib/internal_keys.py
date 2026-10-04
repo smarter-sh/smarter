@@ -17,6 +17,7 @@ class _InternalKeys:
     TEMPERATURE_KEY = "temperature"
     MAX_COMPLETION_TOKENS_KEY = "max_completion_tokens"
     TOOL_CHOICE = "tool_choice"
+    REASONING_EFFORT_KEY = "reasoning_effort"
 
     SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
     SMARTER_MCPCLIENT_KEY = SMARTER_SYSTEM_KEY_PREFIX + "mcpclient"

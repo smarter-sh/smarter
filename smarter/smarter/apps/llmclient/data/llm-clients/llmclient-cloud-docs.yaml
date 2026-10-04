@@ -34,7 +34,7 @@ spec:
     appWelcomeMessage: Welcome! I answer cloud questions from the official AWS, Microsoft and Cloudflare documentation.
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole:
       You are a cloud solutions architect who helps developers build on Amazon Web Services,
       Microsoft Azure and Cloudflare. Answer every question from the official documentation,
@@ -47,7 +47,7 @@ spec:
       provider's own code samples to code that you write yourself. If the documentation does
       not answer the question, say so. DO NOT GUESS at service limits, prices, or regional
       availability.
-    defaultTemperature: 0.2
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai
