@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.4...v0.17.2-alpha.5) (2026-10-04)
+
+### Bug Fixes
+
+* fix LLMClient custom domains, Prompt manifests, example manifests, undeploy and kubectl deletes ([05f7ad4](https://github.com/smarter-sh/smarter/commit/05f7ad4a1562fc29d3786c08f6169625ddee8596))
+
 ## [0.17.2-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.3...v0.17.2-alpha.4) (2026-10-04)
 
 ### Bug Fixes
