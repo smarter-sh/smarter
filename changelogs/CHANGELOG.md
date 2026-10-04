@@ -4,49 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.17.0-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.7...v0.17.0-alpha.8) (2026-10-04)
 
 ### Bug Fixes
 
-* fix 43 bugs that unit tests had marked as expected failures ([9b7f0ea](https://github.com/smarter-sh/smarter/commit/9b7f0ea598ba1d5946b9cc6e7b398d3b815a9689))
+- fix 43 bugs that unit tests had marked as expected failures ([9b7f0ea](https://github.com/smarter-sh/smarter/commit/9b7f0ea598ba1d5946b9cc6e7b398d3b815a9689))
 
 ## [0.17.0-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.6...v0.17.0-alpha.7) (2026-10-04)
 
 ### Bug Fixes
 
-* **tests:** provide EKS cluster name and region in kubeconfig tests ([436c7bd](https://github.com/smarter-sh/smarter/commit/436c7bd471932fbd18c394f60f8f9103f8f91b97))
+- **tests:** provide EKS cluster name and region in kubeconfig tests ([436c7bd](https://github.com/smarter-sh/smarter/commit/436c7bd471932fbd18c394f60f8f9103f8f91b97))
+
+## [0.17.0](https://github.com/smarter-sh/smarter/compare/v0.16.7...v0.17.0) (2026-10-04)
+
+### Features
+
+- edit, validate, save, clone and delete manifests in the web console's manifest editor ([b78b1d2](https://github.com/smarter-sh/smarter/commit/b78b1d200ac905d7a1aa3fb22ae2dd25b4e77e81))
+
+### Bug Fixes
+
+- color list view toolbar icons, gray out disabled toolbar buttons, and bump React package versions ([ba5d342](https://github.com/smarter-sh/smarter/commit/ba5d342acf1f1b4eb666a89b3ffb9035c7e6d301))
+- fix 13 account and llmclient bugs found while raising the unit test coverage of smarter.apps.account to 91% ([e92adae](https://github.com/smarter-sh/smarter/commit/e92adae594a3942f1e8544c347cf8c284776f8da))
+- fix 23 bugs found while raising the unit test coverage of smarter.common and smarter.lib to 90% ([da46f38](https://github.com/smarter-sh/smarter/commit/da46f38a96c62ae7e491e95115ed7a41fc95302f))
+- fix 5 connection and plugin bugs, and add unit tests that raise the coverage of smarter.apps from 85% to 89.8% ([6240434](https://github.com/smarter-sh/smarter/commit/6240434a1651c51b6fb2d3d3df996c3cb01549e5))
+- fix 9 api and cli bugs found while raising the unit test coverage of smarter.apps.api to 93% ([d118c6b](https://github.com/smarter-sh/smarter/commit/d118c6bd6f8c3da42a05669a214faadbfc8c3bf7))
+- **plugin:** fix plugin updates through the api and boolean function parameters, remove the unused plugin api urls, and raise the plugin app's test coverage ([f34214e](https://github.com/smarter-sh/smarter/commit/f34214eab7b18b1548556fc14ae81021aad0765f))
 
 ## [0.17.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.5...v0.17.0-alpha.6) (2026-10-04)
 
 ### Bug Fixes
 
-* fix 5 connection and plugin bugs, and add unit tests that raise the coverage of smarter.apps from 85% to 89.8% ([6240434](https://github.com/smarter-sh/smarter/commit/6240434a1651c51b6fb2d3d3df996c3cb01549e5))
+- fix 5 connection and plugin bugs, and add unit tests that raise the coverage of smarter.apps from 85% to 89.8% ([6240434](https://github.com/smarter-sh/smarter/commit/6240434a1651c51b6fb2d3d3df996c3cb01549e5))
 
 ## [0.17.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.4...v0.17.0-alpha.5) (2026-10-03)
 
 ### Bug Fixes
 
-* **plugin:** fix plugin updates through the api and boolean function parameters, remove the unused plugin api urls, and raise the plugin app's test coverage ([f34214e](https://github.com/smarter-sh/smarter/commit/f34214eab7b18b1548556fc14ae81021aad0765f))
+- **plugin:** fix plugin updates through the api and boolean function parameters, remove the unused plugin api urls, and raise the plugin app's test coverage ([f34214e](https://github.com/smarter-sh/smarter/commit/f34214eab7b18b1548556fc14ae81021aad0765f))
 
 ## [0.17.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.3...v0.17.0-alpha.4) (2026-10-03)
 
 ### Bug Fixes
 
-* fix 9 api and cli bugs found while raising the unit test coverage of smarter.apps.api to 93% ([d118c6b](https://github.com/smarter-sh/smarter/commit/d118c6bd6f8c3da42a05669a214faadbfc8c3bf7))
+- fix 9 api and cli bugs found while raising the unit test coverage of smarter.apps.api to 93% ([d118c6b](https://github.com/smarter-sh/smarter/commit/d118c6bd6f8c3da42a05669a214faadbfc8c3bf7))
 
 ## [0.17.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.2...v0.17.0-alpha.3) (2026-10-03)
 
 ### Bug Fixes
 
-* fix 13 account and llmclient bugs found while raising the unit test coverage of smarter.apps.account to 91% ([e92adae](https://github.com/smarter-sh/smarter/commit/e92adae594a3942f1e8544c347cf8c284776f8da))
+- fix 13 account and llmclient bugs found while raising the unit test coverage of smarter.apps.account to 91% ([e92adae](https://github.com/smarter-sh/smarter/commit/e92adae594a3942f1e8544c347cf8c284776f8da))
 
 ## [0.17.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.1...v0.17.0-alpha.2) (2026-10-03)
 
 ### Bug Fixes
 
-* fix 23 bugs found while raising the unit test coverage of smarter.common and smarter.lib to 90% ([da46f38](https://github.com/smarter-sh/smarter/commit/da46f38a96c62ae7e491e95115ed7a41fc95302f))
+- fix 23 bugs found while raising the unit test coverage of smarter.common and smarter.lib to 90% ([da46f38](https://github.com/smarter-sh/smarter/commit/da46f38a96c62ae7e491e95115ed7a41fc95302f))
 
 ## [0.17.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.16.7-alpha.2...v0.17.0-alpha.1) (2026-10-03)
 
@@ -62,8 +75,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [0.16.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.16.6...v0.16.7-alpha.1) (2026-10-03)
 
-=======
-
 ## [0.16.7](https://github.com/smarter-sh/smarter/compare/v0.16.6...v0.16.7) (2026-10-03)
 
 ### Bug Fixes
@@ -74,7 +85,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-* disable the delete button in list views when a resource cannot be deleted ([f8baeaa](https://github.com/smarter-sh/smarter/commit/f8baeaab40141be9617f732294ba13c004226ed6))
+- disable the delete button in list views when a resource cannot be deleted ([f8baeaa](https://github.com/smarter-sh/smarter/commit/f8baeaab40141be9617f732294ba13c004226ed6))
 
 ## [0.16.6](https://github.com/smarter-sh/smarter/compare/v0.16.5...v0.16.6) (2026-10-03)
 
