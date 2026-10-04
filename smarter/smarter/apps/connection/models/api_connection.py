@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 import requests
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.urls import reverse
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
@@ -126,31 +125,6 @@ class ApiConnection(ConnectionBase):
         blank=True,
         null=True,
     )
-
-    @property
-    def manifest_url(self) -> str:
-        """
-        Returns the URL to the plugin's manifest.
-
-        Adds the manifest kind as a slug to the base manifest URL defined in the parent class.
-        For example, if the base manifest URL is "/plugins/{hashed_id}" and the manifest
-        kind is "api_connection", the resulting manifest URL would be "/plugins/{hashed_id}/api-connection/".
-
-        **Example:**
-
-        .. code-block:: python
-
-            self.rfc1034_compliant_kind  # 'api-connection'
-            self.rfc1034_compliant_name  # 'smarter-test-api'
-            self.manifest_url  # 'http://localhost:9357/connection/connections/api-connection/smarter-test-api/'
-        """
-        # pylint: disable=C0415
-        from smarter.apps.connection.urls import ConnectionReverseNames
-
-        return reverse(
-            f"{ConnectionReverseNames.namespace}:{ConnectionReverseNames.api_detailview}",
-            kwargs={"name": self.rfc1034_compliant_name},
-        )
 
     @property
     def connection_string(self) -> str:

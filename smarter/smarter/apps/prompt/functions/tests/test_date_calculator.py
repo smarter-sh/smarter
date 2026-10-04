@@ -1,7 +1,5 @@
 """Test :mod:`smarter.apps.prompt.functions.date_calculator`, the date calculator tool for LLM function calling."""
 
-import unittest
-
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
     Function,
@@ -88,14 +86,8 @@ class TestDateCalculator(SmarterTestBase):
                 )
                 self.assertIn("error", date_calculator(call)[0])
 
-    @unittest.expectedFailure
     def test_difference_of_aware_and_naive_dates(self):
-        """
-        Test that the difference of a date with a time zone and one without is an error, rather than an exception.
-
-        Expected to fail: date_calculator() subtracts the parsed dates without handling the
-        TypeError that subtracting an offset-aware from an offset-naive datetime raises.
-        """
+        """Test that the difference of a date with a time zone and one without is an error, rather than an exception."""
         self.assertIn("error", calculate(dates=["2024-01-01T00:00:00Z", "2024-01-02"], operation="difference"))
 
     def test_tool_factory(self):

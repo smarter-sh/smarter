@@ -5,7 +5,6 @@ api, the LLMClient manifest page, and the sandbox, prompt workbench and config p
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
-import unittest
 from http import HTTPStatus
 from urllib.parse import urlparse
 
@@ -36,27 +35,11 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def create_resource(cls, name: str) -> LLMClient:
         return LLMClient.objects.create(name=name, user_profile=cls.user_profile)
 
-    @unittest.expectedFailure
     def test_detail(self):
-        """
-        Expected to fail: LLMClientDetailView renders the template prompt/manifest-detail.html,.
-
-        which does not exist (the other detail views render common/manifest_detail.html), so the
-        LLMClient manifest page is a 500. Its error handler then raises TypeError, because it
-        passes exec_info, rather than exc_info, to logger.error().
-        """
         super().test_detail()
 
-    @unittest.expectedFailure
     def test_config_other_account(self):
-        """
-        Test that another account's admin cannot read the LLMClient's configuration.
-
-        Expected to fail: PromptConfigView.dispatch() loads the LLMClient by the id in the url
-        with LLMClient.get_cached_object(pk=...), without checking that the user may read it,
-        so any authenticated user can read any account's LLMClient configuration. The hashed id
-        is an encoding of the integer id, so the ids can be enumerated.
-        """
+        """Test that another account's admin cannot read the LLMClient's configuration."""
         other_admin_user, _, _ = admin_user_factory()
         # admin_user_factory() users are superusers, who may read every account's resources.
         other_admin_user.is_superuser = False

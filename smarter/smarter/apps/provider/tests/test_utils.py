@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.provider.utils`: secrets, web page tests, and the Google credentials helpers."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -71,17 +70,10 @@ class TestProviderUtils(ProviderTestBase):
         with patch.object(Secret, "get_cached_object", side_effect=Secret.DoesNotExist):
             self.assertIsNone(utils.get_google_service_account_bearer_token())
 
-    @unittest.expectedFailure
     def test_google_service_account_bearer_token(self):
-        """
-        Test that the bearer token of the service account's credentials is returned.
-
-        Expected to fail: get_google_service_account_bearer_token() calls
-        Secret.get_cached_object(GOOGLE_SERVICE_ACCOUNT_SECRET_NAME), passing the name
-        positionally, rather than as name=, so it always raises DoesNotExist, and the
-        function always returns None.
-        """
+        """Test that the bearer token of the service account's credentials is returned."""
+        self.addCleanup(Secret.objects.filter(name=utils.GOOGLE_SERVICE_ACCOUNT_SECRET_NAME).delete)
+        utils.initialize_secret('{"type": "x"}', utils.GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, "test", self.user_profile)
         credentials = MagicMock(token="bearer-token")
         with patch.object(utils.service_account.Credentials, "from_service_account_info", return_value=credentials):
-            with patch.object(Secret.objects, "get", return_value=MagicMock(get_secret=lambda: '{"type": "x"}')):
-                self.assertEqual(utils.get_google_service_account_bearer_token(), "bearer-token")
+            self.assertEqual(utils.get_google_service_account_bearer_token(), "bearer-token")

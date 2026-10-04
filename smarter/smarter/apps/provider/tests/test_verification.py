@@ -122,14 +122,8 @@ class TestProviderVerification(ProviderTestBase):
                 with self.subTest(check=check.__name__):
                     self.assertFalse(check(provider=self.provider))
 
-    @unittest.expectedFailure
     def test_docs_url(self):
-        """
-        Expected to fail: verify_provider_docs_url() uses ProviderVerificationTypes.DOCS_URL,.
-
-        which does not exist, so it raises AttributeError, as verify_provider() does after
-        the checks before it succeed.
-        """
+        """Test that a provider whose docs url is reachable passes the check."""
         with patch.object(provider_checks, "test_web_page", return_value=True):
             self.assertTrue(provider_checks.verify_provider_docs_url(provider=self.provider))
 
@@ -246,26 +240,13 @@ class TestProviderModelVerification(ProviderTestBase):
         self.model.name = "not-a-code-interpreter"
         self.assertFalse(model_checks.verify_model_code_interpreter(provider_model=self.model))
 
-    @unittest.expectedFailure
     def test_api_key(self):
-        """
-        Test that the checks give the openai client the provider's api key.
-
-        Expected to fail: verify_model_streaming(), verify_model_tools() and
-        verify_model_image_input() assign the api key with a trailing comma, so that
-        openai.api_key is a tuple, and the requests are not authenticated.
-        """
+        """Test that the checks give the openai client the provider's api key."""
         model_checks.verify_model_streaming(provider_model=self.model)
         self.assertEqual(self.openai.api_key, API_KEY)
 
-    @unittest.expectedFailure
     def test_summarization(self):
-        """
-        Test that a summary of 10 words or less succeeds.
-
-        Expected to fail: verify_model_summarization() asks for a summary in 10 words or
-        less, but checks that the summary is at most 10 characters long.
-        """
+        """Test that a summary of 10 words or less succeeds."""
         self.openai.chat.completions.create.return_value = completion("A short summary of seven words here.")
         self.assertTrue(model_checks.verify_model_summarization(provider_model=self.model))
 

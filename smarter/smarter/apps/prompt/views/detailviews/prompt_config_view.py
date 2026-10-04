@@ -16,6 +16,7 @@ from django.http import (
     JsonResponse,
 )
 
+from smarter.apps.account.models import get_resolved_user
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientFunctions,
@@ -437,6 +438,10 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         if llmclient_id is not None:
             try:
                 self._llmclient = LLMClient.get_cached_object(pk=llmclient_id)
+                # a 404 rather than a 403, so that the ids of other accounts' LLMClients can't be discovered.
+                user = get_resolved_user(request.user)
+                if not LLMClient.objects.with_read_permission_for(user).filter(pk=llmclient_id).exists():  # type: ignore[arg-type]
+                    raise LLMClient.DoesNotExist(f"LLMClient {llmclient_id} is not readable by {user}")
                 self.llmclient_name = self._llmclient.name
                 verbose_logger.debug(
                     "%s.dispatch() - set llmclient=%s from llmclient_id=%s",

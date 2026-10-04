@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test API Keys."""
 
-import unittest
 import uuid
 from http import HTTPStatus
 
@@ -193,27 +192,16 @@ class TestAPIKeyViewRequests(TestAccountMixin):
         """Test that a POST creates an api key."""
         self.assert_created(self.client.post(self.url()))
 
-    @unittest.expectedFailure
     def test_new_api_key_page(self):
-        """
-        Test that the page that a new api key redirects to shows its token, once.
-
-        Expected to fail: APIKeyView.get() calls apikey.validate_token(new_api_key), but
-        SmarterAuthToken has no validate_token() method, so the page raises AttributeError,
-        a 500, every time an api key is created.
-        """
+        """Test that the page that a new api key redirects to shows its token, once."""
         url = self.assert_created(self.client.post(self.url()))
         token = url.rstrip("/").split("/")[-1]
         page = self.client.get(url)
         self.assertEqual(page.status_code, HTTPStatus.OK)
         self.assertIn(token.encode(), page.content)
 
-    @unittest.expectedFailure
     def test_get_with_wrong_token(self):
-        """Test that a token that is not the api key's is a 404.
-
-        Expected to fail: see test_new_api_key_page().
-        """
+        """Test that a token that is not the api key's is a 404."""
         response = self.client.get(self.url(self.api_key.key_id, "not-the-token"))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
@@ -266,15 +254,8 @@ class TestAPIKeyViewRequests(TestAccountMixin):
         self.assertEqual(self.client.delete(self.url(self.api_key.key_id)).status_code, HTTPStatus.FORBIDDEN)
         self.assertTrue(SmarterAuthToken.objects.filter(pk=self.api_key.pk).exists())
 
-    @unittest.expectedFailure
     def test_other_account_admin_patch_json(self):
-        """
-        Test that another account's admin cannot deactivate the api key.
-
-        Expected to fail: APIKeyView._handle_json() does not check that the user owns the
-        api key, as get(), delete() and _handle_multipart_form() do, so any admin can
-        activate, deactivate or change the description of any account's api key.
-        """
+        """Test that another account's admin cannot deactivate the api key."""
         self.client.force_login(self.other_admin_user)
         response = self.patch_json({"action": "deactivate"})
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)

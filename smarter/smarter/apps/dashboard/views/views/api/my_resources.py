@@ -346,9 +346,10 @@ class MyResourcesView(SmarterAuthenticatedWebView):
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
+        # user_profile_id is unused, but makes the cache key unique to the user.
         @cache_results()
         @snake_case()
-        def _get_resources() -> dict[str, object]:
+        def _get_resources(user_profile_id: int) -> dict[str, object]:
             retval = {
                 "pending_deployments": get_pending_deployments(user_profile=user_profile),
                 "llmclients_qty": get_llmclients(user_profile=user_profile),
@@ -363,6 +364,6 @@ class MyResourcesView(SmarterAuthenticatedWebView):
             logger.debug("%s.post() cached context %s", self.formatted_class_name, logging.formatted_json(retval))
             return retval
 
-        retval = _get_resources()
+        retval = _get_resources(user_profile.id)  # type: ignore[union-attr]
         logger.debug("%s.post()", self.formatted_class_name)
         return JsonResponse(retval, status=HTTPStatus.OK)

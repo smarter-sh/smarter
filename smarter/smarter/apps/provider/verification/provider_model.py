@@ -57,7 +57,7 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
@@ -89,7 +89,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "What is the weather in Boston?"}],
@@ -131,7 +131,7 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
@@ -162,7 +162,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
         # Example: using a small PNG image as base64 (replace with a real image in production)
         dummy_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgQnQn1wAAAAASUVORK5CYII="
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[
@@ -454,7 +454,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
             max_completion_tokens=30,
         )
         summary = response.choices[0].message.content.strip()  # type: ignore
-        success = len(summary) <= 10
+        success = len(summary.split()) <= 10
     except Exception:
         logger.error(
             "Error during verify_model_summarization() for provider model %s", provider_model.name, exc_info=True

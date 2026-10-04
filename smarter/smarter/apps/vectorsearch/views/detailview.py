@@ -145,7 +145,7 @@ class VectorsearchDetailView(DocsBaseView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="Vectorsearch not found")
 
-        self.kind = SAMKinds.PROVIDER
+        self.kind = SAMKinds.VECTORSEARCH
 
         logger.debug(
             "%s.post() Rendering vectorsearch detail view for %s, kwargs=%s.",

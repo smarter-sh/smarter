@@ -220,13 +220,17 @@ def date_calculator(tool_call: ChatCompletionMessageToolCall) -> list:
         if len(parsed_dates) != 2:
             result = {"error": f"Provide exactly two dates for {DateCalculatorOperations.DIFFERENCE} calculation."}
         else:
-            diff = abs((parsed_dates[0] - parsed_dates[1]).days)
-            result = {
-                "difference_days": diff,
-                "difference_years": round(diff / 365.25, 2),
-                "difference_months": round(diff / 30.44, 2),
-                "difference_weeks": round(diff / 7, 2),
-            }
+            try:
+                diff = abs((parsed_dates[0] - parsed_dates[1]).days)
+                result = {
+                    "difference_days": diff,
+                    "difference_years": round(diff / 365.25, 2),
+                    "difference_months": round(diff / 30.44, 2),
+                    "difference_weeks": round(diff / 7, 2),
+                }
+            except TypeError as e:
+                logger.error(f"{logger_prefix} Error processing difference operation: {e}")
+                result = {"error": f"Cannot calculate the difference of these dates: {e}"}
     elif operation == DateCalculatorOperations.ADD:
         if len(parsed_dates) != 1:
             result = {"error": f"Provide exactly one date for {DateCalculatorOperations.ADD} operation."}

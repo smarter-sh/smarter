@@ -83,7 +83,7 @@ class LLMClientDetailView(DocsBaseView):
         GET /llm-client/detail/?name=my_llmclient&kind=custom
     """
 
-    template_path = "prompt/manifest-detail.html"
+    template_path = "common/manifest_detail.html"
 
     llmclient: Optional[LLMClient] = None
     llmclient_helper: Optional[LLMClientHelper] = None
@@ -217,7 +217,7 @@ class LLMClientDetailView(DocsBaseView):
                 self.formatted_class_name,
                 str(e),
                 formatted_json(context),
-                exec_info=True,
+                exc_info=True,
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response

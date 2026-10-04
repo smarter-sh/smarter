@@ -55,7 +55,7 @@ class APIKeysView(APIKeyBase):
 
 
 class APIKeyView(APIKeyBase):
-    """detail View for api key management."""
+    """Detail View for api key management."""
 
     template_path = "account/dashboard/api-key.html"
 
@@ -106,6 +106,11 @@ class APIKeyView(APIKeyBase):
         except SmarterAuthToken.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "API Key not found"})
 
+        if not SmarterAuthToken.objects.filter(key_id=key_id).with_ownership_permission_for(user=request.user).exists():
+            return http.JsonResponse(
+                status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to change this api key"}
+            )
+
         data = json.loads(request.body)
         if "action" in data:
             action = str(data.get("action", "")).lower()
@@ -147,7 +152,10 @@ class APIKeyView(APIKeyBase):
 
     # pylint: disable=W0221
     def get(self, request, *args, key_id: Optional[str] = None, new_api_key: Optional[str] = None, **kwargs):
-        """Get the api key. We also use this to create a new api key."""
+        """Get the api key.
+
+        We also use this to create a new api key.
+        """
 
         # in cases where we arrived here via api-keys/new/
         if key_id is None:

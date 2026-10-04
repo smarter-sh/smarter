@@ -340,5 +340,8 @@ class ChargesView(SmarterAuthenticatedWebView):
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         logger.debug("%s.post()", self.formatted_class_name)
 
-        retval = get_aggregated_charges(user_profile=user_profile, periodicity=periodicity)
+        try:
+            retval = get_aggregated_charges(user_profile=user_profile, periodicity=periodicity)
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return JsonResponse(retval, status=HTTPStatus.OK, safe=False)

@@ -4,8 +4,6 @@ Test the Secret dashboard views: the React list page, its list, clone, delete an
 and the manifest detail page. See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
-import unittest
-
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.caching import invalidate_all_cached_secrets_for_user_profile
 from smarter.apps.secret.models import Secret
@@ -14,16 +12,11 @@ from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 
 class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
-    """
-    Test the Secret dashboard views.
-
-    test_clone, test_delete and test_rename are expected to fail: the urls pass the Secret's
-    id as llmclient_id, but the views read secret_id, so every request is refused with a 400.
-    """
+    """Test the Secret dashboard views."""
 
     model = Secret
     reverse_names = SecretReverseNames
-    id_kwarg = "llmclient_id"
+    id_kwarg = "secret_id"
     invalidate_cache = staticmethod(invalidate_all_cached_secrets_for_user_profile)
     resource_name_prefix = "test_secret_views"
 
@@ -38,14 +31,11 @@ class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
         response = self.client.get(self.url("detailview", hashed_id=self.resource.hashed_id))
         self.assertNotIn(b"test-secret-value", response.content)
 
-    @unittest.expectedFailure
     def test_clone(self):
         super().test_clone()
 
-    @unittest.expectedFailure
     def test_delete(self):
         super().test_delete()
 
-    @unittest.expectedFailure
     def test_rename(self):
         super().test_rename()
