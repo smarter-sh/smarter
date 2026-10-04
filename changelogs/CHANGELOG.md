@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.2...v0.17.2-alpha.3) (2026-10-04)
+
+### Bug Fixes
+
+* fix the last 10 bugs that unit tests had marked as expected failures ([f6c2458](https://github.com/smarter-sh/smarter/commit/f6c2458c73b0bc7f5d7db3d5ea4854d275d24b1c))
+
 ## [0.17.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.1...v0.17.2-alpha.2) (2026-10-04)
 
 ### Bug Fixes
