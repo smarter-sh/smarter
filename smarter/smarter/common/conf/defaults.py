@@ -198,7 +198,7 @@ class SettingsDefaults:
         "you are still unable to provide a response, you should inform the user "
         "that you are unable to help them at this time."
     )
-    LLM_DEFAULT_TEMPERATURE = 0.5
+    LLM_DEFAULT_TEMPERATURE = 1.0
     LLM_DEFAULT_MAX_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]

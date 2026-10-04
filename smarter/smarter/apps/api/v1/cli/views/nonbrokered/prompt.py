@@ -387,6 +387,21 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
 
         return new_request
 
+    @staticmethod
+    def prompt_error_message(chat_response: dict) -> str:
+        """The error message of a prompt's error response, e.g. the LLM provider's error message."""
+        response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA) or {}
+        body = response_data.get("body") if isinstance(response_data, dict) else None
+        if isinstance(body, str):
+            try:
+                body = json.loads(body)
+            except json.JSONDecodeError:
+                return body
+        error = body.get("error") if isinstance(body, dict) else None
+        if isinstance(error, dict) and error.get("message"):
+            return str(error["message"])
+        return f"The prompt failed with status {response_data.get('statusCode', 'unknown')}."
+
     def handler(self, request, name, *args, **kwargs):
         # get the prompt configuration for the LLMClient (name)
         logger.debug(
@@ -460,7 +475,18 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             raise APIV1CLIChatViewError(
                 f"Internal error. Prompt response is not a JsonResponse. chat_response: {chat_response}"
             )
+        chat_status = chat_response.status_code
         chat_response = json.loads(chat_response.content)
+        if chat_status != HTTPStatus.OK.value:
+            # e.g. the LLM provider's error response, whose status and message are returned as is.
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=APIV1CLIChatViewError(self.prompt_error_message(chat_response)),
+                thing=SmarterJournalThings(SmarterJournalThings.PROMPT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
+                status=chat_status,
+                description=self.prompt_error_message(chat_response),
+            )
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
         logger.debug(

@@ -34,7 +34,6 @@ spec:
       at this time.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Not Verified
     provider: openai
     subdomain: example-llmclient
   functions:

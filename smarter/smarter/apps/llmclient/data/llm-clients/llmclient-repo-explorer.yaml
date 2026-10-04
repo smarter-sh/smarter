@@ -46,7 +46,6 @@ spec:
       question, say so. DO NOT INVENT file names or APIs.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions: []

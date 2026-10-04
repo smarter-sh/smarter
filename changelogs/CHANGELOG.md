@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.8...v0.17.2-alpha.9) (2026-10-04)
+
+### Bug Fixes
+
+* **api:** return intelligible errors with matching status codes from apply and prompt ([9c3e451](https://github.com/smarter-sh/smarter/commit/9c3e451520724ef33d2e52cf92b300b46d119ba7))
 ## [0.17.2](https://github.com/smarter-sh/smarter/compare/v0.17.1...v0.17.2) (2026-10-04)
 
 ### Bug Fixes

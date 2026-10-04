@@ -46,7 +46,6 @@ spec:
       due date, and ask the user for them if they are missing. Keep a professional tone.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions: []

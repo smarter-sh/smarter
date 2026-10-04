@@ -1,0 +1,217 @@
+# Invalid LLMClient manifests, and the response that /api/v1/cli/apply/ must return for each.
+#
+# Each case changes llmclient-apply-errors-base.yaml in one way:
+#   path + value:  set the value at the dotted path, e.g. spec.config.defaultTemperature
+#                  (repeat: N sets the value repeated N times, for strings that are too long)
+#   path + delete: remove the key at the dotted path
+#   body:          post this text instead of a manifest
+# and expects the HTTP status, and a description that contains every string in expect.
+# A client error must never be a 500, nor ask for a bug report.
+
+# Pydantic validation errors in the spec
+- name: temperature_below_range
+  path: spec.config.defaultTemperature
+  value: -0.5
+  status: 400
+  expect: ["config.defaultTemperature", "greater than or equal to 0", "-0.5"]
+- name: temperature_above_range
+  path: spec.config.defaultTemperature
+  value: 2.5
+  status: 400
+  expect: ["config.defaultTemperature", "less than or equal to 1", "2.5"]
+- name: temperature_not_a_number
+  path: spec.config.defaultTemperature
+  value: hot
+  status: 400
+  expect: ["config.defaultTemperature", "valid number", "'hot'"]
+- name: max_tokens_zero
+  path: spec.config.defaultMaxTokens
+  value: 0
+  status: 400
+  expect: ["config.defaultMaxTokens", "greater than 0"]
+- name: max_tokens_negative
+  path: spec.config.defaultMaxTokens
+  value: -1
+  status: 400
+  expect: ["config.defaultMaxTokens", "greater than 0"]
+- name: max_tokens_not_an_integer
+  path: spec.config.defaultMaxTokens
+  value: lots
+  status: 400
+  expect: ["config.defaultMaxTokens", "valid integer"]
+- name: max_tokens_fractional
+  path: spec.config.defaultMaxTokens
+  value: 12.5
+  status: 400
+  expect: ["config.defaultMaxTokens", "fractional part"]
+- name: deployed_not_a_boolean
+  path: spec.config.deployed
+  value: maybe
+  status: 400
+  expect: ["config.deployed", "valid boolean"]
+- name: example_prompts_not_a_list
+  path: spec.config.appExamplePrompts
+  value: not a list
+  status: 400
+  expect: ["config.appExamplePrompts", "valid list"]
+- name: plugins_not_a_list
+  path: spec.plugins
+  value: smarter_project_websearch
+  status: 400
+  expect: ["plugins", "valid list"]
+- name: missing_config
+  path: spec.config
+  delete: true
+  status: 400
+  expect: ["config", "Field required"]
+- name: custom_domain_incomplete
+  path: spec.config.customDomain
+  value: {domain_name: example.com}
+  status: 400
+  expect: ["config.customDomain.aws_hosted_zone_id", "Field required"]
+
+- name: system_role_too_long
+  path: spec.config.defaultSystemRole
+  value: x
+  repeat: 2049
+  status: 400
+  expect: ["config.defaultSystemRole", "at most 2048 characters"]
+
+# keys that the manifest does not define, e.g. misspellings, which must not be silently ignored
+- name: unknown_config_key
+  path: spec.config.defaultTemperatura
+  value: 0.5
+  status: 400
+  expect: ["keys that it does not define", "spec.config.defaultTemperatura"]
+- name: unknown_status_key_in_config
+  path: spec.config.dnsVerificationStatus
+  value: Verified
+  status: 400
+  expect: ["spec.config.dnsVerificationStatus"]
+- name: unknown_spec_key
+  path: spec.plugin
+  value: [smarter_project_websearch]
+  status: 400
+  expect: ["spec.plugin"]
+- name: unknown_metadata_key
+  path: metadata.author
+  value: Lawrence McDaniel
+  status: 400
+  expect: ["metadata.author"]
+- name: unknown_top_level_key
+  path: specs
+  value: {}
+  status: 400
+  expect: ["keys that it does not define", "specs"]
+- name: unknown_nested_key
+  path: spec.config.customDomain
+  value: {aws_hosted_zone_id: Z123, domain_name: example.com, ttl: 300}
+  status: 400
+  expect: ["spec.config.customDomain.ttl"]
+
+# Pydantic validation errors in the metadata, and the manifest's structure
+- name: missing_name
+  path: metadata.name
+  delete: true
+  status: 400
+  expect: ["name", "Field required"]
+- name: missing_version
+  path: metadata.version
+  delete: true
+  status: 400
+  expect: ["version", "Field required"]
+- name: version_not_semantic
+  path: metadata.version
+  value: one
+  status: 400
+  expect: ["Invalid semantic version"]
+- name: missing_spec
+  path: spec
+  delete: true
+  status: 400
+  expect: ["Missing required key: spec"]
+- name: missing_metadata
+  path: metadata
+  delete: true
+  status: 400
+  expect: ["Missing required key: metadata"]
+- name: unknown_kind
+  path: kind
+  value: LLMClientz
+  status: 400
+  expect: ["Could not find broker for LLMClientz manifest"]
+- name: unknown_api_version
+  path: apiVersion
+  value: smarter.sh/v9
+  status: 400
+  expect: ["Invalid version", "smarter.sh/v9"]
+
+# Django model validation errors
+- name: provider_unknown
+  path: spec.config.provider
+  value: notaprovider
+  status: 400
+  expect: ["provider", "notaprovider is not a valid provider", "openai"]
+- name: provider_wrong_case
+  path: spec.config.provider
+  value: OpenAI
+  status: 400
+  expect: ["provider", "OpenAI is not a valid provider"]
+- name: app_name_too_long
+  path: spec.config.appName
+  value: n
+  repeat: 300
+  status: 400
+  expect: ["app_name", "at most 255 characters"]
+- name: info_url_not_a_url
+  path: spec.config.appInfoUrl
+  value: not a url
+  status: 400
+  expect: ["app_info_url", "Enter a valid URL"]
+- name: logo_url_not_a_url
+  path: spec.config.appLogoUrl
+  value: ftp//broken
+  status: 400
+  expect: ["app_logo_url", "Enter a valid URL"]
+- name: subdomain_set
+  path: spec.config.subdomain
+  value: my-subdomain
+  status: 400
+  expect: ["spec.config.subdomain cannot be set by apply"]
+
+# references to resources that do not exist
+- name: plugin_not_found
+  path: spec.plugins
+  value: [no_such_plugin]
+  status: 404
+  expect: ["Plugin no_such_plugin not found"]
+- name: mcpclient_not_found
+  path: spec.mcpClients
+  value: [no_such_mcpclient]
+  status: 404
+  expect: ["MCPClient no_such_mcpclient not found"]
+- name: guardrail_not_found
+  path: spec.guardrails
+  value: [no_such_guardrail]
+  status: 404
+  expect: ["Guardrail no_such_guardrail not found"]
+- name: function_not_found
+  path: spec.functions
+  value: [no_such_function]
+  status: 404
+  expect: ["Function no_such_function not found", "Valid functions are"]
+- name: api_key_not_found
+  path: spec.apiKey
+  value: no_such_key
+  status: 404
+  expect: ["API Key no_such_key not found"]
+
+# request bodies that are not manifests
+- name: not_yaml
+  body: "::: this is : not yaml ["
+  status: 400
+  expect: ["The manifest is not valid YAML"]
+- name: empty_body
+  body: ""
+  status: 400
+  expect: ["No YAML manifest provided"]

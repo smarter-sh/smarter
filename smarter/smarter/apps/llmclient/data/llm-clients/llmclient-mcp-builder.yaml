@@ -47,7 +47,6 @@ spec:
       Point out security risks, such as tools that write data or expose credentials.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions: []

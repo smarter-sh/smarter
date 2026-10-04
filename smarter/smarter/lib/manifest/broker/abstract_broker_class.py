@@ -49,6 +49,8 @@ from smarter.lib.journal.http import (
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.keys import unknown_keys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
@@ -875,6 +877,23 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return None
 
+    def raise_for_unknown_keys(self, manifest: Any) -> None:
+        """
+        Raise a validation error if the manifest has keys that its Pydantic model does not define.
+
+        The models ignore such keys, so that a misspelled key, e.g. ``defaultTemperatura``, would
+        otherwise be silently ignored, rather than be reported to the client as an error.
+        """
+        model = self._pydantic_model
+        if not isinstance(manifest, dict) or not issubclass(model, AbstractSAMBase) or model is AbstractSAMBase:
+            return
+        unknown = unknown_keys(model, manifest)
+        if unknown:
+            raise SAMValidationError(
+                f"The {self.kind} manifest has keys that it does not define: {', '.join(unknown)}. "
+                "Check their spelling, or remove them."
+            )
+
     @loader.setter
     def loader(self, value: SAMLoader):
         """
@@ -896,6 +915,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             raise SAMBrokerError(
                 f"loader manifest kind '{value.manifest_kind}' does not match broker kind '{self.kind}'"
             )
+        self.raise_for_unknown_keys(value.json_data)
         self._loader = value
 
         logger.debug("%s.loader() setter set loader to %s", self.abstract_broker_logger_prefix, self._loader)

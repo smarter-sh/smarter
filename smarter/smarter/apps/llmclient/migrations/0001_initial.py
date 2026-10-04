@@ -184,7 +184,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "default_temperature",
-                    models.FloatField(blank=True, default=0.5, null=True),
+                    models.FloatField(blank=True, default=1.0, null=True),
                 ),
                 (
                     "default_max_tokens",
