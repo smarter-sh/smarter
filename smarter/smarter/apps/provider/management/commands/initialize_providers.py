@@ -86,7 +86,11 @@ class Command(SmarterCommand):
         """
         try:
             svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
-            secret_string = SecretStr(json.loads(base64.b64decode(svc_acct_b64).decode("utf-8")))
+            svc_acct_json = base64.b64decode(svc_acct_b64).decode("utf-8")
+            # parsed only to validate it: the Secret stores the json string, which
+            # get_google_service_account_bearer_token() parses.
+            json.loads(svc_acct_json)
+            secret_string = SecretStr(svc_acct_json)
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             logger.error("Failed to load Google service account: %s", e)
             logger.error(

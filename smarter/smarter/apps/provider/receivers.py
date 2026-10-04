@@ -80,6 +80,8 @@ def handle_model_verification_success(
 ):
     """Handle model verification success signal."""
     prefix = get_prefix("handle_model_verification_success")
+    if provider_model_verification and not provider_model:
+        provider_model = provider_model_verification.provider_model
     if provider_model_verification:
         logger.info(
             "%s Model verification successful for model: %s with verification: %s",
@@ -102,6 +104,8 @@ def handle_model_verification_failure(
 ):
     """Handle model verification failure signal."""
     prefix = get_prefix("handle_model_verification_failure")
+    if provider_model_verification and not provider_model:
+        provider_model = provider_model_verification.provider_model
     if provider_model_verification:
         logger.error(
             "%s Model verification failed for model: %s with verification: %s",
@@ -142,6 +146,8 @@ def handle_provider_verification_success(
 ):
     """Handle test passed signal."""
     prefix = get_prefix("handle_provider_verification_success")
+    if provider_verification and not provider:
+        provider = provider_verification.provider
     if provider_verification:
         logger.info(
             "%s Test passed for provider: %s with verification: %s",
@@ -161,6 +167,8 @@ def handle_provider_verification_failure(
 ):
     """Handle test failed signal."""
     prefix = get_prefix("handle_provider_verification_failure")
+    if provider_verification and not provider:
+        provider = provider_verification.provider
     if provider_verification:
         logger.error(
             "%s Test failed for provider: %s with verification: %s",

@@ -6,7 +6,6 @@ test and the web page test are mocked, so no request leaves the test.
 """
 
 import os
-import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -140,16 +139,8 @@ class TestProviderVerification(ProviderTestBase):
         self.assertFalse(provider.is_active)
         self.assertIsNone(provider_checks.verify_provider(999999999))
 
-    @unittest.expectedFailure
     def test_verify_provider_succeeds(self):
-        """
-        Test that a provider that passes every check is verified and activated.
-
-        Expected to fail: verify_provider() fails a provider unless provider.can_activate,
-        which requires the status VERIFIED, which verify_provider() only sets afterwards,
-        so a provider that is not verified already can never be verified. Also, it sends
-        provider_activated with provider=, but handle_provider_activated() takes instance.
-        """
+        """Test that a provider that passes every check is verified and activated."""
         with (
             patch.object(Provider, "test_connectivity", return_value=True),
             patch.object(provider_checks, "test_web_page", return_value=True),
@@ -269,15 +260,8 @@ class TestProviderModelVerification(ProviderTestBase):
 class TestVerificationSignals(ProviderTestBase):
     """Test that recording a verification's result, which sends a signal, works."""
 
-    @unittest.expectedFailure
     def test_set_provider_verification(self):
-        """
-        Expected to fail: set_provider_verification() sends provider_verification_success and.
-
-        provider_verification_failure with provider_verification= only, and their receivers
-        then read provider.name, of provider=None, which raises AttributeError, so every
-        Provider check raises.
-        """
+        """Test that a Provider check's result is recorded, and its signal, which has only the verification, is handled."""
         from smarter.apps.provider.models import (
             ProviderVerificationTypes,  # pylint: disable=import-outside-toplevel
         )
@@ -291,15 +275,8 @@ class TestVerificationSignals(ProviderTestBase):
         set_provider_verification(provider_verification=verification, is_successful=True)
         self.assertTrue(ProviderVerification.objects.get(pk=verification.pk).is_successful)
 
-    @unittest.expectedFailure
     def test_set_model_verification_success(self):
-        """
-        Expected to fail: set_model_verification() sends model_verification_success with.
-
-        provider_model_verification= only, and handle_model_verification_success() then reads
-        provider_model.name, of provider_model=None, which raises AttributeError, so every
-        ProviderModel check that succeeds raises.
-        """
+        """Test that a ProviderModel check's result is recorded, and its signal, which has only the verification, is handled."""
         from smarter.apps.provider.models import (  # pylint: disable=import-outside-toplevel
             ProviderModelVerificationTypes,
         )
