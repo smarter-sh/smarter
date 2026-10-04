@@ -64,6 +64,9 @@ class SmarterAuthTokenSerializer(MetaDataWithOwnershipModelSerializer):
     """Serializer for SmarterAuthToken model."""
 
     user_profile = UserProfileSerializer()
+    # a token has no integer id: it is identified by its key_id, a UUID.
+    id = serializers.CharField(read_only=True)
+    manifest_url = serializers.CharField(read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):

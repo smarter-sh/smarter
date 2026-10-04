@@ -152,7 +152,7 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse({"error": "authtoken_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            authtoken = AuthToken.objects.with_read_permission_for(self.user_profile.user).get(id=authtoken_id)  # type: ignore
+            authtoken = AuthToken.objects.with_read_permission_for(self.user_profile.user).get(key_id=authtoken_id)  # type: ignore
         except AuthToken.DoesNotExist:
             logger.warning(
                 "%s.post() AuthToken with id %s not found for cloning.", self.formatted_class_name, authtoken_id
@@ -213,7 +213,7 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse({"error": "authtoken_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            authtoken = AuthToken.objects.with_ownership_permission_for(self.user_profile.user).get(id=authtoken_id)  # type: ignore
+            authtoken = AuthToken.objects.with_ownership_permission_for(self.user_profile.user).get(key_id=authtoken_id)  # type: ignore
         except AuthToken.DoesNotExist:
             logger.warning(
                 "%s.post() AuthToken with id %s not found for deletion.", self.formatted_class_name, authtoken_id
@@ -281,7 +281,7 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse({"error": "authtoken_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            authtoken = AuthToken.objects.with_ownership_permission_for(self.user_profile.user).get(id=authtoken_id)  # type: ignore
+            authtoken = AuthToken.objects.with_ownership_permission_for(self.user_profile.user).get(key_id=authtoken_id)  # type: ignore
         except AuthToken.DoesNotExist:
             logger.warning(
                 "%s.post() AuthToken with id %s not found for renaming.", self.formatted_class_name, authtoken_id

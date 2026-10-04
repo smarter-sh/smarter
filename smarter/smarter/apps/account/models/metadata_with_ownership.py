@@ -815,7 +815,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             return retval
 
         try:
-            user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)
+            # a user profile is resolved only from a user: with only an account, the lookup is by name and account.
+            if not user_profile and user:
+                user_profile = UserProfile.get_cached_object(user=user, account=account)
         except UserProfile.DoesNotExist:
             user_profile = None
         except UserProfile.MultipleObjectsReturned:

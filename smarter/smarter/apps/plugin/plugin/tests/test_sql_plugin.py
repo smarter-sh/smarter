@@ -25,7 +25,7 @@ from smarter.apps.plugin.plugin.sql import (
     SqlPlugin,
 )
 from smarter.apps.plugin.serializers import PluginSqlSerializer
-from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
 from .base_classes import (
@@ -495,25 +495,22 @@ class TestSqlPlugin(PluginTestBase):
         execute_query.assert_called_once()
         self.assertEqual(retval, '[{"a": 1}]')
 
-    def test_sql_tool_call_invalid_query_raises(self):
+    def test_sql_tool_call_invalid_query_returns_empty_string(self):
         """
-        Test that a query rejected by the remote database raises.
+        Test that a query rejected by the remote database returns an empty string.
 
-        SqlConnection.execute_query() catches the DatabaseError, but the
-        sql_connection_query_failed signal receiver re-raises it as a
-        SmarterConfigurationError.
+        SqlConnection.execute_query() catches the DatabaseError and returns False,
+        which the plugin answers with an empty string.
         """
         plugin = self.new_sql_plugin("sql_invalid_query", sql_query="SELEKT {username} AS username, {unit} AS unit;")
-        with self.assertRaises(SmarterConfigurationError):
-            plugin.tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(plugin.tool_call_fetch_plugin_response({"username": "admin"}), "")
 
     def test_sql_tool_call_invalid_query_is_not_cached(self):
         """Test that a query rejected by the remote database is not cached."""
         plugin = self.new_sql_plugin(
             "sql_invalid_query_cache", sql_query="SELEKT {username} AS username, {unit} AS unit;"
         )
-        with self.assertRaises(SmarterConfigurationError):
-            plugin.tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(plugin.tool_call_fetch_plugin_response({"username": "admin"}), "")
         with mock.patch.object(SqlConnection, "execute_query", return_value='[{"a": 1}]') as execute_query:
             plugin.tool_call_fetch_plugin_response({"username": "admin"})
         execute_query.assert_called_once()

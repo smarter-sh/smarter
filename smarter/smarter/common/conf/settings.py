@@ -1285,7 +1285,7 @@ class Settings(BaseSettings):
             if int_value < 0:
                 raise SmarterConfigurationError(f"cache_expiration {int_value} must be a positive integer.")
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate cache_expiration") from e
 
     chat_cache_expiration: int = Field(
@@ -1327,7 +1327,7 @@ class Settings(BaseSettings):
             if int_value < 0:
                 raise SmarterConfigurationError(f"chat_cache_expiration {int_value} must be a positive integer.")
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
 
     llmclient_cache_expiration: int = Field(
@@ -1367,7 +1367,7 @@ class Settings(BaseSettings):
             if int_value < 0:
                 raise SmarterConfigurationError(f"llmclient_cache_expiration {int_value} must be a positive integer.")
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate llmclient_cache_expiration") from e
 
     llmclient_max_returned_history: int = Field(
@@ -1407,7 +1407,7 @@ class Settings(BaseSettings):
                     f"llmclient_max_returned_history {int_value} must be a positive integer."
                 )
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate llmclient_max_returned_history") from e
 
     llmclient_tasks_create_dns_record: bool = Field(
@@ -1511,7 +1511,7 @@ class Settings(BaseSettings):
                     f"llmclient_tasks_default_ttl {int_value} must be a non-negative integer."
                 )
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate llmclient_tasks_default_ttl: {v}") from e
 
     llmclient_tasks_celery_max_retries: int = Field(
@@ -1544,7 +1544,7 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate llmclient_tasks_celery_max_retries: {v}") from e
 
     llmclient_tasks_celery_retry_backoff: bool = Field(
@@ -1643,7 +1643,7 @@ class Settings(BaseSettings):
             if int_value < 0:
                 raise SmarterConfigurationError(f"plugin_max_data_results {int_value} must be a positive integer.")
             return int_value
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate plugin_max_data_results: {v}") from e
 
     sensitive_files_amnesty_patterns: List[Pattern] = Field(
@@ -3257,7 +3257,7 @@ class Settings(BaseSettings):
             v = settings_defaults.SMTP_PORT
         try:
             retval = int(v)  # type: ignore
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             raise SmarterValueError("Could not convert port number to int.") from e
 
         if not str(retval).isdigit() or not 1 <= int(retval) <= 65535:

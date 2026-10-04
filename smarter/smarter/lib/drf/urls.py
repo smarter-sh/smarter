@@ -48,19 +48,19 @@ urlpatterns = [
         name=AuthTokenReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/clone/<uuid:authtoken_id>/<str:new_name>/",
         AuthTokenListApiCloneView.as_view(),
         name=AuthTokenReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llmclient_id>/",
+        "react-integration/api/delete/<uuid:authtoken_id>/",
         AuthTokenListApiDeleteView.as_view(),
         name=AuthTokenReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/rename/<uuid:authtoken_id>/<str:new_name>/",
         AuthTokenListApiRenameView.as_view(),
         name=AuthTokenReverseNames.listview_api_rename,
     ),
-    path("<int:authtoken_id>/", AuthTokenDetailView.as_view(), name=AuthTokenReverseNames.detailview),
+    path("<uuid:authtoken_id>/", AuthTokenDetailView.as_view(), name=AuthTokenReverseNames.detailview),
 ]

@@ -3,6 +3,7 @@
 # pylint: disable=W0613,C0115
 from typing import Optional
 
+from django.db import transaction
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
@@ -105,7 +106,15 @@ def llmclient_deleted(sender, instance: LLMClient, **kwargs):
     llmclient: LLMClient = instance
     prefix = logging.formatted_text(f"{module_prefix}.llmclient_deleted()")
     logger.info("%s - %s", prefix, instance.url)
-    delete_default_api.delay(name=llmclient.name, account_id=llmclient.user_profile.account.id, api_url=llmclient.default_url)  # type: ignore[union-attr]
+    # the task is passed the account number, read now, because the llmclient may be deleted
+    # with its account, which then no longer exists when the task runs. It is queued when the
+    # deletion is committed, so that a deletion that is rolled back deletes no resources.
+    kwargs = {
+        "name": llmclient.name,
+        "account_number": llmclient.user_profile.account.account_number,  # type: ignore[union-attr]
+        "api_url": llmclient.default_url,
+    }
+    transaction.on_commit(lambda: delete_default_api.delay(**kwargs))
 
 
 @receiver(pre_delete, sender=LLMClientPlugin)

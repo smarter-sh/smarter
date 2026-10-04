@@ -1,8 +1,22 @@
 {% extends 'dashboard/base.html' %}
-{% load static custom_filters %}
+{% load static react_manifest_editor %}
 
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the manifest editor
+  see: smarter.apps.dashboard.templatetags.react_manifest_editor.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% manifest_editor_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/manifest-editor/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
 
 {% block dashboard_content %}
+{% manifest_editor_context as manifest_editor %}
 <section id="plugin-manifest">
   <div id="kt_app_content" class="app-content flex-column-fluid">
     <!--begin::Content container-->
@@ -14,15 +28,23 @@
           <!--begin::Row-->
           <div class="row g-5 g-xl-10 mb-l-10">
             {% block title %}<h2>{{ page_title }}</h2>{% endblock %}
-            <!--begin:: Manifest body-->
-            <div class="code-sample-body">
-              <pre class="code-snippet prettyprint w-100">
-                <code>
-{{ manifest|unescape_unicode }}
-                </code>
-              </pre>
+            <!--begin:: Manifest editor-->
+            {{ manifest|json_script:manifest_editor.data_id }}
+            <div
+              id="{{ manifest_editor.root_id }}"
+              smarter-manifest-data-id="{{ manifest_editor.data_id }}"
+              smarter-apply-api-url="{{ manifest_editor.apply_api_url }}"
+              smarter-validate-api-url="{{ manifest_editor.validate_api_url }}"
+              smarter-delete-api-url="{{ manifest_editor.delete_api_url }}"
+              smarter-kind-placeholder="{{ manifest_editor.kind_placeholder }}"
+              django-csrf-cookie-name="{{ manifest_editor.csrf_cookie_name }}"
+              django-session-cookie-name="{{ manifest_editor.django_session_cookie_name }}"
+              django-cookie-domain="{{ manifest_editor.cookie_domain }}"
+              react-debug-mode="{{ manifest_editor.react_debug_mode }}"
+              smarter-request-id="{{ manifest_editor.smarter_request_id }}"
+              >
             </div>
-            <!--end:: Manifest body-->
+            <!--end:: Manifest editor-->
 
           </div>
           <!--end::Row-->
@@ -36,4 +58,18 @@
     <!--end::Content container-->
   </div>
 </section>
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the manifest editor
+  see: smarter.apps.dashboard.templatetags.react_manifest_editor.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% manifest_editor_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/manifest-editor/' %}{{ js_file }}"></script>
+  {% endfor %}
 {% endblock %}

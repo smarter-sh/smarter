@@ -1,6 +1,8 @@
 # pylint: disable=W0707,W0718,W0613
 """Views for unit tests."""
 
+import os
+
 from rest_framework import serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,6 +19,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 )
 
 logger = logging.getLogger(__name__)
+STACKADEMY_COURSES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stackademy_courses.json")
 faux_dict = {
     "message": "This is a test JSON response. This data is static, and it is not real.",
     "status": "success",
@@ -117,12 +120,13 @@ class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
 
     def catalogue(self) -> list[dict]:
 
-        with open("./stackaemy_courses.json", encoding="utf-8") as file:
+        # the file is beside this module, not in the working directory.
+        with open(STACKADEMY_COURSES, encoding="utf-8") as file:
             try:
                 return json.load(file)
             except json.JSONDecodeError as e:
                 raise SmarterConfigurationError(
-                    "Failed to decode JSON from stackaemy_courses.json. "
+                    "Failed to decode JSON from stackademy_courses.json. "
                     "Please ensure the file is correctly formatted."
                 ) from e
         return None

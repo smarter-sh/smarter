@@ -50,7 +50,7 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
                 f"Middleware chain expects HttpResponseBase, but returned an invalid response of {type(response)}"
             )
 
-        return await super().__acall__(request)
+        return response
 
     @property
     def formatted_class_name(self) -> str:

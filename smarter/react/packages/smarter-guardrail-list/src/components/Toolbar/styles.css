@@ -1,4 +1,34 @@
-.toolbar .btn:hover i,
-.toolbar .btn:focus i {
-  color: var(--bs-primary, #0d6efd);
+/* The toolbar's buttons are colored, unless they are disabled. */
+.toolbar .btn:disabled,
+.toolbar .btn.disabled {
+  filter: grayscale(1);
+  /* Bootstrap disables pointer events, which would hide the button's tooltip, i.e. why it is disabled. */
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+
+/* Icon colors, from the Material Design color palette: 600 shades, and 300 shades in dark mode. */
+.toolbar .md-blue {
+  color: #1e88e5;
+}
+.toolbar .md-green {
+  color: #43a047;
+}
+.toolbar .md-red {
+  color: #e53935;
+}
+.toolbar .md-teal {
+  color: #00897b;
+}
+[data-bs-theme="dark"] .toolbar .md-blue {
+  color: #64b5f6;
+}
+[data-bs-theme="dark"] .toolbar .md-green {
+  color: #81c784;
+}
+[data-bs-theme="dark"] .toolbar .md-red {
+  color: #e57373;
+}
+[data-bs-theme="dark"] .toolbar .md-teal {
+  color: #4db6ac;
 }

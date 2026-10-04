@@ -175,32 +175,76 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             return None
 
     @property
-    def identifier(self):
-        self.mask_string(self.digest)
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """
+        Returns the token's public identifier, its key_id, as a string.
+
+        A knox AuthToken has no integer id: its primary key is its digest. The api, the
+        urls and the web console identify a token by its key_id instead.
+        """
+        return str(self.key_id)
+
+    @property
+    def hashed_id(self) -> str:  # type: ignore[override]
+        """Returns the token's public identifier.
+
+        See :attr:`id`.
+        """
+        return self.id
+
+    def clone(
+        self,
+        new_name: Optional[str] = None,
+        new_version: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "SmarterAuthToken":
+        """
+        Create a new API key with this key's metadata.
+
+        A clone is a new key: the manager creates its own token, digest and key_id, which
+        MetaDataWithOwnershipModel.clone() would otherwise copy from this key.
+
+        :param new_name: The name of the new key. Defaults to this key's name, suffixed with "_clone".
+        :param new_version: The version of the new key. Defaults to this key's version.
+        :param user_profile: The owner of the new key. Defaults to this key's owner.
+        :returns: The new key.
+        :rtype: SmarterAuthToken
+        """
+        user_profile = user_profile or self.user_profile
+        clone, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user=user_profile.user,
+            user_profile=user_profile,
+            name=new_name or f"{self.name}_clone",
+            description=self.description,
+            version=new_version or self.version,
+            annotations=self.annotations,
+            tags=self.tags,
+            is_active=self.is_active,
+        )
+        return clone
+
+    @property
+    def identifier(self) -> str:
+        """Returns the token's digest, masked for logging."""
+        return self.mask_string(self.digest)
 
     @property
     def manifest_url(self) -> Optional[str]:
         """
-        Returns the URL to the plugin's manifest.
-
-        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
-        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
-        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+        Returns the URL of the token's manifest detail page, which identifies the token by its key_id.
 
         **Example:**
 
         .. code-block:: python
 
-            self.rfc1034_compliant_kind  # 'static'
-            self.rfc1034_compliant_name  # 'example-plugin
-            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+            self.manifest_url  # '/authtoken/d55cfbe5-89ec-4c11-90b9-3e9ec4bbbd85/'
         """
         # pylint: disable=C0415
         from smarter.lib.drf.urls import AuthTokenReverseNames
 
         return reverse(
             f"{AuthTokenReverseNames.namespace}:{AuthTokenReverseNames.detailview}",
-            kwargs={"authtoken_id": self.id},  # type: ignore
+            kwargs={"authtoken_id": self.key_id},
         )
 
     def save(self, *args, **kwargs):

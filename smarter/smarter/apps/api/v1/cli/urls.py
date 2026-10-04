@@ -13,6 +13,8 @@ Endpoints
      - Return information about the specified resource
    * - /api/v1/cli/apply/
      - Apply a manifest
+   * - /api/v1/cli/validate/
+     - Validate a manifest, without applying it
    * - /api/v1/cli/describe/
      - Print the manifest
    * - /api/v1/cli/deploy/
@@ -49,6 +51,7 @@ from .views.nonbrokered.version import ApiV1CliVersionApiView
 from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
 from .views.schema import ApiV1CliSchemaApiView
 from .views.undeploy import ApiV1CliUndeployApiView
+from .views.validate import ApiV1CliValidateApiView
 
 app_name = namespace
 
@@ -102,10 +105,12 @@ class ApiV1CliReverseViews:
     version = to_snake_case(ApiV1CliVersionApiView.__name__)
     whoami = to_snake_case(ApiV1CliWhoamiApiView.__name__)
     resources = to_snake_case(ApiV1CliResourcesApiView.__name__)
+    validate = to_snake_case(ApiV1CliValidateApiView.__name__)
 
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name=ApiV1CliReverseViews.apply),
+    path("validate/", ApiV1CliValidateApiView.as_view(), name=ApiV1CliReverseViews.validate),
     path("prompt/<str:name>/", ApiV1CliPromptApiView.as_view(), name=ApiV1CliReverseViews.prompt),
     path("prompt/config/<str:name>/", ApiV1CliPromptConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name=ApiV1CliReverseViews.delete),
