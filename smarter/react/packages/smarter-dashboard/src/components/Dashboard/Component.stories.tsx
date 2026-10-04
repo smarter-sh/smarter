@@ -20,6 +20,9 @@ const appContext: AppContextInterface = {
   serviceHealthApiUrl: "https://customer.smarter.sh/dashboard/api/service-health",
   chargesApiUrl: "https://customer.smarter.sh/dashboard/api/charges",
   budgetsApiUrl: "https://customer.smarter.sh/dashboard/api/budgets/",
+  activityApiUrl: "https://customer.smarter.sh/dashboard/api/activity/",
+  gettingStartedApiUrl: "https://customer.smarter.sh/dashboard/api/getting-started/",
+  quickActionsApiUrl: "https://customer.smarter.sh/dashboard/api/quick-actions/",
   sessionContext: sessionContext,
 };
 

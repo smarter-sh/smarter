@@ -118,6 +118,21 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.budgets,
                     ),
+                    "activity_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.activity,
+                    ),
+                    "getting_started_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.getting_started,
+                    ),
+                    "quick_actions_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.quick_actions,
+                    ),
                     "charges_api_url": reverse(
                         ":".join(
                             (
