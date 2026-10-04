@@ -45,7 +45,8 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
     Generate a standardized JSON return dictionary for all possible response scenarios.
 
     status: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-    body: a JSON dict of http response for status 200, an error dict otherwise.
+    body: a JSON dict of http response for status 200, an error dict otherwise. Both are
+        serialized into the "body", so that an error's message reaches the client.
 
     see https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     """
@@ -60,7 +61,6 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
 
     if status != 200:
         logger.error("Error: %s", body)
-        return retval
 
     if debug_mode:
         retval["body"] = body

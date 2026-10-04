@@ -37,7 +37,6 @@ spec:
       the user for clarification.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions:

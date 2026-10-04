@@ -1,0 +1,35 @@
+# The valid LLMClient manifest that test_llm_client_apply_errors.py mutates, one case at a time.
+# metadata.name is replaced with the test class's name. It has no plugins, MCPClients or
+# guardrails, so that it applies in the test account without any other resources.
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "LLMClient apply error test"
+  name: replaced_by_the_test
+  version: 1.0.0
+  tags:
+    - test
+spec:
+  apiKey: null
+  config:
+    appAssistant: Smarter
+    appExamplePrompts:
+      - Tell me about Smarter
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Apply Error Test
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome!
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: gpt-4o-mini
+    defaultSystemRole: You are a helpful assistant.
+    defaultTemperature: 0.5
+    deployed: false
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins: []
+  mcpClients: []
+  guardrails: []

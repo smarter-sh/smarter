@@ -47,7 +47,6 @@ metadata:
         using the Stackademy SQL plugin to retrieve course information.
 spec:
   connection:
-    account: 6097
     apiKey: test_secret
     authMethod: basic
     baseUrl: http://localhost:9357/api/v1/cli/example_manifest/plugin/
@@ -57,4 +56,3 @@ spec:
     proxyProtocol: http
     proxyUsername: null
     timeout: 30
-    version: 1.0.0

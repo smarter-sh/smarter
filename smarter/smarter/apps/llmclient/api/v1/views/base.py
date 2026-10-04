@@ -653,6 +653,8 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         response = handler(
             self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins, functions=self.functions
         )
+        # the prompt's own status, e.g. the status of the LLM provider's error response.
+        status = response.get("statusCode", HTTPStatus.OK.value) if isinstance(response, dict) else HTTPStatus.OK.value
         response = {
             SmarterJournalApiResponseKeys.DATA: response,
         }
@@ -661,7 +663,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             data=response,
             command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
             thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
-            status=HTTPStatus.OK.value,
+            status=status,
             safe=False,
         )
         self.helper_logger(f"{self.formatted_class_name} response={response}")

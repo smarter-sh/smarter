@@ -28,9 +28,6 @@ spec:
       - users
       - admin
   sqlData:
-    description:
-      Query the Django User model to retrieve detailed account information
-      about the admin account for the Smarter platform .
     limit: 1
     parameters:
       - default: admin
