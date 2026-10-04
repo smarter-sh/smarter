@@ -37,6 +37,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - fix 9 api and cli bugs found while raising the unit test coverage of smarter.apps.api to 93% ([d118c6b](https://github.com/smarter-sh/smarter/commit/d118c6bd6f8c3da42a05669a214faadbfc8c3bf7))
 - **plugin:** fix plugin updates through the api and boolean function parameters, remove the unused plugin api urls, and raise the plugin app's test coverage ([f34214e](https://github.com/smarter-sh/smarter/commit/f34214eab7b18b1548556fc14ae81021aad0765f))
 
+## [0.17.1](https://github.com/smarter-sh/smarter/compare/v0.17.0...v0.17.1) (2026-10-04)
+
+### Bug Fixes
+
+* **tests:** provide EKS cluster name and region in kubeconfig tests ([436c7bd](https://github.com/smarter-sh/smarter/commit/436c7bd471932fbd18c394f60f8f9103f8f91b97))
+
+## [0.17.0](https://github.com/smarter-sh/smarter/compare/v0.16.7...v0.17.0) (2026-10-04)
+
+### Features
+
+* edit, validate, save, clone and delete manifests in the web console's manifest editor ([b78b1d2](https://github.com/smarter-sh/smarter/commit/b78b1d200ac905d7a1aa3fb22ae2dd25b4e77e81))
+
+### Bug Fixes
+
+* color list view toolbar icons, gray out disabled toolbar buttons, and bump React package versions ([ba5d342](https://github.com/smarter-sh/smarter/commit/ba5d342acf1f1b4eb666a89b3ffb9035c7e6d301))
+* fix 13 account and llmclient bugs found while raising the unit test coverage of smarter.apps.account to 91% ([e92adae](https://github.com/smarter-sh/smarter/commit/e92adae594a3942f1e8544c347cf8c284776f8da))
+* fix 23 bugs found while raising the unit test coverage of smarter.common and smarter.lib to 90% ([da46f38](https://github.com/smarter-sh/smarter/commit/da46f38a96c62ae7e491e95115ed7a41fc95302f))
+* fix 5 connection and plugin bugs, and add unit tests that raise the coverage of smarter.apps from 85% to 89.8% ([6240434](https://github.com/smarter-sh/smarter/commit/6240434a1651c51b6fb2d3d3df996c3cb01549e5))
+* fix 9 api and cli bugs found while raising the unit test coverage of smarter.apps.api to 93% ([d118c6b](https://github.com/smarter-sh/smarter/commit/d118c6bd6f8c3da42a05669a214faadbfc8c3bf7))
+* **plugin:** fix plugin updates through the api and boolean function parameters, remove the unused plugin api urls, and raise the plugin app's test coverage ([f34214e](https://github.com/smarter-sh/smarter/commit/f34214eab7b18b1548556fc14ae81021aad0765f))
+
 ## [0.17.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.5...v0.17.0-alpha.6) (2026-10-04)
 
 ### Bug Fixes
