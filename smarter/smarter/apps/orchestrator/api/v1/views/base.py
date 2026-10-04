@@ -5,10 +5,9 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.response import Response
 
 from smarter.apps.account.models.budget import (
     SmarterBudgetExceeded,
@@ -305,7 +304,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :type request: ASGIRequest
         """
         logger.debug("%s.options(): orchestrator=%s", self.formatted_class_name, self.orchestrator)
-        response = Response()
+        response = HttpResponse()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "origin, content-type, accept"

@@ -86,22 +86,8 @@ class LLMClientApiV1ReverseViews:
 
 urlpatterns = [
     path("", LLMClientListView.as_view(), name=LLMClientApiV1ReverseViews.llmclient_list_view),
-    # --------------------------------------------------------------------------
-    # paths by hashed_id
-    # --------------------------------------------------------------------------
-    path("<str:hashed_id>/", LLMClientView.as_view(), name=LLMClientApiV1ReverseViews.llmclient_view_by_hashed_id),
-    path(
-        "<str:hashed_id>/config/",
-        PromptConfigView.as_view(),
-        name=LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id,
-    ),
-    path(
-        "<str:hashed_id>/prompt/",
-        DefaultLLMClientApiView.as_view(),
-        name=LLMClientApiV1ReverseViews.default_llmclient_api_view_by_hashed_id,
-    ),
-    # mcdaniel: this is a patch to keep the react component working with the new hashed_id urls.
-    path("<str:hashed_id>/prompt/config/", PromptConfigView.as_view()),
+    # the paths by id come first: an id is also a str, so <str:hashed_id> would match it,
+    # but a hashed id, which starts with 'r', never matches <int:...>.
     # --------------------------------------------------------------------------
     # paths by llmclient_id
     # --------------------------------------------------------------------------
@@ -166,4 +152,20 @@ urlpatterns = [
         LLMClientPluginListView.as_view(),
         name=LLMClientApiV1ReverseViews.llmclient_function_plugin_list_view_by_id,
     ),
+    # --------------------------------------------------------------------------
+    # paths by hashed_id
+    # --------------------------------------------------------------------------
+    path("<str:hashed_id>/", LLMClientView.as_view(), name=LLMClientApiV1ReverseViews.llmclient_view_by_hashed_id),
+    path(
+        "<str:hashed_id>/config/",
+        PromptConfigView.as_view(),
+        name=LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id,
+    ),
+    path(
+        "<str:hashed_id>/prompt/",
+        DefaultLLMClientApiView.as_view(),
+        name=LLMClientApiV1ReverseViews.default_llmclient_api_view_by_hashed_id,
+    ),
+    # mcdaniel: this is a patch to keep the react component working with the new hashed_id urls.
+    path("<str:hashed_id>/prompt/config/", PromptConfigView.as_view()),
 ]
