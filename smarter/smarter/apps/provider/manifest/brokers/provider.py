@@ -22,6 +22,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django import waffle
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -137,6 +138,24 @@ class SAMProviderBroker(AbstractBroker):
             self._provider = Provider.objects.filter(user_profile__account=self.account, name=self.name).first()
         return self._provider
 
+    @property
+    def logo_url(self) -> Optional[str]:
+        """
+        Return the Provider's logo as a URL, if it has one.
+
+        A manifest may set the logo to an absolute URL, which the ImageField
+        stores as its file name. Return that as-is: ``logo.url`` would
+        prefix it with the storage backend's base URL, which yields a bogus
+        CDN URL under S3 and an invalid relative path under FileSystemStorage.
+
+        :returns: The logo URL, or `None` if the Provider has no logo.
+        """
+        if not self.provider or not self.provider.logo:
+            return None
+        if SmarterValidator.is_valid_url(self.provider.logo.name):
+            return self.provider.logo.name
+        return self.provider.logo.url
+
     def manifest_to_django_orm(self) -> dict:
         """
         Convert the Smarter API Provider manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
@@ -228,7 +247,7 @@ class SAMProviderBroker(AbstractBroker):
             base_url=self.provider.base_url,
             api_key="*****" if self.provider.api_key else None,
             connectivity_test_path=self.provider.connectivity_test_path,
-            logo=self.provider.logo.url if self.provider.logo else None,
+            logo=self.logo_url,
             website_url=self.provider.website_url,
             contact_email=self.provider.contact_email,
             support_email=self.provider.support_email,
