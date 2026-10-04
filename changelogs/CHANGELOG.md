@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.17.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.17.1...v0.17.2-alpha.1) (2026-10-04)
+
+### Bug Fixes
+
+* fix 43 bugs that unit tests had marked as expected failures ([9b7f0ea](https://github.com/smarter-sh/smarter/commit/9b7f0ea598ba1d5946b9cc6e7b398d3b815a9689))
+
 ## [0.17.0-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.7...v0.17.0-alpha.8) (2026-10-04)
 
 ### Bug Fixes
