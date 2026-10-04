@@ -11,7 +11,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from smarter.apps.account.models import User, UserProfile
 from smarter.apps.vectorsearch.models import (
     Vectorsearch,
 )
@@ -34,24 +33,15 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 class ViewBase(SmarterAdminAPIView):
     """Base class for all vectorsearch detail views."""
 
-    def dispatch(self, request: Request, *args, **kwargs):
-        retval = super().dispatch(request, *args, **kwargs)
-        if isinstance(request.user, User):
-            self.user_profile = get_object_or_404(UserProfile, user=request.user)
-            self.account = self.user_profile.cached_account
-        return retval
+    # SmarterRequestMixin sets user, user_profile and account from the request,
+    # which are immutable once set.
 
 
 class ListViewBase(SmarterAdminListAPIView):
     """Base class for all vectorsearch list views."""
 
-    def dispatch(self, request: Request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if response.status_code > 299:
-            return response
-        self.user_profile = get_object_or_404(UserProfile, user=request.user)
-        self.account = self.user_profile.cached_account
-        return response
+    # SmarterRequestMixin sets user, user_profile and account from the request,
+    # which are immutable once set.
 
 
 ###############################################################################
@@ -72,7 +62,11 @@ class VectorsearchView(ViewBase):
 
     def dispatch(self, request: Request, *args, **kwargs):
         self.hashed_id = kwargs.pop("hashed_id", None)
-        retval = super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
+
+    def initial(self, request: Request, *args, **kwargs):
+        """Find the Vectorsearch, after DRF has authenticated the request and before the handler runs."""
+        super().initial(request, *args, **kwargs)
         if self.hashed_id:
             self.vectorsearch_id = Vectorsearch.id_from_hashed_id(self.hashed_id)
         else:
@@ -85,12 +79,11 @@ class VectorsearchView(ViewBase):
                 self._account = self.vectorsearch.user_profile.account
                 self._user = self.vectorsearch.user_profile.user
                 logger.debug(
-                    "%s.dispatch() - reinitializing user, account, and user_profile from vectorsearch.user_profile: %s",
+                    "%s.initial() - reinitializing user, account, and user_profile from vectorsearch.user_profile: %s",
                     self.formatted_class_name,
                     self.vectorsearch.user_profile,
                 )
-            logger.debug("%s.dispatch() - %s %s", self.formatted_class_name, self.vectorsearch, self.user_profile)
-        return retval
+            logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.vectorsearch, self.user_profile)
 
     def get(self, request: Request, vectorsearch_id: Optional[int] = None):
         if self.vectorsearch:
@@ -110,7 +103,9 @@ class VectorsearchView(ViewBase):
         vectorsearch: Optional[Vectorsearch] = None
         data: Optional[dict] = None
 
-        vectorsearch = get_object_or_404(Vectorsearch, pk=vectorsearch_id, account=self.account)
+        vectorsearch = self.vectorsearch
+        if not vectorsearch:
+            return HttpResponseNotFound("Vectorsearch not found")
 
         try:
             data = request.data

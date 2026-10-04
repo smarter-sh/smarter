@@ -66,6 +66,19 @@ class VectorsearchApiV1ReverseViews:
 
 urlpatterns = [
     path("", VectorsearchListView.as_view(), name=VectorsearchApiV1ReverseViews.vectorsearch_list_view),
+    # the paths by id come first: an id is also a str, so <str:hashed_id> would match it,
+    # but a hashed id, which starts with 'r', never matches <int:...>.
+    # --------------------------------------------------------------------------
+    # paths by vectorsearch_id
+    # --------------------------------------------------------------------------
+    path(
+        "<int:vectorsearch_id>/", VectorsearchView.as_view(), name=VectorsearchApiV1ReverseViews.vectorsearch_view_by_id
+    ),
+    path(
+        "<int:vectorsearch_id>/vectorsearch/",
+        DefaultVectorsearchApiView.as_view(),
+        name=VectorsearchApiV1ReverseViews.default_vectorsearch_api_view_by_id,
+    ),
     # --------------------------------------------------------------------------
     # paths by hashed_id
     # --------------------------------------------------------------------------
@@ -78,16 +91,5 @@ urlpatterns = [
         "<str:hashed_id>/vectorsearch/",
         DefaultVectorsearchApiView.as_view(),
         name=VectorsearchApiV1ReverseViews.default_vectorsearch_api_view_by_hashed_id,
-    ),
-    # --------------------------------------------------------------------------
-    # paths by vectorsearch_id
-    # --------------------------------------------------------------------------
-    path(
-        "<int:vectorsearch_id>/", VectorsearchView.as_view(), name=VectorsearchApiV1ReverseViews.vectorsearch_view_by_id
-    ),
-    path(
-        "<int:vectorsearch_id>/vectorsearch/",
-        DefaultVectorsearchApiView.as_view(),
-        name=VectorsearchApiV1ReverseViews.default_vectorsearch_api_view_by_id,
     ),
 ]
