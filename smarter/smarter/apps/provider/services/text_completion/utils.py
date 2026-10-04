@@ -44,11 +44,12 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
     """
     Generate a standardized JSON return dictionary for all possible response scenarios.
 
-    status: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-    body: a JSON dict of http response for status 200, an error dict otherwise. Both are
+    :param status: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    :param body: a JSON dict of http response for status 200, an error dict otherwise. Both are
         serialized into the "body", so that an error's message reaches the client.
+    :param debug_mode: if True, log the response to the CloudWatch log for this Lambda.
 
-    see https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
+    See https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     """
     if status < 100 or status > 599:
         raise SmarterValueError(f"Invalid HTTP response code received: {status}")
