@@ -410,9 +410,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             logger.debug(
                 "%s -> %s called with args: %s kwargs: %s",
                 logger_prefix_blue,
-                logging.formatted_text(
-                    func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.BOLD_DARK_BLUE
-                ),
+                logging.formatted_text(func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY),
                 args,
                 kwargs,
             )
@@ -442,7 +440,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                     logger_prefix_red
                     + "."
                     + logging.formatted_text(
-                        func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.DARK_RED
+                        func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY
                     ),
                     computed_cache_key,
                 )

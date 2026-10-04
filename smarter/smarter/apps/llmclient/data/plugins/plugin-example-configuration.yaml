@@ -27,7 +27,7 @@ spec:
       platformProvider: OpenAI
   prompt:
     maxTokens: 256
-    model: gpt-4o-mini
+    model: gpt-6-luna
     provider: openai
     systemRole: 'Your job is to provide helpful technical information about the OpenAI
       API Function Calling feature by calling the tool for ''the example plugin''.

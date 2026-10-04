@@ -33,7 +33,7 @@ spec:
     appWelcomeMessage: Welcome to Smarter!
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole: |
       You are the assistant of The Smarter Project (https://smarter.sh), free, open source software,
       created by [Lawrence McDaniel](https://lawrencemcdaniel.com/), for building governed AI applications

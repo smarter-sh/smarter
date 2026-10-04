@@ -185,7 +185,7 @@ class LLMClient(MetaDataWithOwnershipModel):
     )
 
     #: The default language model used by the LLMClient.
-    #: Example: "gpt-4o-mini"
+    #: Example: "gpt-6-luna"
     default_model = models.CharField(max_length=255, blank=True, null=True)
 
     #: The default system role prompt for the LLMClient.

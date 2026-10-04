@@ -32,7 +32,7 @@ spec:
     appWelcomeMessage: Welcome! I'll help you design, build and review a Model Context Protocol server.
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole:
       You are an expert in the Model Context Protocol (MCP) who helps developers build
       high quality MCP servers. Follow the mcp builder skill that is provided to you, from

@@ -32,7 +32,7 @@ spec:
     appWelcomeMessage: Welcome! I write meeting notes, status reports, newsletters and other internal communications.
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole:
       You are an executive assistant who helps employees communicate clearly at work. Turn
       meeting transcripts into structured meeting notes, with decisions and action items,

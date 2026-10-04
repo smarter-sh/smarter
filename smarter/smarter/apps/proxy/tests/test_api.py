@@ -12,7 +12,7 @@ from smarter.lib import json
 
 from .base_classes import API_KEY, BASE_URL, ProxyTestBase, get_test_text, sse_response
 
-CHAT = {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hi"}]}
+CHAT = {"model": "gpt-6-luna", "messages": [{"role": "user", "content": "Hi"}]}
 
 
 def url(name: str, path: str = "") -> str:
@@ -67,10 +67,10 @@ class TestProxyPassthroughApi(ProxyTestBase):
                 self.assertNotIn(self.key, str(self.fake.last_request.headers))
 
     def test_query_string_and_methods(self):
-        response = self.client.get(url("test_api_proxy", "models/gpt-4o-mini") + "?limit=1", HTTP_X_API_KEY=self.key)
+        response = self.client.get(url("test_api_proxy", "models/gpt-6-luna") + "?limit=1", HTTP_X_API_KEY=self.key)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
         self.assertEqual(self.fake.last_request.method, "GET")
-        self.assertEqual(str(self.fake.last_request.url), BASE_URL + "models/gpt-4o-mini?limit=1")
+        self.assertEqual(str(self.fake.last_request.url), BASE_URL + "models/gpt-6-luna?limit=1")
         response = self.client.delete(url("test_api_proxy", "models/ft-x"), HTTP_X_API_KEY=self.key)
         self.assertEqual((response.status_code, self.fake.last_request.method), (HTTPStatus.OK, "DELETE"))
 

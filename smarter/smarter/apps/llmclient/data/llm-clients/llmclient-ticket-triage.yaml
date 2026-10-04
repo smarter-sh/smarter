@@ -32,7 +32,7 @@ spec:
     appWelcomeMessage: Paste a customer message, and I'll return its triage fields as JSON.
     customDomain: null
     defaultMaxTokens: 512
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole:
       You are a support ticket triage service for a web hosting company. Your replies are
       parsed by a help desk integration, so reply with a single JSON object only, with no

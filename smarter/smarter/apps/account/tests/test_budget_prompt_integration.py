@@ -46,7 +46,7 @@ def completion(content: str) -> ChatCompletion:
     """Return an LLM's chat completion with a reply."""
     return ChatCompletion(
         id="test",
-        model="gpt-4o-mini",
+        model="gpt-6-luna",
         choices=[
             Choice(message=ChatCompletionMessage(role="assistant", content=content), finish_reason="stop", index=0)
         ],
@@ -122,7 +122,7 @@ class TestBudgetPromptIntegration(TestAccountMixin):
             provider_name="openai",
             base_url="https://api.example.com/v1/",
             api_key=SecretStr("sk-test"),
-            default_model="gpt-4o-mini",
+            default_model="gpt-6-luna",
         )
 
     def data(self) -> dict:

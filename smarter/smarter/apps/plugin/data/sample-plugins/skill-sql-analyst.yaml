@@ -27,7 +27,7 @@ spec:
     provider: openai
     systemRole: >
       You are a careful data analyst who writes correct, efficient SQL.
-    model: gpt-4o-mini
+    model: gpt-6-luna
     temperature: 0.0
     maxTokens: 2048
   skillData:
