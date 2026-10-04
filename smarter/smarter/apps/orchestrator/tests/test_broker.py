@@ -4,8 +4,6 @@ Test the Orchestrator manifest broker through the api/v1/cli/ commands.
 See :class:`smarter.lib.unittest.cli_brokers.CliBrokerTestMixin`.
 """
 
-import unittest
-
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.llmclient.models import LLMClient
@@ -37,14 +35,7 @@ class TestOrchestratorBroker(CliBrokerTestMixin, ApiV1TestBase):
             harness["llmClientName"] = llmclient.name
         return manifest
 
-    @unittest.expectedFailure
     def test_get(self):
-        """
-        Expected to fail: the broker's OrchestratorSerializer declares fields = ["__all__"], a list,.
-
-        rather than the string "__all__", so serializing a Orchestrator raises ImproperlyConfigured,
-        and get is a 500 whenever one exists.
-        """
         super().test_get()
 
     def test_apply_describe(self):
@@ -52,11 +43,5 @@ class TestOrchestratorBroker(CliBrokerTestMixin, ApiV1TestBase):
         response = self.cli("describe", name=self.name)
         self.assertEqual(response["data"]["metadata"]["name"], self.name)
 
-    @unittest.expectedFailure
     def test_apply_describe_delete(self):
-        """
-        Expected to fail: SAMOrchestratorBroker.delete() calls Orchestrator.get_cached_object().
-
-        with neither a pk nor a name, which raises DoesNotExist, so delete is a 500.
-        """
         super().test_apply_describe_delete()

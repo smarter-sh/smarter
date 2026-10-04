@@ -975,8 +975,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         user_profile = user_profile or self.user_profile
         if not new_name:
             new_name = f"{self.name} (clone)"
+            i = 0
             while True:
-                i = 0
                 try:
                     self.__class__.objects.get(name=new_name, user_profile=user_profile)
                     i += 1

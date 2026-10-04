@@ -13,7 +13,6 @@ from django.core.validators import MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
-from django.urls import reverse
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
@@ -300,31 +299,6 @@ class SqlConnection(ConnectionBase):
 
     Usually comes from ~/.ssh/known_hosts.
     """
-
-    @property
-    def manifest_url(self) -> str:
-        """
-        Returns the URL to the plugin's manifest.
-
-        Adds the manifest kind as a slug to the base manifest URL defined in the parent class.
-        For example, if the base manifest URL is "/plugins/{hashed_id}" and the manifest
-        kind is "sql_connection", the resulting manifest URL would be "/plugins/{hashed_id}/sql_connection/".
-
-        **Example:**
-
-        .. code-block:: python
-
-            self.rfc1034_compliant_kind  # 'sql-connection'
-            self.rfc1034_compliant_name  # 'smarter-test-sql
-            self.manifest_url  # 'http://localhost:9357/connection/connections/sql-connection/smarter-test-sql/'
-        """
-        # pylint: disable=C0415
-        from smarter.apps.connection.urls import ConnectionReverseNames
-
-        return reverse(
-            f"{ConnectionReverseNames.namespace}:{ConnectionReverseNames.sql_detailview}",
-            kwargs={"name": self.rfc1034_compliant_name},
-        )
 
     @property
     def connection(self) -> Optional[BaseDatabaseWrapper]:

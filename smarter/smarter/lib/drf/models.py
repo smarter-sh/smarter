@@ -1,5 +1,6 @@
 """DRF knox authtoken model and manager."""
 
+import hmac
 import uuid
 from datetime import datetime, timedelta
 from logging import getLogger
@@ -222,6 +223,12 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             is_active=self.is_active,
         )
         return clone
+
+    def validate_token(self, token: str) -> bool:
+        """Return True if token is this api key's token, which is stored only as its digest."""
+        if not token or token[: CONSTANTS.TOKEN_KEY_LENGTH] != self.token_key:
+            return False
+        return hmac.compare_digest(crypto.hash_token(token), self.digest)
 
     @property
     def identifier(self) -> str:

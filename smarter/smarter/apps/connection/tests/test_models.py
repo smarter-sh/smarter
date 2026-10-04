@@ -4,7 +4,6 @@ Test :mod:`smarter.apps.connection.models.connection_base`, :mod:`smarter.apps.c
 and the parts of :mod:`smarter.apps.connection.models.sql_connection` that need no database server.
 """
 
-import unittest
 from unittest.mock import MagicMock
 
 from django.urls import reverse
@@ -32,15 +31,8 @@ class TestApiConnectionModels(ApiConnectionTestMixin):
         connection = ConnectionBase.objects.get(pk=self.connection_django_model.pk)  # type: ignore[union-attr]
         self.assertEqual(connection.manifest_url, detail_url(connection, ConnectionReverseNames.api_detailview))
 
-    @unittest.expectedFailure
     def test_manifest_url(self):
-        """
-        Test that ApiConnection.manifest_url is its detail page.
-
-        Expected to fail: ApiConnection and SqlConnection override ConnectionBase.manifest_url
-        with a reverse() of the detail view by name, but the detail views' urls take a hashed_id,
-        so the property always raises NoReverseMatch.
-        """
+        """Test that ApiConnection.manifest_url is its detail page."""
         connection = self.connection_django_model
         self.assertEqual(connection.manifest_url, detail_url(connection, ConnectionReverseNames.api_detailview))  # type: ignore[union-attr]
 
@@ -82,12 +74,8 @@ class TestSqlConnectionModels(SqlConnectionTestMixin):
         connection = ConnectionBase.objects.get(pk=self.connection_django_model.pk)  # type: ignore[union-attr]
         self.assertEqual(connection.manifest_url, detail_url(connection, ConnectionReverseNames.sql_detailview))
 
-    @unittest.expectedFailure
     def test_manifest_url(self):
-        """Test that SqlConnection.manifest_url is its detail page.
-
-        Expected to fail: see TestApiConnectionModels.
-        """
+        """Test that SqlConnection.manifest_url is its detail page."""
         connection = self.connection_django_model
         self.assertEqual(connection.manifest_url, detail_url(connection, ConnectionReverseNames.sql_detailview))  # type: ignore[union-attr]
 
