@@ -217,7 +217,22 @@ class TestKubernetesHelperIngress(KubernetesHelperTestBase):
             patch(f"{MODULE}.time.sleep") as sleep,
         ):
             self.assertEqual(self.helper.verify_ingress_resources("bot.example.com", "ns"), (True, False, False))
-        self.assertEqual(sleep.call_count, 30)
+        # 30 attempts, a minute apart: no sleep after the last one.
+        self.assertEqual(sleep.call_count, 29)
+
+    def test_verify_ingress_resources_single_attempt(self):
+        """Test that a task can check the certificate once, without waiting, and check again later."""
+        with (
+            patch.object(KubernetesHelper, "verify_ingress", return_value=True),
+            patch.object(KubernetesHelper, "verify_secret", return_value=True),
+            patch.object(KubernetesHelper, "verify_certificate", return_value=False) as verify_certificate,
+            patch(f"{MODULE}.time.sleep") as sleep,
+        ):
+            self.assertEqual(
+                self.helper.verify_ingress_resources("bot.example.com", "ns", max_attempts=1), (True, False, True)
+            )
+        verify_certificate.assert_called_once()
+        sleep.assert_not_called()
 
     def test_delete(self):
         """Test that each delete method runs kubectl delete, and returns False on an error."""

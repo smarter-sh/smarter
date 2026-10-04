@@ -174,7 +174,11 @@ def get_google_service_account_bearer_token() -> str | None:
         "https://www.googleapis.com/auth/generative-language",
     ]
     try:
-        secret = Secret.get_cached_object(name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME)
+        # the platform's Secret, which initialize_providers stores for the smarter admin. A Secret of
+        # the same name in another account must not be found, nor make the name ambiguous.
+        secret = Secret.get_cached_object(
+            name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, user_profile=smarter_cached_objects.smarter_admin_user_profile
+        )
     except Secret.DoesNotExist:
         logger.error("initialize_googleai: Google service account secret not found.")
         return

@@ -110,6 +110,7 @@ jobs:
           social-auth-github-secret: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
           social-auth-linkedin-oauth2-key: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
           social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
+          tavily-api-key: ${{ secrets.TAVILY_API_KEY }}
           togetherai-api-key: ${{ secrets.TOGETHERAI_API_KEY }}
 
       - name: Set deployment domain

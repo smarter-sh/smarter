@@ -134,6 +134,9 @@ class SettingsDefaults:
         "LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF", True
     )
     LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: str = get_env("LLM_CLIENT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
+    INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: str = get_env(
+        "INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE", "infrastructure_celery_task_queue"
+    )
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [

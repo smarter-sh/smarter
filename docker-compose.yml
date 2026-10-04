@@ -109,6 +109,50 @@ services:
       timeout: 30s
       retries: 3
 
+  # Serves the infrastructure queue: tasks that deploy, verify and destroy cloud, Kubernetes and
+  # DNS resources, which can take many minutes. Its own worker, so that they never block the
+  # operational tasks of smarter-worker, such as prompt history, charges and budgets.
+  smarter-worker-infrastructure:
+    container_name: smarter-worker-infrastructure
+    mem_limit: 2g
+    cpus: 0.5
+    user: smarter_user
+    x-build:
+      type: docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # future use. The worker and beat services use the same Dockerfile as the app service,
+        # but we can optionally set the SCHEMA build argument to something other than "APP"
+        # in order to fine tune the build requirements.
+        SCHEMA: APP
+        ENVIRONMENT: ${ENVIRONMENT}
+        DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
+        DOCKER_REACT_REMOTE_CACHE_BUSTER: ${DOCKER_REACT_REMOTE_CACHE_BUSTER}
+        DOCKER_REACT_REMOTE_CDN_URL: ${DOCKER_REACT_REMOTE_CDN_URL}
+    image: smarter
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q infrastructure_celery_task_queue -E -n infrastructure@%h
+    depends_on:
+      - smarter-mariadb
+      - smarter-redis
+      - smarter-app
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker
+    # volumes:
+    #   - type: bind
+    #     source: ./smarter
+    #     target: /smarter
+    #     consistency: cached
+    healthcheck:
+      test: ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
   smarter-beat:
     container_name: smarter-beat
     mem_limit: 1g

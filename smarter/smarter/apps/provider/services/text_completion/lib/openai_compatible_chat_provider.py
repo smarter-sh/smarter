@@ -67,6 +67,7 @@ from smarter.apps.provider.services.text_completion.lib.protocols import (
 )
 from smarter.apps.provider.services.text_completion.utils import (
     http_response_factory,
+    pair_tool_messages,
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
@@ -225,7 +226,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if _InternalKeys.SMARTER_IS_NEW in message_copy:
                 del message_copy[_InternalKeys.SMARTER_IS_NEW]
             retval.append(message_copy)
-        return retval
+        # the thread may come from the client, which keeps the tool replies but not the
+        # assistant's tool_calls, and OpenAI refuses a tool reply without its tool call.
+        return pair_tool_messages(retval)
 
     @property
     def new_messages(self) -> list[dict[str, Any]]:

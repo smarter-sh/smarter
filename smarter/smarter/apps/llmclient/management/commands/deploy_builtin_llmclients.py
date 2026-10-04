@@ -5,7 +5,8 @@ import io
 import os
 from typing import Optional
 
-from django.core.management import CommandError, call_command
+from django.core.management import call_command
+from django.db import transaction
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
@@ -89,6 +90,33 @@ class Command(SmarterCommand):
             self.style.NOTICE(f"Found and deleted existing llmclient {name} for user_profile {self.user_profile}.")
         )
 
+    def apply_manifest(self, manifest: SAMLoader, filespec: str) -> bool:
+        """
+        Apply a manifest as the smarter admin, and report, rather than raise, a failure.
+
+        The manifest is applied in a transaction, so that a manifest that fails is rolled back
+        entirely: a plugin whose apply fails leaves no PluginMeta behind, which an LLMClient
+        would otherwise attach, and an LLMClient that exists keeps its previous version.
+        Any exception is caught, because brokers raise their own exceptions, rather than
+        CommandError, and one manifest that fails must not prevent the others from being applied.
+        For example, the plugin smarter_project_websearch fails without its Secret tavily_api_key,
+        and the smarter LLMClient, which uses it, then fails too.
+
+        :return: True if the manifest was applied, False otherwise.
+        """
+        output = io.StringIO()
+        try:
+            with transaction.atomic():
+                call_command(
+                    "apply_manifest", manifest=manifest.yaml_data, username=SMARTER_ADMIN_USERNAME, stdout=output
+                )
+            return True
+        # SystemExit: SmarterCommand.handle_completed_failure() exits when it is given an exception.
+        # pylint: disable=W0718
+        except (Exception, SystemExit) as e:
+            self.stderr.write(self.style.ERROR(f"Failed to apply manifest {filespec}: {type(e).__name__}: {e}"))
+            return False
+
     def create_plugin(self, filespec: str) -> bool:
         """
         Create a plugin by name.
@@ -102,14 +130,7 @@ class Command(SmarterCommand):
         if not self.user_profile:
             raise SmarterValueError("UserProfile is required to create a plugin.")
         self.stdout.write(f"Creating plugin from manifest {filespec} for user_profile {self.user_profile}.")
-        manifest = SAMLoader(file_path=filespec)
-        output = io.StringIO()
-        try:
-            call_command("apply_manifest", manifest=manifest.yaml_data, username=SMARTER_ADMIN_USERNAME, stdout=output)
-            return True
-        except CommandError as e:
-            self.stderr.write(self.style.ERROR(f"apply_manifest raised CommandError: {e}"))
-            return False
+        return self.apply_manifest(SAMLoader(file_path=filespec), filespec)
 
     def create_and_deploy_llmclient(self, filespec: str) -> bool:
         """
@@ -131,11 +152,7 @@ class Command(SmarterCommand):
         )
 
         manifest = SAMLoader(file_path=filespec)
-        output = io.StringIO()
-        try:
-            call_command("apply_manifest", manifest=manifest.yaml_data, username=SMARTER_ADMIN_USERNAME, stdout=output)
-        except CommandError as e:
-            self.stderr.write(self.style.ERROR(f"apply_manifest raised CommandError: {e}"))
+        if not self.apply_manifest(manifest, filespec):
             return False
 
         try:

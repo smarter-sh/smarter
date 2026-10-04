@@ -1,0 +1,68 @@
+---
+# A WebsearchPlugin that searches the web for information about The Smarter Project,
+# from reputable sources, for the smarter LLMClient (llm-clients/llmclient-smarter.yaml).
+#
+# Prerequisite: a Smarter Secret named tavily_api_key, containing a Tavily API key from
+# https://tavily.com. manage.py initialize_providers creates it from the environment
+# variable TAVILY_API_KEY (or SMARTER_TAVILY_API_KEY).
+#
+# Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: smarter_project_websearch
+  pluginClass: websearch
+  description: >
+    Searches the web for information about The Smarter Project (https://smarter.sh), the
+    open-source, declarative, YAML manifest-based platform for managing AI resources in the
+    enterprise, created by Lawrence McDaniel. Always include "The Smarter Project" or
+    "smarter.sh" in the search query, because "smarter" alone matches many unrelated
+    products. Prefer reputable sources: the official website and documentation at
+    smarter.sh, the smarter-sh organization on GitHub, the Python Package Index, and
+    established technology publications. Ignore results that are not about The Smarter
+    Project.
+  version: 1.0.0
+  tags:
+    - smarter
+    - websearch
+    - about
+    - information
+  annotations:
+    - smarter.sh/smarter-project-websearch/plugin-display-name: The Smarter Project Web Search
+    - smarter.sh/smarter-project-websearch/plugin-category: Information Plugins
+    - smarter.sh/smarter-project-websearch/plugin-purpose: |
+        finds current information about The Smarter Project on the web, from reputable sources,
+        to complement the documentation, which the smarter_project_github MCPClients read.
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a careful research assistant for The Smarter Project (https://smarter.sh).
+      Search the web for information about The Smarter Project, and read the most relevant
+      pages before answering. Rely only on reputable sources, such as smarter.sh, the
+      smarter-sh organization on GitHub, the Python Package Index, and established technology
+      publications. Ignore anything that is not about The Smarter Project. Cite the url of
+      every source that you use, as a markdown link.
+    model: gpt-4o-mini
+    temperature: 0.5
+    maxTokens: 4096
+  websearchData:
+    search:
+      provider: tavily
+      apiKey: tavily_api_key
+      maxResults: 5
+      safeSearch: moderate
+    fetch:
+      maxCharacters: 20000
+      respectRobotsTxt: false
+    # low quality, user-generated and content farm sources, which are not reputable.
+    blockedDomains:
+      - pinterest.com
+      - quora.com
+      - answers.com
+      - ehow.com
+    timeout: 15
+    cacheTtl: 86400
