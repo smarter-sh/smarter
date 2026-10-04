@@ -2,11 +2,13 @@
 
 # pylint: disable=W0718,W0212
 
+import asyncio
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseForbidden
+from django.test import RequestFactory
 
 from smarter.lib.django import waffle
 from smarter.lib.django.middleware.sensitive_files import (
@@ -15,22 +17,35 @@ from smarter.lib.django.middleware.sensitive_files import (
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
-@unittest.skipUnless(
-    waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES),
-    "Sensitive files middleware is not enabled",
-)
 class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
     """Test the SmarterBlockSensitiveFilesMiddleware class."""
 
+    # The middleware is tested with its waffle switch on, whatever the switch's value in the database.
+    switch = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES
+
     def setUp(self):
+        original = waffle.switch_is_active
+        patcher = patch(
+            "smarter.lib.django.waffle.switch_is_active",
+            side_effect=lambda name: True if name == self.switch else original(name),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.get_response = MagicMock(return_value=HttpResponse("OK"))
         self.middleware = SmarterBlockSensitiveFilesMiddleware(self.get_response)
-        cache.clear()
+        self.factory = RequestFactory()
+        self.ip_count = 0
 
-    def make_request(self, path):
-        req = MagicMock()
-        req.path = path
-        return req
+    def public_ip(self) -> str:
+        """Return a new public ip, whose throttle count is deleted after the test."""
+        self.ip_count += 1
+        ip = f"8.8.{self.ip_count // 250}.{self.ip_count % 250 + 1}"
+        self.addCleanup(cache.delete, self.middleware.get_throttle_key(ip))
+        return ip
+
+    def make_request(self, path, ip=None):
+        """Return a request from a public ip: the middleware ignores requests whose client ip it can't find."""
+        return self.factory.get(path, REMOTE_ADDR=ip or self.public_ip())
 
     def test_sensitive_file_blocked(self):
         for sensitive in [
@@ -137,3 +152,45 @@ class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
         self.assertIsInstance(resp, HttpResponse, "Failed to allow amnesty pattern with sensitive file")
         self.assertNotIsInstance(resp, HttpResponseForbidden, "Incorrectly blocked amnesty pattern with sensitive file")
         self.assertEqual(resp.content, b"OK", "Incorrect response content for amnesty pattern with sensitive file")
+
+    def test_throttle(self):
+        """Test that a client is throttled after THROTTLE_LIMIT blocked requests, even for a normal path."""
+        ip = self.public_ip()
+        for _ in range(self.middleware.THROTTLE_LIMIT):
+            self.assertIsInstance(self.middleware(self.make_request("/.env", ip=ip)), HttpResponseForbidden)
+        self.assertTrue(self.middleware.is_throttled(ip))
+        resp = self.middleware(self.make_request("/some/normal/path/", ip=ip))
+        self.assertIsInstance(resp, HttpResponseForbidden)
+        self.assertIn(b"Too many suspicious requests", resp.content)
+
+    def test_private_ip_is_not_inspected(self):
+        """Test that a request whose client ip is private, e.g. from inside the cluster, is not blocked."""
+        resp = self.middleware(self.make_request("/.env", ip="10.0.0.1"))
+        self.assertEqual(resp.content, b"OK")
+
+    def test_switch_off(self):
+        """Test that nothing is blocked when the waffle switch is off."""
+        with patch("smarter.lib.django.waffle.switch_is_active", return_value=False):
+            self.assertEqual(self.middleware(self.make_request("/.env")).content, b"OK")
+
+    def test_health_check_amnesty(self):
+        self.assertEqual(self.middleware(self.make_request("/healthz/")).content, b"OK")
+
+    def test_normalize_path(self):
+        normalize = SmarterBlockSensitiveFilesMiddleware.normalize_path
+        self.assertEqual(normalize("/a//b/../.ENV"), "/a/.env")
+        self.assertEqual(normalize("/a/%252eenv"), "/a/.env")
+        self.assertEqual(normalize("a\\b\x00c"), "/a/bc")
+
+    def test_async(self):
+        """Test that an async middleware blocks a sensitive file, and passes a normal path through."""
+
+        async def get_response(request):
+            return HttpResponse("async OK")
+
+        middleware = SmarterBlockSensitiveFilesMiddleware(get_response)
+        with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
+            self.assertIsInstance(asyncio.run(middleware(self.make_request("/.env"))), HttpResponseForbidden)
+            self.assertEqual(asyncio.run(middleware(self.make_request("/normal/"))).content, b"async OK")
+        with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=False):
+            self.assertEqual(asyncio.run(middleware(self.make_request("/.env"))).content, b"async OK")

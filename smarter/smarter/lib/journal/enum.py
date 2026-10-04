@@ -274,6 +274,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     PROMPT_CONFIG = "chat_config"
     STATUS = "status"
     UNDEPLOY = "undeploy"
+    VALIDATE = "validate"
     VERSION = "version"
     WHOAMI = "whoami"
     RESOURCES = "resources"
@@ -296,6 +297,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             (cls.JSON_SCHEMA.value, cls.JSON_SCHEMA.value),
             (cls.VERSION.value, cls.VERSION.value),
             (cls.UNDEPLOY.value, cls.UNDEPLOY.value),
+            (cls.VALIDATE.value, cls.VALIDATE.value),
             (cls.WHOAMI.value, cls.WHOAMI.value),
             (cls.RESOURCES.value, cls.RESOURCES.value),
         ]
@@ -318,6 +320,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.JSON_SCHEMA.value: "fetched json schema",
             cls.VERSION.value: "fetched version",
             cls.UNDEPLOY.value: "undeployed",
+            cls.VALIDATE.value: "validated",
             cls.WHOAMI.value: "fetched identity",
             cls.RESOURCES.value: "fetched resources",
         }

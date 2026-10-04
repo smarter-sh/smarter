@@ -14,6 +14,7 @@ from django.core import serializers
 from django.core.handlers.asgi import ASGIRequest
 from django.db import IntegrityError, models
 from django.http import HttpRequest, QueryDict
+from pydantic import ValidationError
 from requests import PreparedRequest
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
@@ -1768,6 +1769,39 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         data = model.model_json_schema()
 
         return self.json_response_ok(command=command, data=data)
+
+    @classmethod
+    def validation_errors(cls, manifest: dict) -> list[dict[str, Any]]:
+        """Validate a manifest against the broker's Pydantic model, without saving it.
+
+        Pydantic's errors keep their ``loc``, the path of the invalid value in the manifest.
+        Errors that the model's validators raise as other exceptions, e.g. ``SAMValidationError``,
+        have an empty ``loc``.
+
+        Example:
+
+        .. code-block:: python
+
+            SAMGuardrailBroker.validation_errors({"apiVersion": "smarter.sh/v1", "kind": "Guardrail"})
+            # [{"loc": ["metadata"], "message": "Field required", "type": "missing"}, ...]
+
+        :param manifest: The manifest, as a dict.
+        :type manifest: dict
+        :return: The manifest's errors, as dicts with a ``loc``, a ``message`` and a ``type``, or an empty list.
+        :rtype: list[dict[str, Any]]
+        """
+        try:
+            cls._pydantic_model.model_validate(manifest)
+        except ValidationError as e:
+            return [
+                {"loc": [str(part) for part in error["loc"]], "message": error["msg"], "type": error["type"]}
+                for error in e.errors()
+            ]
+        # pylint: disable=broad-except
+        except Exception as e:
+            message = getattr(e, "message", None) or str(e) or type(e).__name__
+            return [{"loc": [], "message": message, "type": type(e).__name__}]
+        return []
 
     ###########################################################################
     # Smarter object helpers

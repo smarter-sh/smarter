@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""utility for running api/v1 cli endpoints to verify that they work."""
+"""Utility for running api/v1 cli endpoints to verify that they work."""
 
 import os
 from typing import Optional
@@ -7,7 +7,7 @@ from typing import Optional
 import yaml
 from django.test import Client
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
@@ -97,21 +97,24 @@ class Command(SmarterCommand):
         if not account:
             self.handle_completed_failure(msg=f"Account with account number '{account_number}' does not exist.")
             return
+        # the account's admin, unless another user of the account is named.
         user = get_cached_admin_user_for_account(account=account)
-        if username != user.get_username():
-            try:
-                user_profile = UserProfile.get_cached_object(account=account, user=user)
-                if not user_profile:
-                    self.handle_completed_failure(
-                        msg=f"No user profile for user '{username}' associated with account {account.account_number}."
-                    )
-                    return
-                user = user_profile.cached_user
-            except UserProfile.DoesNotExist:
-                self.handle_completed_failure(
-                    msg=f"No user profile for user '{username}' associated with account {account.account_number}."
-                )
-                return
+        try:
+            if username and username != user.get_username():
+                user = User.objects.get(username=username)
+            user_profile = UserProfile.get_cached_object(account=account, user=user)
+        except (User.DoesNotExist, UserProfile.DoesNotExist):
+            user_profile = None
+        if not user_profile:
+            self.handle_completed_failure(
+                msg=f"No user profile for user '{username}' associated with account {account.account_number}."
+            )
+            return
+        user = user_profile.cached_user
+        if not user.is_staff:
+            # an api key can only be created for a staff user.
+            self.handle_completed_failure(msg=f"User '{user.username}' is not a staff user, and can't have an api key.")
+            return
 
         # generate an auth token (api key) for this job.
         token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
@@ -132,6 +135,7 @@ class Command(SmarterCommand):
         def get_response(path, manifest: Optional[str] = None):
             """
             Prepare and get a response from an api/v1/cli endpoint.
+
             We need to be mindful of the environment we are in, as the
             endpoint may be hosted over https or http.
             """
@@ -143,11 +147,11 @@ class Command(SmarterCommand):
 
             if smarter_settings.environment in SmarterEnvironments.aws_environments:
                 response = client.post(
-                    path=path, data=manifest, content_type="application/json", HTTP_HOST=http_host, extra=headers
+                    path=path, data=manifest, content_type="application/json", HTTP_HOST=http_host, headers=headers
                 )
                 url = f"https://{smarter_settings.environment_platform_domain}{path}"
             else:
-                response = client.post(path=path, data=manifest, content_type="application/json", extra=headers)
+                response = client.post(path=path, data=manifest, content_type="application/json", headers=headers)
                 url = f"http://localhost:9357{path}"
 
             response_content = response.content.decode("utf-8")
@@ -157,8 +161,12 @@ class Command(SmarterCommand):
             response = json.dumps(response_json) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
-        path = reverse(ApiV1CliReverseViews.namespace + "apply_view", kwargs={})
-        get_response(path, manifest=self.data)  # type: ignore
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
+        try:
+            get_response(path, manifest=self.data)  # type: ignore
+        finally:
+            # the single-use api key is deleted, whether or not the verification succeeded.
+            token_record.delete()
 
         # path = reverse("api:v1:cli:deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         # get_response(path)
@@ -184,5 +192,4 @@ class Command(SmarterCommand):
         # path = reverse("api:v1:cli:whoami_view")
         # get_response(path)
 
-        token_record.delete()
         self.handle_completed_success()

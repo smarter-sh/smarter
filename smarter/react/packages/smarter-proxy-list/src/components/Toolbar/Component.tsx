@@ -32,6 +32,7 @@ import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 import { loggerPrefix } from "@/lib/const";
 import { proxyUrl } from "@/lib/format";
 import type { Proxy } from "@/lib/Types";
+import "./styles.css";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 
@@ -217,7 +218,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           disabled={!proxy.url}
           tabIndex={0}
         >
-          <i className={copied ? "bi bi-clipboard-check text-success" : "bi bi-clipboard"} />
+          <i className={copied ? "bi bi-clipboard-check md-green" : "bi bi-clipboard md-teal"} />
         </button>
         <a
           href={proxy.manifestUrl}
@@ -225,7 +226,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           title="Edit: Open the YAML manifest that defines this proxy resource"
           tabIndex={0}
         >
-          <i className="bi bi-pencil-square" />
+          <i className="bi bi-pencil-square md-blue" />
         </a>
         <button
           type="button"
@@ -234,7 +235,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           onClick={() => setModal({ type: "clone", proxy })}
           tabIndex={0}
         >
-          <i className="bi bi-files" />
+          <i className="bi bi-files md-green" />
         </button>
         <button
           type="button"
@@ -243,7 +244,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           onClick={() => setModal({ type: "rename", proxy })}
           tabIndex={0}
         >
-          <i className="bi bi-pencil" />
+          <i className="bi bi-pencil md-blue" />
         </button>
         <button
           type="button"
@@ -257,7 +258,7 @@ export const Toolbar = ({ sessionContext, proxy, onRequery }: ToolbarProps) => {
           disabled={proxy.canDelete === false}
           tabIndex={0}
         >
-          <i className="bi bi-trash" />
+          <i className="bi bi-trash md-red" />
         </button>
       </div>
 

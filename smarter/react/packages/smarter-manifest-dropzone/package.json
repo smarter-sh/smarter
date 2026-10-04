@@ -1,7 +1,7 @@
 {
   "name": "@smarter/drop-zone",
   "description": "React-based manifest drop-zone for the Smarter web console.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "config": {
     "cdnDeploy": false,
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@smarter/common": "^0.1.0",
+    "@smarter/common": "^0.2.0",
     "js-yaml": "^5.4.2",
     "process": "^0.11.10",
     "react": "^19.3.0",

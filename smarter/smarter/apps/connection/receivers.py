@@ -8,8 +8,6 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
-from smarter.common.conf import smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
@@ -126,19 +124,20 @@ def handle_sql_connection_validated(sender, connection: SqlConnection, **kwargs)
 
 @receiver(sql_connection_failed, dispatch_uid="sql_connection_failed")
 def handle_sql_connection_failed(sender, connection: SqlConnection, error: str, **kwargs):
-    """Handle SQL connection failed signal."""
+    """
+    Handle SQL connection failed signal.
+
+    Only logs the failure: the method that sent the signal reports it to its caller, by returning
+    None. The connection string is always masked, so that its password is never logged.
+    """
 
     logger.error(
         "%s - %s is %s - error: %s",
         formatted_text(prefix + "sql_connection_failed()"),
-        connection.get_connection_string(masked=not smarter_settings.debug_mode),
+        connection.get_connection_string(),
         SmarterReadyState.NOT_READY,
         error,
     )
-
-    raise SmarterConfigurationError(
-        f"Remote SQL Connection {connection.get_connection_string(masked=not smarter_settings.debug_mode)} failed: {error}"
-    ) from None
 
 
 @receiver(sql_connection_query_attempted, dispatch_uid="sql_connection_query_attempted")
@@ -169,19 +168,20 @@ def handle_sql_connection_query_success(sender, connection: SqlConnection, sql: 
 
 @receiver(sql_connection_query_failed, dispatch_uid="sql_connection_query_failed")
 def handle_sql_connection_query_failed(sender, connection: SqlConnection, sql: str, limit: int, error: str, **kwargs):
-    """Handle SQL connection query failed signal."""
+    """
+    Handle SQL connection query failed signal.
 
-    logger.info(
+    Only logs the failure: execute_query(), which sent the signal, reports it to its caller by
+    returning False.
+    """
+
+    logger.error(
         "%s - %s - sql: %s - limit: %s - error: %s",
         formatted_text(prefix + "sql_connection_query_failed()"),
         connection.get_connection_string(),
         sql,
         limit,
         error,
-    )
-
-    raise SmarterConfigurationError(
-        f"Remote SQL {connection.get_connection_string()} query execution failed {sql}: {error}"
     )
 
 

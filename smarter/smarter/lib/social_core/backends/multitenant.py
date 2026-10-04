@@ -24,6 +24,7 @@ from requests.exceptions import HTTPError, RequestException, Timeout, TooManyRed
 from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
 
+from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
@@ -36,7 +37,8 @@ logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
 
 USERNAME = "username"
-INACTIVE_ACCOUNT_REDIRECT_URL = "account_inactive"
+# the account app's url name, in its namespace: a url name alone isn't found.
+INACTIVE_ACCOUNT_REDIRECT_URL = f"{account_namespace}:account_inactive"
 SUBSCRIPTION_STATUS_API_URL = f"https://api.am.{smarter_settings.root_domain}/accounts/subscription-status/"
 """
 API endpoint to verify subscription status.

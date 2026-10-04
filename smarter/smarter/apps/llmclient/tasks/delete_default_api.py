@@ -30,7 +30,7 @@ Usage
 
 Import this module and call the Celery task as needed to asynchronously delete llmclient API resources:
 
-    delete_default_api.delay(api_url, account_number, name)
+    delete_default_api.delay(name=name, api_url=api_url, account_number=account_number)
 
 Raises
 ------
@@ -39,21 +39,18 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
+from typing import Optional
 from urllib.parse import urlparse
 
-from django.http import HttpRequest
-
 from smarter.apps.account.models import Account
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.signals import (
     post_delete_default_api,
     pre_delete_default_api,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib import logging
-from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
@@ -66,13 +63,36 @@ logger = logging.getSmarterLogger(
 logger_prefix = logging.formatted_text(__name__)
 
 
+def _account_number_from_hostname(hostname: str) -> Optional[str]:
+    """
+    Return the account number of an llmclient's default api hostname.
+
+    The hostname is "{llmclient name}.{account number}.{environment api domain}",
+    e.g. example.3141-5926-5359.alpha.api.example.com
+    """
+    labels = hostname.split(".")
+    if len(labels) < 3 or not SmarterValidator.is_valid_account_number(labels[1]):
+        return None
+    return labels[1]
+
+
+def _is_default_api_hostname(hostname: str, account_number: Optional[str]) -> bool:
+    """Return True if the hostname is the default api hostname of an llmclient of the account."""
+    return bool(account_number) and _account_number_from_hostname(hostname) == account_number
+
+
 @app.task(
     autoretry_for=(Exception,),
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def delete_default_api(name: str, account_id: int, api_url: str):
+def delete_default_api(
+    name: str,
+    api_url: str,
+    account_number: Optional[str] = None,
+    account_id: Optional[int] = None,
+):
     """
     Delete AWS and Kubernetes resources for a customer API.
 
@@ -92,8 +112,19 @@ def delete_default_api(name: str, account_id: int, api_url: str):
 
     Parameters
     ----------
-    llmclient_id : int
-        The ID of the llmclient whose resources are to be deleted.
+    name : str
+        The llmclient's name.
+    api_url : str
+        The llmclient's default api url, e.g. https://example.3141-5926-5359.alpha.api.example.com/
+    account_number : str, optional
+        The account number of the llmclient's account. The task is queued when the llmclient
+        is deleted, which may be because its account is being deleted, so the account may no
+        longer exist when the task runs. The caller passes the account number, which the task
+        uses instead of looking the account up.
+    account_id : int, optional
+        Deprecated: the id of the llmclient's account, which tasks queued by earlier versions pass.
+        The account number is looked up from it if the account still exists, and is otherwise
+        taken from the api url's hostname.
 
     Signals
     -------
@@ -108,55 +139,34 @@ def delete_default_api(name: str, account_id: int, api_url: str):
         Any exception raised during the deletion process will trigger a retry according to Celery settings.
     """
 
-    def _get_url_path(api_url):
-        """Extracts the path component from a given URL."""
-        parsed_url = urlparse(api_url)
-        return parsed_url.path
-
-    def _get_domain_name(api_url):
-        """Extracts the domain name (netloc) from a given URL."""
-        parsed_url = urlparse(api_url)
-        domain_name = parsed_url.netloc
-        return domain_name
-
-    def _dummy_request_factory(path: str):
-        """
-        Creates a dummy HttpRequest object with the necessary attributes to be.
-
-        used with SmarterRequestMixin for a given llmclient.
-        """
-        request = HttpRequest()
-        request.user = smarter_cached_objects.smarter_admin
-        request.path = path
-        request.method = "POST"
-        return request
-
     if not is_taskable():
         return
 
-    account: Account
-    try:
-        account = Account.get_cached_object(pk=account_id)
-    except Account.DoesNotExist as e:
-        raise SmarterConfigurationError(
-            f"{logger_prefix} - Account with id {account_id} does not exist for llmclient API deletion."
-        ) from e
-
-    request_path = _get_url_path(api_url)
-    request = _dummy_request_factory(request_path)
-    request_mixin = SmarterRequestMixin(request=request)
-    if not request_mixin.is_llmclient:
-        raise SmarterConfigurationError(
-            f"{logger_prefix} - Request path {request.path} is not recognized as an llmclient URL."
+    hostname = urlparse(api_url).netloc
+    if account_number is None and account_id is not None:
+        try:
+            account_number = Account.get_cached_object(pk=account_id).account_number  # type: ignore[union-attr]
+        except Account.DoesNotExist:
+            logger.warning(
+                "%s - account %s no longer exists. Using the account number of the api url %s.",
+                logger_prefix,
+                account_id,
+                api_url,
+            )
+    account_number = account_number or _account_number_from_hostname(hostname)
+    if not _is_default_api_hostname(hostname, account_number):
+        # not retried: a retry can't make the url valid.
+        logger.error(
+            "%s - %s is not the default api url of an llmclient of account %s. Nothing was deleted.",
+            logger_prefix,
+            api_url,
+            account_number,
         )
-    if not request_mixin.is_llmclient_named_url:
-        raise SmarterConfigurationError(
-            f"{logger_prefix} - Request path {request.path} is not recognized as an llmclient named URL."
-        )
+        return
 
     task_id = delete_default_api.request.id
     pre_delete_default_api.send(
-        sender=delete_default_api, url=api_url, account_number=account.account_number, name=name, task_id=task_id
+        sender=delete_default_api, url=api_url, account_number=account_number, name=name, task_id=task_id
     )
 
     prefix = logger_prefix + f".{delete_default_api.__name__}()"
@@ -164,12 +174,11 @@ def delete_default_api(name: str, account_id: int, api_url: str):
         "%s - llmclient %s account: %s name: %s task_id: %s",
         prefix,
         api_url,
-        account,
+        account_number,
         name,
         task_id,
     )
 
-    hostname = _get_domain_name(api_url)
     destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
     ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
         hostname=hostname, namespace=smarter_settings.environment_namespace
@@ -179,7 +188,7 @@ def delete_default_api(name: str, account_id: int, api_url: str):
             "%s - llmclient %s account: %s name: %s all resources successfully deleted task_id: %s",
             prefix,
             api_url,
-            account,
+            account_number,
             name,
             task_id,
         )
@@ -188,10 +197,10 @@ def delete_default_api(name: str, account_id: int, api_url: str):
             "%s - llmclient %s account: %s name: %s one or more resources were not deleted task_id: %s",
             prefix,
             api_url,
-            account,
+            account_number,
             name,
             task_id,
         )
     post_delete_default_api.send(
-        sender=delete_default_api, url=api_url, account_number=account.account_number, name=name, task_id=task_id
+        sender=delete_default_api, url=api_url, account_number=account_number, name=name, task_id=task_id
     )

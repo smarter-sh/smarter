@@ -11,4 +11,5 @@ class SmarterApiVersions:
 
     @classmethod
     def all(cls):
-        return [value for name, value in vars(SmarterApiVersions).items() if not name.startswith("__")]
+        """Return the api versions: the class's upper-case string attributes, not its methods."""
+        return [value for name, value in vars(SmarterApiVersions).items() if name.isupper() and isinstance(value, str)]

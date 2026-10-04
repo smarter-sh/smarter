@@ -1,0 +1,11 @@
+---
+#------------------------------------------------------------------------------
+# Codecov configuration
+#
+# .github/workflows/test.yml runs the unit tests with coverage inside the
+# smarter-app container, where the repository's smarter/ folder is
+# /home/smarter_user/smarter/. This maps the paths in coverage.xml back to
+# the repository's paths.
+#------------------------------------------------------------------------------
+fixes:
+  - "/home/smarter_user/smarter/::smarter/"

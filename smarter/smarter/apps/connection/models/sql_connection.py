@@ -551,13 +551,12 @@ class SqlConnection(ConnectionBase):
             if isinstance(transport, paramiko.Transport):
                 transport.request_port_forward(address="127.0.0.1", port=local_port, handler=self.transport_handler)
 
-            connection_handler = ConnectionHandler(self.django_db_connection)
-            tcpip_ssh_connection: BaseDatabaseWrapper = connection_handler["default"].connection
+            connection_handler = ConnectionHandler({"default": self.django_db_connection})
+            tcpip_ssh_connection: BaseDatabaseWrapper = connection_handler["default"]
             tcpip_ssh_connection.ensure_connection()
 
-            # Close the SSH connection after ensuring the database connection
             sql_connection_success.send(sender=self.__class__, connection=self)
-            return connection_handler  # type: ignore[return-value]
+            return tcpip_ssh_connection
 
         except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
             logger.error("%s.connect_tcpip_ssh() SSH connection failed: %s", self.formatted_class_name, e)
@@ -583,9 +582,8 @@ class SqlConnection(ConnectionBase):
         try:
             # Example: Customize the connection string for LDAP authentication
             sql_connection_attempted.send(sender=self.__class__, connection=self)
-            databases = self.django_db_connection
-            connection_handler = ConnectionHandler(databases)
-            ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"].connection
+            connection_handler = ConnectionHandler({"default": self.django_db_connection})
+            ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"]
             ldap_user_pwd_connection.ensure_connection()
             sql_connection_success.send(sender=self.__class__, connection=self)
             return ldap_user_pwd_connection
@@ -729,13 +727,16 @@ class SqlConnection(ConnectionBase):
         :return: True if the proxy connection is successful, otherwise False.
         :rtype: bool
         """
-        proxy_dict: Optional[dict] = (
-            {
-                self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+        proxy_dict: Optional[dict] = None
+        if self.proxy_protocol is not None and self.proxy_host is not None:
+            # proxy_password is a Secret, whose value is the password.
+            password = self.proxy_password.get_secret(update_last_accessed=False) if self.proxy_password else None
+            userinfo = ""
+            if self.proxy_username:
+                userinfo = f"{self.proxy_username}:{password}@" if password else f"{self.proxy_username}@"
+            proxy_dict = {
+                self.proxy_protocol: f"{self.proxy_protocol}://{userinfo}{self.proxy_host}:{self.proxy_port}",
             }
-            if self.proxy_protocol is not None and self.proxy_host is not None
-            else None
-        )
         try:
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]

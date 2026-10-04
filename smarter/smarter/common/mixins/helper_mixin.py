@@ -37,7 +37,6 @@ from smarter.common.utils import (
 from smarter.common.utils import to_camel_case as utils_snake_to_camel
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
-from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -219,12 +218,9 @@ class SmarterHelperMixin:
         :raises SmarterValueError: If the URI cannot be built from the request.
         """
 
-        # pylint: disable=W0613
-        @cache_results()
-        def _smarter_build_absolute_uri(pk=id(self)):
-            return utils_smarter_build_absolute_uri(request)
-
-        return _smarter_build_absolute_uri()
+        # not cached: a cache key of the instance would return the first request's url
+        # for every later request of a long-lived instance, e.g. a middleware.
+        return utils_smarter_build_absolute_uri(request)
 
     ###########################################################################
     # String utilities
