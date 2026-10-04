@@ -5,7 +5,6 @@ Test the dashboard's "My Resources" and "Aggregated Charges" api views,.
 :mod:`smarter.apps.dashboard.views.views.api.charges`.
 """
 
-import unittest
 from http import HTTPStatus
 
 from django.test import Client
@@ -86,15 +85,8 @@ class TestDashboardApiViews(TestAccountMixin):
         response = self.client.post(self.url(DashboardApiReverseNames.my_resources))
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
-    @unittest.expectedFailure
     def test_my_resources_are_the_users_own(self):
-        """
-        Test that each user's counts are their own.
-
-        Expected to fail: MyResourcesView.post() caches its result with @cache_results() on an
-        inner function that takes no arguments, so its cache key is the same for every user,
-        and every user is shown the counts of the first user who asked, until the cache expires.
-        """
+        """Test that each user's counts are their own."""
         self.clear_cache()
         llmclient = LLMClient.objects.create(
             name=f"test_dashboard_api_{self.hash_suffix}", user_profile=self.user_profile
@@ -128,14 +120,8 @@ class TestDashboardApiViews(TestAccountMixin):
         for periodicity in (AggregatedChargesPeriod.HOUR, AggregatedChargesPeriod.YEAR):
             self.assertTrue(AggregatedChargesPeriod.grouping_fields(periodicity))
 
-    @unittest.expectedFailure
     def test_charges_unknown_periodicity(self):
-        """
-        Test that an unknown periodicity is a 400.
-
-        Expected to fail: ChargesView.post() does not handle the ValueError that
-        AggregatedChargesPeriod.delta() raises for an unknown periodicity, so it is a 500.
-        """
+        """Test that an unknown periodicity is a 400."""
         self.client.raise_request_exception = False
         response = self.client.post(self.url(DashboardApiReverseNames.token_charges, periodicity="2_weeks"))
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)

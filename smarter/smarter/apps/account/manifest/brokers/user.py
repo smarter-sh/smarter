@@ -1,6 +1,7 @@
 # pylint: disable=W0718,C0302
 """Smarter API User Manifest handler."""
 
+import datetime
 from typing import TYPE_CHECKING, Any, List, Optional, Type
 
 from django.core import serializers
@@ -16,7 +17,6 @@ from smarter.apps.account.manifest.models.user.spec import (
 from smarter.apps.account.manifest.models.user.status import SAMUserStatus
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -729,11 +729,37 @@ class SAMUserBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
-        smarter_admin_profile = smarter_cached_objects.smarter_admin_user_profile
-        self.brokered_user = smarter_admin_profile.user
-        self.brokered_user_profile = smarter_admin_profile
-        data = self.django_orm_to_manifest_dict()
-        return self.json_response_ok(command=command, data=data)
+        # placeholder values, rather than a description of a real user, such as the smarter admin,
+        # whose email and account number would otherwise be published in the example.
+        manifest = SAMUser(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=SAMUserMetadata(
+                name="example_user",
+                description="An example Smarter API manifest for a User",
+                version="1.0.0",
+                tags=["example"],
+                annotations=[],
+                username="example_user",
+            ),
+            spec=SAMUserSpec(
+                config=SAMUserSpecConfig(
+                    firstName="Example",
+                    lastName="User",
+                    email="example.user@example.com",
+                    isStaff=False,
+                    isActive=True,
+                )
+            ),
+            status=SAMUserStatus(
+                account_number="1234-5678-9012",
+                username="example_user",
+                recordLocator="user-example",
+                created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+                modified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
+            ),
+        )
+        return self.json_response_ok(command=command, data=manifest.model_dump())
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

@@ -4,7 +4,6 @@
 import typing
 
 from django.core.handlers.asgi import ASGIRequest
-from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.prompt.manifest.models.prompt.const import MANIFEST_KIND
@@ -99,14 +98,14 @@ class SAMPromptBroker(AbstractBroker):
     def chat_object(self) -> typing.Optional[Prompt]:
         if self._chat:
             return self._chat
-        try:
-            # Fixnote: we should be searching on the session_key, not the description
-            if self.manifest:
-                self._chat = Prompt.objects.get(
-                    user_profile__user=self.user, description=self.manifest.metadata.description
-                )
-        except Prompt.DoesNotExist:
-            pass
+        # a manifest identifies its chat session by its session key, which is unique. Without one, as
+        # for describe, which receives only a name, the user's most recent Prompt of that name is used.
+        prompts = Prompt.objects.filter(user_profile__user=self.user)
+        session_key = self.manifest.spec.sessionKey if self.manifest else None
+        if session_key:
+            self._chat = prompts.filter(session_key=session_key).first()
+        elif self.name:
+            self._chat = prompts.filter(name=self.name).order_by("-created_at").first()
 
         return self._chat
 
@@ -115,7 +114,8 @@ class SAMPromptBroker(AbstractBroker):
         if not self.manifest:
             return None
         metadata = super().manifest_to_django_orm()
-        config_dump = self.manifest.spec.config.model_dump()  # type: ignore
+        # SAMPrompt.spec is the configuration itself; it has no config key.
+        config_dump = self.manifest.spec.model_dump()  # type: ignore
         config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMPromptBrokerError(
@@ -133,14 +133,6 @@ class SAMPromptBroker(AbstractBroker):
         """
         if not self.chat_object:
             return None
-        chat_dict = model_to_dict(self.chat_object)
-        chat_dict = self.to_camel_case(chat_dict)
-        if not isinstance(chat_dict, dict):
-            raise SAMPromptBrokerError(
-                f"Failed to convert {self.kind} {self.chat_object.id} Django ORM model to dict. Got {type(chat_dict)}", thing=self.kind  # type: ignore
-            )
-        chat_dict.pop("id")
-
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -149,7 +141,13 @@ class SAMPromptBroker(AbstractBroker):
                 SAMMetadataKeys.DESCRIPTION.value: self.chat_object.description,
                 SAMMetadataKeys.VERSION.value: self.chat_object.version,
             },
-            SAMKeys.SPEC.value: None,
+            SAMKeys.SPEC.value: {
+                "sessionKey": self.chat_object.session_key,
+                "llmclient": self.chat_object.llmclient.name,
+                "ipAddress": self.chat_object.ip_address,
+                "userAgent": self.chat_object.user_agent,
+                "url": self.chat_object.url,
+            },
             SAMKeys.STATUS.value: {
                 "created": self.chat_object.created_at.isoformat(),
                 "modified": self.chat_object.updated_at.isoformat(),
@@ -241,7 +239,13 @@ class SAMPromptBroker(AbstractBroker):
                 SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a Prompt",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },
-            SAMKeys.SPEC.value: None,
+            SAMKeys.SPEC.value: {
+                "sessionKey": "dde3dde5e3b97134f5bce5edf26ec05134da71d8485a86dfc9231149aaf0b0af",
+                "llmclient": "example-llmclient",
+                "ipAddress": "192.168.1.1",
+                "userAgent": "Mozilla/5.0",
+                "url": "https://example-llmclient.3141-5926-5359.api.example.com/",
+            },
         }
         return self.json_response_ok(command=command, data=data)
 

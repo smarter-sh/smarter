@@ -69,7 +69,7 @@ class TestGuardrailClients(GuardrailTestBase):
         client, sdk = self.client()
         message = SimpleNamespace(content='{"triggered": true, "confidence": 0.9, "rationale": "r"}')
         sdk.chat.completions.create.return_value = SimpleNamespace(choices=[SimpleNamespace(message=message)])
-        verdict = client.judge("prompt", model="gpt-4o-mini")
+        verdict = client.judge("prompt", model="gpt-6-luna")
         self.assertTrue(verdict.triggered)
         kwargs = sdk.chat.completions.create.call_args.kwargs
         self.assertEqual(kwargs["response_format"], {"type": "json_object"})

@@ -24,7 +24,7 @@ spec:
     appWelcomeMessage: Welcome to the Example LLMClient! How can I help you today?
     customDomain: null
     defaultMaxTokens: 2048
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole:
       You are a helpful llmclient. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to provide the
@@ -32,7 +32,7 @@ spec:
       you should prompt the user for more information. If you are still unable to
       provide a response, you should inform the user that you are unable to help them
       at this time.
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Not Verified
     provider: openai

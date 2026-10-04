@@ -2,14 +2,14 @@
 # Bastion Pod Deployment
 #
 # This deployment creates a single pod that serves as a bastion shell
-# for users to perform administrative tasks and to connect to the MySQL database
+# for users to perform administrative tasks and to connect to the MariaDB database
 # which is only accessible from within the cluster. The pod is based on a
 # lightweight Debian image with minimal tools installed, including the
-# MariaDB MySQL client.
+# MariaDB client.
 #
 # setup:
 # -------------------------------------
-# - installs the MariaDB MySQL client
+# - installs the MariaDB client
 # - creates a welcome message with usage instructions and environment variable
 #   information
 # - configures the welcome message to be displayed whenever a user connects to

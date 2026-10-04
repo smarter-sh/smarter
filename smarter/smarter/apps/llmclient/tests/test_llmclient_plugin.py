@@ -1,7 +1,6 @@
 """Test :class:`smarter.apps.llmclient.models.LLMClientPlugin`, the plugins of an LLMClient."""
 
 import copy
-import unittest
 
 import yaml
 
@@ -26,13 +25,8 @@ class TestLLMClientPlugin(PluginAppTestBase):
     def test_str(self):
         self.assertIn(self.static_plugin.plugin_meta.name, str(self.llmclient_plugin))
 
-    @unittest.expectedFailure
     def test_plugin(self):
-        """
-        Expected to fail: LLMClientPlugin.plugin passes account= and user= to PluginController,.
-
-        which does not take them, so it raises TypeError.
-        """
+        """Test that the LLMClientPlugin's plugin is the plugin of its PluginMeta."""
         plugin = self.llmclient_plugin.plugin
         self.assertEqual(plugin.plugin_meta.pk, self.static_plugin.plugin_meta.pk)
         self.assertIsNone(LLMClientPlugin(plugin_meta=self.static_plugin.plugin_meta).plugin)
@@ -51,15 +45,8 @@ class TestLLMClientPlugin(PluginAppTestBase):
             self.assertEqual([p.pk for p in plugins], [self.llmclient_plugin.pk])
         self.assertIsNotNone(LLMClientPlugin.get_cached_objects())
 
-    @unittest.expectedFailure
     def test_load(self):
-        """
-        Test that a plugin manifest is loaded, which creates the plugin, and added to the LLMClient.
-
-        Expected to fail: LLMClientPlugin.load() makes a SAMPluginCommon of the manifest, rather
-        than the model of its kind, e.g. SAMStaticPlugin, which the plugin class refuses with a
-        TypeError, so no plugin can be loaded.
-        """
+        """Test that a plugin manifest is loaded, which creates the plugin, and added to the LLMClient."""
         name = f"test_llmclient_plugin_load_{self.hash_suffix}"
         self.addCleanup(PluginMeta.objects.filter(name=name).delete)
         manifest = copy.deepcopy(self.static_plugin_yaml)

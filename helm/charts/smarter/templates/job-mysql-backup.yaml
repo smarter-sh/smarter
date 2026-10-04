@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------------
-# Purpose: CronJob to perform scheduled MySQL database backups to S3.
+# Purpose: CronJob to perform scheduled MariaDB database backups to S3.
 #
 # This file defines a Kubernetes CronJob that runs a backup script
-# to back up the MySQL database. The backup script is stored in a
+# to back up the MariaDB database. The backup script is stored in a
 # ConfigMap and mounted into the Job. The Job runs on a Debian image,
 # installs necessary tools, and executes the backup script.
 #

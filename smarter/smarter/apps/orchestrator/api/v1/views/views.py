@@ -11,7 +11,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from smarter.apps.account.models import User, UserProfile
 from smarter.apps.orchestrator.models import (
     Orchestrator,
 )
@@ -34,24 +33,15 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 class ViewBase(SmarterAdminAPIView):
     """Base class for all orchestrator detail views."""
 
-    def dispatch(self, request: Request, *args, **kwargs):
-        retval = super().dispatch(request, *args, **kwargs)
-        if isinstance(request.user, User):
-            self.user_profile = get_object_or_404(UserProfile, user=request.user)
-            self.account = self.user_profile.cached_account
-        return retval
+    # SmarterRequestMixin sets user, user_profile and account from the request,
+    # which are immutable once set.
 
 
 class ListViewBase(SmarterAdminListAPIView):
     """Base class for all orchestrator list views."""
 
-    def dispatch(self, request: Request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if response.status_code > 299:
-            return response
-        self.user_profile = get_object_or_404(UserProfile, user=request.user)
-        self.account = self.user_profile.cached_account
-        return response
+    # SmarterRequestMixin sets user, user_profile and account from the request,
+    # which are immutable once set.
 
 
 ###############################################################################
@@ -72,7 +62,11 @@ class OrchestratorView(ViewBase):
 
     def dispatch(self, request: Request, *args, **kwargs):
         self.hashed_id = kwargs.pop("hashed_id", None)
-        retval = super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
+
+    def initial(self, request: Request, *args, **kwargs):
+        """Find the Orchestrator, after DRF has authenticated the request and before the handler runs."""
+        super().initial(request, *args, **kwargs)
         if self.hashed_id:
             self.orchestrator_id = Orchestrator.id_from_hashed_id(self.hashed_id)
         else:
@@ -85,12 +79,11 @@ class OrchestratorView(ViewBase):
                 self._account = self.orchestrator.user_profile.account
                 self._user = self.orchestrator.user_profile.user
                 logger.debug(
-                    "%s.dispatch() - reinitializing user, account, and user_profile from orchestrator.user_profile: %s",
+                    "%s.initial() - reinitializing user, account, and user_profile from orchestrator.user_profile: %s",
                     self.formatted_class_name,
                     self.orchestrator.user_profile,
                 )
-            logger.debug("%s.dispatch() - %s %s", self.formatted_class_name, self.orchestrator, self.user_profile)
-        return retval
+            logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.orchestrator, self.user_profile)
 
     def get(self, request: Request, orchestrator_id: Optional[int] = None):
         if self.orchestrator:
@@ -110,7 +103,9 @@ class OrchestratorView(ViewBase):
         orchestrator: Optional[Orchestrator] = None
         data: Optional[dict] = None
 
-        orchestrator = get_object_or_404(Orchestrator, pk=orchestrator_id, account=self.account)
+        orchestrator = self.orchestrator
+        if not orchestrator:
+            return HttpResponseNotFound("Orchestrator not found")
 
         try:
             data = request.data

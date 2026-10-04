@@ -32,6 +32,9 @@ logger = logging.getSmarterLogger(
 )
 logger_prefix = logging.formatted_text(__name__)
 QUEUE = smarter_settings.llmclient_tasks_celery_task_queue
+# snapshots and reconciliation manage vector databases, which can take minutes, so they run
+# in the infrastructure queue, and never block the operational tasks of QUEUE.
+INFRASTRUCTURE_QUEUE = smarter_settings.infrastructure_tasks_celery_task_queue
 
 
 @app.task(queue=QUEUE)
@@ -61,7 +64,7 @@ def delete_vectorstore_document(document_id: int) -> bool:
     return True
 
 
-@app.task(queue=QUEUE)
+@app.task(queue=INFRASTRUCTURE_QUEUE)
 def snapshot_vectorstore(vectorstore_id: int) -> Optional[str]:
     """Take a snapshot, or backup, of a vectorstore.
 
@@ -76,7 +79,7 @@ def snapshot_vectorstore(vectorstore_id: int) -> Optional[str]:
     return snapshot.name
 
 
-@app.task(queue=QUEUE)
+@app.task(queue=INFRASTRUCTURE_QUEUE)
 def reconcile_vectorstores() -> dict[str, str]:
     """Bring every deployed vectorstore to ready, and record its status.
 
@@ -97,7 +100,7 @@ def _requeue(document_ids: list[int]) -> None:
             load_vectorstore_document.delay(document.pk)
 
 
-@app.task(queue=QUEUE)
+@app.task(queue=INFRASTRUCTURE_QUEUE)
 def maintain_vectorstores() -> dict[str, Any]:
     """The scheduled maintenance of every ready vectorstore.
 

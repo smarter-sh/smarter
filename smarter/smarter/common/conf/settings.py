@@ -1608,6 +1608,44 @@ class Settings(BaseSettings):
 
         return v
 
+    infrastructure_tasks_celery_task_queue: str = Field(
+        settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE,
+        description="The Celery task queue name for infrastructure tasks, which deploy, verify and destroy cloud, Kubernetes and DNS resources.",
+        title="Infrastructure Tasks Celery Task Queue",
+    )
+    """
+    The Celery task queue name for infrastructure tasks.
+
+    Infrastructure tasks deploy, verify and destroy cloud, Kubernetes and DNS resources, such as
+    an LLMClient's DNS record, ingress and certificate, an LLMHost's node group, or a vectorstore's
+    database. They can take many minutes, so they run in their own queue, served by their own
+    Celery worker, and never block the operational tasks of llmclient_tasks_celery_task_queue,
+    such as prompt history, charges and budgets.
+
+    :type: str
+    :default: Value from ``settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("infrastructure_tasks_celery_task_queue")
+    def validate_infrastructure_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """Validates the `infrastructure_tasks_celery_task_queue` field.
+
+        Args:
+            v (Optional[str]): The llmclient tasks celery task queue value to validate.
+        Returns:
+            str: The validated llmclient tasks celery task queue.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(
+                f"infrastructure_tasks_celery_task_queue of type {type(v)} is not a str: {v}"
+            )
+
+        return v
+
     plugin_max_data_results: int = Field(
         settings_defaults.PLUGIN_MAX_DATA_RESULTS,
         gt=0,
@@ -2277,7 +2315,7 @@ class Settings(BaseSettings):
     llm_default_model: str = Field(
         settings_defaults.LLM_DEFAULT_MODEL,
         description="The default LLM model to use for language model interactions.",
-        examples=["gpt-4o-mini", "claude-2", "gemini"],
+        examples=["gpt-6-luna", "claude-2", "gemini"],
         title="Default LLM Model",
     )
     """
@@ -2836,16 +2874,16 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
-        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The secret name for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter-mariadb-test-db-secret"],
-        title="Smarter MySQL Test Database Secret Name",
+        title="Smarter MariaDB Test Database Secret Name",
     )
     """
-    The secret name for the Smarter MySQL test database.
+    The secret name for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
     This setting specifies the name of the secret in AWS Secrets Manager
-    that contains the credentials for the Smarter MySQL test database.
+    that contains the credentials for the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
@@ -2855,15 +2893,15 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_password: Optional[SecretStr] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_PASSWORD,
-        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The password for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["your_password_here"],
-        title="Smarter MySQL Test Database Password",
+        title="Smarter MariaDB Test Database Password",
     )
     """
-    The password for the Smarter MySQL test database.
+    The password for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting provides the password used to connect to the Smarter MySQL test database.
+    This setting provides the password used to connect to the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
@@ -3142,16 +3180,16 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
-        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The secret name for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter_test_db"],
-        title="Smarter MySQL Test Database Secret Name",
+        title="Smarter MariaDB Test Database Secret Name",
     )
     """
-    The secret name for the Smarter MySQL test database.
+    The secret name for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
     This setting specifies the name of the secret in AWS Secrets Manager
-    that contains the credentials for the Smarter MySQL test database.
+    that contains the credentials for the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
     :type: Optional[str]
     :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME``
@@ -3160,15 +3198,15 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_password: Optional[SecretStr] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_PASSWORD,
-        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The password for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter_test_user"],
-        title="Smarter MySQL Test Database Password",
+        title="Smarter MariaDB Test Database Password",
     )
     """
-    The password for the Smarter MySQL test database.
+    The password for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting provides the password used to connect to the Smarter MySQL test database.
+    This setting provides the password used to connect to the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
     :type: Optional[SecretStr]
     :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_PASSWORD``

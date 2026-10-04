@@ -223,7 +223,7 @@ class Migration(migrations.Migration):
                             ("django.db.backends.sybase", "django.db.backends.sybase"),
                         ],
                         default="django.db.backends.mysql",
-                        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+                        help_text="The type of database management system. Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
                         max_length=255,
                         null=True,
                     ),
@@ -296,7 +296,7 @@ class Migration(migrations.Migration):
                     models.IntegerField(
                         blank=True,
                         default=3306,
-                        help_text="The port of the SQL connection. example: 3306 for MySQL.",
+                        help_text="The port of the SQL connection. example: 3306 for MariaDB.",
                         null=True,
                     ),
                 ),

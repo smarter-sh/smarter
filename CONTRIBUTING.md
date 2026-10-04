@@ -145,7 +145,7 @@ On the other hand, if you've forked this repo and are working on your own indepe
 
 ### Kubernetes Secrets
 
-The Terraform code in this repo generates several sets of sensitive data that are persisted to [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). This configuration data is tightly integrated to the CI/CD build and deploy workflows, and fully automates configuration of all back end services on which Smarter relies including for example, MySQL, SMTP Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
+The Terraform code in this repo generates several sets of sensitive data that are persisted to [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). This configuration data is tightly integrated to the CI/CD build and deploy workflows, and fully automates configuration of all back end services on which Smarter relies including for example, MariaDB, SMTP Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
 ![Kubernetes Secrets](https://github.com/smarter-sh/smarter/blob/main/docs/img/kubernetes-secrets.png)
 
@@ -169,7 +169,7 @@ A typical pull request will look like the following:
 You can leverage Docker Community Edition and Docker Compose to stand up the entire Smarter platforn in your local development environment. This closely approximates the Kubernetes production environment in which Smarter actually runs. Everything is substantially created with two files located in the root of this repo:
 
 - [Dockerfile](https://github.com/smarter-sh/smarter/blob/main/Dockerfile): This defines the contents and configuration of the Docker container used to deploy the Smarter application, worker, and Celery Beat service in all Kubernetes environments as well as in your local Docker CE environment. Thus, think twice before pushing modifications to this file, as there could be unintended consequences.
-- [docker-compose.yml](https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml): This simulates the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MySQL and Redis.
+- [docker-compose.yml](https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml): This simulates the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MariaDB and Redis.
 - [Helm Chart](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/): Smarter is deployed to Kubernetes via this locally managed Helm chart. You can use this as a reference for questions regarding ports, network configuration, horizontal and vertical scaling configuration, and Docker Container configurations for each service.
 
 ## Python Setup
@@ -235,9 +235,9 @@ Smarter runs on AWS cloud infrastructure. Please take note that all Smarter clou
 
 A single, shared Kubernetes cluster hosts test, staging and production environments. The bastion server has preconfigured kubectl cli as well as a nice ascii gui-based application named k9s that is especially helpful if you're unfamiliar with the inner workings of Kubernetes.
 
-### MySQL
+### MariaDB
 
-Smarter persists most of its data to MySQL running on AWS RDS. For simple SQL tasks the bastion server provides shortcuts for connecting to the MySQL service from the command line. However, you can also connect to the service using Oracle's MySQL Workbench desktop software which conveniently, offers a means of connecting to database hosts via a bastion server.
+Smarter persists most of its data to MariaDB running on AWS RDS. For simple SQL tasks the bastion server provides shortcuts for connecting to the MariaDB service from the command line. However, you can also connect to the service using Oracle's MariaDB Workbench desktop software which conveniently, offers a means of connecting to database hosts via a bastion server.
 
 ### Other Resources
 

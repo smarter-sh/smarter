@@ -2,8 +2,9 @@
  * ServiceHealth dashboard widget.
  *
  * This component fetches backend service metadata from an API endpoint and
- * renders platform health details, infrastructure checks, GitHub status, and
- * runtime version information in a dashboard card.
+ * renders platform health details, the results of the live checks of the
+ * backing services, GitHub status, and runtime version information in a
+ * dashboard card.
  *
  * :param apiUrl: Endpoint used to request service health and platform version
  *     data.
@@ -36,20 +37,23 @@ interface ServiceHealthData {
   python_version: string;
   pydantic_version: string;
   drf_version: string;
+  health_checks: HealthCheck[];
+  health_score: number;
 }
 
-interface HealthCheckItemProps {
-  label: string;
+interface HealthCheck {
+  name: string;
+  healthy: boolean;
 }
 
-function HealthCheckItem({ label }: HealthCheckItemProps) {
+function HealthCheckItem({ name, healthy }: HealthCheck) {
   return (
     <span className="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
-      <i className="smarter-health-checks ki-duotone ki-check fs-6 me-2">
-        <span className="path1"></span>
-        <span className="path2"></span>
-      </i>
-      {label}
+      <i
+        className={`smarter-health-checks ki-outline ${healthy ? "ki-check text-success" : "ki-cross text-danger"} fs-6 me-2`}
+        aria-label={healthy ? "healthy" : "unhealthy"}
+      ></i>
+      {name}
     </span>
   );
 }
@@ -99,8 +103,14 @@ function PlatformVersions({ python_version, django_version, pydantic_version, dr
 }
 
 
-function ServiceHealthChecks() {
-  const serviceHealthScore = 100;
+interface ServiceHealthChecksProps {
+  healthChecks: HealthCheck[];
+  healthScore: number;
+}
+
+function ServiceHealthChecks({ healthChecks, healthScore }: ServiceHealthChecksProps) {
+  // two columns of checks
+  const half = Math.ceil(healthChecks.length / 2);
 
   return (
     <div className="d-flex align-items-center mb-5">
@@ -112,7 +122,7 @@ function ServiceHealthChecks() {
               id="kt_slider_widget_smarter_health"
               style={{ height: "100px" }}
             >
-              <HealthRing value={serviceHealthScore} />
+              <HealthRing value={healthScore} />
             </div>
           </div>
         </div>
@@ -120,12 +130,14 @@ function ServiceHealthChecks() {
           <h4 className="fw-bold text-gray-800 mb-3">Backend Service Health</h4>
           <div className="d-flex d-grid gap-5">
             <div className="d-flex flex-column flex-shrink-0 me-4">
-              <HealthCheckItem label="Compute" />
-              <HealthCheckItem label="Network" />
+              {healthChecks.slice(0, half).map((check) => (
+                <HealthCheckItem key={check.name} {...check} />
+              ))}
             </div>
             <div className="d-flex flex-column flex-shrink-0">
-              <HealthCheckItem label="Data Storage" />
-              <HealthCheckItem label="Ingress" />
+              {healthChecks.slice(half).map((check) => (
+                <HealthCheckItem key={check.name} {...check} />
+              ))}
             </div>
           </div>
         </div>
@@ -181,6 +193,8 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   const drf_version = data?.drf_version ?? "0.0.0";
   const linux_distribution =
     data?.linux_distribution ?? "Unknown Linux distribution";
+  const health_checks = data?.health_checks ?? [];
+  const health_score = data?.health_score ?? 0;
 
   if (loading) return <Loading />;
   if (error) return <div>Failed to load service health: {error}</div>;
@@ -196,7 +210,7 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
         <div className="card card-flush h-xl-100">
           <CardHeader smarter_version={smarter_version} linux_distribution={linux_distribution} />
           <div className="card-body py-6">
-            <ServiceHealthChecks />
+            <ServiceHealthChecks healthChecks={health_checks} healthScore={health_score} />
             <GitHubStatus />
             <PlatformVersions
               python_version={python_version}

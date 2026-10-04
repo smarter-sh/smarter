@@ -42,6 +42,13 @@
         "resources": { "type": "object" }
       }
     },
+    "workerInfrastructure": {
+      "type": "object",
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 },
+        "resources": { "type": "object" }
+      }
+    },
     "beat": {
       "type": "object",
       "properties": {
@@ -96,6 +103,7 @@
         "PINECONE_ENVIRONMENT": { "type": "string" },
         "ROOT_DOMAIN": { "type": "string" },
         "SECRET_KEY": { "type": "string" },
+        "TAVILY_API_KEY": { "type": "string" },
         "SMARTER_DOCKER_IMAGE": { "type": "string" },
         "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": { "type": "string" },
         "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": { "type": "string" },

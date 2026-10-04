@@ -21,13 +21,13 @@ spec:
   config:
     deployed: false
     provider: openai
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-6-luna
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to
       provide the best possible responses to the user. DO NOT GUESS. IF
         YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     defaultMaxTokens: 1024
     appName: Stackademy
     appAssistant: Stanley

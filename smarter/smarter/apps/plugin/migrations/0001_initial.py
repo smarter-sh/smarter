@@ -287,7 +287,7 @@ class Migration(migrations.Migration):
                 (
                     "model",
                     models.CharField(
-                        default="gpt-4o-mini",
+                        default="gpt-6-luna",
                         help_text="The model to use for the completion.",
                         max_length=255,
                     ),

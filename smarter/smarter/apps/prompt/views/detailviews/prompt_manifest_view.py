@@ -8,7 +8,7 @@ a SAM manifest for an llmclient.
 from typing import Optional
 
 import yaml
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -83,7 +83,7 @@ class LLMClientDetailView(DocsBaseView):
         GET /llm-client/detail/?name=my_llmclient&kind=custom
     """
 
-    template_path = "prompt/manifest-detail.html"
+    template_path = "common/manifest_detail.html"
 
     llmclient: Optional[LLMClient] = None
     llmclient_helper: Optional[LLMClientHelper] = None
@@ -217,7 +217,7 @@ class LLMClientDetailView(DocsBaseView):
                 self.formatted_class_name,
                 str(e),
                 formatted_json(context),
-                exec_info=True,
+                exc_info=True,
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response

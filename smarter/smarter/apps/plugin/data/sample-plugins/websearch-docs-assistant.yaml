@@ -37,8 +37,8 @@ spec:
       You are a senior Python engineer. Answer only from the official Python and
       Django documentation. Quote the relevant passage, and cite its url. If the
       documentation does not answer the question, say so.
-    model: gpt-4o-mini
-    temperature: 0.0
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 4096
   websearchData:
     search:

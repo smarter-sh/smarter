@@ -32,7 +32,7 @@ spec:
       """
 
       Respond with a JSON object only: {{"triggered": true or false, "confidence": 0.0 to 1.0, "rationale": "one sentence"}}
-    model: gpt-4o-mini
+    model: gpt-6-luna
     threshold: 0.8
     action: flag
     severity: 2

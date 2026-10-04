@@ -85,7 +85,7 @@ def _is_default_api_hostname(hostname: str, account_number: Optional[str]) -> bo
     autoretry_for=(Exception,),
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
 )
 def delete_default_api(
     name: str,

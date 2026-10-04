@@ -68,7 +68,7 @@ class OrchestratorSerializer(ModelSerializer):
     # pylint: disable=C0115
     class Meta:
         model = Orchestrator
-        fields = ["__all__"]
+        fields = "__all__"
 
 
 class SAMOrchestratorBroker(AbstractBroker):
@@ -765,8 +765,8 @@ class SAMOrchestratorBroker(AbstractBroker):
         self.verify_no_dependencies(command)
         if self.orchestrator:
             try:
-                self.orchestrator.delete()
                 self.cache_invalidations()
+                self.orchestrator.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(

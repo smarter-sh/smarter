@@ -58,17 +58,17 @@ urlpatterns = [
         name=ConnectionReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:connection_id>/<str:new_name>/",
         ConnectionListApiCloneView.as_view(),
         name=ConnectionReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llmclient_id>/",
+        "react-integration/api/delete/<int:connection_id>/",
         ConnectionListApiDeleteView.as_view(),
         name=ConnectionReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:connection_id>/<str:new_name>/",
         ConnectionListApiRenameView.as_view(),
         name=ConnectionReverseNames.listview_api_rename,
     ),

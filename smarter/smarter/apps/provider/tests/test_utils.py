@@ -1,10 +1,10 @@
 """Test :mod:`smarter.apps.provider.utils`: secrets, web page tests, and the Google credentials helpers."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import requests
 
+from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.provider import utils
 from smarter.apps.secret.models import Secret
 
@@ -71,17 +71,24 @@ class TestProviderUtils(ProviderTestBase):
         with patch.object(Secret, "get_cached_object", side_effect=Secret.DoesNotExist):
             self.assertIsNone(utils.get_google_service_account_bearer_token())
 
-    @unittest.expectedFailure
     def test_google_service_account_bearer_token(self):
-        """
-        Test that the bearer token of the service account's credentials is returned.
-
-        Expected to fail: get_google_service_account_bearer_token() calls
-        Secret.get_cached_object(GOOGLE_SERVICE_ACCOUNT_SECRET_NAME), passing the name
-        positionally, rather than as name=, so it always raises DoesNotExist, and the
-        function always returns None.
-        """
+        """Test that the bearer token of the smarter admin's service account is returned, whatever other owners have."""
+        name = utils.GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
+        # self.user_profile stands for the smarter admin. Another account has a Secret of the same name,
+        # which is not deleted with factory_account_teardown(), because it sweeps the class's own accounts.
+        other_user, other_account, other_user_profile = admin_user_factory()
+        self.addCleanup(lambda: (other_user_profile.delete(), other_user.delete(), other_account.delete()))
+        for user_profile in (self.user_profile, other_user_profile):
+            self.addCleanup(Secret.objects.filter(name=name, user_profile=user_profile).delete)
+        utils.initialize_secret('{"type": "admin"}', name, "test", self.user_profile)
+        utils.initialize_secret('{"type": "other"}', name, "test", other_user_profile)
         credentials = MagicMock(token="bearer-token")
-        with patch.object(utils.service_account.Credentials, "from_service_account_info", return_value=credentials):
-            with patch.object(Secret.objects, "get", return_value=MagicMock(get_secret=lambda: '{"type": "x"}')):
-                self.assertEqual(utils.get_google_service_account_bearer_token(), "bearer-token")
+        cached_objects = MagicMock(smarter_admin_user_profile=self.user_profile)
+        with (
+            patch.object(utils, "smarter_cached_objects", cached_objects),
+            patch.object(
+                utils.service_account.Credentials, "from_service_account_info", return_value=credentials
+            ) as from_info,
+        ):
+            self.assertEqual(utils.get_google_service_account_bearer_token(), "bearer-token")
+        self.assertEqual(from_info.call_args.args[0], {"type": "admin"})

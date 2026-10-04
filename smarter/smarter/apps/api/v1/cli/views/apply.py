@@ -10,6 +10,7 @@ from http import HTTPStatus
 from django.core.handlers.asgi import ASGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -86,6 +87,13 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
         if self.broker is None:
+            if self.loader is None or not self.loader.ready:
+                # the broker could not be instantiated because the manifest itself is
+                # not valid, which is the client's error, a 400, rather than a 500.
+                raise SmarterValueError(
+                    f"The {self.manifest_kind} manifest is not valid: it must have an apiVersion, kind, "
+                    "metadata and a non-empty spec."
+                )
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.apply(
             request, user=user, account=account, user_profile=user_profile, args=args, kwargs=kwargs

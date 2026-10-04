@@ -6,7 +6,7 @@
 #
 # This workflow reproduces the local developer workflow from the Makefile:
 # the sub-targets of `make init` (Python venv, React build, collectstatic,
-# Docker build, MySQL setup, migrations, platform initialization, example
+# Docker build, MariaDB setup, migrations, platform initialization, example
 # resources) followed by `make docker-test`. The runner is first provisioned
 # with the prerequisites that `make init` assumes are already installed
 # locally.
@@ -161,6 +161,7 @@ jobs:
           LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           TOGETHERAI_API_KEY: ${{ secrets.TOGETHERAI_API_KEY }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
@@ -210,7 +211,7 @@ jobs:
               FERNET_ENCRYPTION_KEY AUTHENTICATION_BACKENDS SMTP_USERNAME SMTP_PASSWORD \
               ANTHROPIC_API_KEY COHERE_API_KEY FIREWORKS_API_KEY GEMINI_API_KEY \
               GOOGLE_AI_STUDIO_KEY GOOGLE_MAPS_API_KEY GOOGLE_SERVICE_ACCOUNT_B64 \
-              LLAMA_API_KEY MISTRAL_API_KEY OPENAI_API_KEY TOGETHERAI_API_KEY \
+              LLAMA_API_KEY MISTRAL_API_KEY OPENAI_API_KEY TAVILY_API_KEY TOGETHERAI_API_KEY \
               PINECONE_API_KEY PINECONE_ENVIRONMENT MAILCHIMP_API_KEY MAILCHIMP_LIST_ID \
               SOCIAL_AUTH_GITHUB_KEY SOCIAL_AUTH_GITHUB_SECRET \
               SOCIAL_AUTH_GOOGLE_OAUTH2_KEY SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET \

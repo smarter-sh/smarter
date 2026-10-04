@@ -84,7 +84,7 @@ Then point the provider's SDK at a Proxy, with your Smarter API key.
        api_key=SMARTER_API_KEY,
    )
    response = client.chat.completions.create(
-       model="gpt-4o-mini",
+       model="gpt-6-luna",
        messages=[{"role": "user", "content": "Hello!"}],
    )
 
@@ -124,7 +124,7 @@ include it:
    curl https://platform.smarter.sh/api/v1/proxy/openai/chat/completions \
      -H "Authorization: Bearer $SMARTER_API_KEY" \
      -H "Content-Type: application/json" \
-     -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello!"}]}'
+     -d '{"model": "gpt-6-luna", "messages": [{"role": "user", "content": "Hello!"}]}'
 
 Creating a Proxy
 ----------------

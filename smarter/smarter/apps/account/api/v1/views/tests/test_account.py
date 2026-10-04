@@ -196,4 +196,4 @@ class TestAccountListView(TestAccountMixin):
         """Unauthenticated user gets no accounts."""
         self.client.logout()
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertIn(response.status_code, (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN))

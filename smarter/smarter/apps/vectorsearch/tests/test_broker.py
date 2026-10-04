@@ -4,8 +4,6 @@ Test the Vectorsearch manifest broker through the api/v1/cli/ commands.
 See :class:`smarter.lib.unittest.cli_brokers.CliBrokerTestMixin`.
 """
 
-import unittest
-
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.provider.models import Provider
@@ -50,14 +48,7 @@ class TestVectorsearchBroker(CliBrokerTestMixin, ApiV1TestBase):
         config[key] = self.vectorstore.name
         return manifest
 
-    @unittest.expectedFailure
     def test_get(self):
-        """
-        Expected to fail: the broker's VectorsearchSerializer declares fields = ["__all__"], a list,.
-
-        rather than the string "__all__", so serializing a Vectorsearch raises ImproperlyConfigured,
-        and get is a 500 whenever one exists.
-        """
         super().test_get()
 
     def test_apply(self):
@@ -67,13 +58,5 @@ class TestVectorsearchBroker(CliBrokerTestMixin, ApiV1TestBase):
         self.apply()
         self.assertEqual(Vectorsearch.objects.filter(name=self.name).count(), 1)
 
-    @unittest.expectedFailure
     def test_apply_describe_delete(self):
-        """
-        Expected to fail: SAMVectorsearchBroker.describe() builds SAMVectorsearchSpecConfig from a.
-
-        camelCased dict, whose vectorstoreName the model, which requires vectorstore_name, does
-        not accept, so describe is a 500. Also, SAMVectorsearchBroker.delete() calls
-        Vectorsearch.get_cached_object() with neither a pk nor a name, so delete is a 500.
-        """
         super().test_apply_describe_delete()

@@ -31,8 +31,8 @@ spec:
     systemRole: >
       You are a helpful assistant. When the user shares a link, read it before
       answering. Summarize faithfully, and never invent content that is not on the page.
-    model: gpt-4o-mini
-    temperature: 0.2
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 2048
   websearchData:
     fetch:

@@ -78,6 +78,10 @@ from .base_classes import (
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
+# the built-in WebsearchPlugin of the smarter LLMClient, which deploy_builtin_llmclients applies.
+SMARTER_PROJECT_WEBSEARCH_PATH = os.path.abspath(
+    os.path.join(HERE, "..", "..", "..", "llmclient", "data", "plugins", "plugin-smarter-websearch.yaml")
+)
 BRAVE_URL = BraveSearchProvider.url
 TAVILY_URL = TavilySearchProvider.url
 
@@ -717,6 +721,27 @@ class TestWebsearchPlugin(PluginTestBase):
             with mock_web_host(web(pages={"https://a.example/": PAGE})):
                 retval = plugin.tool_call_fetch_plugin_response(function_args)
             self.assertNotIn("error", retval, path)
+
+    def test_smarter_project_websearch(self):
+        """Test that the smarter LLMClient's built-in WebsearchPlugin searches for The Smarter Project, with Tavily."""
+        self.new_secret("tavily_api_key")
+        manifest = copy.deepcopy(get_readonly_yaml_file(SMARTER_PROJECT_WEBSEARCH_PATH))
+        name = "websearch_smarter_project"
+        manifest["metadata"]["name"] = name
+        self.addCleanup(self.delete_plugin_by_name, name)
+        plugin = WebsearchPlugin(manifest=SAMWebsearchPlugin(**manifest), user_profile=self.user_profile)
+        self.assertTrue(plugin.ready)
+        self.assertEqual(plugin.plugin_data.search_provider, "tavily")  # type: ignore[union-attr]
+
+        # the tool description tells the LLM what to search for, and which sources to prefer.
+        description = plugin.custom_tool["function"]["description"]  # type: ignore[index]
+        self.assertIn("The Smarter Project", description)
+        self.assertIn("smarter.sh", description)
+
+        with mock_web_host(web(tavily=["https://smarter.sh/", "https://github.com/smarter-sh"])):
+            retval = plugin.tool_call_fetch_plugin_response({"query": "The Smarter Project smarter.sh"})
+        self.assertNotIn("error", retval)
+        self.assertIn("https://smarter.sh/", str(retval))
 
     def test_the_fixture_name(self):
         """Test the shared plugin's name, which the unit test data manifest defines."""

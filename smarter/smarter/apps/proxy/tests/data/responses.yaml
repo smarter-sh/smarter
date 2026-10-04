@@ -3,7 +3,7 @@
 openai_chat_completion:
   id: chatcmpl-123
   object: chat.completion
-  model: gpt-4o-mini
+  model: gpt-6-luna
   choices:
     - index: 0
       message:
@@ -62,5 +62,5 @@ cohere_v2_chat:
 models_list:
   object: list
   data:
-    - id: gpt-4o-mini
+    - id: gpt-6-luna
       object: model

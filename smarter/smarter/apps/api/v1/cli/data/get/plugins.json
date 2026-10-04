@@ -126,8 +126,8 @@
           "updatedAt": "2025-09-19T19:02:16.548327Z"
         },
         {
-          "name": "about_smarter",
-          "pluginClass": "static",
+          "name": "smarter_project_websearch",
+          "pluginClass": "websearch",
           "version": "1.0.0",
           "email": "admin@smarter.sh",
           "createdAt": "2025-09-19T19:02:40.796092Z",

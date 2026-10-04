@@ -1,9 +1,11 @@
 /**
  * Dashboard root layout component.
  *
- * This component composes the main dashboard view by arranging resource,
- * service, certification, tooling, hosting, contribution, and media widgets
- * into responsive Bootstrap grid sections.
+ * This component composes the main dashboard view by arranging budget alerts,
+ * resource, service health, quick action, onboarding, activity and usage
+ * widgets into responsive Bootstrap grid sections, followed by the static
+ * informational widgets: new features, certification, tooling, hosting and
+ * contribution.
  *
  * :param myResourcesApiUrl: API endpoint used by the MyResources widget.
  * :type myResourcesApiUrl: str
@@ -37,13 +39,17 @@ import type { AppContextInterface } from "@/main";
 import "./styles.css";
 import MyResources from "../MyResources/Component";
 import ServiceHealth from "../ServiceHealth/Component";
+import QuickActions from "../QuickActions/Component";
 import CertificateProgram from "../CertificateProgram/Component";
 import VSCodeExtension from "../VSCodeExtension/Component";
+import WhatsNew from "../WhatsNew/Component";
+import GettingStarted from "../GettingStarted/Component";
+import RecentActivity from "../RecentActivity/Component";
+import BudgetAlerts from "../BudgetAlerts/Component";
 import Sdk from "../Sdk/Component";
 import Cli from "../Cli/Component";
 import SelfHost from "../SelfHost/Component";
 import Contribute from "../Contribute/Component";
-import YTVideo from "../YTVideo/Component";
 import UserCharges from "../TokenUsage/";
 import BudgetVsActual from "../BudgetVsActual/";
 
@@ -52,14 +58,26 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
     <>
       <section id="kt_app_content" aria-label="Dashboard" className="app-content flex-column-fluid">
         <div id="kt_app_content_container" className="app-container container-xxl">
+          {appContext.budgetsApiUrl && (
+            <BudgetAlerts sessionContext={appContext.sessionContext} apiUrl={appContext.budgetsApiUrl} />
+          )}
+
           <div className="row g-5 g-xl-10 mt-3">
             <MyResources apiUrl={appContext.myResourcesApiUrl} />
             <div className="col-xl-8 mb-5 mb-xl-10">
               <div className="row g-5 g-xl-10">
                 <ServiceHealth apiUrl={appContext.serviceHealthApiUrl} />
-                <CertificateProgram />
+                <QuickActions sessionContext={appContext.sessionContext} apiUrl={appContext.quickActionsApiUrl} />
               </div>
               <VSCodeExtension />
+            </div>
+          </div>
+
+          <GettingStarted sessionContext={appContext.sessionContext} apiUrl={appContext.gettingStartedApiUrl} />
+
+          <div className="row g-5 g-xl-10">
+            <div className="col-xl-12 mb-5 mb-xl-10">
+              <RecentActivity sessionContext={appContext.sessionContext} apiUrl={appContext.activityApiUrl} />
             </div>
           </div>
 
@@ -75,6 +93,14 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
             </div>
           )}
 
+          {/* static widgets */}
+          <div className="row g-5 g-xl-10">
+            <div className="col-xl-6 mb-5 mb-xl-10">
+              <WhatsNew />
+            </div>
+            <CertificateProgram />
+          </div>
+
           <div className="row g-5 g-xl-10 align-items-stretch">
             <Sdk />
             <Cli />
@@ -87,11 +113,6 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
             <div className="col-xl-6 mb-5 mb-xl-10" style={{ minHeight: "300px" }}>
               <Contribute />
             </div>
-          </div>
-
-          <div className="row g-5 g-xl-10">
-            <YTVideo videoId="YtVxkjHzZrE" />
-            <YTVideo videoId="bfePkGzKAvw" />
           </div>
         </div>
       </section>

@@ -4,7 +4,6 @@
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import (
-    AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
     UserMiniSerializer,
     UserProfileSerializer,

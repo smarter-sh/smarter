@@ -84,6 +84,13 @@ class TestPluginTasks(PluginAppTestBase):
             create_plugin_selector_history(plugin_id=self.static_plugin.id, **self.selector_history["input_text"])
         self.assertEqual(self.history().count(), 0)
 
+    def test_deleted_user(self):
+        """Test that the task records nothing, and does not raise, for a user who was deleted after it was queued."""
+        create_plugin_selector_history(
+            user_id=999999999, plugin_id=self.static_plugin.id, **self.selector_history["input_text"]  # type: ignore
+        )
+        self.assertEqual(self.history().count(), 0)
+
     def test_unknown_plugin(self):
         """Test that the task records nothing for a plugin that does not exist."""
         create_plugin_selector_history(
