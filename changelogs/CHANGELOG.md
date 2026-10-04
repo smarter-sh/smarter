@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.6...v0.17.2-alpha.7) (2026-10-04)
+
+### Bug Fixes
+
+* **guardrail:** patch prompt Celery tasks in prompt integration tests to stop teardown races ([b0fee8b](https://github.com/smarter-sh/smarter/commit/b0fee8b3fccd29fc1df194ff87615c6c0bb4ef9d))
+
 ## [0.17.2-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.5...v0.17.2-alpha.6) (2026-10-04)
 
 ### Bug Fixes
