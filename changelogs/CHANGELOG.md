@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.5...v0.17.0-alpha.6) (2026-10-04)
+
+### Bug Fixes
+
+* fix 5 connection and plugin bugs, and add unit tests that raise the coverage of smarter.apps from 85% to 89.8% ([6240434](https://github.com/smarter-sh/smarter/commit/6240434a1651c51b6fb2d3d3df996c3cb01549e5))
+
 ## [0.17.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.17.0-alpha.4...v0.17.0-alpha.5) (2026-10-03)
 
 ### Bug Fixes
