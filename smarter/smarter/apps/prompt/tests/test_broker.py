@@ -4,7 +4,6 @@ Test the Prompt manifest broker, :mod:`smarter.apps.prompt.manifest.brokers.prom
 api/v1/cli/ commands. A Prompt is a chat session, a read-only resource that apply refuses.
 """
 
-import unittest
 from http import HTTPStatus
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -35,14 +34,8 @@ class TestPromptBroker(CliBrokerTestMixin, ApiV1TestBase):
         self.assertIn("count", response["data"]["metadata"])
         self.cli("get", session_key="no-such-session")
 
-    @unittest.expectedFailure
     def test_apply_describe_delete(self):
-        """
-        Test that apply is refused, because a Prompt is read-only.
-
-        Expected to fail: the apply view has no broker for the kind Prompt, and answers with a
-        500, "No broker found for manifest kind 'Prompt'", rather than the broker's refusal.
-        """
+        """Test that apply is refused, because a Prompt is read-only."""
         manifest = self.prepare_manifest(self.example_manifest())
         self.cli("apply", data=manifest, with_kind=False, status=REFUSED)
 

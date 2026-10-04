@@ -1,7 +1,6 @@
 """Test the docs app's generate_example_manifests management command."""
 
 import os
-import unittest
 from io import StringIO
 
 import yaml
@@ -15,12 +14,8 @@ OUTPUT_FOLDER = "/home/smarter_user/data/manifests/example_manifests"
 class TestGenerateExampleManifests(SmarterTestBase):
     """Test that an example manifest of each kind is written as yaml."""
 
-    @unittest.expectedFailure
     def test_generate_example_manifests(self):
-        """Expected to fail: the command calls each docs view's post(request=None), which raises.
-
-        "Authentication required to access this resource", so it writes no manifest at all.
-        """
+        """Test that the command writes an example manifest of each kind."""
         call_command("generate_example_manifests", stdout=StringIO(), stderr=StringIO())
         files = [name for name in os.listdir(OUTPUT_FOLDER) if name.endswith((".yaml", ".yml"))]
         self.assertTrue(files)

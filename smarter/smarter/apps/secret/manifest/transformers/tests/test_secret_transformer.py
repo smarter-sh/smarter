@@ -2,7 +2,6 @@
 """Test Secret Manager."""
 
 import os
-import unittest
 
 import yaml
 
@@ -286,16 +285,8 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         self.assertIsInstance(secret_transformer.secret, Secret)
         secret_transformer.delete()
 
-    @unittest.expectedFailure
     def test_manager_11_initialize_by_secret_serializer(self):
-        """
-        Test initializing the SecretTransformer with a Secret serializer.
-
-        Expected to fail: initializing it with the json of a Secret that exists calls create(),
-        which checks self._secret, which the name lookup has not loaded, and so creates the Secret
-        with manifest_to_django_orm(), whose id is the existing Secret's id, which raises
-        IntegrityError, rather than updating it.
-        """
+        """Test initializing the SecretTransformer with the json of a Secret that exists, which updates it."""
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
         self.assertTrue(loader.ready, msg="loader is not ready")

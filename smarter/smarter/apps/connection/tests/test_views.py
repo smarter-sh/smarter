@@ -6,7 +6,6 @@ connection list and its api, and :mod:`smarter.apps.connection.views.detailview`
 The class fixture ``connection_django_model`` is owned by the account's admin user.
 """
 
-import unittest
 from http import HTTPStatus
 
 from django.test import Client
@@ -164,15 +163,8 @@ class TestApiConnectionDetailView(ViewTestMixin, ApiConnectionTestMixin):
     def detail_url(self, hashed_id: str) -> str:
         return self.url(ConnectionReverseNames.api_detailview, hashed_id=hashed_id)
 
-    @unittest.expectedFailure
     def test_detail(self):
-        """
-        Test that the detail view renders the connection's manifest.
-
-        Expected to fail: the fixture has a proxy password, and SAMApiConnectionBroker.manifest
-        passes the proxy password's Secret object, rather than a string, to the pydantic model,
-        so describing any ApiConnection with a proxy password raises a ValidationError, a 500.
-        """
+        """Test that the detail view renders the connection's manifest, which has a proxy password."""
         response = self.client.get(self.detail_url(self.connection_django_model.hashed_id))  # type: ignore[union-attr]
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertIn(self.connection_django_model.name.encode(), response.content)  # type: ignore[union-attr]

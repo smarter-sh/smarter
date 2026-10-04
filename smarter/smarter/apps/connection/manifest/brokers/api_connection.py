@@ -283,7 +283,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 proxyHost=self.connection.proxy_host,
                 proxyPort=self.connection.proxy_port,
                 proxyUsername=self.connection.proxy_username,
-                proxyPassword=self.connection.proxy_password,
+                proxyPassword=self.connection.proxy_password.get_secret() if self.connection.proxy_password else None,
             )
             spec = SAMApiConnectionSpec(
                 connection=connection,

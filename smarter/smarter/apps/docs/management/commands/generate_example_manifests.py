@@ -4,6 +4,9 @@
 import os
 from typing import Type
 
+from django.test import RequestFactory
+
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.docs.views.manifest import (
     DocsExampleManifestAccountView,
     DocsExampleManifestApiConnectionView,
@@ -57,11 +60,16 @@ class Command(SmarterCommand):
         # and permissions are set so smarter_user can write here.
         output_folder = "/home/smarter_user/data/manifests/example_manifests"
 
+        # the docs views broker each manifest request on behalf of request.user,
+        # and refuse an anonymous request, so the request is made as the smarter admin.
+        request = RequestFactory().post("/")
+        request.user = smarter_cached_objects.smarter_admin
+
         def write_manifest(view_class: Type[DocsExampleManifestBaseView]):
             """Generate example manifest YAML file."""
             instance = view_class()
             try:
-                response = instance.post(request=None)
+                response = instance.post(request=request)
             # pylint: disable=broad-except
             except Exception as exc:
                 logger.error("Failed to generate manifest for %s: %s", view_class.__name__, exc)
