@@ -474,7 +474,7 @@ class SAMVectorsearchBroker(AbstractBroker):
                 )
                 return self._manifest
         else:
-            logger.warning(
+            logger.debug(
                 "%s.manifest() could not initialize",
                 self.formatted_class_name,
             )
