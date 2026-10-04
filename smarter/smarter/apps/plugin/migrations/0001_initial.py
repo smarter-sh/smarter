@@ -295,7 +295,7 @@ class Migration(migrations.Migration):
                 (
                     "temperature",
                     models.FloatField(
-                        default=0.5,
+                        default=1.0,
                         help_text="The higher the temperature, the more creative the result.",
                         validators=[
                             django.core.validators.MinValueValidator(0.0),

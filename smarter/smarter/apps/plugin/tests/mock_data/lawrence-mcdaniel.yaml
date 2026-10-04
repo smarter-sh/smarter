@@ -6,7 +6,6 @@ metadata:
   pluginClass: static
   description: Get additional information about Lawrence McDaniel, full stack web developer and host of YouTube channel FullStackwithLawrence. returns a personal bio, contact information, marketing information, client list, education background, professional certifications, etc.
   version: 0.1.0
-  author: Lawrence McDaniel
   tags:
     - lawrence
     - mcdaniel

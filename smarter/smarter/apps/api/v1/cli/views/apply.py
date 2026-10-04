@@ -7,6 +7,7 @@ Smarter API command-line interface 'apply' view.
 
 from http import HTTPStatus
 
+import yaml
 from django.core.handlers.asgi import ASGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
@@ -14,7 +15,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .base import APIV1CLIViewError, CliBaseApiView
+from .base import APIV1CLIViewBadRequestError, APIV1CLIViewError, CliBaseApiView
 from .swagger import (
     COMMON_SWAGGER_RESPONSES,
     ManifestSerializer,
@@ -26,11 +27,11 @@ logger = logging.getSmarterLogger(
 )
 
 
-class APIV1CLIViewManifestNotFoundError(APIV1CLIViewError):
+class APIV1CLIViewManifestNotFoundError(APIV1CLIViewBadRequestError):
     """Custom error for when a manifest is not found."""
 
 
-class APIV1CLIViewManifestMalFormedError(APIV1CLIViewError):
+class APIV1CLIViewManifestMalFormedError(APIV1CLIViewBadRequestError):
     """Custom error for when a manifest is malformed."""
 
 
@@ -58,6 +59,24 @@ class ApiV1CliApplyApiView(CliBaseApiView):
         this_class = f".{ApiV1CliApplyApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
+    def raise_for_unparseable_manifest(self, request: ASGIRequest) -> None:
+        """Raise a malformed manifest error if the request body is text that is not a YAML or JSON object."""
+        try:
+            body = request.body.decode("utf-8")
+        # pylint: disable=broad-except
+        except Exception:
+            return
+        if not body.strip():
+            return
+        try:
+            parsed = yaml.safe_load(body)
+        except yaml.YAMLError as e:
+            raise APIV1CLIViewManifestMalFormedError(f"The manifest is not valid YAML: {e}") from e
+        if not isinstance(parsed, dict):
+            raise APIV1CLIViewManifestMalFormedError(
+                f"The manifest must be a YAML object with apiVersion, kind, metadata and spec, not a {type(parsed).__name__}."
+            )
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'apply' command for Smarter resources using a YAML manifest in the smarter.sh/v1 format.
@@ -81,6 +100,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         )
 
         if not self.manifest_data:
+            self.raise_for_unparseable_manifest(request)
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
 
         user = kwargs.pop("user", None)

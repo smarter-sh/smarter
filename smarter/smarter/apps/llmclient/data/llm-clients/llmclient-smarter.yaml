@@ -57,7 +57,6 @@ spec:
       start guide. Project contact: Lawrence McDaniel, lpm0073@gmail.com, https://smarter.sh/.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions: []

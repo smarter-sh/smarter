@@ -38,6 +38,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -855,6 +856,19 @@ class SAMLLMClientBroker(AbstractBroker):
             raise SAMBrokerErrorNotReady(
                 f"{self.kind} {self.name} manifest spec not found", thing=self.kind, command=command
             )
+        if self.manifest.metadata.name != self.name:
+            # the manifest's metadata validator stores names in snake_case, e.g. 'My Client' as
+            # 'my_client', so the llmclient is looked up by that name. Otherwise it is never
+            # found, and every apply tries to create it again.
+            logger.warning(
+                "%s.apply() %s name '%s' is stored as '%s'",
+                self.formatted_class_name,
+                self.kind,
+                self.name,
+                self.manifest.metadata.name,
+            )
+            self._name = self.manifest.metadata.name
+            self._llmclient = None
         if not isinstance(self.llmclient, LLMClient):
             raise SAMLLMClientBrokerError(f"LLMClient {self.name} not found", thing=self.kind, command=command)
         with transaction.atomic():
@@ -864,6 +878,14 @@ class SAMLLMClientBroker(AbstractBroker):
                 tags = data.get("tags", [])
                 for field in readonly_fields:
                     data.pop(field, None)
+                # the subdomain and the custom domain are relations that are created when the
+                # llmclient is deployed, so apply neither sets them nor clears them.
+                for field, manifest_key in (("subdomain", "subdomain"), ("custom_domain", "customDomain")):
+                    if data.pop(field, None) is not None:
+                        raise SmarterValueError(
+                            f"spec.config.{manifest_key} cannot be set by apply, because it is assigned when "
+                            f"the {self.kind} is deployed. Remove it from the manifest, or set it to null."
+                        )
                 for key, value in data.items():
                     setattr(self.llmclient, key, value)
                 if self.llmclient.user_profile != self.user_profile:
@@ -872,6 +894,10 @@ class SAMLLMClientBroker(AbstractBroker):
                         thing=self.kind,
                         command=command,
                     )
+                # run the model's field validators, e.g. the provider, URLs and maximum lengths,
+                # which save() does not, so that an invalid manifest is a 400 rather than an
+                # invalid row, or a database error.
+                self.llmclient.full_clean(validate_unique=False)
                 self.llmclient.save()
 
                 # Fix note: occasionally seeing AttributeError: \'list\' object has no attribute \'set\ in the logs,

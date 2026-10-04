@@ -31,7 +31,6 @@ spec:
     defaultSystemRole: You are a helpful assistant.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions: []
