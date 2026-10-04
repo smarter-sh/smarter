@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.5...v0.17.2-alpha.6) (2026-10-04)
+
+### Bug Fixes
+
+* isolate infrastructure tasks from operational tasks, never block a worker, and refresh the smarter LLMClient, its plugins and OpenAI models ([5a378b4](https://github.com/smarter-sh/smarter/commit/5a378b47fc8cae82d60f82875486528d1cce8ac8))
+
 ## [0.17.2-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.4...v0.17.2-alpha.5) (2026-10-04)
 
 ### Bug Fixes
