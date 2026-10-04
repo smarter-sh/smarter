@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - **tests:** provide EKS cluster name and region in kubeconfig tests ([436c7bd](https://github.com/smarter-sh/smarter/commit/436c7bd471932fbd18c394f60f8f9103f8f91b97))
 
+## [0.17.1](https://github.com/smarter-sh/smarter/compare/v0.17.0...v0.17.1) (2026-10-04)
+
+### Bug Fixes
+
+* **tests:** provide EKS cluster name and region in kubeconfig tests ([436c7bd](https://github.com/smarter-sh/smarter/commit/436c7bd471932fbd18c394f60f8f9103f8f91b97))
+
 ## [0.17.0](https://github.com/smarter-sh/smarter/compare/v0.16.7...v0.17.0) (2026-10-04)
 
 ### Features
