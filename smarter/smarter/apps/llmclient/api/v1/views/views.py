@@ -312,30 +312,34 @@ class LLMClientCustomDomainView(ViewBase):
         serializer = self.serializer_class(custom_domain)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request: Request, llmclient_id: int, customdomain_id: Optional[int] = None):
+    def post(self, request: Request, llmclient_id: int, customdomain_id: int):
+        """Attach the custom domain to the LLMClient, through LLMClient.custom_domain."""
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         custom_domain = get_object_or_404(LLMClientCustomDomain, pk=customdomain_id)
-        try:
-            llmclient_custom_domain = LLMClientCustomDomain.objects.create(
-                llmclient=llmclient, custom_domain=custom_domain
+        # LLMClient.custom_domain is one-to-one, so a domain belongs to at most one LLMClient.
+        if LLMClient.objects.filter(custom_domain=custom_domain).exclude(pk=llmclient.pk).exists():
+            return JsonResponse(
+                {"error": f"Custom domain {custom_domain.domain_name} is already used by another LLMClient."},
+                status=HTTPStatus.CONFLICT,
             )
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-        return HttpResponseRedirect(request.path_info + str(llmclient_custom_domain.id) + "/")  # type: ignore[return-value]
+        llmclient.custom_domain = custom_domain
+        llmclient.save(update_fields=["custom_domain"])
+        return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, llmclient_id: int, customdomain_id: int):
+        """
+        Detach the custom domain from the LLMClient.
+
+        The domain itself is kept: LLMClient.custom_domain is on_delete=CASCADE, so deleting
+        the domain would delete the LLMClient too.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        custom_domain = get_object_or_404(LLMClientCustomDomain, pk=customdomain_id)
-        llmclient_custom_domain = get_object_or_404(
-            LLMClientCustomDomain, llmclient=llmclient, custom_domain=custom_domain
-        )
-        try:
-            llmclient_custom_domain.delete()
-        except Exception as e:
-            return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
-            )
-        return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
+        if llmclient.custom_domain_id != customdomain_id:  # type: ignore[attr-defined]
+            return HttpResponseNotFound("Custom domain not found for this LLMClient")
+        llmclient.custom_domain = None
+        llmclient.save(update_fields=["custom_domain"])
+        # these urls have no trailing slash, so the list url is the parent path.
+        return HttpResponseRedirect(request.path_info.rsplit("/", 1)[0])
 
 
 class LLMClientCustomDomainListView(ListViewBase):

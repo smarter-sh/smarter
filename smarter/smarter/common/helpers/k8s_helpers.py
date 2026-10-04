@@ -497,9 +497,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete an ingress and all child resources from the cluster.
 
         commands:
-        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
-        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
-        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod --ignore-not-found
+        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
+        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
 
         :param hostname: The hostname of the ingress.
         :type hostname: str
@@ -532,7 +532,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete an Ingress resource from the cluster.
 
         command:
-        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
+        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod --ignore-not-found
 
         :param ingress_name: The name of the ingress.
         :type ingress_name: str
@@ -550,7 +550,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         if not self.ready:
             return False
-        command = ["kubectl", "delete", "ingress", ingress_name, "-n", namespace]
+        # --ignore-not-found: a resource that is already gone counts as deleted.
+        command = ["kubectl", "delete", "ingress", ingress_name, "-n", namespace, "--ignore-not-found"]
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
@@ -567,7 +568,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete a cert-manager certificate resource from the cluster.
 
         command:
-        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
 
         :param certificate_name: The name of the certificate.
         :type certificate_name: str
@@ -585,7 +586,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         if not self.ready:
             return False
-        command = ["kubectl", "delete", "certificate", certificate_name, "-n", namespace]
+        # --ignore-not-found: a resource that is already gone counts as deleted.
+        command = ["kubectl", "delete", "certificate", certificate_name, "-n", namespace, "--ignore-not-found"]
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
@@ -602,7 +604,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete a secret resource from the cluster.
 
         commands:
-        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod --ignore-not-found
 
         :param secret_name: The name of the secret.
         :type secret_name: str
@@ -620,7 +622,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         if not self.ready:
             return False
-        command = ["kubectl", "delete", "secret", secret_name, "-n", namespace]
+        # --ignore-not-found: a resource that is already gone counts as deleted.
+        command = ["kubectl", "delete", "secret", secret_name, "-n", namespace, "--ignore-not-found"]
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:

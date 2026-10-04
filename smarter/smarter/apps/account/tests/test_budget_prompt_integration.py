@@ -33,6 +33,13 @@ CREATE_PATCH = (
     "smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.openai.chat.completions.create"
 )
 CHARGE_PATCH = "smarter.apps.provider.services.text_completion.lib.mixins.create_charge"
+# Celery tasks that write rows that refer to the prompt. Celery is not eager in tests, so unpatched,
+# they run in the live worker, which can write a row while tearDownClass deletes the prompt.
+PROMPT_TASK_PATCHES = (
+    "smarter.apps.prompt.receivers.create_prompt_history",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_tool_call_history",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_plugin_usage",
+)
 
 
 def completion(content: str) -> ChatCompletion:
@@ -55,6 +62,10 @@ class TestBudgetPromptIntegration(TestAccountMixin):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        for target in PROMPT_TASK_PATCHES:
+            patcher = mock.patch(target)
+            patcher.start()
+            cls.addClassCleanup(patcher.stop)
         cls.llmclient = LLMClient.objects.create(
             name="test_budget_prompt_llmclient", user_profile=cls.user_profile, deployed=False, app_name="Smarter"
         )

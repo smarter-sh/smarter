@@ -8,7 +8,7 @@ a SAM manifest for an llmclient.
 from typing import Optional
 
 import yaml
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds

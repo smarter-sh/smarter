@@ -8,7 +8,7 @@ from http import HTTPStatus
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.llmclient.api.v1.urls import LLMClientApiV1ReverseViews as Names
-from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
 from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 
 
@@ -58,6 +58,34 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
     def test_sub_resource_views_not_found(self):
         """Test that an unknown plugin, api key, custom domain or function of the LLMClient is a 404."""
         self.assert_sub_resource_views()
+
+    def test_custom_domain_attach_and_detach(self):
+        """Test that a custom domain is attached to the LLMClient, refused for a second LLMClient, and detached."""
+        domain = LLMClientCustomDomain.objects.create(
+            aws_hosted_zone_id="Z0000000000TEST", domain_name=f"test-{self.hash_suffix}.example.com"
+        )
+        self.addCleanup(LLMClientCustomDomain.objects.filter(pk=domain.pk).delete)
+        url = self.url(
+            Names.llmclient_custom_domain_view_by_id, llmclient_id=self.resource.pk, customdomain_id=domain.pk
+        )
+
+        response = self.api_client.post(url)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
+        self.assertEqual(LLMClient.objects.get(pk=self.resource.pk).custom_domain_id, domain.pk)
+        response = self.api_client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+        self.assertEqual(response.json()["domainName"], domain.domain_name)
+
+        other = self.create_resource(f"{self.resource_name_prefix}_{self.hash_suffix}_other")
+        other_url = self.url(Names.llmclient_custom_domain_view_by_id, llmclient_id=other.pk, customdomain_id=domain.pk)
+        self.assertEqual(self.api_client.post(other_url).status_code, HTTPStatus.CONFLICT)
+        self.assertEqual(self.api_client.delete(other_url).status_code, HTTPStatus.NOT_FOUND)
+
+        response = self.api_client.delete(url)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
+        self.assertIsNone(LLMClient.objects.get(pk=self.resource.pk).custom_domain_id)
+        # detaching keeps the domain, whose deletion would cascade to the LLMClient.
+        self.assertTrue(LLMClientCustomDomain.objects.filter(pk=domain.pk).exists())
 
     def test_list(self):
         super().test_list()
