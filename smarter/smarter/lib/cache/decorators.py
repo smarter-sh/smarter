@@ -409,7 +409,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             explicit_cache_key = kwargs.pop("cache_key", None) or cache_key
             logger.debug(
                 "%s -> %s called with args: %s kwargs: %s",
-                logger_prefix_blue,
+                logger_prefix_gray,
                 logging.formatted_text(func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY),
                 args,
                 kwargs,
@@ -437,7 +437,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             else:
                 logger.debug(
                     "%s - no cache entry found for %s (nothing to invalidate)",
-                    logger_prefix_red
+                    logger_prefix_gray
                     + "."
                     + logging.formatted_text(
                         func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY
