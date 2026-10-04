@@ -412,7 +412,7 @@ jobs:
       - name: Run unit tests with coverage
         shell: bash
         run: |
-          docker exec smarter-app bash -c "coverage run --source=smarter --omit='*/tests/*,*/migrations/*' manage.py test smarter && coverage report && coverage xml -o coverage.xml"
+          docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report && coverage xml -o coverage.xml"
           docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
 
       - name: Upload coverage to Codecov
