@@ -229,7 +229,9 @@ class TestKubernetesHelperIngress(KubernetesHelperTestBase):
             with self.subTest(kind=kind):
                 with patch(f"{MODULE}.subprocess.check_call", return_value=0) as check_call:
                     self.assertTrue(method("a", "ns"))
-                self.assertEqual(check_call.call_args.args[0], ["kubectl", "delete", kind, "a", "-n", "ns"])
+                self.assertEqual(
+                    check_call.call_args.args[0], ["kubectl", "delete", kind, "a", "-n", "ns", "--ignore-not-found"]
+                )
                 for error in (ERROR, OSError("kubectl not found")):
                     with patch(f"{MODULE}.subprocess.check_call", side_effect=error):
                         self.assertFalse(method("a", "ns"))

@@ -9,6 +9,7 @@ from taggit.managers import TaggableManager
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.account.manifest.models.user.model import SAMUser
+from smarter.apps.account.models import User
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
@@ -242,6 +243,11 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
         is_valid_response = self.validate_example_manifest(response)
         self.assertTrue(is_valid_response)
+
+        # the example is placeholder data, not a description of a real user, such as the smarter admin.
+        data = json.loads(response.content.decode("utf-8"))["data"]
+        self.assertEqual(data["spec"]["config"]["email"], "example.user@example.com")
+        self.assertFalse(User.objects.filter(email=data["spec"]["config"]["email"]).exists())
 
     def test_get(self):
         """

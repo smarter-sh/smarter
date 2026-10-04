@@ -235,7 +235,7 @@ class ChatDbMixin(AccountMixin):
             provider.prompt = new_chat
             # All cached database attributes are reset
         """
-        if not isinstance(value, Prompt) and not value is None:
+        if not isinstance(value, Prompt) and value is not None:
             raise SmarterValueError("Prompt must be an instance of Prompt or None")
         self._chat = value
         if isinstance(value, Prompt):
