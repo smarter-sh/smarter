@@ -38,6 +38,14 @@ SYSTEM_ROLE = "You are a helpful assistant."
 CREATE_PATCH = (
     "smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.openai.chat.completions.create"
 )
+# Celery tasks that write rows that refer to the prompt, or charge for it. Celery is not eager in tests, so
+# unpatched, they run in the live worker, which can write a row while tearDownClass deletes the prompt.
+PROMPT_TASK_PATCHES = (
+    "smarter.apps.prompt.receivers.create_prompt_history",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_tool_call_history",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_plugin_usage",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_charge",
+)
 
 
 def completion(content: str) -> ChatCompletion:
@@ -60,6 +68,10 @@ class TestGuardrailPromptIntegration(GuardrailTestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        for target in PROMPT_TASK_PATCHES:
+            patcher = mock.patch(target)
+            patcher.start()
+            cls.addClassCleanup(patcher.stop)
         cls.llmclient = LLMClient.objects.create(
             name="test_guardrail_prompt_llmclient", user_profile=cls.user_profile, deployed=False, app_name="Smarter"
         )
