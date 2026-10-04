@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
 )
@@ -98,7 +98,16 @@ def create_plugin_selector_history(*args, **kwargs):
         user_profile = UserProfile.get_cached_object(pk=user_profile_id)
     user_id = kwargs.get("user_id")
     if user_id and not user_profile:
-        user = get_cached_user_for_user_id(user_id=user_id)
+        try:
+            user = get_cached_user_for_user_id(user_id=user_id)
+        except User.DoesNotExist:
+            # the user was deleted after this task was queued, which a retry cannot fix.
+            logger.warning(
+                "%s user_id: %s no longer exists. Plugin selector history is not recorded.",
+                formatted_text(module_prefix + "create_plugin_selector_history()"),
+                user_id,
+            )
+            return
         user_profile = UserProfile.get_cached_object(user=user) if user else None
     if not user_profile:
         raise SmarterPluginError(
