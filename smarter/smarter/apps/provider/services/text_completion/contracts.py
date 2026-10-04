@@ -104,7 +104,7 @@ class PreCompletionPayload(BaseModel):
     """The request body the Harness is about to send to the LLM provider.
 
     :ivar model: The model identifier the Harness intends to call, e.g.
-        ``"gpt-4o-mini"``.
+        ``"gpt-6-luna"``.
     :vartype model: str
     :ivar temperature: The sampling temperature for the request, if set.
     :vartype temperature: float or None

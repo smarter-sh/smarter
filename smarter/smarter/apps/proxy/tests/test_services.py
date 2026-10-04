@@ -50,7 +50,7 @@ from .base_classes import (
     sse_response,
 )
 
-CHAT_BODY = json.dumps({"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hi"}]}).encode()
+CHAT_BODY = json.dumps({"model": "gpt-6-luna", "messages": [{"role": "user", "content": "Hi"}]}).encode()
 CALLER_HEADERS = {
     "Authorization": "Bearer smarter-key-of-the-caller",
     "Content-Type": "application/json",

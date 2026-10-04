@@ -104,7 +104,7 @@ class TestProxyModel(ProxyTestBase):
         self.assertTrue(proxy.is_path_allowed("chat/completions"))
         self.assertTrue(proxy.is_path_allowed("/chat/completions/"))
         self.assertTrue(proxy.is_path_allowed("models"))
-        self.assertTrue(proxy.is_path_allowed("models/gpt-4o-mini"))
+        self.assertTrue(proxy.is_path_allowed("models/gpt-6-luna"))
         self.assertFalse(proxy.is_path_allowed("files"))
         self.assertFalse(proxy.is_path_allowed("chat/completions/../../files"))
         self.assertFalse(proxy.is_path_allowed("fine_tuning/jobs"))

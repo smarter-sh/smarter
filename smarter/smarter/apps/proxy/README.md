@@ -16,7 +16,7 @@ client = OpenAI(
     api_key="<Smarter API key>",
 )
 client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-6-luna",
     messages=[{"role": "user", "content": "Hi"}],
 )
 ```

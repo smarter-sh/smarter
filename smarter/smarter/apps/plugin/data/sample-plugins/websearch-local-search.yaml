@@ -28,7 +28,7 @@ spec:
     systemRole: >
       Vous êtes un assistant serviable. Répondez en français, et citez l'url de
       chaque source que vous utilisez.
-    model: gpt-4o-mini
+    model: gpt-6-luna
     temperature: 0.3
     maxTokens: 2048
   websearchData:

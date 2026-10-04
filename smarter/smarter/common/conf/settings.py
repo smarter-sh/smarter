@@ -2315,7 +2315,7 @@ class Settings(BaseSettings):
     llm_default_model: str = Field(
         settings_defaults.LLM_DEFAULT_MODEL,
         description="The default LLM model to use for language model interactions.",
-        examples=["gpt-4o-mini", "claude-2", "gemini"],
+        examples=["gpt-6-luna", "claude-2", "gemini"],
         title="Default LLM Model",
     )
     """

@@ -35,7 +35,7 @@ spec:
     systemRole: >
       You are a news analyst. Summarize the most recent, relevant stories in a
       short bulleted list. Give each story's publication date, and link to it.
-    model: gpt-4o-mini
+    model: gpt-6-luna
     temperature: 0.3
     maxTokens: 2048
   websearchData:

@@ -467,7 +467,7 @@ class Command(SmarterCommand):
         """Initialize OpenAI provider and its models."""
         API_KEY_ENV_VAR = "OPENAI_API_KEY"
         NAME = "openai"
-        DEFAULT_MODEL = "gpt-4o-mini"
+        DEFAULT_MODEL = "gpt-6-luna"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
@@ -490,7 +490,7 @@ class Command(SmarterCommand):
         """Initialize TogetherAI provider and its models."""
         API_KEY_ENV_VAR = "TOGETHERAI_API_KEY"
         NAME = "togetherai"
-        DEFAULT_MODEL = "gpt-4o-mini"
+        DEFAULT_MODEL = "gpt-6-luna"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,

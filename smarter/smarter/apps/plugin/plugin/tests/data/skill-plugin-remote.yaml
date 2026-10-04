@@ -21,7 +21,7 @@ spec:
     provider: openai
     systemRole: >
       You are a helpful assistant for unit testing the SkillPlugin.
-    model: gpt-4o-mini
+    model: gpt-6-luna
     temperature: 0.0
     maxTokens: 256
   skillData:

@@ -40,7 +40,7 @@ tracks the following cost metrics:
    * - Total tokens
      - The total number of tokens, for external billing purposes. eg 609
    * - Model
-     - The Provider LLM model used for the request. eg gpt-4o-mini
+     - The Provider LLM model used for the request. eg gpt-6-luna
    * - Reference
      - External provider billing reference. eg fp_b547601dbd
 
@@ -77,11 +77,11 @@ Each charge has a ``total_cost``, in USD, that budgets which measure cost compar
       LLMPrices.objects.create(
           charge_type=ChargeTypes.PROMPT_COMPLETION.value,
           provider="openai",
-          model="gpt-4o-mini",
+          model="gpt-6-luna",
           price=Decimal("0.60"),  # USD per million tokens
       )
 
-      LLMPrices.cost_of(ChargeTypes.PROMPT_COMPLETION.value, "openai", "gpt-4o-mini", total_tokens=200_000)
+      LLMPrices.cost_of(ChargeTypes.PROMPT_COMPLETION.value, "openai", "gpt-6-luna", total_tokens=200_000)
       # Decimal('0.12')
 
   The provider is matched without regard to case. A charge whose charge type, provider and model

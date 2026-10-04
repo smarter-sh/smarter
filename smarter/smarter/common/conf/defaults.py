@@ -189,7 +189,7 @@ class SettingsDefaults:
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")
 
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4o-mini"
+    LLM_DEFAULT_MODEL = "gpt-6-luna"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful llmclient. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "

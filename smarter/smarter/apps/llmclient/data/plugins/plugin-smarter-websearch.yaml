@@ -46,7 +46,7 @@ spec:
       smarter-sh organization on GitHub, the Python Package Index, and established technology
       publications. Ignore anything that is not about The Smarter Project. Cite the url of
       every source that you use, as a markdown link.
-    model: gpt-4o-mini
+    model: gpt-6-luna
     temperature: 0.5
     maxTokens: 4096
   websearchData:

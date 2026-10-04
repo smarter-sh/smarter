@@ -416,13 +416,13 @@ class TestPluginBase(PluginTestBase):
         """Test the PluginPrompt serializer."""
         serializer = self.load_api_plugin().plugin_prompt_serializer
         self.assertIsInstance(serializer, PluginPromptSerializer)
-        self.assertEqual(serializer.data["model"], "gpt-4o-mini")  # type: ignore[union-attr]
+        self.assertEqual(serializer.data["model"], "gpt-6-luna")  # type: ignore[union-attr]
 
     def test_base_plugin_prompt_django_model(self):
         """Test the PluginPrompt Django model dict constructed from the manifest."""
         model = self.api_plugin.plugin_prompt_django_model
         self.assertIsInstance(model, dict)
-        self.assertEqual(model["model"], "gpt-4o-mini")  # type: ignore[index]
+        self.assertEqual(model["model"], "gpt-6-luna")  # type: ignore[index]
         self.assertEqual(model["max_completion_tokens"], 256)  # type: ignore[index]
 
     def test_base_plugin_prompt_django_model_without_manifest(self):

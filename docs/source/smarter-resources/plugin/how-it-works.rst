@@ -50,7 +50,7 @@ Smarter Plugin, ``example_configuration``. The ``example_configuration`` Plugin 
       version: 0.1.0
     spec:
       config:
-        defaultModel: gpt-4o-mini
+        defaultModel: gpt-6-luna
         defaultSystemRole: You are a helpful llmclient.
         provider: openai
       functions:
