@@ -107,16 +107,28 @@ class TestKubernetesHelperReady(KubernetesHelperTestBase):
             self.assertEqual(self.helper.kubeconfig, {"apiVersion": "v1", "clusters": []})
         read.assert_called_once_with(self.helper.kubeconfig_path)
 
+    def eks_settings(self):
+        """Provide a cluster name and region, which are unset in CI, where AWS is not configured."""
+        settings = MagicMock(aws_eks_cluster_name="cluster", aws_region="us-east-1")
+        patcher = patch(f"{MODULE}.smarter_settings", settings)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return settings
+
     def test_update_kubeconfig(self):
+        settings = self.eks_settings()
         self.helper._configured = False  # pylint: disable=protected-access
         with patch(f"{MODULE}.subprocess.check_call", return_value=0) as check_call:
             self.assertTrue(self.helper.configured)
         command = check_call.call_args.args[0]
         self.assertEqual(command[:3], ["aws", "eks", "update-kubeconfig"])
-        self.assertIn(smarter_settings.aws_eks_cluster_name, command)
+        self.assertIn(settings.aws_eks_cluster_name, command)
+        self.assertIn(settings.aws_region, command)
 
     def test_update_kubeconfig_errors(self):
+        self.eks_settings()
         for error in (ERROR, OSError("aws not found")):
+            self.helper._configured = True  # pylint: disable=protected-access
             with self.subTest(error=type(error).__name__), patch(f"{MODULE}.subprocess.check_call", side_effect=error):
                 self.assertFalse(self.helper.update_kubeconfig())
                 self.assertFalse(self.helper._configured)  # pylint: disable=protected-access
