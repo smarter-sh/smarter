@@ -1,7 +1,7 @@
 ---
 #------------------------------------------------------------------------------
 # For local development, you can use the following docker-compose file
-# to run the application. This file will start a MySQL database, a Redis
+# to run the application. This file will start a MariaDB database, a Redis
 # server, Celery and Beat workers, and the application itself. The application
 # will be available at http://localhost:9357.
 #------------------------------------------------------------------------------

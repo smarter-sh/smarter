@@ -140,7 +140,7 @@ class SqlConnection(ConnectionBase):
     ]
     """The supported authentication methods for SQL connections."""
     db_engine = models.CharField(
-        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+        help_text="The type of database management system. Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         default=DbEngines.MYSQL.value,
         max_length=255,
         choices=DBMS_CHOICES,
@@ -150,7 +150,7 @@ class SqlConnection(ConnectionBase):
     """
     The type of database management system.
 
-    Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
+    Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
     """
     authentication_method = models.CharField(
         help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
@@ -202,16 +202,16 @@ class SqlConnection(ConnectionBase):
     Should be a valid internet domain name.
     """
     port = models.IntegerField(
-        default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.", blank=True, null=True
+        default=3306, help_text="The port of the SQL connection. example: 3306 for MariaDB.", blank=True, null=True
     )
     """
     The port of the SQL connection.
 
-    example: 3306 for MySQL.
+    example: 3306 for MariaDB.
     5432 for PostgreSQL, 1521 for Oracle, 1433 for MS SQL Server.
     5000 for Sybase.
     1234 for SQLite (not commonly used).
-    3306 is a reasonable default as MySQL is widely used.
+    3306 is a reasonable default as MariaDB is widely used.
     5432 could also be a reasonable default as PostgreSQL is also widely used.
     """
     database = models.CharField(max_length=255, help_text="The name of the database to connect to.")

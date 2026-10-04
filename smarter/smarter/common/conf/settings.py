@@ -2874,16 +2874,16 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
-        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The secret name for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter-mariadb-test-db-secret"],
-        title="Smarter MySQL Test Database Secret Name",
+        title="Smarter MariaDB Test Database Secret Name",
     )
     """
-    The secret name for the Smarter MySQL test database.
+    The secret name for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
     This setting specifies the name of the secret in AWS Secrets Manager
-    that contains the credentials for the Smarter MySQL test database.
+    that contains the credentials for the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
@@ -2893,15 +2893,15 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_password: Optional[SecretStr] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_PASSWORD,
-        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The password for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["your_password_here"],
-        title="Smarter MySQL Test Database Password",
+        title="Smarter MariaDB Test Database Password",
     )
     """
-    The password for the Smarter MySQL test database.
+    The password for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting provides the password used to connect to the Smarter MySQL test database.
+    This setting provides the password used to connect to the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
@@ -3180,16 +3180,16 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
-        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The secret name for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter_test_db"],
-        title="Smarter MySQL Test Database Secret Name",
+        title="Smarter MariaDB Test Database Secret Name",
     )
     """
-    The secret name for the Smarter MySQL test database.
+    The secret name for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
     This setting specifies the name of the secret in AWS Secrets Manager
-    that contains the credentials for the Smarter MySQL test database.
+    that contains the credentials for the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
     :type: Optional[str]
     :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME``
@@ -3198,15 +3198,15 @@ class Settings(BaseSettings):
 
     smarter_mysql_test_database_password: Optional[SecretStr] = Field(
         settings_defaults.MYSQL_TEST_DATABASE_PASSWORD,
-        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        description="The password for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter_test_user"],
-        title="Smarter MySQL Test Database Password",
+        title="Smarter MariaDB Test Database Password",
     )
     """
-    The password for the Smarter MySQL test database.
+    The password for the Smarter MariaDB test database.
 
     Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting provides the password used to connect to the Smarter MySQL test database.
+    This setting provides the password used to connect to the Smarter MariaDB test database.
     It is used by example Smarter Plugins that require access to a test database.
     :type: Optional[SecretStr]
     :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_PASSWORD``

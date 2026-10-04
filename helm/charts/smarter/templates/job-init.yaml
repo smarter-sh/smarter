@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------------
 # Job Manifest for Smarter Database Initialization
 #
-# This file defines a Kubernetes Job to initialize the MySQL database for the Smarter app.
+# This file defines a Kubernetes Job to initialize the MariaDB database for the Smarter app.
 #
 # - Maintainer: <your team/contact>
 # - Purpose: Creates the database if it does not exist, typically run as a Helm hook.
