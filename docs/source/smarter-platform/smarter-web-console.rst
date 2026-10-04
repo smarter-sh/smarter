@@ -19,9 +19,13 @@ authoring workflow.
 Console Dashboard
 ~~~~~~~~~~~~~~~~~
 
-Provides a comprehensive overview of all AI resources, platform health, and recent activity. It
-also provides quick access to the complete suite of The Smarter Project tools, resources, online tutorials, and
-documentation.
+Provides a comprehensive overview of all AI resources, platform health, and recent activity. Service
+health is checked live: the database, the cache, the Celery task broker and the Celery workers. Recent
+activity lists your latest ``apply``, ``deploy``, ``undeploy`` and ``delete`` commands from the journal,
+with failures highlighted. Budgets that are locked, or that have spent 80% or more of a limit, are
+shown as alerts at the top of the dashboard, and new users see a getting started checklist until
+they have created and deployed their first LLM Client. It also provides quick access to the complete
+suite of The Smarter Project tools, resources, online tutorials, and documentation.
 
 .. raw:: html
 

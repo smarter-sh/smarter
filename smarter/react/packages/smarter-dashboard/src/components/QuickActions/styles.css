@@ -1,0 +1,7 @@
+.quick-action {
+  transition: background-color 150ms ease-in-out;
+}
+
+.quick-action:hover {
+  background-color: var(--bs-gray-200) !important;
+}
