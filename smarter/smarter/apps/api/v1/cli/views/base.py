@@ -5,8 +5,11 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
+import yaml
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest
+from pydantic import ValidationError as PydanticValidationError
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
@@ -21,12 +24,6 @@ from smarter.apps.api.signals import (
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.apps.docs.views.base import DocsError
-from smarter.apps.llmclient.exceptions import SmarterLLMClientException
-from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
-    SmarterChatappViewError,
-)
 from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
 )
@@ -38,8 +35,6 @@ from smarter.common.exceptions import (
     SmarterInvalidApiKeyError,
     SmarterValueError,
 )
-from smarter.common.helpers.aws.exceptions import SmarterAWSError
-from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.common.utils import (
     is_authenticated_request,
     mask_string,
@@ -51,10 +46,7 @@ from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.drf.views.helpers import SmarterAuthenticatedPermissionClass
-from smarter.lib.journal.enum import (
-    SmarterJournalCliCommands,
-    SmarterJournalEnumException,
-)
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -62,10 +54,11 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMBrokerInternalError,
     SAMBrokerReadOnlyError,
 )
-from smarter.lib.manifest.exceptions import SAMBadRequestError
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
+from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 from .swagger import BUG_REPORT
 
@@ -86,6 +79,125 @@ class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
     @property
     def get_formatted_err_message(self):
         return "Smarter api v1 command-line interface error: not authenticated"
+
+
+class APIV1CLIViewBadRequestError(APIV1CLIViewError):
+    """Error class for requests that are the client's error, such as an invalid manifest."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter api v1 command-line interface error: bad request"
+
+
+# errors that are the client's fault, e.g. an invalid manifest, and that are therefore a 400.
+CLIENT_ERRORS: tuple[Type[BaseException], ...] = (
+    PydanticValidationError,
+    DjangoValidationError,
+    yaml.YAMLError,
+    SAMLoaderError,
+    SAMValidationError,
+    SAMBadRequestError,
+    SmarterValueError,
+    SmarterIlligalInvocationError,
+    SmarterBusinessRuleViolation,
+    APIV1CLIViewBadRequestError,
+)
+MAX_INPUT_LENGTH = 80
+
+
+def exception_chain(e: BaseException) -> list[BaseException]:
+    """The exception, followed by its causes, i.e. ``raise ... from ...``, outermost first."""
+    retval: list[BaseException] = []
+    while e is not None and e not in retval:
+        retval.append(e)
+        e = e.__cause__  # type: ignore[assignment]
+    return retval
+
+
+def client_error_in(e: BaseException) -> Optional[BaseException]:
+    """The first client error in the chain of the exception and its causes, or None."""
+    return next((err for err in exception_chain(e) if isinstance(err, CLIENT_ERRORS)), None)
+
+
+def format_validation_error(e: BaseException) -> str:
+    """A readable, one line description of a Pydantic or Django validation error."""
+    if isinstance(e, PydanticValidationError):
+        problems = []
+        for error in e.errors():
+            location = ".".join(str(part) for part in error.get("loc", ())) or e.title
+            problem = f"{location}: {error.get('msg')}"
+            if "input" in error and not isinstance(error["input"], dict):
+                value = repr(error["input"])
+                if len(value) > MAX_INPUT_LENGTH:
+                    value = value[:MAX_INPUT_LENGTH] + "..."
+                problem += f" (got {value})"
+            problems.append(problem)
+        return f"{e.title} is not valid. " + "; ".join(problems)
+    if isinstance(e, DjangoValidationError):
+        if hasattr(e, "error_dict"):
+            return "; ".join(f"{field}: {' '.join(messages)}" for field, messages in e.message_dict.items())
+        return " ".join(e.messages)
+    return str(e)
+
+
+def http_status_for_exception(e: BaseException) -> int:
+    """
+    The HTTP status of the response to a request that raised the exception.
+
+    Exceptions are matched by class, including their subclasses, so that e.g. a broker's own
+    ``SAM<Kind>BrokerError`` is treated as a ``SAMBrokerError``. A broker error that was raised
+    from an exception that is not the client's error, e.g. a database error, is a 500.
+    """
+    if isinstance(e, SAMBrokerInternalError):
+        return HTTPStatus.INTERNAL_SERVER_ERROR.value
+    if isinstance(e, SAMBrokerErrorNotImplemented):
+        return HTTPStatus.NOT_IMPLEMENTED.value
+    if isinstance(e, SAMBrokerErrorNotReady):
+        return HTTPStatus.SERVICE_UNAVAILABLE.value
+    if isinstance(e, SAMBrokerErrorNotFound):
+        return HTTPStatus.NOT_FOUND.value
+    if isinstance(e, SAMBrokerReadOnlyError):
+        return HTTPStatus.METHOD_NOT_ALLOWED.value
+    if (
+        isinstance(
+            e,
+            (
+                SmarterAPIV1CLIViewErrorNotAuthenticated,
+                SmarterInvalidApiKeyError,
+                SmarterTokenError,
+                NotAuthenticated,
+                AuthenticationFailed,
+            ),
+        )
+        or type(e) is AttributeError
+    ):  # can be raised by a django admin decorator if request or request.user is None
+        return HTTPStatus.FORBIDDEN.value
+    if client_error_in(e) is not None:
+        return HTTPStatus.BAD_REQUEST.value
+    if isinstance(e, SAMBrokerError) and e.__cause__ is None:
+        return HTTPStatus.BAD_REQUEST.value
+    return HTTPStatus.INTERNAL_SERVER_ERROR.value
+
+
+def describe_exception(e: BaseException, status: int) -> Optional[str]:
+    """
+    The error description that is returned to the client, or None for the exception's own message.
+
+    A 500 is a bug, so its description asks for a bug report. A client error describes what the
+    client did wrong, including the validation error that caused it, if any.
+    """
+    client_error = client_error_in(e)
+    if isinstance(e, (PydanticValidationError, DjangoValidationError)):
+        description = format_validation_error(e)
+    elif client_error is not None and client_error is not e:
+        description = f"{e}: {format_validation_error(client_error)}"
+    elif client_error is not None or status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
+        description = str(e)
+    else:
+        return None
+    if status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
+        description = f"{type(e)}: {BUG_REPORT} {description}"
+    return description
 
 
 class CliBaseApiView(APIView, SmarterRequestMixin):
@@ -247,7 +359,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     self._BrokerClass.__name__ if self._BrokerClass else "<None>",
                 )
             if not self._BrokerClass:
-                raise APIV1CLIViewError(
+                raise APIV1CLIViewBadRequestError(
                     f"Could not find broker for {self.manifest_kind or '<-- Missing -->'} manifest."
                 )
         return self._BrokerClass
@@ -302,6 +414,16 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     e,
                     exc_info=True,
                 )
+            except CLIENT_ERRORS as e:
+                # the manifest is not valid, e.g. a Pydantic validation error. This is the
+                # client's error, which must be returned to the client rather than swallowed.
+                logger.warning(
+                    "%s.broker() - the %s manifest is not valid: %s",
+                    self.logger_prefix,
+                    self.manifest_kind,
+                    e,
+                )
+                raise
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
@@ -793,60 +915,12 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # pylint: disable=broad-except
         except Exception as e:
             api_request_failed.send(sender=self.__class__, instance=self, request=request, response=response)
-            status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            description_override: Optional[str] = None
-
-            if type(e) in (SAMBrokerErrorNotImplemented,):
-                status = HTTPStatus.NOT_IMPLEMENTED.value
-            elif type(e) in (SAMBrokerErrorNotReady,):
-                status = HTTPStatus.SERVICE_UNAVAILABLE.value
-            elif type(e) in (SAMBrokerErrorNotFound,):
-                status = HTTPStatus.NOT_FOUND.value
-            elif type(e) in (SAMBrokerReadOnlyError,):
-                status = HTTPStatus.METHOD_NOT_ALLOWED.value
-            elif type(e) in (
-                SmarterAPIV1CLIViewErrorNotAuthenticated,
-                SmarterInvalidApiKeyError,
-                SmarterTokenError,
-                NotAuthenticated,
-                AuthenticationFailed,
-                AttributeError,  # can be raised by a django admin decorator if request or request.user is None
-            ):
-                status = HTTPStatus.FORBIDDEN.value
-            elif type(e) in (
-                SAMBrokerError,
-                SmarterValueError,
-                SmarterIlligalInvocationError,
-                SmarterBusinessRuleViolation,
-            ):
-                status = HTTPStatus.BAD_REQUEST.value
-            elif type(e) in (
-                SmarterChatappViewError,
-                SmarterLLMClientException,
-                DocsError,
-                SmarterPluginError,
-                SmarterConfigurationError,
-                SmarterAWSError,
-                KubernetesHelperException,
-                SmarterJournalEnumException,
-                SmarterException,
-            ):
-                status = HTTPStatus.INTERNAL_SERVER_ERROR.value
-
-            if status in (
-                HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                HTTPStatus.BAD_REQUEST.value,
-                HTTPStatus.SERVICE_UNAVAILABLE.value,
-            ):
-                # if the error is not a known error, then we should
-                # log the error and return a generic error message with bug report instructions.
-                logger.error(
-                    "%s.dispatch() - %s: %s",
-                    self.formatted_class_name,
-                    type(e),
-                    str(e),
-                )
-                description_override = f"{type(e)}: " + BUG_REPORT + " " + str(e)
+            status = http_status_for_exception(e)
+            description = describe_exception(e, status)
+            if status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
+                logger.error("%s.dispatch() - %s: %s", self.formatted_class_name, type(e), str(e), exc_info=True)
+            else:
+                logger.warning("%s.dispatch() - %s %s: %s", self.formatted_class_name, status, type(e), description)
 
             return SmarterJournaledJsonErrorResponse(
                 request=request,
@@ -855,5 +929,5 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 e=e,
                 status=status,
                 stack_trace=traceback.format_exc(),
-                description=description_override,
+                description=description,
             )

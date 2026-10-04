@@ -37,8 +37,6 @@ spec:
     maxTokens: 256
   connection: test_sql_connection
   sqlData:
-    description: >
-      This SQL query retrieves the Django user record for the username provided.
     # a deterministic query that echoes its interpolated arguments back, without
     # depending on the contents of the remote database. note that placeholders
     # are NOT quoted: SqlPlugin quotes and escapes string values itself.

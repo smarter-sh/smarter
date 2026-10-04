@@ -49,7 +49,6 @@ spec:
       availability.
     defaultTemperature: 1.0
     deployed: false
-    dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
   functions: []

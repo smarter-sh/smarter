@@ -37,8 +37,6 @@ spec:
     maxTokens: 256
   connection: test_sql_connection
   sqlData:
-    description: >
-      This SQL query retrieves the Django user record for the username provided.
     sqlQuery: >
       SELECT * FROM auth_user WHERE username = '{username}';
     parameters:

@@ -62,6 +62,7 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
     )
     defaultSystemRole: Optional[str] = Field(
         None,
+        max_length=SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH,
         description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the llmclient. This defaults to the following value:\n{settings_defaults.LLM_DEFAULT_SYSTEM_ROLE}.\nThe system prompt is the first message in the conversation and is used to set the context for the llmclient. It is important to keep this prompt short, as it is included in the token count for each message. The maximum length of the system prompt is {SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH} characters.",
     )
     defaultTemperature: Optional[float] = Field(

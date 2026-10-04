@@ -82,7 +82,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .chat_provider_base import SmarterChatProviderBase
-from .exception_map import EXCEPTION_MAP
+from .exception_map import exception_status_and_message
 from .internal_keys import _InternalKeys
 
 
@@ -776,7 +776,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         Handle a plugin being selected.
 
         does the prompt have anything to do with any of the search terms defined in a plugin?
-        TODO: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
+        The LLMClient's model, temperature and max_completion_tokens are used whichever plugins
+        are selected: a plugin customizes the prompt's messages and tools, not the LLM settings.
         2025-10-02: updated to validate that messages and tools are lists.
         2025-10-02: updated to use plugin.plugin_meta.name for the plugin name.
 
@@ -797,9 +798,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: plugin_prompt must be an instance of PluginPrompt, got {type(plugin.plugin_prompt)}"
             )
-        self.model = plugin.plugin_prompt.model
-        self.temperature = plugin.plugin_prompt.temperature
-        self.max_completion_tokens = plugin.plugin_prompt.max_completion_tokens
         self.messages = plugin.customize_prompt(self.messages)
         if self.tools is None:
             self.tools = []
@@ -1171,6 +1169,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.functions = functions
 
         prompt_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
+        # the status and the message of an error, e.g. a 400 from the LLM provider, if any.
+        error_status: Optional[int] = None
+        error_message: Optional[str] = None
         self.iteration = 1
         openai.api_key = self.api_key
         openai.base_url = self.base_url
@@ -1371,17 +1372,16 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 messages=self.messages,
                 stack_trace=stack_trace,
             )
-            # pylint: disable=W0612
-            status_code, _message = EXCEPTION_MAP.get(
-                type(e), (HTTPStatus.INTERNAL_SERVER_ERROR.value, "Internal server error")
-            )
+            error_status, error_message = exception_status_and_message(e)
             created_time = int(time.time())
             self.first_response = ChatCompletion(
                 id="error_response",
                 model=self.model or "unknown",
                 choices=[
                     Choice(
-                        message=ChatCompletionMessage(role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=str(e)),
+                        message=ChatCompletionMessage(
+                            role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=error_message
+                        ),
                         finish_reason="stop",
                         index=0,
                     )
@@ -1394,9 +1394,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             self.handle_response()
             self.append_openai_error_response(self.first_response, e)
 
-        # done! for better or worse. We process and return LLM errors as a 200
-        # response with the error message in the body, so that the client can
-        # display the error message in the prompt engineers workbench.
+        # done! for better or worse. An error is kept in the message history, so that the
+        # prompt engineers workbench can display it, and is returned with its own status,
+        # e.g. the status of the LLM provider's error response, and its message.
         response = self.handle_completion()
 
         prompt_finished.send(
@@ -1406,7 +1406,13 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             response=response,
             messages=self.messages,
         )
-        retval = http_response_factory(status=HTTPStatus.OK, body=response)
+        if error_status is not None and error_status != HTTPStatus.OK.value:
+            retval = http_response_factory(
+                status=error_status,
+                body={"error": {"status": error_status, "message": error_message}, "response": response},
+            )
+        else:
+            retval = http_response_factory(status=HTTPStatus.OK, body=response)
         if not isinstance(retval, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: http_response_factory() should have returned a dictionary, but instead returned {type(retval)}"
