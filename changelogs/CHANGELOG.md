@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.1...v0.17.2-alpha.2) (2026-10-04)
+
+### Bug Fixes
+
+* fix 18 vectorsearch and llmclient api bugs that unit tests had marked as expected failures ([f1f197f](https://github.com/smarter-sh/smarter/commit/f1f197fe29c1d0130bfca72e6654705e7d5663c0))
+
 ## [0.17.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.17.1...v0.17.2-alpha.1) (2026-10-04)
 
 ### Bug Fixes
