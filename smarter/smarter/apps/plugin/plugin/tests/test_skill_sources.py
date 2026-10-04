@@ -48,10 +48,18 @@ ANTHROPIC_SKILL_URL = "https://github.com/anthropics/skills/tree/main/skills/bra
 
 
 def github_is_available() -> bool:
-    """Return True if GitHub is reachable from this process."""
+    """
+    Return True if GitHub is reachable from this process, and its api rate limit is not exhausted.
+
+    Unauthenticated GitHub api requests are rate limited to 60 per hour per client IP, and
+    CI runners share their IP addresses. Querying the rate limit does not count against it.
+    """
     try:
-        return requests.head("https://raw.githubusercontent.com/", timeout=5).status_code < 500
-    except requests.exceptions.RequestException:
+        if requests.head("https://raw.githubusercontent.com/", timeout=5).status_code >= 500:
+            return False
+        response = requests.get("https://api.github.com/rate_limit", timeout=5)
+        return response.status_code == 200 and response.json()["resources"]["core"]["remaining"] > 0
+    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):
         return False
 
 
@@ -418,7 +426,7 @@ class TestSkillSources(SmarterTestBase):
     # =========================================================================
     # live: Anthropic's skills repository
     # =========================================================================
-    @skipUnless(GITHUB_AVAILABLE, "GitHub is not reachable")
+    @skipUnless(GITHUB_AVAILABLE, "GitHub is not reachable, or its api rate limit is exhausted")
     def test_live_retrieve_anthropic_skill(self):
         """Test retrieving a real skill from Anthropic's skills repository."""
         skill = retrieve_skill(ANTHROPIC_SKILL_URL)

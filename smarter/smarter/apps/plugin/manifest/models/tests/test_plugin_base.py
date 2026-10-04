@@ -27,6 +27,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.apps.plugin.plugin.tests.base_classes import mock_remote_skills
 from smarter.apps.plugin.plugin.utils import PluginExamples
 from smarter.apps.plugin.serializers import (
     PluginMetaSerializer,
@@ -366,8 +367,10 @@ class TestPluginBase(TestAccountMixin):
                 )
                 self.addCleanup(secret.delete)
 
-        # add the sample plugins to the user account
-        add_example_plugins(user_profile=self.user_profile)
+        # add the sample plugins to the user account. the remote SkillPlugin examples
+        # are retrieved from the test skill, since unit tests must not depend on GitHub.
+        with mock_remote_skills():
+            add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
         plugins = PluginMeta.objects.filter(user_profile__account=self.account)

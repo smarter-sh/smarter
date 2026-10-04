@@ -67,6 +67,7 @@ from smarter.apps.plugin.manifest.models.websearch_plugin.model import (
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
 from smarter.apps.plugin.plugin.skill import SkillPlugin
+from smarter.apps.plugin.plugin.skill_sources import retrieve_skill
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.plugin.websearch import WebsearchPlugin
@@ -275,6 +276,22 @@ def mock_skill_host(host: Optional[FakeWebHost] = None):
     """Serve remote skills from a FakeSkillHost, and resolve every host to a public address."""
     with mock_web_host(host or FakeSkillHost()) as fake_host:
         yield fake_host
+
+
+@contextmanager
+def mock_remote_skills():
+    """
+    Replace the retrieval of every remote SkillPlugin skill with the test skill.
+
+    The sample SkillPlugin manifests refer to Anthropic's skills repository on GitHub,
+    whose unauthenticated api is rate limited to 60 requests per hour per client IP.
+    Use this around :py:func:`smarter.apps.plugin.utils.add_example_plugins`, since unit
+    tests must not depend on GitHub.
+    """
+    with mock_skill_host():
+        test_skill = retrieve_skill(SKILL_REMOTE_URL)
+    with mock.patch("smarter.apps.plugin.plugin.skill.retrieve_skill", return_value=test_skill):
+        yield test_skill
 
 
 def live_api_is_available(attempts: int = 5) -> bool:
