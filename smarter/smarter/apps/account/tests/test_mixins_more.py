@@ -95,3 +95,63 @@ class TestAccountMixinMore(TestAccountMixin):
         self.assertEqual(mixin.user, self.admin_user)
         self.assertTrue(mixin.authenticate(key.encode()))  # already authenticated
         self.assertFalse(AccountMixin().authenticate(b"not-a-valid-token"))
+
+
+class TestAccountMixinLookupErrors(TestAccountMixin):
+    """Test how AccountMixin's lazy lookups of the account, user and user profile handle errors."""
+
+    MODULE = "smarter.apps.account.mixins"
+
+    def mixin_with_user(self) -> AccountMixin:
+        mixin = AccountMixin()
+        mixin._user = self.non_admin_user  # pylint: disable=protected-access
+        return mixin
+
+    def test_account_lookup_errors(self):
+        """Test that an account that can't be found, or isn't unique, or a lookup that fails, is None."""
+        from unittest.mock import patch  # pylint: disable=import-outside-toplevel
+
+        from smarter.apps.account.models import (
+            Account,  # pylint: disable=import-outside-toplevel
+        )
+
+        for error in (Account.DoesNotExist, Account.MultipleObjectsReturned, RuntimeError("cache down")):
+            with self.subTest(error=error), patch(f"{self.MODULE}.get_cached_account_for_user", side_effect=error):
+                self.assertIsNone(self.mixin_with_user().account)
+
+    def test_account_without_user_profile(self):
+        """Test that an account whose user profile can't be found is None."""
+        from unittest.mock import patch  # pylint: disable=import-outside-toplevel
+
+        from smarter.apps.account.models import (
+            UserProfile,  # pylint: disable=import-outside-toplevel
+        )
+
+        with patch.object(UserProfile, "get_cached_object", side_effect=UserProfile.DoesNotExist):
+            mixin = self.mixin_with_user()
+            self.assertIsNone(mixin.account)
+
+    def test_nothing_to_look_up(self):
+        mixin = AccountMixin()
+        self.assertIsNone(mixin.account)
+        self.assertIsNone(mixin.user)
+        self.assertIsNone(mixin.user_profile)
+        self.assertFalse(mixin.am_ready)
+
+    def test_user_profile_setter(self):
+        """Test that setting the user profile sets the user and account, and that setting None clears them."""
+        mixin = AccountMixin()
+        mixin.user_profile = None
+        self.assertIsNone(mixin._user)  # pylint: disable=protected-access
+        self.assertIsNone(mixin._account)  # pylint: disable=protected-access
+        mixin.user_profile = self.non_admin_user_profile
+        self.assertEqual(mixin.user, self.non_admin_user)
+        self.assertEqual(mixin.account, self.account)
+        self.assertTrue(mixin.am_ready)
+
+    def test_am_ready_from_user_profile(self):
+        """Test that am_ready fills in the user and account from the user profile."""
+        mixin = AccountMixin()
+        mixin._user_profile = self.non_admin_user_profile  # pylint: disable=protected-access
+        self.assertTrue(mixin.am_ready)
+        self.assertEqual(mixin._user, self.non_admin_user)  # pylint: disable=protected-access
