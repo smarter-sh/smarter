@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.3...v0.17.2-alpha.4) (2026-10-04)
+
+### Bug Fixes
+
+* stop retrying create_plugin_selector_history for a user who no longer exists ([84c72fa](https://github.com/smarter-sh/smarter/commit/84c72fab0da173e8e1c477aa5b40dc56251bcdfa))
+
 ## [0.17.2-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.2...v0.17.2-alpha.3) (2026-10-04)
 
 ### Bug Fixes
