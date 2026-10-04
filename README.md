@@ -1,5 +1,7 @@
 # The Smarter Project
 
+Welcome Harinder Singh
+
 [![Latest Release](https://img.shields.io/github/v/release/smarter-sh/smarter?label=release)](https://github.com/smarter-sh/smarter/releases)
 ![Test Status](https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main)
 [![codecov](https://codecov.io/gh/smarter-sh/smarter/branch/main/graph/badge.svg)](https://codecov.io/gh/smarter-sh/smarter)
