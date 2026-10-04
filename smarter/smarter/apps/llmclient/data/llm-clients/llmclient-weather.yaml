@@ -40,7 +40,7 @@ spec:
       then you ask the user for clarification. If you are still unable to provide
       the necessary parameters, you inform the user that you are unable to help them
       at this time.
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

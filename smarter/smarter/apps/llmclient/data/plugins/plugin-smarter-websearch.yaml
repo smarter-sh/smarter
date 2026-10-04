@@ -47,7 +47,7 @@ spec:
       publications. Ignore anything that is not about The Smarter Project. Cite the url of
       every source that you use, as a markdown link.
     model: gpt-6-luna
-    temperature: 0.5
+    temperature: 1.0
     maxTokens: 4096
   websearchData:
     search:

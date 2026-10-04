@@ -37,7 +37,7 @@ spec:
       websites, press releases and filings. Compare findings in a table, and cite
       the url of every claim.
     model: gpt-6-luna
-    temperature: 0.2
+    temperature: 1.0
     maxTokens: 4096
   websearchData:
     search:

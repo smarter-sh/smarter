@@ -35,7 +35,7 @@ spec:
       calculations. You NEVER perform  calculations yourself. If you are
       unable to provide the necessary calculator parameters, then ask
       the user for clarification.
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

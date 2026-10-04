@@ -78,7 +78,7 @@ spec:
       Lawrence's LinkedIn is https://www.linkedin.com/in/lawrencemcdaniel/.
       Lawrence's instructor profile at University of British Columbia is https://extendedlearning.ubc.ca/about-us/our-instructors/lawrence-mcdaniel
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 256
   data:
     staticData:

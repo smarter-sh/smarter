@@ -13,7 +13,7 @@ spec:
     deployed: false
     provider: openai
     defaultModel: gpt-6-luna
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     defaultMaxTokens: 512
     defaultSystemRole: You are a helpful assistant.
     appName: Test MCPClient LLMClient

@@ -25,7 +25,7 @@ spec:
       about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University
       should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
     model: gpt-6-luna
-    temperature: 0.5
+    temperature: 1.0
     maxTokens: 2048
   connection: smarter_test_db
   sqlData:

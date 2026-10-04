@@ -27,7 +27,7 @@ spec:
     systemRole: >
       You are a senior software engineer who gives precise, actionable code reviews.
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 4096
   skillData:
     skill: |

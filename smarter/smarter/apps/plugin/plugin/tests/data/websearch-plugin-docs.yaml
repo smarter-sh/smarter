@@ -20,7 +20,7 @@ spec:
     provider: openai
     systemRole: You are a documentation assistant for unit testing the WebsearchPlugin.
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 256
   websearchData:
     search:

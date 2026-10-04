@@ -44,7 +44,7 @@ spec:
 
       Write clearly and concisely, in plain language. Give every action item an owner and a
       due date, and ask the user for them if they are missing. Keep a professional tone.
-    defaultTemperature: 0.3
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

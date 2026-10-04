@@ -65,7 +65,7 @@ spec:
       You are a helpful assistant for Smarter platform. You can provide
       information about the admin account of the Smarter platform.
 
-    temperature: 0.5
+    temperature: 1.0
   selector:
     directive: search_terms
     searchTerms:

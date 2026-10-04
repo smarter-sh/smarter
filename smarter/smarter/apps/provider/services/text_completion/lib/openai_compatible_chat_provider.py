@@ -93,6 +93,18 @@ def should_log(level):
 
 
 OPENAI_TOOL_CHOICE = "auto"
+REASONING_EFFORT_NONE = "none"
+
+TOOLS_REQUIRE_NO_REASONING_MODELS: set[str] = {"gpt-6-luna"}
+"""
+Models whose v1/chat/completions endpoint rejects function tools unless reasoning_effort is 'none'.
+
+OpenAI returns a 400 for these models when a request has tools and omits reasoning_effort, because
+their default effort is not 'none'. The set is not exhaustive: a model that fails this way at runtime
+is added to it, so each process pays for the failed request at most once per model. reasoning_effort
+is never sent otherwise, because older models such as gpt-4o-mini, and some OpenAI-compatible
+providers, reject the parameter.
+"""
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
@@ -1026,6 +1038,38 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             "input_text": self.input_text,
         }
 
+    def create_first_completion(self, completions_kwargs: dict[str, Any]) -> ChatCompletion:
+        """
+        Send the first request, which is the only one that offers the LLM tools.
+
+        Some reasoning models reject function tools on v1/chat/completions unless reasoning_effort
+        is 'none'. Requests with tools set reasoning_effort to 'none' for the models in
+        :data:`TOOLS_REQUIRE_NO_REASONING_MODELS`. If another model rejects the request for that
+        reason, it is retried once with reasoning_effort set to 'none' and the model is added to the set.
+        """
+        has_tools = bool(completions_kwargs.get(_InternalKeys.TOOLS_KEY))
+        if has_tools and self.model in TOOLS_REQUIRE_NO_REASONING_MODELS:
+            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
+        try:
+            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+        except openai.BadRequestError as e:
+            if (
+                not has_tools
+                or _InternalKeys.REASONING_EFFORT_KEY in completions_kwargs
+                or e.param != _InternalKeys.REASONING_EFFORT_KEY
+            ):
+                raise
+            base_logger.warning(
+                "%s %s - model %s rejected function tools at its default reasoning_effort. Retrying with reasoning_effort='%s'.",
+                self.formatted_class_name,
+                formatted_text("create_first_completion()"),
+                self.model,
+                REASONING_EFFORT_NONE,
+            )
+            TOOLS_REQUIRE_NO_REASONING_MODELS.add(str(self.model))
+            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
+            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+
     def handler(
         self,
         user_profile: UserProfile,
@@ -1206,7 +1250,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 completions_kwargs,
             )
 
-            self.first_response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            self.first_response = self.create_first_completion(completions_kwargs)
             if not isinstance(self.first_response, ChatCompletion):
                 raise SmarterValueError(
                     f"{self.formatted_class_name}: first_response must be a ChatCompletion, got {type(self.first_response)}"

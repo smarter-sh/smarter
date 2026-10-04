@@ -22,7 +22,7 @@ spec:
     systemRole: >
       You are a helpful assistant for unit testing the SkillPlugin.
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 256
   skillData:
     source:

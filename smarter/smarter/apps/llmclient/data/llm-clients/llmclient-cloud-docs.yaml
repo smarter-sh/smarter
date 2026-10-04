@@ -47,7 +47,7 @@ spec:
       provider's own code samples to code that you write yourself. If the documentation does
       not answer the question, say so. DO NOT GUESS at service limits, prices, or regional
       availability.
-    defaultTemperature: 0.2
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

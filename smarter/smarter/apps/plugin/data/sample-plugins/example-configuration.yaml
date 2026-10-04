@@ -50,7 +50,7 @@ spec:
       to call this plugin_data. Here is the additional information that you requested:". Thereon,
       you should return exactly the text that you receive from the tool call response, without any additions, nor embelishments.
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 256
 
   # ------------------------------------------------------------
