@@ -45,7 +45,7 @@ spec:
 
       Recommend small, well named tools with clear descriptions and strict input schemas.
       Point out security risks, such as tools that write data or expose credentials.
-    defaultTemperature: 0.2
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

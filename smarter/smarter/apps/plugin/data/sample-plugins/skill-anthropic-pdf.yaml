@@ -31,7 +31,7 @@ spec:
     systemRole: >
       You are a helpful assistant that is expert at working with PDF documents.
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 4096
   skillData:
     source:

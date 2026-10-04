@@ -45,7 +45,7 @@ spec:
       service credits, restoration times or exceptions to policy. Instead, tell the customer
       that a member of the support team will confirm them. Never ask the customer for passwords or
       full payment card numbers.
-    defaultTemperature: 0.3
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

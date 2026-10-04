@@ -55,7 +55,7 @@ spec:
       the subject of Smarter and AI in the organization. Ask one question at a time about the user's
       goals, and relate Smarter to them. When the user is ready, suggest a next step, such as the quick
       start guide. Project contact: Lawrence McDaniel, lpm0073@gmail.com, https://smarter.sh/.
-    defaultTemperature: 0.0
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

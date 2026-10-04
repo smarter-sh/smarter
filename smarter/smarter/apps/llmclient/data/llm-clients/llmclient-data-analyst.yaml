@@ -45,7 +45,7 @@ spec:
       other statements that change data. Aggregate personal data rather than listing
       individual students. If a question is ambiguous, such as "last quarter", state the
       assumption that you made.
-    defaultTemperature: 0.0
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

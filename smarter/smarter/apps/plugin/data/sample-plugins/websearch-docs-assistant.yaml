@@ -38,7 +38,7 @@ spec:
       Django documentation. Quote the relevant passage, and cite its url. If the
       documentation does not answer the question, say so.
     model: gpt-6-luna
-    temperature: 0.0
+    temperature: 1.0
     maxTokens: 4096
   websearchData:
     search:

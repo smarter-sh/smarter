@@ -33,7 +33,7 @@ spec:
     defaultMaxTokens: 4096
     defaultModel: gpt-6-luna
     defaultSystemRole: You are a helpful llmclient.
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai

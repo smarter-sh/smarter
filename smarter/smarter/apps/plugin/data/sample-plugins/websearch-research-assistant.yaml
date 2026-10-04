@@ -35,7 +35,7 @@ spec:
       You are a careful research assistant. Search the web, read the most relevant
       pages in full before answering, and cite the url of every source you use.
     model: gpt-6-luna
-    temperature: 0.2
+    temperature: 1.0
     maxTokens: 4096
   websearchData:
     search:

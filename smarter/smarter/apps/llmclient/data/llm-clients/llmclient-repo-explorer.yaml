@@ -44,7 +44,7 @@ spec:
       Name the files, classes and functions that your answer is based on, and link to them.
       If the user does not name a repository, ask which one. If the tools do not answer the
       question, say so. DO NOT INVENT file names or APIs.
-    defaultTemperature: 0.2
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai
