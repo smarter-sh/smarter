@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.17.2](https://github.com/smarter-sh/smarter/compare/v0.17.1...v0.17.2) (2026-10-04)
+
+### Bug Fixes
+
+* **dashboard:** live service health, activity, budget alerts, onboarding and quick actions ([a7d449d](https://github.com/smarter-sh/smarter/commit/a7d449d7d8e40603de32330da983b33ebaaace37))
+* fix 18 vectorsearch and llmclient api bugs that unit tests had marked as expected failures ([f1f197f](https://github.com/smarter-sh/smarter/commit/f1f197fe29c1d0130bfca72e6654705e7d5663c0))
+* fix 43 bugs that unit tests had marked as expected failures ([9b7f0ea](https://github.com/smarter-sh/smarter/commit/9b7f0ea598ba1d5946b9cc6e7b398d3b815a9689))
+* fix LLMClient custom domains, Prompt manifests, example manifests, undeploy and kubectl deletes ([05f7ad4](https://github.com/smarter-sh/smarter/commit/05f7ad4a1562fc29d3786c08f6169625ddee8596))
+* fix the last 10 bugs that unit tests had marked as expected failures ([f6c2458](https://github.com/smarter-sh/smarter/commit/f6c2458c73b0bc7f5d7db3d5ea4854d275d24b1c))
+* **guardrail:** patch prompt Celery tasks in prompt integration tests to stop teardown races ([b0fee8b](https://github.com/smarter-sh/smarter/commit/b0fee8b3fccd29fc1df194ff87615c6c0bb4ef9d))
+* isolate infrastructure tasks from operational tasks, never block a worker, and refresh the smarter LLMClient, its plugins and OpenAI models ([5a378b4](https://github.com/smarter-sh/smarter/commit/5a378b47fc8cae82d60f82875486528d1cce8ac8))
+* stop retrying create_plugin_selector_history for a user who no longer exists ([84c72fa](https://github.com/smarter-sh/smarter/commit/84c72fab0da173e8e1c477aa5b40dc56251bcdfa))
+
 ## [0.17.2-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.17.2-alpha.7...v0.17.2-alpha.8) (2026-10-04)
 
 ### Bug Fixes
