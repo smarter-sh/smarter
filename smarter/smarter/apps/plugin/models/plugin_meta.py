@@ -300,7 +300,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if username and not user:
             try:
                 user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username, account=account)  # type: ignore[arg-type]
-            except UserProfile.DoesNotExist:
+            # the lookup by username raises User.DoesNotExist for an unknown username.
+            except (UserProfile.DoesNotExist, User.DoesNotExist):
                 logger.debug(
                     "%s.get_cached_object() - No UserProfile found for username: %s, account: %s",
                     logger_prefix,
@@ -308,12 +309,15 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     account.id if account else None,  # type: ignore[attr-defined]
                 )
                 user_profile = None
-            user = user_profile.user if user_profile else None
-            account = account or (user_profile.account if user_profile else None)
+            if not user_profile:
+                # without a user, the lookup below would find the account's admin.
+                raise SmarterValueError(f"No user named {username} was found for account {account}.")
+            user = user_profile.user
+            account = account or user_profile.account
 
         try:
             user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
-        except UserProfile.DoesNotExist:
+        except (UserProfile.DoesNotExist, User.DoesNotExist):
             logger.debug(
                 "%s.get_cached_object() - No UserProfile found for user: %s, account: %s",
                 logger_prefix,
