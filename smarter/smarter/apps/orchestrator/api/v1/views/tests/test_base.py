@@ -11,6 +11,7 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
     SAMOrchestratorBroker,
 )
+from smarter.apps.plugin.plugin.tests.base_classes import mock_remote_skills
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
@@ -72,7 +73,8 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
         )
 
         # Add example plugins to the user profile
-        add_example_plugins(user_profile=cls.user_profile)
+        with mock_remote_skills():
+            add_example_plugins(user_profile=cls.user_profile)
 
         # the LLMClient that the manifest's harness refers to by name
         cls.harness_llmclient, _ = LLMClient.objects.get_or_create(
