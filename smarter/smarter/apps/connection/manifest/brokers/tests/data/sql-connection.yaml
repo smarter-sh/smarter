@@ -24,7 +24,7 @@ metadata:
     - smarter.sh/test-sql-connection/maintainer-email: support@smarter.sh
     - smarter.sh/test-sql-connection/usage: |
         This SQL connection configuration is intended for testing purposes only. It
-        connects to a local Docker MySQL development database with default credentials.
+        connects to a local Docker MariaDB development database with default credentials.
         Do not use this configuration in production environments.
 spec:
   connection:

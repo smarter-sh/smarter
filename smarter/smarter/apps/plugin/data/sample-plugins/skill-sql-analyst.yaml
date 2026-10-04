@@ -34,8 +34,8 @@ spec:
     skill: |
       ---
       name: sql-analyst
-      description: Writes and explains MySQL queries against the Stackademy data warehouse to answer questions about courses, enrollments and revenue. Use when the user asks a quantitative question about Stackademy's business, or asks for a SQL query or report.
-      compatibility: MySQL 8
+      description: Writes and explains MariaDB queries against the Stackademy data warehouse to answer questions about courses, enrollments and revenue. Use when the user asks a quantitative question about Stackademy's business, or asks for a SQL query or report.
+      compatibility: MariaDB
       ---
 
       # Stackademy SQL analyst

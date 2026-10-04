@@ -139,7 +139,7 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
    * - PINECONE_ENVIRONMENT
      - (optional) Pinecone environment name
    * - SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-     - Password for MySQL test database
+     - Password for MariaDB test database
    * - SMTP_PASSWORD
      - SMTP server password for outgoing email
    * - SMTP_USERNAME
@@ -198,7 +198,7 @@ Smarter currently relies on four primary mechanisms for secrets management:
         sudo apt-get update
         sudo apt-get install -y jq
 
-    - name: Configure MySQL from Kubernetes secret
+    - name: Configure MariaDB from Kubernetes secret
       id: get-mysql-secret
       uses: ./.github/actions/k8s-get-secret
       with:

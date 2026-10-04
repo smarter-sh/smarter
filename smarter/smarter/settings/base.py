@@ -931,10 +931,10 @@ DATABASES = {
     }
 }
 """
-The Django database configuration for Smarter, using MySQL as the database backend.
+The Django database configuration for Smarter, using MariaDB as the database backend.
 
 Smarter **should** be able to support other common Sql databases supported by Django
-with minimal or no changes, but MySQL is the recommended and tested database backend.
+with minimal or no changes, but MariaDB is the recommended and tested database backend.
 
 This setting is environment specific and will typically be overridden in
 smarter/smarter/settings/base_aws.py or other environment-specific settings files.

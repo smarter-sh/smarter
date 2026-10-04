@@ -36,7 +36,7 @@ init:
 	@echo "==============================================================================="
 	@echo "Initializing local development environment. This will verify and set up your"
 	@echo "Python virtual environment, install all 3rd-party package requirements,"
-	@echo "build the Docker containers, initialize the MySQL database, and create example users,"
+	@echo "build the Docker containers, initialize the MariaDB database, and create example users,"
 	@echo "prompts and AI resources. This may take up to 20 minutes..."
 	@echo "==============================================================================="
 	make check-python							# verify Python 3.13 is installed
@@ -46,7 +46,7 @@ init:
 	make react-build							# build React frontend apps and collect static files
 	make collectstatic							# collect static files for the Django admin interface and other components
 	make docker-build 			                # build the Smarter containers, including building the React frontend components
-	make docker-init							# initialize MySQL and create the smarter database
+	make docker-init							# initialize MariaDB and create the smarter database
 	make pre-commit-init						# install and configure pre-commit
 	@echo ""
 	@echo ""
@@ -163,11 +163,11 @@ docker-check:
 docker-init:
 	@echo ""
 	@echo "==============================================================================="
-	@echo "Initializing Docker environment, including MySQL database and Smarter application setup. This may take a few minutes..."
+	@echo "Initializing Docker environment, including MariaDB database and Smarter application setup. This may take a few minutes..."
 	@echo "==============================================================================="
 	make docker-check && \
 	docker-compose up -d && \
-	docker exec smarter-mariadb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
+	docker exec smarter-mariadb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MariaDB to be ready...'; sleep 10; done" && \
 	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' && \
 	docker exec -i smarter-mariadb mariadb -u root -psmarter < scripts/smarter_test_db.sql && \
 	docker exec smarter-app bash -c "\
