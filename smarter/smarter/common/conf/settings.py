@@ -1608,6 +1608,44 @@ class Settings(BaseSettings):
 
         return v
 
+    infrastructure_tasks_celery_task_queue: str = Field(
+        settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE,
+        description="The Celery task queue name for infrastructure tasks, which deploy, verify and destroy cloud, Kubernetes and DNS resources.",
+        title="Infrastructure Tasks Celery Task Queue",
+    )
+    """
+    The Celery task queue name for infrastructure tasks.
+
+    Infrastructure tasks deploy, verify and destroy cloud, Kubernetes and DNS resources, such as
+    an LLMClient's DNS record, ingress and certificate, an LLMHost's node group, or a vectorstore's
+    database. They can take many minutes, so they run in their own queue, served by their own
+    Celery worker, and never block the operational tasks of llmclient_tasks_celery_task_queue,
+    such as prompt history, charges and budgets.
+
+    :type: str
+    :default: Value from ``settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("infrastructure_tasks_celery_task_queue")
+    def validate_infrastructure_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """Validates the `infrastructure_tasks_celery_task_queue` field.
+
+        Args:
+            v (Optional[str]): The llmclient tasks celery task queue value to validate.
+        Returns:
+            str: The validated llmclient tasks celery task queue.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(
+                f"infrastructure_tasks_celery_task_queue of type {type(v)} is not a str: {v}"
+            )
+
+        return v
+
     plugin_max_data_results: int = Field(
         settings_defaults.PLUGIN_MAX_DATA_RESULTS,
         gt=0,

@@ -157,6 +157,13 @@ class TestSettings(SmarterTestBase):
     def test_llmclient_tasks_celery_task_queue(self):
         self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_task_queue)
 
+    def test_infrastructure_tasks_celery_task_queue(self):
+        """Test that infrastructure tasks have their own queue, so that they never block operational tasks."""
+        self.assertTrue(smarter_settings.infrastructure_tasks_celery_task_queue)
+        self.assertNotEqual(
+            smarter_settings.infrastructure_tasks_celery_task_queue, smarter_settings.llmclient_tasks_celery_task_queue
+        )
+
     def test_plugin_max_data_results(self):
         self.assertIsNotNone(smarter_settings.plugin_max_data_results)
 

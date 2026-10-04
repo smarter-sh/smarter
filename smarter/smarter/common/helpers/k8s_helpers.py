@@ -272,7 +272,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             return False
         return True
 
-    def verify_ingress_resources(self, hostname: str, namespace: str) -> Tuple[bool, bool, bool]:
+    def verify_ingress_resources(
+        self, hostname: str, namespace: str, max_attempts: int = 30
+    ) -> Tuple[bool, bool, bool]:
         """
         Verify that an ingress and all child resources exist in the.
 
@@ -287,6 +289,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :type hostname: str
         :param namespace: The namespace of the ingress.
         :type namespace: str
+        :param max_attempts: How many times to check the certificate, a minute apart. A Celery task
+            passes 1, and checks again later, so that it does not block its worker while it waits.
+        :type max_attempts: int
         :return: A tuple of booleans indicating whether the ingress, certificate, and secret were verified.
         :rtype: Tuple[bool, bool, bool]
         """
@@ -305,12 +310,20 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         secret_verified = self.verify_secret(secret_name, namespace)
 
         certificate_name = secret_name
-        max_attempts = 30
         sleep_time = 60
-        # attempt to verify the certificate once per minute for up to a half hour.
-        for _ in range(max_attempts):
+        certificate_verified = False
+        # attempt to verify the certificate once per minute, by default for up to a half hour.
+        for attempt in range(max(1, max_attempts)):
             certificate_verified = self.verify_certificate(certificate_name, namespace)
             if certificate_verified:
+                break
+            if attempt + 1 >= max_attempts:
+                # no sleep after the last attempt.
+                logger.error(
+                    "%s.verify_ingress_resources() certificate not ready after %s attempts",
+                    module_prefix,
+                    max_attempts,
+                )
                 break
             logger.debug(
                 "%s.verify_ingress_resources() certificate %s %s not ready, sleeping for %s seconds",
@@ -320,12 +333,6 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
                 sleep_time,
             )
             time.sleep(sleep_time)
-        else:
-            logger.error(
-                "%s.verify_ingress_resources() certificate not ready after %s attempts",
-                module_prefix,
-                max_attempts,
-            )
 
         return ingress_verified, certificate_verified, secret_verified
 

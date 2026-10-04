@@ -142,6 +142,31 @@ class TestInitializeProviders(TestAccountMixin):
             self.command.initialize_google_maps()
         self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "maps-key")
 
+    def test_tavily(self):
+        """Test that the Tavily api key is stored as the tavily_api_key Secret."""
+        with (
+            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
+            patch.dict(os.environ, {"TAVILY_API_KEY": "tavily-key"}),
+        ):
+            self.command.initialize_tavily()
+        self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "tavily-key")
+        self.assertEqual(initialize_secret.call_args.kwargs["secret_name"], "tavily_api_key")
+
+    def test_tavily_missing(self):
+        """Test that no Secret is stored when the Tavily api key is not set, or is a .env.example or helm placeholder."""
+        for value in (None, "SET-ME-PLEASE", "SET-ME-IN-helm/charts/smarter/values.yaml"):
+            with (
+                self.subTest(value=value),
+                patch.object(initialize_providers, "initialize_secret") as initialize_secret,
+                patch.dict(os.environ, {}),
+            ):
+                for name in ("TAVILY_API_KEY", "SMARTER_TAVILY_API_KEY"):
+                    os.environ.pop(name, None)
+                if value:
+                    os.environ["TAVILY_API_KEY"] = value
+                self.command.initialize_tavily()
+            initialize_secret.assert_not_called()
+
     def test_google_service_account_invalid(self):
         """Test that a service account that is not base64 encoded json is not stored."""
         with patch.object(initialize_providers, "initialize_secret") as initialize_secret:

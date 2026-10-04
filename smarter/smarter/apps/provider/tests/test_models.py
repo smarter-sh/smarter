@@ -30,6 +30,12 @@ class ProviderTestBase(TestAccountMixin):
 
     def setUp(self):
         super().setUp()
+        # creating a ProviderModel queues verify_provider_model. Celery is not eager in tests, so,
+        # unpatched, it runs in the live worker, which writes ProviderModelVerifications while the test
+        # deletes the model, and the delete fails. Tests that verify a model call the checks themselves.
+        patcher = patch("smarter.apps.provider.tasks.verify_provider_model")
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.provider = self.new_provider("test_provider_models")
 
     def new_provider(self, name: str, **kwargs) -> Provider:

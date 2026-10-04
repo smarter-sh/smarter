@@ -158,6 +158,9 @@ inputs:
   social-auth-linkedin-oauth2-secret:
     description: "The LinkedIn OAuth2 secret"
     required: true
+  tavily-api-key:
+    description: "The Tavily web search API key, which the built-in smarter LLMClient's websearch plugin uses"
+    required: false
   togetherai-api-key:
     description: "The TogetherAI API key"
     required: false
@@ -449,6 +452,7 @@ runs:
             "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
             "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
             "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
+            "SMARTER_TAVILY_API_KEY": ${{ inputs.tavily-api-key && format('"{0}"', inputs.tavily-api-key) || 'null' }},
             "SMARTER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
             "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
             "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},

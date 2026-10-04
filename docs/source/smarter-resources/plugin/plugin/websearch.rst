@@ -15,6 +15,7 @@ Technical References
 - Web search APIs: :py:mod:`smarter.apps.plugin.plugin.websearch_providers`
 - Reading web pages: :py:mod:`smarter.apps.plugin.plugin.websearch_fetch`
 - Safe HTTP requests: :py:mod:`smarter.apps.plugin.plugin.safe_http`
+- :doc:`Tavily web search <../../../smarter-framework/technologies/tavily>`: what Tavily is, and how to set up its API key
 - :doc:`SAM Broker <../sam/brokers/websearch-plugin>`
 - :doc:`SAM Pydantic Class Reference <../sam/models/websearch-plugin>`
 

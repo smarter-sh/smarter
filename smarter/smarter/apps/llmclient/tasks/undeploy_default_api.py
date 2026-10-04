@@ -66,7 +66,7 @@ logger_prefix = logging.formatted_text(__name__)
     autoretry_for=(Exception,),
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
 )
 def undeploy_default_api(llmclient_id: int):
     """

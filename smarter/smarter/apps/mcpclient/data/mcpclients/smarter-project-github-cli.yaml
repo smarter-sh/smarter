@@ -1,0 +1,39 @@
+---
+# The Smarter Project's GitHub repository smarter-sh/smarter-cli, the Smarter command-line interface, through GitMCP.
+# Repository: https://github.com/smarter-sh/smarter-cli
+# Documentation: https://gitmcp.io
+#
+# GitMCP serves one MCP server per repository, so this client can read only smarter-sh/smarter-cli.
+# The smarter LLMClient uses one such client for each of The Smarter Project's repositories that
+# it may read: see the other smarter-project-github*.yaml manifests.
+#
+# This server requires no authentication. allowedTools omits GitMCP's generic tool that fetches
+# any url, so that the LLM reads only this repository.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: smarter_project_github_cli
+  description: Reads and searches the documentation and source code of the Smarter command-line interface, in The Smarter Project's GitHub repository smarter-sh/smarter-cli.
+  version: 1.0.0
+  tags:
+    - smarter
+    - documentation
+    - github
+    - code
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://gitmcp.io
+    - smarter.sh/mcpclient/repository: https://github.com/smarter-sh/smarter-cli
+spec:
+  config:
+    transport: http
+    endpointUrl: https://gitmcp.io/smarter-sh/smarter-cli
+    authType: none
+    allowedTools:
+      - fetch_smarter_cli_documentation
+      - search_smarter_cli_documentation
+      - search_smarter_cli_code
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 3600
+    isActive: true
+    priority: 100
