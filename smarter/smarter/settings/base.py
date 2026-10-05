@@ -46,11 +46,9 @@ logger.debug("%s Smarter version: %s", logger_prefix, smarter_version)
 # pylint: disable=W0621
 def smart_cast(value, default_value):
     """
-    Cast string value to the same data type as the type.
+    Cast string value to the same data type as the type of the default_value.
 
-    of the default_value. This is used for casting
-    environment variable strings to the
-    appropriate settings type.
+    This is used for casting environment variable strings to the appropriate settings type.
     """
     if isinstance(default_value, bool):
         return str(value).lower() in ("1", "true", "yes", "on")

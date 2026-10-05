@@ -1,7 +1,6 @@
 """
-Test the Prompt dashboard views: the React list of LLMClients, its list, clone, delete and rename.
+Test the Prompt dashboard views: the React list of LLMClients, its list, clone, delete and rename api, the LLMClient manifest page, and the sandbox, prompt workbench and config pages.
 
-api, the LLMClient manifest page, and the sandbox, prompt workbench and config pages.
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 

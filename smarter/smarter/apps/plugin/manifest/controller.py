@@ -78,9 +78,7 @@ class SAMPluginControllerError(SAMExceptionBase):
 
 class PluginController(AbstractController):
     """
-    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations,.
-
-    and Django ORM models within the Smarter platform.
+    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations, and Django ORM models within the Smarter platform.
 
     The PluginController is responsible for orchestrating the instantiation and management of plugin
     objects based on manifest data, plugin metadata, or plugin names. It supports dynamic loading of
@@ -221,11 +219,7 @@ class PluginController(AbstractController):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         class_name = f"{__name__}.{PluginController.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 

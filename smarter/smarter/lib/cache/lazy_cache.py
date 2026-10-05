@@ -50,9 +50,8 @@ logger = logging.getLogger(__name__)
 # pylint: disable=C2801,E1102,W0613
 class LazyCache:
     """
-    A lazy wrapper around Django's cache framework that defers importing the cache.
+    A lazy wrapper around Django's cache framework that defers importing the cache until just before it is used for the first time.
 
-    until just before it is used for the first time.
     This helps avoid premature initialization issues. See https://docs.djangoproject.com/en/5.2/topics/cache/
 
     Usage example::

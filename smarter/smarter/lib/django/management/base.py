@@ -111,11 +111,7 @@ class SmarterCommand(BaseCommand):
             sys.exit(1)
 
     def create_parser(self, prog_name, subcommand, **kwargs):
-        """
-        Create and return the ``ArgumentParser`` which will be used to.
-
-        parse the arguments to this command.
-        """
+        """Create and return the ``ArgumentParser`` which will be used to parse the arguments to this command."""
         parser = super().create_parser(prog_name, subcommand, **kwargs)
         parser.add_argument(
             "--settings_output",

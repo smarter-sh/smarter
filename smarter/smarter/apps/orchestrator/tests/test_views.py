@@ -1,7 +1,7 @@
 """
-Test the Orchestrator dashboard views: the React list page, its list, clone, delete and rename api,.
+Test the Orchestrator dashboard views: the React list page, its list, clone, delete and rename api, and the manifest detail page.
 
-and the manifest detail page. See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
+See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
 from smarter.apps.account.tests.mixins import TestAccountMixin

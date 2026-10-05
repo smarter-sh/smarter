@@ -1,11 +1,10 @@
 # pylint: disable=W0613,C0302
 """
-PromptWorkbenchView is a Django class-based view responsible for serving the.
+PromptWorkbenchView is a Django class-based view responsible for serving the main prompt application page within the Smarter dashboard web app.
 
-main prompt application page within the Smarter dashboard web app. It integrates
-the ReactJS prompt UI with the Django template system by injecting a React build
-artifact snippet (served from an AWS Cloudfront CDN) into the Django-rendered
-HTML template. The React app then takes over the UI from there.
+It integrates the ReactJS prompt UI with the Django template system by injecting a React build artifact snippet
+(served from an AWS Cloudfront CDN) into the Django-rendered HTML template. The React app then takes over the UI
+from there.
 """
 
 import traceback

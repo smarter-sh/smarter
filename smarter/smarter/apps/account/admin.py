@@ -41,10 +41,9 @@ def smarter_filter_queryset_for_user_profile(
     user_profile_filter: Optional[str] = "user_profile",
 ) -> QuerySet:
     """
-    Helper method to filter a queryset based on the user's role and ownership.
+    Helper method to filter a queryset based on the user's role and ownership of the objects in the queryset.
 
-    of the objects in the queryset. Queryset is assumed to have a user_profile
-    field that is a foreign key to the UserProfile model.
+    Queryset is assumed to have a user_profile field that is a foreign key to the UserProfile model.
 
     FIX NOTE: refactor this to use SmarterQuerySetWithPermissions()
 
@@ -373,11 +372,7 @@ class RestrictedUserAdmin(UserAdmin):
     )
 
     def has_add_permission(self, request) -> bool:
-        """
-        Force all adds to the manage.py command, because.
-
-        this adds UserProfile and sends the welcome email.
-        """
+        """Force all adds to the manage.py command, because this adds UserProfile and sends the welcome email."""
         return False
 
     def has_delete_permission(self, request, obj=None) -> bool:
@@ -392,11 +387,7 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_change_permission(self, request, obj=None) -> bool:
-        """
-        Allow change permissions for superusers and to.
-
-        staff users if they are changing a user within their own account.
-        """
+        """Allow change permissions for superusers and to staff users if they are changing a user within their own account."""
         if not hasattr(request, "user"):
             return False
         if not isinstance(request.user, User):

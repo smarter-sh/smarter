@@ -568,9 +568,9 @@ class PluginTestBase(TestAccountMixin):
     @classmethod
     def websearch_manifest_dict(cls, name: str, variant: str = "research", **websearch_data) -> dict[str, Any]:
         """
-        Return a WebsearchPlugin manifest dict based on ./data/websearch-plugin*.yaml, optionally.
+        Return a WebsearchPlugin manifest dict based on ./data/websearch-plugin*.yaml, optionally replacing its websearchData fields.
 
-        replacing its websearchData fields. A value of None removes a field.
+        A value of None removes a field.
         """
         data = copy.deepcopy(cls.websearch_yaml[variant])
         data["metadata"]["name"] = name

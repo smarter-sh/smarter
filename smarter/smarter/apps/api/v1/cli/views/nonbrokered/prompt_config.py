@@ -55,11 +55,7 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         inherited_class = super().formatted_class_name
         return f"{inherited_class}.{ApiV1CliPromptConfigApiView.__name__}[{id(self)}]"
 

@@ -80,9 +80,10 @@ class names its views differently, add a small adapter class (see
 - **`SmarterCommand.handle_completed_failure(err, msg)`** exits with
   `SystemExit` only when `err` is set. Assert command failures with
   `assertRaises(SystemExit)`.
-- **Same-named management commands shadow each other.** For example, the
-  account app's `get_secret` and `update_secret` shadow the secret app's
-  commands of the same name. Check which one `call_command` actually resolves.
+- **`call_command("<name>")` runs whichever app's command Django finds first.**
+  Command names are unique across the project, and
+  `smarter/smarter/apps/secret/management/tests/test_commands.py` guards its
+  commands with `get_commands()`. Test a command by name, as `manage.py` runs it.
 - **`smarter.lib.django.shortcuts.reverse(ns, name, kwargs=...)` is broken with
   kwargs.** Use Django's `reverse(f"{ns}:{name}", kwargs=...)`.
 - **GitHub rate limits.** Tests that load plugins from GitHub must wrap them in

@@ -130,11 +130,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
     def display_value(self, obj: Secret):
-        """
-        Display the secret value as '********' for users who do not have.
-
-        permission to view it.
-        """
+        """Display the secret value as '********' for users who do not have permission to view it."""
 
         def has_all_permission() -> bool:
             """

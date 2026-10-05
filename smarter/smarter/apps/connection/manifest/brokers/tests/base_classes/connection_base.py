@@ -42,10 +42,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
     @classmethod
     def setUpClass(cls):
         """
-        Set up the test class with a single account, and admin and non-admin users.
-
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
+        Set up the test class with a single account, and admin and non-admin users using the class setup so that we retain the same user_profile for each test, which is needed so that the django Secret model can be queried.
 
         # note: this is SMARTER_MYSQL_TEST_DATABASE_PASSWORD from .env
         # cls.test_secret_value = smarter_settings.smarter_mysql_test_database_password.get_secret_value()

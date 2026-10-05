@@ -131,11 +131,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_02_apply(self):
-        """
-        Test that we get OK response when passing a valid manifest.
-
-        to apply()
-        """
+        """Test that we get OK response when passing a valid manifest to apply()."""
         # load the manifest from the yaml file
         loader = SAMLoader(file_path=os.path.join(HERE, "data", "good-secret.yaml"))
         self.assertTrue(loader.ready, msg="loader is not ready")

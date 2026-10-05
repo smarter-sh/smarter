@@ -17,9 +17,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class DefaultVectorsearchApiView(VectorsearchApiBaseViewSet):
     """
-    Main view for Smarter Vectorsearch API prompt prompts.
+    Main view for Smarter Vectorsearch API prompts.
 
-    top-level viewset for customer-deployed Plugin-based Prompt APIs.
+    The top-level viewset for customer-deployed Plugin-based Prompt APIs.
     """
 
     def dispatch(self, request, *args, **kwargs):

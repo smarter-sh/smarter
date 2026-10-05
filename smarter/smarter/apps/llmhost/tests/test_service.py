@@ -77,11 +77,7 @@ class TestLLMHostService(LLMHostTestBase):
         self.assertFalse(Secret.objects.filter(name="llmhost_test_service_plan_api_key").exists())
 
     def test_launch(self):
-        """
-        Test that launch applies the resources, with the token and a generated API key, adds a node to.
-
-        its compute's node group, and records it.
-        """
+        """Test that launch applies the resources, with the token and a generated API key, adds a node to its compute's node group, and records it."""
         launched = self.connect(llmhost_launched)
         llmhost = self.new_llmhost("test_service_launch")
         observation = self.service.launch(llmhost)

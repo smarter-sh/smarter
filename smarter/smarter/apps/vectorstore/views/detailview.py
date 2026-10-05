@@ -1,9 +1,5 @@
 # pylint: disable=W0613
-"""
-This module contains views to implement the Vectorstore.
-
-card-style detail view in the Smarter Dashboard.
-"""
+"""This module contains views to implement the Vectorstore card-style detail view in the Smarter Dashboard."""
 
 from typing import Optional
 

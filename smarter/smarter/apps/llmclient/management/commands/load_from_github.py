@@ -1,8 +1,4 @@
-"""
-This module is used to deploy a collection of customer API's from a GitHub repository containing plugin YAML files.
-
-organized in directories by customer API name.
-"""
+"""This module is used to deploy a collection of customer API's from a GitHub repository containing plugin YAML files organized in directories by customer API name."""
 
 import os
 import re
@@ -178,11 +174,7 @@ class Command(SmarterCommand):
                 process_directory(directory="llmclients")
 
     def process_repo_v1(self):
-        """
-        Process a GitHub repository containing yaml plugin files organized into folders,.
-
-        where each folder name is the subdomain for a customer API.
-        """
+        """Process a GitHub repository containing yaml plugin files organized into folders, where each folder name is the subdomain for a customer API."""
 
         def is_demo_folder(directory) -> bool:
             """Returns true if the folder contains yaml or yml files."""

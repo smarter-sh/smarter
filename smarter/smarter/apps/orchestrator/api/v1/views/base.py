@@ -126,9 +126,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
+        Returns the class name in a formatted string along with the name of this mixin.
 
         :return: Formatted class name string.
         :rtype: str

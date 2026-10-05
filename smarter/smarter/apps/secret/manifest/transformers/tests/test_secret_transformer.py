@@ -33,11 +33,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
             SecretTransformer(user_profile=self.user_profile)
 
     def test_manager_02_example_manifest(self):
-        """
-        Test that the example manifest method returns a dictionary.
-
-        from a call to the SecretTransformer class method.
-        """
+        """Test that the example manifest method returns a dictionary from a call to the SecretTransformer class method."""
         example_manifest = SecretTransformer.example_manifest()
         self.assertIsInstance(example_manifest, dict)
 

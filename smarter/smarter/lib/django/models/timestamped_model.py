@@ -37,9 +37,7 @@ verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)  # type
 
 class TimestampedModel(models.Model, SmarterHelperMixin):
     """
-    Abstract base model for all Django ORM models in the Smarter project, providing automatic.
-
-    timestamp fields and utility methods.
+    Abstract base model for all Django ORM models in the Smarter project, providing automatic timestamp fields and utility methods.
 
     This class should be used as the base class for all models in the project to ensure
     consistent tracking of creation and modification times. It adds ``created_at`` and
@@ -153,9 +151,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @cached_property
     def hashed_id(self) -> str:
         """
-        Returns a URL-friendly hashed version of the object's ID for use in URLs and other.
-
-        contexts where an obscured, non-identifying, non-sequential identifier is preferred.
+        Returns a URL-friendly hashed version of the object's ID for use in URLs and other contexts where an obscured, non-identifying, non-sequential identifier is preferred.
 
         Encoding scheme:
         1. Take the object's ID and add a large constant (HASH_FLOOR) to ensure it's not easily guessable.
@@ -255,9 +251,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def find_hash(cls, value: str) -> Optional[str]:
         """
-        Finds and returns the first substring in the given value that matches.
-
-        the hashed ID format.
+        Finds and returns the first substring in the given value that matches the hashed ID format.
 
         :param value: The string to search for a hashed ID.
         :returns: The first matching hashed ID if found, otherwise None.
@@ -531,10 +525,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
     ) -> Optional[models.Model]:
         """
-        Retrieve a model instance by primary key, using caching to.
+        Retrieve a model instance by primary key, using caching to optimize performance.
 
-        optimize performance. This method is selectively overridden in
-        models that inherit from TimestampedModel to provide class-specific
+        This method is selectively overridden in models that inherit from TimestampedModel to provide class-specific
         function parameters.
 
         Example usage:

@@ -1,7 +1,5 @@
 """
-This module provides a Django management command to remove an email address from.
-
-the Account Contact list associated with a specific Account.
+This module provides a Django management command to remove an email address from the Account Contact list associated with a specific Account.
 
 Classes
 =======

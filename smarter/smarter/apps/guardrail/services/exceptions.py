@@ -7,9 +7,7 @@ class GuardrailServiceError(Exception):
 
 class GuardrailConfigError(GuardrailServiceError):
     """
-    Raised for a :class:`~smarter.apps.guardrail.models.Guardrail` whose configuration is.
-
-    invalid or incomplete for its strategy, e.g. ``strategy=regex`` without a ``pattern``.
+    Raised for a :class:`~smarter.apps.guardrail.models.Guardrail` whose configuration is invalid or incomplete for its strategy, e.g. ``strategy=regex`` without a ``pattern``.
 
     Manifests are validated when they are applied, so this indicates a Guardrail that was
     changed outside of a manifest, e.g. in the Django admin.

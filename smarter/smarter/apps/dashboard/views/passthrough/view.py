@@ -45,10 +45,7 @@ logger = logging.getLogger(__name__)
 
 class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Renders a passthrough template for the prompt app that accepts a raw JSON.
-
-    dict for an LLM provider, passes this directly to the LLM provider API,
-    and renders the API response in the template.
+    Renders a passthrough template for the prompt app that accepts a raw JSON dict for an LLM provider, passes this directly to the LLM provider API, and renders the API response in the template.
 
     :param request: Django HTTP request object.
     :type request: ASGIRequest

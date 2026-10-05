@@ -1,8 +1,5 @@
 """
-Test the deployment entry points: the per-environment Django settings modules,.
-
-the ASGI and WSGI applications, the Celery Beat schedule, and the WebSocket
-consumers.
+Test the deployment entry points: the per-environment Django settings modules, the ASGI and WSGI applications, the Celery Beat schedule, and the WebSocket consumers.
 
 None of these are imported by the test runner, which runs under
 smarter.settings.local, so these tests import them directly. Importing a
@@ -120,10 +117,9 @@ class TestBaseSettings(SmarterTestBase):
 
     def test_environment_overrides_and_diagnostics(self):
         """
-        DJANGO_* environment variables override existing settings, cast to the.
+        DJANGO_* environment variables override existing settings, cast to the existing type, or create new settings with an inferred type.
 
-        existing type, or create new settings with an inferred type. Outside of
-        manage.py, base.py also logs container diagnostics.
+        Outside of manage.py, base.py also logs container diagnostics.
         """
         environ = {
             "DJANGO_APPEND_SLASH": "false",

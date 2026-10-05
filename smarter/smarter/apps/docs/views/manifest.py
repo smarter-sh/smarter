@@ -37,11 +37,7 @@ class DocsExampleManifestBaseView(DocsBaseView):
         return render(request, self.template_path, context=self.context)
 
     def post(self, request, *args, **kwargs):
-        """
-        For Sphinx docs generation, we just want the raw YAML output.
-
-        rather than the HTML page.
-        """
+        """For Sphinx docs generation, we just want the raw YAML output rather than the HTML page."""
         self.file_name = str(self.kind)
         self.file_name = str(to_snake_case(self.file_name)) + ".yaml"
 

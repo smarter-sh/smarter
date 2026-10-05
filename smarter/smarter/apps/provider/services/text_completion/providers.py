@@ -97,11 +97,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class ClientTypeEnum(SmarterEnumAbstract):
-    """
-    Client type distinguishes between the kind of handler we want.
-
-    from the provider.
-    """
+    """Client type distinguishes between the kind of handler we want from the provider."""
 
     SMARTER = OpenAISmarterClient.__name__
     PASSTHROUGH = OpenAIPassthroughClient.__name__

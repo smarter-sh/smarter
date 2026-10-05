@@ -250,11 +250,7 @@ def _get_cached_llmhost_computes_shared_with_user_profile(user_profile_id: int) 
 
 
 def get_cached_llmhost_computes_shared_with_user_profile(user_profile: UserProfile) -> models.QuerySet[LLMHostCompute]:
-    """
-    Retrieve the LLMHostComputes shared with the given UserProfile, cached: e.g. the built-in.
-
-    ones, which the Smarter admin owns.
-    """
+    """Retrieve the LLMHostComputes shared with the given UserProfile, cached: e.g. the built-in ones, which the Smarter admin owns."""
     return _get_cached_llmhost_computes_shared_with_user_profile(user_profile.id)  # type: ignore
 
 

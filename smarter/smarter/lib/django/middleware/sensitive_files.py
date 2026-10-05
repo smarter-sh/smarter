@@ -1,7 +1,5 @@
 """
-Middleware that blocks requests targeting sensitive files, configuration.
-
-artifacts, and common attack-probe endpoints.
+Middleware that blocks requests targeting sensitive files, configuration artifacts, and common attack-probe endpoints.
 
 This middleware detects suspicious path access attempts commonly associated
 with automated scanners, vulnerability enumeration tools, credential

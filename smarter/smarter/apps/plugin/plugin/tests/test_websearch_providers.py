@@ -1,7 +1,5 @@
 """
-Unit tests for :py:mod:`smarter.apps.plugin.plugin.websearch_providers`, the web search APIs.
-
-of the WebsearchPlugin.
+Unit tests for :py:mod:`smarter.apps.plugin.plugin.websearch_providers`, the web search APIs of the WebsearchPlugin.
 
 The Brave Search and Tavily APIs are simulated by a :class:`FakeWebHost`, using responses
 in the documented format of each API.

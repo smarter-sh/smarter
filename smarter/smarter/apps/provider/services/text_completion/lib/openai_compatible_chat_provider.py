@@ -419,10 +419,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         def extract_json_objects(text) -> Optional[dict[str, Any]]:
             """
-            Evaluate the text to attempt to extract any JSON objects that.
+            Evaluate the text to attempt to extract any JSON objects that may be present.
 
-            may be present. This is useful for extracting json error
-            information that might exist inside of the error messages.
+            This is useful for extracting json error information that might exist inside of the error messages.
 
             Find all curly-brace blocks (non-greedy) and attempt to parse
             them as JSON objects.

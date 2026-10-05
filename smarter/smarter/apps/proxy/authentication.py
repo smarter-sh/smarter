@@ -37,9 +37,7 @@ API_KEY_HEADERS = ("HTTP_X_API_KEY", "HTTP_X_GOOG_API_KEY", "HTTP_API_KEY")
 
 def get_api_key(request: Request) -> Optional[str]:
     """
-    The Smarter API key of a request: from ``Authorization: Bearer <key>`` or ``Authorization: Token <key>``,.
-
-    else from the ``x-api-key``, ``x-goog-api-key`` or ``api-key`` header.
+    The Smarter API key of a request: from ``Authorization: Bearer <key>`` or ``Authorization: Token <key>``, else from the ``x-api-key``, ``x-goog-api-key`` or ``api-key`` header.
 
     :returns: The API key, or ``None`` if there is none.
     :raises AuthenticationFailed: if the Authorization header is malformed.

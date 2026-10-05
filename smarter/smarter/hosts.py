@@ -1,7 +1,5 @@
 """
-This module defines the complete set of host patterns for the Smarter Framework,.
-
-organized by logical group.
+This module defines the complete set of host patterns for the Smarter Framework, organized by logical group.
 
 Web Console Hosts
 -----------------

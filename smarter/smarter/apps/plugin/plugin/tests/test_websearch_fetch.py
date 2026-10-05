@@ -1,8 +1,6 @@
 # pylint: disable=too-many-public-methods
 """
-Unit tests for :py:mod:`smarter.apps.plugin.plugin.websearch_fetch`, which reads web pages.
-
-for the WebsearchPlugin.
+Unit tests for :py:mod:`smarter.apps.plugin.plugin.websearch_fetch`, which reads web pages for the WebsearchPlugin.
 
 .. note::
 

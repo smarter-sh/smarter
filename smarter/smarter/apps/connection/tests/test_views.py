@@ -1,7 +1,5 @@
 """
-Test the connection app's views: :mod:`smarter.apps.connection.views.listview`, the React.
-
-connection list and its api, and :mod:`smarter.apps.connection.views.detailview`.
+Test the connection app's views: :mod:`smarter.apps.connection.views.listview`, the React connection list and its api, and :mod:`smarter.apps.connection.views.detailview`.
 
 The class fixture ``connection_django_model`` is owned by the account's admin user.
 """

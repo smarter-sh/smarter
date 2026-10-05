@@ -1,8 +1,4 @@
-"""
-Test :mod:`smarter.apps.provider.models`: Provider's status transitions, activation rules,.
-
-api keys and connectivity test, its cached getters, and the verification models.
-"""
+"""Test :mod:`smarter.apps.provider.models`: Provider's status transitions, activation rules, api keys and connectivity test, its cached getters, and the verification models."""
 
 import os
 from datetime import timedelta

@@ -67,11 +67,7 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     )
 
     def __init__(self, **data):
-        """
-        Add support for passing a 'user' argument when initializing the model,.
-
-        which will be stored in a private attribute.
-        """
+        """Add support for passing a 'user' argument when initializing the model, which will be stored in a private attribute."""
         user_profile = data.pop("user_profile", None)
         user = data.pop("user", None)
         super().__init__(**data)

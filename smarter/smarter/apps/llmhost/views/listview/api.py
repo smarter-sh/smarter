@@ -314,12 +314,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class LLMHostComputeListApiView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Return the LLMHostComputes available to the authenticated user, for the React list view in.
-
-    the Smarter Workbench web console: their own, and those shared with them, e.g. the built-in
-    LLMHostComputes, which the Smarter admin owns.
-    """
+    """Return the LLMHostComputes available to the authenticated user, for the React list view in the Smarter Workbench web console: their own, and those shared with them, e.g. the built-in LLMHostComputes, which the Smarter admin owns."""
 
     @property
     def formatted_class_name(self) -> str:

@@ -115,11 +115,7 @@ class TestSAMLoader(TestAccountMixin):
             self.fail("SAMValidationError not raised")
 
     def test_unknown_kind(self):
-        """
-        The loader does not validate the kind argument against the manifest (the recursive.
-
-        key validator was deprecated on 2026-03-14), so the manifest's own kind is used.
-        """
+        """The loader does not validate the kind argument against the manifest (the recursive key validator was deprecated on 2026-03-14), so the manifest's own kind is used."""
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
             kind="bad_kind",

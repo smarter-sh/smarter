@@ -292,9 +292,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         **kwargs,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
-        Retrieve API keys with caching based on user profile and optional name.
-
-        filter using caching.
+        Retrieve API keys with caching based on user profile and optional name filter using caching.
 
         :param invalidate: If True, invalidate the cache for this query.
         :type invalidate: bool, optional

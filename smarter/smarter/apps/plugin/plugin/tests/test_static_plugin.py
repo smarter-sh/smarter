@@ -308,11 +308,7 @@ class TestStaticPlugin(PluginTestBase):
         self.assertIsNone(StaticPlugin().custom_tool)
 
     def test_every_advertised_inquiry_type_resolves(self):
-        """
-        Test the contract between custom_tool and tool_call_fetch_plugin_response: every.
-
-        inquiry type offered to the LLM in the tool's enum can be requested without error.
-        """
+        """Test the contract between custom_tool and tool_call_fetch_plugin_response: every inquiry type offered to the LLM in the tool's enum can be requested without error."""
         for edge_cases in (False, True):
             plugin = self.load_static_plugin(edge_cases=edge_cases)
             enum = plugin.custom_tool["function"]["parameters"]["properties"]["inquiry_type"]["enum"]  # type: ignore[index]

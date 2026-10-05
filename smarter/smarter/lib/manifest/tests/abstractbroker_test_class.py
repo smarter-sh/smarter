@@ -228,14 +228,12 @@ class SAMTestBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
-        SAMPluginCommon() is a Pydantic model.
+        SAMPluginCommon() is a Pydantic model that is used to represent the Smarter API User manifest.
 
-        that is used to represent the Smarter API User manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        The Pydantic model is initialized with the data from the manifest loader, which is generally passed to the
+        model constructor as **data. However, this top-level manifest model has to be explicitly initialized,
+        whereas its child models are automatically cascade-initialized by the Pydantic model, implicitly passing
+        **data to each child's constructor.
         """
         if self._manifest:
             return self._manifest

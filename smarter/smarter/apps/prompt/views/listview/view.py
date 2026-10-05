@@ -1,12 +1,10 @@
 # pylint: disable=W0613,C0302
 """
-PromptListView is a Django class-based view that serves the list of LLMClients.
+PromptListView is a Django class-based view that serves the list of LLMClients for the Smarter workbench web console.
 
-for the Smarter workbench web console. It is responsible for fetching the
-LLMClients associated with the authenticated user, as well as any shared LLMClients,
-and rendering them in a template. The view is protected and requires the user
-to be authenticated. It also includes caching to keep the workbench snappy while
-avoiding appearing stale.
+It is responsible for fetching the LLMClients associated with the authenticated user, as well as any shared
+LLMClients, and rendering them in a template. The view is protected and requires the user to be authenticated. It
+also includes caching to keep the workbench snappy while avoiding appearing stale.
 """
 
 from django.conf import settings

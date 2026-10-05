@@ -178,11 +178,7 @@ class Testk8sHelpers(SmarterTestBase):
         self.assertIsInstance(output, dict)
 
     def test_verify_ingress(self):
-        """
-        Test verify_ingress method.
-
-        verifying an existing ingress.
-        """
+        """Test verify_ingress method verifying an existing ingress."""
         if not kubernetes_helper.ready:
             self.skipTest("KubernetesHelper not ready, skipping test_verify_ingress")
 
@@ -191,11 +187,7 @@ class Testk8sHelpers(SmarterTestBase):
         self.assertTrue(output)
 
     def test_verify_certificate(self):
-        """
-        Test verify_certificate method.
-
-        verifying an existing certificate
-        """
+        """Test verify_certificate method verifying an existing certificate."""
         if not kubernetes_helper.ready:
             self.skipTest("KubernetesHelper not ready, skipping test_verify_certificate")
 
@@ -204,11 +196,7 @@ class Testk8sHelpers(SmarterTestBase):
         self.assertTrue(output)
 
     def test_verify_secret(self):
-        """
-        Test verify_secret method.
-
-        verifying an existing secret
-        """
+        """Test verify_secret method verifying an existing secret."""
         if not kubernetes_helper.ready:
             self.skipTest("KubernetesHelper not ready, skipping test_verify_secret")
 
@@ -217,11 +205,7 @@ class Testk8sHelpers(SmarterTestBase):
         self.assertTrue(output)
 
     def test_apply_manifest(self):
-        """
-        Test that we can apply a manifest that creates.
-
-        a new ingress with a certificate and secret.
-        """
+        """Test that we can apply a manifest that creates a new ingress with a certificate and secret."""
         if not kubernetes_helper.ready:
             self.skipTest("KubernetesHelper not ready, skipping test_apply_manifest")
 
@@ -244,11 +228,7 @@ class Testk8sHelpers(SmarterTestBase):
         self.assertTrue(output)
 
     def test_apply_illegal_host_name(self):
-        """
-        Test that we can apply a manifest that creates.
-
-        a new ingress with a certificate and secret.
-        """
+        """Test that we can apply a manifest that creates a new ingress with a certificate and secret."""
         bad_hostname = f"test_k8s_helpers.{self.account_number}.{self.cluster_issuer}"
         ingress_values = {
             "app_name": smarter_settings.platform_name,

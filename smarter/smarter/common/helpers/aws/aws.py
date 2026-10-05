@@ -532,9 +532,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def environment_domain(self) -> str:
         """
-        We need to rebuild these in order to reformat the localhost domain into.
-
-        a proxy domain that will work with AWS Route53 and Kubernetes
+        We need to rebuild these in order to reformat the localhost domain into a proxy domain that will work with AWS Route53 and Kubernetes.
 
         :return: environment domain
         :rtype: str
@@ -544,9 +542,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def environment_api_domain(self) -> str:
         """
-        We need to rebuild these in order to reformat the localhost domain into.
-
-        a proxy domain that will work with AWS Route53 and Kubernetes
+        We need to rebuild these in order to reformat the localhost domain into a proxy domain that will work with AWS Route53 and Kubernetes.
 
         :return: environment API domain
         :rtype: str
@@ -601,9 +597,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def ready(self) -> bool:
         """
-        Return True if we're working with a known Smarter environment, and.
-
-        we consider it safe to create billable resources in AWS.
+        Return True if we're working with a known Smarter environment, and we consider it safe to create billable resources in AWS.
 
         :return: True if ready
         :rtype: bool

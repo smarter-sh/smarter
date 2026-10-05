@@ -392,10 +392,10 @@ class SAMCustomDomainBroker(AbstractBroker):
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Register the CustomDomain with AWS: queue the register_custom_domain Celery task, which.
+        Register the CustomDomain with AWS: queue the register_custom_domain Celery task, which creates its Route53 hosted zone and TLS certificate.
 
-        creates its Route53 hosted zone and TLS certificate. The domain is verified once its NS
-        records, reported in ``status.dnsRecords``, are added to the root domain's DNS settings.
+        The domain is verified once its NS records, reported in ``status.dnsRecords``, are added to the root
+        domain's DNS settings.
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.llmclient.tasks import register_custom_domain
