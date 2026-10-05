@@ -110,7 +110,7 @@ jobs:
       # to smarter/react, which codecov.yml maps back to the repository's.
       #========================================================================
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: ./smarter/react/coverage/lcov.info
           flags: react
@@ -474,7 +474,7 @@ jobs:
           docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml
           flags: python
