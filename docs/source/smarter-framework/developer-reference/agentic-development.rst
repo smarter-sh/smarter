@@ -94,7 +94,8 @@ the most positive impact.
   pre-commit hooks also catch the agent's own mistakes before you review them.
 - **Types and schemas.** Type hints and Pydantic models state contracts the
   agent would otherwise have to infer, and turn a wrong guess into an immediate
-  error.
+  error. For this reason, Smarter vigorously enforces type annotations and strong
+  type checking throughout the entire codebase.
 - **Names you can search for.** An agent explores a code base mostly with text
   search and file listings. Specific, unambiguous, distinctive names for files, classes and
   settings make the right code easy to find. Generic ones (``utils.py``,
@@ -108,11 +109,14 @@ the most positive impact.
   Moreover, logging is controlled by :doc:`waffle switches </adr/022-feature-flags>`
   and curated for development, so that an agent has the information it needs
   in order to accurately follow a thread of execution. See :doc:`lib/logging`.
-- **Accurate docs and comments.** Agents believe what they read. A stale
+- **Accurate and complete docs.** Agents believe what they read. A stale
   comment or docstring is worse than none. Smarter's Sphinx documentation is
   written as much for agents as for people, so that they fully understand
   the intent behind a piece of code, and the broader context in which
-  it operates.
+  it operates. As of version v0.14 Smarter has more than 1,000 pages of consistently
+  formatted technical documentation, published to `docs.smarter.sh <https://docs.smarter.sh/>`_.
+  Keep in mind that agentic AI is able to search and browse this information
+  in the same way as humans. This has a huge impact on the effectiveness of agentic AI.
 - **A safe place to experiment.** Agents work best when they can run things
   freely. Every live credential or irreversible side effect in the development
   environment means either constant confirmation prompts or a risk of real

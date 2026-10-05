@@ -60,6 +60,8 @@ Smarter is large and highly consistent. Almost every change has a precedent.
    error handling. Don't introduce a new pattern when one exists.
 4. Make the change, then add or update its tests, docstrings and Sphinx page.
 5. Run the hooks and the tests, and fix what they find.
+6. When in doubt, refer to [docs.smarter.sh](https://docs.smarter.sh), which
+   is a searchable ReadTheDocs site built from the Sphinx documentation in this repo.
 
 When existing code disagrees with these skills, the code that is newest and
 consistent with most of the codebase wins. Say so in your summary.
