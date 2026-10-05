@@ -6,6 +6,7 @@ Developer Technical Reference
    :maxdepth: 1
    :caption: Technical Reference
 
+   developer-reference/agentic-development
    developer-reference/react-integration
    developer-reference/smarter-journal
    developer-reference/smarter-enum

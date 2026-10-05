@@ -81,6 +81,14 @@ The skills are also readable documentation for people. If you're new to the
 codebase, `smarter-development` and `smarter-docker-environment` are a good
 place to start.
 
+## Getting the most from a coding agent
+
+Skills are only one of the things that decide how well an agent works on this
+repository. How you ask, and properties of the codebase such as its tests, CI/CD,
+consistency and logging, matter at least as much. See
+[Agentic Development](https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/agentic-development.html)
+on docs.smarter.sh.
+
 ## When to add or change a skill
 
 Consider adding a skill, or adding to an existing one, when:
