@@ -1,0 +1,34 @@
+"""Smarter API CustomDomain Manifest."""
+
+from typing import ClassVar, Optional
+
+from pydantic import Field
+
+from smarter.apps.llmclient.manifest.models.custom_domain.const import MANIFEST_KIND
+from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.models import AbstractSAMBase
+
+from .metadata import SAMCustomDomainMetadata
+from .spec import SAMCustomDomainSpec
+from .status import SAMCustomDomainStatus
+
+MODULE_IDENTIFIER = MANIFEST_KIND
+
+
+class SAMCustomDomain(AbstractSAMBase):
+    """Smarter API Manifest - CustomDomain."""
+
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER
+
+    metadata: SAMCustomDomainMetadata = Field(
+        ...,
+        description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
+    )
+    spec: SAMCustomDomainSpec = Field(
+        ...,
+        description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
+    )
+    status: Optional[SAMCustomDomainStatus] = Field(
+        default=None,
+        description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
+    )

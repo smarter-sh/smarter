@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_custom_domain_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the custom domain list
+  see: smarter.apps.llmclient.templatetags.react_custom_domain_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% custom_domain_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/custom-domain-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ custom_domain_list.root_id }}"
+    django-csrf-cookie-name="{{ custom_domain_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ custom_domain_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ custom_domain_list.cookie_domain }}"
+    smarter-custom-domain-list-api-url="{{ custom_domain_list.custom_domain_list_api_url }}"
+    react-debug-mode="{{ custom_domain_list.react_debug_mode }}"
+    smarter-request-id="{{ custom_domain_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the custom domain list
+  see: smarter.apps.llmclient.templatetags.react_custom_domain_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% custom_domain_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/custom-domain-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

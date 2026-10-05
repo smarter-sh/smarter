@@ -1,0 +1,13 @@
+---
+# A CustomDomain for the llmclient app's broker tests.
+apiVersion: smarter.sh/v1
+kind: CustomDomain
+metadata:
+  name: test_custom_domain
+  description: A custom domain for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+spec:
+  config:
+    domainName: test-custom-domain-broker.example.com

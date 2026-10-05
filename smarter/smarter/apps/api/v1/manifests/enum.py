@@ -22,6 +22,9 @@ from smarter.apps.connection.manifest.models.sql_connection.const import (
 from smarter.apps.guardrail.manifest.models.guardrail.const import (
     MANIFEST_KIND as GUARDRAIL_MANIFEST_KIND,
 )
+from smarter.apps.llmclient.manifest.models.custom_domain.const import (
+    MANIFEST_KIND as CUSTOM_DOMAIN_MANIFEST_KIND,
+)
 from smarter.apps.llmclient.manifest.models.llmclient.const import (
     MANIFEST_KIND as LLM_CLIENT_MANIFEST_KIND,
 )
@@ -119,6 +122,7 @@ class SAMKinds(SmarterEnumAbstract):
         BUDGET: Budget manifest: spending limits enforced on the resources it lists.
         USER: User manifest.
         SECRET: Secret manifest.
+        CUSTOM_DOMAIN: Custom domain manifest: a domain that serves LLMClients.
         GUARDRAIL: Guardrail manifest.
         PROMPT: Prompt manifest.
         LLM_CLIENT: LLM client manifest.
@@ -177,6 +181,7 @@ class SAMKinds(SmarterEnumAbstract):
     # prompt resources
     PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
+    CUSTOM_DOMAIN = CUSTOM_DOMAIN_MANIFEST_KIND
     LLM_HOST = LLM_HOST_MANIFEST_KIND
     LLM_HOST_COMPUTE = LLM_HOST_COMPUTE_MANIFEST_KIND
     MCP_CLIENT = MCP_CLIENT_MANIFEST_KIND

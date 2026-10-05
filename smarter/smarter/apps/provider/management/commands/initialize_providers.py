@@ -195,7 +195,9 @@ class Command(SmarterCommand):
                 )
                 return
 
-            models = response.json().get("data", [])
+            # some providers (e.g. Together AI) return a bare list rather than {"object": "list", "data": [...]}
+            response_json = response.json()
+            models = response_json if isinstance(response_json, list) else response_json.get("data", [])
             if len(models) == 0:
                 self.stdout.write(self.style.WARNING(f"{log_prefix} No provider models found."))
                 return
@@ -306,14 +308,14 @@ class Command(SmarterCommand):
         """Initialize Cohere provider and its models."""
         API_KEY_ENV_VAR = "COHERE_API_KEY"
         NAME = "cohere"
-        DEFAULT_MODEL = "command-r-plus"
+        DEFAULT_MODEL = "command-a-03-2025"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
             name=NAME,
             provider_configuration={
                 "description": "Cohere provides advanced AI models and APIs.",
-                "base_url": "https://api.cohere.com/v1/",
+                "base_url": "https://api.cohere.ai/compatibility/v1/",
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.cohere.com/",
@@ -329,7 +331,7 @@ class Command(SmarterCommand):
         """Initialize Fireworks provider and its models."""
         API_KEY_ENV_VAR = "FIREWORKS_API_KEY"
         NAME = "fireworks"
-        DEFAULT_MODEL = "command-r-plus"
+        DEFAULT_MODEL = "accounts/fireworks/models/gpt-oss-120b"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
@@ -420,16 +422,16 @@ class Command(SmarterCommand):
         """Initialize Meta AI provider and its models."""
         API_KEY_ENV_VAR = "LLAMA_API_KEY"
         NAME = "metaai"
-        DEFAULT_MODEL = "llama3.2-3b"
+        DEFAULT_MODEL = "muse-spark-1.3-contributor"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
             name=NAME,
             provider_configuration={
                 "description": "Meta AI provides a range of AI and machine learning services.",
-                "base_url": "https://api.llama.com/v1/",
+                "base_url": "https://api.meta.ai/v1/",
                 "default_model": DEFAULT_MODEL,
-                "connectivity_test_path": "chat/completions",
+                "connectivity_test_path": "responses",
                 "website_url": "https://ai.meta.com/",
                 "terms_of_service_url": "https://ai.meta.com/terms/",
                 "privacy_policy_url": "https://ai.meta.com/privacy/",
@@ -443,7 +445,7 @@ class Command(SmarterCommand):
         """Initialize Mistral provider and its models."""
         API_KEY_ENV_VAR = "MISTRAL_API_KEY"
         NAME = "mistral"
-        DEFAULT_MODEL = "mistral-1"
+        DEFAULT_MODEL = "mistral-medium-latest"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,
@@ -453,7 +455,7 @@ class Command(SmarterCommand):
                 "user_profile": self.user_profile,
                 "base_url": "https://api.mistral.ai/v1/",
                 "default_model": DEFAULT_MODEL,
-                "connectivity_test_path": "chat/completions",
+                "connectivity_test_path": "conversations",
                 "website_url": "https://mistral.ai/",
                 "terms_of_service_url": "https://legal.mistral.ai/terms/",
                 "privacy_policy_url": "https://legal.mistral.ai/terms/privacy-policy/",
@@ -490,7 +492,7 @@ class Command(SmarterCommand):
         """Initialize TogetherAI provider and its models."""
         API_KEY_ENV_VAR = "TOGETHERAI_API_KEY"
         NAME = "togetherai"
-        DEFAULT_MODEL = "gpt-6-luna"
+        DEFAULT_MODEL = "openai/gpt-oss-120b"
 
         self.initialize_generic_provider(
             api_key_env_var=API_KEY_ENV_VAR,

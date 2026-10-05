@@ -108,6 +108,12 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize Guardrails: %s", e)
 
         try:
+            # applied, not deployed: an example CustomDomain, whose verification fails.
+            call_command("add_builtin_custom_domains")
+        except Exception as e:
+            logger.error("Failed to initialize CustomDomains: %s", e)
+
+        try:
             call_command("add_builtin_budgets")  # Detached budgets, which superusers can attach to resources
         except Exception as e:
             logger.error("Failed to initialize Budgets: %s", e)

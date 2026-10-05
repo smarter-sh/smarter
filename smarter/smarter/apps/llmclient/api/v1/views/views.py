@@ -25,6 +25,7 @@ from smarter.apps.llmclient.serializers import (
     LLMClientPluginSerializer,
     LLMClientSerializer,
 )
+from smarter.apps.llmclient.tasks import deploy_custom_api
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -324,6 +325,9 @@ class LLMClientCustomDomainView(ViewBase):
             )
         llmclient.custom_domain = custom_domain
         llmclient.save(update_fields=["custom_domain"])
+        # a deployed llmclient is served on its custom host once its custom domain is verified.
+        if llmclient.deployed and custom_domain.is_verified:
+            deploy_custom_api.delay(llmclient_id=llmclient.id)
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, llmclient_id: int, customdomain_id: int):

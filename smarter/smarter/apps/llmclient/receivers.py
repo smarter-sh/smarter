@@ -61,6 +61,7 @@ from .signals import (
 from .tasks import (
     create_llmclient_request,
     delete_default_api,
+    deploy_custom_api,
     deploy_default_api,
     undeploy_default_api,
 )
@@ -234,6 +235,10 @@ def handle_llmclient_deployed(sender, **kwargs):
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info("%s - %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
+    # an llmclient with a verified custom domain is also served on its custom host.
+    if llmclient and llmclient.custom_host:
+        logger.info("%s deploying llmclient %s on %s", prefix, llmclient.name, llmclient.custom_host)
+        deploy_custom_api.delay(llmclient_id=llmclient.id)  # type: ignore[union-attr]
 
 
 @receiver(llmclient_dns_verification_status_changed, dispatch_uid="llmclient_dns_verification_status_changed")

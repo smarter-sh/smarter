@@ -7,6 +7,9 @@ from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
 )
+from smarter.apps.llmclient.manifest.models.custom_domain.const import (
+    MANIFEST_KIND as CUSTOM_DOMAIN_KIND,
+)
 from smarter.apps.llmclient.manifest.models.llmclient.const import (
     MANIFEST_KIND as LLMCLIENT_KIND,
 )
@@ -17,6 +20,7 @@ from .models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
+    LLMClientCustomDomainDNS,
     LLMClientFunctions,
     LLMClientPlugin,
     LLMClientRequests,
@@ -89,6 +93,83 @@ class LLMClientCustomDomainSerializer(SmarterCamelCaseSerializer):
         for field in fields.values():
             field.read_only = True
         return fields
+
+
+class LLMClientCustomDomainListSerializer(MetaDataWithOwnershipModelSerializer):
+    """
+    A custom domain: the resource's metadata and owner, the domain, the.
+
+    llmclient that it serves, and its DNS records. Used by the Custom Domain
+    list in the web console, and by the CustomDomain broker's ``get``.
+    """
+
+    user_profile = UserProfileSerializer(read_only=True)
+    manifest_url = serializers.SerializerMethodField()
+    llmclient = serializers.SerializerMethodField()
+    dns_records = serializers.SerializerMethodField()
+
+    # pylint: disable=missing-class-docstring
+    class Meta(MetaDataWithOwnershipModelSerializer.Meta):
+        model = LLMClientCustomDomain
+        kind = CUSTOM_DOMAIN_KIND
+        fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "user_profile",
+            "description",
+            "version",
+            "annotations",
+            "tags",
+            "domain_name",
+            "aws_hosted_zone_id",
+            "verification_status",
+            "verified_at",
+            "verification_message",
+            "manifest_url",
+            "llmclient",
+            "dns_records",
+        ]
+        read_only_fields = fields
+
+    def get_manifest_url(self, obj: LLMClientCustomDomain) -> str:
+        """The URL of the custom domain's detail view, which renders its manifest."""
+        # pylint: disable=C0415
+        from django.urls import reverse
+
+        from .urls import LLMClientReverseNames
+
+        return reverse(
+            f"{LLMClientReverseNames.namespace}:{LLMClientReverseNames.custom_domain_detailview}",
+            kwargs={"hashed_id": obj.hashed_id},
+        )
+
+    def get_llmclient(self, obj: LLMClientCustomDomain):
+        """The llmclient that the domain serves, or None if no llmclient uses it."""
+        llmclient = getattr(obj, "llmclient", None)
+        if llmclient is None:
+            return None
+        return {
+            "id": llmclient.id,
+            "name": llmclient.name,
+            "deployed": llmclient.deployed,
+            "url": llmclient.custom_url,
+            "sandbox_url": llmclient.sandbox_url,
+            "manifest_url": llmclient.manifest_url,
+            "owner": llmclient.user_profile.user.username,
+        }
+
+    def get_dns_records(self, obj: LLMClientCustomDomain):
+        return [
+            {
+                "name": record.record_name,
+                "type": record.record_type,
+                "value": record.record_value,
+                "ttl": record.record_ttl,
+            }
+            for record in LLMClientCustomDomainDNS.objects.filter(custom_domain=obj).order_by("record_name")
+        ]
 
 
 class LLMClientPluginSerializer(SmarterCamelCaseSerializer):
@@ -248,4 +329,5 @@ __all__ = [
     "LLMClientPluginSerializer",
     "LLMClientFunctionsSerializer",
     "LLMClientCustomDomainSerializer",
+    "LLMClientCustomDomainListSerializer",
 ]
