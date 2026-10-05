@@ -1,91 +1,30 @@
 /******************************************************************************
  * Prompt templates for the Prompt component. The getPromptTemplate
  * function returns a JSON stringified template based on the templateId
- * and defaultModel provided. The templates include a simple "Hello world"
- * example, a message roles example, and a function call example. The
- * function throws an error if templateId or defaultModel are not provided.
- * The templates can be easily extended with additional cases in the switch
- * statement.
+ * and defaultModel provided. The templates themselves live in
+ * templates.json, which is also read by the backend unit tests
+ * (smarter/apps/prompt/api/v1/views/tests/test_passthrough.py) so that
+ * every template is tested against every provider. Add new templates
+ * there. The function throws an error if templateId or defaultModel are
+ * not provided.
  *****************************************************************************/
-const helloWorld = {
-  messages: [
-    {
-      role: "user",
-      content: "Hello world",
-    },
-  ],
-};
+import templates from "./templates.json";
 
-const messageRoles = {
-  temperature: 0.5,
-  max_tokens: 1024,
-  messages: [
-    {
-      role: "system",
-      content: "You are a helpful assistant.",
-    },
-    {
-      role: "assistant",
-      content: "Hello! How can I assist you today?",
-    },
-    {
-      role: "user",
-      content: "What is the capital of France?",
-    },
-  ],
-};
+export interface PromptTemplate {
+  id: number;
+  name: string;
+  body: Record<string, unknown>;
+}
 
-const functionCallPrompt = {
-  temperature: 0.7,
-  max_tokens: 1024,
-  messages: [
-    {
-      role: "user",
-      content: "What is the weather like in New York?",
-    },
-  ],
-  functions: [
-    {
-      name: "getWeather",
-      description: "Get the current weather in a given location",
-      parameters: {
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The city and state, e.g. San Francisco, CA",
-          },
-          unit: {
-            type: "string",
-            enum: ["celsius", "fahrenheit"],
-          },
-        },
-        required: ["location"],
-      },
-    },
-  ],
-};
+export const promptTemplates: PromptTemplate[] = templates;
 
 export default function getPromptTemplate(templateId: number, defaultModel: string) {
   if (!templateId) {
     throw new Error("templateId is required to get a prompt template");
-    }
+  }
   if (!defaultModel) {
     throw new Error("defaultModel is required to get a prompt template");
   }
-  let template;
-    switch (templateId) {
-      case 1:
-        template = helloWorld;
-        break;
-      case 2:
-        template = messageRoles;
-        break;
-      case 3:
-        template = functionCallPrompt;
-        break;
-      default:
-        template = helloWorld;
-    }
-    return JSON.stringify({model: defaultModel, ...template}, null, 2);
+  const template = promptTemplates.find((t) => t.id === templateId) ?? promptTemplates[0];
+  return JSON.stringify({ model: defaultModel, ...template.body }, null, 2);
 }
