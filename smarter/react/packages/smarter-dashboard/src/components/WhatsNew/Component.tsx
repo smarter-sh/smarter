@@ -25,6 +25,12 @@ const DOCS_BASE_URL = "https://docs.smarter.sh";
 
 const FEATURES: Feature[] = [
   {
+    name: "Custom Domains",
+    version: "0.18",
+    description: "Serve LLMClients from your own branded domain, managed with a SAM manifest",
+    docsPath: "smarter-resources/smarter-custom-domain.html",
+  },
+  {
     name: "Manifest Editor",
     version: "0.17",
     description: "Edit, validate, save, clone and delete manifests in the web console",
@@ -77,18 +83,6 @@ const FEATURES: Feature[] = [
     version: "0.15",
     description: "Agent Skills (SKILL.md), inline or sourced from GitHub",
     docsPath: "smarter-resources/plugin/plugin/skill.html",
-  },
-  {
-    name: "ApiPlugin",
-    version: "0.14",
-    description: "Let LLMs call your REST APIs through a managed ApiConnection",
-    docsPath: "smarter-resources/plugin/plugin/api.html",
-  },
-  {
-    name: "SqlPlugin",
-    version: "0.14",
-    description: "Let LLMs query a remote SQL database through a managed SqlConnection",
-    docsPath: "smarter-resources/plugin/plugin/sql.html",
   },
 ];
 

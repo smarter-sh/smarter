@@ -41,7 +41,8 @@ the platform:
    ways a model reaches Smarter — a third-party API such as OpenAI or Anthropic, or a self-hosted,
    freely downloadable model you run and manage yourself. :doc:`smarter-resources/smarter-llmclient`
    sits in front of both, giving prompts and applications one consistent interface regardless of which
-   kind of model is actually answering the request. :doc:`smarter-resources/smarter-orchestrator` sits
+   kind of model is actually answering the request, and :doc:`smarter-resources/smarter-custom-domain`
+   serves LLMClients from your own branded domain. :doc:`smarter-resources/smarter-orchestrator` sits
    in front of LLMClient in turn, coordinating a collection of LLMClients — as Harnesses, each with its
    own role — toward a single agentic objective, using a configurable strategy such as sequential
    hand-off, parallel fan-out, supervisor/worker delegation, routing, or voting/debate.
@@ -85,6 +86,7 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-authtoken
    smarter-resources/smarter-budget
    smarter-resources/smarter-connection
+   smarter-resources/smarter-custom-domain
    smarter-resources/smarter-guardrail
    smarter-resources/smarter-llmclient
    smarter-resources/smarter-llmhost

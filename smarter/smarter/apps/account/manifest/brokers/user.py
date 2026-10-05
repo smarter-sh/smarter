@@ -1049,7 +1049,7 @@ class SAMUserBroker(AbstractBroker):
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.connection.models import ApiConnection, SqlConnection
         from smarter.apps.guardrail.models import Guardrail
-        from smarter.apps.llmclient.models import LLMClient
+        from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
         from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
         from smarter.apps.mcpclient.models import MCPClient
         from smarter.apps.orchestrator.models import Orchestrator
@@ -1068,6 +1068,7 @@ class SAMUserBroker(AbstractBroker):
         for kind, model in (
             (SAMKinds.API_CONNECTION, ApiConnection),
             (SAMKinds.SQL_CONNECTION, SqlConnection),
+            (SAMKinds.CUSTOM_DOMAIN, LLMClientCustomDomain),
             (SAMKinds.GUARDRAIL, Guardrail),
             (SAMKinds.LLM_CLIENT, LLMClient),
             (SAMKinds.LLM_HOST, LLMHost),

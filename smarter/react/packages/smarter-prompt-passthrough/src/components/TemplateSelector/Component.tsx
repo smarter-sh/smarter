@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { promptTemplates } from "@/components/Prompt/templates";
 import "./styles.css";
 
 interface TemplateSelectorProps {
@@ -20,9 +21,11 @@ function TemplateSelector({ value, onChange }: TemplateSelectorProps) {
         onChange(e);
       }}
     >
-      <option value={1}>Hello World</option>
-      <option value={2}>Message Roles</option>
-      <option value={3}>Function Call</option>
+      {promptTemplates.map((t) => (
+        <option key={t.id} value={t.id}>
+          {t.name}
+        </option>
+      ))}
     </select>
   );
 }

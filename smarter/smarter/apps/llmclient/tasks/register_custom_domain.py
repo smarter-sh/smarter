@@ -68,7 +68,7 @@ from smarter.workers.celery import app
 
 from .exceptions import LLMClientCustomDomainExists
 from .utils import is_taskable
-from .verify_certificate import verify_certificate
+from .verify_custom_domain import verify_custom_domain
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
@@ -146,14 +146,19 @@ def register_custom_domain(account_id: int, domain_name: str):
         task_id,
     )
     try:
-        LLMClientCustomDomain.objects.get(user_profile__account=account, domain_name=domain_name)
+        existing = LLMClientCustomDomain.objects.get(user_profile__account=account, domain_name=domain_name)
         certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=domain_name)
         if not certificate_arn:
             raise AWSACMCertificateNotFound
         if not aws_helper.acm.certificate_is_verified(certificate_arn=certificate_arn):
             raise AWSACMVerificationNotFound
 
-        # we found the custom domain, and its certificate is verified
+        # we found the custom domain, and its certificate is issued. verify it, unless it is verified.
+        if existing.aws_hosted_zone_id and not existing.is_verified:
+            existing.set_verification_status(
+                LLMClientCustomDomain.VerificationStatusChoices.VERIFYING, "Verification has started."
+            )
+            verify_custom_domain.delay(hosted_zone_id=existing.aws_hosted_zone_id)
         logger.info(
             "%s - custom domain %s already exists for account %s and certificate is verified. Nothing to do. task_id: %s",
             logger_prefix,
@@ -191,32 +196,37 @@ def register_custom_domain(account_id: int, domain_name: str):
             task_id,
         )
 
-    try:
-        # verify that the domain is available to register.
-        domain_record = LLMClientCustomDomain.objects.get(domain_name=domain_name)
+    # verify that no other account has registered the domain. The account's own CustomDomain,
+    # e.g. from smarter apply, is the one that this task registers.
+    domain_record = (
+        LLMClientCustomDomain.objects.filter(domain_name=domain_name).exclude(user_profile__account=account).first()
+    )
+    if domain_record is not None:
         err = f"{logger_prefix}.register_custom_domain() - Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
         logger.error(err)
         raise LLMClientCustomDomainExists(err)
-    except LLMClientCustomDomain.DoesNotExist:
-        # domain was not previously registered by another account, so we can continue.
-        logger.info("%s - domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
+    logger.info("%s - domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
 
     # create a Hosted Zone for the custom domain
 
     aws_hosted_zone, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain_name)
-    host, _ = LLMClientCustomDomain.objects.get_or_create(
-        user_profile=admin_user_profile,
-        domain_name=domain_name,
-    )
+    # the account's CustomDomain resource, e.g. from smarter apply, whoever in the account owns it.
+    host = LLMClientCustomDomain.objects.filter(user_profile__account=account, domain_name=domain_name).first()
+    if host is None:
+        host = LLMClientCustomDomain.objects.create(user_profile=admin_user_profile, domain_name=domain_name)
     host.aws_hosted_zone_id = aws_hosted_zone["Id"]
     host.save()
 
     # create a certificate for the custom domain
     certificate_arn = aws_helper.acm.get_or_create_certificate(domain_name=domain_name)
 
-    # create a DNS record for the certificate and wait for it to be verified.
+    # create the DNS record that validates the certificate. ACM can only read it once the
+    # customer has delegated the domain's NS records to the hosted zone, which may take a day,
+    # so rather than wait here, verify_custom_domain checks the NS records, the certificate and
+    # https, and checks again later until they work.
     aws_helper.acm.get_or_create_certificate_dns_record(certificate_arn=certificate_arn)
-    verify_certificate.delay(certificate_arn=certificate_arn)
+    host.set_verification_status(LLMClientCustomDomain.VerificationStatusChoices.VERIFYING, "Verification has started.")
+    verify_custom_domain.delay(hosted_zone_id=host.aws_hosted_zone_id)
     post_register_custom_domain.send(
         sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
     )

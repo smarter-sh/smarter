@@ -39,6 +39,7 @@ Current app packages include:
 
 - `smarter-authtoken-list`
 - `smarter-connection-list`
+- `smarter-custom-domain-list`
 - `smarter-dashboard`
 - `smarter-plugin-list`
 - `smarter-prompt-list`

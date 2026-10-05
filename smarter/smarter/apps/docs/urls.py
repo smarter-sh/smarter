@@ -24,6 +24,7 @@ from .views.json_schema import (
     DocsJsonSchemaApiKeyView,
     DocsJsonSchemaApiView,
     DocsJsonSchemaBudgetView,
+    DocsJsonSchemaCustomDomainView,
     DocsJsonSchemaGuardrailView,
     DocsJsonSchemaLLMClientView,
     DocsJsonSchemaLLMHostComputeView,
@@ -49,6 +50,7 @@ from .views.manifest import (
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
     DocsExampleManifestBudgetView,
+    DocsExampleManifestCustomDomainView,
     DocsExampleManifestGuardrailView,
     DocsExampleManifestLLMClientView,
     DocsExampleManifestLLMHostComputeView,
@@ -128,6 +130,11 @@ urlpatterns = [
         json_schema_path(SAMKinds.BUDGET.value),
         DocsJsonSchemaBudgetView.as_view(),
         name=json_schema_name(SAMKinds.BUDGET.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.CUSTOM_DOMAIN.value),
+        DocsJsonSchemaCustomDomainView.as_view(),
+        name=json_schema_name(SAMKinds.CUSTOM_DOMAIN.value),
     ),
     path(
         json_schema_path(SAMKinds.GUARDRAIL.value),
@@ -246,6 +253,11 @@ urlpatterns = [
         manifest_path(SAMKinds.BUDGET.value),
         DocsExampleManifestBudgetView.as_view(),
         name=manifest_name(SAMKinds.BUDGET.value),
+    ),
+    path(
+        manifest_path(SAMKinds.CUSTOM_DOMAIN.value),
+        DocsExampleManifestCustomDomainView.as_view(),
+        name=manifest_name(SAMKinds.CUSTOM_DOMAIN.value),
     ),
     path(
         manifest_path(SAMKinds.GUARDRAIL.value),

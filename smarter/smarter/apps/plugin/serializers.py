@@ -198,7 +198,9 @@ class PluginPromptSerializer(SmarterCamelCaseSerializer):
         # }
     """
 
-    # TODO: this temporarily deals with a breaking change in gpt 5
+    # maxTokens is part of the Plugin manifest contract (spec.prompt.maxTokens) and is
+    # provider-neutral. It is stored as max_completion_tokens, which is what the
+    # OpenAI-compatible providers receive.
     max_tokens = serializers.IntegerField(source="max_completion_tokens")
 
     # pylint: disable=missing-class-docstring

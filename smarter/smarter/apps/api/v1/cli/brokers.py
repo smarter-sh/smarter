@@ -31,6 +31,7 @@ from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
+from smarter.apps.llmclient.manifest.brokers.custom_domain import SAMCustomDomainBroker
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmhost.manifest.brokers.llmhost import SAMLLMHostBroker
 from smarter.apps.llmhost.manifest.brokers.llmhost_compute import (
@@ -117,6 +118,7 @@ class Brokers:
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
         SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
         SAMKinds.BUDGET.value: SAMBudgetBroker,
+        SAMKinds.CUSTOM_DOMAIN.value: SAMCustomDomainBroker,
         SAMKinds.GUARDRAIL.value: SAMGuardrailBroker,
         SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
         SAMKinds.LLM_HOST.value: SAMLLMHostBroker,
