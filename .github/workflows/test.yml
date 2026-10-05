@@ -2,7 +2,9 @@
 #------------------------------------------------------------------------------
 # - Initialize the full local development environment, as `make init` does
 # - Run the Smarter unit test suite inside the smarter-app container, with
-#   coverage.py, and upload the coverage report to Codecov
+#   coverage.py, and upload the coverage report to Codecov (flag: python)
+# - Run the React unit tests with Vitest coverage, and upload that report to
+#   Codecov (flag: react)
 #
 # This workflow reproduces the local developer workflow from the Makefile:
 # the sub-targets of `make init` (Python venv, React build, collectstatic,
@@ -102,6 +104,18 @@ jobs:
 
       - name: Unit tests (Vitest), with coverage
         run: npm run coverage
+
+      #========================================================================
+      # Upload coverage/lcov.info under the react flag. Its paths are relative
+      # to smarter/react, which codecov.yml maps back to the repository's.
+      #========================================================================
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./smarter/react/coverage/lcov.info
+          flags: react
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   python:
     runs-on: ubuntu-latest
@@ -463,6 +477,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
+          flags: python
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
