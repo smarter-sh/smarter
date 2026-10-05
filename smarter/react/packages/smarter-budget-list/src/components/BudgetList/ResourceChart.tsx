@@ -17,7 +17,13 @@ const PERIODS = 12;
 
 type SeriesResponse = { status: { budget: string }; series: BudgetSeriesRow[] }[];
 
-export default function ResourceChart({ sessionContext, status }: { sessionContext: SessionContext; status: BudgetResourceStatus }) {
+export default function ResourceChart({
+  sessionContext,
+  status,
+}: {
+  sessionContext: SessionContext;
+  status: BudgetResourceStatus;
+}) {
   const [series, setSeries] = useState<BudgetSeriesRow[] | null>(null);
   const [errMessage, setErrMessage] = useState("");
 
@@ -36,5 +42,13 @@ export default function ResourceChart({ sessionContext, status }: { sessionConte
 
   if (errMessage) return <div className="text-danger fs-7">{errMessage}</div>;
   if (series === null) return <div className="text-muted fs-7">Loading…</div>;
-  return <BudgetChart series={series} unit={status.unit} period={status.period} periodicLimit={status.periodicLimit} height={260} />;
+  return (
+    <BudgetChart
+      series={series}
+      unit={status.unit}
+      period={status.period}
+      periodicLimit={status.periodicLimit}
+      height={260}
+    />
+  );
 }

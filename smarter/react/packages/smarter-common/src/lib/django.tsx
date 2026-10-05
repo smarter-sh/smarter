@@ -10,18 +10,17 @@ import { loggerPrefix } from "./const";
 import { getCookie } from "./cookie";
 import type { SessionContext } from "./Types";
 
-export default async function fetchDjangoUrl(
-  sessionContext: SessionContext,
-  url: string,
-  requestJson: string,
-) {
+export default async function fetchDjangoUrl(sessionContext: SessionContext, url: string, requestJson: string) {
   const applicationJson = "application/json";
-  const csrftokenValue =
-    getCookie({ name: sessionContext.csrfCookieName, domain: sessionContext.cookieDomain });
-  const capabilities = sessionContext.smarterCapabilities ? sessionContext.smarterCapabilities.join(",") : "listview,cardview";
+  const csrftokenValue = getCookie({ name: sessionContext.csrfCookieName, domain: sessionContext.cookieDomain });
+  const capabilities = sessionContext.smarterCapabilities
+    ? sessionContext.smarterCapabilities.join(",")
+    : "listview,cardview";
 
   if (!csrftokenValue) {
-    console.error(`${loggerPrefix} fetchDjangoUrl() No CSRF token found for cookie name ${sessionContext.csrfCookieName} in domain ${sessionContext.cookieDomain}.`);
+    console.error(
+      `${loggerPrefix} fetchDjangoUrl() No CSRF token found for cookie name ${sessionContext.csrfCookieName} in domain ${sessionContext.cookieDomain}.`,
+    );
   }
 
   /*
@@ -39,7 +38,13 @@ export default async function fetchDjangoUrl(
     "X-Smarter-Capabilities": capabilities,
   };
 
-  console.debug(`${loggerPrefix} fetchDjangoUrl() Sending POST request to ${url}`, "with headers:", requestHeaders, "with body:", requestJson);
+  console.debug(
+    `${loggerPrefix} fetchDjangoUrl() Sending POST request to ${url}`,
+    "with headers:",
+    requestHeaders,
+    "with body:",
+    requestJson,
+  );
 
   const res = await fetch(url, {
     method: "POST",

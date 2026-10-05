@@ -26,7 +26,19 @@ async function postJson<T>(sessionContext: SessionContext, url: string): Promise
   return response.json() as Promise<T>;
 }
 
-function Usage({ label, actual, limit, percent, status }: { label: string; actual: number; limit: number; percent: number | null; status: BudgetStatus }) {
+function Usage({
+  label,
+  actual,
+  limit,
+  percent,
+  status,
+}: {
+  label: string;
+  actual: number;
+  limit: number;
+  percent: number | null;
+  status: BudgetStatus;
+}) {
   if (!limit) return null;
   const over = percent !== null && percent >= 100;
   return (
@@ -37,7 +49,13 @@ function Usage({ label, actual, limit, percent, status }: { label: string; actua
   );
 }
 
-export default function BudgetVsActualChart({ sessionContext, apiUrl }: { sessionContext: SessionContext; apiUrl: string }) {
+export default function BudgetVsActualChart({
+  sessionContext,
+  apiUrl,
+}: {
+  sessionContext: SessionContext;
+  apiUrl: string;
+}) {
   const [statuses, setStatuses] = useState<BudgetStatus[] | null>(null);
   const [selected, setSelected] = useState<string>("");
   const [series, setSeries] = useState<BudgetSeries | null>(null);
@@ -79,7 +97,11 @@ export default function BudgetVsActualChart({ sessionContext, apiUrl }: { sessio
       {errMessage && <div style={{ color: "#b91c1c", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{errMessage}</div>}
       {statuses && (
         <div className="d-flex flex-wrap align-items-center mb-4 gap-2">
-          <select className="form-select form-select-sm w-auto" value={selected} onChange={(e) => setSelected(e.target.value)}>
+          <select
+            className="form-select form-select-sm w-auto"
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+          >
             {statuses.map((s) => (
               <option key={keyOf(s)} value={keyOf(s)}>
                 {s.budget} — {s.resource_locator}
@@ -88,8 +110,20 @@ export default function BudgetVsActualChart({ sessionContext, apiUrl }: { sessio
           </select>
           {status && (
             <>
-              <Usage label={`This ${status.period}`} actual={status.periodic_actual} limit={status.periodic_limit} percent={status.periodic_percent} status={status} />
-              <Usage label="Total" actual={status.absolute_actual} limit={status.absolute_limit} percent={status.absolute_percent} status={status} />
+              <Usage
+                label={`This ${status.period}`}
+                actual={status.periodic_actual}
+                limit={status.periodic_limit}
+                percent={status.periodic_percent}
+                status={status}
+              />
+              <Usage
+                label="Total"
+                actual={status.absolute_actual}
+                limit={status.absolute_limit}
+                percent={status.absolute_percent}
+                status={status}
+              />
               {status.is_locked && (
                 <span className="badge badge-danger fs-7" title={status.lock_reason ?? ""}>
                   Blocked
@@ -101,7 +135,12 @@ export default function BudgetVsActualChart({ sessionContext, apiUrl }: { sessio
         </div>
       )}
       {status && series && (
-        <BudgetChart series={series.series} unit={status.unit} period={status.period} periodicLimit={status.periodic_limit} />
+        <BudgetChart
+          series={series.series}
+          unit={status.unit}
+          period={status.period}
+          periodicLimit={status.periodic_limit}
+        />
       )}
     </div>
   );

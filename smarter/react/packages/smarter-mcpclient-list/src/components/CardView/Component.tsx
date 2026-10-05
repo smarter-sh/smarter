@@ -67,10 +67,7 @@ function CardView({ sessionContext, objects, onRequery }: MCPClientCardViewProps
                     {renderDetailRow("Tags", mcpclient.tags, "str[]")}
                     {renderDetailRow("Annotations", mcpclient.annotations, "json")}
                     {renderDetailRow("Ready", mcpclient.ready, "bool")}
-                    {renderDetailRow(
-                      "RFC 1034 Compliant Name",
-                      mcpclient.rfc1034CompliantName
-                    )}
+                    {renderDetailRow("RFC 1034 Compliant Name", mcpclient.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

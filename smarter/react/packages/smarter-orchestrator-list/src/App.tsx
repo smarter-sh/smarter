@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type OrchestratorTabbedViewContext = Omit<
-  TabbedViewContext<Orchestrator>,
-  "ListView" | "CardView"
-> & {
+export type OrchestratorTabbedViewContext = Omit<TabbedViewContext<Orchestrator>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<OrchestratorListViewProps>;
   CardView: React.ComponentType<OrchestratorCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "Orchestrators";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-orchestrator.html";
-  const helpText = "Orchestrators are a standardized interface for coordinating multiple LLMClients (ie 'Harnesses') toward a shared agentic objective. Rather than hard-coding the control flow for each multi-model workflow, the Orchestrator lets you declare which LLMClients participate, what role each one plays, and which coordination strategy governs their interaction: sequential hand-offs, parallel fan-out, a supervisor delegating to workers, a router dispatching by intent, or a voting/debate pattern for consensus.";
+  const helpText =
+    "Orchestrators are a standardized interface for coordinating multiple LLMClients (ie 'Harnesses') toward a shared agentic objective. Rather than hard-coding the control flow for each multi-model workflow, the Orchestrator lets you declare which LLMClients participate, what role each one plays, and which coordination strategy governs their interaction: sequential hand-offs, parallel fan-out, a supervisor delegating to workers, a router dispatching by intent, or a voting/debate pattern for consensus.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="orchestrator-list">

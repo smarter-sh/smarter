@@ -117,7 +117,10 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                       "Custom Domains",
                       llmclient.customDomains?.length ? JSON.stringify(llmclient.customDomains) : undefined,
                     )}
-                    {renderDetailRow("API Keys", llmclient.apiKeys?.length ? JSON.stringify(llmclient.apiKeys) : undefined)}
+                    {renderDetailRow(
+                      "API Keys",
+                      llmclient.apiKeys?.length ? JSON.stringify(llmclient.apiKeys) : undefined,
+                    )}
                     {renderDetailRow(
                       "RFC1034 Name",
                       llmclient.rfc1034CompliantName,

@@ -43,7 +43,6 @@ type ModalState = {
   isError?: boolean;
 };
 
-
 export default function DropZone({ sessionContext }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,7 +184,14 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
         <div className="app-container container-xxl">
           <h3 className="pt-5">Apply Smarter YAML Manifest</h3>
 
-          <input ref={fileInputRef} type="file" accept=".yaml,.yml" hidden onChange={handleFileSelected} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".yaml,.yml"
+            aria-label="Manifest file"
+            hidden
+            onChange={handleFileSelected}
+          />
 
           <button type="button" className="btn btn-sm btn-primary" disabled={isUploading} onClick={openFileDialog}>
             {isUploading ? "Uploading..." : "File Open"}
@@ -201,10 +207,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
             <span>{isUploading ? "Uploading..." : "Drop Zone"}</span>
           </div>
 
-          <DropZoneModal
-            {...modal}
-            onClose={() => setModal((m) => ({ ...m, open: false }))}
-          />
+          <DropZoneModal {...modal} onClose={() => setModal((m) => ({ ...m, open: false }))} />
         </div>
       </div>
     </section>

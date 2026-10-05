@@ -1,8 +1,3 @@
-
-
 export default function ReadyEmoji() {
-
-  return (
-    <span aria-label="ready"></span>
-  );
+  return <span aria-label="ready"></span>;
 }

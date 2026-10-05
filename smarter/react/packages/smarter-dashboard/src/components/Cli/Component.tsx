@@ -25,20 +25,12 @@ function Cli() {
             {/* begin::Wrapper */}
             <div className="m-0">
               {/* begin::Title */}
-              <h6 className="text-muted opacity-75-hover me-2 fs-3 fw-bold">
-                Smarter Command-line interface
-              </h6>
+              <h6 className="text-muted opacity-75-hover me-2 fs-3 fw-bold">Smarter Command-line interface</h6>
               {/* end::Title */}
-              <p className="mb-10">
-                Powerful tools for managing your AI resources.
-              </p>
+              <p className="mb-10">Powerful tools for managing your AI resources.</p>
               {/* begin::Action */}
               <div className="mb-3">
-                <a
-                  href="https://smarter.sh/cli/"
-                  target="_blank"
-                  className="btn btn-sm btn-dark fw-semibold me-2"
-                >
+                <a href="https://smarter.sh/cli/" target="_blank" className="btn btn-sm btn-dark fw-semibold me-2">
                   Download
                 </a>
                 <a

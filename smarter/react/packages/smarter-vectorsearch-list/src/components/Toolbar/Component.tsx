@@ -51,7 +51,11 @@ const ModalClone = ({ vectorsearch, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned vectorsearch.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new vectorsearch name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new vectorsearch name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ vectorsearch, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the vectorsearch.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new vectorsearch name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new vectorsearch name"
+      />
     </Modal>
   );
 };
@@ -145,7 +153,10 @@ interface ToolbarProps {
 export const Toolbar = ({ sessionContext, vectorsearch, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time.
-  const [modal, setModal] = useState<{ type: ModalType; vectorsearch: Vectorsearch | null }>({ type: null, vectorsearch: null });
+  const [modal, setModal] = useState<{ type: ModalType; vectorsearch: Vectorsearch | null }>({
+    type: null,
+    vectorsearch: null,
+  });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -259,7 +270,12 @@ export const Toolbar = ({ sessionContext, vectorsearch, onRequery }: ToolbarProp
           onOk={() => runAction(modal.vectorsearch!, `delete/${modal.vectorsearch!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} vectorsearch={modal.vectorsearch} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          vectorsearch={modal.vectorsearch}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           vectorsearch={modal.vectorsearch}

@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type MCPClientTabbedViewContext = Omit<
-  TabbedViewContext<MCPClient>,
-  "ListView" | "CardView"
-> & {
+export type MCPClientTabbedViewContext = Omit<TabbedViewContext<MCPClient>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<MCPClientListViewProps>;
   CardView: React.ComponentType<MCPClientCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "MCP (Model Context Protocol) Clients";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-mcpclient.html";
-  const helpText = "MCP Clients provide a standardized interface for connecting large language models to external tools and services through the Model Context Protocol (MCP).";
+  const helpText =
+    "MCP Clients provide a standardized interface for connecting large language models to external tools and services through the Model Context Protocol (MCP).";
   return (
     <>
       <section className="mt-5 mb-5 container" id="mcpclient-list">

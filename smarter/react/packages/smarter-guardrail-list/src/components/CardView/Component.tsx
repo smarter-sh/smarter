@@ -65,10 +65,7 @@ function CardView({ sessionContext, objects, onRequery }: GuardrailCardViewProps
                     {renderDetailRow("Tags", guardrail.tags, "str[]")}
                     {renderDetailRow("Annotations", guardrail.annotations, "json")}
                     {renderDetailRow("Ready", guardrail.ready, "bool")}
-                    {renderDetailRow(
-                      "RFC 1034 Compliant Name",
-                      guardrail.rfc1034CompliantName
-                    )}
+                    {renderDetailRow("RFC 1034 Compliant Name", guardrail.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

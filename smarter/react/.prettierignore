@@ -1,0 +1,9 @@
+# Generated files, which Prettier does not format.
+**/dist/
+**/storybook-static/
+**/coverage/
+**/node_modules/
+package-lock.json
+**/CHANGELOG.md
+storybook/public/mockServiceWorker.js
+**/*.tgz

@@ -68,10 +68,7 @@ function CardView({ sessionContext, objects, onRequery }: VectorsearchCardViewPr
                     {renderDetailRow("Tags", vectorsearch.tags, "str[]")}
                     {renderDetailRow("Annotations", vectorsearch.annotations, "json")}
                     {renderDetailRow("Ready", vectorsearch.ready, "bool")}
-                    {renderDetailRow(
-                      "RFC 1034 Compliant Name",
-                      vectorsearch.rfc1034CompliantName
-                    )}
+                    {renderDetailRow("RFC 1034 Compliant Name", vectorsearch.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

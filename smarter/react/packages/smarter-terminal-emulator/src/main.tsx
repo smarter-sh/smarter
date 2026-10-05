@@ -5,7 +5,6 @@ import App from "./App.tsx";
 const rootEl = document.getElementById("smarter-terminal-emulator-root");
 if (!rootEl) throw new Error("Root element not found");
 
-
 const apiUrl = rootEl.getAttribute("smarter-api-path");
 const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
 const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";

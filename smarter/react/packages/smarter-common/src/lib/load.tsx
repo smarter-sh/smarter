@@ -70,11 +70,7 @@ export const load = async <TObject,>(
 
   try {
     const url = buildLoadUrl(sessionContext.ApiUrl, urlSlug, invalidateCacheFlag);
-    const response = await fetchDjangoUrl(
-      sessionContext,
-      url,
-      JSON.stringify({}),
-    );
+    const response = await fetchDjangoUrl(sessionContext, url, JSON.stringify({}));
 
     const responseBody = await readJsonSafely(response);
 

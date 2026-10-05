@@ -15,15 +15,23 @@ repos:
     hooks:
       - id: codespell
         args: ["--ignore-words=codespell.txt"]
-        exclude: '\.svg$|^smarter/smarter/static/|^helm/|^docs/source/example-manifests/|package-lock\.json$'
+        exclude: '\.svg$|^smarter/smarter/static/|^helm/|^docs/source/example-manifests/|package-lock\.json$|^smarter/react/storybook/public/mockServiceWorker\.js$'
+  # The React apps in smarter/react, with the workspace's own Prettier and ESLint (and their
+  # configuration in smarter/react), so that the hooks and `npm run format` / `npm run lint`
+  # always agree. They need smarter/react's node_modules: make react-install.
   - repo: local
     hooks:
-      - id: eslint
-        name: eslint
-        entry: bash -c 'cd client && npx eslint'
-        language: node
-        types: [javascript]
-        files: ^client/
+      - id: react-prettier
+        name: prettier (smarter/react)
+        entry: bash -c 'cd smarter/react && npx --no-install prettier --write --ignore-unknown "${@#smarter/react/}"' --
+        language: system
+        files: ^smarter/react/
+        exclude: ^smarter/react/(package-lock\.json|storybook/public/|packages/[^/]+/CHANGELOG\.md$)
+      - id: react-eslint
+        name: eslint (smarter/react)
+        entry: bash -c 'cd smarter/react && npx --no-install eslint --max-warnings=0 --no-warn-ignored "${@#smarter/react/}"' --
+        language: system
+        files: ^smarter/react/.*\.(ts|tsx|js)$
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:

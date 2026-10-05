@@ -33,21 +33,9 @@ export type GuardrailCategory =
   | "formatting"
   | "custom";
 
-export type GuardrailStrategy =
-  | "regex"
-  | "keyword"
-  | "detector"
-  | "semantic"
-  | "moderation"
-  | "llm_judge";
+export type GuardrailStrategy = "regex" | "keyword" | "detector" | "semantic" | "moderation" | "llm_judge";
 
-export type GuardrailAction =
-  | "log"
-  | "flag"
-  | "redact"
-  | "transform"
-  | "block"
-  | "escalate";
+export type GuardrailAction = "log" | "flag" | "redact" | "transform" | "block" | "escalate";
 
 export type GuardrailMode = "enforce" | "monitor";
 
@@ -97,7 +85,6 @@ export type Guardrail = {
   priority: number;
   isActive: boolean;
 };
-
 
 // ----------------------------------------------------------------------------
 // Component Props Interfaces

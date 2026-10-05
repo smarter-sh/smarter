@@ -7,7 +7,6 @@ import Hero from "./components/Hero";
 import Prompt from "./components/Prompt";
 import type { SessionContext } from "@smarter/common";
 
-
 interface AppProps {
   sessionContext: SessionContext;
   defaultLLMProviderId: number;

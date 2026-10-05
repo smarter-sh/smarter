@@ -69,7 +69,6 @@ const TableHeader = () => {
   );
 };
 
-
 /**
  * CreatedDate and UpdatedDate
  *
@@ -118,7 +117,9 @@ const ProviderRow = React.memo(function ProviderRow({
       {/* Description */}
       <td className="">{provider.description}</td>
       {/* API Key */}
-      <td className=""><a href={provider.apiKey.manifestUrl}>{provider.apiKey.name}</a></td>
+      <td className="">
+        <a href={provider.apiKey.manifestUrl}>{provider.apiKey.name}</a>
+      </td>
       {/* Last Accessed */}
       <td className="d-none d-lg-table-cell width-100">
         <UpdatedDate date={provider.lastAccessed} createdAt={provider.createdAt} />

@@ -58,15 +58,10 @@
                 },
                 "unit": {
                   "type": "string",
-                  "enum": [
-                    "celsius",
-                    "fahrenheit"
-                  ]
+                  "enum": ["celsius", "fahrenheit"]
                 }
               },
-              "required": [
-                "location"
-              ]
+              "required": ["location"]
             }
           }
         }

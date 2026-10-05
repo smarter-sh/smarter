@@ -20,10 +20,7 @@ export default function ProviderFlags({ provider }: ProviderFlagsProps) {
     <div className="mt-2">
       <strong>Flags:</strong>{" "}
       {flags.map((flag) => (
-        <span
-          key={flag.label}
-          className={`badge me-1 ${flag.enabled ? "text-bg-success" : "text-bg-light border"}`}
-        >
+        <span key={flag.label} className={`badge me-1 ${flag.enabled ? "text-bg-success" : "text-bg-light border"}`}>
           {flag.label}
         </span>
       ))}

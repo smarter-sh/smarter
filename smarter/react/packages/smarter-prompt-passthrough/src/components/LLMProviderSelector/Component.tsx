@@ -8,22 +8,16 @@ interface LLMProviderSelectorProps {
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
-function LLMProviderSelector({
-  value,
-  onChange,
-  providersJson,
-}: LLMProviderSelectorProps) {
-
+function LLMProviderSelector({ value, onChange, providersJson }: LLMProviderSelectorProps) {
   return (
     <select
+      aria-label="LLM provider"
       className="form-select form-select-sm"
       style={{ width: "220px" }}
       value={value}
       onChange={onChange}
     >
-      {providersJson.length === 0 && (
-        <option value="">No providers available</option>
-      )}
+      {providersJson.length === 0 && <option value="">No providers available</option>}
       {providersJson.map((provider) => (
         <option key={provider.id} value={provider.id}>
           {provider.name}

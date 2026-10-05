@@ -259,7 +259,12 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           onOk={() => runAction(modal.llmhost!, `delete/${modal.llmhost!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} llmhost={modal.llmhost} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          llmhost={modal.llmhost}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           llmhost={modal.llmhost}

@@ -65,7 +65,12 @@ function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewPro
                     {renderDetailRow("Endpoint", vectorstore.endpointUrl)}
                     {renderDetailRow("ApiConnection", vectorstore.connection)}
                     {renderDetailRow("API Key Secret", vectorstore.apiKeySecret)}
-                    {renderDetailRow("Embeddings", vectorstore.embeddingsProvider ? `${vectorstore.embeddingsProvider} / ${vectorstore.embeddingsModel}` : vectorstore.embeddingsModel)}
+                    {renderDetailRow(
+                      "Embeddings",
+                      vectorstore.embeddingsProvider
+                        ? `${vectorstore.embeddingsProvider} / ${vectorstore.embeddingsModel}`
+                        : vectorstore.embeddingsModel,
+                    )}
                     {renderDetailRow("Dimensions", vectorstore.dimension, "number")}
                     {renderDetailRow("Metric", vectorstore.metric)}
                     {renderDetailRow("Deletion Protection", vectorstore.deletionProtection, "bool")}

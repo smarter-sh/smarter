@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type SecretTabbedViewContext = Omit<
-  TabbedViewContext<Secret>,
-  "ListView" | "CardView"
-> & {
+export type SecretTabbedViewContext = Omit<TabbedViewContext<Secret>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<SecretListViewProps>;
   CardView: React.ComponentType<SecretCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "Secrets";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-secret.html";
-  const helpText = "Smarter Secret is a standard credentials vault, seamlessly integrated with every other Smarter resource that relies on sensitive information for authentication and connectivity. Secrets can be shared across teams and referenced by dependent resources without ever exposing the underlying value, and, like any other Smarter resource, a Secret is defined and managed through a standard SAM manifest.";
+  const helpText =
+    "Smarter Secret is a standard credentials vault, seamlessly integrated with every other Smarter resource that relies on sensitive information for authentication and connectivity. Secrets can be shared across teams and referenced by dependent resources without ever exposing the underlying value, and, like any other Smarter resource, a Secret is defined and managed through a standard SAM manifest.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="secret-list">

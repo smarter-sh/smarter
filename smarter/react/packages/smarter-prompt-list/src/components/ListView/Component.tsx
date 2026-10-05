@@ -61,7 +61,6 @@ const TableHeader = () => {
   );
 };
 
-
 /**
  * CreatedDate and UpdatedDate
  *
@@ -251,7 +250,6 @@ export interface ListViewProps {
   objects: LLMClient[];
   onRequery: () => void;
 }
-
 
 /**
  * ListView

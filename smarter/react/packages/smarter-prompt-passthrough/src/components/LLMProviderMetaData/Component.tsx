@@ -15,7 +15,7 @@ export default function LLMProviderMetaData({ provider }: ProviderMetaDataProps)
   return (
     <div className="row w-100 mt-2 mb-2">
       <div className="col-12">
-          <div className="border rounded bg-white p-3 small position-relative">
+        <div className="border rounded bg-white p-3 small position-relative">
           {provider.logo && (
             <a
               href={provider.logo}

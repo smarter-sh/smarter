@@ -45,14 +45,18 @@ interface NameModalProps {
 const ModalClone = ({ customDomain, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone CustomDomain" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title="Clone Custom Domain" onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
         Clone custom domain <strong>{customDomain?.name}</strong> to a new resource owned by you.
       </p>
       <p>
         <em>Provide the new name for the cloned custom domain.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new custom domain name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new custom domain name"
+      />
     </Modal>
   );
 };
@@ -61,14 +65,18 @@ const ModalClone = ({ customDomain, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ customDomain, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(customDomain?.name || "");
   return (
-    <Modal show title="Rename CustomDomain" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title="Rename Custom Domain" onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
         Rename custom domain <strong>{customDomain?.name}</strong>.
       </p>
       <p>
         <em>Provide the new name for the custom domain.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new custom domain name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new custom domain name"
+      />
     </Modal>
   );
 };
@@ -85,7 +93,7 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete CustomDomain" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title="Delete Custom Domain" onOk={onOk} onCancel={onCancel}>
     <p>
       Are you sure you want to delete custom domain <strong>{customDomain?.name}</strong>?
     </p>
@@ -176,7 +184,10 @@ interface ToolbarProps {
 export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time.
-  const [modal, setModal] = useState<{ type: ModalType; customDomain: CustomDomain | null }>({ type: null, customDomain: null });
+  const [modal, setModal] = useState<{ type: ModalType; customDomain: CustomDomain | null }>({
+    type: null,
+    customDomain: null,
+  });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -237,7 +248,9 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
           href={customDomain.verificationStatus === "Verified" ? customDomain.llmclient?.url : null}
           title={`Visit: ${customDomain.llmclient?.url}`}
           disabledTitle={
-            customDomain.llmclient ? "Visit: The custom domain is not verified yet" : "Visit: No LLMClient uses this custom domain"
+            customDomain.llmclient
+              ? "Visit: The custom domain is not verified yet"
+              : "Visit: No LLMClient uses this custom domain"
           }
           icon="bi bi-box-arrow-up-right md-green"
           external
@@ -265,7 +278,7 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
           className="btn btn-icon btn-sm border"
           title={
             customDomain.canDelete === false
-              ? "Delete: You can't delete this customDomain, because an LLMClient uses it, or you don't have permission to delete it"
+              ? "Delete: You can't delete this custom domain, because an LLMClient uses it, or you don't have permission to delete it"
               : "Delete: Delete this custom domain"
           }
           onClick={() => setModal({ type: "delete", customDomain })}
@@ -297,7 +310,12 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
           onOk={() => runAction(modal.customDomain!, `delete/${modal.customDomain!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} customDomain={modal.customDomain} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          customDomain={modal.customDomain}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           customDomain={modal.customDomain}
