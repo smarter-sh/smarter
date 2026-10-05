@@ -22,7 +22,7 @@ include .env
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	react-install react-build react-build-ci \
+	react-install react-build react-build-ci react-test react-lint react-storybook \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -347,6 +347,20 @@ react-build-ci:
 	NODE_ENV=production npm ci --include=dev && \
 	NODE_ENV=production npm run build
 
+# Run the unit tests of every React app, with a coverage report in smarter/react/coverage/.
+# Each story is rendered as a test too. See smarter/react/README.md.
+react-test:
+	cd smarter/react && npm run coverage
+
+# Check the formatting, lint and types of every React app, as CI does.
+react-lint:
+	cd smarter/react && npm run format:check && npm run lint && npm run typecheck
+
+# Browse a React app's components in Storybook, at http://localhost:6006.
+# example: make react-storybook APP=smarter-secret-list
+react-storybook:
+	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
+
 # -------------------------------------------------------------------------
 # Sphinx Documentation
 #
@@ -423,6 +437,9 @@ help:
 	@echo 'react-install          - Install npm dependencies for React frontend apps'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
 	@echo 'react-build-ci         - Build all React frontend apps using CI settings'
+	@echo 'react-test             - Run the unit tests of all React apps, with a coverage report'
+	@echo 'react-lint             - Check the formatting, lint and types of all React apps'
+	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'

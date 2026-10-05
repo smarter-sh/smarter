@@ -74,11 +74,7 @@ MAX_RESULTS = 1000
 
 
 def compute_spec_to_django_orm(spec: SAMLLMHostComputeSpec) -> dict[str, Any]:
-    """
-    The LLMHostCompute fields of a spec: the spec itself, and copies of the parts that sizing and.
-
-    node groups use.
-    """
+    """The LLMHostCompute fields of a spec: the spec itself, and copies of the parts that sizing and node groups use."""
     node = spec.node
     gpu = node.gpu
     return {

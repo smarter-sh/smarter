@@ -114,11 +114,7 @@ class SAMBrokerErrorDependencies(SAMBrokerError):
 
 
 class SAMBrokerInternalError(SAMBrokerError):
-    """
-    Error for broker operations that result in an internal error,.
-
-    such as trying to create a resource that already exists.
-    """
+    """Error for broker operations that result in an internal error, such as trying to create a resource that already exists."""
 
     @property
     def get_formatted_err_message(self):

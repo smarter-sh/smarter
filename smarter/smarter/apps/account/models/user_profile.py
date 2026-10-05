@@ -56,9 +56,7 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
 
     def with_read_permission_for(self, user: User) -> "SmarterBaseQuerySetWithPermissions[_GenericTypeVar]":
         """
-        A pipeline for filtering a queryset of this resource based on the.
-
-        permissions of the authenticated user in the given request.
+        A pipeline for filtering a queryset of this resource based on the permissions of the authenticated user in the given request.
 
         Return a queryset of this resource if the user has permission to read it,
         or an empty queryset if not.
@@ -207,10 +205,7 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
     # --------------------------------------------------------------------------
     def with_read_permission_for(self, user: User) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
         """
-        A custom Smarter pipeline for filtering any MetaDataWithOwnership.
-
-        queryset based on the Smarter permissions scheme for the authenticated user in
-        the given request.
+        A custom Smarter pipeline for filtering any MetaDataWithOwnership queryset based on the Smarter permissions scheme for the authenticated user in the given request.
 
         Returns a queryset of the resource if the user has permission to read it,
         or an empty queryset if not.
@@ -496,10 +491,9 @@ class UserProfile(MetaDataModel):
         **kwargs,
     ) -> "UserProfile":
         """
-        Retrieve a model instance by primary key or name, using caching to.
+        Retrieve a model instance by primary key or name, using caching to optimize performance.
 
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
         Example usage:
@@ -676,9 +670,7 @@ class UserProfile(MetaDataModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None, **kwargs
     ) -> QuerySet["UserProfile"]:
         """
-        Retrieve a queryset of UserProfile instances associated with the given.
-
-        user, using caching to optimize performance.
+        Retrieve a queryset of UserProfile instances associated with the given user, using caching to optimize performance.
 
         :param invalidate: Boolean. If True, invalidates the cache for the user's profiles before retrieving.
         :param user: Optional[User]. If provided, retrieves profiles associated with this user. If not provided, retrieves all profiles.

@@ -13,13 +13,12 @@
  * @param defaultValue - Value returned when the cookie is not found. Defaults to `null`.
  * @returns The cookie value, or `defaultValue` if not found.
  */
-export function getCookie(
-  cookie: { name: string; domain: string },
-  defaultValue: string | null = "",
-) {
+export function getCookie(cookie: { name: string; domain: string }, defaultValue: string | null = "") {
   let cookieValue = null;
 
-  console.debug(`getCookie() Looking for cookie ${cookie.name} in domain ${cookie.domain}. Current hostname: ${window.location.hostname}`);
+  console.debug(
+    `getCookie() Looking for cookie ${cookie.name} in domain ${cookie.domain}. Current hostname: ${window.location.hostname}`,
+  );
 
   if (window.location.hostname.endsWith(cookie.domain) && document.cookie && document.cookie !== "") {
     const cookies = document.cookie.split(";").map((cookie) => cookie.trim());
@@ -33,7 +32,10 @@ export function getCookie(
     }
   }
   if (cookieValue === null) {
-    console.debug(`getCookie() Cookie ${cookie.name} not found in domain ${cookie.domain}. Returning default value:`, defaultValue);
+    console.debug(
+      `getCookie() Cookie ${cookie.name} not found in domain ${cookie.domain}. Returning default value:`,
+      defaultValue,
+    );
   }
   return cookieValue || defaultValue;
 }

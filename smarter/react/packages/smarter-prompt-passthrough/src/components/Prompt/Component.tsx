@@ -31,7 +31,6 @@ import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
 import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
 import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
 
-
 import "./styles.css";
 
 interface PromptProps {
@@ -41,12 +40,7 @@ interface PromptProps {
   providerApiUrl: string;
 }
 
-function Prompt({
-  sessionContext,
-  defaultLLMProviderId,
-  defaultTemplateId,
-  providerApiUrl,
-}: PromptProps) {
+function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, providerApiUrl }: PromptProps) {
   // UI state
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -129,12 +123,9 @@ function Prompt({
 
     setIsSending(true);
     try {
-      const url = new URL(providerSlug + "/", sessionContext.ApiUrl).toString();
-      const res = await fetchDjangoUrl(
-        sessionContext,
-        url,
-        requestJson,
-      );
+      // ApiUrl is absolute when Django renders the page, and relative in the Vite dev server's index.html.
+      const url = new URL(providerSlug + "/", new URL(sessionContext.ApiUrl, window.location.href)).toString();
+      const res = await fetchDjangoUrl(sessionContext, url, requestJson);
       const data = await res.json();
       console.debug(loggerPrefix, `fetched response from ${url}:`, data);
 

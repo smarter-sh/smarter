@@ -1,16 +1,14 @@
 """
 Test the secret app's get_secret and update_secret management commands.
 
-The account app defines management commands with the same names, and it is
-installed first, so ``manage.py get_secret`` runs the account app's version.
-These tests run the secret app's commands by passing their Command instances
-to call_command.
+The tests call the commands by name, as ``manage.py`` does, so they also prove that no other app
+defines a command with the same name, which would shadow them.
 """
 
 from io import StringIO
 from unittest.mock import patch
 
-from django.core.management import call_command
+from django.core.management import call_command, get_commands
 from django.utils.crypto import get_random_string
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -30,13 +28,21 @@ class TestSecretCommands(TestAccountMixin):
         self.addCleanup(Secret.objects.filter(pk=self.secret.pk).delete)
 
     def run_command(self, module, **options) -> str:
+        """Run the command that the module defines, by name, and return its output."""
         out = StringIO()
-        call_command(module.Command(), stdout=out, stderr=out, **options)
+        call_command(module.__name__.rsplit(".", 1)[1], stdout=out, stderr=out, **options)
         return out.getvalue()
 
     def get_value(self) -> str:
         self.secret.refresh_from_db()
         return self.secret.get_secret(update_last_accessed=False)
+
+    def test_commands_belong_to_the_secret_app(self):
+        """Manage.py runs the secret app's commands: no other app shadows them."""
+        commands = get_commands()
+        for name in ("get_secret", "update_secret"):
+            with self.subTest(command=name):
+                self.assertEqual(commands[name], "smarter.apps.secret")
 
     def test_get_secret(self):
         output = self.run_command(get_secret, name=self.name, username=self.admin_user.username)

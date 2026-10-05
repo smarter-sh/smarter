@@ -197,10 +197,9 @@ class MetaDataModel(TimestampedModel):
         cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None, **kwargs
     ) -> "MetaDataModel":
         """
-        Retrieve a model instance by primary key or name, using caching to.
+        Retrieve a model instance by primary key or name, using caching to optimize performance.
 
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
         Example usage:

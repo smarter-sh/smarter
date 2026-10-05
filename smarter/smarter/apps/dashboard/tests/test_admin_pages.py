@@ -1,8 +1,7 @@
 """
-Test that the admin console's pages render for each of the Smarter apps' models: the.
+Test that the admin console's pages render for each of the Smarter apps' models: the changelist, a change page, and the add page, for a superuser.
 
-changelist, a change page, and the add page, for a superuser. These run each ModelAdmin's
-list_display, list_filter, search, readonly field and form code.
+These run each ModelAdmin's list_display, list_filter, search, readonly field and form code.
 """
 
 from http import HTTPStatus

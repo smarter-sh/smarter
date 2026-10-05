@@ -22,11 +22,7 @@ export type MCPTransport = "stdio" | "sse" | "http";
 
 export type MCPAuthType = "none" | "api_key" | "oauth2" | "bearer_token";
 
-export type MCPConnectionStatus =
-  | "unconfigured"
-  | "connected"
-  | "disconnected"
-  | "error";
+export type MCPConnectionStatus = "unconfigured" | "connected" | "disconnected" | "error";
 
 export type MCPClient = {
   id: number;
@@ -75,7 +71,6 @@ export type MCPClient = {
   lastConnectedAt: string | null;
   lastError: string | null;
 };
-
 
 // ----------------------------------------------------------------------------
 // Component Props Interfaces

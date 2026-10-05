@@ -1,30 +1,19 @@
-// Component.stories.tsx
-
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { STREAM_URL } from "@/mocks/fixtures";
+import { streamHandlers } from "@/mocks/handlers";
+
 import TerminalEmulator from "./Component";
 
-const meta: Meta<typeof TerminalEmulator> = {
-  title: "Terminal/Emulator",
+/** The web console's log terminal, streaming the platform's logs from its api. */
+const meta = {
+  title: "Terminal Emulator/TerminalEmulator",
   component: TerminalEmulator,
-  parameters: {
-    layout: "fullscreen",
-  },
-  args: {
-    apiUrl: "/dashboard/logs/api/stream/",
-  },
-};
+  args: { apiUrl: STREAM_URL },
+  parameters: { layout: "fullscreen", msw: { handlers: streamHandlers } },
+} satisfies Meta<typeof TerminalEmulator>;
 
 export default meta;
-type Story = StoryObj<typeof TerminalEmulator>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    // uses default args above
-  },
-};
-
-export const WithRemoteApi: Story = {
-  args: {
-    apiUrl: "https://customer.smarter.sh/dashboard/logs/api/stream/",
-  },
-};
+export const Default: Story = {};

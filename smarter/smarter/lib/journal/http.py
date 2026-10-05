@@ -33,9 +33,7 @@ logger = logging.getLogger(__name__)
 
 class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     """
-    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses.
-
-    with additional manifest structure and metadata.
+    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses with additional manifest structure and metadata.
 
     This class is designed to provide a consistent response format for all Smarter API endpoints,
     embedding contextual information about the request and operation performed. It automatically

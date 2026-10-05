@@ -1,7 +1,7 @@
 """
-Test the CustomDomain dashboard views: the React list page, its list, clone,.
+Test the CustomDomain dashboard views: the React list page, its list, clone, delete and rename api, and the manifest detail page.
 
-delete and rename api, and the manifest detail page. See
+See
 :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 

@@ -1,7 +1,5 @@
 """
-Middleware that guarantees JSON-formatted error responses for clients.
-
-requesting JSON content.
+Middleware that guarantees JSON-formatted error responses for clients requesting JSON content.
 
 This middleware intercepts non-JSON error responses and converts them
 into standardized ``JsonResponse`` objects when the client explicitly
@@ -183,11 +181,7 @@ else:
 
 
 class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
-    """
-    Middleware that converts non-JSON error responses into JSON responses.
-
-    for clients requesting JSON content.
-    """
+    """Middleware that converts non-JSON error responses into JSON responses for clients requesting JSON content."""
 
     JSON_CONTENT_TYPES = (
         "application/json",

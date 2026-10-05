@@ -51,7 +51,11 @@ const ModalClone = ({ connection, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned connection.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new connection name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new connection name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ connection, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the connection.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new connection name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new connection name"
+      />
     </Modal>
   );
 };
@@ -145,7 +153,10 @@ interface ToolbarProps {
 export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time.
-  const [modal, setModal] = useState<{ type: ModalType; connection: Connection | null }>({ type: null, connection: null });
+  const [modal, setModal] = useState<{ type: ModalType; connection: Connection | null }>({
+    type: null,
+    connection: null,
+  });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -259,7 +270,12 @@ export const Toolbar = ({ sessionContext, connection, onRequery }: ToolbarProps)
           onOk={() => runAction(modal.connection!, `delete/${modal.connection!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} connection={modal.connection} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          connection={modal.connection}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           connection={modal.connection}

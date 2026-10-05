@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ProviderTabbedViewContext = Omit<
-  TabbedViewContext<Provider>,
-  "ListView" | "CardView"
-> & {
+export type ProviderTabbedViewContext = Omit<TabbedViewContext<Provider>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<ProviderListViewProps>;
   CardView: React.ComponentType<ProviderCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "Providers";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-provider.html";
-  const helpText = "Providers connect third-party LLM providers to the Smarter Platform. Rather than wiring each provider in through manual, one-off configuration, it exposes a structured onboarding process that validates a provider's models before they become available to Smarter Resources. As part of that process, the app runs a battery of verification checks confirming that a provider's models are compatible with the Smarter Resource feature set, and it re-runs those checks periodically so compatibility doesn't silently drift over time.";
+  const helpText =
+    "Providers connect third-party LLM providers to the Smarter Platform. Rather than wiring each provider in through manual, one-off configuration, it exposes a structured onboarding process that validates a provider's models before they become available to Smarter Resources. As part of that process, the app runs a battery of verification checks confirming that a provider's models are compatible with the Smarter Resource feature set, and it re-runs those checks periodically so compatibility doesn't silently drift over time.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="provider-list">

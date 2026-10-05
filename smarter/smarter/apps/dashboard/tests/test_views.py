@@ -1,8 +1,4 @@
-"""
-Test the dashboard's React page views: the prompt passthrough page and its providers api,.
-
-the terminal emulator (logs) page, and the manifest dropzone page.
-"""
+"""Test the dashboard's React page views: the prompt passthrough page and its providers api, the terminal emulator (logs) page, and the manifest dropzone page."""
 
 from http import HTTPStatus
 

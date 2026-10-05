@@ -38,15 +38,15 @@ const terminalTheme = {
   brightWhite: "#ffffff",
 };
 const terminalConfig = {
-      convertEol: true,
-      cursorBlink: false,
-      disableStdin: true,
-      fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, monospace',
-      fontSize: 13,
-      lineHeight: 1.4,
-      scrollback: 5000,
-      theme: terminalTheme,
-    };
+  convertEol: true,
+  cursorBlink: false,
+  disableStdin: true,
+  fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, monospace',
+  fontSize: 13,
+  lineHeight: 1.4,
+  scrollback: 5000,
+  theme: terminalTheme,
+};
 
 interface TerminalEmulatorProps {
   apiUrl: string;
@@ -73,7 +73,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
     // defer fit until after browser layout
     const rafId = requestAnimationFrame(() => {
       fitAddon.fit();
-      term.write('\x1b[?7l');
+      term.write("\x1b[?7l");
     });
 
     terminalRef.current = term;
@@ -89,7 +89,6 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
     resizeObserver.observe(terminalContainerRef.current);
     window.addEventListener("resize", handleResize);
-
 
     return () => {
       cancelAnimationFrame(rafId);
@@ -167,9 +166,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
             <span className="terminal-window__dot terminal-window__dot--maximize" />
           </div>
           <div className="terminal-window__title">logs@smarter:~</div>
-          <div
-            className={`terminal-window__status ${connected ? "is-online" : "is-offline"}`}
-          >
+          <div className={`terminal-window__status ${connected ? "is-online" : "is-offline"}`}>
             {connected ? "connected" : "disconnected"}
           </div>
         </div>

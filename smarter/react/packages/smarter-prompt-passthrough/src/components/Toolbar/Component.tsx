@@ -9,12 +9,7 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({ onClick, title, iconClass }: ToolbarButtonProps) {
   return (
-    <button
-      type="button"
-      className="btn btn-sm btn-icon btn-light"
-      onClick={onClick}
-      title={title}
-    >
+    <button type="button" className="btn btn-sm btn-icon btn-light" onClick={onClick} title={title}>
       <i className={iconClass}>
         <span className="path1"></span>
         <span className="path2"></span>
@@ -29,43 +24,33 @@ interface ToolbarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null;
 }
 
-
 interface CopyiedMessageProps {
   show_copied: boolean;
 }
 
 function CopyiedMessage({ show_copied }: CopyiedMessageProps) {
-
   const showCopiedMessageStyle: React.CSSProperties = {
-            position: "absolute",
-            top: "-2.5rem",
-            left: 0,
-            right: 0,
-            margin: "0 auto",
-            width: "fit-content",
-            background: "#222",
-            color: "#fff",
-            padding: "0.5rem 1.25rem",
-            borderRadius: "0.5rem",
-            fontSize: "1rem",
-            zIndex: 10,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            pointerEvents: "none",
-            textAlign: "center",
-            opacity: 0.95,
-            transition: "opacity 0.2s",
-          };
+    position: "absolute",
+    top: "-2.5rem",
+    left: 0,
+    right: 0,
+    margin: "0 auto",
+    width: "fit-content",
+    background: "#222",
+    color: "#fff",
+    padding: "0.5rem 1.25rem",
+    borderRadius: "0.5rem",
+    fontSize: "1rem",
+    zIndex: 10,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    pointerEvents: "none",
+    textAlign: "center",
+    opacity: 0.95,
+    transition: "opacity 0.2s",
+  };
 
-   return (
-    <>
-      {show_copied && (
-        <div style={showCopiedMessageStyle}>Copied to clipboard</div>
-      )}
-    </>
-    );
-
+  return <>{show_copied && <div style={showCopiedMessageStyle}>Copied to clipboard</div>}</>;
 }
-
 
 function Toolbar({ editor }: ToolbarProps) {
   const [copyIcon, setCopyIcon] = useState("ki-copy");
@@ -147,44 +132,15 @@ function Toolbar({ editor }: ToolbarProps) {
     }
   };
 
-
   return (
     <div className="d-flex gap-2 mb-3 flex-wrap align-items-center position-relative">
-      <ToolbarButton
-        onClick={handleFileNew}
-        title="File New"
-        iconClass="ki-duotone ki-document fs-2"
-      />
-      <ToolbarButton
-        onClick={handleFileOpen}
-        title="File Open"
-        iconClass="ki-duotone ki-folder fs-2"
-      />
-      <ToolbarButton
-        onClick={handleFileSave}
-        title="File Save"
-        iconClass="ki-duotone ki-disk fs-2"
-      />
-      <ToolbarButton
-        onClick={handleFormat}
-        title="Format JSON"
-        iconClass="ki-duotone ki-code fs-2"
-      />
-      <ToolbarButton
-        onClick={handleUndo}
-        title="Undo"
-        iconClass="ki-duotone ki-arrow-circle-left fs-2"
-      />
-      <ToolbarButton
-        onClick={handleRedo}
-        title="Redo"
-        iconClass="ki-duotone ki-arrow-circle-right fs-2"
-      />
-      <ToolbarButton
-        onClick={handleCopy}
-        title="Copy JSON"
-        iconClass={`ki-duotone ${copyIcon} fs-2`}
-      />
+      <ToolbarButton onClick={handleFileNew} title="File New" iconClass="ki-duotone ki-document fs-2" />
+      <ToolbarButton onClick={handleFileOpen} title="File Open" iconClass="ki-duotone ki-folder fs-2" />
+      <ToolbarButton onClick={handleFileSave} title="File Save" iconClass="ki-duotone ki-disk fs-2" />
+      <ToolbarButton onClick={handleFormat} title="Format JSON" iconClass="ki-duotone ki-code fs-2" />
+      <ToolbarButton onClick={handleUndo} title="Undo" iconClass="ki-duotone ki-arrow-circle-left fs-2" />
+      <ToolbarButton onClick={handleRedo} title="Redo" iconClass="ki-duotone ki-arrow-circle-right fs-2" />
+      <ToolbarButton onClick={handleCopy} title="Copy JSON" iconClass={`ki-duotone ${copyIcon} fs-2`} />
       <CopyiedMessage show_copied={showCopied} />
     </div>
   );

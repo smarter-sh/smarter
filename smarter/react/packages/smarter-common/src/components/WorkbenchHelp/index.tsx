@@ -1,2 +1,2 @@
 import WorkbenchHelp from "./Component";
-export { WorkbenchHelp }
+export { WorkbenchHelp };

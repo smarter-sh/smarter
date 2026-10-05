@@ -20,9 +20,8 @@ export type TabKey = "owned" | "shared";
 
 export type Tabs = {
   key: TabKey;
-  label: string
+  label: string;
 }[];
-
 
 type AnnotationValue = string | number | boolean | null;
 export type Annotations = Array<Record<string, AnnotationValue>> | null;

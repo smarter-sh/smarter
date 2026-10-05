@@ -51,7 +51,11 @@ const ModalClone = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned vectorstore.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new vectorstore name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new vectorstore name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the vectorstore.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new vectorstore name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new vectorstore name"
+      />
     </Modal>
   );
 };
@@ -89,7 +97,10 @@ const ModalDelete = ({
       Are you sure you want to delete vectorstore <strong>{vectorstore?.name}</strong>?
     </p>
     <p>
-      <em>Its database, its documents and its snapshots are destroyed, and cannot be recovered. A vectorstore with deletion protection cannot be deleted.</em>
+      <em>
+        Its database, its documents and its snapshots are destroyed, and cannot be recovered. A vectorstore with
+        deletion protection cannot be deleted.
+      </em>
     </p>
   </Modal>
 );
@@ -145,7 +156,10 @@ interface ToolbarProps {
 export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time.
-  const [modal, setModal] = useState<{ type: ModalType; vectorstore: Vectorstore | null }>({ type: null, vectorstore: null });
+  const [modal, setModal] = useState<{ type: ModalType; vectorstore: Vectorstore | null }>({
+    type: null,
+    vectorstore: null,
+  });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -259,7 +273,12 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           onOk={() => runAction(modal.vectorstore!, `delete/${modal.vectorstore!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} vectorstore={modal.vectorstore} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          vectorstore={modal.vectorstore}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           vectorstore={modal.vectorstore}

@@ -94,12 +94,9 @@ function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps)
                     {renderDetailRow("TOS Accepted At", provider.tosAcceptedAt, "dateTime")}
                     {renderDetailRow(
                       "TOS Accepted By",
-                      provider.tosAcceptedBy ? provider.tosAcceptedBy.username : null
+                      provider.tosAcceptedBy ? provider.tosAcceptedBy.username : null,
                     )}
-                    {renderDetailRow(
-                      "RFC 1034 Compliant Name",
-                      provider.rfc1034CompliantName
-                    )}
+                    {renderDetailRow("RFC 1034 Compliant Name", provider.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

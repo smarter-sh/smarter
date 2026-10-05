@@ -1,7 +1,7 @@
 """
-Test the Prompt manifest broker, :mod:`smarter.apps.prompt.manifest.brokers.prompt`, through the.
+Test the Prompt manifest broker, :mod:`smarter.apps.prompt.manifest.brokers.prompt`, through the api/v1/cli/ commands.
 
-api/v1/cli/ commands. A Prompt is a chat session, a read-only resource that apply refuses.
+A Prompt is a chat session, a read-only resource that apply refuses.
 """
 
 import secrets

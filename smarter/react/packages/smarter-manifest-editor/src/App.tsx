@@ -80,13 +80,23 @@ function CloneModal({ kind, name, onOk, onCancel }: CloneModalProps) {
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
         placeholder={`Enter new ${kind} name`}
+        aria-label={`New ${kind} name`}
+        // focus moves into the dialog that just opened, as dialogs should do.
+        // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
       />
     </Modal>
   );
 }
 
-function App({ sessionContext, initialManifest, applyApiUrl, validateApiUrl, deleteApiUrl, kindPlaceholder }: AppProps) {
+function App({
+  sessionContext,
+  initialManifest,
+  applyApiUrl,
+  validateApiUrl,
+  deleteApiUrl,
+  kindPlaceholder,
+}: AppProps) {
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [savedYaml, setSavedYaml] = useState(initialManifest);
   const [yaml, setYaml] = useState(initialManifest);
@@ -161,7 +171,12 @@ function App({ sessionContext, initialManifest, applyApiUrl, validateApiUrl, del
       return;
     }
     const result = await run(() =>
-      callCli(sessionContext, applyApiUrl, manifestToApply(manifest), `${manifest.kind} ${manifest.metadata.name} saved`),
+      callCli(
+        sessionContext,
+        applyApiUrl,
+        manifestToApply(manifest),
+        `${manifest.kind} ${manifest.metadata.name} saved`,
+      ),
     );
     if (result.ok) setSavedYaml(yaml);
     showResult(result.ok ? "Saved" : "Save Failed", result);

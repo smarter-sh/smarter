@@ -43,11 +43,7 @@ def mask(text: str, category: str) -> str:
 
 
 def excerpt(finding: GuardrailFinding, segment_text: Optional[str]) -> Optional[str]:
-    """
-    Return the excerpt of a finding, for its event: its matches, or the segment, masked for.
-
-    the ``pii`` and ``secrets`` categories.
-    """
+    """Return the excerpt of a finding, for its event: its matches, or the segment, masked for the ``pii`` and ``secrets`` categories."""
     if finding.matches:
         parts = [
             (

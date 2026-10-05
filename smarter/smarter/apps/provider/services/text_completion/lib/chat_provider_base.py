@@ -377,9 +377,7 @@ class SmarterChatProviderBase(ChatDbMixin):
     @cached_property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
+        Returns the class name in a formatted string along with the name of this mixin.
 
         :returns: The formatted class name.
         :rtype: str
@@ -525,10 +523,9 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def get_message_thread(self, data: dict[str, Any]) -> List[Dict[str, str]]:
         """
-        Initialize a new message thread with a system prompt.
+        Initialize a new message thread with a system prompt and the incoming data.
 
-        and the incoming data. This method ensures that the system
-        role is present in the message thread.
+        This method ensures that the system role is present in the message thread.
 
         :raises SmarterValueError: If the request body is invalid.
 

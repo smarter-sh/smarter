@@ -188,9 +188,7 @@ def is_visible(user_profile: "UserProfile", resource_locator: str) -> bool:
 
 class Budget(MetaDataModel):
     """
-    A budget is a catalogue of spending limits that can be enforced on a resource, either.
-
-    in a given period of time, or over the life of the resource.
+    A budget is a catalogue of spending limits that can be enforced on a resource, either in a given period of time, or over the life of the resource.
 
     examples:
 
@@ -539,10 +537,10 @@ class ResourceConstraint(TimestampedModel):
 
 class ResourceLock(TimestampedModel):
     """
-    A mechanism to prevent spending on a resource when its.
+    A mechanism to prevent spending on a resource when its budget constraint has been exceeded.
 
-    budget constraint has been exceeded. The existence of a resource lock indicates that
-    the resource is locked and cannot be used until the lock is removed, or it expires.
+    The existence of a resource lock indicates that the resource is locked and cannot be used until the lock is
+    removed, or it expires.
     """
 
     resource_constraint = models.ForeignKey(

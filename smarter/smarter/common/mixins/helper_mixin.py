@@ -104,11 +104,9 @@ class SmarterHelperMixin:
 
     def __init__(self, *args, **kwargs):
         """
-        Note: this needs to exist.
+        Note: this needs to exist; something in the Python MRO requires it, even if it does nothing.
 
-        something in the Python MRO requires it,
-        even if it does nothing. If you remove this, you will get a mysterious error
-        about something downstream expecting exactly one object.
+        If you remove this, you will get a mysterious error about something downstream expecting exactly one object.
         """
         # logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
 

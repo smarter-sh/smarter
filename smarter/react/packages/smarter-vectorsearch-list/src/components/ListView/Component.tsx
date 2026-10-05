@@ -69,7 +69,6 @@ const TableHeader = () => {
   );
 };
 
-
 /**
  * CreatedDate and UpdatedDate
  *
@@ -222,7 +221,12 @@ function ChunkedRows({
   return (
     <>
       {vectorsearchs.slice(0, visibleCount).map((vectorsearch) => (
-        <VectorsearchRow key={vectorsearch.id} vectorsearch={vectorsearch} sessionContext={sessionContext} onRequery={onRequery} />
+        <VectorsearchRow
+          key={vectorsearch.id}
+          vectorsearch={vectorsearch}
+          sessionContext={sessionContext}
+          onRequery={onRequery}
+        />
       ))}
     </>
   );

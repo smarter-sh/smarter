@@ -15,7 +15,13 @@ import type * as monaco from "monaco-editor";
 import { yamlKeys } from "./validation";
 
 /** The paths of the locked fields. */
-export const LOCKED_PATHS: string[][] = [["apiVersion"], ["kind"], ["metadata", "name"], ["metadata", "pluginClass"], ["status"]];
+export const LOCKED_PATHS: string[][] = [
+  ["apiVersion"],
+  ["kind"],
+  ["metadata", "name"],
+  ["metadata", "pluginClass"],
+  ["status"],
+];
 
 const LOCKED_MESSAGE = "This field identifies this resource and cannot be changed here. Also, status is read-only.";
 
@@ -80,7 +86,11 @@ export function useLockedFields(editor: monaco.editor.IStandaloneCodeEditor | nu
           if (!selection.isEmpty()) return monacoInstance.Range.areIntersecting(selection, range);
           // a new line at either end of a locked field does not change it.
           if (e.keyCode === KeyCode.Enter) {
-            return range.containsPosition(position) && !position.equals(range.getStartPosition()) && !position.equals(range.getEndPosition());
+            return (
+              range.containsPosition(position) &&
+              !position.equals(range.getStartPosition()) &&
+              !position.equals(range.getEndPosition())
+            );
           }
           return range.containsPosition(position);
         });
@@ -102,7 +112,8 @@ export function useLockedFields(editor: monaco.editor.IStandaloneCodeEditor | nu
       if (isUndoing) return;
       const ranges = decorations.getRanges();
       const changed =
-        ranges.length !== lockedTexts.length || ranges.some((range, i) => model.getValueInRange(range) !== lockedTexts[i]);
+        ranges.length !== lockedTexts.length ||
+        ranges.some((range, i) => model.getValueInRange(range) !== lockedTexts[i]);
       if (!changed) return;
       const position = editor.getPosition();
       isUndoing = true;

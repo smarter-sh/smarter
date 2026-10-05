@@ -54,8 +54,8 @@ const ModalClone = ({ show, compute, onOk, onCancel }: NameModalProps) => {
       </p>
       <p>
         <em>
-          The clone has the same kind of node, and its own node group, which Smarter creates when an LLMHost first
-          needs one of its nodes.
+          The clone has the same kind of node, and its own node group, which Smarter creates when an LLMHost first needs
+          one of its nodes.
         </em>
       </p>
       <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new name" />
@@ -176,7 +176,9 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(data.error || `Failed to ${verb} LLMHostCompute (${response.status}): ${response.statusText}`);
+          throw new Error(
+            data.error || `Failed to ${verb} LLMHostCompute (${response.status}): ${response.statusText}`,
+          );
         }
         return data;
       })

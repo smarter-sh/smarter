@@ -6,7 +6,7 @@ from calling a model, to running a tool, to storing a credential — is expresse
 **Resource**.
 
 What sets Smarter apart is how those Resources are created: entirely through a
-:doc:`Smarter Application Manifest (SAM) <../smarter-framework/smarter-manifests>`, a plain
+:doc:`Smarter Application Manifest (SAM) <smarter-framework/smarter-manifests>`, a plain
 `YAML <https://en.wikipedia.org/wiki/YAML>`__ file that declares a Resource's desired state. There
 is no separate SDK to learn and no resource-specific API call to make — an Account, a Secret, an
 LLMClient, an Orchestrator, a Plugin, all of it is created and managed the same way, by applying a
@@ -70,12 +70,12 @@ Harness invocations that led to it.
 Because Resources are layered rather than monolithic, different roles on a team naturally gravitate
 toward different parts of the stack, without needing to understand the whole thing to be productive:
 
-- **Prompt engineers** work in the Conversation and Extensibility layers — :doc:`smarter-resources/smarter-prompt`, :doc:`smarter-resources/smarter-plugin`, and :doc:`smarter-resources/smarter-guardrail` — using :doc:`YAML manifests <../smarter-framework/smarter-manifests>` and the :doc:`Smarter CLI <smarter-framework/smarter-cli>`.
+- **Prompt engineers** work in the Conversation and Extensibility layers — :doc:`smarter-resources/smarter-prompt`, :doc:`smarter-resources/smarter-plugin`, and :doc:`smarter-resources/smarter-guardrail` — using :doc:`YAML manifests <smarter-framework/smarter-manifests>` and the :doc:`Smarter CLI <smarter-framework/smarter-cli>`.
 - **Business Process Analysts** work downstream of the Conversation layer, querying archived :doc:`smarter-resources/smarter-prompt` history and :doc:`smarter-resources/smarter-account` usage data through Smarter's MariaDB database and reporting tools.
-- **Application developers** work in the Model Connectivity and Extensibility layers, composing multi-agent workflows with :doc:`smarter-resources/smarter-orchestrator` and wiring :doc:`smarter-resources/smarter-connection` and :doc:`smarter-resources/smarter-mcpclient` resources into applications using Python, the :doc:`Smarter Application Framework <../smarter-framework>`, and its built-in :doc:`REST APIs <../smarter-framework/smarter-api>`.
+- **Application developers** work in the Model Connectivity and Extensibility layers, composing multi-agent workflows with :doc:`smarter-resources/smarter-orchestrator` and wiring :doc:`smarter-resources/smarter-connection` and :doc:`smarter-resources/smarter-mcpclient` resources into applications using Python, the :doc:`Smarter Application Framework <smarter-framework>`, and its built-in :doc:`REST APIs <smarter-framework/smarter-api>`.
 - **Data scientists** work in the Model Connectivity layer, deploying and evaluating models and retrieval pipelines through :doc:`smarter-resources/smarter-llmhost` and :doc:`smarter-resources/smarter-vectorstore`.
-- **DevOps engineers** work in the Access & Governance layer, provisioning :doc:`smarter-resources/smarter-secret` and :doc:`smarter-resources/smarter-llmhost` infrastructure through the :doc:`Smarter CLI <../smarter-platform/cli>`, :doc:`GitHub Actions <../smarter-framework/developer-reference/devops/ci-cd>`, and `Kubernetes <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
-- **Cloud engineers** work alongside DevOps in Access & Governance and Model Connectivity, using Smarter's :doc:`AWS <../smarter-framework/technologies/aws>` and :doc:`Kubernetes <../smarter-framework/technologies/kubernetes>` Helper classes to scale self-hosted infrastructure.
+- **DevOps engineers** work in the Access & Governance layer, provisioning :doc:`smarter-resources/smarter-secret` and :doc:`smarter-resources/smarter-llmhost` infrastructure through the :doc:`Smarter CLI <smarter-platform/cli>`, :doc:`GitHub Actions <smarter-framework/developer-reference/devops/ci-cd>`, and `Kubernetes <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
+- **Cloud engineers** work alongside DevOps in Access & Governance and Model Connectivity, using Smarter's :doc:`AWS <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` Helper classes to scale self-hosted infrastructure.
 
 
 .. toctree::

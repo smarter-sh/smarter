@@ -1,14 +1,4 @@
-import type { StorybookConfig } from "@storybook/react-vite";
+/** Storybook for this package. See storybook/main.ts in the workspace. */
+import { smarterStorybookConfig } from "../../../storybook/main";
 
-const config: StorybookConfig = {
-  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
-  addons: [
-    "@chromatic-com/storybook",
-    "@storybook/addon-vitest",
-    "@storybook/addon-a11y",
-    "@storybook/addon-docs",
-    "@storybook/addon-onboarding",
-  ],
-  framework: "@storybook/react-vite",
-};
-export default config;
+export default smarterStorybookConfig(import.meta.dirname);

@@ -259,7 +259,12 @@ export const Toolbar = ({ sessionContext, secret, onRequery }: ToolbarProps) => 
           onOk={() => runAction(modal.secret!, `delete/${modal.secret!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} secret={modal.secret} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          secret={modal.secret}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           secret={modal.secret}

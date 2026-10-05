@@ -14,9 +14,7 @@ manage.py Commands
    commands/delete_account_contact
    commands/dump_django_settings
    commands/get_accounts
-   commands/get_secret
    commands/initialize_account
    commands/initialize_platform
    commands/reset_cache
    commands/send_welcome_email
-   commands/update_secret

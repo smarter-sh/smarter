@@ -25,11 +25,7 @@ INGRESS_TEMPLATE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 
 
 
 def is_taskable() -> bool:
-    """
-    Module helper function to check if aws resources are accessible.
-
-    for task processing.
-    """
+    """Module helper function to check if aws resources are accessible for task processing."""
     prefix = logger_prefix + f".{is_taskable.__name__}()"
     # verifies that the aws credentials are available and valid.
     if not aws_helper.ready():

@@ -66,11 +66,7 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         self.assertIn("metadata.description", str(context.exception))
 
     def test_manifest_initalization_bad3(self):
-        """
-        Test the manifest initialization with a manifest file.
-
-        that has an invalid expiration_date
-        """
+        """Test the manifest initialization with a manifest file that has an invalid expiration_date."""
 
         filespec = self.get_data_full_filepath("secret-bad3.yaml")
         loader = SAMLoader(file_path=filespec)

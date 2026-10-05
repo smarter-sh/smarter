@@ -67,7 +67,6 @@ const TableHeader = () => {
   );
 };
 
-
 /**
  * CreatedDate and UpdatedDate
  *

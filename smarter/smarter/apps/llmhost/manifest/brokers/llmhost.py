@@ -75,9 +75,7 @@ MAX_RESULTS = 1000
 
 def spec_to_django_orm(spec: SAMLLMHostSpec, name: str, compute: Optional[LLMHostCompute] = None) -> dict[str, Any]:
     """
-    The LLMHost fields of a spec: the spec itself, and copies of the parts that are queried.
-
-    and reported on.
+    The LLMHost fields of a spec: the spec itself, and copies of the parts that are queried and reported on.
 
     :param compute: The LLMHost's compute, from
         :func:`~smarter.apps.llmhost.services.compute.resolve_compute`. Its name is stored in the

@@ -34,15 +34,15 @@ if (!smarterRequestId) throw new Error("Smarter request ID not found in root ele
 if (!chargesApiUrl) throw new Error("Charges API url not found in root element attributes");
 
 const sessionContext: SessionContext = {
-    ApiUrl: myResourcesApiUrl,
-    csrfCookieName,
-    djangoSessionCookieName,
-    cookieDomain,
-    debugMode,
-    smarterClient,
-    smarterClientVersion,
-    smarterRequestId,
-    smarterCapabilities,
+  ApiUrl: myResourcesApiUrl,
+  csrfCookieName,
+  djangoSessionCookieName,
+  cookieDomain,
+  debugMode,
+  smarterClient,
+  smarterClientVersion,
+  smarterRequestId,
+  smarterCapabilities,
 };
 export interface AppContextInterface {
   sessionContext: SessionContext;

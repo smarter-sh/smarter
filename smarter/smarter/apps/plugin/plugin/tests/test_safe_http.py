@@ -1,8 +1,6 @@
 # pylint: disable=unused-argument
 """
-Unit tests for :py:mod:`smarter.apps.plugin.plugin.safe_http`, which protects the Smarter.
-
-platform from requests to user-supplied URLs.
+Unit tests for :py:mod:`smarter.apps.plugin.plugin.safe_http`, which protects the Smarter platform from requests to user-supplied URLs.
 
 .. note::
 

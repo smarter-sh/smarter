@@ -272,9 +272,7 @@ class SAMVectorsearchBroker(AbstractBroker):
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Convert the Smarter API Vectorsearch manifest into a dictionary suitable for creating or updating.
-
-        a Django ORM Vectorsearch model.
+        Convert the Smarter API Vectorsearch manifest into a dictionary suitable for creating or updating a Django ORM Vectorsearch model.
 
         This method extracts all relevant configuration, metadata, and versioning information from the
         loaded manifest and transforms it into a dictionary format compatible with Django ORM operations.

@@ -1,9 +1,5 @@
 # pylint: disable=W0613
-"""
-This module contains views to implement the Provider.
-
-card-style detail view in the Smarter Dashboard.
-"""
+"""This module contains views to implement the Provider card-style detail view in the Smarter Dashboard."""
 
 from typing import Optional
 

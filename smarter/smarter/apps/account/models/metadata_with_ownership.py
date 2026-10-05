@@ -116,9 +116,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
     def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
-        Returns a queryset of resources that the authenticated user in the.
-
-        given request has read permission for.
+        Returns a queryset of resources that the authenticated user in the given request has read permission for.
 
         This method supports users with multiple UserProfiles. For each profile,
         it computes the set of resources the user can read, and combines all
@@ -224,9 +222,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
     def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
-        Returns a queryset of resources that the authenticated user in the.
-
-        given request has full management (ownership) permission for.
+        Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
 
         This method supports users with multiple UserProfiles. For each profile,
         it computes the set of resources the user can fully manage
@@ -437,10 +433,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
 
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
         """
-        A custom Smarter pipeline for filtering any MetaDataWithOwnership.
-
-        queryset based on the Smarter permissions scheme for the authenticated user in
-        the given request.
+        A custom Smarter pipeline for filtering any MetaDataWithOwnership queryset based on the Smarter permissions scheme for the authenticated user in the given request.
 
         Returns a queryset of the resource if the user has permission to read it,
         or an empty queryset if not.
@@ -651,11 +644,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             name: str, user_profile: UserProfile, class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
-            Internal method to retrieve a model instance by name and user.
+            Internal method to retrieve a model instance by name and user profile with caching.
 
-            profile with caching. Prefetches related tags and selects
-            related user profile, account, and user for optimal access.
-            Handles common SAM retrieval patterns for name/user.
+            Prefetches related tags and selects related user profile, account, and user for optimal access. Handles
+            common SAM retrieval patterns for name/user.
 
             :param name: The name of the model instance to retrieve.
             :param user_profile: The user profile associated with the model instance.
@@ -703,11 +695,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             name: str, account: Account, class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
-            Internal method to retrieve a model instance by name and account with.
+            Internal method to retrieve a model instance by name and account with caching.
 
-            caching. Prefetches related tags and selects related user profile,
-            account, and user for optimal access. Handles common SAM retrieval
-            patterns for name/account.
+            Prefetches related tags and selects related user profile, account, and user for optimal access. Handles
+            common SAM retrieval patterns for name/account.
 
             :param name: The name of the model instance to retrieve.
             :param account: The account associated with the model instance.
@@ -879,9 +870,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
             """
-            Internal method to retrieve MetaDataWithOwnershipModel instances for.
-
-            a given user profile ID with caching.
+            Internal method to retrieve MetaDataWithOwnershipModel instances for a given user profile ID with caching.
 
             :param user_profile_id: The ID of the user profile for which to retrieve MetaDataWithOwnershipModel instances.
             :param class_name: The name of the class for cache key purposes.

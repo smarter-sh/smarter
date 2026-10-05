@@ -227,10 +227,9 @@ class PluginDataSql(PluginDataBase):
         **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
-        Retrieve a model instance by primary key, using caching to.
+        Retrieve a model instance by primary key, using caching to optimize performance.
 
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
         Example usage:

@@ -28,7 +28,6 @@ const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
 const smarterClient = projectName;
 const smarterClientVersion = projectVersion;
 
-
 if (!ApiUrl) throw new Error("LLMHost list API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
 if (!djangoSessionCookieName) throw new Error("Django session cookie name not found in root element attributes");

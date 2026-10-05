@@ -1,7 +1,5 @@
 """
-This module provides a Django management command to print out all.
-
-external integrations that are currently configured in the system.
+This module provides a Django management command to print out all external integrations that are currently configured in the system.
 
 Classes
 =======

@@ -31,11 +31,7 @@ class TestApiCliV1Brokers(SmarterTestBase):
         self.assertEqual(Brokers.to_camel_case("super_snake_case"), "superSnakeCase")
 
     def test_get_broker_kind(self):
-        """
-        Test that the broker kind is returned correctly from the broker name.
-
-        taking into consideration spelling and case anomalies.
-        """
+        """Test that the broker kind is returned correctly from the broker name taking into consideration spelling and case anomalies."""
         self.assertEqual(Brokers.get_broker_kind("Account"), SAMKinds.ACCOUNT.value)
         self.assertEqual(Brokers.get_broker_kind("account"), SAMKinds.ACCOUNT.value)
         self.assertEqual(Brokers.get_broker_kind("accounts"), SAMKinds.ACCOUNT.value)

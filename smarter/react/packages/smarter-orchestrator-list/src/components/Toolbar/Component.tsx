@@ -51,7 +51,11 @@ const ModalClone = ({ orchestrator, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned orchestrator.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new orchestrator name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new orchestrator name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ orchestrator, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the orchestrator.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new orchestrator name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new orchestrator name"
+      />
     </Modal>
   );
 };
@@ -145,7 +153,10 @@ interface ToolbarProps {
 export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time.
-  const [modal, setModal] = useState<{ type: ModalType; orchestrator: Orchestrator | null }>({ type: null, orchestrator: null });
+  const [modal, setModal] = useState<{ type: ModalType; orchestrator: Orchestrator | null }>({
+    type: null,
+    orchestrator: null,
+  });
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -259,7 +270,12 @@ export const Toolbar = ({ sessionContext, orchestrator, onRequery }: ToolbarProp
           onOk={() => runAction(modal.orchestrator!, `delete/${modal.orchestrator!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} orchestrator={modal.orchestrator} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          orchestrator={modal.orchestrator}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           orchestrator={modal.orchestrator}

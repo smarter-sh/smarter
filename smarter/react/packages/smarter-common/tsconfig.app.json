@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "@smarter-common/*": ["./src/*"]
+      "@smarter-common/*": ["./src/*"],
+      "@test/*": ["../../test/*"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2023",
@@ -18,5 +19,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "../../test", "../../storybook"]
 }

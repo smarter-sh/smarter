@@ -105,12 +105,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     @property
     def smarter_auth_token(self) -> Optional[SmarterAuthToken]:
         """
-        The SmarterAuthToken object is a Django ORM model subclass from knox.AuthToken.
+        The SmarterAuthToken object is a Django ORM model subclass from knox.AuthToken that represents a SmarterAuthToken api key.
 
-        that represents a SmarterAuthToken api key. The SmarterAuthToken object is
-        used to store the authentication hash and Smarter metadata for the Smarter API.
-        The SmarterAuthToken object is retrieved from the database, if it exists,
-        or created from the manifest if it does not.
+        The SmarterAuthToken object is used to store the authentication hash and Smarter metadata for the Smarter
+        API. The SmarterAuthToken object is retrieved from the database, if it exists, or created from the manifest
+        if it does not.
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token

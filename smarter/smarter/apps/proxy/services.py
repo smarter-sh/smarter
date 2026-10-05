@@ -146,10 +146,9 @@ def check_upstream_host(proxy: Proxy) -> None:
 
 def resolve_proxy(name: str, user_profile: UserProfile) -> Proxy:
     """
-    The Proxy that a caller means by ``name``: of those that the caller may read, their own, else.
+    The Proxy that a caller means by ``name``: of those that the caller may read, their own, else their account's, else the built-in one, which the Smarter admin owns.
 
-    their account's, else the built-in one, which the Smarter admin owns. Ties go to the most
-    recently updated.
+    Ties go to the most recently updated.
 
     :raises ProxyNotFound: if the caller may read no Proxy of that name.
     """

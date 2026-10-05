@@ -1,7 +1,5 @@
 """
-A test mixin for the /api/v1/<resources>/ REST api that the vectorsearch and orchestrator apps.
-
-repeat: a list view, a detail view by hashed id or by id, and the resource's default api view.
+A test mixin for the /api/v1/<resources>/ REST api that the vectorsearch and orchestrator apps repeat: a list view, a detail view by hashed id or by id, and the resource's default api view.
 
 A subclass names the app's model, reverse names and url parameter, and creates the resource::
 

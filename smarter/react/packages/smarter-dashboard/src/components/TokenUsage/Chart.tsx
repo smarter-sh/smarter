@@ -92,8 +92,7 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
         setIsLoading(false);
       });
 
-    return () => {
-    };
+    return () => {};
   }, [sessionContext, apiUrl, periodicity]);
 
   return (
@@ -102,9 +101,7 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
         <ChargesPeriodicityDropdown value={periodicity} onChange={handlePeriodicityChange} />
       </div>
 
-      {errMessage && (
-        <div style={{ color: "#b91c1c", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{errMessage}</div>
-      )}
+      {errMessage && <div style={{ color: "#b91c1c", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{errMessage}</div>}
 
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={tokenUsageData}>
@@ -146,9 +143,7 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
         </AreaChart>
       </ResponsiveContainer>
 
-      {isLoading && (
-        <div style={{ marginTop: "0.5rem", fontSize: "0.85rem", opacity: 0.6 }}>Loading…</div>
-      )}
+      {isLoading && <div style={{ marginTop: "0.5rem", fontSize: "0.85rem", opacity: 0.6 }}>Loading…</div>}
     </div>
   );
 }

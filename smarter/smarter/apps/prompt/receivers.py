@@ -52,11 +52,7 @@ prefix = "smarter.apps.prompt.receivers"
 
 
 def get_sender_name(sender: Any) -> str:
-    """
-    Get a readable name for the sender of a signal, handling both class and.
-
-    instance methods.
-    """
+    """Get a readable name for the sender of a signal, handling both class and instance methods."""
     if isinstance(sender, type):
         return f"{sender.__name__}({id(sender)})"
     return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"

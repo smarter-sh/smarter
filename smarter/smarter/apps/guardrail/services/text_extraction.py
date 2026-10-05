@@ -1,7 +1,5 @@
 """
-Extract the text that guardrails scan from a chat completion request or response, and.
-
-write guardrails' changes back.
+Extract the text that guardrails scan from a chat completion request or response, and write guardrails' changes back.
 
 - Input guardrails scan the **latest user message**: what the user just said. They do not
   scan the LLMClient's own system prompt, which would make e.g. a prompt injection guardrail

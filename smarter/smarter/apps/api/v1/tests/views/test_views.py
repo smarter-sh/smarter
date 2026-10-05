@@ -132,11 +132,7 @@ class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
         return None
 
     def get(self, request: Request, *args, **kwargs):
-        """
-        Handle GET requests and return the faux Stackacademy.
-
-        course catalog.
-        """
+        """Handle GET requests and return the faux Stackacademy course catalog."""
         course_id = request.query_params.get("course_id")
         max_cost = request.query_params.get("max_cost")
         description = request.query_params.get("description")

@@ -87,11 +87,7 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
         return f"{self.name}"
 
     def clone(self, new_name=None, new_version=None, user_profile=None) -> "LLMHostCompute":
-        """
-        Clone the LLMHostCompute's spec, but not its node group: the clone is a new kind of node,.
-
-        whose node group Smarter creates when an LLMHost first needs one of its nodes.
-        """
+        """Clone the LLMHostCompute's spec, but not its node group: the clone is a new kind of node, whose node group Smarter creates when an LLMHost first needs one of its nodes."""
         clone = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)
         clone.nodegroup_status = LLMHostComputeNodeGroupStatus.ABSENT
         clone.desired_nodes = 0

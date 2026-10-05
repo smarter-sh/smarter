@@ -92,11 +92,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         return super().__call__(request)
 
     async def __acall__(self, request):
-        """
-        Async version of __call__ that is swapped in when an async request.
-
-        is running.
-        """
+        """Async version of __call__ that is swapped in when an async request is running."""
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         return await super().__acall__(request)
 

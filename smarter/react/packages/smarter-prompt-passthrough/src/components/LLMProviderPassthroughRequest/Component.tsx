@@ -45,11 +45,7 @@ export default function LLMProviderPassthroughRequest({
       <div className="card-header d-flex flex-column align-items-stretch">
         <div className="row w-100 mt-3 mb-2">
           <div className="col-6">
-            <LLMProviderSelector
-              providersJson={providersJson}
-              value={llmProviderId}
-              onChange={onLLMProviderChange}
-            />
+            <LLMProviderSelector providersJson={providersJson} value={llmProviderId} onChange={onLLMProviderChange} />
           </div>
           <div className="col-6">
             <TemplateSelector value={templateId} onChange={onTemplateChange} />
@@ -60,20 +56,13 @@ export default function LLMProviderPassthroughRequest({
             <input
               type="text"
               className="form-control"
-              value={
-                providerBaseUrl ? `${providerBaseUrl}${connectivityTestPath}` : ""
-              }
+              value={providerBaseUrl ? `${providerBaseUrl}${connectivityTestPath}` : ""}
               readOnly
               style={{ backgroundColor: "#f8f9fa", fontSize: "0.95rem" }}
             />
           </div>
           <div className="col-3 d-flex align-items-center justify-content-end">
-            <button
-              className="btn btn-primary w-100"
-              type="button"
-              onClick={onSend}
-              disabled={isSending}
-            >
+            <button className="btn btn-primary w-100" type="button" onClick={onSend} disabled={isSending}>
               {isSending ? "SENDING..." : "SEND"}
             </button>
           </div>

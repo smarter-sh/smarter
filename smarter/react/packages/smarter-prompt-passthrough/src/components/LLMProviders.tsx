@@ -71,11 +71,7 @@ const isLLMProvider = (candidate: unknown): candidate is LLMProvider => {
   }
 
   const provider = candidate as Partial<LLMProvider>;
-  return (
-    typeof provider.id === "number" &&
-    typeof provider.name === "string" &&
-    typeof provider.baseUrl === "string"
-  );
+  return typeof provider.id === "number" && typeof provider.name === "string" && typeof provider.baseUrl === "string";
 };
 
 const parseProviders = (payload: ProvidersApiResponse): LLMProvider[] => {

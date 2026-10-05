@@ -87,8 +87,8 @@ and status and command bar React components to use for TabbedListView.
 
 ```typescript
 import type { PluginTabbedViewContext, Plugin } from "@/lib/Types";
-import ListView from "@/components/ListView"
-import CardView from "@/components/CardView"
+import ListView from "@/components/ListView";
+import CardView from "@/components/CardView";
 
 const pluginTabbedListViewContext: PluginTabbedViewContext = {
   objectType: {} as Plugin,

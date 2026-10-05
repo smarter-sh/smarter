@@ -1,8 +1,8 @@
 # pylint: disable=W0613,W0212
 """
-Cached querysets of the vectorstores that a user may see: those they own, those shared with.
+Cached querysets of the vectorstores that a user may see: those they own, those shared with them, and both.
 
-them, and both. A vectorstore's post_save and post_delete receivers invalidate its owner's.
+A vectorstore's post_save and post_delete receivers invalidate its owner's.
 """
 
 from django.db import models
