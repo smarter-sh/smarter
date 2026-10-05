@@ -1,7 +1,5 @@
 import { useState } from "react";
-const failureEmojis = [
-  "💥", "😵‍💫", "🧨", "😿", "🥀", "🫠", "🧟", "🫤"
-];
+const failureEmojis = ["💥", "😵‍💫", "🧨", "😿", "🥀", "🫠", "🧟", "🫤"];
 
 export default function FailureEmoji() {
   // picked once, so that it does not change when the component re-renders.

@@ -28,17 +28,9 @@ function DownloadNpm({ apiUrl }: DownloadNpmProps) {
   console.debug(loggerPrefix, "Rendering DownloadNpm with apiUrl:", apiUrl);
   return (
     <>
-      <section
-        id="download-npm"
-        aria-label="Download Npm"
-        className="col-xl-4 mb-xl-10"
-      >
+      <section id="download-npm" aria-label="Download Npm" className="col-xl-4 mb-xl-10">
         {/* begin::Download NPM widget 4 */}
-        <div
-          className="card border-transparent"
-          data-bs-theme="light"
-          style={{ backgroundColor: "#1C325E" }}
-        >
+        <div className="card border-transparent" data-bs-theme="light" style={{ backgroundColor: "#1C325E" }}>
           {/* begin::Body */}
           <div className="card-body d-flex ps-xl-15">
             {/* begin::Wrapper */}

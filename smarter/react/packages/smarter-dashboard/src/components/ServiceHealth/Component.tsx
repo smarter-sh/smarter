@@ -58,8 +58,6 @@ function HealthCheckItem({ name, healthy }: HealthCheck) {
   );
 }
 
-
-
 interface CardHeaderProps {
   smarter_version: string;
   linux_distribution: string;
@@ -71,13 +69,9 @@ function CardHeader({ smarter_version, linux_distribution }: CardHeaderProps) {
       {/* begin::Title */}
       <div className="row">
         <div className="col-12 border-bottom border-gray-200 pb-2 mb-2">
-          <h4 className="card-title card-label fw-bold text-gray-800">
-            Smarter v{smarter_version}
-          </h4>
+          <h4 className="card-title card-label fw-bold text-gray-800">Smarter v{smarter_version}</h4>
         </div>
-        <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">
-          {linux_distribution}
-        </div>
+        <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">{linux_distribution}</div>
       </div>
       {/* end::Title */}
     </div>
@@ -95,13 +89,11 @@ function PlatformVersions({ python_version, django_version, pydantic_version, dr
   return (
     <div className="row">
       <span className="col-12 text-gray-500 text-center mt-3 mb-0 pb-0 fs-9">
-        Python {python_version} / Django {django_version} / Pydantic{" "}
-        {pydantic_version} / DRF {drf_version}
+        Python {python_version} / Django {django_version} / Pydantic {pydantic_version} / DRF {drf_version}
       </span>
     </div>
   );
 }
-
 
 interface ServiceHealthChecksProps {
   healthChecks: HealthCheck[];
@@ -191,8 +183,7 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   const python_version = data?.python_version ?? "0.0.0";
   const pydantic_version = data?.pydantic_version ?? "0.0.0";
   const drf_version = data?.drf_version ?? "0.0.0";
-  const linux_distribution =
-    data?.linux_distribution ?? "Unknown Linux distribution";
+  const linux_distribution = data?.linux_distribution ?? "Unknown Linux distribution";
   const health_checks = data?.health_checks ?? [];
   const health_score = data?.health_score ?? 0;
 
@@ -202,11 +193,7 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   return (
     <>
       {/* begin::Col */}
-      <div
-        id="service-health"
-        aria-label="ServiceHealth"
-        className="col-xl-6 mb-xl-10"
-      >
+      <div id="service-health" aria-label="Service Health" className="col-xl-6 mb-xl-10">
         <div className="card card-flush h-xl-100">
           <CardHeader smarter_version={smarter_version} linux_distribution={linux_distribution} />
           <div className="card-body py-6">

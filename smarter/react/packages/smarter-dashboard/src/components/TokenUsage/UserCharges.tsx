@@ -8,12 +8,12 @@ import "./styles.css";
 const TokenUsageChart = lazy(() => import("./Chart"));
 
 interface UserUsageProps {
-  sessionContext: SessionContext,
+  sessionContext: SessionContext;
   apiUrl: string;
 }
 
 function UserCharges({ sessionContext, apiUrl }: UserUsageProps) {
-  console.debug("apiUrl", apiUrl)
+  console.debug("apiUrl", apiUrl);
   return (
     <>
       <div id="user-usage" aria-label="User Usage" className="col-xl-12 mb-5 mb-xl-10">
@@ -22,9 +22,7 @@ function UserCharges({ sessionContext, apiUrl }: UserUsageProps) {
           {/* begin::Body */}
           <div className="card-body d-flex flex-column ps-xl-15 h-100">
             {/* begin::Title */}
-            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
-              Token Usage
-            </h6>
+            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">Token Usage</h6>
             <Suspense fallback={null}>
               <TokenUsageChart sessionContext={sessionContext} apiUrl={apiUrl} />
             </Suspense>

@@ -1,36 +1,31 @@
-{% extends 'dashboard/base.html' %}
-{% load static custom_filters %}
-
-{% block style_extra %}
-{{ block.super }}
+{% extends 'dashboard/base.html' %} {% load static custom_filters %} {% block style_extra %} {{ block.super }}
 
 <style>
- div.file-open-command-button {
-   border: 2px solid #ccc;
-   border-radius: 5px;
-   padding: 10px;
- }
- div.manifest-drop-zone {
-   padding: 10px;
-   border: 2px dashed #ccc;
-   border-radius: 5px;
-   font-size: 16px;
-   transition: border-color 0.3s, background-color 0.3s;
-   min-height: 500px;
-   height: 75vh;
- }
- div.manifest-drop-zone span {
-   pointer-events: none;
-   font-family: Arial, sans-serif;
-   font-size: 84px;
-   font-weight: bold;
-   color: #999;
- }
+  div.file-open-command-button {
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+  }
+  div.manifest-drop-zone {
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    transition:
+      border-color 0.3s,
+      background-color 0.3s;
+    min-height: 500px;
+    height: 75vh;
+  }
+  div.manifest-drop-zone span {
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    font-size: 84px;
+    font-weight: bold;
+    color: #999;
+  }
 </style>
-{% endblock %}
-
-
-{% block dashboard_content %}
+{% endblock %} {% block dashboard_content %}
 <section id="manifest-apply">
   <div id="kt_app_content" class="app-content flex-column-fluid">
     <!--begin::Content container-->
@@ -46,8 +41,15 @@
             <div class="file-open-command-button mt-5 mb-5">
               <div class="col-10"></div>
               <div class="col-2">
-                <input type="file" id="fileInput" style="display: none;" accept=".yaml,.yml,.json" />
-                <a class="btn btn-sm btn-primary justify-content-right" href="#" onclick="document.getElementById('fileInput').click(); return false;">
+                <input type="file" id="fileInput" style="display: none" accept=".yaml,.yml,.json" />
+                <a
+                  class="btn btn-sm btn-primary justify-content-right"
+                  href="#"
+                  onclick="
+                    document.getElementById('fileInput').click();
+                    return false;
+                  "
+                >
                   File Open
                 </a>
               </div>
@@ -68,18 +70,15 @@
     <!--end::Content container-->
   </div>
 </section>
-{% endblock %}
-
-{% block javascript_extra %}
-{{ block.super }}
-  <script>
-    window.dropzoneEnabled = "{{ drop_zone.file_drop_zone_enabled }}";
-    window.apiApplyPath = "{{ drop_zone.api_apply_path }}";
-    window.workbenchListPath = "{{ drop_zone.workbench_list_path }}";
-    window.pluginListPath = "{{ drop_zone.plugin_list_path }}";
-    window.connectionListPath = "{{ drop_zone.connection_list_path }}";
-    window.providerListPath = "{{ drop_zone.provider_list_path }}";
-  </script>
-  <script src="{% static 'js/handle-file-drop.js' %}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+{% endblock %} {% block javascript_extra %} {{ block.super }}
+<script>
+  window.dropzoneEnabled = "{{ drop_zone.file_drop_zone_enabled }}";
+  window.apiApplyPath = "{{ drop_zone.api_apply_path }}";
+  window.workbenchListPath = "{{ drop_zone.workbench_list_path }}";
+  window.pluginListPath = "{{ drop_zone.plugin_list_path }}";
+  window.connectionListPath = "{{ drop_zone.connection_list_path }}";
+  window.providerListPath = "{{ drop_zone.provider_list_path }}";
+</script>
+<script src="{% static 'js/handle-file-drop.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 {% endblock %}

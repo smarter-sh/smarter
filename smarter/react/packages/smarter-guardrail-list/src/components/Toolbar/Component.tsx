@@ -51,7 +51,11 @@ const ModalClone = ({ guardrail, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned guardrail.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new guardrail name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new guardrail name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ guardrail, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the guardrail.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new guardrail name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new guardrail name"
+      />
     </Modal>
   );
 };
@@ -259,7 +267,12 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
           onOk={() => runAction(modal.guardrail!, `delete/${modal.guardrail!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} guardrail={modal.guardrail} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          guardrail={modal.guardrail}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           guardrail={modal.guardrail}

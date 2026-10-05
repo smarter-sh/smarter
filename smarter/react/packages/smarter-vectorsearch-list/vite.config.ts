@@ -45,7 +45,10 @@ const packageName = packageJson.name;
 const addCustomManifestData: PluginOption = {
   name: "add-custom-manifest-data",
   writeBundle() {
-    const manifestPath = path.resolve(import.meta.dirname, `../../../smarter/static/react/${packageName}/manifest.json`);
+    const manifestPath = path.resolve(
+      import.meta.dirname,
+      `../../../smarter/static/react/${packageName}/manifest.json`,
+    );
     if (fs.existsSync(manifestPath)) {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
       manifest._custom = {
@@ -58,7 +61,6 @@ const addCustomManifestData: PluginOption = {
     }
   },
 };
-
 
 /**
  * Vite Vectorsearch: postBuildVectorsearch

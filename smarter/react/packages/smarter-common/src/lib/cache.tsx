@@ -75,7 +75,13 @@ export const readCache = <T,>(key: string): T[] | null => {
  */
 export const writeCache = <T,>(key: string, objects: T[]) => {
   try {
-    console.debug(`${loggerPrefix} writeCache() writing sessionStorage cache for`, key, "with", objects.length, "objects");
+    console.debug(
+      `${loggerPrefix} writeCache() writing sessionStorage cache for`,
+      key,
+      "with",
+      objects.length,
+      "objects",
+    );
     const payload: CacheEntry<T> = { ts: Date.now(), objects };
     sessionStorage.setItem(key, JSON.stringify(payload));
   } catch {

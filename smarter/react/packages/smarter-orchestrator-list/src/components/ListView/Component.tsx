@@ -69,7 +69,6 @@ const TableHeader = () => {
   );
 };
 
-
 /**
  * CreatedDate and UpdatedDate
  *
@@ -222,7 +221,12 @@ function ChunkedRows({
   return (
     <>
       {orchestrators.slice(0, visibleCount).map((orchestrator) => (
-        <OrchestratorRow key={orchestrator.id} orchestrator={orchestrator} sessionContext={sessionContext} onRequery={onRequery} />
+        <OrchestratorRow
+          key={orchestrator.id}
+          orchestrator={orchestrator}
+          sessionContext={sessionContext}
+          onRequery={onRequery}
+        />
       ))}
     </>
   );

@@ -66,10 +66,7 @@ function CardView({ sessionContext, objects, onRequery }: LLMHostCardViewProps) 
                     {renderDetailRow("Tags", llmhost.tags, "str[]")}
                     {renderDetailRow("Annotations", llmhost.annotations, "json")}
                     {renderDetailRow("Ready", llmhost.ready, "bool")}
-                    {renderDetailRow(
-                      "RFC 1034 Compliant Name",
-                      llmhost.rfc1034CompliantName
-                    )}
+                    {renderDetailRow("RFC 1034 Compliant Name", llmhost.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

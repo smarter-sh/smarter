@@ -23,7 +23,17 @@ function resourceLabel(status: BudgetResourceStatus): string {
   return kind && name ? `${kind} ${name}` : (recordLocator ?? status.resourceLocator);
 }
 
-function Usage({ actual, limit, percent, unit }: { actual: number; limit: number; percent: number | null; unit: BudgetResourceStatus["unit"] }) {
+function Usage({
+  actual,
+  limit,
+  percent,
+  unit,
+}: {
+  actual: number;
+  limit: number;
+  percent: number | null;
+  unit: BudgetResourceStatus["unit"];
+}) {
   if (!limit) return <span className="text-muted">No limit</span>;
   const pct = Math.min(percent ?? 0, 100);
   const color = pct >= 100 ? "bg-danger" : pct >= 80 ? "bg-warning" : "bg-success";
@@ -39,7 +49,13 @@ function Usage({ actual, limit, percent, unit }: { actual: number; limit: number
   );
 }
 
-function ResourceStatusRow({ sessionContext, status }: { sessionContext: SessionContext; status: BudgetResourceStatus }) {
+function ResourceStatusRow({
+  sessionContext,
+  status,
+}: {
+  sessionContext: SessionContext;
+  status: BudgetResourceStatus;
+}) {
   const [showChart, setShowChart] = useState(false);
   return (
     <>
@@ -49,10 +65,20 @@ function ResourceStatusRow({ sessionContext, status }: { sessionContext: Session
           <div className="text-muted fs-8">{status.resourceLocator}</div>
         </td>
         <td>
-          <Usage actual={status.periodicActual} limit={status.periodicLimit} percent={status.periodicPercent} unit={status.unit} />
+          <Usage
+            actual={status.periodicActual}
+            limit={status.periodicLimit}
+            percent={status.periodicPercent}
+            unit={status.unit}
+          />
         </td>
         <td>
-          <Usage actual={status.absoluteActual} limit={status.absoluteLimit} percent={status.absolutePercent} unit={status.unit} />
+          <Usage
+            actual={status.absoluteActual}
+            limit={status.absoluteLimit}
+            percent={status.absolutePercent}
+            unit={status.unit}
+          />
         </td>
         <td>
           {status.isExpired ? (
@@ -98,12 +124,19 @@ const BudgetRow = React.memo(function BudgetRow({
   const [expanded, setExpanded] = useState(false);
   const limit = (value: string, suffix: string) =>
     Number(value) > 0 ? `${formatAmount(Number(value), budget.unit)}${suffix}` : null;
-  const limits = [limit(budget.periodicLimit, ` / ${budget.period}`), limit(budget.absoluteLimit, " total")].filter(Boolean);
+  const limits = [limit(budget.periodicLimit, ` / ${budget.period}`), limit(budget.absoluteLimit, " total")].filter(
+    Boolean,
+  );
   return (
     <>
       <tr className={budget.locked > 0 ? "budget-row-locked" : ""}>
         <td>
-          <button type="button" className="btn btn-icon btn-sm" aria-label="Show resources" onClick={() => setExpanded(!expanded)}>
+          <button
+            type="button"
+            className="btn btn-icon btn-sm"
+            aria-label="Show resources"
+            onClick={() => setExpanded(!expanded)}
+          >
             <i className={`bi ${expanded ? "bi-chevron-down" : "bi-chevron-right"}`} />
           </button>
           <a href={budget.manifestUrl}>{budget.name}</a>
@@ -112,7 +145,13 @@ const BudgetRow = React.memo(function BudgetRow({
         <td>{limits.length ? limits.join(", ") : "No limit"}</td>
         <td>{budget.action === "block" ? "Block" : "Warn"}</td>
         <td>{budget.resources}</td>
-        <td>{budget.locked > 0 ? <span className="badge badge-danger">{budget.locked} blocked</span> : <span className="text-muted">None</span>}</td>
+        <td>
+          {budget.locked > 0 ? (
+            <span className="badge badge-danger">{budget.locked} blocked</span>
+          ) : (
+            <span className="text-muted">None</span>
+          )}
+        </td>
         <td className="d-none d-lg-table-cell">{formatDateTime(budget.updatedAt, "relative", budget.createdAt)}</td>
         <td className="text-end">
           {isSuperuser && (
@@ -175,7 +214,12 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
 
   const onDelete = useCallback(
     (budget: Budget) => {
-      if (!window.confirm(`Delete the budget ${budget.name}? It will no longer be enforced on its ${budget.resources} resources.`)) return;
+      if (
+        !window.confirm(
+          `Delete the budget ${budget.name}? It will no longer be enforced on its ${budget.resources} resources.`,
+        )
+      )
+        return;
       fetchDjangoUrl(sessionContext, actionUrl(sessionContext, `delete/${budget.id}/`), JSON.stringify({}))
         .then(async (response) => {
           if (!response.ok) {
@@ -192,7 +236,11 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
   return (
     <div className="card mt-5">
       <div className="card-body">
-        {errMessage && <div className="alert alert-danger">{errMessage}</div>}
+        {errMessage && (
+          <div className="alert alert-danger" role="alert">
+            {errMessage}
+          </div>
+        )}
         {data === null && !errMessage && <Loading />}
         {data && data.objects.length === 0 && (
           <div className="text-muted p-4">
@@ -217,7 +265,13 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
               </thead>
               <tbody>
                 {data.objects.map((budget) => (
-                  <BudgetRow key={budget.id} sessionContext={sessionContext} budget={budget} isSuperuser={data.isSuperuser} onDelete={onDelete} />
+                  <BudgetRow
+                    key={budget.id}
+                    sessionContext={sessionContext}
+                    budget={budget}
+                    isSuperuser={data.isSuperuser}
+                    onDelete={onDelete}
+                  />
                 ))}
               </tbody>
             </table>

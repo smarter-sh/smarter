@@ -1,37 +1,24 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { PROVIDER_API_URL, sessionContext } from "@/mocks/fixtures";
+import { passthroughErrorHandlers, passthroughHandlers } from "@/mocks/handlers";
+
 import Prompt from "./Component";
-import type { SessionContext } from "@smarter/common";
 
-const sessionContext: SessionContext = {
-  ApiUrl: "https://customer.smarter.sh/api/llm/",
-  csrfCookieName: "csrftoken",
-  djangoSessionCookieName: "sessionid",
-  cookieDomain: ".smarter.sh",
-  debugMode: false,
-  smarterClient: "storybook-client",
-  smarterClientVersion: "1.0.0",
-  smarterRequestId: "storybook-request-id",
-  smarterCapabilities: [],
-};
-
-const meta: Meta<typeof Prompt> = {
-  title: "LLM/Prompt",
+/** Send a raw request to an LLM provider's API, through Smarter, and see its response. */
+const meta = {
+  title: "Prompt Passthrough/Prompt",
   component: Prompt,
-  parameters: {
-    layout: "fullscreen",
-  },
-};
+  args: { sessionContext, defaultLLMProviderId: 1, defaultTemplateId: 1, providerApiUrl: PROVIDER_API_URL },
+  parameters: { layout: "fullscreen", msw: { handlers: passthroughHandlers } },
+} satisfies Meta<typeof Prompt>;
 
 export default meta;
+type Story = StoryObj<typeof meta>;
 
-type Story = StoryObj<typeof Prompt>;
+export const Default: Story = {};
 
-export const Default: Story = {
-  args: {
-    sessionContext,
-    defaultLLMProviderId: 1,
-    defaultTemplateId: 1,
-    providerApiUrl: "https://customer.smarter.sh/api/llm/providers/",
-  },
+/** The provider rejects the request. */
+export const ProviderError: Story = {
+  parameters: { msw: { handlers: passthroughErrorHandlers } },
 };

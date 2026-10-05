@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-
 interface HealthRingProps {
   value: number;
   size?: number;
@@ -8,7 +7,6 @@ interface HealthRingProps {
   trackColor?: string;
   progressColor?: string;
 }
-
 
 export default function HealthRing({
   value,
@@ -43,17 +41,8 @@ export default function HealthRing({
   const dashOffset = circumference * (1 - animatedValue / 100);
 
   return (
-    <div
-      className="service-health-ring"
-      role="img"
-      aria-label={`Service health ${Math.round(clampedValue)} percent`}
-    >
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="service-health-ring__svg"
-      >
+    <div className="service-health-ring" role="img" aria-label={`Service health ${Math.round(clampedValue)} percent`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="service-health-ring__svg">
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -77,9 +66,7 @@ export default function HealthRing({
           className="service-health-ring__progress"
         />
       </svg>
-      <div className="service-health-ring__label">
-        {Math.round(animatedValue)}%
-      </div>
+      <div className="service-health-ring__label">{Math.round(animatedValue)}%</div>
     </div>
   );
 }

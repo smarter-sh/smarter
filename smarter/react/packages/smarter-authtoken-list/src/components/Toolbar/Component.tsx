@@ -51,7 +51,11 @@ const ModalClone = ({ authtoken, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned authtoken.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new authtoken name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new authtoken name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ authtoken, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the authtoken.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new authtoken name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new authtoken name"
+      />
     </Modal>
   );
 };
@@ -259,7 +267,12 @@ export const Toolbar = ({ sessionContext, authtoken, onRequery }: ToolbarProps) 
           onOk={() => runAction(modal.authtoken!, `delete/${modal.authtoken!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} authtoken={modal.authtoken} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          authtoken={modal.authtoken}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           authtoken={modal.authtoken}

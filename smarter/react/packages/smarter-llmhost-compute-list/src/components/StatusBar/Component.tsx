@@ -26,7 +26,10 @@ function nodeGroupIndicator(compute: LLMHostCompute): { icon: string; title: str
         title: "No node group yet: Smarter creates it when an LLMHost first needs one of its nodes.",
       };
     case "ACTIVE":
-      return { icon: "bi bi-cloud-check text-success", title: `Node group ${compute.nodegroupName} is active.${message}` };
+      return {
+        icon: "bi bi-cloud-check text-success",
+        title: `Node group ${compute.nodegroupName} is active.${message}`,
+      };
     case "CREATING":
     case "UPDATING":
       return {

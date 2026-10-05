@@ -1,45 +1,24 @@
-import type { SessionContext } from "@smarter/common";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { appContext } from "@/mocks/fixtures";
+import { dashboardErrorHandlers, dashboardHandlers } from "@/mocks/handlers";
+
 import Dashboard from "./Component";
-import type { AppContextInterface } from "@/main";
-const sessionContext: SessionContext = {
-    ApiUrl: "https://customer.smarter.sh/dashboard/api/my-resources",
-    csrfCookieName: "csrftoken",
-    djangoSessionCookieName: "sessionid",
-    cookieDomain: ".smarter.sh",
-    debugMode: false,
-    smarterClient: "storybook-client",
-    smarterClientVersion: "1.0.0",
-    smarterRequestId: "storybook-request-id",
-    smarterCapabilities: [],
-};
 
-const appContext: AppContextInterface = {
-  myResourcesApiUrl: "https://customer.smarter.sh/dashboard/api/my-resources",
-  serviceHealthApiUrl: "https://customer.smarter.sh/dashboard/api/service-health",
-  chargesApiUrl: "https://customer.smarter.sh/dashboard/api/charges",
-  budgetsApiUrl: "https://customer.smarter.sh/dashboard/api/budgets/",
-  activityApiUrl: "https://customer.smarter.sh/dashboard/api/activity/",
-  gettingStartedApiUrl: "https://customer.smarter.sh/dashboard/api/getting-started/",
-  quickActionsApiUrl: "https://customer.smarter.sh/dashboard/api/quick-actions/",
-  sessionContext: sessionContext,
-};
-
-const meta: Meta<typeof Dashboard> = {
+/** The web console's dashboard, with its api mocked. */
+const meta = {
   title: "Dashboard/Dashboard",
   component: Dashboard,
-  parameters: {
-    layout: "fullscreen",
-  },
-};
+  args: { appContext },
+  parameters: { layout: "fullscreen", msw: { handlers: dashboardHandlers } },
+} satisfies Meta<typeof Dashboard>;
 
 export default meta;
+type Story = StoryObj<typeof meta>;
 
-type Story = StoryObj<typeof Dashboard>;
+export const Default: Story = {};
 
-export const Default: Story = {
-  args: {
-    appContext,
-  },
+/** Every api fails: each widget shows its own error, and the others still render. */
+export const ApiErrors: Story = {
+  parameters: { msw: { handlers: dashboardErrorHandlers } },
 };

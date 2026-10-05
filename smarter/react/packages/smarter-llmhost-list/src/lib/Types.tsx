@@ -20,21 +20,10 @@ import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/co
 // ----------------------------------------------------------------------------
 
 /** Inference server that loads the weights and exposes an API. */
-export type InferenceEngine =
-  | "vllm"
-  | "tgi"
-  | "sglang"
-  | "llama_cpp"
-  | "ollama"
-  | "tei"
-  | "custom";
+export type InferenceEngine = "vllm" | "tgi" | "sglang" | "llama_cpp" | "ollama" | "tei" | "custom";
 
 /** Wire-protocol contract the LLMHost endpoint speaks, independent of engine. */
-export type ApiFormat =
-  | "openai_compatible"
-  | "huggingface"
-  | "ollama_native"
-  | "custom";
+export type ApiFormat = "openai_compatible" | "huggingface" | "ollama_native" | "custom";
 
 /** Where the model weights come from. */
 export type ModelSource = "huggingface" | "ollama" | "s3" | "url" | "pvc";
@@ -44,28 +33,11 @@ export type ModelTask = "text-generation" | "embedding";
 
 /** Numeric precision / compression scheme applied to the model's weights. */
 export type Quantization =
-  | "none"
-  | "fp32"
-  | "fp16"
-  | "bf16"
-  | "fp8"
-  | "mxfp4"
-  | "int8"
-  | "int4"
-  | "gguf"
-  | "awq"
-  | "gptq";
+  "none" | "fp32" | "fp16" | "bf16" | "fp8" | "mxfp4" | "int8" | "int4" | "gguf" | "awq" | "gptq";
 
 /** Lifecycle state of the LLMHost deployment. */
 export type HostStatus =
-  | "provisioning"
-  | "pending"
-  | "downloading"
-  | "deploying"
-  | "active"
-  | "degraded"
-  | "inactive"
-  | "error";
+  "provisioning" | "pending" | "downloading" | "deploying" | "active" | "degraded" | "inactive" | "error";
 
 export type LLMHost = {
   id: number;
@@ -134,7 +106,6 @@ export type LLMHost = {
   lastHealthOk: boolean | null;
   deployedAt: string | null;
 };
-
 
 // ----------------------------------------------------------------------------
 // Component Props Interfaces

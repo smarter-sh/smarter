@@ -19,7 +19,7 @@
  *   <p>Modal content goes here.</p>
  * </Modal>
  */
-import React, { useEffect } from "react";
+import React, { useEffect, useId } from "react";
 
 export function Modal({
   show,
@@ -32,12 +32,14 @@ export function Modal({
 }: {
   show: boolean;
   title: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   inputLabel?: string;
   onClose?: () => void;
   onOk?: () => void;
   onCancel?: () => void;
 }) {
+  const titleId = useId();
+
   useEffect(() => {
     if (!show || !onOk) return;
 
@@ -52,6 +54,17 @@ export function Modal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [show, onOk]);
 
+  // Escape closes the dialog, as clicking outside it does: the keyboard's way to dismiss it.
+  const dismiss = onClose || onCancel;
+  useEffect(() => {
+    if (!show || !dismiss) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [show, dismiss]);
+
   if (!onClose && !onOk && !onCancel) {
     throw new Error("Modal requires at least one of onClose, onOk, or onCancel handlers.");
   }
@@ -63,7 +76,13 @@ export function Modal({
   if (!show) return null;
 
   return (
+    // Clicking the backdrop closes the dialog: a mouse convenience, whose keyboard equivalent is
+    // Escape (see above), so the click handlers need no key handlers of their own.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
       className="modal show"
       style={{
         display: "block",
@@ -75,10 +94,13 @@ export function Modal({
       tabIndex={-1}
       onClick={handleClose}
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- keeps clicks inside the dialog from closing it. */}
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">{title}</h5>
+            <h5 className="modal-title" id={titleId}>
+              {title}
+            </h5>
 
             {onClose && <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />}
           </div>

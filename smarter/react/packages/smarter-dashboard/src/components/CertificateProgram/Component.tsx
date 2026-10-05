@@ -17,15 +17,10 @@
 import "./styles.css";
 
 function CertificateProgram() {
-
   return (
     <>
       {/* begin::Col */}
-      <section
-        id="certificate-program"
-        aria-label="Certificate Program"
-        className="col-xl-6 mb-5 mb-xl-10"
-      >
+      <section id="certificate-program" aria-label="Certificate Program" className="col-xl-6 mb-5 mb-xl-10">
         {/* begin::Slider Widget 2 */}
         <div
           id="kt_sliders_widget_2_slider"
@@ -37,33 +32,17 @@ function CertificateProgram() {
           <div className="card-header pt-5">
             {/* begin::Title */}
             <h4 className="card-title d-flex align-items-start flex-column">
-              <span className="card-label fw-bold text-gray-800">
-                Certification Programs
-              </span>
-              <span className="text-gray-500 mt-1 fw-bold fs-7">
-                Online self-paced and in demand
-              </span>
+              <span className="card-label fw-bold text-gray-800">Certification Programs</span>
+              <span className="text-gray-500 mt-1 fw-bold fs-7">Online self-paced and in demand</span>
             </h4>
             {/* end::Title */}
             {/* begin::Toolbar */}
             <div className="card-toolbar">
               {/* begin::Carousel Indicators */}
               <ol className="p-0 m-0 carousel-indicators carousel-indicators-bullet carousel-indicators-active-success">
-                <li
-                  data-bs-target="#kt_sliders_widget_2_slider"
-                  data-bs-slide-to="0"
-                  className="active ms-1"
-                ></li>
-                <li
-                  data-bs-target="#kt_sliders_widget_2_slider"
-                  data-bs-slide-to="1"
-                  className="ms-1"
-                ></li>
-                <li
-                  data-bs-target="#kt_sliders_widget_2_slider"
-                  data-bs-slide-to="2"
-                  className="ms-1"
-                ></li>
+                <li data-bs-target="#kt_sliders_widget_2_slider" data-bs-slide-to="0" className="active ms-1"></li>
+                <li data-bs-target="#kt_sliders_widget_2_slider" data-bs-slide-to="1" className="ms-1"></li>
+                <li data-bs-target="#kt_sliders_widget_2_slider" data-bs-slide-to="2" className="ms-1"></li>
               </ol>
               {/* end::Carousel Indicators */}
             </div>
@@ -91,9 +70,7 @@ function CertificateProgram() {
                   {/* begin::Info */}
                   <div className="m-0">
                     {/* begin::Subtitle */}
-                    <h4 className="fw-bold text-gray-800 mb-3">
-                      Prompt Engineer
-                    </h4>
+                    <h4 className="fw-bold text-gray-800 mb-3">Prompt Engineer</h4>
                     {/* end::Subtitle */}
                     {/* begin::Items */}
                     <div className="d-flex d-grid gap-5">
@@ -149,16 +126,10 @@ function CertificateProgram() {
                 {/* end::Wrapper */}
                 {/* begin::Action */}
                 <div className="m-0">
-                  <a
-                    href="https://smarter.sh/"
-                    className="btn btn-sm btn-light me-2 mb-2"
-                  >
+                  <a href="https://smarter.sh/" className="btn btn-sm btn-light me-2 mb-2">
                     Details
                   </a>
-                  <a
-                    href="https://smarter.sh/"
-                    className="btn btn-sm btn-success mb-2"
-                  >
+                  <a href="https://smarter.sh/" className="btn btn-sm btn-success mb-2">
                     Apply
                   </a>
                 </div>
@@ -238,16 +209,10 @@ function CertificateProgram() {
                 {/* end::Wrapper */}
                 {/* begin::Action */}
                 <div className="m-0">
-                  <a
-                    href="https://smarter.sh"
-                    className="btn btn-sm btn-light me-2 mb-2"
-                  >
+                  <a href="https://smarter.sh" className="btn btn-sm btn-light me-2 mb-2">
                     Details
                   </a>
-                  <a
-                    href="https://smarter.sh"
-                    className="btn btn-sm btn-success mb-2"
-                  >
+                  <a href="https://smarter.sh" className="btn btn-sm btn-success mb-2">
                     Apply
                   </a>
                 </div>
@@ -271,9 +236,7 @@ function CertificateProgram() {
                   {/* begin::Info */}
                   <div className="m-0">
                     {/* begin::Subtitle */}
-                    <h4 className="fw-bold text-gray-800 mb-3">
-                      Administrator
-                    </h4>
+                    <h4 className="fw-bold text-gray-800 mb-3">Administrator</h4>
                     {/* end::Subtitle */}
                     {/* begin::Items */}
                     <div className="d-flex d-grid gap-5">
@@ -329,16 +292,10 @@ function CertificateProgram() {
                 {/* end::Wrapper */}
                 {/* begin::Action */}
                 <div className="m-0">
-                  <a
-                    href="https://smarter.sh"
-                    className="btn btn-sm btn-light me-2 mb-2"
-                  >
+                  <a href="https://smarter.sh" className="btn btn-sm btn-light me-2 mb-2">
                     Details
                   </a>
-                  <a
-                    href="https://smarter.sh"
-                    className="btn btn-sm btn-success mb-2"
-                  >
+                  <a href="https://smarter.sh" className="btn btn-sm btn-success mb-2">
                     Apply
                   </a>
                 </div>

@@ -25,7 +25,13 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({ onClick, title, iconClass, disabled = false }: ToolbarButtonProps) {
   return (
-    <button type="button" className="btn btn-sm btn-icon btn-outline-secondary" onClick={onClick} title={title} disabled={disabled}>
+    <button
+      type="button"
+      className="btn btn-sm btn-icon btn-outline-secondary"
+      onClick={onClick}
+      title={title}
+      disabled={disabled}
+    >
       <i className={iconClass}>
         {DUOTONE_PATHS.map((n) => (
           <span key={n} className={`path${n}`}></span>

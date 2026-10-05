@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type VectorsearchTabbedViewContext = Omit<
-  TabbedViewContext<Vectorsearch>,
-  "ListView" | "CardView"
-> & {
+export type VectorsearchTabbedViewContext = Omit<TabbedViewContext<Vectorsearch>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<VectorsearchListViewProps>;
   CardView: React.ComponentType<VectorsearchCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "Vector Search";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-vectorsearch.html";
-  const helpText = "Smarter Vectorsearch provides a framework for executing RAG (Retrieval Augmented Generation) semantic search queries against locally-hosted vector databases managed by Smarter Vectorstore.";
+  const helpText =
+    "Smarter Vectorsearch provides a framework for executing RAG (Retrieval Augmented Generation) semantic search queries against locally-hosted vector databases managed by Smarter Vectorstore.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="vectorsearch-list">

@@ -59,7 +59,51 @@ env:
   MARKETING_SITE_URL: https://smarter.sh
 
 jobs:
-  test:
+  #----------------------------------------------------------------------------
+  # The React apps in smarter/react: formatting (Prettier), lint (ESLint),
+  # types (TypeScript) and unit tests (Vitest, with every Storybook story
+  # rendered as a test), as `make react-lint && make react-test` do. It needs
+  # only Node, so it runs alongside the test job, in a few minutes.
+  #
+  # @smarter/common's dist/ is not committed, and the apps type-check against
+  # its declarations, so it is built before the type check. The tests use its
+  # TypeScript source, and need no build.
+  #----------------------------------------------------------------------------
+  react:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: smarter/react
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          cache: npm
+          cache-dependency-path: smarter/react/package-lock.json
+
+      - name: npm ci
+        run: npm ci --include=dev
+
+      - name: Formatting (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Types (TypeScript)
+        run: |
+          npm run build --workspace=@smarter/common
+          npm run typecheck
+
+      - name: Unit tests (Vitest), with coverage
+        run: npm run coverage
+
+  python:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

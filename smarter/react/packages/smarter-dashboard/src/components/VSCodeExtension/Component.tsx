@@ -21,7 +21,7 @@ function VSCodeExtension() {
       {/* begin::Download VS Code Extension widget 4 */}
       <div
         id="vscode-extension"
-        aria-label="VSCodeExtension"
+        aria-label="VS Code Extension"
         className="card border-transparent"
         data-bs-theme="light"
         style={{ backgroundColor: "#23272e" }}
@@ -34,7 +34,7 @@ function VSCodeExtension() {
             <div className="position-relative fs-2x z-index-2 fw-bold text-white mb-0">
               {/* begin::Title */}
               <span className="me-2">
-                Get the{' '}
+                Get the{" "}
                 <span className="position-relative d-inline-block text-danger mb-2">
                   <a
                     href="https://marketplace.visualstudio.com/items?itemName=Querium.smarter-manifest"
@@ -48,13 +48,9 @@ function VSCodeExtension() {
                 </span>
               </span>
               {/* end::Title */}
-              <p
-                className="text-gray-200 fs-6 fw-normal mt-3 mb-10"
-                style={{ maxWidth: "80%" }}
-              >
-                The Smarter Manifest VS Code Extension provides intelligent
-                syntax checking, context-sensitive microhelp, and real-time code
-                suggestions.
+              <p className="text-gray-200 fs-6 fw-normal mt-3 mb-10" style={{ maxWidth: "80%" }}>
+                The Smarter Manifest VS Code Extension provides intelligent syntax checking, context-sensitive
+                microhelp, and real-time code suggestions.
               </p>
               {/* end::Title */}
               {/* begin::Action */}

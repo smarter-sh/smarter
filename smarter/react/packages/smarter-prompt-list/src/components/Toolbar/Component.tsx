@@ -51,7 +51,11 @@ const ModalClone = ({ llmclient, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned llmclient.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new llmclient name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new llmclient name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ llmclient, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the llmclient.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new llmclient name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new llmclient name"
+      />
     </Modal>
   );
 };
@@ -262,7 +270,12 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
           onOk={() => runAction(modal.llmclient!, `delete/${modal.llmclient!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} llmclient={modal.llmclient} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          llmclient={modal.llmclient}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           llmclient={modal.llmclient}

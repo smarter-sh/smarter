@@ -51,14 +51,15 @@ function LLMProviderPassthroughResponse({
       <div className="card shadow-sm">
         <div className="card-header d-flex justify-content-center align-items-center">
           <h3 className="mb-0">
-            HTTP Response Body <span style={status_style}>{status_text} {status_emoji}</span>
+            HTTP Response Body{" "}
+            <span style={status_style}>
+              {status_text} {status_emoji}
+            </span>
           </h3>
         </div>
         <div className="card-body">
           <div>
-            <pre style={{ margin: 0 }}>
-              {responseJson === null ? "" : JSON.stringify(responseJson, null, 2)}
-            </pre>
+            <pre style={{ margin: 0 }}>{responseJson === null ? "" : JSON.stringify(responseJson, null, 2)}</pre>
           </div>
         </div>
       </div>

@@ -115,7 +115,9 @@
 }
 
 @keyframes terminal-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .terminal-window__loading-spinner {
