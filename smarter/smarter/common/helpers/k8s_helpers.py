@@ -276,9 +276,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         self, hostname: str, namespace: str, max_attempts: int = 30
     ) -> Tuple[bool, bool, bool]:
         """
-        Verify that an ingress and all child resources exist in the.
-
-        cluster.
+        Verify that an ingress and all child resources exist in the cluster.
 
         commands:
         - kubectl get ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod -o json
@@ -374,9 +372,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     def verify_certificate(self, name: str, namespace: str) -> bool:
         """
-        Verify that a cert-manager certificate resource exists in the cluster.
-
-        and is in a ready state.
+        Verify that a cert-manager certificate resource exists in the cluster and is in a ready state.
 
         command:
         - kubectl get certificate smarter.3141-5926-5359.api.example.com-tls -n smarter-platform-prod -o json

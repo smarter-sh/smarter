@@ -1,7 +1,5 @@
 """
-A test mixin for the dashboard views that each resource app repeats: the React list page, its.
-
-list, clone, delete and rename api, and the manifest detail page.
+A test mixin for the dashboard views that each resource app repeats: the React list page, its list, clone, delete and rename api, and the manifest detail page.
 
 A subclass names the app's model, url names and url parameter, and creates the resource::
 

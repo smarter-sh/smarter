@@ -43,11 +43,7 @@ class LLMClientRequestsSerializer(serializers.ModelSerializer):
 
 
 class LLMClientConfigSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the smarter.apps.prompt.views.PromptConfigView.
-
-    which should not be camelCased.
-    """
+    """Serializer for the smarter.apps.prompt.views.PromptConfigView which should not be camelCased."""
 
     url_llmclient = serializers.ReadOnlyField()
     user_profile = UserProfileSerializer()
@@ -97,10 +93,9 @@ class LLMClientCustomDomainSerializer(SmarterCamelCaseSerializer):
 
 class LLMClientCustomDomainListSerializer(MetaDataWithOwnershipModelSerializer):
     """
-    A custom domain: the resource's metadata and owner, the domain, the.
+    A custom domain: the resource's metadata and owner, the domain, the llmclient that it serves, and its DNS records.
 
-    llmclient that it serves, and its DNS records. Used by the Custom Domain
-    list in the web console, and by the CustomDomain broker's ``get``.
+    Used by the Custom Domain list in the web console, and by the CustomDomain broker's ``get``.
     """
 
     user_profile = UserProfileSerializer(read_only=True)

@@ -1,7 +1,5 @@
 """
-This module provides a weather forecast function for use with Smarter's.
-
-extension of the OpenAI API function calling feature.
+This module provides a weather forecast function for use with Smarter's extension of the OpenAI API function calling feature.
 
 Secondarily, this module also serves as a template for implementing
 additional tools following the same protocol, with best practices for error
@@ -120,9 +118,7 @@ ureg = UnitRegistry()
 
 def weather_tool_factory() -> dict[str, Any]:
     """
-    Constructs and returns a JSON-compatible dictionary defining the weather.
-
-    tool for OpenAI LLM function calling.
+    Constructs and returns a JSON-compatible dictionary defining the weather tool for OpenAI LLM function calling.
 
     See Also
     ---------

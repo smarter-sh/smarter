@@ -1,9 +1,5 @@
 # pylint: disable=W0613,C0302
-"""
-LLMClientDetailView is a Django class-based view that renders a detail view of.
-
-a SAM manifest for an llmclient.
-"""
+"""LLMClientDetailView is a Django class-based view that renders a detail view of a SAM manifest for an llmclient."""
 
 from typing import Optional
 

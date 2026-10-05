@@ -37,11 +37,13 @@ class Command(SmarterCommand):
   `self.style.WARNING/SUCCESS`, so tests can capture it.
 - Every command accepts `--settings_output`, which prints the Django settings
   first.
-- Command names must be unique across apps. Same-named commands in two apps
-  shadow each other (the account app's `get_secret` and `update_secret` shadow the
-  secret app's). Check before you pick a name.
+- Command names must be unique across apps. If two apps define a command with
+  the same name, `manage.py` silently runs only one of them. A command belongs
+  to the app whose model it manages: Secret commands (`get_secret`,
+  `update_secret`) live in the secret app. Check
+  `python manage.py help` before you pick a name.
 
-## Built-in data: add*builtin*<kinds>
+## Built-in data: `add_builtin_<kinds>`
 
 Resources that ship with the platform (built-in Guardrails, the example
 CustomDomain, Budgets, MCPClients, Proxies, VectorStores, LLMHosts) are **YAML

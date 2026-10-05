@@ -57,9 +57,9 @@ class ActionOutcome:
 
 def replace_matches(text: str, matches: list[GuardrailMatch], replacement: str) -> str:
     """
-    Replace each match in text, from the last to the first, so that the positions of the.
+    Replace each match in text, from the last to the first, so that the positions of the earlier matches remain valid.
 
-    earlier matches remain valid. ``{label}`` in the replacement is the match's label.
+    ``{label}`` in the replacement is the match's label.
     """
     for match in sorted(matches, key=lambda m: m.start, reverse=True):
         value = replacement.replace(LABEL_PLACEHOLDER, match.label or "")

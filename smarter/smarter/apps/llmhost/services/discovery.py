@@ -310,11 +310,7 @@ def estimate_vram_gb(
 
 
 def pod_cpu(gpu_count: int) -> str:
-    """
-    The CPU that an inference server pod requests: two cores, plus two per GPU, or three on CPU,.
-
-    which fits a 4 vCPU node after the kubelet's and the DaemonSets' share.
-    """
+    """The CPU that an inference server pod requests: two cores, plus two per GPU, or three on CPU, which fits a 4 vCPU node after the kubelet's and the DaemonSets' share."""
     return str(2 + 2 * gpu_count) if gpu_count else "3"
 
 

@@ -1,7 +1,5 @@
 """
-This module provides a custom Django management command to add an email address to.
-
-the Account Contact list associated with an Account in the system.
+This module provides a custom Django management command to add an email address to the Account Contact list associated with an Account in the system.
 
 Classes
 =======

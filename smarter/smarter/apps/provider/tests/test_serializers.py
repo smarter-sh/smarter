@@ -1,8 +1,7 @@
 """
-Test the get_queryset() methods of the provider serializers, which filter by.
+Test the get_queryset() methods of the provider serializers, which filter by the request's ``name``, ``model_name`` and ``verification_type`` query parameters.
 
-the request's ``name``, ``model_name`` and ``verification_type`` query
-parameters. The provider lookups are mocked, so no provider has to exist.
+The provider lookups are mocked, so no provider has to exist.
 """
 
 from types import SimpleNamespace

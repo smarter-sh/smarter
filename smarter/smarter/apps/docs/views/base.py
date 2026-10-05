@@ -1,9 +1,5 @@
 # pylint: disable=W0613
-"""
-Django REST framework base views for /docs/ brokered viewsets,.
-
-manifest and schema.
-"""
+"""Django REST framework base views for /docs/ brokered viewsets, manifest and schema."""
 
 import os
 from typing import TYPE_CHECKING, Any, Optional

@@ -50,12 +50,10 @@ see https://github.com/smarter-sh/account-manager
 @cache_results()
 def verify_payment_status(username) -> bool:
     """
-    Verify the payment status of a user by making an API call.
+    Verify the payment status of a user by making an API call to the Account Manager subscription status endpoint.
 
-    to the Account Manager subscription status endpoint.
-    Returns True if the subscription is active, False otherwise.
-    In case of errors, defaults to returning True to avoid
-    blocking access due to transient issues.
+    Returns True if the subscription is active, False otherwise. In case of errors, defaults to returning True to
+    avoid blocking access due to transient issues.
     """
 
     def handle_error(err_type: str, err) -> str:
@@ -125,11 +123,7 @@ def verify_payment_status(username) -> bool:
 
 
 class GoogleOAuth2Multitenant(GoogleOAuth2):
-    """
-    Custom Google OAuth2 backend that also verifies.
-
-    payment status of the hosted platform.
-    """
+    """Custom Google OAuth2 backend that also verifies payment status of the hosted platform."""
 
     def get_user_details(self, response):
         details = super().get_user_details(response)
@@ -153,11 +147,7 @@ class GoogleOAuth2Multitenant(GoogleOAuth2):
 
 
 class GithubOAuth2Multitenant(GithubOAuth2):
-    """
-    Custom GitHub OAuth2 backend that also verifies.
-
-    payment status of the hosted platform.
-    """
+    """Custom GitHub OAuth2 backend that also verifies payment status of the hosted platform."""
 
     def get_user_details(self, response):
         details = super().get_user_details(response)
@@ -184,11 +174,7 @@ class GithubOAuth2Multitenant(GithubOAuth2):
 
 
 class DjangoModelBackendMultitenant(ModelBackend):
-    """
-    Custom Django ModelBackend that also verifies.
-
-    payment status of the hosted platform.
-    """
+    """Custom Django ModelBackend that also verifies payment status of the hosted platform."""
 
     def authenticate(self, request, username=None, password=None, **kwargs):
         user = super().authenticate(request, username, password, **kwargs)

@@ -161,11 +161,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         self.assertIsInstance(broker, SAMSqlPluginBroker)
 
     def test_manifest_model_initialization(self):
-        """
-        Test that the SAMSqlPlugin can be initialized from.
-
-        a json dump of the manifest model.
-        """
+        """Test that the SAMSqlPlugin can be initialized from a json dump of the manifest model."""
         sql_plugin = SAMSqlPlugin(**self.broker.manifest.model_dump())
         self.assertIsInstance(sql_plugin, SAMSqlPlugin)
 
@@ -189,11 +185,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         self.assertIsInstance(manifest, SAMSqlPlugin)
 
     def test_django_orm_to_manifest_dict(self):
-        """
-        Test that we can convert the Django plugin spec ORM.
-
-        to a Pydantic manifest spec.
-        """
+        """Test that we can convert the Django plugin spec ORM to a Pydantic manifest spec."""
         response = self.broker.apply(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)

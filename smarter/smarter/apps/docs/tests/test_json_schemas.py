@@ -35,11 +35,10 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
 
     def test_get_unauthenticated_json_schemas(self):
         """
-        Test all docs/json-schema/ endpoints with an unauthenticated user.
+        Test all docs/json-schema/ endpoints with an unauthenticated user to ensure that we are redirected to the login page.
 
-        to ensure that we are redirected to the login page. (docs views require
-        authentication since 2026-01-31.)
-        example: http://localhost:9357/docs/json-schema/plugin/
+        (docs views require authentication since 2026-01-31.) example:
+        http://localhost:9357/docs/json-schema/plugin/
         """
 
         for kind in ALL_KINDS:
@@ -54,12 +53,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
             self.assertIn("/login/", response.url)
 
     def test_get_authenticated_json_schemas(self):
-        """
-        Test all docs/json-schema/ endpoints with an authenticated user.
-
-        to ensure that we get a 200 response
-        example: http://localhost:9357/docs/json-schema/plugin/
-        """
+        """Test all docs/json-schema/ endpoints with an authenticated user to ensure that we get a 200 response example: http://localhost:9357/docs/json-schema/plugin/."""
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
             reverse_name = f"{namespace}:{json_schema_name(kind)}"

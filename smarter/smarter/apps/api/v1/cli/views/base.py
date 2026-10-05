@@ -295,9 +295,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
+        Returns the class name in a formatted string along with the name of this mixin.
 
         :return: Formatted class name string
         :rtype: str
@@ -517,10 +515,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def command(self) -> SmarterJournalCliCommands:
         """
-        Translate the request route into a SmarterJournalCliCommands enum.
+        Translate the request route into a SmarterJournalCliCommands enum instance.
 
-        instance. For example, if the route is '/api/v1/cli/apply/', then
-        the corresponding command will be SmarterJournalCliCommands.APPLY.
+        For example, if the route is '/api/v1/cli/apply/', then the corresponding command will be
+        SmarterJournalCliCommands.APPLY.
 
         url:
          - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient

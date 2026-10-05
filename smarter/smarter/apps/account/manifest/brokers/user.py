@@ -648,11 +648,7 @@ class SAMUserBroker(AbstractBroker):
             return None
 
     def orm_meta_instance_setter(self) -> None:
-        """
-        Override the base method to initialize the ORM meta model instance for.
-
-        the broker.
-        """
+        """Override the base method to initialize the ORM meta model instance for the broker."""
         if self._orm_instance:
             logger.debug(
                 "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",

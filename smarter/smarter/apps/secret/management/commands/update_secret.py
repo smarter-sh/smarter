@@ -1,4 +1,13 @@
-"""This module is used to update the encrypted value of a Secret."""
+"""
+Django manage.py update_secret command: replace the value of a user's Secret.
+
+Usage::
+
+    python manage.py update_secret --name <secret name> --username <username> [--value <value>]
+
+The Secret must be owned by the user. Without ``--value``, the command prompts for the value, so
+that it is not recorded in the shell's history. The value is encrypted before it is saved.
+"""
 
 import getpass
 
@@ -8,7 +17,7 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_user command. This command is used to update the encrypted value of a Secret."""
+    """Django manage.py update_secret command, which encrypts and saves a new value for a Secret."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -20,14 +29,14 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--username",
             type=str,
-            help="The user to associate with this Secret. If not provided, the current user will be used.",
+            help="The user who owns the Secret.",
         )
         parser.add_argument(
             "--value", type=str, help="The value to encrypt and persist. If not provided, you will be prompted."
         )
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Encrypt the new value, and save it to the Secret."""
         self.handle_begin()
 
         name = options.get("name")
@@ -36,7 +45,7 @@ class Command(SmarterCommand):
             return
         username = options.get("username")
         if not username:
-            self.stdout.write(self.style.ERROR("No username provided, using the current user for this Secret."))
+            self.stdout.write(self.style.ERROR("No username provided. You must provide --username."))
             return
         value = options.get("value")
         if not value:

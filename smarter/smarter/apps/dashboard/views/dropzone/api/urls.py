@@ -14,11 +14,7 @@ app_name = namespace
 
 
 class DropzoneApiReverseNames:
-    """
-    A class to hold the names of the dropzone views for easy reference.
-
-    throughout the codebase.
-    """
+    """A class to hold the names of the dropzone views for easy reference throughout the codebase."""
 
     namespace = namespace
 

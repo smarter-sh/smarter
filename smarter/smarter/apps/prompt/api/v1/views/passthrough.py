@@ -1,9 +1,5 @@
 # pylint: disable=W0613
-"""
-This module contains passthrough views for interacting directly with the LLM.
-
-provider backend API.
-"""
+"""This module contains passthrough views for interacting directly with the LLM provider backend API."""
 
 from http import HTTPStatus
 from typing import Any
@@ -127,11 +123,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
         | SmarterHttpErrorResponse
         | SmarterHttpResponseForbidden
     ):
-        """
-        Handle POST requests to the passthrough endpoint for direct LLM.
-
-        provider API access.
-        """
+        """Handle POST requests to the passthrough endpoint for direct LLM provider API access."""
         try:
             charge_authorization(
                 [self.user_profile.record_locator, self.user_profile.account.record_locator],  # type: ignore

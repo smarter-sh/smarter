@@ -558,10 +558,9 @@ class LLMClient(MetaDataWithOwnershipModel):
     @property
     def url_llmclient(self) -> str:
         """
-        The Smarter Api url returned by PromptConfigView.config() as the.
+        The Smarter Api url returned by PromptConfigView.config() as the key, "url_llmclient".
 
-        key, "url_llmclient". This url is consumed by React.js app for http
-        requests on new prompts.
+        This url is consumed by React.js app for http requests on new prompts.
 
         maps to "<int:llmclient_id>/prompt/"
         example: "http://localhost:9357/api/v1/llm-clients/5174/prompt/"

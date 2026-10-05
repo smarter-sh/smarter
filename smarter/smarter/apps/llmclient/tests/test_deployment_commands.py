@@ -1,8 +1,5 @@
 """
-Test the llmclient deployment management commands: deploy_llmclient,.
-
-undeploy_llmclient, deploy_example_llmclient, register_custom_domain and
-verify_custom_domain.
+Test the llmclient deployment management commands: deploy_llmclient, undeploy_llmclient, deploy_example_llmclient, register_custom_domain and verify_custom_domain.
 
 Deploying an llmclient creates real Route53 records, so nothing here lets a
 deployment reach AWS: LLMClient.save() is mocked wherever it would send
@@ -122,11 +119,7 @@ class TestUndeployLLMClient(DeploymentCommandTestBase):
 
 
 class TestDeployExampleLLMClient(DeploymentCommandTestBase):
-    """
-    Test manage.py deploy_example_llmclient, against the test account rather.
-
-    than the Smarter account, so that the real demo llmclient is not modified.
-    """
+    """Test manage.py deploy_example_llmclient, against the test account rather than the Smarter account, so that the real demo llmclient is not modified."""
 
     def setUp(self):
         super().setUp()

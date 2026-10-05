@@ -101,9 +101,7 @@ class SafeResponse:
 
 def validate_public_url(url: str) -> None:
     """
-    Validate that a URL is https, on the standard port, without credentials, and that.
-
-    every address its host resolves to is public.
+    Validate that a URL is https, on the standard port, without credentials, and that every address its host resolves to is public.
 
     :param url: The URL to validate.
     :raises SafeHttpError: If the URL is not permitted.

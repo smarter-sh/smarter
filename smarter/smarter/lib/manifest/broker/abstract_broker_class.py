@@ -591,8 +591,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Return the query parameters from the url of the request.
 
-        there are two
-        scenarios to consider:
+        There are two scenarios to consider:
+
         1. the request is a Django HttpRequest object (the expected case)
         2. the request is a Python PreparedRequest object (the edge case)
 
@@ -809,11 +809,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def name_cached_property_setter(self, value: str):
         """
-        A workaround to the limitation that you cannot use both @cached_property and.
+        A workaround to the limitation that you cannot use both @cached_property and a setter for the same attribute name (name).
 
-        a setter for the same attribute name (name). In Python, you cannot have a
-        property (or cached_property) and a setter with the same name unless you use the
-        @property decorator (not @cached_property).
+        In Python, you cannot have a property (or cached_property) and a setter with the same name unless you use
+        the @property decorator (not @cached_property).
 
         We need the cached_property so that the lazy evaluation of the name only happens
         once, and subsequent accesses return the cached value for performance.
@@ -1376,9 +1375,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def manifest_setter(self, value: Optional[Union[AbstractSAMBase, dict[str, Any]]]):
         """
-        Set the manifest for the broker and override all AbstractBroker.
-
-        model properties based on the manifest data.
+        Set the manifest for the broker and override all AbstractBroker model properties based on the manifest data.
 
         :param value: The manifest to set, either as a Pydantic model or a dictionary.
         :type value: Optional[Union[AbstractSAMBase, dict]]
@@ -2130,9 +2127,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def json_response_err(self, command: SmarterJournalCliCommands, e: Exception) -> SmarterJournaledJsonResponse:
         """
-        Return a structured error response that can be unpacked and rendered.
-
-        by the cli in a variety of formats.
+        Return a structured error response that can be unpacked and rendered by the cli in a variety of formats.
 
         :param command: The command that was executed.
         :type command: SmarterJournalCliCommands
@@ -2169,9 +2164,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     def set_and_verify_name_param(self, *args, command: Optional[SmarterJournalCliCommands] = None, **kwargs):
         """
-        Set self.name from the 'name' query string param and then verify that it.
-
-        was actually passed.
+        Set self.name from the 'name' query string param and then verify that it was actually passed.
 
         :param command: The command being executed, for error reporting purposes.
         :type command: Optional[SmarterJournalCliCommands]

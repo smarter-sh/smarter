@@ -117,11 +117,7 @@ def clean_text(value: Any, max_length: int) -> str:
 
 
 def post_filter(results: list[SearchResult], request: SearchRequest) -> list[SearchResult]:
-    """
-    Enforce the domain policy on search results, remove duplicate and non-http(s) URLs, and.
-
-    limit the number of results.
-    """
+    """Enforce the domain policy on search results, remove duplicate and non-http(s) URLs, and limit the number of results."""
     filtered: list[SearchResult] = []
     seen: set[str] = set()
     for result in results:

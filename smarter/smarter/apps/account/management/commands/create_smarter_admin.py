@@ -1,7 +1,5 @@
 """
-This module provides a Django management command to create or update a superuser ("Smarter admin").
-
-account, user profile, and a corresponding API key for the platform.
+This module provides a Django management command to create or update a superuser ("Smarter admin") account, user profile, and a corresponding API key for the platform.
 
 Classes
 =======

@@ -32,10 +32,9 @@ class TestApiDocsManifests(TestAccountMixin):
 
     def test_get_unauthenticated_manifests(self):
         """
-        Test all docs/manifests/ endpoints with an unauthenticated user.
+        Test all docs/manifests/ endpoints with an unauthenticated user to ensure that we are redirected to the login page.
 
-        to ensure that we are redirected to the login page. (docs views require
-        authentication since 2026-01-31.)
+        (docs views require authentication since 2026-01-31.)
         """
 
         for kind in ALL_KINDS:
@@ -46,11 +45,7 @@ class TestApiDocsManifests(TestAccountMixin):
             self.assertIn("/login/", response.url)
 
     def test_get_authenticated_manifests(self):
-        """
-        Test all docs//manifests/ endpoints with an authenticated user.
-
-        to ensure that we get a 200 response
-        """
+        """Test all docs//manifests/ endpoints with an authenticated user to ensure that we get a 200 response."""
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
             reverse_name = f"{namespace}:{manifest_name(kind)}"

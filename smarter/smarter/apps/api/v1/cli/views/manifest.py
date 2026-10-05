@@ -42,11 +42,7 @@ class ApiV1CliManifestApiView(CliBaseApiView):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         inherited_class = super().formatted_class_name
         this_class = f".{ApiV1CliManifestApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"

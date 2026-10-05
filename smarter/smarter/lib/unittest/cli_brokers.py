@@ -1,8 +1,5 @@
 """
-A test mixin that takes a manifest kind through each command of the api/v1/cli/ api, which.
-
-calls the kind's broker: example-manifest, apply, get, describe, deploy, undeploy, logs and
-delete.
+A test mixin that takes a manifest kind through each command of the api/v1/cli/ api, which calls the kind's broker: example-manifest, apply, get, describe, deploy, undeploy, logs and delete.
 
 The manifest that it applies is the kind's own example manifest, renamed for the test, so the
 subclass only names the kind and its Django model::

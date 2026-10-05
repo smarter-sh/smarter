@@ -3970,9 +3970,7 @@ class Settings(BaseSettings):
     @cached_property
     def root_api_domain(self) -> str:
         """
-        Return the root API domain name, generated.
-
-        from the system constant `SMARTER_API_SUBDOMAIN` and the root platform domain.
+        Return the root API domain name, generated from the system constant `SMARTER_API_SUBDOMAIN` and the root platform domain.
 
         Example:
             >>> print(smarter_settings.root_api_domain)
@@ -4294,10 +4292,7 @@ class Settings(BaseSettings):
     @cached_property
     def version(self) -> str:
         """
-        Current version of the Smarter platform codebase.
-
-        based on the semantic version currently persisted
-        to smarter.__version__.py.
+        Current version of the Smarter platform codebase based on the semantic version currently persisted to smarter.__version__.py.
 
         Example:
             >>> print(smarter_settings.version)

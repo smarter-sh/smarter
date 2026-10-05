@@ -90,9 +90,7 @@ def _generate_sorted_kwargs_cached(sorted_items: KwargsTupleType) -> KwargsTuple
 
 def _generate_sorted_kwargs(kwargs: dict[str, object]) -> KwargsTupleType:
     """
-    Sorts the keyword arguments for consistent generation of sha256 cache key,.
-
-    which is created, in part, on the results of this function.
+    Sorts the keyword arguments for consistent generation of sha256 cache key, which is created, in part, on the results of this function.
 
     :param kwargs: The keyword arguments to sort.
     :return: A tuple of sorted keyword argument items.
@@ -138,9 +136,7 @@ def _json_cache_key_cached(key_tuple: tuple[KwargsTupleType, ...]) -> Union[byte
 
 def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[str, object]) -> Optional[bytes]:
     """
-    Generates a raw cache key based on the function name, arguments,.
-
-    and sorted keyword arguments.
+    Generates a raw cache key based on the function name, arguments, and sorted keyword arguments.
 
     :param func: The function for which to generate the key.
     :param args: The positional arguments passed to the function.
@@ -166,10 +162,7 @@ def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[st
 @lru_cache(maxsize=LRU_CACHE_MAXSIZE)
 def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
     """
-    Generates a deterministic cache key str based on.
-
-    the module name, function name and a 32-character hash of
-    the complete set of key data.
+    Generates a deterministic cache key str based on the module name, function name and a 32-character hash of the complete set of key data.
 
     :param func: The function for which to generate the key.
     :param key_data: The raw key data as bytes.
@@ -181,9 +174,7 @@ def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
 
 def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional[str] = None, logging_enabled=False):
     """
-    A decorator that caches the result of a function based on the arguments.
-
-    passed to it.
+    A decorator that caches the result of a function based on the arguments passed to it.
 
     .. important::
 
