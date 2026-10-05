@@ -305,7 +305,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             )
             return self._manifest
         else:
-            logger.warning(
+            logger.debug(
                 "%s.manifest() could not initialize manifest. Expected %s but got %s",
                 self.formatted_class_name,
                 self.kind,
