@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Smarter Manifest Editor</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 
     <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/common-styles.css" rel="stylesheet" type="text/css" />
-
   </head>
   <body>
     <!--
@@ -23,7 +22,9 @@
     - smarter.apps.dashboard.templatetags.react_manifest_editor
     - templates/common/manifest_detail.html, e.g. smarter.apps.guardrail.views.detailview.GuardrailDetailView
     -->
-    <script id="smarter-manifest-editor-data" type="application/json">"apiVersion: smarter.sh/v1\nkind: Guardrail\nmetadata:\n  name: example_guardrail\n  description: An example Guardrail.\n  version: 1.0.0\nspec:\n  config:\n    stage: input\n    strategy: keyword\n    keywords:\n    - ignore all previous instructions\n    action: block\nstatus:\n  dependencies: []\n"</script>
+    <script id="smarter-manifest-editor-data" type="application/json">
+      "apiVersion: smarter.sh/v1\nkind: Guardrail\nmetadata:\n  name: example_guardrail\n  description: An example Guardrail.\n  version: 1.0.0\nspec:\n  config:\n    stage: input\n    strategy: keyword\n    keywords:\n    - ignore all previous instructions\n    action: block\nstatus:\n  dependencies: []\n"
+    </script>
     <div
       id="smarter-manifest-editor-root"
       smarter-manifest-data-id="smarter-manifest-editor-data"
@@ -36,8 +37,7 @@
       django-cookie-domain="localhost"
       react-debug-mode="true"
       smarter-request-id="abcd1234"
-      >
-    </div>
+    ></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
   <script src="/assets/plugins/global/plugins.bundle.js"></script>

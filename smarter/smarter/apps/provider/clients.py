@@ -1,8 +1,4 @@
-"""
-This module contains passthrough views for interacting directly with the LLM.
-
-provider backend API.
-"""
+"""This module contains passthrough views for interacting directly with the LLM provider backend API."""
 
 import traceback
 from http import HTTPStatus
@@ -115,11 +111,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         )
 
     def create_chat_completion(self, data: dict[str, Any], logger_prefix: str):
-        """
-        Send the prompt to the provider, retrying once with ``reasoning_effort="none"``.
-
-        when OpenAI requires it for function tools.
-        """
+        """Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools."""
         try:
             return openai.chat.completions.create(**data)
         except openai.BadRequestError as e:

@@ -118,9 +118,7 @@ class LLMClientFunctions(TimestampedModel):
             llmclient_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["LLMClientFunctions"]:
             """
-            Caches the functions for an llmclient by llmclient_id to optimize.
-
-            performance and reduce database queries.
+            Caches the functions for an llmclient by llmclient_id to optimize performance and reduce database queries.
 
             :param llmclient_id: The ID of the LLMClient for which to retrieve functions.
             :param class_name: The name of the class for cache key purposes.

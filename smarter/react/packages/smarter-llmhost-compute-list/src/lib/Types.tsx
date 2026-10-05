@@ -24,14 +24,7 @@ import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/co
  * "absent": Smarter has not created it yet. It does so when an LLMHost first needs one of its nodes.
  */
 export type NodeGroupStatus =
-  | "absent"
-  | "CREATING"
-  | "ACTIVE"
-  | "UPDATING"
-  | "DELETING"
-  | "CREATE_FAILED"
-  | "DELETE_FAILED"
-  | "DEGRADED";
+  "absent" | "CREATING" | "ACTIVE" | "UPDATING" | "DELETING" | "CREATE_FAILED" | "DELETE_FAILED" | "DEGRADED";
 
 export type LLMHostCompute = {
   id: number;

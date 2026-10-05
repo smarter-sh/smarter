@@ -24,9 +24,7 @@ logger_prefix = logging.formatted_text(f"{__name__}")
 
 class PluginDataStatic(PluginDataBase):
     """
-    Stores the configuration and static data set for a Smarter plugin.
-
-    which is based on static data.
+    Stores the configuration and static data set for a Smarter plugin which is based on static data.
 
     This model is used for plugins that return static (predefined) data to the LLM.
     The ``static_data`` field holds the JSON data that will be returned when the plugin is invoked.
@@ -214,10 +212,9 @@ class PluginDataStatic(PluginDataBase):
         **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
-        Retrieve a model instance by primary key, using caching to.
+        Retrieve a model instance by primary key, using caching to optimize performance.
 
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
         Example usage:

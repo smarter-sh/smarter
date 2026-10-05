@@ -1,8 +1,8 @@
 import { actionUrl } from "./actionUrl";
-import {makeCacheKey, readCache, writeCache} from "./cache";
-import {getCookie, setCookie} from "./cookie";
+import { makeCacheKey, readCache, writeCache } from "./cache";
+import { getCookie, setCookie } from "./cookie";
 import fetchDjangoUrl from "./django";
-import {formatDateTime} from "./formatDateTime";
+import { formatDateTime } from "./formatDateTime";
 import { Modal } from "./modalDialogue";
 
 export { actionUrl, getCookie, setCookie, fetchDjangoUrl, formatDateTime, Modal };

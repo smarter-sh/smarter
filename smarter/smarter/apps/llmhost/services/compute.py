@@ -135,11 +135,7 @@ def fits(pod: PodRequests, compute: LLMHostCompute) -> list[str]:
 
 
 def cost_per_hour(pod: PodRequests, compute: Optional[LLMHostCompute]) -> Optional[Decimal]:
-    """
-    One replica's share of its node's price: the largest of its shares of the node's GPUs, CPU.
-
-    and memory, since that is what keeps the rest of the node from other pods.
-    """
+    """One replica's share of its node's price: the largest of its shares of the node's GPUs, CPU and memory, since that is what keeps the rest of the node from other pods."""
     if compute is None or compute.price_per_hour is None:
         return None
     shares = [
@@ -191,10 +187,10 @@ def builtin_computes() -> QuerySet:
 
 def resolve_compute(spec: SAMLLMHostSpec, user_profile: UserProfile) -> LLMHostCompute:
     """
-    The compute of an LLMHost's spec: ``spec.compute``, else :func:`choose_compute`, of those.
+    The compute of an LLMHost's spec: ``spec.compute``, else :func:`choose_compute`, of those that the LLMHost's owner may read.
 
-    that the LLMHost's owner may read. If several have the name, the owner's own is preferred,
-    then their account's, then the Smarter admin's, i.e. the built-in one.
+    If several have the name, the owner's own is preferred, then their account's, then the Smarter admin's, i.e. the
+    built-in one.
 
     :raises LLMHostComputeError: if spec.compute does not exist, or the LLMHost's pod does not fit it.
     """

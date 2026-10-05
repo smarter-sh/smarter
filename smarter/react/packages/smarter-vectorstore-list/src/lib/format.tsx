@@ -14,7 +14,11 @@ export const HOSTING_LABELS: Record<Vectorstore["hosting"], string> = {
 };
 
 export const STATUS_BADGES: Record<VectorstoreStatus, { className: string; label: string; help: string }> = {
-  pending: { className: "badge-light", label: "Pending", help: "Applied, but not deployed. Deploy it to create its database." },
+  pending: {
+    className: "badge-light",
+    label: "Pending",
+    help: "Applied, but not deployed. Deploy it to create its database.",
+  },
   provisioning: { className: "badge-light-warning", label: "Provisioning", help: "Its database is being created." },
   ready: { className: "badge-light-success", label: "Ready", help: "Its database is serving." },
   stopped: { className: "badge-light-secondary", label: "Stopped", help: "Undeployed. Its data is kept." },

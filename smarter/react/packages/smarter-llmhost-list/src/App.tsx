@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type LLMHostTabbedViewContext = Omit<
-  TabbedViewContext<LLMHost>,
-  "ListView" | "CardView"
-> & {
+export type LLMHostTabbedViewContext = Omit<TabbedViewContext<LLMHost>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<LLMHostListViewProps>;
   CardView: React.ComponentType<LLMHostCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "LLM Hosts";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llmhost.html";
-  const helpText = "LLMHosts provide a standardized interface for deploying and managing self-hosted large language models from platforms like HuggingFace within Smarter-orchestrated applications.";
+  const helpText =
+    "LLMHosts provide a standardized interface for deploying and managing self-hosted large language models from platforms like HuggingFace within Smarter-orchestrated applications.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="llmhost-list">

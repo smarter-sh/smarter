@@ -55,11 +55,7 @@ class TestReactManifestEditorTemplateTag(SmarterTestBase):
 
 
 class TestManifestEditorCliApi(TestAccountMixin):
-    """
-    Test the cli api calls of the manifest editor, as a browser makes them: with the.
-
-    user's Django session, and its CSRF cookie and header.
-    """
+    """Test the cli api calls of the manifest editor, as a browser makes them: with the user's Django session, and its CSRF cookie and header."""
 
     def setUp(self):
         super().setUp()

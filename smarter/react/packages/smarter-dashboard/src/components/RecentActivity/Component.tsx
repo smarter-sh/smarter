@@ -50,7 +50,9 @@ function ActivityRow({ item }: { item: ActivityItem }) {
         <span className={`badge ${failed ? "badge-light-danger" : "badge-light-success"} fs-8`}>{item.command}</span>
       </td>
       <td className="fw-bold text-gray-800 fs-7">{item.thing}</td>
-      <td className={`fs-7 ${failed ? "text-danger" : "text-gray-600"}`}>{item.message ?? `HTTP ${item.status_code}`}</td>
+      <td className={`fs-7 ${failed ? "text-danger" : "text-gray-600"}`}>
+        {item.message ?? `HTTP ${item.status_code}`}
+      </td>
     </tr>
   );
 }

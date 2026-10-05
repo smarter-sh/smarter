@@ -144,11 +144,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(broker, SAMStaticPluginBroker)
 
     def test_manifest_model_initialization(self):
-        """
-        Test that the SAMStaticPlugin can be initialized from.
-
-        a json dump of the manifest model.
-        """
+        """Test that the SAMStaticPlugin can be initialized from a json dump of the manifest model."""
         static_plugin = SAMStaticPlugin(**self.broker.manifest.model_dump())
         self.assertIsInstance(static_plugin, SAMStaticPlugin)
 
@@ -172,11 +168,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(manifest, SAMStaticPlugin)
 
     def test_django_orm_to_manifest_dict(self):
-        """
-        Test that we can convert the Django plugin spec ORM.
-
-        to a Pydantic manifest spec.
-        """
+        """Test that we can convert the Django plugin spec ORM to a Pydantic manifest spec."""
         manifest_dict = self.broker.plugin_static_spec_orm2pydantic()
         self.assertIsInstance(manifest_dict, SAMPluginStaticSpec)
 

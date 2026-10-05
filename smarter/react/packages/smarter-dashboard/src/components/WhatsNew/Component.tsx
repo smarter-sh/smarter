@@ -90,7 +90,7 @@ function WhatsNew() {
   return (
     <>
       {/* begin::What's New widget */}
-      <section id="whats-new" aria-label="WhatsNew" className="card border-transparent h-xl-100">
+      <section id="whats-new" aria-label="What's New" className="card border-transparent h-xl-100">
         {/* begin::Header */}
         <div className="card-header border-0 pt-5">
           <h3 className="card-title align-items-start flex-column">

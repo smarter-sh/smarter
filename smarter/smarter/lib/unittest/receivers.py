@@ -1,9 +1,8 @@
 """
-A test mixin that calls each signal receiver of a module, as its signal would, with a mock for.
+A test mixin that calls each signal receiver of a module, as its signal would, with a mock for each argument that the receiver names.
 
-each argument that the receiver names. Celery's Task.apply_async, and each Celery task that the
-module imports, are mocked, so that no receiver queues a task. A receiver that only logs is then covered, and one that reads an
-argument that its signal does not send fails.
+Celery's Task.apply_async, and each Celery task that the module imports, are mocked, so that no receiver queues a
+task. A receiver that only logs is then covered, and one that reads an argument that its signal does not send fails.
 """
 
 import inspect

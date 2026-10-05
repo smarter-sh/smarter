@@ -54,13 +54,22 @@ function CardView({ sessionContext, objects, onRequery }: ProxyCardViewProps) {
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("URL", proxyUrl(proxy), "string", "Use it as the base URL of the provider's SDK, with a Smarter API key.")}
+                    {renderDetailRow(
+                      "URL",
+                      proxyUrl(proxy),
+                      "string",
+                      "Use it as the base URL of the provider's SDK, with a Smarter API key.",
+                    )}
                     {renderDetailRow("Provider", proxy.providerName)}
                     {renderDetailRow("Provider API", proxy.upstreamUrl, "string")}
                     {renderDetailRow("API Key Secret", formatApiKey(proxy))}
                     {renderDetailRow("Auth Header", formatAuth(proxy))}
                     {renderDetailRow("Headers", Object.keys(proxy.headers || {}).length ? proxy.headers : null, "json")}
-                    {renderDetailRow("Allowed Paths", proxy.allowedPaths?.length ? proxy.allowedPaths : "All paths", "str[]")}
+                    {renderDetailRow(
+                      "Allowed Paths",
+                      proxy.allowedPaths?.length ? proxy.allowedPaths : "All paths",
+                      "str[]",
+                    )}
                     {renderDetailRow("Timeout", `${proxy.timeout} seconds`)}
                     {renderDetailRow("Active", proxy.isActive, "bool")}
                     {renderDetailRow("Manifest", proxy.manifestUrl, "url")}

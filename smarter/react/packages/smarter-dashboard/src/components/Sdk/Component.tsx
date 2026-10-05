@@ -24,9 +24,7 @@ function Sdk() {
           {/* begin::Body */}
           <div className="card-body d-flex flex-column ps-xl-15 h-100">
             {/* begin::Title */}
-            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
-              Smarter Developer SDKs
-            </h6>
+            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">Smarter Developer SDKs</h6>
             {/* end::Title */}
             {/* begin::Action */}
             <div className="mb-3">
@@ -41,17 +39,9 @@ function Sdk() {
                   >
                     &#8594;
                   </span>
-                  <a
-                    href="https://www.npmjs.com/package/@smarter.sh/ui-chat"
-                    target="_blank"
-                    className="text-dark"
-                  >
+                  <a href="https://www.npmjs.com/package/@smarter.sh/ui-chat" target="_blank" className="text-dark">
                     <span>
-                      <img
-                        src="/static/assets/media/framework-logos/react.png"
-                        className="h-10px"
-                        alt="ReactJS Logo"
-                      />
+                      <img src="/static/assets/media/framework-logos/react.png" className="h-10px" alt="ReactJS Logo" />
                     </span>
                     React NPM Package
                   </a>
@@ -66,17 +56,9 @@ function Sdk() {
                   >
                     &#8594;
                   </span>
-                  <a
-                    href="https://pypi.org/project/smarter-api/"
-                    target="_blank"
-                    className="text-dark"
-                  >
+                  <a href="https://pypi.org/project/smarter-api/" target="_blank" className="text-dark">
                     <span>
-                      <img
-                        src="/static/images/python-logo.png"
-                        className="h-10px"
-                        alt="Python Logo"
-                      />
+                      <img src="/static/images/python-logo.png" className="h-10px" alt="Python Logo" />
                     </span>
                     Python PyPi Library
                   </a>
@@ -119,9 +101,7 @@ function Sdk() {
       <div className="col-xl-4 mb-5 mb-xl-10 h-100">
         {/* begin::Row Developer/enthusiast banner */}
         <div className="mt-15 text-center">
-          <h2 className="text-gray-600">
-            Resources for Developers, Solution Architects, and Enterprise Users
-          </h2>
+          <h2 className="text-gray-600">Resources for Developers, Solution Architects, and Enterprise Users</h2>
         </div>
       </div>
     </>

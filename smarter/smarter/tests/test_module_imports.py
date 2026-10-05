@@ -1,10 +1,4 @@
-"""
-Test that modules which nothing else imports still load, and that their.
-
-contents are well formed: the per-app api/urls.py configurations that the
-project urlconf does not include, and the manifest enum modules that are kept
-for backward compatibility.
-"""
+"""Test that modules which nothing else imports still load, and that their contents are well formed: the per-app api/urls.py configurations that the project urlconf does not include, and the manifest enum modules that are kept for backward compatibility."""
 
 import importlib
 import inspect

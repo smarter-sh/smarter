@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstract attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ProxyTabbedViewContext = Omit<
-  TabbedViewContext<Proxy>,
-  "ListView" | "CardView"
-> & {
+export type ProxyTabbedViewContext = Omit<TabbedViewContext<Proxy>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<ProxyListViewProps>;
   CardView: React.ComponentType<ProxyCardViewProps>;
 };

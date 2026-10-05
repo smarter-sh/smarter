@@ -1,8 +1,4 @@
-"""
-Test the methods of :class:`smarter.apps.connection.models.SqlConnection` that connect to a database.
-
-and query it, with an in-memory SQLite database, so that no database server is needed.
-"""
+"""Test the methods of :class:`smarter.apps.connection.models.SqlConnection` that connect to a database and query it, with an in-memory SQLite database, so that no database server is needed."""
 
 from unittest.mock import MagicMock, patch
 

@@ -1,8 +1,4 @@
-"""
-Test :mod:`smarter.apps.connection.models.connection_base`, :mod:`smarter.apps.connection.models.utils`,.
-
-and the parts of :mod:`smarter.apps.connection.models.sql_connection` that need no database server.
-"""
+"""Test :mod:`smarter.apps.connection.models.connection_base`, :mod:`smarter.apps.connection.models.utils`, and the parts of :mod:`smarter.apps.connection.models.sql_connection` that need no database server."""
 
 from unittest.mock import MagicMock
 

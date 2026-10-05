@@ -77,9 +77,7 @@ SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, ASGIReque
 
 class SmarterRequestMixin(AccountMixin):
     """
-    Helper class for the Django request object that enforces authentication and.
-
-    provides lazy loading of the user, account, user profile, and session_key.
+    Helper class for the Django request object that enforces authentication and provides lazy loading of the user, account, user profile, and session_key.
 
     This mixin works with any Django request object and any valid URL, but is designed
     as a helper class for Smarter LLMClient URLs.
@@ -673,10 +671,7 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def qualified_request(self) -> bool:
         """
-        A cursory screening of the WSGI request object to look for.
-
-        any disqualifying conditions that confirm this is not a
-        request that we are interested in.
+        A cursory screening of the WSGI request object to look for any disqualifying conditions that confirm this is not a request that we are interested in.
 
         The request is considered "qualified" if **all** of the following are true:
 
@@ -2097,9 +2092,7 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def srm_formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string.
-
-        along with the name of this mixin.
+        Returns the class name in a formatted string along with the name of this mixin.
 
         :return: Formatted class name string.
         """
@@ -2294,9 +2287,7 @@ class SmarterRequestMixin(AccountMixin):
 
     def eval_llmclient_url(self):
         """
-        If we are an llmclient, based on analysis of the URL format.
-
-        then we need to make a follow up check of the user and account.
+        If we are an llmclient, based on analysis of the URL format then we need to make a follow up check of the user and account.
 
         Examples:
 

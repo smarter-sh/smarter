@@ -77,7 +77,9 @@ function BudgetAlerts({ sessionContext, apiUrl }: BudgetAlertsProps) {
               role="alert"
               className={`alert ${danger ? "alert-danger" : "alert-warning"} d-flex align-items-center p-4 mb-3`}
             >
-              <i className={`ki-outline ki-notification-bing fs-2x me-4 ${danger ? "text-danger" : "text-warning"}`}></i>
+              <i
+                className={`ki-outline ki-notification-bing fs-2x me-4 ${danger ? "text-danger" : "text-warning"}`}
+              ></i>
               <div className="fs-6">
                 Budget <span className="fw-bold">{status.budget}</span> on{" "}
                 <span className="fw-bold">{status.resource_locator}</span> {alertMessage(status)}

@@ -1,10 +1,5 @@
 # pylint: disable=W0613,C0302
-"""
-PromptConfigView is a Django class-based view responsible for providing.
-
-configuration data to the ReactJS prompt UI component in the Smarter
-web application.
-"""
+"""PromptConfigView is a Django class-based view responsible for providing configuration data to the ReactJS prompt UI component in the Smarter web application."""
 
 from http import HTTPStatus
 from typing import Any, Optional, Union
@@ -224,11 +219,7 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         return retval
 
     def legacy_config(self, config: Union[dict[str, Any], list[Any]], replace_str: str, with_str: str) -> Any:
-        """
-        Recursively replaces any key value of 'llmclient' with 'chatbot' for legacy.
-
-        support of older versions of the React app that expect 'chatbot' instead of 'llmclient'.
-        """
+        """Recursively replaces any key value of 'llmclient' with 'chatbot' for legacy support of older versions of the React app that expect 'chatbot' instead of 'llmclient'."""
         retval = search_replace(config, replace_str="llmclient", with_str="chatbot")
         retval = search_replace(retval, replace_str="account_number", with_str="accountNumber")
         retval = search_replace(retval, replace_str="prompt_history", with_str="chat_history")

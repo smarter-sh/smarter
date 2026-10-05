@@ -1,7 +1,5 @@
 """
-The LLMHost service layer: discover, launch, observe and destroy the models that Smarter.
-
-hosts on Kubernetes.
+The LLMHost service layer: discover, launch, observe and destroy the models that Smarter hosts on Kubernetes.
 
 - :mod:`.service`: :class:`LLMHostService`, the API of the service layer.
 - :mod:`.discovery`: model catalogs, e.g. Hugging Face, sizing, and manifest drafts.

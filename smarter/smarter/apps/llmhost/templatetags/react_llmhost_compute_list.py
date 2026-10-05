@@ -23,9 +23,5 @@ static/react/@smarter/llmhost-compute-list/. See react_llmhost_list for an examp
 
 @register.simple_tag
 def llmhost_compute_list_react_assets() -> AssetDict:
-    """
-    Load CSS and JS files for a React app entry point.
-
-    based on its manifest.json.
-    """
+    """Load CSS and JS files for a React app entry point based on its manifest.json."""
     return templatetag_manager.reactapp_build_assets

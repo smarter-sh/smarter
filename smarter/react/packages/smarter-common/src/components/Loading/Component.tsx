@@ -1,5 +1,3 @@
-
-
 export function Loading() {
   return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 40 }}>

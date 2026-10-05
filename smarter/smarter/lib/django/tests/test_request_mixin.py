@@ -101,11 +101,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         return SmarterRequestMixin(request)
 
     def test_init_without_request_object(self):
-        """
-        Test that SmarterRequestMixin raises SmarterValueError.
-
-        when initialized without a request object.
-        """
+        """Test that SmarterRequestMixin raises SmarterValueError when initialized without a request object."""
         SmarterRequestMixin(request=None)
 
     def test_unauthenticated_instantiation(self):

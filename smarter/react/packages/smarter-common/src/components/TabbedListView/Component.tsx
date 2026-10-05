@@ -68,8 +68,10 @@ type TabbedListViewProps<TObject> = {
   tabbedListViewContext: TabbedViewContext<TObject>;
 };
 
-export default function TabbedListView<TObject>({ sessionContext, tabbedListViewContext }: TabbedListViewProps<TObject>) {
-
+export default function TabbedListView<TObject>({
+  sessionContext,
+  tabbedListViewContext,
+}: TabbedListViewProps<TObject>) {
   // cache keys for session-based local caching of owned/shared lists
   // to improve perceived load times on repeat visits
   const sharedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "shared");
@@ -87,7 +89,9 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   // the real data loads.
   // A list is loading until the first load completes, unless its cache already has its objects.
   const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(() => readCache<TObject>(ownedListCacheKey) === null);
-  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(() => readCache<TObject>(sharedListCacheKey) === null);
+  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(
+    () => readCache<TObject>(sharedListCacheKey) === null,
+  );
   const [userListObjects, setUserListObjects] = useState<TObject[]>(() => readCache<TObject>(ownedListCacheKey) || []);
   const [sharedListObjects, setSharedListObjects] = useState<TObject[]>(
     () => readCache<TObject>(sharedListCacheKey) || [],
@@ -98,7 +102,6 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
   const userGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
   const sharedGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
-
 
   // define 2-tab layout with cookie-based persistent active tab state
   const [activeTab, setActiveTab] = useState<TabKey>("owned");
@@ -122,11 +125,16 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   // finishes after the component unmounts, is ignored.
   const handleLoad = useCallback(
     (invalidateCache: boolean, isActive: () => boolean = () => true): Promise<void> => {
-      console.debug(`${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCache=${invalidateCache}`);
+      console.debug(
+        `${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCache=${invalidateCache}`,
+      );
       return load<TObject>(sessionContext, invalidateCache, "owned", setErrorMessage)
         .then((ownedObjects) => {
           if (!isActive()) return;
-          console.debug(`${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`, ownedObjects);
+          console.debug(
+            `${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`,
+            ownedObjects,
+          );
           setUserListObjects(ownedObjects);
           writeCache(ownedListCacheKey, ownedObjects);
           setIsLoadingOwned(false);
@@ -134,7 +142,10 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
         })
         .then((sharedObjects) => {
           if (!sharedObjects || !isActive()) return;
-          console.debug(`${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`, sharedObjects);
+          console.debug(
+            `${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`,
+            sharedObjects,
+          );
           setSharedListObjects(sharedObjects);
           writeCache(sharedListCacheKey, sharedObjects);
           setIsLoadingShared(false);
@@ -160,7 +171,9 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   // the cached objects, if any, are shown at once (see the state initializers above), and
   // replaced by the freshly loaded ones.
   useEffect(() => {
-    console.debug(`${loggerPrefix} useEffect() triggered on mount/sessionContext change, loading data with handleLoad()`);
+    console.debug(
+      `${loggerPrefix} useEffect() triggered on mount/sessionContext change, loading data with handleLoad()`,
+    );
     let active = true;
     void handleLoad(false, () => active);
     return () => {
@@ -169,7 +182,11 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   }, [handleLoad]);
 
   if (errorMessage) {
-    return <div className="alert alert-danger">{errorMessage}</div>;
+    return (
+      <div className="alert alert-danger" role="alert">
+        {errorMessage}
+      </div>
+    );
   }
 
   return (
@@ -190,7 +207,11 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
               onRequery={onRequery}
             />
           ) : (
-            <tabbedListViewContext.CardView sessionContext={sessionContext} objects={userListObjects} onRequery={onRequery} />
+            <tabbedListViewContext.CardView
+              sessionContext={sessionContext}
+              objects={userListObjects}
+              onRequery={onRequery}
+            />
           )
         ) : viewMode === "list" ? (
           <tabbedListViewContext.ListView
@@ -201,7 +222,11 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
             onRequery={onRequery}
           />
         ) : (
-          <tabbedListViewContext.CardView sessionContext={sessionContext} objects={sharedListObjects} onRequery={onRequery} />
+          <tabbedListViewContext.CardView
+            sessionContext={sessionContext}
+            objects={sharedListObjects}
+            onRequery={onRequery}
+          />
         )}
       </div>
     </div>

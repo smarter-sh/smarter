@@ -1,11 +1,30 @@
 import { useEffect, useState } from "react";
 import "./styles.css";
 
-
-
 const successEmojis = [
-  "🎉", "🥳", "🚀", "🌟", "🏆", "🥇", "🎊", "🍾", "😸", "💯",
-  "🤩", "🥂", "🎈", "🦄", "🕺", "💃", "🤗", "🥰", "😻", "👑", "🧁", "🍀", "🥒"
+  "🎉",
+  "🥳",
+  "🚀",
+  "🌟",
+  "🏆",
+  "🥇",
+  "🎊",
+  "🍾",
+  "😸",
+  "💯",
+  "🤩",
+  "🥂",
+  "🎈",
+  "🦄",
+  "🕺",
+  "💃",
+  "🤗",
+  "🥰",
+  "😻",
+  "👑",
+  "🧁",
+  "🍀",
+  "🥒",
 ];
 
 export default function SuccessEmoji() {
@@ -20,11 +39,7 @@ export default function SuccessEmoji() {
   const [randomEmoji] = useState(() => successEmojis[Math.floor(Math.random() * successEmojis.length)]);
 
   return (
-    <span
-      role="img"
-      aria-label="success"
-      className={`emoji-animate${show ? " emoji-animate--show" : ""}`}
-    >
+    <span role="img" aria-label="success" className={`emoji-animate${show ? " emoji-animate--show" : ""}`}>
       {randomEmoji}
     </span>
   );

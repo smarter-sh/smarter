@@ -19,21 +19,9 @@ import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/co
 // Orchestrator Definition
 // ----------------------------------------------------------------------------
 
-export type OrchestrationStrategy =
-  | "sequential"
-  | "parallel"
-  | "supervisor"
-  | "router"
-  | "voting"
-  | "debate";
+export type OrchestrationStrategy = "sequential" | "parallel" | "supervisor" | "router" | "voting" | "debate";
 
-export type HarnessRole =
-  | "planner"
-  | "executor"
-  | "critic"
-  | "router"
-  | "summarizer"
-  | "tool_caller";
+export type HarnessRole = "planner" | "executor" | "critic" | "router" | "summarizer" | "tool_caller";
 
 export type OrchestratorHarness = {
   llmClientName: string;

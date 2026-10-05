@@ -214,9 +214,7 @@ class LLMClientPlugin(TimestampedModel):
             llmclient_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["LLMClientPlugin"]:
             """
-            Caches the plugins for an llmclient by llmclient_id to optimize.
-
-            performance and reduce database queries.
+            Caches the plugins for an llmclient by llmclient_id to optimize performance and reduce database queries.
 
             :param llmclient_id: The ID of the LLMClient for which to retrieve plugins.
             :param class_name: The name of the class for cache key purposes.

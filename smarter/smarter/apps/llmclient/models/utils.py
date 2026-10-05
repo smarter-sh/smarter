@@ -20,10 +20,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 def get_cached_llmclient_by_request(request: HttpRequest) -> Optional[LLMClient]:
     """
-    Returns the llmclient from the cache if it exists, otherwise.
-
-    it queries the database with assistance from LLMClientHelper
-    and caches the result.
+    Returns the llmclient from the cache if it exists, otherwise it queries the database with assistance from LLMClientHelper and caches the result.
 
     .. code-block:: python
 
@@ -39,11 +36,7 @@ def get_cached_llmclient_by_request(request: HttpRequest) -> Optional[LLMClient]
     # pylint: disable=W0613
     @cache_results()
     def get_llmclient_by_url(url: str, class_name: str) -> Optional[LLMClient]:
-        """
-        We use the request URL as the cache key to avoid redundant.
-
-        parsing and database queries for repeated requests.
-        """
+        """We use the request URL as the cache key to avoid redundant parsing and database queries for repeated requests."""
         llmclient_helper = LLMClientHelper(request)
         if llmclient_helper:
             logger.debug(

@@ -25,12 +25,7 @@ class UnauthenticatedPermissionClass(BasePermission):
 
 
 class SmarterAuthenticatedPermissionClass(IsAuthenticated):
-    """
-    Implements an internal API permission class that allows.
-
-    authenticated users to access internal API endpoints without
-    requiring bearer tokens or other authentication methods.
-    """
+    """Implements an internal API permission class that allows authenticated users to access internal API endpoints without requiring bearer tokens or other authentication methods."""
 
     @property
     def formatted_class_name(self) -> str:
@@ -38,11 +33,7 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
         return formatted_text(class_name)
 
     def has_all_permission(self, request: Request, view) -> bool:
-        """
-        Allows internal view access to authenticated users and.
-
-        internal API requests.
-        """
+        """Allows internal view access to authenticated users and internal API requests."""
         if is_authenticated_request(request) and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False):
             logger.info(
                 "%s.has_all_permission() - internal api request. Overriding permission: %s",

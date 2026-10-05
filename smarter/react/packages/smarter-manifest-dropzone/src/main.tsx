@@ -26,15 +26,15 @@ if (!smarterRequestId) throw new Error("Smarter request ID not found in root ele
 if (!smarterApiUrl) throw new Error("Smarter API URL not found in root element attributes");
 
 const sessionContext: SessionContext = {
-    ApiUrl: smarterApiUrl,
-    csrfCookieName,
-    djangoSessionCookieName,
-    cookieDomain,
-    debugMode,
-    smarterClient,
-    smarterClientVersion,
-    smarterRequestId,
-    smarterCapabilities,
+  ApiUrl: smarterApiUrl,
+  csrfCookieName,
+  djangoSessionCookieName,
+  cookieDomain,
+  debugMode,
+  smarterClient,
+  smarterClientVersion,
+  smarterRequestId,
+  smarterCapabilities,
 };
 
 console.debug(loggerPrefix, "sessionContext initialized with values:", sessionContext);

@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ConnectionTabbedViewContext = Omit<
-  TabbedViewContext<Connection>,
-  "ListView" | "CardView"
-> & {
+export type ConnectionTabbedViewContext = Omit<TabbedViewContext<Connection>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<ConnectionListViewProps>;
   CardView: React.ComponentType<ConnectionCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "Connections";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-connection.html";
-  const helpText = "A Connection defines and stores the credentials and configuration needed to access an external system, such as a database, REST API, Web service or email server, on which an AI application needs to communicate";
+  const helpText =
+    "A Connection defines and stores the credentials and configuration needed to access an external system, such as a database, REST API, Web service or email server, on which an AI application needs to communicate";
   return (
     <>
       <section className="mt-5 mb-5 container" id="connection-list">

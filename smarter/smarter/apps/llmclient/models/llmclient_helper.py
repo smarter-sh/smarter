@@ -29,9 +29,7 @@ llmclient_helper_logger = logging.getSmarterLogger(
 
 class LLMClientHelper(SmarterRequestMixin):
     """
-    Provides a mapping between URLs and their corresponding LLMClient models,.
-
-    abstracting URL parsing logic for reuse across the codebase.
+    Provides a mapping between URLs and their corresponding LLMClient models, abstracting URL parsing logic for reuse across the codebase.
 
     This helper class is designed to centralize and standardize the logic
     required to resolve a LLMClient instance from a given URL or request context.
@@ -239,10 +237,7 @@ class LLMClientHelper(SmarterRequestMixin):
     @cached_property
     def account(self) -> Optional[Account]:
         """
-        Return the associated :class:`Account` for this LLMClientHelper instance,.
-
-        optionally overriding the default account based on the account number
-        parsed from the URL, if available.
+        Return the associated :class:`Account` for this LLMClientHelper instance, optionally overriding the default account based on the account number parsed from the URL, if available.
 
         If the URL contains an account number (for example,
         ``http://education.3141-5926-5359.api.localhost:9357/config/``),

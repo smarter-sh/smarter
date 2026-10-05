@@ -67,10 +67,7 @@ function CardView({ sessionContext, objects, onRequery }: OrchestratorCardViewPr
                     {renderDetailRow("Tags", orchestrator.tags, "str[]")}
                     {renderDetailRow("Annotations", orchestrator.annotations, "json")}
                     {renderDetailRow("Ready", orchestrator.ready, "bool")}
-                    {renderDetailRow(
-                      "RFC 1034 Compliant Name",
-                      orchestrator.rfc1034CompliantName
-                    )}
+                    {renderDetailRow("RFC 1034 Compliant Name", orchestrator.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

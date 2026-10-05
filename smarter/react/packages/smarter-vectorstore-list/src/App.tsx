@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type VectorstoreTabbedViewContext = Omit<
-  TabbedViewContext<Vectorstore>,
-  "ListView" | "CardView"
-> & {
+export type VectorstoreTabbedViewContext = Omit<TabbedViewContext<Vectorstore>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<VectorstoreListViewProps>;
   CardView: React.ComponentType<VectorstoreCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "Vectorstores";
   const icon = "ki-data";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-vectorstore.html";
-  const helpText = "A Vectorstore is a vector database for retrieval-augmented generation (RAG): documents, such as PDFs, are split into chunks, embedded, and loaded into it, and searched by meaning. Smarter runs Qdrant on its own Kubernetes cluster, or connects to Pinecone or Qdrant Cloud. It creates and destroys the database, loads and removes documents, and takes scheduled snapshots. Create one with a Vectorstore manifest.";
+  const helpText =
+    "A Vectorstore is a vector database for retrieval-augmented generation (RAG): documents, such as PDFs, are split into chunks, embedded, and loaded into it, and searched by meaning. Smarter runs Qdrant on its own Kubernetes cluster, or connects to Pinecone or Qdrant Cloud. It creates and destroys the database, loads and removes documents, and takes scheduled snapshots. Create one with a Vectorstore manifest.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="vectorstore-list">

@@ -41,7 +41,8 @@ export function syntaxErrors(yaml: string): ManifestError[] {
   }
 }
 
-type Container = { kind: "mapping"; path: string[]; key: string | null } | { kind: "sequence"; path: string[]; index: number };
+type Container =
+  { kind: "mapping"; path: string[]; key: string | null } | { kind: "sequence"; path: string[]; index: number };
 
 /** Where a key is in the YAML: its key's offset, and the end of its value, if its value is a scalar. */
 export type YamlKey = {
@@ -82,7 +83,9 @@ export function yamlKeys(yaml: string): Map<string, YamlKey> {
   for (const event of events) {
     if (event.type === EVENT_ID.MAPPING || event.type === EVENT_ID.SEQUENCE) {
       const path = nextValuePath(event.start) ?? [];
-      stack.push(event.type === EVENT_ID.MAPPING ? { kind: "mapping", path, key: null } : { kind: "sequence", path, index: 0 });
+      stack.push(
+        event.type === EVENT_ID.MAPPING ? { kind: "mapping", path, key: null } : { kind: "sequence", path, index: 0 },
+      );
     } else if (event.type === EVENT_ID.SCALAR) {
       const scalar = event as ScalarEvent;
       const top = stack[stack.length - 1];

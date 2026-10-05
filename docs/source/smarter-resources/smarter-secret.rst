@@ -19,6 +19,16 @@ resource, a Secret is defined and managed through a standard SAM manifest.
    :language: yaml
    :caption: Example Smarter Secret Manifest
 
+Platform administrators can also read and change a Secret's value from the command line, inside
+the Smarter application container. ``manage.py get_secret`` decrypts and prints the value of a
+Secret that a user may read, and ``manage.py update_secret`` encrypts and saves a new value for a
+Secret that the user owns, prompting for the value if ``--value`` is not given:
+
+.. code-block:: console
+
+   python manage.py get_secret --name openai_api_key --username admin
+   python manage.py update_secret --name openai_api_key --username admin
+
 
 
 Technical Reference
@@ -31,6 +41,7 @@ Technical Reference
    secret/admin
    secret/caching
    secret/const
+   secret/management
    secret/manifest
    secret/models
    secret/receivers

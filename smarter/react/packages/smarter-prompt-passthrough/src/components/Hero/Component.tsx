@@ -1,12 +1,7 @@
-import './styles.css';
-
+import "./styles.css";
 
 function Hero() {
-
-  return (
-    <>
-    </>
-  );
+  return <></>;
 }
 
 export default Hero;

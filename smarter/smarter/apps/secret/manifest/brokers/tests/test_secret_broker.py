@@ -242,11 +242,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         self.assertEqual(self.broker.manifest.spec.config.expiration_date, self.broker.secret.expires_at)
 
     def test_apply_does_not_overwrite_platform_secret(self):
-        """
-        Test that apply() creates the user's own Secret when the Smarter platform.
-
-        admin already owns a Secret of the same name, leaving the platform's untouched.
-        """
+        """Test that apply() creates the user's own Secret when the Smarter platform admin already owns a Secret of the same name, leaving the platform's untouched."""
         name = self.broker.manifest.metadata.name
         Secret.objects.filter(user_profile=self.user_profile, name=name).delete()
         platform_secret = secret_factory(

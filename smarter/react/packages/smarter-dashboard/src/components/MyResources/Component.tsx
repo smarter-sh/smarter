@@ -1,4 +1,3 @@
-
 /**
  * MyResources dashboard widget.
  *
@@ -87,232 +86,215 @@ function MyResources({ apiUrl }: MyResourcesProps) {
 
   if (error) return <div>Failed to load resources: {error}</div>;
 
-
   return (
     <>
-        {/* begin::Col */}
-        <section id="my-resources" aria-label="My Resources"className="col-xl-4 mb-xl-10">
-          {/* begin::Lists Widget 19 */}
-          <div className="card card-flush h-xl-100">
-            {/* begin::Heading */}
-            <div
-              className="card-header rounded bgi-no-repeat bgi-size-cover bgi-position-y-top bgi-position-x-center align-items-start h-250px"
-              style={{
-                backgroundImage:
-                  "url('/static/assets/media/svg/shapes/top-green.png')",
-              }}
-              data-bs-theme="light"
-            >
-              <img
-                src="/static/assets/media/svg/files/ai.svg"
-                className="position-absolute top-0 end-0 mt-3 me-3 h-75px"
-                alt=""
-              />
+      {/* begin::Col */}
+      <section id="my-resources" aria-label="My Resources" className="col-xl-4 mb-xl-10">
+        {/* begin::Lists Widget 19 */}
+        <div className="card card-flush h-xl-100">
+          {/* begin::Heading */}
+          <div
+            className="card-header rounded bgi-no-repeat bgi-size-cover bgi-position-y-top bgi-position-x-center align-items-start h-250px"
+            style={{
+              backgroundImage: "url('/static/assets/media/svg/shapes/top-green.png')",
+            }}
+            data-bs-theme="light"
+          >
+            <img
+              src="/static/assets/media/svg/files/ai.svg"
+              className="position-absolute top-0 end-0 mt-3 me-3 h-75px"
+              alt=""
+            />
 
-              {/* begin::Title */}
-              <h3 className="card-title align-items-start flex-column text-white pt-15">
-                <span className="fw-bold fs-2x mb-3">My Resources</span>
-                <div className="fs-4 text-white">
-                  {my_resources_pending_deployments > 0 && (
-                    <>
-                      <span className="opacity-75">You have</span>{' '}
-                      <span className="position-relative d-inline-block">
-                        {loading ?
-                          <Loading /> :
-                          <a
-                            href={data?.llmclients_url}
-                            className="link-white opacity-75-hover fw-bold d-block mb-1"
-                          >
-                            {my_resources_pending_deployments} pending
-                          </a>
-                        }
-                        <span className="position-absolute opacity-50 bottom-0 start-0 border-2 border-body border-bottom w-100"></span>
-                      </span>
-                      <span className="opacity-75">{' '}
-                        {my_resources_pending_deployments > 1
-                          ? "deployments"
-                          : "deployment"}
-                      </span>
-                    </>
-                  )}
+            {/* begin::Title */}
+            <h3 className="card-title align-items-start flex-column text-white pt-15">
+              <span className="fw-bold fs-2x mb-3">My Resources</span>
+              <div className="fs-4 text-white">
+                {my_resources_pending_deployments > 0 && (
+                  <>
+                    <span className="opacity-75">You have</span>{" "}
+                    <span className="position-relative d-inline-block">
+                      {loading ? (
+                        <Loading />
+                      ) : (
+                        <a href={data?.llmclients_url} className="link-white opacity-75-hover fw-bold d-block mb-1">
+                          {my_resources_pending_deployments} pending
+                        </a>
+                      )}
+                      <span className="position-absolute opacity-50 bottom-0 start-0 border-2 border-body border-bottom w-100"></span>
+                    </span>
+                    <span className="opacity-75">
+                      {" "}
+                      {my_resources_pending_deployments > 1 ? "deployments" : "deployment"}
+                    </span>
+                  </>
+                )}
+              </div>
+            </h3>
+            {/* end::Title */}
+          </div>
+          {/* end::Heading */}
+          {/* begin::Body */}
+          <div className="card-body mt-n20">
+            {/* begin::Stats */}
+            <div className="mt-n20 position-relative">
+              {/* begin::Row */}
+              <div className="row g-3 g-lg-6">
+                {/* begin::Col - LLM Clients */}
+                <div className="col-6">
+                  {/* begin::Items */}
+                  <a href={data?.llmclients_url}>
+                    <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
+                      {/* begin::Symbol */}
+                      <div className="symbol symbol-30px me-5 mb-8">
+                        <span className="symbol-label">
+                          <i className="ki-duotone ki-technology-2 fs-1 text-primary">
+                            <span className="path1"></span>
+                            <span className="path2"></span>
+                          </i>
+                        </span>
+                      </div>
+                      {/* end::Symbol */}
+                      {/* begin::Workbench */}
+                      <div className="m-0">
+                        {/* begin::Number */}
+                        {loading ? (
+                          <Loading />
+                        ) : (
+                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                            {my_resources_llmclients}
+                          </span>
+                        )}
+                        {/* end::Number */}
+                        <span className="text-gray-500 fw-semibold fs-6">LLM Clients</span>
+                      </div>
+                      {/* end::Workbench */}
+                    </div>
+                  </a>
+                  {/* end::Items */}
                 </div>
-              </h3>
-              {/* end::Title */}
-            </div>
-            {/* end::Heading */}
-            {/* begin::Body */}
-            <div className="card-body mt-n20">
-              {/* begin::Stats */}
-              <div className="mt-n20 position-relative">
-                {/* begin::Row */}
-                <div className="row g-3 g-lg-6">
-                  {/* begin::Col - LLM Clients */}
-                  <div className="col-6">
-                    {/* begin::Items */}
-                    <a href={data?.llmclients_url}>
-                      <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
-                        {/* begin::Symbol */}
-                        <div className="symbol symbol-30px me-5 mb-8">
-                          <span className="symbol-label">
-                            <i className="ki-duotone ki-technology-2 fs-1 text-primary">
-                              <span className="path1"></span>
-                              <span className="path2"></span>
-                            </i>
+                {/* end::Col - LLM Clients */}
+                {/* begin::Col - Plugins */}
+                <div className="col-6">
+                  {/* begin::Items */}
+                  <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
+                    {/* begin::Symbol */}
+                    <div className="symbol symbol-30px me-5 mb-8">
+                      <span className="symbol-label">
+                        <i className="ki-duotone ki-cube-2 fs-1 text-primary">
+                          <span className="path1"></span>
+                          <span className="path2"></span>
+                        </i>
+                      </span>
+                    </div>
+                    {/* end::Symbol */}
+
+                    {/* begin::Plugins */}
+                    <a href={data?.plugins_url}>
+                      <div className="m-0">
+                        {/* begin::Number */}
+                        {loading ? (
+                          <Loading />
+                        ) : (
+                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                            {my_resources_plugins}
                           </span>
-                        </div>
-                        {/* end::Symbol */}
-                        {/* begin::Workbench */}
-                        <div className="m-0">
-                          {/* begin::Number */}
-                          {loading ?
-                            <Loading /> :
-                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                              {my_resources_llmclients}
-                            </span>
-                          }
-                          {/* end::Number */}
-                          <span className="text-gray-500 fw-semibold fs-6">
-                            LLM Clients
-                          </span>
-                        </div>
-                        {/* end::Workbench */}
+                        )}
+                        {/* end::Number */}
+                        {/* begin::Desc */}
+                        <span className="text-gray-500 fw-semibold fs-6">Skills/Plugins</span>
+                        {/* end::Desc */}
                       </div>
                     </a>
-                    {/* end::Items */}
+                    {/* end::Plugins */}
                   </div>
-                  {/* end::Col - LLM Clients */}
-                  {/* begin::Col - Plugins */}
-                  <div className="col-6">
-                    {/* begin::Items */}
-                    <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
-                      {/* begin::Symbol */}
-                      <div className="symbol symbol-30px me-5 mb-8">
-                        <span className="symbol-label">
-                          <i className="ki-duotone ki-cube-2 fs-1 text-primary">
-                            <span className="path1"></span>
-                            <span className="path2"></span>
-                          </i>
-                        </span>
-                      </div>
-                      {/* end::Symbol */}
-
-                      {/* begin::Plugins */}
-                      <a href={data?.plugins_url}>
-                        <div className="m-0">
-                          {/* begin::Number */}
-                          {loading ?
-                            <Loading /> :
-                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                              {my_resources_plugins}
-                            </span>
-                          }
-                          {/* end::Number */}
-                          {/* begin::Desc */}
-                          <span className="text-gray-500 fw-semibold fs-6">
-                            Skills/Plugins
-                          </span>
-                          {/* end::Desc */}
-                        </div>
-                      </a>
-                      {/* end::Plugins */}
-                    </div>
-                    {/* end::Items */}
-                  </div>
-                  {/* end::Col - Plugins */}
-                  {/* begin::Col - Connections */}
-                  <div className="col-6">
-                    {/* begin::Items */}
-                    <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
-                      {/* begin::Symbol */}
-                      <div className="symbol symbol-30px me-5 mb-8">
-                        <span className="symbol-label">
-                          <i className="ki-duotone ki-key fs-1 text-primary">
-                            <span className="path1"></span>
-                            <span className="path2"></span>
-                            <span className="path3"></span>
-                          </i>
-                        </span>
-                      </div>
-                      {/* end::Symbol */}
-                      {/* begin::Connections */}
-                      <a
-                        className="menu-link"
-                        href={data?.connections_url}
-                        target="_self"
-                      >
-                        <div className="m-0">
-                          {/* begin::Number */}
-                          {loading ?
-                            <Loading /> :
-                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                              {my_resources_connections}
-                            </span>
-                          }
-                          {/* end::Number */}
-                          {/* begin::Desc */}
-                          <span className="text-gray-500 fw-semibold fs-6">
-                            Connections
-                          </span>
-                          {/* end::Desc */}
-                        </div>
-                      </a>
-                      {/* end::Connections */}
-                    </div>
-                    {/* end::Items */}
-                  </div>
-                  {/* end::Col - Connections */}
-                  {/* begin::Col - LLM Providers */}
-                  <div className="col-6">
-                    {/* begin::Items */}
-                    <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
-                      {/* begin::Symbol */}
-                      <div className="symbol symbol-30px me-5 mb-8">
-                        <span className="symbol-label">
-                          <i className="ki-duotone ki-bank fs-1 text-primary">
-                            <span className="path1"></span>
-                            <span className="path2"></span>
-                            <span className="path3"></span>
-                          </i>
-                        </span>
-                      </div>
-                      {/* end::Symbol */}
-                      {/* begin::Secrets */}
-                      <a
-                        className="menu-link"
-                        href={data?.providers_url}
-                        target="_self"
-                      >
-                        <div className="m-0">
-                          {/* begin::Number */}
-                          {loading ?
-                            <Loading /> :
-                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                              {my_resources_providers}
-                            </span>
-                          }
-                          {/* end::Number */}
-                          {/* begin::Desc */}
-                          <span className="text-gray-500 fw-semibold fs-6">
-                            LLM Providers
-                          </span>
-                          {/* end::Desc */}
-                        </div>
-                      </a>
-                      {/* end::Secrets */}
-                    </div>
-                    {/* end::Items */}
-                  </div>
-                  {/* end::Col - LLM Providers */}
+                  {/* end::Items */}
                 </div>
-                {/* end::Row */}
+                {/* end::Col - Plugins */}
+                {/* begin::Col - Connections */}
+                <div className="col-6">
+                  {/* begin::Items */}
+                  <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
+                    {/* begin::Symbol */}
+                    <div className="symbol symbol-30px me-5 mb-8">
+                      <span className="symbol-label">
+                        <i className="ki-duotone ki-key fs-1 text-primary">
+                          <span className="path1"></span>
+                          <span className="path2"></span>
+                          <span className="path3"></span>
+                        </i>
+                      </span>
+                    </div>
+                    {/* end::Symbol */}
+                    {/* begin::Connections */}
+                    <a className="menu-link" href={data?.connections_url} target="_self">
+                      <div className="m-0">
+                        {/* begin::Number */}
+                        {loading ? (
+                          <Loading />
+                        ) : (
+                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                            {my_resources_connections}
+                          </span>
+                        )}
+                        {/* end::Number */}
+                        {/* begin::Desc */}
+                        <span className="text-gray-500 fw-semibold fs-6">Connections</span>
+                        {/* end::Desc */}
+                      </div>
+                    </a>
+                    {/* end::Connections */}
+                  </div>
+                  {/* end::Items */}
+                </div>
+                {/* end::Col - Connections */}
+                {/* begin::Col - LLM Providers */}
+                <div className="col-6">
+                  {/* begin::Items */}
+                  <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
+                    {/* begin::Symbol */}
+                    <div className="symbol symbol-30px me-5 mb-8">
+                      <span className="symbol-label">
+                        <i className="ki-duotone ki-bank fs-1 text-primary">
+                          <span className="path1"></span>
+                          <span className="path2"></span>
+                          <span className="path3"></span>
+                        </i>
+                      </span>
+                    </div>
+                    {/* end::Symbol */}
+                    {/* begin::Secrets */}
+                    <a className="menu-link" href={data?.providers_url} target="_self">
+                      <div className="m-0">
+                        {/* begin::Number */}
+                        {loading ? (
+                          <Loading />
+                        ) : (
+                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                            {my_resources_providers}
+                          </span>
+                        )}
+                        {/* end::Number */}
+                        {/* begin::Desc */}
+                        <span className="text-gray-500 fw-semibold fs-6">LLM Providers</span>
+                        {/* end::Desc */}
+                      </div>
+                    </a>
+                    {/* end::Secrets */}
+                  </div>
+                  {/* end::Items */}
+                </div>
+                {/* end::Col - LLM Providers */}
               </div>
-              {/* end::Stats */}
+              {/* end::Row */}
             </div>
-            {/* end::Body */}
+            {/* end::Stats */}
           </div>
-          {/* end::Lists Widget 19 */}
-        </section>
-        {/* end::Col */}
+          {/* end::Body */}
+        </div>
+        {/* end::Lists Widget 19 */}
+      </section>
+      {/* end::Col */}
     </>
   );
 }

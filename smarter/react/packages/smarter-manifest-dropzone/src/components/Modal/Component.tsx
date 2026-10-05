@@ -1,5 +1,3 @@
-
-
 /** The response of the Smarter API to an applied manifest: the parts that the modal shows. */
 export type ApplyResult = {
   message?: string | null;
@@ -22,13 +20,7 @@ export type DropZoneModalProps = ModalState & {
   onClose: () => void;
 };
 
-export default function DropZoneModal({
-  open,
-  title,
-  data,
-  isError = false,
-  onClose,
-}: DropZoneModalProps) {
+export default function DropZoneModal({ open, title, data, isError = false, onClose }: DropZoneModalProps) {
   if (!open) return null;
 
   const color = isError ? "#dc3545" : "#28a745";
@@ -56,6 +48,9 @@ export default function DropZoneModal({
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dropzone-modal-title"
         style={{
           background: "#fff",
           padding: 20,
@@ -66,6 +61,8 @@ export default function DropZoneModal({
         }}
       >
         <button
+          type="button"
+          aria-label="Close"
           onClick={onClose}
           style={{
             position: "absolute",
@@ -80,15 +77,11 @@ export default function DropZoneModal({
           ×
         </button>
 
-        <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>
+        <div id="dropzone-modal-title" style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>
           {title}
         </div>
 
-        {response.message && (
-          <div style={{ color, marginBottom: 16 }}>
-            {response.message}
-          </div>
-        )}
+        {response.message && <div style={{ color, marginBottom: 16 }}>{response.message}</div>}
 
         {/* SUCCESS VIEW (clean summary) */}
         {!isError && data && (
@@ -101,9 +94,15 @@ export default function DropZoneModal({
               fontSize: 13,
             }}
           >
-            <div><strong>Name:</strong> {response.name}</div>
-            <div><strong>Version:</strong> {response.version}</div>
-            <div><strong>Description:</strong> {response.description}</div>
+            <div>
+              <strong>Name:</strong> {response.name}
+            </div>
+            <div>
+              <strong>Version:</strong> {response.version}
+            </div>
+            <div>
+              <strong>Description:</strong> {response.description}
+            </div>
           </div>
         )}
 

@@ -209,9 +209,7 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
 
 def base(request: "HttpRequest") -> dict[str, Any]:
     """
-    Provides the base context for all templates inheriting from ``base.html``.
-
-    in the Smarter dashboard.
+    Provides the base context for all templates inheriting from ``base.html`` in the Smarter dashboard.
 
     This context processor injects a comprehensive set of user-specific and
     application-wide variables into the template context. These variables

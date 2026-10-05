@@ -1,8 +1,6 @@
 # pylint: disable=broad-exception-caught
 """
-This module provides date calculation functions for use with the OpenAI API.
-
-function calling feature.
+This module provides date calculation functions for use with the OpenAI API function calling feature.
 
 Overview
 --------

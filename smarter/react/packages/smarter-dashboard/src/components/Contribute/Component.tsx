@@ -18,27 +18,16 @@ function Contribute() {
   return (
     <>
       {/* begin::Engage widget 4 */}
-      <section
-        id="contribute"
-        aria-label="Contribute"
-        className="card border-transparent h-100"
-        data-bs-theme="light"
-      >
+      <section id="contribute" aria-label="Contribute" className="card border-transparent h-100" data-bs-theme="light">
         {/* begin::Body */}
         <div className="row w-100">
           <div className="card-body d-flex flex-column ps-xl-15 h-100">
             {/* begin::Title */}
-            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
-              Contribute to Smarter
-            </h6>
+            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">Contribute to Smarter</h6>
             {/* end::Title */}
 
-            <p
-              className="text-gray-700 fs-6 fw-normal mt-3 mb-10 w-50"
-              style={{ maxWidth: "50%" }}
-            >
-              Start small, learn by doing, and help improve Smarter while you
-              discover how real Python projects work.
+            <p className="text-gray-700 fs-6 fw-normal mt-3 mb-10 w-50" style={{ maxWidth: "50%" }}>
+              Start small, learn by doing, and help improve Smarter while you discover how real Python projects work.
             </p>
 
             <div className="bottom-0 start-0 mb-5 ms-5">

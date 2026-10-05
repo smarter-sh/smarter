@@ -1,8 +1,7 @@
 """
-Test :mod:`smarter.apps.provider.verification`: the checks that verify a Provider, and those.
+Test :mod:`smarter.apps.provider.verification`: the checks that verify a Provider, and those that verify a ProviderModel's capabilities.
 
-that verify a ProviderModel's capabilities. The openai client, the provider's connectivity
-test and the web page test are mocked, so no request leaves the test.
+The openai client, the provider's connectivity test and the web page test are mocked, so no request leaves the test.
 """
 
 import os
@@ -28,11 +27,7 @@ API_KEY = "sk-test-verification"
 
 
 def record(provider_verification=None, provider_model_verification=None, is_successful=False, **kwargs) -> None:
-    """
-    Record a verification's result, as set_provider_verification() and set_model_verification() do,.
-
-    but without their signals, whose receivers raise (see TestVerificationSignals).
-    """
+    """Record a verification's result, as set_provider_verification() and set_model_verification() do, but without their signals, whose receivers raise (see TestVerificationSignals)."""
     verification = provider_verification or provider_model_verification
     verification.is_successful = is_successful
     verification.save()

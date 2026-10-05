@@ -1,4 +1,3 @@
-
-import Hero from './Component';
+import Hero from "./Component";
 
 export default Hero;

@@ -259,7 +259,12 @@ export const Toolbar = ({ sessionContext, provider, onRequery }: ToolbarProps) =
           onOk={() => runAction(modal.provider!, `delete/${modal.provider!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} provider={modal.provider} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          provider={modal.provider}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           provider={modal.provider}

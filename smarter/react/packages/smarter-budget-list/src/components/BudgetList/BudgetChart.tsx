@@ -6,7 +6,18 @@
  *
  * The data is a series from the Smarter dashboard API, /dashboard/api/budgets/<locator>/series/.
  */
-import { Bar, CartesianGrid, Cell, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { formatAmount, formatPeriod } from "./format";
 import type { BudgetChartProps } from "./format";
@@ -28,7 +39,10 @@ export default function BudgetChart({ series, unit, period, periodicLimit, heigh
         <Legend />
         <Bar dataKey="actual" name="Actual" fill={ACTUAL_COLOR}>
           {data.map((row) => (
-            <Cell key={row.period_start} fill={periodicLimit > 0 && row.actual >= periodicLimit ? OVER_COLOR : ACTUAL_COLOR} />
+            <Cell
+              key={row.period_start}
+              fill={periodicLimit > 0 && row.actual >= periodicLimit ? OVER_COLOR : ACTUAL_COLOR}
+            />
           ))}
         </Bar>
         {periodicLimit > 0 && (

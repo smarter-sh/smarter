@@ -79,9 +79,7 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
 
 def exception_response_factory(exception, request_meta_data: Optional[dict] = None) -> Union[list, dict]:
     """
-    Generate a standardized error response dictionary that includes.
-
-    the Python exception type and stack trace.
+    Generate a standardized error response dictionary that includes the Python exception type and stack trace.
 
     exception: a descendant of Python Exception class
     """

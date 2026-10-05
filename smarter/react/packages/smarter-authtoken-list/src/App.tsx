@@ -20,10 +20,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type AuthTokenTabbedViewContext = Omit<
-  TabbedViewContext<AuthToken>,
-  "ListView" | "CardView"
-> & {
+export type AuthTokenTabbedViewContext = Omit<TabbedViewContext<AuthToken>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<AuthTokenListViewProps>;
   CardView: React.ComponentType<AuthTokenCardViewProps>;
 };
@@ -44,7 +41,8 @@ function App({ sessionContext }: AppProps) {
   const title = "AuthTokens";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-framework/developer-reference/lib/drf/models.html";
-  const helpText = "Smarter Authtokens are a Django REST Framework API authentication token that can be associated with any Smarter resource, rather than being limited to a user account. This allows access to be scoped precisely: individual users and services can each be issued a token limited to a specific resource, rather than sharing one broad credential across an entire integration.";
+  const helpText =
+    "Smarter Authtokens are a Django REST Framework API authentication token that can be associated with any Smarter resource, rather than being limited to a user account. This allows access to be scoped precisely: individual users and services can each be issued a token limited to a specific resource, rather than sharing one broad credential across an entire integration.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="authtoken-list">

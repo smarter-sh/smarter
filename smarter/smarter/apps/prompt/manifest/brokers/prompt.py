@@ -199,14 +199,12 @@ class SAMPromptBroker(AbstractBroker):
     @property
     def manifest(self) -> typing.Optional[SAMPrompt]:
         """
-        SAMPrompt() is a Pydantic model.
+        SAMPrompt() is a Pydantic model that is used to represent the Smarter API SAMPrompt manifest.
 
-        that is used to represent the Smarter API SAMPrompt manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        The Pydantic model is initialized with the data from the manifest loader, which is generally passed to the
+        model constructor as **data. However, this top-level manifest model has to be explicitly initialized,
+        whereas its child models are automatically cascade-initialized by the Pydantic model, implicitly passing
+        **data to each child's constructor.
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMPrompt):

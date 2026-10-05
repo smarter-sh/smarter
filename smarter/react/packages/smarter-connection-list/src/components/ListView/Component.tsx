@@ -67,7 +67,6 @@ const TableHeader = () => {
   );
 };
 
-
 /**
  * CreatedDate and UpdatedDate
  *
@@ -216,7 +215,12 @@ function ChunkedRows({
   return (
     <>
       {connections.slice(0, visibleCount).map((connection) => (
-        <ConnectionRow key={connection.id} connection={connection} sessionContext={sessionContext} onRequery={onRequery} />
+        <ConnectionRow
+          key={connection.id}
+          connection={connection}
+          sessionContext={sessionContext}
+          onRequery={onRequery}
+        />
       ))}
     </>
   );

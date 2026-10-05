@@ -29,11 +29,7 @@ AsyncGetResponseCallable = Callable[[HttpRequest], Awaitable[HttpResponse]]
 
 
 class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, SmarterMiddlewareMixin):
-    """
-    Custom Social Auth Exception Middleware to handle specific exceptions.
-
-    during the social authentication pipeline.
-    """
+    """Custom Social Auth Exception Middleware to handle specific exceptions during the social authentication pipeline."""
 
     def __init__(self, get_response=None):
         super().__init__(get_response)
@@ -71,10 +67,9 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
 
 def create_user(strategy, details, backend, *args, user=None, **kwargs):
     """
-    Custom user creation function to replace the default one in the.
+    Custom user creation function to replace the default one in the social auth pipeline.
 
-    social auth pipeline. This allows for additional customization
-    during user creation if needed.
+    This allows for additional customization during user creation if needed.
 
     expecting details to contain the following:
     details={
@@ -120,10 +115,9 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
 
 def user_details(strategy, details, backend, *args, user=None, **kwargs):
     """
-    Custom user details update function to replace the default one in the.
+    Custom user details update function to replace the default one in the social auth pipeline.
 
-    social auth pipeline. This allows for updating additional fields
-    during user details update if needed.
+    This allows for updating additional fields during user details update if needed.
     """
     if user is None:
         logger.debug("%s.user_details() No user provided to update.", logger_prefix)

@@ -1,10 +1,9 @@
-
 .not-selectable {
-    user-select: none;
-  }
-  .smarter-title-bar {
-  }
-  .product-name {
-    font-size: small;
-    color: gray;
-  }
+  user-select: none;
+}
+.smarter-title-bar {
+}
+.product-name {
+  font-size: small;
+  color: gray;
+}

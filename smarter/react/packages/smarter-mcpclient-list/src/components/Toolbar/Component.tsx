@@ -51,7 +51,11 @@ const ModalClone = ({ mcpclient, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the cloned mcpclient.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new mcpclient name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new mcpclient name"
+      />
     </Modal>
   );
 };
@@ -67,7 +71,11 @@ const ModalRename = ({ mcpclient, onOk, onCancel }: NameModalProps) => {
       <p>
         <em>Provide the new name for the mcpclient.</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new mcpclient name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Enter new mcpclient name"
+      />
     </Modal>
   );
 };
@@ -259,7 +267,12 @@ export const Toolbar = ({ sessionContext, mcpclient, onRequery }: ToolbarProps) 
           onOk={() => runAction(modal.mcpclient!, `delete/${modal.mcpclient!.id}/`, "delete")}
           onCancel={handleCloseModal}
         />
-        <ModalError show={modal.type === "error"} mcpclient={modal.mcpclient} message={errMessage} onClose={handleCloseModal} />
+        <ModalError
+          show={modal.type === "error"}
+          mcpclient={modal.mcpclient}
+          message={errMessage}
+          onClose={handleCloseModal}
+        />
         <ModalConfirmation
           show={modal.type === "confirmation"}
           mcpclient={modal.mcpclient}

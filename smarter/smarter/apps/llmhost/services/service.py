@@ -296,9 +296,7 @@ class LLMHostService:
 
     def launch(self, llmhost: LLMHost) -> LLMHostObservation:
         """
-        Launch the LLMHost: apply its Kubernetes resources, then give its compute's node group the.
-
-        nodes that it needs.
+        Launch the LLMHost: apply its Kubernetes resources, then give its compute's node group the nodes that it needs.
 
         It returns as soon as the cluster accepts the resources, and the cloud the node group's
         new size. A new node takes minutes to start, during which :meth:`observe` reports
@@ -426,11 +424,7 @@ class LLMHostService:
 
     @staticmethod
     def provisioning_status(llmhost: LLMHost, status: str, message: str) -> tuple[str, str]:
-        """
-        ``provisioning``, if the LLMHost's pods wait for a node that its compute's node group is.
-
-        adding, as of the compute's last reconcile.
-        """
+        """``provisioning``, if the LLMHost's pods wait for a node that its compute's node group is adding, as of the compute's last reconcile."""
         compute = llmhost.compute
         if status != Status.PENDING.value or compute is None:
             return status, message
@@ -532,10 +526,9 @@ class LLMHostService:
 
     def release_compute(self, llmhost: LLMHost) -> Optional[ComputeState]:
         """
-        Remove the nodes of the LLMHost's compute that no LLMHost needs any more, e.g. its own,.
+        Remove the nodes of the LLMHost's compute that no LLMHost needs any more, e.g. its own, after it is destroyed.
 
-        after it is destroyed. A failure is logged, not raised: the compute is reconciled again
-        by the ``reconcile_llmhost_compute`` task.
+        A failure is logged, not raised: the compute is reconciled again by the ``reconcile_llmhost_compute`` task.
         """
         if llmhost.compute is None:
             return None

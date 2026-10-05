@@ -147,11 +147,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertIsInstance(broker, SAMSqlConnectionBroker)
 
     def test_manifest_model_initialization(self):
-        """
-        Test that the SAMSqlConnection can be initialized from.
-
-        a json dump of the manifest model.
-        """
+        """Test that the SAMSqlConnection can be initialized from a json dump of the manifest model."""
         sql_connection = SAMSqlConnection(**self.broker.manifest.model_dump())
         self.assertIsInstance(sql_connection, SAMSqlConnection)
 
@@ -178,11 +174,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         SAMSqlConnection(**self.broker.manifest.model_dump())
 
     def test_manifest_to_django_orm(self):
-        """
-        Test that we can convert the Django spec ORM.
-
-        to a Pydantic manifest spec.
-        """
+        """Test that we can convert the Django spec ORM to a Pydantic manifest spec."""
         orm_dict = self.broker.manifest_to_django_orm()
         self.assertIsInstance(orm_dict, dict)
 

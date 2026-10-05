@@ -21,9 +21,7 @@ class SmarterFormattedTextColorCodes:
 
 def formatted_json(json_obj: Union[dict, list]) -> str:
     """
-    Format a JSON object as a pretty-printed string with ANSI color codes for.
-
-    better readability in logs.
+    Format a JSON object as a pretty-printed string with ANSI color codes for better readability in logs.
 
     .. param json_obj: The JSON object (dict or list) to format.
     .. return: A string representation of the JSON object with ANSI color codes.
