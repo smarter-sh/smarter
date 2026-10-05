@@ -88,6 +88,7 @@ from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.urls import LLMClientReverseNames
 from smarter.apps.llmhost.urls import LLMHostReverseNames
 from smarter.apps.mcpclient.urls import MCPClientReverseNames
 from smarter.apps.orchestrator.urls import OrchestratorReverseNames
@@ -152,7 +153,7 @@ def sidebar_context() -> dict[str, Any]:
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
             "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
-            "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
+            "custom_domains": reverse(LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview),
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
             "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
             "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),

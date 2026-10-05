@@ -72,6 +72,12 @@ class DocsJsonSchemaBudgetView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.BUDGET)
 
 
+class DocsJsonSchemaCustomDomainView(DocsJsonSchemaBaseView):
+    """CustomDomain JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.CUSTOM_DOMAIN)
+
+
 class DocsJsonSchemaGuardrailView(DocsJsonSchemaBaseView):
     """Guardrail JSON Schema view."""
 

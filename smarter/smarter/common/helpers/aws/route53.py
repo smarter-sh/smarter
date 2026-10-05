@@ -657,7 +657,9 @@ class AWSRoute53(AWSBase):
         logger.error("Domain %s does not exist or no DNS answer after multiple attempts", domain_name)
         return False
 
-    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> Tuple[dict, bool]:  # type: ignore[no-untyped-def]
+    def create_domain_a_record(  # type: ignore[no-untyped-def]
+        self, hostname: str, api_host_domain: str, hosted_zone_id: Optional[str] = None
+    ) -> Tuple[dict, bool]:
         """
         Create an A record in an AWS Route53 hosted zone for a given hostname.
 
@@ -668,8 +670,12 @@ class AWSRoute53(AWSBase):
 
         :param hostname: The full hostname for the A record to create (e.g., "api.example.com").
         :type hostname: str
-        :param api_host_domain: The parent domain where the hosted zone exists (e.g., "example.com").
+        :param api_host_domain: The parent domain where the hosted zone exists (e.g., "example.com"), whose
+            A record is copied.
         :type api_host_domain: str
+        :param hosted_zone_id: The hosted zone in which to create the A record, if not that of api_host_domain,
+            e.g. the hosted zone of a custom domain.
+        :type hosted_zone_id: Optional[str]
         :return: A tuple containing the created (or existing) DNS record dictionary and a boolean indicating if it was newly created (True) or already existed (False).
         :rtype: Tuple[dict, bool]
         :raises AWSHostedZoneNotFound: If the hosted zone or deployment record cannot be found for the given domain.
@@ -684,8 +690,9 @@ class AWSRoute53(AWSBase):
 
             logger.debug("%s resolved hostname: %s", fn_name, hostname)
 
-            # add the A record to the customer API domain
-            hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
+            # add the A record to the customer API domain, unless another hosted zone is given,
+            # e.g. that of a custom domain, whose subdomains serve llmclients.
+            hosted_zone_id = hosted_zone_id or self.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
             logger.debug("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
 
             # retrieve the A record from the environment domain hosted zone. we'll

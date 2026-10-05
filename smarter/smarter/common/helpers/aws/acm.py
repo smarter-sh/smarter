@@ -179,15 +179,30 @@ class AWSCertificateManager(AWSBase):
 
     def certificate_is_verified(self, certificate_arn: str) -> bool:
         """
-        Return whether the certificate is verified.
+        Return whether the certificate is issued, i.e. ACM has validated the domain.
 
         :param certificate_arn: The ARN of the certificate.
         :type certificate_arn: str
         :return: True if the certificate is verified, else False.
         :rtype: bool
         """
+        return self.certificate_status(certificate_arn=certificate_arn) == "ISSUED"
+
+    def certificate_status(self, certificate_arn: str) -> str:
+        """
+        Return the certificate's status, e.g. PENDING_VALIDATION, ISSUED, EXPIRED or FAILED.
+
+        ``Certificate.Status`` is ``ISSUED`` once ACM has validated the domain and issued the
+        certificate. (``SUCCESS`` is a status of each domain's validation, in
+        ``DomainValidationOptions``, not of the certificate.)
+
+        :param certificate_arn: The ARN of the certificate.
+        :type certificate_arn: str
+        :return: The certificate's status.
+        :rtype: str
+        """
         certificate_detail = self.get_certificate_status(certificate_arn=certificate_arn)
-        return certificate_detail["Certificate"]["Status"] == "SUCCESS"
+        return certificate_detail["Certificate"]["Status"]
 
     def verify_certificate(self, certificate_arn: str) -> bool:
         """

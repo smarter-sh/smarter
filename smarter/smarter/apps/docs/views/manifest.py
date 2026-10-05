@@ -90,6 +90,12 @@ class DocsExampleManifestBudgetView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.BUDGET)
 
 
+class DocsExampleManifestCustomDomainView(DocsExampleManifestBaseView):
+    """CustomDomain example manifest view."""
+
+    kind = SAMKinds(SAMKinds.CUSTOM_DOMAIN)
+
+
 class DocsExampleManifestGuardrailView(DocsExampleManifestBaseView):
     """Guardrail JSON Schema view."""
 

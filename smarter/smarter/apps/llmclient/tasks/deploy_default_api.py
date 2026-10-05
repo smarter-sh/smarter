@@ -47,8 +47,6 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
-import os
-from string import Template
 from typing import Optional
 
 from smarter.apps.account.models import AccountContact
@@ -72,7 +70,7 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
-from .utils import is_taskable
+from .utils import apply_ingress_manifest, is_taskable
 from .verify_domain import (
     VERIFY_DOMAIN_INTERVAL,
     VERIFY_DOMAIN_MAX_ATTEMPTS,
@@ -86,7 +84,6 @@ logger = logging.getSmarterLogger(
 )
 logger_prefix = logging.formatted_text(__name__)
 
-HERE = os.path.abspath(os.path.dirname(__file__))
 
 # continue_default_api_deployment checks the ingress resources and certificate 10 minutes after
 # the ingress is applied, and then every minute, for up to half an hour, without blocking a worker.
@@ -251,22 +248,8 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
         )
     else:
         logger.info("%s verifying/creating ingress manifest for %s task_id: %s", fn_name, domain_name, task_id)
-        ingress_values = {
-            "app_name": smarter_settings.platform_name,
-            "cluster_issuer": smarter_settings.environment_api_domain,
-            "environment_namespace": smarter_settings.environment_namespace,
-            "domain": domain_name,
-            "service_name": "smarter",
-        }
-
-        # create and apply the ingress manifest
-        template_path = os.path.join(HERE, "../k8s/ingress.yaml.tpl")
-        with open(template_path, encoding="utf-8") as ingress_template:
-            template = Template(ingress_template.read())
-            manifest = template.substitute(ingress_values)
-
         try:
-            kubernetes_helper.apply_manifest(manifest)
+            apply_ingress_manifest(domain_name)
         except SmarterException as e:
             logger.error(
                 "%s failed to apply ingress manifest for llmclient %s at domain %s task_id: %s. Error: %s",

@@ -40,6 +40,8 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
             ("is_taskable", MagicMock(return_value=True)),
             ("aws_helper", aws_helper),
             ("kubernetes_helper", MagicMock()),
+            # applies the ingress manifest with the real kubernetes_helper, in tasks.utils.
+            ("apply_ingress_manifest", MagicMock()),
             ("AccountContact", MagicMock()),
         ):
             patcher = patch(f"{MODULE}.{target}", value)
