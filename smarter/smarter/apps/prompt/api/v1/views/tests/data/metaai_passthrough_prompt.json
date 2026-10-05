@@ -1,5 +1,5 @@
 {
-    "model": "llama3.1-8b",
+    "model": "muse-spark-1.3-contributor",
     "temperature": 0.50,
     "max_tokens": 1024,
     "messages": [
