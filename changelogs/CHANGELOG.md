@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.17.4-alpha.1...v0.18.0-alpha.1) (2026-10-05)
+
+### Features
+
+* **llmclient:** make Custom Domain a SAM resource, with verification and a web console list ([b5b13d0](https://github.com/smarter-sh/smarter/commit/b5b13d0a649cc39179ab2dc8c405400edba63238))
+
 ## [0.17.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.17.3...v0.17.4-alpha.1) (2026-10-05)
 
 ### Bug Fixes
