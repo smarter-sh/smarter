@@ -534,7 +534,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         2. **URL with custom domain**
             Example: ``https://api.example.com/llm-client/``
             - ``api.example.com``: The llmclient's custom domain.
-            - The custom domain must be verified (``LLMClientCustomDomain.is_verified == True``).
+            - The custom domain must be verified (``LLMClientCustomDomain.verification_status == "Verified"``).
 
         The LLMClient instance hostname is determined by:
         ``llmclient.hostname == llmclient.custom_domain or llmclient.default_host``

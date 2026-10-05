@@ -249,7 +249,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
             invalidate,
             user_profile,
         )
-        retval = LLMClientCustomDomain.objects.filter(llmclient__user_profile__id=user_profile_id).count() or 0
+        retval = LLMClientCustomDomain.objects.filter(user_profile__id=user_profile_id).count() or 0
         logger.debug("%s.get_custom_domains() retrieved and cached custom domains count: %s", logger_prefix, retval)
         return retval
 

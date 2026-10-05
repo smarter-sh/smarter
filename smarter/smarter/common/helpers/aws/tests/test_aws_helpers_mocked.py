@@ -446,7 +446,7 @@ class TestAWSCertificateManager(AWSTestBase):
         self.mock_sleep = sleep.start()
         self.addCleanup(sleep.stop)
 
-    def certificate(self, status="SUCCESS", resource_record=True) -> dict:
+    def certificate(self, status="ISSUED", resource_record=True) -> dict:
         option = {"DomainName": DOMAIN}
         if resource_record:
             option["ResourceRecord"] = {"Name": f"_acm.{DOMAIN}", "Type": "CNAME", "Value": "acm-validations.aws."}
@@ -500,7 +500,12 @@ class TestAWSCertificateManager(AWSTestBase):
 
     def test_verify_certificate(self):
         self.client.describe_certificate.return_value = self.certificate()
+        self.assertEqual(self.acm.certificate_status("arn"), "ISSUED")
         self.assertTrue(self.acm.certificate_is_verified("arn"))
+        # SUCCESS is the status of a domain's validation, not of the certificate.
+        self.client.describe_certificate.return_value = self.certificate("SUCCESS")
+        self.assertFalse(self.acm.certificate_is_verified("arn"))
+        self.client.describe_certificate.return_value = self.certificate()
         self.assertTrue(self.acm.verify_certificate("arn"))
 
         self.client.describe_certificate.side_effect = [self.certificate("PENDING_VALIDATION")] * 2 + [

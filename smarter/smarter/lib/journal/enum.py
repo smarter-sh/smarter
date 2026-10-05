@@ -100,6 +100,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    CUSTOM_DOMAIN = "CustomDomain"
+    """Smarter Custom Domain resource: a domain that serves LLMClients.
+
+    A Django ORM model instance.
+    """
+
     GUARDRAIL = "Guardrail"
     """Smarter API Guardrail resource.
 
@@ -225,6 +231,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
             (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
             (cls.BUDGET.value, cls.BUDGET.value),
+            (cls.CUSTOM_DOMAIN.value, cls.CUSTOM_DOMAIN.value),
             (cls.GUARDRAIL.value, cls.GUARDRAIL.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
             (cls.MCPCLIENT.value, cls.MCPCLIENT.value),

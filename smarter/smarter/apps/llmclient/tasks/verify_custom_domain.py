@@ -1,13 +1,29 @@
 """
 Celery tasks for verifying llmclient custom domains.
 
-This module defines Celery tasks for verifying the NS records of AWS Route53 hosted zones for llmclient custom domains, including periodic re-verification, signal handling, and notification of account owners.
+A custom domain is verified when it is delegated to Smarter and its TLS certificate is issued,
+which takes two steps, checked in order:
+
+1. **NS delegation**: the domain's public NS records include one of the name servers of its
+   AWS Route53 hosted zone, i.e. the customer has delegated the domain to Smarter.
+2. **TLS certificate**: the domain's AWS ACM certificate is ``ISSUED``. ACM validates the
+   certificate with a DNS record in the hosted zone, so it can only be issued after step 1.
+   A certificate is requested if the domain has none.
+
+https itself is served by each LLMClient that uses the domain, on its own subdomain,
+``<llmclient>.<domain>``, with its own Kubernetes-managed certificate. The LLMClient's
+deployment handles that, not the custom domain's verification.
 
 Main Tasks
 ----------
 
 - verify_custom_domain(hosted_zone_id, sleep_interval=None, max_attempts=None):
-    Periodically verifies the NS records of a hosted zone to ensure they match DNS records, updating verification status and notifying the account owner.
+    Checks the steps once. If a step is not complete, it records why in the custom domain's
+    ``verification_message``, and schedules itself to check again, until ``max_attempts``.
+
+The custom domain's ``verification_status`` is Verifying while it is checked, Verified, with
+``verified_at``, once its certificate is issued, and Failed if it is still not verified after the last attempt.
+A domain that is already Verified stays Verified while it is re-verified, until it fails.
 
 Signals
 -------
@@ -20,15 +36,8 @@ Configuration
 
 Celery task behavior (retries, backoff, queue) is controlled by `smarter_settings`.
 
-Logging
--------
-
-Task execution, verification attempts, and results are logged using the smarter logging library, with waffle switches for task and llmclient logging.
-
 Usage
 -----
-
-Import this module and call the Celery task as needed to asynchronously verify an llmclient custom domain:
 
     verify_custom_domain.delay(hosted_zone_id, sleep_interval, max_attempts)
 
@@ -66,6 +75,10 @@ logger = logging.getSmarterLogger(
 )
 logger_prefix = logging.formatted_text(__name__)
 
+CERTIFICATE_ISSUED = "ISSUED"
+
+Status = LLMClientCustomDomain.VerificationStatusChoices
+
 
 @app.task(
     autoretry_for=(Exception,),
@@ -74,29 +87,31 @@ logger_prefix = logging.formatted_text(__name__)
     queue=smarter_settings.infrastructure_tasks_celery_task_queue,
 )
 def verify_custom_domain(
-    hosted_zone_id: str,
+    hosted_zone_id: Optional[str] = None,
     sleep_interval: Optional[int] = None,
     max_attempts: Optional[int] = None,
     attempt: int = 0,
     task_id: Optional[str] = None,
+    custom_domain_id: Optional[int] = None,
 ) -> Optional[bool]:
     """
-    Verify the NS records of an AWS Route53 hosted zone for a custom domain.
+    Verify that the custom domain of an AWS Route53 hosted zone is delegated to Smarter, and that its.
 
-    This Celery task periodically checks the NS records of a hosted zone to ensure they match DNS records,
-    marking the custom domain as verified or not verified, and notifying the account owner of the result.
-    Pre- and post-verification signals are sent, and all actions are logged.
+    TLS certificate is issued.
 
-    A domain's name servers can take a day to change. Each run checks once, and if the domain is not
-    verified yet, the task schedules itself to check again in sleep_interval seconds, up to max_attempts
-    times, rather than sleeping, so that it never blocks a Celery worker while it waits.
+    Each run checks the verification steps once, in order. If a step is not complete, the task
+    records why, and schedules itself to check again in sleep_interval seconds, up to max_attempts
+    times, rather than sleeping, so that it never blocks a Celery worker while DNS changes.
 
     Parameters
     ----------
-    hosted_zone_id : str
-        The ID of the AWS Route53 hosted zone to verify.
+    hosted_zone_id : str, optional
+        The ID of the AWS Route53 hosted zone of the custom domain.
+    custom_domain_id : int, optional
+        The id of the custom domain, in place of its hosted zone. A custom domain that has no
+        hosted zone, because it has not been registered with ``smarter deploy``, fails at once.
     sleep_interval : int, optional
-        The interval in seconds to wait between verification attempts. Default is 1800 (30 minutes).
+        The interval in seconds between verification attempts. Default is 1800 (30 minutes).
     max_attempts : int, optional
         The maximum number of verification attempts. Default is calculated for 24 hours.
     attempt : int, optional
@@ -107,42 +122,47 @@ def verify_custom_domain(
     Returns
     -------
     bool or None
-        True if the hosted zone is verified, False if it is not after max_attempts checks, and None
+        True if the domain is verified, False if it is not after max_attempts checks, and None
         if it will be checked again.
-
-    Signals
-    -------
-    pre_verify_custom_domain : django.dispatch.Signal
-        Sent before custom domain verification begins.
-    post_verify_custom_domain : django.dispatch.Signal
-        Sent after custom domain verification is completed.
-
-    Raises
-    ------
-    LLMClientTaskError
-        If the hosted zone data is not in the expected format.
-    Exception
-        Any exception raised during the verification process will trigger a retry according to Celery settings.
     """
+    fn_name = logger_prefix + ".verify_custom_domain()"
+    task_id = task_id or verify_custom_domain.request.id
+    if not hosted_zone_id:
+        custom_domain = LLMClientCustomDomain.objects.filter(pk=custom_domain_id).first()
+        if custom_domain is None:
+            logger.error("%s custom domain %s not found. task_id: %s", fn_name, custom_domain_id, task_id)
+            return False
+        if not custom_domain.aws_hosted_zone_id:
+            # nothing can be verified, and nothing will change, until the domain is registered.
+            message = (
+                f"{custom_domain.domain_name} has no AWS Route53 hosted zone, because it is not registered. "
+                "Run smarter deploy to register it."
+            )
+            logger.warning("%s %s task_id: %s", fn_name, message, task_id)
+            custom_domain.set_verification_status(Status.FAILED, message)
+            return False
+        hosted_zone_id = custom_domain.aws_hosted_zone_id
     if not is_taskable():
         return False
     if not aws_helper.route53:
         return False
-
-    fn_name = logger_prefix + ".verify_custom_domain()"
-    task_id = task_id or verify_custom_domain.request.id
-    HOURS = 24
+    hours = 24
     sleep_interval = sleep_interval or 1800
-    max_attempts = max_attempts or int(HOURS * (3600 / sleep_interval))
-
-    if attempt == 0:
-        logger.info("%s - verifying AWS Route53 Hosted Zone %s task_id: %s", fn_name, hosted_zone_id, task_id)
-        pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
+    max_attempts = max_attempts or int(hours * (3600 / sleep_interval))
 
     hosted_zone = aws_helper.route53.get_hosted_zone_by_id(hosted_zone_id=hosted_zone_id)
     if not isinstance(hosted_zone, dict):
         raise LLMClientTaskError(f"expected a dict but received {type(hosted_zone)}")
-    domain_name = hosted_zone["HostedZone"]["Name"]
+    domain_name = hosted_zone["HostedZone"]["Name"].rstrip(".")
+    custom_domain = LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id).first()
+
+    if attempt == 0:
+        logger.info(
+            "%s - verifying %s, AWS Route53 Hosted Zone %s task_id: %s", fn_name, domain_name, hosted_zone_id, task_id
+        )
+        pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
+        if custom_domain and not custom_domain.is_verified:
+            custom_domain.set_verification_status(Status.VERIFYING, "Verification has started.")
     logger.info(
         "%s - %s %s Attempt: %s of %s task_id: %s",
         fn_name,
@@ -153,40 +173,32 @@ def verify_custom_domain(
         task_id,
     )
 
-    if _ns_records_verified(hosted_zone_id, domain_name, task_id):
-        logger.info(
-            "%s AWS Route53 Hosted Zone %s %s verified. task_id %s", fn_name, hosted_zone_id, domain_name, task_id
-        )
-        # if this is a customer custom domain, we should update the database to reflect that
-        # the domain is verified.
-        LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id).update(is_verified=True)
-
-        # send an email to the account owner to notify them that the domain has been verified
-        account = _account_for(hosted_zone_id)
-        if account:
-            subject = f"Domain Verification for {domain_name} Successful"
-            body = f"""Your domain {domain_name} has been verified.\n\n
-            Your custom domain is now active and ready to use with your LLMClient.
-            If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
-            AccountContact.send_email_to_account(account=account, subject=subject, body=body)
-            logger.info(
-                "%s - Domain %s has been verified for account %s %s task_id: %s",
-                fn_name,
-                domain_name,
-                account.company_name,
-                account.account_number,
-                task_id,
+    blocker = _verification_blocker(hosted_zone_id, domain_name, task_id)
+    if blocker is None:
+        logger.info("%s %s is verified: its certificate is issued. task_id %s", fn_name, domain_name, task_id)
+        if custom_domain:
+            custom_domain.set_verification_status(Status.VERIFIED)
+            _deploy_llmclient_on(custom_domain)
+            _notify(
+                custom_domain,
+                subject=f"Domain Verification for {domain_name} Successful",
+                body=(
+                    f"Your domain {domain_name} has been verified: its DNS is delegated to Smarter, and its "
+                    "TLS certificate is issued.\n\n"
+                    "Your custom domain is now active and ready to use with your LLMClients.\n"
+                    f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+                ),
             )
         else:
             logger.info("%s domain %s is not a LLMClient custom domain.", fn_name, domain_name)
         post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
         return True
 
-    # the hosted zone is not verified, so update the custom domain record to reflect that.
-    LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id, is_verified=True).update(is_verified=False)
-
+    logger.info("%s %s is not verified yet: %s task_id %s", fn_name, domain_name, blocker, task_id)
     if attempt + 1 < max_attempts:
-        # check again later, without blocking this worker while the name servers change.
+        if custom_domain and not custom_domain.is_verified:
+            custom_domain.set_verification_status(Status.VERIFYING, blocker)
+        # check again later, without blocking this worker while DNS changes.
         verify_custom_domain.apply_async(
             kwargs={
                 "hosted_zone_id": hosted_zone_id,
@@ -199,26 +211,40 @@ def verify_custom_domain(
         )
         return None
 
-    # send an email to the account owner to notify them that the domain verification failed
-    account = _account_for(hosted_zone_id)
-    if account:
-        subject = f"Domain Verification Failure for {domain_name}"
-        body = f"""We were unable to verify your domain {domain_name}.\n\n
-        We made {max_attempts} attempts over a period of {HOURS} hours to verify the domain.
-        If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
-        AccountContact.send_email_to_account(account=account, subject=subject, body=body)
-        logger.error(
-            "%s - Domain verification failed for domain %s for account %s %s task_id: %s",
-            fn_name,
-            domain_name,
-            account.company_name,
-            account.account_number,
-            task_id,
+    logger.error(
+        "%s - Domain verification failed for domain %s: %s task_id: %s", fn_name, domain_name, blocker, task_id
+    )
+    if custom_domain:
+        custom_domain.set_verification_status(Status.FAILED, blocker)
+        _notify(
+            custom_domain,
+            subject=f"Domain Verification Failure for {domain_name}",
+            body=(
+                f"We were unable to verify your domain {domain_name}: {blocker}\n\n"
+                f"We made {max_attempts} attempts over a period of {hours} hours to verify the domain.\n"
+                f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+            ),
         )
-    else:
-        logger.error("%s - Domain verification failed for domain %s task_id: %s", fn_name, domain_name, task_id)
     post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
     return False
+
+
+def _verification_blocker(hosted_zone_id: str, domain_name: str, task_id: Optional[str]) -> Optional[str]:
+    """
+    Check the verification steps in order.
+
+    :returns: Why the first incomplete step is not complete, or None if the domain is verified.
+    """
+    if not _ns_records_verified(hosted_zone_id, domain_name, task_id):
+        ns_records = [record["Value"] for record in aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)]  # type: ignore[union-attr]
+        return (
+            f"The NS records of {domain_name} are not delegated to Smarter yet. "
+            f"Add these NS records to your root domain's DNS settings: {', '.join(ns_records)}"
+        )
+    certificate_status = _certificate_status(domain_name)
+    if certificate_status != CERTIFICATE_ISSUED:
+        return f"The TLS certificate of {domain_name} is not issued yet. Its status is {certificate_status}."
+    return None
 
 
 def _ns_records_verified(hosted_zone_id: str, domain_name: str, task_id: Optional[str]) -> bool:
@@ -253,12 +279,40 @@ def _ns_records_verified(hosted_zone_id: str, domain_name: str, task_id: Optiona
     return False
 
 
-def _account_for(hosted_zone_id: str) -> Optional[Account]:
+def _certificate_status(domain_name: str) -> str:
     """
-    Return the account of the LLMClient that uses the custom domain of a hosted zone, if any.
+    Return the status of the domain's AWS ACM certificate, e.g. PENDING_VALIDATION or ISSUED.
 
-    LLMClientCustomDomain has no owner of its own: it belongs to the LLMClient whose
-    custom_domain it is.
+    If the domain has no certificate, one is requested, with its DNS validation record.
     """
-    llmclient = LLMClient.objects.filter(custom_domain__aws_hosted_zone_id=hosted_zone_id).first()
-    return llmclient.user_profile.account if llmclient else None
+    acm = aws_helper.acm
+    if acm is None:
+        return "unavailable: AWS ACM is not available"
+    certificate_arn = acm.get_certificate_arn(domain_name=domain_name)
+    if not certificate_arn:
+        certificate_arn = acm.get_or_create_certificate(domain_name=domain_name)
+        acm.get_or_create_certificate_dns_record(certificate_arn=certificate_arn)
+    return acm.certificate_status(certificate_arn=certificate_arn)
+
+
+def _deploy_llmclient_on(custom_domain: LLMClientCustomDomain) -> None:
+    """Deploy the llmclient that uses the custom domain, if it is deployed, on its custom host."""
+    # pylint: disable=import-outside-toplevel
+    from .deploy_custom_api import deploy_custom_api
+
+    llmclient = LLMClient.objects.filter(custom_domain=custom_domain, deployed=True).first()
+    if llmclient:
+        deploy_custom_api.delay(llmclient_id=llmclient.id)
+
+
+def _account_for(custom_domain: LLMClientCustomDomain) -> Optional[Account]:
+    """Return the account that owns the custom domain."""
+    user_profile = getattr(custom_domain, "user_profile", None)
+    return user_profile.account if user_profile else None
+
+
+def _notify(custom_domain: LLMClientCustomDomain, subject: str, body: str) -> None:
+    """Email the result of the verification to the account that owns the custom domain."""
+    account = _account_for(custom_domain)
+    if account:
+        AccountContact.send_email_to_account(account=account, subject=subject, body=body)
