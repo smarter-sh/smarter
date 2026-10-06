@@ -33,6 +33,7 @@ from dotenv import load_dotenv
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
+from smarter.common.utils import mask_string
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
@@ -629,11 +630,10 @@ if SECRET_KEY == smarter_settings.default_missing_value:
     random_bytes = random_string.encode("utf-8")
     hash_object = hashlib.sha256(random_bytes)
     SECRET_KEY = hash_object.hexdigest()
-    logger.warning("SECRET_KEY not set. Using randomized value: %s", SECRET_KEY)
+    logger.warning("SECRET_KEY not set. Using a randomized value.")
 
 logger.debug("PROJECT_ROOT: %s", PROJECT_ROOT)
 logger.debug("BASE_DIR: %s", BASE_DIR)
-logger.debug("SECRET_KEY: %s", SECRET_KEY)
 
 
 DEBUG = smarter_settings.debug_mode
@@ -1767,7 +1767,7 @@ for key, value in os.environ.items():
             logger_prefix,
             key,
             key,
-            value,
+            mask_string(value),
         )
 
         raw_value = value
@@ -1787,7 +1787,7 @@ for key, value in os.environ.items():
                 "%s Successfully cast value using ast.literal_eval() for %s=%s of Type '%s'",
                 logger_prefix,
                 key,
-                cast_value,
+                mask_string(str(cast_value)),
                 type(cast_value).__name__,
             )
         except (ValueError, SyntaxError):
@@ -1804,7 +1804,7 @@ for key, value in os.environ.items():
                 logger_prefix,
                 type(default_value).__name__,
                 key,
-                cast_value,
+                mask_string(str(cast_value)),
             )
 
         # Hereon, we're simply trying to infer the intended type of the
@@ -1817,24 +1817,24 @@ for key, value in os.environ.items():
         elif not cast_value and str(raw_value).replace(".", "").isdigit():
             try:
                 cast_value = int(raw_value)
-                logger.debug("%s Inferred type 'int' for %s=%s", logger_prefix, key, cast_value)
+                logger.debug("%s Inferred type 'int' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
             except ValueError:
                 try:
                     cast_value = float(raw_value)
-                    logger.debug("%s Inferred type 'float' for %s=%s", logger_prefix, key, cast_value)
+                    logger.debug("%s Inferred type 'float' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
                 except ValueError:
                     cast_value = raw_value
                     logger.warning(
                         "%s could not cast as a numeric value. Falling back to string for %s=%s",
                         logger_prefix,
                         key,
-                        cast_value,
+                        mask_string(str(cast_value)),
                     )
         # Date (ISO format)
         elif not cast_value and re.match(r"^\d{4}-\d{2}-\d{2}$", raw_value):
             try:
                 cast_value = datetime.strptime(raw_value, "%Y-%m-%d").date()
-                logger.debug("%s Inferred type 'date' for %s=%s", logger_prefix, key, cast_value)
+                logger.debug("%s Inferred type 'date' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
             except ValueError:
                 pass
 
@@ -1842,7 +1842,7 @@ for key, value in os.environ.items():
         elif not cast_value and "," in raw_value:
             try:
                 cast_value = [item.strip() for item in raw_value.split(",")]
-                logger.debug("%s Inferred type 'list' for %s=%s", logger_prefix, key, cast_value)
+                logger.debug("%s Inferred type 'list' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
             # pylint: disable=broad-except
             except Exception:
                 pass
@@ -1851,21 +1851,21 @@ for key, value in os.environ.items():
         elif not cast_value and raw_value.startswith("{") and raw_value.endswith("}"):
             try:
                 cast_value = json.loads(raw_value)
-                logger.debug("%s Inferred type 'dict' for %s=%s", logger_prefix, key, cast_value)
+                logger.debug("%s Inferred type 'dict' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
             # pylint: disable=broad-except
             except Exception:
                 cast_value = raw_value
         # String (default)
         elif not cast_value:
             cast_value = str(raw_value)
-            logger.debug("%s Inferred type 'str' for %s=%s", logger_prefix, key, cast_value)
+            logger.debug("%s Inferred type 'str' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
 
         globals()[key] = cast_value
         logger.info(
             "%s Creating new Django setting from environment variable: %s=%s of Type '%s'",
             logger_prefix,
             key,
-            repr(cast_value),
+            mask_string(repr(cast_value)),
             type(cast_value),
         )
         continue

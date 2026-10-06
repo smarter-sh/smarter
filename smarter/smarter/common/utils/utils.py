@@ -29,6 +29,7 @@ import random
 import warnings
 from functools import lru_cache
 from typing import Union
+from warnings import deprecated
 
 from cryptography.fernet import Fernet
 
@@ -87,6 +88,7 @@ def hash_factory(length: int = 16) -> str:
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
 
+@deprecated("Use Pydantic's ``SecretStr`` or other secure alternatives for string masking.")
 def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: int = 4, string_length: int = 12) -> str:
     """
     Masks a string by replacing all but the last ``mask_length`` characters with ``mask_char``.
