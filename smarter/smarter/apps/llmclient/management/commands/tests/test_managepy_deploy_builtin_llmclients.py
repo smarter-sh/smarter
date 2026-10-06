@@ -18,13 +18,16 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.management.commands.deploy_builtin_llmclients import Command
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.loader import SAMLoader
 
 MODULE = "smarter.apps.llmclient.management.commands.deploy_builtin_llmclients"
 HERE = os.path.abspath(os.path.dirname(__file__))
-SMARTER_PROJECT_WEBSEARCH_PATH = os.path.join(HERE, "..", "data", "plugins", "plugin-smarter-websearch.yaml")
+SMARTER_PROJECT_WEBSEARCH_PATH = os.path.join(
+    PROJECT_ROOT, "apps", "llmclient", "data", "plugins", "plugin-smarter-websearch.yaml"
+)
 
 
 class TestDeployBuiltinLLMClients(TestAccountMixin):

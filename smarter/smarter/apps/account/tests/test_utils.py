@@ -232,3 +232,56 @@ class TestValidResourceOwnersForUser(TestAccountMixin):
         owners = utils.valid_resource_owners_for_user(self.non_admin_user_profile)
         self.assertIn(self.non_admin_user_profile, owners)
         self.assertIn(smarter_cached_objects.smarter_admin_user_profile, owners)
+
+
+class TestAccountUtilsBranches(TestAccountMixin):
+    """Test the fallback and error branches of the account utils."""
+
+    def test_multiple_default_accounts_raise(self):
+        with patch.object(Account.objects, "get", side_effect=Account.MultipleObjectsReturned):
+            with self.assertRaises(SmarterConfigurationError):
+                utils.get_cached_default_account(invalidate=True)
+        utils.get_cached_default_account(invalidate=True)
+
+    def test_admin_user_for_an_unknown_account_number(self):
+        account = Account(account_number="0000-0000-0000")
+        with self.assertRaises(Account.DoesNotExist):
+            utils.get_cached_admin_user_for_account(invalidate=True, account=account)
+
+    def test_account_number_from_url(self):
+        self.assertIsNone(utils.account_number_from_url(url=12345))  # type: ignore[arg-type]
+        url = "https://hr.3141-5926-5359.alpha.api.example.com/"
+        self.assertEqual(utils.account_number_from_url(url=url, invalidate=True), "3141-5926-5359")
+
+    def test_valid_resource_owners_include_an_account_admin_profile(self):
+        admin_profile = UserProfile(user=self.admin_user, account=self.account)
+        with patch.object(utils, "get_cached_admin_user_for_account", return_value=admin_profile):
+            owners = utils.valid_resource_owners_for_user(self.non_admin_user_profile)
+        self.assertEqual(owners[:2], [self.non_admin_user_profile, admin_profile])
+
+    def test_account_for_a_user_of_the_default_account(self):
+        default_account = utils.get_cached_default_account()
+        user = User.objects.create(username=f"test_default_account_user_{self.hash_suffix}")
+        self.addCleanup(user.delete)
+        profile = UserProfile.objects.create(user=user, account=default_account)
+        self.addCleanup(UserProfile.objects.filter(pk=profile.pk).delete)
+        self.assertEqual(utils.get_cached_account_for_user(invalidate=True, user=user), default_account)
+
+    def test_account_for_a_user_with_an_unexpected_profile(self):
+        user = User.objects.create(username=f"test_unexpected_profile_user_{self.hash_suffix}")
+        self.addCleanup(user.delete)
+        with patch.object(UserProfile.objects, "filter", return_value=["not a user profile"]):
+            with self.assertRaises(SmarterConfigurationError):
+                utils.get_cached_account_for_user(invalidate=True, user=user)
+
+    def test_add_builtin_budgets_skips_or_creates(self):
+        """Existing built-in budgets are skipped, and missing ones are created."""
+        existing = patch.object(utils.Budget.objects, "filter")
+        with existing as budget_filter:
+            budget_filter.return_value.exists.return_value = True
+            self.assertEqual(utils.add_builtin_budgets(verbose=True), [])
+        with existing as budget_filter, patch.object(utils.Budget.objects, "create") as create:
+            budget_filter.return_value.exists.return_value = False
+            created = utils.add_builtin_budgets(verbose=True)
+        self.assertEqual(len(created), create.call_count)
+        self.assertGreater(len(created), 0)

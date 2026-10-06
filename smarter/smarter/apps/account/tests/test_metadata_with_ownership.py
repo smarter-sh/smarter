@@ -4,9 +4,11 @@ Test :mod:`smarter.apps.account.models.metadata_with_ownership`, with Secret, a 
 Each test gives its secrets new names: get_cached_object() caches a resource by its name and owner.
 """
 
+from unittest.mock import PropertyMock, patch
+
 from django.utils.crypto import get_random_string
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
@@ -103,3 +105,38 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         self.mine.description = "changed"
         self.mine.save()
         self.assertEqual(Secret.get_cached_object(pk=self.mine.pk).description, "changed")
+
+    def test_user_without_profiles_has_no_permissions(self):
+        """A user who has no user profile can read, and owns, nothing."""
+        user = User.objects.create(username=f"test_no_profile_{self.hash_suffix}")
+        self.addCleanup(user.delete)
+        self.assertFalse(Secret.objects.all().with_read_permission_for(user).exists())
+        self.assertFalse(Secret.objects.all().with_ownership_permission_for(user).exists())
+
+    def test_authorize_a_resource_that_is_not_billable(self):
+        with (
+            patch.object(Secret, "is_billable_resource", new_callable=PropertyMock, return_value=False),
+            patch("smarter.apps.account.models.metadata_with_ownership.charge_authorization") as charge,
+        ):
+            self.assertIsNone(self.mine.authorize())
+        charge.assert_not_called()
+
+    def test_get_cached_object_by_session_key_needs_the_field(self):
+        with self.assertRaises(SmarterValueError):
+            Secret.get_cached_object(session_key="0" * 64)
+
+    def test_second_unnamed_clone_is_numbered(self):
+        first = self.mine.clone()
+        self.addCleanup(Secret.objects.filter(pk=first.pk).delete)
+        second = self.mine.clone()
+        self.addCleanup(Secret.objects.filter(pk=second.pk).delete)
+        self.assertNotEqual(first.name, second.name)
+
+    def test_save_ignores_lookups_that_find_nothing(self):
+        with (
+            patch.object(Secret, "get_cached_object", side_effect=[None, Secret.DoesNotExist, Secret.DoesNotExist]),
+            patch.object(Secret, "get_cached_objects", side_effect=Secret.DoesNotExist),
+        ):
+            self.mine.description = "saved"
+            self.mine.save()
+        self.assertEqual(Secret.objects.get(pk=self.mine.pk).description, "saved")

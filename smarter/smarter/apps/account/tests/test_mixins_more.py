@@ -1,5 +1,7 @@
 """Test the AccountMixin branches that test_mixins.py doesn't: lazy lookups, immutability, ordering and api tokens."""
 
+from unittest.mock import PropertyMock, patch
+
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
@@ -155,3 +157,25 @@ class TestAccountMixinLookupErrors(TestAccountMixin):
         mixin._user_profile = self.non_admin_user_profile  # pylint: disable=protected-access
         self.assertTrue(mixin.am_ready)
         self.assertEqual(mixin._user, self.non_admin_user)  # pylint: disable=protected-access
+
+    def test_am_ready_when_not_ready_or_failing(self):
+        """Am_ready is False when the superclass isn't ready, or when checking raises."""
+        base_class = AccountMixin.__mro__[1]
+        mixin = AccountMixin()
+        with patch.object(base_class, "ready", new_callable=PropertyMock, return_value=False):
+            self.assertFalse(mixin.am_ready)
+        for error in (AttributeError("partial"), RuntimeError("boom")):
+            with self.subTest(error=type(error).__name__):
+                mixin = AccountMixin()
+                with (
+                    patch.object(base_class, "ready", new_callable=PropertyMock, return_value=True),
+                    patch.object(AccountMixin, "user_profile", new_callable=PropertyMock, side_effect=error),
+                ):
+                    ready = mixin.am_ready
+                self.assertFalse(ready)
+
+    def test_authenticate_needs_a_bytes_token(self):
+        self.assertFalse(AccountMixin().authenticate("not bytes"))  # type: ignore[arg-type]
+
+    def test_log_ready_status(self):
+        AccountMixin(user=self.admin_user).log_ready_status()

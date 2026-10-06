@@ -6,7 +6,12 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from smarter.apps.plugin.manifest.brokers import SAMPluginBrokerError
 from smarter.apps.plugin.manifest.brokers.plugin_base import SAMPluginBaseBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
-from smarter.apps.plugin.models import PluginDataBase, PluginMeta, PluginSelector
+from smarter.apps.plugin.models import (
+    PluginDataBase,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
 from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -199,3 +204,96 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
 
     def test_base_class_formatted_class_name(self):
         self.assertIn("SAMPluginBaseBroker", SAMPluginBaseBroker.formatted_class_name.fget(self.broker))  # type: ignore[attr-defined]
+
+    def test_setting_plugin_meta_takes_its_owner(self):
+        """Setting a PluginMeta makes its account, and the account's admin, the broker's."""
+        broker = self.broker
+        # the broker's owner is immutable once set, so start from a broker without one.
+        broker._user_profile = None
+        broker._account = None
+        broker._user = None
+        broker.plugin_meta = MagicMock(user_profile=self.user_profile)  # type: ignore[assignment]
+        self.assertEqual(broker.account, self.account)
+
+    def test_plugin_status_without_an_account_admin(self):
+        self.patch_property("plugin_meta", self.plugin_meta())
+        broker = self.broker
+        broker._plugin_status = None
+        with patch(f"{MODULE}.get_cached_admin_user_for_account", return_value=None):
+            with self.assertRaises(SAMPluginBrokerError):
+                broker.plugin_status_pydantic()
+
+    def test_metadata_conversion_failures(self):
+        """A model dump that isn't a dict, or a PluginMeta that no longer exists, raises."""
+        broker = self.broker
+        self.patch_property("plugin_meta", self.plugin_meta())
+        self.patch_property("plugin", MagicMock())
+        with (
+            patch(f"{MODULE}.model_to_dict", return_value={}),
+            patch.object(SAMStaticPluginBroker, "to_camel_case", return_value="not a dict"),
+        ):
+            with self.assertRaises(SAMPluginBrokerError):
+                SAMPluginBaseBroker.plugin_metadata_orm2pydantic(broker)
+        with patch(f"{MODULE}.model_to_dict", side_effect=PluginMeta.DoesNotExist):
+            with self.assertRaises(SAMPluginBrokerError):
+                SAMPluginBaseBroker.plugin_metadata_orm2pydantic(broker)
+
+    def test_plugin_data_conversion(self):
+        """Plugin data that isn't a dict raises, and parameters are converted to a list."""
+        broker = self.broker
+        self.patch_property("plugin_meta", self.plugin_meta())
+        self.patch_property("plugin", MagicMock())
+        self.patch_property("plugin_data", MagicMock())
+        with patch(f"{MODULE}.model_to_dict", return_value={}):
+            with patch.object(SAMStaticPluginBroker, "to_camel_case", return_value="not a dict"):
+                with self.assertRaises(SAMPluginBrokerError):
+                    SAMPluginBaseBroker.plugin_data_orm2pydantic(broker)
+            parameters = {
+                "properties": {"unit": {"type": "string"}, "username": {"type": "string"}},
+                "required": ["username"],
+            }
+            with patch.object(SAMStaticPluginBroker, "to_camel_case", return_value={"parameters": parameters}):
+                plugin_data = SAMPluginBaseBroker.plugin_data_orm2pydantic(broker)
+        self.assertEqual(
+            plugin_data["parameters"],
+            [
+                {"name": "unit", "type": "string", "required": False},
+                {"name": "username", "type": "string", "required": True},
+            ],
+        )
+
+    def test_missing_plugin_prompt(self):
+        broker = self.broker
+        broker._plugin_prompt = None
+        self.patch_property("plugin_meta", self.plugin_meta())
+        with patch(f"{MODULE}.PluginPrompt.get_cached_prompt_by_plugin", side_effect=PluginPrompt.DoesNotExist):
+            self.assertIsNone(broker.plugin_prompt_orm)
+
+    def test_selector_dump_that_is_not_a_dict(self):
+        broker = self.broker
+        self.patch_property("plugin_meta", self.plugin_meta())
+        self.patch_property("plugin", MagicMock())
+        with (
+            patch.object(PluginSelector, "get_cached_selector_by_plugin", return_value=MagicMock()),
+            patch(f"{MODULE}.model_to_dict", return_value={}),
+            patch.object(SAMStaticPluginBroker, "to_camel_case", return_value="not a dict"),
+        ):
+            with self.assertRaises(SAMPluginBrokerError):
+                broker.plugin_selector_orm2pydantic()
+
+    def test_apply_by_another_user(self):
+        request = MagicMock(user=MagicMock())
+        with self.assertRaises(SAMBrokerError):
+            SAMPluginBaseBroker.apply(self.broker, request)
+
+    def test_get_serialization_failure(self):
+        broker = self.broker
+        plugin = MagicMock()
+        plugin.name = "broken"
+        with (
+            patch(f"{MODULE}.PluginMeta.objects.filter", return_value=MagicMock(__iter__=lambda s: iter([plugin]))),
+            patch(f"{MODULE}.PluginSerializer", side_effect=[MagicMock(), RuntimeError("bad")]),
+            patch.object(SAMStaticPluginBroker, "get_model_titles", return_value=[]),
+        ):
+            with self.assertRaises(SAMPluginBrokerError):
+                SAMPluginBaseBroker.get(broker, self.request)

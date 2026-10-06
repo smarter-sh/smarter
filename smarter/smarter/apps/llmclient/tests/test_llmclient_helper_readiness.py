@@ -7,21 +7,18 @@ from django.test import RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import (
     LLMClient,
+    LLMClientAPIKey,
     LLMClientCustomDomain,
     LLMClientRequests,
 )
 from smarter.apps.llmclient.models.llmclient_helper import LLMClientHelper
+from smarter.common.exceptions import SmarterValueError
 
 from .test_llmclient_helper import PLATFORM_HOST
 
 
-class TestLLMClientHelperReadiness(TestAccountMixin):
-    """
-    Test is_helper_ready's fallback checks.
-
-    The ``llmclient`` lookup is patched to return None, so that readiness is decided
-    by the url, user, account, name and cached LLMClient checks in turn.
-    """
+class LLMClientHelperTestBase(TestAccountMixin):
+    """A helper for a workbench url, whose ``llmclient`` lookup is patched to return None."""
 
     def setUp(self):
         super().setUp()
@@ -52,6 +49,15 @@ class TestLLMClientHelperReadiness(TestAccountMixin):
         mock = patcher.start()
         self.addCleanup(patcher.stop)
         return mock
+
+
+class TestLLMClientHelperReadiness(LLMClientHelperTestBase):
+    """
+    Test is_helper_ready's fallback checks.
+
+    The ``llmclient`` lookup is patched to return None, so that readiness is decided
+    by the url, user, account, name and cached LLMClient checks in turn.
+    """
 
     def assertNotReady(self):
         self.assertFalse(self.helper.is_helper_ready)
@@ -131,3 +137,47 @@ class TestLLMClientHelperLookups(TestAccountMixin):
                 LLMClientHelper, "llmclient_name", new_callable=PropertyMock, return_value=self.llmclient.name
             ):
                 self.assertEqual(helper.llmclient_id, self.llmclient.id)
+
+
+class TestLLMClientHelperWithoutAnLLMClient(LLMClientHelperTestBase):
+    """Test the LLMClientHelper properties that fall back when there's no LLMClient or request."""
+
+    def setUp(self):
+        super().setUp()
+        self.helper._llmclient = None
+
+    def test_without_an_llmclient(self):
+        self.assertIsNone(self.helper.rfc1034_compliant_name)
+        self.assertIsNone(self.helper.provider)
+        self.assertEqual(self.helper.llmclient_plugins_list, [])
+        self.patch_property("is_llmclient_sandbox_url", False)
+        self.helper.__dict__.pop("is_authentication_required", None)
+        self.assertFalse(self.helper.is_authentication_required)
+
+    def test_authentication_required_by_an_active_api_key(self):
+        self.patch_property("is_llmclient_sandbox_url", False)
+        self.patch_property("llmclient", self.llmclient)
+        self.helper.__dict__.pop("is_authentication_required", None)
+        with patch.object(LLMClientAPIKey, "get_cached_objects") as api_keys:
+            api_keys.return_value.filter.return_value.exists.return_value = True
+            self.assertTrue(self.helper.is_authentication_required)
+
+    def test_api_host_needs_a_qualified_request(self):
+        for name, value in (("smarter_request", None), ("qualified_request", False)):
+            with self.subTest(name=name):
+                self.helper.__dict__.pop("api_host", None)
+                with patch.object(LLMClientHelper, name, new_callable=PropertyMock, return_value=value):
+                    self.assertIsNone(self.helper.api_host)
+
+    def test_llmclient_id_from_the_url(self):
+        self.helper._llmclient_id = None
+        base_class = next(c for c in LLMClientHelper.__mro__[1:] if "smarter_request_llmclient_id" in vars(c))
+        with patch.object(base_class, "smarter_request_llmclient_id", new_callable=PropertyMock, return_value=42):
+            self.assertEqual(self.helper.llmclient_id, 42)
+
+    def test_llmclient_id_of_another_account_is_refused(self):
+        other = MagicMock()
+        other.user_profile.cached_account = MagicMock()
+        with patch.object(LLMClient, "get_cached_object", return_value=other):
+            with self.assertRaises(SmarterValueError):
+                self.helper.llmclient_id = 42

@@ -7,11 +7,12 @@ from smarter.apps.llmclient.manifest.brokers.llmclient import (
     SAMLLMClientBroker,
     SAMLLMClientBrokerError,
 )
-from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
 from smarter.lib.manifest.broker import SAMBrokerErrorNotReady
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 LIFECYCLE_COMMANDS = ("describe", "delete", "deploy", "undeploy")
+MODULE = "smarter.apps.llmclient.manifest.brokers.llmclient"
 
 
 class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
@@ -147,3 +148,68 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
         ):
             with self.assertRaises(SAMLLMClientBrokerError):
                 broker.get(self.request, name=llmclient.name)
+
+    def test_cached_functions_plugins_and_api_key(self):
+        broker = self.broker
+        broker._functions = ["calculator"]
+        broker._plugins = ["a_plugin"]
+        api_key = MagicMock()
+        broker._llmclient_api_key = api_key
+        self.assertEqual(broker.functions, ["calculator"])
+        self.assertEqual(broker.plugins, ["a_plugin"])
+        self.assertIs(broker.llmclient_api_key, api_key)
+        broker._llmclient_api_key = None
+        found = MagicMock()
+        with patch.object(LLMClientAPIKey.objects, "get", return_value=found):
+            self.assertIs(broker.llmclient_api_key, found)
+
+    def test_django_orm_to_manifest_dict_that_is_not_a_dict(self):
+        broker = self.broker
+        self.patch_property("llmclient", MagicMock(spec=LLMClient))
+        with (
+            patch(f"{MODULE}.model_to_dict", return_value={}),
+            patch.object(SAMLLMClientBroker, "to_camel_case", return_value="not a dict"),
+        ):
+            with self.assertRaises(SAMLLMClientBrokerError):
+                broker.django_orm_to_manifest_dict()
+
+    def test_manifest_from_an_existing_llmclient(self):
+        broker = self.broker
+        broker._manifest = None
+        broker._llmclient = MagicMock(spec=LLMClient)
+        self.patch_property("loader", None)
+        manifest = MagicMock()
+        with patch.object(SAMLLMClientBroker, "django_orm_to_manifest_dict", return_value=manifest):
+            self.assertIs(broker.manifest, manifest)
+
+    def test_get_with_an_empty_model_dump(self):
+        llmclient = LLMClient.objects.create(name=f"test_get_empty_{self.hash_suffix}", user_profile=self.user_profile)
+        self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
+        with patch(f"{MODULE}.LLMClientSerializer", return_value=MagicMock(data={})):
+            with self.assertRaises(SAMLLMClientBrokerError):
+                self.broker.get(self.request, name=llmclient.name)
+
+    def test_apply_guards(self):
+        """Apply needs a ready broker, a manifest spec, and an LLMClient."""
+        broker = self.broker
+        with patch.object(SAMLLMClientBroker, "ready", new_callable=PropertyMock, return_value=False):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.apply(self.request)
+        manifest = MagicMock(spec=None)
+        manifest.spec = None
+        with patch.object(SAMLLMClientBroker, "manifest", new_callable=PropertyMock, return_value=manifest):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.apply(self.request)
+        with patch.object(SAMLLMClientBroker, "llmclient", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMLLMClientBrokerError):
+                broker.apply(self.request)
+
+    def test_manifest_to_django_orm_config_that_is_not_a_dict(self):
+        broker = self.broker
+        base_class = next(c for c in SAMLLMClientBroker.__mro__[1:] if "manifest_to_django_orm" in vars(c))
+        with (
+            patch.object(base_class, "manifest_to_django_orm", return_value={}),
+            patch.object(SAMLLMClientBroker, "to_snake_case", return_value="not a dict"),
+        ):
+            with self.assertRaises(SAMLLMClientBrokerError):
+                broker.manifest_to_django_orm()

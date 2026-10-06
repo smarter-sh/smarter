@@ -177,7 +177,7 @@ class PluginExample:
         try:
             retval = self._json["metadata"]["name"] if isinstance(self._json, dict) else None
         except KeyError:
-            logger.warning("PluginExample: %d is malformed and has no metadata.name", self.filename)
+            logger.warning("PluginExample: %s is malformed and has no metadata.name", self.filename)
             retval = self.convert_filename()
         return retval
 
