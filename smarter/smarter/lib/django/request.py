@@ -1677,7 +1677,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.url_path_parts,
             )
             return False
-        if not self.url_path_parts[3].isnumeric() or isinstance(self.url_path_parts[3], str):
+        if not self.url_path_parts[3].isnumeric():
             # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
             verbose_logger.debug(
                 "%s.is_llmclient_smarter_api_url() - fourth part is not numeric: %s",

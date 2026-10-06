@@ -21,17 +21,23 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
+from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
+
 logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods
-class TestSmarterSkillPluginBroker(TestSAMBrokerBaseClass):
+class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMSkillPluginBroker, using a manifest that contains its SKILL.md verbatim.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
+
+    plugin_class = SkillPlugin
+    broker_module = "smarter.apps.plugin.manifest.brokers.skill_plugin"
+    spec_kind = "skill"
 
     def setUp(self):
         super().setUp()

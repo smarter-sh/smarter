@@ -107,6 +107,31 @@ class TestSmarterRequestUrlProbes(TestAccountMixin):
         self.assertTrue(self.srm("http://localhost:9357/api/v1/cli/prompt/example/").is_llmclient_cli_api_url)
         self.assertFalse(self.srm("http://example.com/contact/").is_llmclient)
 
+    def test_llmclient_smarter_api_url(self):
+        """/api/v1/workbench/<int:pk>/prompt/ and .../config/ are LLMClient smarter api urls, which carry the LLMClient's id."""
+        for url in (
+            "http://localhost:9357/api/v1/workbench/1/prompt/",
+            "http://localhost:9357/api/v1/workbench/1/config/",
+            "http://localhost:9357/api/v1/llm-clients/42/prompt/",
+        ):
+            with self.subTest(url=url):
+                srm = self.srm(url)
+                self.assertTrue(srm.is_llmclient_smarter_api_url)
+                self.assertTrue(srm.is_llmclient)
+                self.assertIsNone(srm.smarter_request_llmclient_name)
+        self.assertEqual(
+            self.srm("http://localhost:9357/api/v1/llm-clients/42/prompt/").smarter_request_llmclient_id, 42
+        )
+        for url in (
+            "http://localhost:9357/api/v1/workbench/not-a-number/prompt/",
+            "http://localhost:9357/api/v1/workbench/1/other/",
+            "http://localhost:9357/api/v2/workbench/1/prompt/",
+            "http://localhost:9357/apis/v1/workbench/1/prompt/",
+            "http://localhost:9357/api/v1/llmclient/1/prompt/",
+        ):
+            with self.subTest(url=url):
+                self.assertFalse(self.srm(url).is_llmclient_smarter_api_url)
+
     def test_session_key(self):
         """Test that the session key is read from the url, the request body, or a cookie."""
         url = f"http://localhost:9357/workbench/example/config/?{SMARTER_CHAT_SESSION_KEY_NAME}={SESSION_KEY}"

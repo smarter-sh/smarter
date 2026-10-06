@@ -24,19 +24,24 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.loader import SAMLoader
 
+from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
 from .base_classes.plugin_base import TestSmarterPluginBrokerBase
 
 logger = logging.getLogger(__name__)
 HERE = __name__
 
 
-class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
+class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBrokerBase):
     """
     Test the Smarter SAMSqlPluginBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
+
+    plugin_class = SqlPlugin
+    broker_module = "smarter.apps.plugin.manifest.brokers.sql_plugin"
+    apply_builds_plugin = True
 
     test_smarter_sql_plugin_broker_logger_prefix = formatted_text(f"{HERE}.TestSmarterSqlPluginBroker()")
 
