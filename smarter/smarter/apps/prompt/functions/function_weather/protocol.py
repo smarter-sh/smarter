@@ -367,7 +367,9 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         if unit == WeatherUnits.USCS:
 
             def convert_array(arr, from_unit, to_unit):
-                return pd.Series((arr * ureg(from_unit)).to(to_unit).magnitude)
+                # a Quantity, rather than arr * ureg(from_unit): pint refuses to multiply by
+                # an offset unit such as degC.
+                return pd.Series(ureg.Quantity(arr, from_unit).to(to_unit).magnitude)
 
             hourly_temperature_2m = convert_array(hourly_temperature_2m, "degC", "degF")
             hourly_precipitation_2m = convert_array(hourly_precipitation_2m, "millimeter", "inch")

@@ -20,6 +20,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.loader import SAMLoader
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
+from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
 
 logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -27,8 +28,12 @@ MANIFEST_PATH_API_CONNECTION = os.path.join(HERE, "data", "api-connection-broker
 """ApiConnection manifest whose name matches spec.connection in data/api-plugin.yaml."""
 
 
-class TestSmarterApiPluginBroker(TestSmarterConnectionBrokerBase):
+class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnectionBrokerBase):
     """Test the Smarter SAMApiPluginBroker."""
+
+    plugin_class = ApiPlugin
+    broker_module = "smarter.apps.plugin.manifest.brokers.api_plugin"
+    apply_builds_plugin = True
 
     @classmethod
     def setUpClass(cls):

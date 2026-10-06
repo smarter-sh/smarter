@@ -2,11 +2,10 @@
 
 from typing import Optional
 
-from django.db.models import Sum
 from django.db.models.query import QuerySet
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Charge, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.prompt.models import (
     Prompt,
@@ -37,14 +36,6 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class _InternalKeys:
-    """This class contains the internal keys for the provider model."""
-
-    PromptTokens = "prompt_tokens"
-    CompletionTokens = "completion_tokens"
-    TotalTokens = "total_tokens"
-
-
 class ChatDbMixin(AccountMixin):
     """
     Mixin for database-related methods for provider models.
@@ -58,10 +49,9 @@ class ChatDbMixin(AccountMixin):
 
     **Key Features:**
 
-        - Manages retrieval and caching of prompt, prompt history, tool calls, plugin usage, and charge records.
+        - Manages retrieval and caching of prompt, prompt history, tool calls, and plugin usage.
         - Provides properties for accessing and updating prompt-related data.
         - Supports insertion of new tool call, plugin usage, and charge records via asynchronous tasks.
-        - Aggregates token usage statistics for billing and analytics.
 
     **Usage:**
 
@@ -82,7 +72,6 @@ class ChatDbMixin(AccountMixin):
         "_chat",
         "_chat_tool_call",
         "_chat_plugin_usage",
-        "_charges",
         "_chat_history",
         "_message_history",
         "_provider_name",
@@ -121,7 +110,6 @@ class ChatDbMixin(AccountMixin):
         self._chat: Optional[Prompt] = None
         self._chat_tool_call: QuerySet[PromptToolCall] = None  # type: ignore
         self._chat_plugin_usage: Optional[QuerySet[PromptPluginUsage]] = None
-        self._charges: Optional[QuerySet[Charge]] = None
         self._chat_history: Optional[QuerySet[PromptHistory]] = None
         self._message_history: Optional[list[dict]] = None
         self._provider_name: Optional[str] = kwargs.get("provider_name", None)
@@ -225,7 +213,7 @@ class ChatDbMixin(AccountMixin):
 
         Side Effects
         ------------
-        Resets lazy attributes: `_chat_tool_call`, `_chat_plugin_usage`, `_charges`,
+        Resets lazy attributes: `_chat_tool_call`, `_chat_plugin_usage`,
         `_chat_history`, and `_message_history`.
 
         Example
@@ -244,7 +232,6 @@ class ChatDbMixin(AccountMixin):
             )
         self._chat_tool_call = None  # type: ignore
         self._chat_plugin_usage = None  # type: ignore
-        self._charges = None
         self._chat_history = None
         self._message_history = None
         logger.debug("%s.prompt setter reset lazy attributes due to prompt change.", self.formatted_class_name)
@@ -390,145 +377,6 @@ class ChatDbMixin(AccountMixin):
         return PromptPluginUsage.objects.none()
 
     @property
-    def db_charges(self) -> QuerySet[Charge]:
-        """
-        Get the queryset of charge records for the current prompt session and UserProfile.
-
-        This property returns a Django QuerySet of `Charge` objects filtered by the
-        current user profile and prompt session key. If either the user profile or prompt is not set,
-        returns None. The queryset is cached for efficiency.
-
-        Each `Charge` record typically contains fields such as:
-            - prompt_tokens (int): Number of prompt tokens used.
-            - completion_tokens (int): Number of completion tokens used.
-            - total_tokens (int): Total tokens used.
-
-        Returns
-        -------
-        QuerySet[Charge] or None
-            QuerySet of charge records for the current session, or None if unavailable.
-
-        Example
-        -------
-        .. code-block:: python
-
-            charges = provider.db_charges
-            if charges is not None:
-                for charge in charges:
-                    print(charge.prompt_tokens, charge.completion_tokens, charge.total_tokens)
-        """
-
-        if self._charges is None and self.user_profile is not None and self.prompt is not None:
-            self._charges = Charge.objects.filter(user_profile=self.user_profile, session_key=self.prompt.session_key)
-            logger.debug(
-                "%s.db_charges() loaded charge queryset with %d records.",
-                self.formatted_class_name,
-                self._charges.count(),
-            )
-        return Charge.objects.none()
-
-    @property
-    def db_total_prompt_tokens(self) -> int:
-        """
-        Get the total number of prompt tokens used in the current prompt session.
-
-        This property aggregates the `prompt_tokens` field across all charge records
-        for the current prompt session and account. If no charges are available, returns 0.
-
-        Returns
-        -------
-        int
-            The total number of prompt tokens used, or 0 if unavailable.
-
-        Example
-        -------
-        .. code-block:: python
-
-            total_prompt = provider.db_total_prompt_tokens
-            print(f"Prompt tokens used: {total_prompt}")
-        """
-        if not self.db_charges.exists():
-            return 0
-        return self.db_charges.aggregate(Sum("prompt_tokens"))["prompt_tokens__sum"]
-
-    @property
-    def db_total_completion_tokens(self) -> int:
-        """
-        Get the total number of completion tokens used in the current prompt session.
-
-        This property aggregates the `completion_tokens` field across all charge records
-        for the current prompt session and account. If no charges are available, returns 0.
-
-        Returns
-        -------
-        int
-            The total number of completion tokens used, or 0 if unavailable.
-
-        Example
-        -------
-        .. code-block:: python
-
-            total_completion = provider.db_total_completion_tokens
-            print(f"Completion tokens used: {total_completion}")
-        """
-        if not self.db_charges.exists():
-            return 0
-        return self.db_charges.aggregate(Sum("completion_tokens"))["completion_tokens__sum"]
-
-    @property
-    def db_total_total_tokens(self) -> int:
-        """
-        Get the total number of tokens used in the current prompt session.
-
-        This property aggregates the `total_tokens` field across all charge records
-        for the current prompt session and account. If no charges are available, returns 0.
-
-        Returns
-        -------
-        int
-            The total number of tokens used, or 0 if unavailable.
-
-        Example
-        -------
-        .. code-block:: python
-
-            total_tokens = provider.db_total_total_tokens
-            print(f"Total tokens used: {total_tokens}")
-        """
-        if not self.db_charges.exists():
-            return 0
-        return self.db_charges.aggregate(Sum("total_tokens"))["total_tokens__sum"]
-
-    @property
-    def db_total_tokens(self) -> Optional[dict]:
-        """
-        Get a dictionary containing the total prompt, completion, and overall tokens used.
-
-        This property returns a dictionary with the total number of prompt tokens,
-        completion tokens, and overall tokens used in the current prompt session.
-        The values are aggregated from all charge records for the session.
-
-        Returns
-        -------
-        dict or None
-            A dictionary with keys 'prompt_tokens', 'completion_tokens', and 'total_tokens',
-            or None if no charge data is available.
-
-        Example
-        -------
-        .. code-block:: python
-
-            totals = provider.db_total_tokens
-            if totals:
-                print(f"Prompt: {totals['prompt_tokens']}, Completion: {totals['completion_tokens']}, Total: {totals['total_tokens']}")
-        """
-        return {
-            _InternalKeys.PromptTokens: self.db_total_prompt_tokens,
-            _InternalKeys.CompletionTokens: self.db_total_completion_tokens,
-            _InternalKeys.TotalTokens: self.db_total_total_tokens,
-        }
-
-    @property
     def provider_name(self) -> Optional[str]:
         """
         Get the provider name associated with this provider model.
@@ -574,7 +422,7 @@ class ChatDbMixin(AccountMixin):
                 print(provider_instance.name)
         """
         if self._provider is None and self._provider_name is not None:
-            self._provider = Provider.objects.filter(is_active=True, name=self.provider_name).with_read_permission_for(self.user_profile.user).first()  # type: ignore
+            self._provider = Provider.objects.filter(is_active=True, name=self._provider_name).with_read_permission_for(self.user_profile.user).first()  # type: ignore
             if self._provider:
                 logger.debug(
                     "%s.provider property loaded provider '%s' for user %s.",
@@ -586,7 +434,7 @@ class ChatDbMixin(AccountMixin):
                 logger.warning(
                     "%s.provider property could not find an active provider with name '%s' for user %s.",
                     self.formatted_class_name,
-                    self.provider_name,
+                    self._provider_name,
                     self.user_profile.user.username if self.user_profile and self.user_profile.user else "Unknown",
                 )
         return self._provider
@@ -595,8 +443,8 @@ class ChatDbMixin(AccountMixin):
         """
         Refresh the provider instance and its cached database attributes.
 
-        This method refreshes the prompt instance from the database and resets the cached
-        charges queryset. Use this method to ensure the provider has the latest data
+        This method refreshes the prompt instance from the database and resets its cached
+        querysets. Use this method to ensure the provider has the latest data
         after external changes to the prompt or related records.
 
         Example
@@ -604,7 +452,7 @@ class ChatDbMixin(AccountMixin):
         .. code-block:: python
 
             provider.db_refresh()
-            # Now provider.db_charges and related properties are up to date
+            # Now provider.db_chat_tool_call and related properties are up to date
         """
         logger.debug("%s.db_refresh() called.", self.formatted_class_name)
         if self.prompt:

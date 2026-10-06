@@ -22,16 +22,22 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
+from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
+
 logger = logging.getLogger(__name__)
 
 
-class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
+class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMStaticPluginBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
+
+    plugin_class = StaticPlugin
+    broker_module = "smarter.apps.plugin.manifest.brokers.static_plugin"
+    spec_kind = "static"
 
     def setUp(self):
         super().setUp()
