@@ -179,6 +179,8 @@ class AWSTestBase(InfrastructureTestBase):
         """An AWS provider whose helpers have fake clients."""
         provider = AWSProvider(allow_in_tests=True)
         provider._base = connect(AWSBase(), MagicMock())  # pylint: disable=protected-access
+        # aws_session returns None without credentials, as in CI, so give it the patched session.
+        provider._base._aws_session = self.session.return_value  # pylint: disable=protected-access
         route53 = connect(AWSRoute53(), self.route53_client)
         acm = connect(AWSCertificateManager(), self.acm_client)
         provider.dns._route53 = route53  # pylint: disable=protected-access
