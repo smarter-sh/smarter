@@ -2,10 +2,14 @@
 #------------------------------------------------------------------------------
 # Build the React frontend components, or restore them from cache.
 #
-# Equivalent to `make react-install && make react-build`. Shared by build.yml
-# and test.yml so that both read and write the same cache entries. actions/cache
-# includes the path list in the cache version, so the paths below must stay
-# identical for every caller.
+# Equivalent to `make react-install` plus the npm build step of
+# `make react-build`. It deliberately does not call `make react-build`, which
+# also runs collectstatic and the Docker build: the runner has no Python
+# environment, and the Docker build happens in a later workflow step.
+#
+# Shared by build.yml and test.yml so that both read and write the same cache
+# entries. actions/cache includes the path list in the cache version, so the
+# paths below must stay identical for every caller.
 #
 # - The build output is keyed on the git tree hash of smarter/react, which
 #   changes whenever any tracked file under it changes, package-lock.json
@@ -89,11 +93,14 @@ runs:
           smarter/react/packages/*/node_modules
         key: ${{ steps.react-node-modules.outputs.cache-primary-key }}
 
-    - name: make react-build
+    - name: npm run build
       if: steps.react-build.outputs.cache-hit != 'true'
       shell: bash
+      working-directory: smarter/react
+      env:
+        NODE_ENV: production
       run: |
-        make react-build
+        npm run build
 
     - name: Save React build
       if: steps.react-build.outputs.cache-hit != 'true'

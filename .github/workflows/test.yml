@@ -371,7 +371,7 @@ jobs:
           key: ${{ steps.root-node-modules.outputs.cache-primary-key }}
 
       #========================================================================
-      # make react-install && make react-build
+      # make react-install, then the npm build step of make react-build
       #
       # Shared with build.yml, so that both use the same cache entries. See
       # .github/actions/react-build/action.yml.
