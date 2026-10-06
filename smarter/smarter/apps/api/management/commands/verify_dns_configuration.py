@@ -91,6 +91,41 @@ class Command(SmarterCommand):
             f"{log_prefix} Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
         )
 
+    def get_load_balancer_a_record(self) -> DNSRecord:
+        """
+        Return the A record of the platform's load balancer, to copy to the platform's other domains.
+
+        This is the A record of the platform domain, e.g. platform.example.com. The root domain,
+        e.g. example.com, is not necessarily served by the platform: it may be a marketing site
+        behind a CDN. Its A record is used only when the platform domain does not yet have one,
+        e.g. in a new installation.
+
+        :return: the A record of the platform's load balancer.
+        :rtype: DNSRecord
+        :raises SmarterConfigurationError: if neither the platform domain nor the root domain has an A record.
+        """
+        log_prefix = self.log_prefix + ".get_load_balancer_a_record()"
+        dns = infrastructure.dns
+        if dns.get_zone(smarter_settings.root_platform_domain) is not None:
+            a_record = dns.get_environment_a_record(domain=smarter_settings.root_platform_domain)
+            if a_record:
+                return a_record
+        logger.warning(
+            "%s %s has no A record. Falling back to the A record of the root domain %s, "
+            "which must point at the platform's load balancer.",
+            log_prefix,
+            smarter_settings.root_platform_domain,
+            smarter_settings.root_domain,
+        )
+        a_record = dns.get_environment_a_record(domain=smarter_settings.root_domain)
+        if not a_record:
+            raise SmarterConfigurationError(
+                f"{log_prefix} Couldn't find an A record in the platform domain: "
+                f"{smarter_settings.root_platform_domain}, or in the root domain: {smarter_settings.root_domain}. "
+                "Expected to find an 'A' record alias to the platform's load balancer. Cannot proceed."
+            )
+        return a_record
+
     def verify_domain_delegated_from_parent(self, child_domain: str, parent_domain: str, a_record: DNSRecord):
         """
         Verify the DNS zone for the child domain.
@@ -137,18 +172,31 @@ class Command(SmarterCommand):
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} verify that an A record exists in child zone {child_domain}")
         )
-        _, created = dns.get_or_create_record(
-            zone_id=child_zone.id,
-            name=child_domain,
-            record_type="A",
-            ttl=600,
-            values=a_record.values,
-            alias=a_record.alias,
-        )
-        if created:
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created A record for api base domain {child_domain}."))
-        else:
+        # Never overwrite an existing A record. The root domain's A record is not necessarily
+        # the platform's load balancer, e.g. example.com may be served by a CDN. Overwriting
+        # child records with it takes the whole platform offline.
+        existing_a_record = dns.get_record(child_zone.id, child_domain, "A")
+        if existing_a_record is not None:
+            if not existing_a_record.same_target(a_record):
+                logger.warning(
+                    "%s A record for %s points at %s, not at the A record of %s (%s). Leaving it unchanged.",
+                    log_prefix,
+                    child_domain,
+                    existing_a_record.alias or existing_a_record.values,
+                    a_record.name,
+                    a_record.alias or a_record.values,
+                )
             self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for api base domain {child_domain}."))
+        else:
+            dns.get_or_create_record(
+                zone_id=child_zone.id,
+                name=child_domain,
+                record_type="A",
+                ttl=600,
+                values=a_record.values,
+                alias=a_record.alias,
+            )
+            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created A record for api base domain {child_domain}."))
 
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} verify that NS records for {child_domain} exist in {parent_domain} zone.")
@@ -285,13 +333,7 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         self.verify_root_domain_dns_config()
         verified_domains.append(smarter_settings.root_domain)
-        a_record = infrastructure.dns.get_environment_a_record(domain=smarter_settings.root_domain)
-        if not a_record:
-            raise SmarterConfigurationError(
-                f"{log_prefix} Couldn't find an A record in the root domain: "
-                f"{smarter_settings.root_domain}. Expected to find an 'A' record alias to an AWS Route53 "
-                "classic balancer. Cannot proceed."
-            )
+        a_record = self.get_load_balancer_a_record()
 
         # ---------------------------------------------------------------------
         # 2. platform domain hosted zone verification. ie platform.example.com
