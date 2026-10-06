@@ -14,6 +14,7 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.base import (
     APIV1CLIViewBadRequestError,
     APIV1CLIViewError,
+    CliBaseApiView,
     client_error_in,
     describe_exception,
     format_validation_error,
@@ -184,6 +185,8 @@ class TestCliExceptionClassification(SmarterTestBase):
             format_validation_error(DjangoValidationError({"app_info_url": ["Enter a valid URL."]})),
             "app_info_url: Enter a valid URL.",
         )
+        self.assertEqual(format_validation_error(DjangoValidationError(["first", "second"])), "first second")
+        self.assertEqual(format_validation_error(ValueError("plain")), "plain")
 
     def test_describe_exception(self):
         """Test that a client error says what is wrong, and that only a 500 asks for a bug report."""
@@ -205,3 +208,22 @@ class TestCliExceptionClassification(SmarterTestBase):
 
         # other errors, e.g. not found, keep their own message
         self.assertIsNone(describe_exception(SAMBrokerErrorNotFound("missing"), HTTPStatus.NOT_FOUND))
+
+
+class TestCliBaseApiViewMembers(SmarterTestBase):
+    """Test CliBaseApiView members that the cli endpoints don't reach."""
+
+    def test_options_needs_no_permissions(self):
+        """A CORS preflight OPTIONS request is not authenticated."""
+        view = CliBaseApiView()
+        view.request = type("Request", (), {"method": "OPTIONS"})()
+        self.assertEqual(view.get_permissions(), [])
+
+    def test_manifest_data_from_a_string(self):
+        view = CliBaseApiView()
+        view._manifest_data = '{"kind": "Plugin"}'
+        self.assertEqual(view.manifest_data, {"kind": "Plugin"})
+
+    def test_ready_state(self):
+        view = CliBaseApiView()
+        self.assertEqual(view.is_cli_base_api_view_ready_state, view.formatted_state_ready)

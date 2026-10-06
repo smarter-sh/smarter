@@ -134,3 +134,16 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
         self.patch_property("user_profile", None)
         self.assertIsNone(broker.resolve_guardrail("any"))
         self.assertIsNone(broker.resolve_mcpclient("any"))
+
+    def test_get_serialization_failure(self):
+        """A failure to serialize one of the account's LLMClients is reported as SAMLLMClientBrokerError."""
+        llmclient = LLMClient.objects.create(
+            name=f"test_get_failure_{self.hash_suffix}", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
+        broker = self.broker
+        with patch(
+            "smarter.apps.llmclient.manifest.brokers.llmclient.LLMClientSerializer", side_effect=RuntimeError("broken")
+        ):
+            with self.assertRaises(SAMLLMClientBrokerError):
+                broker.get(self.request, name=llmclient.name)

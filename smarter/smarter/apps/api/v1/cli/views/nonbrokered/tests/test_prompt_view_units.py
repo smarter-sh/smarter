@@ -123,3 +123,23 @@ class TestPromptViewUnits(SmarterTestBase):
         """A prompt with a message list and a valid session key validates."""
         view = self.view(data={"prompt": "hello", "messages": json.dumps([]), "session_key": SESSION_KEY})
         view.validate()
+
+    def test_chat_and_prompt_history(self):
+        """The Prompt and its latest history are looked up by session key, once."""
+        view = self.view(data={})
+        view._chat = None
+        view._chat_history = None
+        prompt = object()
+        history = object()
+        module = "smarter.apps.api.v1.cli.views.nonbrokered.prompt"
+        with (
+            patch.object(ApiV1CliPromptApiView, "session_key", new_callable=PropertyMock, return_value=SESSION_KEY),
+            patch(f"{module}.Prompt.objects.filter") as prompt_filter,
+            patch(f"{module}.PromptHistory.objects.filter") as history_filter,
+        ):
+            prompt_filter.return_value.first.return_value = prompt
+            history_filter.return_value.latest.return_value = history
+            self.assertIs(view.prompt_history, history)
+            self.assertIs(view.chat, prompt)
+        prompt_filter.assert_called_once_with(session_key=SESSION_KEY)
+        history_filter.assert_called_once_with(prompt=prompt)

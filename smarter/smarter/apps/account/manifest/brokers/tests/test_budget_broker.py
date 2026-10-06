@@ -4,6 +4,7 @@
 import glob
 import os
 from decimal import Decimal
+from unittest.mock import PropertyMock, patch
 
 from django.http import HttpRequest
 from pydantic import ValidationError
@@ -19,7 +20,7 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
+from smarter.lib.manifest.broker import SAMBrokerErrorNotFound, SAMBrokerErrorNotReady
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -203,3 +204,36 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
                 self.assertTrue(manifest.spec.resources)
                 names.append(manifest.metadata.name)
         self.assertEqual(len(names), len(set(names)))
+
+    def test_resolve_locator_not_found(self):
+        """Test that a record locator, Account, User or account number that doesn't exist is refused."""
+        broker = self.broker_for(self.manifest_text())
+        for resource in (
+            SAMBudgetSpecResource(recordLocator="llmclient-rbm90aGluZ3x"),
+            SAMBudgetSpecResource(kind="Account", name="9999-9999-9999"),
+            SAMBudgetSpecResource(kind="User", name="no_such_user", accountNumber=self.account.account_number),
+            SAMBudgetSpecResource(kind="LLMClient", name="x", accountNumber="9999-9999-9999"),
+        ):
+            with self.subTest(resource=resource.model_dump(exclude_none=True)):
+                with self.assertRaises(SAMBudgetBrokerError):
+                    broker.resolve_locator(resource)
+
+    def test_resolve_account_needs_an_account(self):
+        broker = self.broker_for(self.manifest_text())
+        self.assertEqual(broker.resolve_account(None), broker.account)
+        with patch.object(SAMBudgetBroker, "account", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMBudgetBrokerError):
+                broker.resolve_account(None)
+
+    def test_without_a_budget_manifest_or_user_profile(self):
+        """Test the broker without a Budget, with a cached manifest of the wrong type, and without a user profile."""
+        broker = self.broker_for(self.manifest_text())
+        with patch.object(SAMBudgetBroker, "budget", new_callable=PropertyMock, return_value=None):
+            self.assertIsNone(broker.django_orm_to_manifest_dict())
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]  # pylint: disable=protected-access
+        with self.assertRaises(SAMBudgetBrokerError):
+            _ = broker.manifest
+        broker._manifest = None  # pylint: disable=protected-access
+        with patch.object(SAMBudgetBroker, "user_profile", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.get(broker.request)

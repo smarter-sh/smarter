@@ -2,12 +2,17 @@
 """Test SAMApiConnectionBroker."""
 
 import os
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 
+from smarter.apps.connection.manifest.brokers import SAMConnectionBrokerError
 from smarter.apps.connection.manifest.brokers.api_connection import (
     SAMApiConnectionBroker,
+)
+from smarter.apps.connection.manifest.brokers.connection_base import (
+    SAMConnectionBaseBroker,
 )
 from smarter.apps.connection.manifest.models.api_connection.model import (
     SAMApiConnection,
@@ -15,6 +20,7 @@ from smarter.apps.connection.manifest.models.api_connection.model import (
 from smarter.apps.connection.models import ApiConnection
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
+    SAMBrokerError,
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
@@ -136,3 +142,73 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
         for method in (self.broker.deploy, self.broker.undeploy, self.broker.prompt, self.broker.logs):
             with self.assertRaises(SAMBrokerErrorNotImplemented):
                 method(self.request, **self.kwargs)
+
+    def test_base_class_abstract_properties(self):
+        """Test that the base broker's ORMModelClass and connection must be implemented by a subclass."""
+        with self.assertRaises(NotImplementedError):
+            SAMConnectionBaseBroker.ORMModelClass.fget(self.broker)  # type: ignore[attr-defined]
+        with self.assertRaises(NotImplementedError):
+            SAMConnectionBaseBroker.connection.fget(self.broker)  # type: ignore[attr-defined]
+        self.assertIn("SAMConnectionBaseBroker", SAMConnectionBaseBroker.formatted_class_name.fget(self.broker))  # type: ignore[attr-defined]
+
+    def test_base_class_apply_updates_metadata(self):
+        """Test that the base broker's apply() restores the manifest's metadata onto the connection."""
+        self.apply_manifest()
+        self.addCleanup(ApiConnection.objects.filter(name="test_api_connection", user_profile=self.user_profile).delete)
+        connection = self.broker.connection
+        self.assertIsNotNone(connection)
+        connection.description = "a stale description"  # type: ignore[union-attr]
+
+        SAMConnectionBaseBroker.apply(self.broker, self.request, **self.kwargs)
+
+        connection.refresh_from_db()  # type: ignore[union-attr]
+        self.assertEqual(connection.description, self.broker.manifest.metadata.description)  # type: ignore[union-attr]
+        self.assertEqual(set(self.broker.manifest.metadata.tags or []), set(connection.tags_list))  # type: ignore[union-attr]
+
+    def test_base_class_apply_requires_staff(self):
+        """Test that the base broker's apply() refuses a user who isn't an account admin."""
+        self.broker.user.is_staff = False  # type: ignore[union-attr]
+        self.addCleanup(setattr, self.broker.user, "is_staff", True)
+        with self.assertRaises(SAMBrokerError):
+            SAMConnectionBaseBroker.apply(self.broker, self.request, **self.kwargs)
+
+    def test_sam_connection_metadata_and_status(self):
+        """Test that the common metadata and status are built from the applied connection."""
+        self.apply_manifest()
+        self.addCleanup(ApiConnection.objects.filter(name="test_api_connection", user_profile=self.user_profile).delete)
+        metadata = self.broker.sam_connection_metadata()
+        self.assertEqual(metadata.name, "test_api_connection")  # type: ignore[union-attr]
+        status = self.broker.sam_connection_status()
+        self.assertEqual(status.account_number, self.account.account_number)  # type: ignore[union-attr]
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMApiConnectionBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_manifest_branches(self):
+        """Test a cached manifest of the wrong type, and no manifest without a loader or connection."""
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMConnectionBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("loader", None)
+        self.patch_property("connection", None)
+        self.assertIsNone(broker.manifest)
+
+    def test_get_serialization_failure(self):
+        """Test that a connection that can't be serialized fails get()."""
+        self.apply_manifest()
+        self.addCleanup(ApiConnection.objects.filter(name="test_api_connection", user_profile=self.user_profile).delete)
+
+        def serializer(*args, **kwargs):
+            """A serializer that fails for an ApiConnection, but not for the column titles."""
+            if args:
+                raise RuntimeError("broken")
+            return MagicMock()
+
+        self.patch_property("SerializerClass", serializer)
+        with patch.object(SAMApiConnectionBroker, "get_model_titles", return_value=[]):
+            with self.assertRaises(SAMConnectionBrokerError):
+                self.broker.get(self.request, name="test_api_connection")

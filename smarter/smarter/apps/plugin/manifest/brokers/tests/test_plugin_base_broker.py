@@ -7,6 +7,7 @@ from smarter.apps.plugin.manifest.brokers import SAMPluginBrokerError
 from smarter.apps.plugin.manifest.brokers.plugin_base import SAMPluginBaseBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
 from smarter.apps.plugin.models import PluginDataBase, PluginMeta, PluginSelector
+from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 MODULE = "smarter.apps.plugin.manifest.brokers.plugin_base"
@@ -137,3 +138,64 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
         self.assertIsNone(broker._plugin_meta)
         with self.assertRaises(NotImplementedError):
             SAMPluginBaseBroker.plugin_data.fget(broker)  # type: ignore[attr-defined]
+
+    def test_orm_instance_admin_fallback_errors(self):
+        """An unexpected error in the account admin's, or the platform admin's, lookup is logged, and there's no instance."""
+        broker = self.broker
+        self.patch_property("plugin_meta", self.plugin_meta())
+        not_found = PluginDataBase.DoesNotExist
+        for side_effect in ([not_found, RuntimeError("down")], [not_found, not_found, RuntimeError("down")]):
+            with self.subTest(side_effect=side_effect):
+                broker._orm_instance = None
+                with (
+                    patch.object(PluginMeta.objects, "get", return_value=self.plugin_meta()),
+                    patch.object(PluginDataBase.objects, "get", side_effect=side_effect),
+                ):
+                    self.assertIsNone(broker.orm_instance)
+
+    def test_orm_instance_found_for_platform_admin(self):
+        """A plugin that only the platform admin has is found."""
+        broker = self.broker
+        broker._orm_instance = None
+        self.patch_property("plugin_meta", self.plugin_meta())
+        orm_instance = MagicMock(spec=PluginDataBase)
+        not_found = PluginDataBase.DoesNotExist
+        with (
+            patch.object(PluginMeta.objects, "get", return_value=self.plugin_meta()),
+            patch.object(PluginDataBase.objects, "get", side_effect=[not_found, not_found, orm_instance]),
+        ):
+            broker.orm_instance  # pylint: disable=pointless-statement
+        self.assertIs(broker._orm_instance, orm_instance)
+
+    def test_base_class_plugin(self):
+        """The base class's plugin property needs a user and a user profile, then asks the PluginController."""
+        broker = self.broker
+        plugin = SAMPluginBaseBroker.plugin.fget  # type: ignore[attr-defined]
+
+        broker._plugin = None
+        self.patch_property("user", None)
+        with self.assertRaises(SAMBrokerError):
+            plugin(broker)
+        patch.stopall()
+
+        broker._plugin = None
+        self.patch_property("user_profile", None)
+        with self.assertRaises(SAMBrokerError):
+            plugin(broker)
+        patch.stopall()
+
+        for obj in (None, MagicMock()):
+            with self.subTest(obj=obj):
+                broker._plugin = None
+                broker._manifest = None
+                with patch(f"{MODULE}.PluginController") as controller:
+                    controller.return_value.obj = obj
+                    self.assertIs(plugin(broker), obj)
+                self.assertEqual(controller.call_args.kwargs["manifest"], broker.loader.json_data)
+
+        broker._plugin = "cached"  # type: ignore[assignment]
+        self.assertEqual(plugin(broker), "cached")
+        broker._plugin = None
+
+    def test_base_class_formatted_class_name(self):
+        self.assertIn("SAMPluginBaseBroker", SAMPluginBaseBroker.formatted_class_name.fget(self.broker))  # type: ignore[attr-defined]
