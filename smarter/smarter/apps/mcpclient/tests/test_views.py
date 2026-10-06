@@ -19,6 +19,7 @@ from smarter.apps.mcpclient.caching import (
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.urls import MCPClientReverseNames as Names
 from smarter.lib import json
+from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import MCPCLIENT_NAME, MCPClientTestBase
 
@@ -100,3 +101,22 @@ class TestMCPClientViews(MCPClientTestBase):
         """Test that an invalid identifier is not found."""
         response = self.client.get(url(Names.detailview, hashed_id="not-a-hash"))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_detailview_unknown_id(self):
+        """Test that a valid hashed id of an MCPClient that doesn't exist is not found."""
+        response = self.client.get(url(Names.detailview, hashed_id=MCPClient(id=999999999).hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+
+class TestMCPClientResourceViews(ResourceViewsTestMixin, MCPClientTestBase):
+    """Test the MCPClient list page, list, clone, delete and rename apis, and detail page with the shared mixin."""
+
+    model = MCPClient
+    reverse_names = Names
+    id_kwarg = "mcpclient_id"
+    invalidate_cache = staticmethod(invalidate_all_cached_mcpclients_for_user_profile)
+    resource_name_prefix = "test_mcpclient_resource_views"
+
+    @classmethod
+    def create_resource(cls, name: str) -> MCPClient:
+        return cls.create_mcpclient(name)

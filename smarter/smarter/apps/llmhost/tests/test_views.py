@@ -5,6 +5,10 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.llmhost.caching import (
+    invalidate_all_cached_llmhost_computes_for_user_profile,
+    invalidate_all_cached_llmhosts_for_user_profile,
+)
 from smarter.apps.llmhost.manifest.brokers.llmhost_compute import (
     compute_spec_to_django_orm,
 )
@@ -14,6 +18,7 @@ from smarter.apps.llmhost.manifest.models.llmhost_compute.spec import (
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.apps.llmhost.urls import LLMHostReverseNames as Names
 from smarter.lib import json
+from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import LLMHostTestBase
 
@@ -144,3 +149,52 @@ class TestLLMHostDetailViews(LLMHostTestBase):
                 for hashed_id in ("not-a-hashed-id", LLMHost(id=999999999).hashed_id):
                     response = self.client.get(url(name, hashed_id=hashed_id))
                     self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+
+class TestLLMHostResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
+    """Test the LLMHost list page, list, clone, delete and rename apis, and detail page with the shared mixin."""
+
+    model = LLMHost
+    reverse_names = Names
+    id_kwarg = "llmhost_id"
+    invalidate_cache = staticmethod(invalidate_all_cached_llmhosts_for_user_profile)
+    resource_name_prefix = "test_llmhost_views"
+
+    @classmethod
+    def create_resource(cls, name: str) -> LLMHost:
+        return cls.create_llmhost(name)
+
+
+class LLMHostComputeReverseNames:
+    """The LLMHostCompute view names, as ResourceViewsTestMixin names them."""
+
+    namespace = Names.namespace
+    listview = Names.compute_listview
+    listview_api = Names.compute_listview_api
+    listview_api_all = Names.compute_listview_api_all
+    listview_api_clone = Names.compute_listview_api_clone
+    listview_api_delete = Names.compute_listview_api_delete
+    listview_api_rename = Names.compute_listview_api_rename
+    detailview = Names.compute_detailview
+
+
+class TestLLMHostComputeResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
+    """Test the LLMHostCompute list page, list, clone, delete and rename apis, and detail page with the shared mixin."""
+
+    model = LLMHostCompute
+    reverse_names = LLMHostComputeReverseNames
+    id_kwarg = "llmhost_compute_id"
+    invalidate_cache = staticmethod(invalidate_all_cached_llmhost_computes_for_user_profile)
+    resource_name_prefix = "test_compute_views"
+
+    @classmethod
+    def create_resource(cls, name: str) -> LLMHostCompute:
+        """An LLMHostCompute without a node group."""
+        spec = SAMLLMHostComputeSpec(
+            node={"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32},
+            nodeGroup={"maxNodes": 2},
+            cost={"perHour": "1.0"},
+        )
+        return LLMHostCompute.objects.create(
+            name=name, user_profile=cls.user_profile, **compute_spec_to_django_orm(spec)
+        )

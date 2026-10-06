@@ -99,3 +99,18 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         content = response.content.decode()
         self.assertIn(vectorstore.name, content)
         self.assertIn("vectorstoreStatus", content)
+
+    def test_detail_view_shared_with_non_admin(self):
+        """Test that a non-admin user sees the detail view of a vectorstore owned by the account's admin."""
+        vectorstore = self.new_vectorstore("test_views_detail_shared")
+        self.client.force_login(self.non_admin_user)
+        response = self.client.get(url(Names.detailview, hashed_id=vectorstore.hashed_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(vectorstore.name, response.content.decode())
+
+    def test_detail_view_unknown_id(self):
+        """Test that a valid hashed id of a vectorstore that doesn't exist is not found, as is an invalid one."""
+        response = self.client.get(url(Names.detailview, hashed_id=VectorstoreMeta(id=999999999).hashed_id))
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get(url(Names.detailview, hashed_id="not-a-hash"))
+        self.assertEqual(response.status_code, 404)

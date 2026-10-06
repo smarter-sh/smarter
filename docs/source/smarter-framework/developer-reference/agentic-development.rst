@@ -49,7 +49,7 @@ What the Code Base Gives the Agent
 
 Mind you, arriving at a code base that is ideally suited towards agentic
 AI was an iterative process that was years in the making. Looking backwards,
-these are the charastics of the Smarter codebase that seem to have led to
+these are the characteristics of the Smarter codebase that seem to have led to
 the most positive impact.
 
 - **Existing, similar code.** Agents are very good at following a pattern. If
