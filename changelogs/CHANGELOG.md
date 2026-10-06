@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.0...v0.18.1-alpha.1) (2026-10-06)
+
+### Bug Fixes
+
+* **settings:** stop logging SECRET_KEY and DJANGO_* override values ([1bae42a](https://github.com/smarter-sh/smarter/commit/1bae42a88f65e37d2e63029ba7b0443d57bfe254)), closes [smarter-sh/smarter#760](https://github.com/smarter-sh/smarter/issues/760)
+
+### Refactoring
+
+* remove shadowing secret commands, repair docstrings and docs ([063da2f](https://github.com/smarter-sh/smarter/commit/063da2f8124ec62a34e97d47393c35e6cf9fc655))
+
 ## [0.18.0](https://github.com/smarter-sh/smarter/compare/v0.17.3...v0.18.0) (2026-10-05)
 
 ### Features
