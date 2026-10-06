@@ -49,10 +49,13 @@ Alternatives Considered
 Consequences
 ------------
 - **Positive:**
+
   - Operational tasks run promptly, however many deployments are in progress.
   - A deployment that waits hours for DNS holds no worker, and is not killed by the task time limit.
   - The two kinds of task can be scaled, monitored and restarted independently.
+
 - **Negative:**
+
   - One more worker Deployment (``templates/deployment-worker-infrastructure.yaml``) and docker-compose service.
   - A new task must be assigned to the right queue, and a task that waits must be written as a sequence
     of checks rather than a loop.
