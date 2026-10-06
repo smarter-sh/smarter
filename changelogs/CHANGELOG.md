@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.18.2-alpha.1...v0.18.2-alpha.2) (2026-10-06)
+
+### Bug Fixes
+
+* **api:** copy the platform domain's A record, never overwrite one ([5ac9747](https://github.com/smarter-sh/smarter/commit/5ac974749bf627465546568b7c46b4301124d128))
+
 ## [0.18.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.1...v0.18.2-alpha.1) (2026-10-06)
 
 ### Bug Fixes
