@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import yaml
 
+from smarter.apps.infrastructure.exceptions import KubernetesServiceError
 from smarter.apps.llmhost.services.cluster import (
     InMemoryClusterBackend,
     KubectlClusterBackend,
@@ -11,7 +12,6 @@ from smarter.apps.llmhost.services.cluster import (
     get_cluster,
 )
 from smarter.apps.llmhost.services.exceptions import LLMHostClusterError
-from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -80,7 +80,7 @@ class TestInMemoryClusterBackend(SmarterTestBase):
 
 
 class TestKubectlClusterBackend(SmarterTestBase):
-    """Test that the kubectl backend delegates to KubernetesHelper, with a mock helper."""
+    """Test that the kubectl backend delegates to the Kubernetes service, with a mock service."""
 
     def setUp(self):
         super().setUp()
@@ -96,7 +96,7 @@ class TestKubectlClusterBackend(SmarterTestBase):
 
     def test_apply_errors(self):
         """Test that an unavailable or rejecting cluster raises LLMHostClusterError."""
-        self.helper.apply_manifest.side_effect = KubernetesHelperException("denied")
+        self.helper.apply_manifest.side_effect = KubernetesServiceError("denied")
         with self.assertRaisesRegex(LLMHostClusterError, "denied"):
             self.cluster.apply([resource("Deployment", "a")])
         self.helper.ready = False

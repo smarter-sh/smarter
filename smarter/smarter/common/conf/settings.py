@@ -585,6 +585,41 @@ class Settings(BaseSettings):
         logger.debug("Checking if AWS is configured with aws_profile, or aws_access_key_id and aws_secret_access_key.")
         return services.is_connected_to_aws()
 
+    cloud_provider: str = Field(
+        settings_defaults.CLOUD_PROVIDER,
+        description="The cloud provider of the platform's infrastructure services: DNS, TLS certificates, and the Kubernetes cluster's credentials.",
+        examples=["aws", "memory"],
+        title="Cloud Provider",
+    )
+    """
+    The cloud provider of the platform's infrastructure services.
+
+    The platform reaches DNS, TLS certificates, and its Kubernetes cluster's credentials only
+    through :mod:`smarter.apps.infrastructure.services`, which uses this provider. ``aws`` is the
+    only cloud that is implemented. ``memory`` keeps everything in memory, for local development
+    without a cloud account.
+
+    :type: str
+    :default: ``aws``, from ``settings_defaults.CLOUD_PROVIDER``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("cloud_provider")
+    def validate_cloud_provider(cls, v: Optional[str]) -> str:
+        """Validates the `cloud_provider` field.
+
+        Args:
+            v (Optional[str]): The cloud provider's name.
+
+        Returns:
+            str: The validated cloud provider's name, in lower case.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.CLOUD_PROVIDER
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"cloud_provider of type {type(v)} is not a str.")
+        return v.strip().lower()
+
     aws_eks_cluster_name: str = Field(
         settings_defaults.AWS_EKS_CLUSTER_NAME,
         description="The name of the AWS EKS cluster used for hosting applications.",

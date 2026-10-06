@@ -29,7 +29,6 @@ Security
 
 import ipaddress
 import socket
-import sys
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterator, Mapping, Optional
@@ -47,6 +46,7 @@ from smarter.apps.account.models.budget import (
 from smarter.apps.account.models.charge import ChargeTypes
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest import running_unit_tests
 
 from .const import DROPPED_REQUEST_HEADERS, DROPPED_RESPONSE_HEADERS
 from .exceptions import (
@@ -100,7 +100,7 @@ def get_transport() -> Optional[httpx.BaseTransport]:
     """
     if _transport_factory is not None:
         return _transport_factory()
-    if "test" in sys.argv:
+    if running_unit_tests():
         raise ProxyConfigurationError(
             "Refusing to call a real LLM provider from the unit tests. Use configure_transport()."
         )

@@ -697,6 +697,25 @@
             {% endif %}
             <!--end:Menu item-->
 
+            <!--begin:Menu item Infrastructure Resources -->
+            {% if user.is_superuser %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.infrastructure_resources }}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Infrastructure Resources</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Infrastructure Resources -->
+
             <!--begin:Menu item Django admin-->
             <div class="menu-item">
               <!--begin:Menu link-->

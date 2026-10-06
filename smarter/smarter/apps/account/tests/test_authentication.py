@@ -624,8 +624,8 @@ class TestAccountActivationEmailView(TestAccountMixin):
         self.url = reverse(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ACTIVATION)
         logger.debug("%s.setUp() URL set to %s", self.test_logger_prefix, self.url)
 
-    @patch("smarter.apps.account.views.authentication.account_views.email_helper")
-    def test_get_authenticated_admin_user_sends_email_and_renders(self, mock_email_helper):
+    @patch("smarter.apps.account.views.authentication.account_views.infrastructure")
+    def test_get_authenticated_admin_user_sends_email_and_renders(self, mock_infrastructure):
         """GET request with authenticated admin user should send activation email and render response."""
         request = self.request_factory().get(self.url)
         request.user = self.admin_user
@@ -634,10 +634,11 @@ class TestAccountActivationEmailView(TestAccountMixin):
         self.assertEqual(
             response.status_code, HTTPStatus.OK, f"Expected OK for authenticated GET but got {response.status_code}"
         )
-        mock_email_helper.send_email.assert_called_once()
+        mock_infrastructure.email.send_email.assert_called_once()
+        self.assertFalse(mock_infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
 
-    @patch("smarter.apps.account.views.authentication.account_views.email_helper")
-    def test_get_authenticated_non_admin_user_sends_email_and_renders(self, mock_email_helper):
+    @patch("smarter.apps.account.views.authentication.account_views.infrastructure")
+    def test_get_authenticated_non_admin_user_sends_email_and_renders(self, mock_infrastructure):
         """GET request with authenticated non-admin user should send activation email and render response."""
         request = self.request_factory().get(self.url)
         request.user = self.non_admin_user
@@ -646,7 +647,8 @@ class TestAccountActivationEmailView(TestAccountMixin):
         self.assertEqual(
             response.status_code, HTTPStatus.OK, f"Expected OK for authenticated GET but got {response.status_code}"
         )
-        mock_email_helper.send_email.assert_called_once()
+        mock_infrastructure.email.send_email.assert_called_once()
+        self.assertFalse(mock_infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
 
     def test_get_anonymous_user_returns_not_found(self):
         """GET request with anonymous user should return not found."""

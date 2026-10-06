@@ -1,10 +1,10 @@
 """
 Test the llmclient deployment management commands: deploy_llmclient, undeploy_llmclient, deploy_example_llmclient, register_custom_domain and verify_custom_domain.
 
-Deploying an llmclient creates real Route53 records, so nothing here lets a
-deployment reach AWS: LLMClient.save() is mocked wherever it would send
-llmclient_deploy, and the Celery tasks and aws_helper are mocked in each
-command's module.
+Deploying an llmclient creates real DNS records, so nothing here lets a
+deployment reach the cloud: LLMClient.save() is mocked wherever it would send
+llmclient_deploy, and the Celery tasks and the infrastructure services are
+mocked in each command's module.
 """
 
 from io import StringIO
@@ -160,9 +160,9 @@ class TestCustomDomainCommands(DeploymentCommandTestBase):
 
     def setUp(self):
         super().setUp()
-        aws_patcher = patch(f"{COMMANDS}.register_custom_domain.aws_helper")
-        self.aws_helper = aws_patcher.start()
-        self.addCleanup(aws_patcher.stop)
+        infrastructure_patcher = patch(f"{COMMANDS}.register_custom_domain.infrastructure")
+        self.infrastructure = infrastructure_patcher.start()
+        self.addCleanup(infrastructure_patcher.stop)
         register_patcher = patch(f"{COMMANDS}.register_custom_domain.register_custom_domain")
         self.register_custom_domain = register_patcher.start()
         self.addCleanup(register_patcher.stop)
@@ -171,13 +171,13 @@ class TestCustomDomainCommands(DeploymentCommandTestBase):
         self.addCleanup(verify_patcher.stop)
         self.domain = f"test-{self.hash_suffix}.example.com".lower()
 
-    def test_register_when_aws_is_unavailable(self):
-        self.aws_helper.ready.return_value = False
+    def test_register_when_the_cloud_is_unavailable(self):
+        self.infrastructure.ready = False
         self.run_command("register_custom_domain", self.account.account_number, self.domain)
         self.register_custom_domain.assert_not_called()
 
     def test_register_unknown_domain(self):
-        self.aws_helper.ready.return_value = True
+        self.infrastructure.ready = True
         self.run_command("register_custom_domain", self.account.account_number, self.domain)
         self.register_custom_domain.assert_not_called()
 
@@ -190,33 +190,33 @@ class TestCustomDomainCommands(DeploymentCommandTestBase):
 
     def test_register(self):
         self.create_custom_domain()
-        self.aws_helper.ready.return_value = True
+        self.infrastructure.ready = True
         self.register_custom_domain.return_value = True
-        self.aws_helper.route53.get_ns_records.return_value = ["ns-1.awsdns.com."]
+        self.infrastructure.dns.get_name_servers.return_value = ["ns-1.awsdns.com"]
         self.run_command("register_custom_domain", self.account.account_number, self.domain)
         self.register_custom_domain.assert_called_once_with(account_id=self.account.id, domain_name=self.domain)
-        self.aws_helper.route53.get_ns_records.assert_called_once_with(hosted_zone_id="ZTESTCOMMANDS")
+        self.infrastructure.dns.get_name_servers.assert_called_once_with("ZTESTCOMMANDS")
 
     def test_register_failure(self):
         self.create_custom_domain()
-        self.aws_helper.ready.return_value = True
+        self.infrastructure.ready = True
         self.register_custom_domain.return_value = False
         self.run_command("register_custom_domain", self.account.account_number, self.domain)
-        self.aws_helper.route53.get_ns_records.assert_not_called()
+        self.infrastructure.dns.get_name_servers.assert_not_called()
 
     def test_verify_in_foreground(self):
         self.create_custom_domain()
-        with patch(f"{COMMANDS}.verify_custom_domain.aws_helper") as aws_helper:
+        with patch(f"{COMMANDS}.verify_custom_domain.infrastructure") as infrastructure:
             self.run_command("verify_custom_domain", self.domain, foreground=True)
         self.verify_custom_domain.assert_called_once_with(
             hosted_zone_id="ZTESTCOMMANDS", sleep_interval=1800, max_attempts=48
         )
         self.verify_custom_domain.delay.assert_not_called()
-        aws_helper.route53.get_ns_records.assert_called_once_with(hosted_zone_id="ZTESTCOMMANDS")
+        infrastructure.dns.get_name_servers.assert_called_once_with("ZTESTCOMMANDS")
 
     def test_verify_as_celery_task(self):
         self.create_custom_domain()
-        with patch(f"{COMMANDS}.verify_custom_domain.aws_helper"):
+        with patch(f"{COMMANDS}.verify_custom_domain.infrastructure"):
             self.run_command("verify_custom_domain", self.domain)
         self.verify_custom_domain.delay.assert_called_once_with(
             hosted_zone_id="ZTESTCOMMANDS", sleep_interval=1800, max_attempts=48
@@ -224,7 +224,7 @@ class TestCustomDomainCommands(DeploymentCommandTestBase):
         self.verify_custom_domain.assert_not_called()
 
     def test_verify_unknown_domain(self):
-        with patch(f"{COMMANDS}.verify_custom_domain.aws_helper", MagicMock()):
+        with patch(f"{COMMANDS}.verify_custom_domain.infrastructure", MagicMock()):
             with self.assertRaises(SystemExit):
                 self.run_command("verify_custom_domain", self.domain)
         self.verify_custom_domain.assert_not_called()

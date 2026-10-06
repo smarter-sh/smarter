@@ -14,21 +14,31 @@ Inside the local Docker containers:
   records, ACM certificates, and EKS managed node groups**.
 
 An unguarded test once created two real EKS node groups, one of them a GPU
-instance. Assume that any code path reaching `aws_helper`, `kubernetes_helper`,
-boto3, or the Kubernetes client **will** change real infrastructure unless you
-stop it.
+instance. Assume that any code path reaching the infrastructure services
+(`smarter.apps.infrastructure.services.infrastructure`: `.dns`, `.certificates`,
+`.kubernetes`, `.email`, `.provider`), boto3, or kubectl **will** change real
+infrastructure unless you stop it.
+
+The platform reaches its cloud only through `smarter.apps.infrastructure` (see
+`docs/source/smarter-framework/technologies/infrastructure.rst`). Its real
+services already refuse to reach their backends in the unit tests (the AWS
+provider is never ready, kubectl and SMTP are refused), but don't rely on that:
+fake them.
 
 ## Rules
 
 1. **Fake it before the first run.** Add the fake, guard, or patch before you
    run a new test for the first time, not after something goes wrong.
 2. **Patch at the point of use.** Patch the name in the module that calls it,
-   for example `smarter.apps.llmclient.tasks.verify_custom_domain.aws_helper`,
-   not `smarter.common.helpers.aws_helpers.aws_helper`.
+   for example `smarter.apps.llmclient.tasks.verify_custom_domain.infrastructure`,
+   not `smarter.apps.infrastructure.services.infrastructure`.
 3. **New AWS-mutating backends get a test guard.** Copy the pattern in
    `EKSNodeGroupBackend._session()`
-   (`smarter/smarter/apps/llmhost/services/nodegroups.py`): refuse to run when
-   `"test" in sys.argv`, and give tests an in-memory replacement.
+   (`smarter/smarter/apps/llmhost/services/nodegroups.py`), or
+   `refuse_in_unit_tests()` (`smarter.apps.infrastructure.services`): refuse to
+   run when `running_unit_tests()` (`smarter.lib.unittest`), and give tests an
+   in-memory replacement. A new cloud is a new provider in
+   `smarter.apps.infrastructure.providers`, never SDK calls in an app.
 4. **Real-infrastructure tests are tagged and skipped by default.** Tag them
    with `@tag(INFRASTRUCTURE)` (`smarter.lib.unittest.runner`). Run them only
    when the user asks for it.
@@ -38,14 +48,17 @@ stop it.
 
 ## The tools that exist
 
-| Concern                                  | Fake / guard                                                                                           | Where                                                                   |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Kubernetes cluster (llmhost)             | `configure_cluster(lambda: InMemoryClusterBackend(...))`, reset with `configure_cluster(None)`         | `smarter/smarter/apps/llmhost/services/cluster.py`                      |
-| EKS node groups                          | `configure_nodegroups(lambda: InMemoryNodeGroupBackend(...))`. The real backend raises in tests        | `smarter/smarter/apps/llmhost/services/nodegroups.py`                   |
-| DNS records for llmhost                  | `patch("smarter.apps.llmhost.tasks.dns_enabled", return_value=False)`                                  | see `smarter/smarter/apps/llmhost/tests/base_classes.py`                |
-| Route53, ACM (llmclient, custom domains) | `patch(f"{MODULE}.aws_helper", MagicMock())`, plus `patch(f"{MODULE}.is_taskable", return_value=True)` | see `smarter/smarter/apps/llmclient/tests/test_verify_custom_domain.py` |
-| Outbound proxy calls to LLM providers    | `configure_transport(...)`. Real calls raise `ProxyConfigurationError` in tests                        | `smarter/smarter/apps/proxy/services.py`                                |
-| GitHub-hosted skills                     | `with mock_remote_skills(): ...`                                                                       | `smarter/smarter/apps/plugin/plugin/tests/base_classes.py`              |
+| Concern                                       | Fake / guard                                                                                                           | Where                                                                                                                                       |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kubernetes cluster (llmhost)                  | `configure_cluster(lambda: InMemoryClusterBackend(...))`, reset with `configure_cluster(None)`                         | `smarter/smarter/apps/llmhost/services/cluster.py`                                                                                          |
+| EKS node groups                               | `configure_nodegroups(lambda: InMemoryNodeGroupBackend(...))`. The real backend raises in tests                        | `smarter/smarter/apps/llmhost/services/nodegroups.py`                                                                                       |
+| DNS records for llmhost                       | `patch("smarter.apps.llmhost.tasks.dns_enabled", return_value=False)`                                                  | see `smarter/smarter/apps/llmhost/tests/base_classes.py`                                                                                    |
+| DNS, certificates (llmclient, custom domains) | `patch(f"{MODULE}.infrastructure", MagicMock())`, plus `patch(f"{MODULE}.is_taskable", return_value=True)`             | see `smarter/smarter/apps/llmclient/tests/tasks/test_task_verify_custom_domain.py`                                                          |
+| A whole cloud, really exercised in memory     | `configure_provider(lambda: InMemoryProvider())`, reset with `configure_provider(None)`                                | `smarter/smarter/apps/infrastructure/providers/memory.py`; see `smarter/smarter/apps/api/management/tests/test_verify_dns_configuration.py` |
+| kubectl (the Kubernetes service)              | `configure_kubernetes(lambda: fake)`, or `KubectlKubernetesService(allow_in_tests=True)` with `subprocess.run` patched | `smarter/smarter/apps/infrastructure/services/kubernetes.py`; see `smarter/smarter/apps/infrastructure/tests/test_kubernetes.py`            |
+| Email                                         | `configure_email(InMemoryEmailService)`, or `patch(f"{MODULE}.infrastructure")`                                        | `smarter/smarter/apps/infrastructure/services/email.py`                                                                                     |
+| Outbound proxy calls to LLM providers         | `configure_transport(...)`. Real calls raise `ProxyConfigurationError` in tests                                        | `smarter/smarter/apps/proxy/services.py`                                                                                                    |
+| GitHub-hosted skills                          | `with mock_remote_skills(): ...`                                                                                       | `smarter/smarter/apps/plugin/plugin/tests/base_classes.py`                                                                                  |
 
 The llmhost test base class (`smarter/smarter/apps/llmhost/tests/base_classes.py`)
 is the model for a whole suite that runs against in-memory infrastructure:
@@ -67,8 +80,9 @@ install the fakes in `setUpClass`, and reset them in `tearDownClass`.
   existing task (`smarter/smarter/apps/llmclient/tasks/deploy_custom_api.py`):
   `autoretry_for`, `retry_backoff`, `max_retries`, and `queue`.
 - `is_taskable()` (`smarter/smarter/apps/llmclient/tasks/utils.py`) checks that
-  AWS is configured. Patch it to `True` together with a mocked `aws_helper`.
-  Never satisfy it with real credentials.
+  the cloud provider's DNS and certificate services are ready. Patch it to
+  `True` together with a mocked `infrastructure`. Never satisfy it with real
+  credentials.
 
 ## Domain knowledge that affects what you fake
 

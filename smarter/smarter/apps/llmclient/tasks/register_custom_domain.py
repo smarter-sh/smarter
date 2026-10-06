@@ -1,13 +1,13 @@
 """
 Celery tasks for registering llmclient custom domains.
 
-This module defines Celery tasks for registering custom domains for llmclients, including creating AWS Route53 hosted zones, ACM certificates, and DNS records, as well as associating domains with accounts.
+This module defines Celery tasks for registering custom domains for llmclients, including creating DNS zones, TLS certificates, and DNS records in the cloud provider, as well as associating domains with accounts.
 
 Main Tasks
 ----------
 
 - register_custom_domain(account_id, domain_name):
-    Registers a customer's custom domain name in AWS Route53 and associates the hosted zone with the account.
+    Registers a customer's custom domain name in the cloud provider's DNS and associates its zone with the account.
 
 Signals
 -------
@@ -37,10 +37,6 @@ Raises
 
 LLMClientCustomDomainExists
     If the domain is already registered to another account.
-AWSACMCertificateNotFound
-    If the ACM certificate for the domain is not found.
-AWSACMVerificationNotFound
-    If the ACM certificate for the domain is not verified.
 Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
@@ -49,19 +45,17 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
+from smarter.apps.infrastructure.exceptions import (
+    CertificateNotFound,
+    CertificateNotIssued,
+)
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import LLMClientCustomDomain
 from smarter.apps.llmclient.signals import (
     post_register_custom_domain,
     pre_register_custom_domain,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws.acm import AWSCertificateManager
-from smarter.common.helpers.aws.exceptions import (
-    AWSACMCertificateNotFound,
-    AWSACMVerificationNotFound,
-)
-from smarter.common.helpers.aws.route53 import AWSRoute53
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -82,17 +76,17 @@ logger_prefix = logging.formatted_text(__name__)
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.infrastructure_tasks_celery_task_queue,
 )
-def register_custom_domain(account_id: int, domain_name: str):
+def register_custom_domain(account_id: int, domain_name: str) -> bool:
     """
-    Register a customer's custom domain name in AWS Route53 and associate the Hosted Zone with the account.
+    Register a customer's custom domain name in the cloud provider's DNS and associate its zone with the account.
 
     This Celery task performs the following steps:
     1. Sends a pre-register signal for the custom domain.
     2. Checks if the custom domain and certificate already exist and are verified.
     3. Ensures the domain is not registered by another account.
-    4. Creates a Hosted Zone for the custom domain if needed.
-    5. Associates the Hosted Zone with the account.
-    6. Creates or retrieves an ACM certificate for the domain.
+    4. Creates a DNS zone for the custom domain if needed.
+    5. Associates the DNS zone with the account.
+    6. Creates or retrieves a TLS certificate for the domain.
     7. Creates a DNS record for the certificate and triggers verification.
     8. Sends a post-register signal for the custom domain.
 
@@ -110,22 +104,20 @@ def register_custom_domain(account_id: int, domain_name: str):
     post_register_custom_domain : django.dispatch.Signal
         Sent after the custom domain registration is completed.
 
+    Returns
+    -------
+    bool
+        True if the domain is registered, or already was, and False if the infrastructure
+        services are not available, so nothing was done.
+
     Raises
     ------
     LLMClientCustomDomainExists
         If the domain is already registered to another account.
-    AWSACMCertificateNotFound
-        If the ACM certificate for the domain is not found.
-    AWSACMVerificationNotFound
-        If the ACM certificate for the domain is not verified.
     Exception
         Any exception raised during the registration process will trigger a retry according to Celery settings.
     """
     if not is_taskable():
-        return
-    if not isinstance(aws_helper.acm, AWSCertificateManager):
-        return False
-    if not isinstance(aws_helper.route53, AWSRoute53):
         return False
 
     task_id = register_custom_domain.request.id
@@ -135,7 +127,7 @@ def register_custom_domain(account_id: int, domain_name: str):
     account = Account.objects.get(id=account_id)
     admin = get_cached_admin_user_for_account(account=account)
     admin_user_profile = UserProfile.get_cached_object(user=admin, account=account)  # type: ignore[assignment]
-    domain_name = aws_helper.aws.domain_resolver(domain_name)
+    domain_name = infrastructure.dns.resolve_domain(domain_name)
 
     logger.info(
         "%s - Account %s %s attempting to register custom domain %s task_id: %s",
@@ -147,11 +139,11 @@ def register_custom_domain(account_id: int, domain_name: str):
     )
     try:
         existing = LLMClientCustomDomain.objects.get(user_profile__account=account, domain_name=domain_name)
-        certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=domain_name)
-        if not certificate_arn:
-            raise AWSACMCertificateNotFound
-        if not aws_helper.acm.certificate_is_verified(certificate_arn=certificate_arn):
-            raise AWSACMVerificationNotFound
+        certificate_id = infrastructure.certificates.get_certificate_id(domain_name)
+        if not certificate_id:
+            raise CertificateNotFound(f"{domain_name} has no certificate.")
+        if not infrastructure.certificates.is_issued(certificate_id):
+            raise CertificateNotIssued(f"The certificate of {domain_name} is not issued.")
 
         # we found the custom domain, and its certificate is issued. verify it, unless it is verified.
         if existing.aws_hosted_zone_id and not existing.is_verified:
@@ -169,7 +161,7 @@ def register_custom_domain(account_id: int, domain_name: str):
         post_register_custom_domain.send(
             sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
         )
-        return
+        return True
     except LLMClientCustomDomain.DoesNotExist:
         # the custom domain doesn't exist, so we need to create it
         logger.info(
@@ -179,7 +171,7 @@ def register_custom_domain(account_id: int, domain_name: str):
             account.company_name,
             task_id,
         )
-    except AWSACMCertificateNotFound:
+    except CertificateNotFound:
         # the certificate was not found, so we need to create it
         logger.info(
             "%s - certificate for domain %s not found. Proceeding to create it. task_id: %s",
@@ -187,7 +179,7 @@ def register_custom_domain(account_id: int, domain_name: str):
             domain_name,
             task_id,
         )
-    except AWSACMVerificationNotFound:
+    except CertificateNotIssued:
         # the certificate has not been verified, so we need to verify it
         logger.info(
             "%s - certificate for domain %s is not verified. Proceeding to verify it. task_id: %s",
@@ -207,26 +199,26 @@ def register_custom_domain(account_id: int, domain_name: str):
         raise LLMClientCustomDomainExists(err)
     logger.info("%s - domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
 
-    # create a Hosted Zone for the custom domain
-
-    aws_hosted_zone, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain_name)
+    # create a DNS zone for the custom domain
+    zone, _ = infrastructure.dns.get_or_create_zone(domain_name)
     # the account's CustomDomain resource, e.g. from smarter apply, whoever in the account owns it.
     host = LLMClientCustomDomain.objects.filter(user_profile__account=account, domain_name=domain_name).first()
     if host is None:
         host = LLMClientCustomDomain.objects.create(user_profile=admin_user_profile, domain_name=domain_name)
-    host.aws_hosted_zone_id = aws_hosted_zone["Id"]
+    host.aws_hosted_zone_id = zone.id
     host.save()
 
     # create a certificate for the custom domain
-    certificate_arn = aws_helper.acm.get_or_create_certificate(domain_name=domain_name)
+    certificate_id, _ = infrastructure.certificates.get_or_create_certificate(domain_name)
 
-    # create the DNS record that validates the certificate. ACM can only read it once the
-    # customer has delegated the domain's NS records to the hosted zone, which may take a day,
+    # create the DNS records that validate the certificate. The provider can only read them once the
+    # customer has delegated the domain's NS records to the DNS zone, which may take a day,
     # so rather than wait here, verify_custom_domain checks the NS records, the certificate and
     # https, and checks again later until they work.
-    aws_helper.acm.get_or_create_certificate_dns_record(certificate_arn=certificate_arn)
+    infrastructure.certificates.create_validation_records(certificate_id)
     host.set_verification_status(LLMClientCustomDomain.VerificationStatusChoices.VERIFYING, "Verification has started.")
     verify_custom_domain.delay(hosted_zone_id=host.aws_hosted_zone_id)
     post_register_custom_domain.send(
         sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
     )
+    return True

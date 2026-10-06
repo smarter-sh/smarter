@@ -1,8 +1,13 @@
-Kubernetes Helper Class Reference
-==========================================
+Kubernetes Service Reference
+============================
 
+.. autoclass:: smarter.apps.infrastructure.services.kubernetes.KubernetesService
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: __init__
 
-.. autoclass:: smarter.common.helpers.k8s_helpers.KubernetesHelper
+.. autoclass:: smarter.apps.infrastructure.services.kubernetes.KubectlKubernetesService
     :members:
     :undoc-members:
     :show-inheritance:

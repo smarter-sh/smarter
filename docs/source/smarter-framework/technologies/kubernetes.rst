@@ -8,25 +8,35 @@ managing application updates seamlessly. Kubernetes has gained popularity
 because it enables organizations to efficiently manage complex applications at scale.
 It improves resource utilization, and supports cloud-native development practices.
 
-Kubernetes Helper Classes
----------------------------
+The Kubernetes Service
+----------------------
 
-The Smarter Framework provides helper classes to facilitate interaction with Kubernetes clusters, primarily via
-the Kubernetes API vis a vis `kubectl <https://kubernetes.io/docs/reference/kubectl/>`__, the command-line tool for Kubernetes.
+Smarter manages the resources of its Kubernetes cluster, for example the Ingress of each
+LLMClient, and the StatefulSet of each self-hosted vectorstore, with the Kubernetes service of
+the :doc:`infrastructure services <infrastructure>`. It uses
+`kubectl <https://kubernetes.io/docs/reference/kubectl/>`__, the command-line tool for
+Kubernetes, with the kubeconfig that the cloud provider writes, for example with
+``aws eks update-kubeconfig`` for AWS EKS. kubectl works the same with any cluster, so the
+service does not depend on the cloud.
 
 .. code-block:: python
 
-  from smarter.common.helpers.k8s_helpers import kubernetes_helper
+  from string import Template
+  from smarter.apps.infrastructure.services import infrastructure
 
   with open("k8s/ingress.yaml.tpl", encoding="utf-8") as ingress_template:
       template = Template(ingress_template.read())
       manifest = template.substitute(ingress_values)
-  kubernetes_helper.apply_manifest(manifest)
+  infrastructure.kubernetes.apply_manifest(manifest)
 
+Applying a manifest that provisions billable cloud resources, for example a
+PersistentVolumeClaim, which provisions a block storage volume, or a Service of type
+LoadBalancer, sends the infrastructure's billable resource signals, and records the resources
+in the infrastructure resource ledger.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Kubernetes Helper Class Technical Reference
+   :caption: Kubernetes Service Technical Reference
 
    kubernetes/helper.rst
 

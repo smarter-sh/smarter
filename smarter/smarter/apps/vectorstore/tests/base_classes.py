@@ -3,7 +3,7 @@ Base classes and fakes of the vectorstore app's tests.
 
 Nothing reaches a real cluster or service:
 
-- :class:`FakeKubernetes` replaces KubernetesHelper, with :func:`configure_kubernetes`. The
+- :class:`FakeKubernetes` replaces the Kubernetes service, with :func:`configure_kubernetes`. The
   smarter-app container's kubeconfig is a real cluster's, so a self-hosted vectorstore must never
   be deployed without it.
 - The Qdrant backend uses an in-memory QdrantClient, which supports everything but snapshots.
@@ -40,7 +40,7 @@ def get_test_data(filename: str) -> Any:
 
 
 class FakeKubernetes:
-    """A KubernetesHelper that records what it is asked to do."""
+    """A Kubernetes service that records what it is asked to do."""
 
     def __init__(self):
         self.ready = True

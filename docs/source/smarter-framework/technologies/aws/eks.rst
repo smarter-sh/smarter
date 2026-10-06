@@ -1,7 +1,7 @@
 Smarter AWS EKS Helper
 ======================
 
-.. autoclass:: smarter.common.helpers.aws.eks.AWSEks
+.. autoclass:: smarter.apps.infrastructure.providers.aws.helpers.eks.AWSEks
     :members:
     :undoc-members:
     :show-inheritance:

@@ -8,6 +8,7 @@ from django.test import tag
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.infrastructure.providers.aws import AWSProvider
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
 from smarter.apps.llmclient.signals import (
     llmclient_dns_failed,
@@ -17,7 +18,6 @@ from smarter.apps.llmclient.signals import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_LLM_CLIENT_NAME
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -154,10 +154,12 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         print("test_deploy_and_undeploy(): initiating deploy...")
         print("-" * 80)
 
-        # hosted zone for the Customer api domain
-        api_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(
-            domain_name=smarter_settings.environment_api_domain
-        )
+        # the DNS zone of the customer api domain. This test is tagged INFRASTRUCTURE, so it may use real AWS.
+        dns = AWSProvider(allow_in_tests=True).dns
+        api_zone = dns.get_zone(smarter_settings.environment_api_domain)
+        if api_zone is None:
+            self.fail(f"DNS zone not found for {smarter_settings.environment_api_domain}")
+        api_hosted_zone_id = api_zone.id
 
         call_command(
             "deploy_llmclient", "--account_number", f"{self.account.account_number}", "--name", self.llmclient.name
@@ -169,16 +171,10 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
 
         # verify that a DNS record was created for the llmclient
         llmclient_default_host = llmclient.default_host
-        a_record = aws_helper.route53.get_dns_record(
-            hosted_zone_id=api_hosted_zone_id, record_name=llmclient_default_host, record_type="A"
-        )
-        self.assertIsNotNone(
-            a_record, f"DNS A record not found for hosted zone {api_hosted_zone_id}, {llmclient_default_host}"
-        )
-        resolved_llmclient_domain = aws_helper.aws.domain_resolver(llmclient_default_host)
-        if not isinstance(a_record, dict):
-            self.fail(f"Unexpected DNS record format for {llmclient_default_host}: {a_record}")
-        self.assertEqual(str(a_record["Name"]).rstrip("."), str(resolved_llmclient_domain).rstrip("."))
+        a_record = dns.get_record(api_hosted_zone_id, llmclient_default_host, "A")
+        if a_record is None:
+            self.fail(f"DNS A record not found for zone {api_hosted_zone_id}, {llmclient_default_host}")
+        self.assertEqual(a_record.name, dns.resolve_domain(llmclient_default_host))
 
         # verify that the dns record verification is either underway or completed
         print("llmclient.dns_verification_status", llmclient.dns_verification_status)
@@ -204,15 +200,10 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         llmclient = LLMClient.objects.get(name=self.llmclient.name, user_profile__account=self.account)
         self.assertEqual(llmclient.deployed, False)
         self.assertEqual(llmclient.dns_verification_status, llmclient.DnsVerificationStatusChoices.NOT_VERIFIED)
-        a_record = aws_helper.route53.get_dns_record(
-            hosted_zone_id=api_hosted_zone_id,
-            record_name=llmclient_default_host,
-            record_type="A",
-        )
+        a_record = dns.get_record(api_hosted_zone_id, llmclient_default_host, "A")
         if a_record is not None:
             logger.info("test_deploy_and_undeploy() found an existing DNS record: %s", a_record)
-            resolved_llmclient_domain = aws_helper.aws.domain_resolver(llmclient_default_host)
-            self.assertEqual(str(a_record["Name"]).rstrip("."), str(resolved_llmclient_domain).rstrip("."))
+            self.assertEqual(a_record.name, dns.resolve_domain(llmclient_default_host))
 
     @tag(INFRASTRUCTURE)
     def test_deploy_demo_api(self):

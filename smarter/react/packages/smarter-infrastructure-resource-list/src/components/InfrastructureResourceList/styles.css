@@ -1,0 +1,7 @@
+.infrastructure-summary-tile {
+  min-height: 5.5rem;
+}
+
+.infrastructure-summary-billable {
+  border-color: var(--bs-warning) !important;
+}

@@ -1,39 +1,35 @@
-Helper Overview for AWS
-===========================
+AWS Provider Overview
+=====================
 
-This section provides documentation for the AWS helper classes available in the Smarter framework.
-These helpers facilitate interactions with the AWS services that Smarter supports, providing layers of abstraction
-for common tasks, like setting up DNS records, managing SSL certificates, and configuring cloud resources.
+Smarter uses these AWS services:
 
-All AWS helper functions are available through a Singleton instance of the `AWSInfrastructureConfig` class.
+- **Route53**, for DNS: the zones and records of the platform's domains, of LLMClients' hosts,
+  and of customers' custom domains.
+- **AWS Certificate Manager (ACM)**, for the TLS certificates of custom domains.
+- **EKS**, the Kubernetes cluster that Smarter runs on, and the node groups of self-hosted LLMs.
+- **Simple Email Service (SES)**, as the SMTP server of the platform's email.
+
+The platform does not call these services directly. It uses the
+:doc:`infrastructure services <../infrastructure>`, which the AWS provider,
+:class:`~smarter.apps.infrastructure.providers.aws.provider.AWSProvider`, implements when
+``SMARTER_CLOUD_PROVIDER`` is ``aws``, the default:
 
 .. code-block:: python
 
-   from smarter.common.helpers.helpers import aws_helper
+   from smarter.apps.infrastructure.services import infrastructure
 
-   aws_helper.route53.get_or_create_hosted_zone("example.com")
+   zone, created = infrastructure.dns.get_or_create_zone("example.com")
+   print(zone.id, zone.name_servers)
 
-returns a dictionary similar to:
+The AWS provider is built on low-level helpers, one per AWS service, which wrap the boto3
+clients. Only the AWS provider uses them:
 
-.. code-block:: json
-
-            {
-            "HostedZone": {
-                "Id": "/hostedzone/Z148QEXAMPLE8V",
-                "Name": "example.com.",
-                "CallerReference": "my hosted zone",
-                "Config": {
-                    "Comment": "This is my hosted zone",
-                    "PrivateZone": false
-                },
-                "ResourceRecordSetCount": 2
-            },
-            "DelegationSet": {
-                "NameServers": [
-                    "ns-2048.awsdns-64.com",
-                    "ns-2049.awsdns-65.net",
-                    "ns-2050.awsdns-66.org",
-                    "ns-2051.awsdns-67.co.uk"
-                ]
-            }
-        }
+- :class:`~smarter.apps.infrastructure.providers.aws.helpers.base.AWSBase` authenticates with
+  AWS, with an IAM role inside AWS, an AWS profile, or an access key pair, and gives the boto3
+  session and the account's identity.
+- :class:`~smarter.apps.infrastructure.providers.aws.helpers.route53.AWSRoute53` manages
+  hosted zones and their record sets.
+- :class:`~smarter.apps.infrastructure.providers.aws.helpers.acm.AWSCertificateManager`
+  requests, describes and deletes DNS-validated certificates.
+- :class:`~smarter.apps.infrastructure.providers.aws.helpers.eks.AWSEks` describes the EKS
+  cluster, and writes its kubeconfig.

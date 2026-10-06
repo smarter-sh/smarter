@@ -1,7 +1,7 @@
 """
 Celery tasks for deploying llmclient default API domains.
 
-This module defines Celery tasks for deploying default API domains for llmclients, including the creation and verification of Route53 A records, Kubernetes ingress manifests, and certificate issuance.
+This module defines Celery tasks for deploying default API domains for llmclients, including the creation and verification of DNS A records, Kubernetes ingress manifests, and certificate issuance.
 
 Main Tasks
 ----------
@@ -50,6 +50,7 @@ Exception
 from typing import Optional
 
 from smarter.apps.account.models import AccountContact
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.signals import (
     llmclient_deploy_failed,
@@ -64,8 +65,6 @@ from smarter.apps.llmclient.signals import (
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.exceptions import SmarterException
-from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -108,7 +107,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
     1. Sends a pre-deploy signal for the llmclient API.
     2. Logs the deployment request.
     3. Retrieves the LLMClient instance by ID.
-    4. Creates a Route53 A record for the llmclient's default domain.
+    4. Creates a DNS A record for the llmclient's default domain.
     5. Optionally creates and applies a Kubernetes ingress manifest for the domain.
     6. Hands off to continue_default_api_deployment, which verifies the ingress resources and the
        certificate, and then the domain, if requested, and activates the llmclient. A certificate and
@@ -179,10 +178,9 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
         )
         return None
 
-    # to quiet linting errors
-    if not aws_helper.route53:
+    if not infrastructure.dns.ready:
         logger.error(
-            "%s AWS Route53 helper is not available. Cannot deploy llmclient %s. task_id: %s",
+            "%s the DNS service is not ready. Cannot deploy llmclient %s. task_id: %s",
             fn_name,
             llmclient.name,
             task_id,
@@ -200,7 +198,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
 
     domain_name = llmclient.default_host
     if smarter_settings.llmclient_tasks_create_dns_record:
-        _, created = aws_helper.route53.create_domain_a_record(
+        _, created = infrastructure.dns.create_domain_a_record(
             hostname=domain_name, api_host_domain=llmclient.base_api_domain
         )
         if created:
@@ -377,7 +375,7 @@ def continue_default_api_deployment(
 
     if stage == STAGE_CERTIFICATE:
         # verify that the ingress resources were created:
-        ingress_verified, certificate_verified, secret_verified = kubernetes_helper.verify_ingress_resources(
+        ingress_verified, certificate_verified, secret_verified = infrastructure.kubernetes.verify_ingress_resources(
             hostname=domain_name, namespace=smarter_settings.environment_namespace, max_attempts=1
         )
         if not (ingress_verified and secret_verified and certificate_verified):
@@ -430,7 +428,7 @@ def continue_default_api_deployment(
             llmclient_dns_verification_initiated.send(
                 sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id
             )
-        result = check_domain(aws_helper.aws.domain_resolver(domain_name), record_type="A", task_id=task_id)
+        result = check_domain(infrastructure.dns.resolve_domain(domain_name), record_type="A", task_id=task_id)
         if result == DomainCheck.PENDING and attempt + 1 < VERIFY_DOMAIN_MAX_ATTEMPTS:
             check_again(STAGE_DOMAIN, attempt + 1, VERIFY_DOMAIN_INTERVAL)
             return

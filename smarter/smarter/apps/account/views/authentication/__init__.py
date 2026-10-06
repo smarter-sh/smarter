@@ -1,6 +1,4 @@
-"""
-Django Account Authentication views.
-"""
+"""Django Account Authentication views."""
 
 from .account_views import (
     AccountActivateView,
@@ -8,7 +6,6 @@ from .account_views import (
     AccountDeactivateView,
     AccountInactiveView,
     AccountRegisterView,
-    email_helper,
 )
 from .login_view import LoginView
 from .logout_view import LogoutView
@@ -23,5 +20,4 @@ __all__ = [
     "LoginView",
     "LogoutView",
     "SocialAuthAlreadyAssociatedView",
-    "email_helper",
 ]
