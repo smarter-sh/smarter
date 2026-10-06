@@ -27,7 +27,7 @@ from smarter.apps.plugin.manifest.models.websearch_plugin.model import (
 from smarter.apps.plugin.manifest.models.websearch_plugin.spec import (
     SAMWebsearchPluginSpec,
 )
-from smarter.apps.plugin.models import PluginDataWebsearch
+from smarter.apps.plugin.models import PluginDataWebsearch, PluginMeta
 from smarter.apps.plugin.plugin.websearch import WebsearchPlugin
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
@@ -189,6 +189,16 @@ class TestSmarterWebsearchPluginBroker(TestSAMBrokerBaseClass):
         """Test the describe() method returns a valid manifest response."""
         response = self.broker.describe(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+
+    def test_delete(self):
+        """Test that delete() removes an applied plugin."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        name = self.broker.manifest.metadata.name
+        broker = self.SAMBrokerClass(self.request, self.loader)
+        response = broker.delete(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).exists())
 
     def test_deploy(self):
         """Test that deploy() is not implemented."""

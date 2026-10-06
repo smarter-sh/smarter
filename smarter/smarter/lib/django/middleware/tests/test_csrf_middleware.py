@@ -86,3 +86,26 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         with patch.object(type(self.middleware), "is_llmclient", new_callable=PropertyMock, return_value=True):
             result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)
+
+    @override_settings(ALLOWED_HOSTS=["example.com"])
+    @patch("smarter.lib.django.middleware.csrf.smarter_settings")
+    @patch("smarter.lib.django.middleware.csrf.waffle")
+    def test_process_view_rejects_post_without_token(self, mock_waffle, mock_smarter_settings):
+        """Test that a POST without a CSRF token, from a host that has no bypass, is forbidden."""
+        mock_waffle.switch_is_active.return_value = True
+        mock_smarter_settings.environment = "prod"
+        mock_smarter_settings.internal_ip_prefixes = []
+        self.request.method = "POST"
+        self.request.path = "/test-csrf-protected/"
+        self.request.META["SERVER_NAME"] = "example.com"
+        self.request.META["SERVER_PORT"] = "443"
+        self.request.META["HTTP_HOST"] = "example.com"
+        setattr(self.middleware, "request", self.request)  # type: ignore
+        with (
+            patch.object(SmarterCsrfViewMiddleware, "is_llmclient", new_callable=PropertyMock, return_value=False),
+            patch.object(
+                SmarterCsrfViewMiddleware, "get_dynamic_trusted_origins", return_value=["https://*.example.com"]
+            ),
+        ):
+            response = self.middleware.process_view(self.request, lambda request: None, (), {})
+        self.assertEqual(response.status_code, 403)

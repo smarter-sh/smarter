@@ -16,11 +16,13 @@ from smarter.apps.llmclient.tasks.deploy_default_api import (
     STAGE_CERTIFICATE,
     STAGE_DOMAIN,
     continue_default_api_deployment,
+    deploy_default_api,
 )
 from smarter.apps.llmclient.tasks.verify_domain import (
     VERIFY_DOMAIN_INTERVAL,
     DomainCheck,
 )
+from smarter.common.exceptions import SmarterException
 
 MODULE = "smarter.apps.llmclient.tasks.deploy_default_api"
 
@@ -136,3 +138,97 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
         continue_default_api_deployment(999999999, stage=STAGE_CERTIFICATE)
         self.kubernetes_helper.verify_ingress_resources.assert_not_called()
         self.apply_async.assert_not_called()
+
+
+class TestDeployDefaultApi(TestAccountMixin):
+    """Test that deploy_default_api creates the DNS record and ingress, then hands off to its continuation."""
+
+    def setUp(self):
+        super().setUp()
+        self.llmclient = LLMClient.objects.create(
+            name=f"test_deploy_default_api_start_{self.hash_suffix}", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
+        self.aws_helper = MagicMock()
+        self.aws_helper.route53.create_domain_a_record.return_value = ({}, True)
+        self.settings = MagicMock(llmclient_tasks_create_dns_record=True, llmclient_tasks_create_ingress_manifest=True)
+        for target, value in (
+            ("is_taskable", MagicMock(return_value=True)),
+            ("aws_helper", self.aws_helper),
+            ("smarter_settings", self.settings),
+            ("apply_ingress_manifest", MagicMock()),
+            ("continue_default_api_deployment", MagicMock()),
+        ):
+            patcher = patch(f"{MODULE}.{target}", value)
+            setattr(self, target, patcher.start())
+            self.addCleanup(patcher.stop)
+
+    def set_certificate_status(self, status):
+        # update(), rather than save(), which would queue a real deployment.
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(tls_certificate_issuance_status=status)
+
+    def test_not_taskable(self):
+        """Test that nothing is done when AWS is not available."""
+        self.is_taskable.return_value = False
+        self.assertIsNone(deploy_default_api(self.llmclient.pk))
+        self.aws_helper.route53.create_domain_a_record.assert_not_called()
+
+    def test_unknown_llmclient(self):
+        """Test that an llmclient that doesn't exist is not deployed."""
+        self.assertIsNone(deploy_default_api(999999999))
+        self.aws_helper.route53.create_domain_a_record.assert_not_called()
+
+    def test_route53_not_available(self):
+        """Test that nothing is deployed without the Route53 helper."""
+        self.aws_helper.route53 = None
+        self.assertIsNone(deploy_default_api(self.llmclient.pk))
+        self.continue_default_api_deployment.assert_not_called()
+
+    def test_already_deployed_and_verified(self):
+        """Test that an llmclient that is deployed and verified only has its DNS record verified."""
+        self.aws_helper.route53.create_domain_a_record.return_value = ({}, False)
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(
+            deployed=True, dns_verification_status=LLMClient.DnsVerificationStatusChoices.VERIFIED
+        )
+        deploy_default_api(self.llmclient.pk)
+        self.aws_helper.route53.create_domain_a_record.assert_called_once()
+        self.apply_ingress_manifest.assert_not_called()
+        self.continue_default_api_deployment.assert_not_called()
+
+    def test_without_ingress_manifest(self):
+        """Test that the domain is verified next when the ingress manifest is not created."""
+        self.settings.llmclient_tasks_create_ingress_manifest = False
+        deploy_default_api(self.llmclient.pk)
+        self.apply_ingress_manifest.assert_not_called()
+        self.continue_default_api_deployment.assert_called_once()
+        self.assertEqual(self.continue_default_api_deployment.call_args.kwargs["stage"], STAGE_DOMAIN)
+
+    def test_ingress_manifest_fails(self):
+        """Test that a failure to apply the ingress manifest fails the certificate issuance."""
+        self.apply_ingress_manifest.side_effect = SmarterException("test ingress error")
+        deploy_default_api(self.llmclient.pk)
+        self.continue_default_api_deployment.assert_not_called()
+        self.assertEqual(
+            LLMClient.objects.get(pk=self.llmclient.pk).tls_certificate_issuance_status,
+            LLMClient.TlsCertificateIssuanceStatusChoices.FAILED,
+        )
+
+    def test_certificate_requested_checks_later(self):
+        """Test that a certificate that is not issued yet is requested, and checked later."""
+        deploy_default_api(self.llmclient.pk)
+        self.apply_ingress_manifest.assert_called_once_with(self.llmclient.default_host)
+        self.continue_default_api_deployment.apply_async.assert_called_once()
+        call = self.continue_default_api_deployment.apply_async.call_args
+        self.assertEqual(call.kwargs["kwargs"]["stage"], STAGE_CERTIFICATE)
+        self.assertEqual(
+            LLMClient.objects.get(pk=self.llmclient.pk).tls_certificate_issuance_status,
+            LLMClient.TlsCertificateIssuanceStatusChoices.REQUESTED,
+        )
+
+    def test_certificate_issued_continues(self):
+        """Test that the certificate of an llmclient whose certificate is issued is verified at once."""
+        self.set_certificate_status(LLMClient.TlsCertificateIssuanceStatusChoices.ISSUED)
+        deploy_default_api(self.llmclient.pk)
+        self.continue_default_api_deployment.apply_async.assert_not_called()
+        self.continue_default_api_deployment.assert_called_once()
+        self.assertEqual(self.continue_default_api_deployment.call_args.kwargs["stage"], STAGE_CERTIFICATE)
