@@ -8,7 +8,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
 from django.contrib.admindocs import urls as admindocs_urls
-from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from django.views.static import serve
@@ -185,7 +184,6 @@ urlpatterns = [
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
-    path("session-test/", session_test_view, name="session_test"),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
