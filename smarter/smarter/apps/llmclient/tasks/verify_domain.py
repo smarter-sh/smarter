@@ -54,6 +54,7 @@ from typing import Optional
 
 import dns.resolver
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.signals import (
     llmclient_dns_failed,
@@ -63,7 +64,6 @@ from smarter.apps.llmclient.signals import (
     pre_verify_domain,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -105,24 +105,23 @@ def check_domain(
     It sends llmclient_dns_verified when the domain resolves, and llmclient_dns_failed when it does
     not resolve yet. It does not wait: the caller checks again later.
 
-    :param domain_name: The domain name, which aws_helper.aws.domain_resolver() has resolved.
+    :param domain_name: The domain name, which infrastructure.dns.resolve_domain() has resolved.
     :param record_type: The DNS record type, e.g. A.
-    :param hosted_zone_id: The Route53 hosted zone of the record, by default that of the environment's api domain.
+    :param hosted_zone_id: The DNS zone of the record, by default that of the environment's api domain.
     :param task_id: The Celery task id, for logging and signals.
     """
     fn_name = f"{logger_prefix}.check_domain()"
     if not hosted_zone_id:
-        customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(  # type: ignore[union-attr]
-            smarter_settings.environment_api_domain
-        )
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id(  # type: ignore[union-attr]
-            hosted_zone=customer_api_domain_hosted_zone
-        )
+        zone = infrastructure.dns.get_zone(smarter_settings.environment_api_domain)
+        if zone is None:
+            logger.warning(
+                "%s DNS zone of %s not found. task_id: %s", fn_name, smarter_settings.environment_api_domain, task_id
+            )
+            return DomainCheck.MISSING
+        hosted_zone_id = zone.id
 
     # 1. verify that the DNS record actually exists. If it doesn't then there's no point in checking again.
-    dns_record = aws_helper.route53.get_dns_record(  # type: ignore[union-attr]
-        hosted_zone_id=hosted_zone_id, record_name=domain_name, record_type=record_type
-    )
+    dns_record = infrastructure.dns.get_record(hosted_zone_id, domain_name, record_type)
     if not dns_record:
         logger.warning("%s DNS record for domain %s not found. task_id: %s", fn_name, domain_name, task_id)
         return DomainCheck.MISSING
@@ -188,7 +187,7 @@ def verify_domain(
     activate_llmclient : bool, optional
         Whether to activate the llmclient upon successful verification. Default is False.
     hosted_zone_id : str, optional
-        The AWS Route53 hosted zone ID to use for DNS lookups.
+        The id of the DNS zone to use for DNS lookups.
     task_id : str, optional
         The Celery task ID for logging and signal purposes.
     attempt : int, optional
@@ -219,8 +218,6 @@ def verify_domain(
     """
     if not is_taskable():
         return False
-    if not aws_helper.route53:
-        return False
     fn_name = f"{logger_prefix}.verify_domain()"
     task_id = task_id or verify_domain.request.id
     llmclient = LLMClient.objects.filter(pk=llmclient_id).first() if llmclient_id else None
@@ -239,7 +236,7 @@ def verify_domain(
         task_id,
     )
 
-    resolved_domain_name = aws_helper.aws.domain_resolver(domain_name)
+    resolved_domain_name = infrastructure.dns.resolve_domain(domain_name)
     result = check_domain(resolved_domain_name, record_type=record_type, hosted_zone_id=hosted_zone_id, task_id=task_id)
 
     if result == DomainCheck.PENDING and attempt + 1 < VERIFY_DOMAIN_MAX_ATTEMPTS:

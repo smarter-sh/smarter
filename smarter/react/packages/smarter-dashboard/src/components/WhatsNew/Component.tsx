@@ -25,6 +25,12 @@ const DOCS_BASE_URL = "https://docs.smarter.sh";
 
 const FEATURES: Feature[] = [
   {
+    name: "Infrastructure Manager",
+    version: "0.18",
+    description: "Manage and monitor your cloud infrastructure from the web console.",
+    docsPath: "smarter-framework/technologies/infrastructure.html",
+  },
+  {
     name: "Custom Domains",
     version: "0.18",
     description: "Serve LLMClients from your own branded domain, managed with a SAM manifest",

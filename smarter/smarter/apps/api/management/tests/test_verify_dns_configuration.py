@@ -1,25 +1,28 @@
 """
 Test the verify_dns_configuration management command.
 
-Route53 is never called: the command's aws_helper is a mock, whose route53 is a mock AWSRoute53.
+The cloud is never called: the command's infrastructure services use an
+:class:`~smarter.apps.infrastructure.providers.memory.InMemoryProvider`, whose DNS zones and
+records are in memory, so that the command's DNS operations really run.
 """
 
 from unittest.mock import MagicMock, patch
 
+from smarter.apps.infrastructure.models import InfrastructureResource
+from smarter.apps.infrastructure.providers.memory import InMemoryProvider
+from smarter.apps.infrastructure.services.dns import DNSRecord
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.helpers.aws.route53 import AWSRoute53
 
 from .base import CommandTestBase
 
 MODULE = "smarter.apps.api.management.commands.verify_dns_configuration"
-A_RECORD = {"Name": "example.com.", "Type": "A", "AliasTarget": {"DNSName": "elb.amazonaws.com."}}
+LOAD_BALANCER = ["192.0.2.10"]
 
 
 def settings(environment: str) -> MagicMock:
     return MagicMock(
         environment=environment,
-        aws_is_configured=True,
         root_domain="example.com",
         root_platform_domain="platform.example.com",
         root_api_domain="api.example.com",
@@ -32,56 +35,91 @@ def settings(environment: str) -> MagicMock:
 
 
 class TestVerifyDnsConfiguration(CommandTestBase):
+    """Test that the platform's DNS zones exist, and are delegated from their parents."""
+
     def setUp(self):
         super().setUp()
-        self.route53 = MagicMock(spec=AWSRoute53)
-        self.route53.get_hosted_zone_id_for_domain.return_value = "Z1"
-        self.route53.get_environment_A_record.return_value = A_RECORD
-        self.route53.get_ns_records.return_value = [{"Name": "example.com."}, {"Name": "api.example.com."}]
-        self.route53.get_or_create_hosted_zone.side_effect = [
-            ({"Id": "/hostedzone/Z1"}, False),
-            ({"Id": "/hostedzone/Z2"}, True),
-        ] * 10
-        self.route53.get_hosted_zone_id.return_value = "Z2"
-        self.route53.get_or_create_dns_record.side_effect = [({}, True), ({}, False)] * 20
-        self.route53.get_ns_records_for_domain.return_value = {"ResourceRecords": [{"Value": "ns-1."}]}
-        patcher = patch(f"{MODULE}.aws_helper", MagicMock(route53=self.route53))
+        self.provider = InMemoryProvider()
+        self.dns = self.provider.dns
+        self.dns.add_zone("example.com", a_record=LOAD_BALANCER)
+        self.use(self.provider)
+        self.addCleanup(InfrastructureResource.objects.filter(provider="memory").delete)
+
+    def use(self, provider: InMemoryProvider, ready: bool = True) -> MagicMock:
+        """Give the command a provider's services."""
+        infrastructure = MagicMock(ready=ready, dns=provider.dns)
+        patcher = patch(f"{MODULE}.infrastructure", infrastructure)
         patcher.start()
         self.addCleanup(patcher.stop)
+        return infrastructure
 
     def run_in(self, environment: str) -> str:
         with patch(f"{MODULE}.smarter_settings", settings(environment)):
             return self.run_command("verify_dns_configuration")
 
+    def assert_delegated(self, child: str, parent: str):
+        """The child's zone has the load balancer's A record, and the parent has the child's NS records."""
+        child_zone = self.dns.get_zone(child)
+        parent_zone = self.dns.get_zone(parent)
+        self.assertIsNotNone(child_zone, child)
+        self.assertIsNotNone(parent_zone, parent)
+        self.assertEqual(self.dns.get_record(child_zone.id, child, "A").values, LOAD_BALANCER)
+        ns_record = self.dns.get_record(parent_zone.id, child, "NS")
+        self.assertIsNotNone(ns_record, f"{parent} does not delegate {child}")
+        self.assertEqual(sorted(ns_record.values), sorted(child_zone.name_servers))
+
     def test_aws_environment(self):
-        """Test that every domain is verified, and delegated from its parent, in an aws environment."""
+        """Test that every domain is verified, and delegated from its parent, in a cloud environment."""
         output = self.run_in(SmarterEnvironments.ALPHA)
         self.assertIn("alpha.api.example.com", output)
-        delegated = [
-            c.kwargs["child_domain"]
-            for c in self.route53.get_or_create_hosted_zone.call_args_list
-            if "child_domain" in c.kwargs
-        ]
-        self.assertGreaterEqual(self.route53.get_or_create_dns_record.call_count, 12)
-        self.assertEqual(delegated, [])
+        self.assert_delegated("platform.example.com", "example.com")
+        self.assert_delegated("proxy.example.com", "example.com")
+        self.assert_delegated("api.proxy.example.com", "proxy.example.com")
+        self.assert_delegated("api.example.com", "example.com")
+        self.assert_delegated("alpha.platform.example.com", "platform.example.com")
+        self.assert_delegated("alpha.api.example.com", "api.example.com")
+
+    def test_idempotent(self):
+        """Test that a second run verifies what the first created, rather than creating it again."""
+        self.run_in(SmarterEnvironments.ALPHA)
+        zones = dict(self.dns.zones)
+        self.run_in(SmarterEnvironments.ALPHA)
+        self.assertEqual(self.dns.zones, zones)
 
     def test_local_environment(self):
+        """Test that only the proxy domains are verified in the local environment."""
         output = self.run_in(SmarterEnvironments.LOCAL)
         self.assertIn("proxy.example.com", output)
+        self.assert_delegated("api.proxy.example.com", "proxy.example.com")
+        self.assertIsNone(self.dns.get_zone("platform.example.com"))
+        self.assertIsNone(self.dns.get_zone("api.example.com"))
 
-    def test_aws_not_configured(self):
-        local = settings(SmarterEnvironments.LOCAL)
-        local.aws_is_configured = False
-        with patch(f"{MODULE}.smarter_settings", local):
+    def test_cloud_not_configured(self):
+        """Test that the command does nothing when the cloud provider is not configured."""
+        self.use(self.provider, ready=False)
+        with patch(f"{MODULE}.smarter_settings", settings(SmarterEnvironments.LOCAL)):
             self.run_command("verify_dns_configuration")
-        self.route53.get_environment_A_record.assert_not_called()
+        self.assertEqual(len(self.dns.zones), 1)
 
-    def test_missing_records(self):
-        """Test that a root domain without a hosted zone or an A record fails the command."""
-        self.route53.get_environment_A_record.return_value = None
+    def test_missing_root_zone(self):
+        """Test that a root domain without a zone fails the command, rather than creating the zone."""
+        empty = InMemoryProvider()
+        self.use(empty)
         with self.assertRaises(SystemExit):
             self.run_in(SmarterEnvironments.ALPHA)
-        self.route53.get_hosted_zone_id_for_domain.return_value = None
+        self.assertEqual(empty.dns.zones, {})
+
+    def test_missing_a_record(self):
+        """Test that a root domain without an A record fails the command."""
+        provider = InMemoryProvider()
+        provider.dns.add_zone("example.com")
+        self.use(provider)
+        with self.assertRaises(SystemExit):
+            self.run_in(SmarterEnvironments.ALPHA)
+
+    def test_dns_not_ready(self):
+        """Test that the command fails when the DNS service is not ready."""
+        self.use(InMemoryProvider(ready=False), ready=True)
         with self.assertRaises(SystemExit):
             self.run_in(SmarterEnvironments.ALPHA)
 
@@ -92,15 +130,12 @@ class TestVerifyDnsConfiguration(CommandTestBase):
 
         command = Command()
         with patch(f"{MODULE}.smarter_settings", settings(SmarterEnvironments.ALPHA)):
-            self.assertEqual(command.get_any_A_record(), A_RECORD)
-            self.route53.get_environment_A_record.return_value = None
+            a_record = command.get_any_A_record()
+            self.assertIsInstance(a_record, DNSRecord)
+            self.assertEqual(a_record.values, LOAD_BALANCER)
+            self.use(InMemoryProvider())
             with self.assertRaises(SmarterConfigurationError):
                 command.get_any_A_record()
-
-    def test_route53_not_initialized(self):
-        with (
-            patch(f"{MODULE}.aws_helper", MagicMock(route53=None)),
-            patch(f"{MODULE}.smarter_settings", settings(SmarterEnvironments.ALPHA)),
-        ):
-            with self.assertRaises(SystemExit):
-                self.run_command("verify_dns_configuration")
+            self.use(InMemoryProvider(ready=False))
+            with self.assertRaises(SmarterConfigurationError):
+                command.get_any_A_record()

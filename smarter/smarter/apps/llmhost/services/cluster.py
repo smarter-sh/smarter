@@ -6,9 +6,9 @@ be tested with :class:`InMemoryClusterBackend`, and so that another way of reach
 e.g. the Kubernetes Python client, or another cluster per account, is a new backend rather than
 a change to the service layer.
 
-:class:`KubectlClusterBackend`, the default, uses
-:class:`~smarter.common.helpers.k8s_helpers.KubernetesHelper`, i.e. kubectl with the
-platform's EKS kubeconfig, in the environment's namespace.
+:class:`KubectlClusterBackend`, the default, uses the platform's Kubernetes service,
+:class:`~smarter.apps.infrastructure.services.kubernetes.KubernetesService`, i.e. kubectl with
+the cloud provider's kubeconfig, in the environment's namespace.
 """
 
 import copy
@@ -17,11 +17,9 @@ from typing import Any, Callable, Optional
 
 import yaml
 
+from smarter.apps.infrastructure.exceptions import KubernetesServiceError
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.k8s_helpers import (
-    KubernetesHelperException,
-    kubernetes_helper,
-)
 
 from .exceptions import LLMHostClusterError
 
@@ -68,11 +66,11 @@ class ClusterBackend(ABC):
 
 
 class KubectlClusterBackend(ClusterBackend):
-    """The platform's EKS cluster, through KubernetesHelper and kubectl."""
+    """The platform's cluster, through its Kubernetes service, i.e. kubectl."""
 
     def __init__(self, namespace: Optional[str] = None, helper=None):
         self.namespace = namespace or smarter_settings.environment_namespace
-        self.helper = helper or kubernetes_helper
+        self.helper = helper or infrastructure.kubernetes
 
     @property
     def ready(self) -> bool:
@@ -84,7 +82,7 @@ class KubectlClusterBackend(ClusterBackend):
         manifest = yaml.safe_dump_all(resources, sort_keys=False)
         try:
             self.helper.apply_manifest(manifest)
-        except KubernetesHelperException as e:
+        except KubernetesServiceError as e:
             raise LLMHostClusterError(f"The Kubernetes cluster rejected the resources: {e}") from e
 
     def get(self, kind: str, name: str) -> Optional[dict[str, Any]]:

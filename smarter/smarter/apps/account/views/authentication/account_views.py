@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
 
 from smarter.apps.account.models import User, get_resolved_user
-from smarter.common.helpers.email_helpers import email_helper
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -165,7 +165,8 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
             to,
             url,
         )
-        email_helper.send_email(subject=subject, body=body, to=to, html=True)
+        # the activation link is a secret, so the admin gets no blind copy.
+        infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, bcc_admin=False)
 
         # render a page to let the user know the email was sent. Add a link to resend the email.
         email_resend_url = reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATION)

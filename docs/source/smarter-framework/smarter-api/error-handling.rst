@@ -48,8 +48,7 @@ which properly formats the error details for CLI client consumption.
                 DocsError,
                 SmarterPluginError,
                 SmarterConfigurationError,
-                SmarterAWSError,
-                KubernetesHelperException,
+                SmarterInfrastructureError,
                 SmarterJournalEnumException,
                 SmarterException,
             ):

@@ -1,6 +1,6 @@
 """Test the create_user management command.
 
-The new user's password email is never sent: email_helper is patched.
+The new user's password email is never sent: the infrastructure email service is patched.
 """
 
 from unittest.mock import patch
@@ -21,8 +21,8 @@ class TestCreateUser(CommandTestBase):
         self.email = f"{self.username}@example.com"
         self.addCleanup(AccountContact.objects.filter(account=self.account, email=self.email).delete)
         self.addCleanup(User.objects.filter(username=self.username).delete)
-        patcher = patch(f"{MODULE}.email_helper")
-        self.email_helper = patcher.start()
+        patcher = patch(f"{MODULE}.infrastructure")
+        self.infrastructure = patcher.start()
         self.addCleanup(patcher.stop)
 
     def create(self, **overrides):
@@ -45,7 +45,9 @@ class TestCreateUser(CommandTestBase):
         self.assertTrue(user.is_staff)
         self.assertTrue(UserProfile.objects.filter(user=user, account=self.account).exists())
         self.assertTrue(AccountContact.objects.filter(account=self.account, email=self.email).exists())
-        self.email_helper.send_email.assert_called_once()
+        self.infrastructure.email.send_email.assert_called_once()
+        # the email has the password: the admin gets no blind copy.
+        self.assertFalse(self.infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
 
     def test_existing_user_is_updated(self):
         self.create(password="first")
@@ -56,7 +58,7 @@ class TestCreateUser(CommandTestBase):
         self.assertFalse(user.is_staff)
 
     def test_email_error_is_reported(self):
-        self.email_helper.send_email.side_effect = Exception("smtp down")
+        self.infrastructure.email.send_email.side_effect = Exception("smtp down")
         with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
             self.create()
         self.assertTrue(User.objects.filter(username=self.username).exists())

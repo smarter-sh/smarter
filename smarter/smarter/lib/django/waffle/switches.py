@@ -86,6 +86,9 @@ class SmarterWaffleSwitches:
     LLM_HOST_LOGGING = "log_llm_host"
     """Enables logging throughout the smarter.app.llmhost namespace."""
 
+    INFRASTRUCTURE_LOGGING = "log_infrastructure"
+    """Enables logging throughout the smarter.app.infrastructure namespace."""
+
     MCPCLIENT_LOGGING = "mcpclient_logging"
     """Enables logging within the smarter.apps.mcpclient namespace."""
 
@@ -250,6 +253,11 @@ class SmarterWaffleSwitches:
         LLM_HOST_LOGGING: SmarterWaffleSwitch(
             name=LLM_HOST_LOGGING,
             comment="Enables logging throughout the smarter.app.llmhost namespace.",
+            default=True,
+        ),
+        INFRASTRUCTURE_LOGGING: SmarterWaffleSwitch(
+            name=INFRASTRUCTURE_LOGGING,
+            comment="Enables logging throughout the smarter.app.infrastructure namespace.",
             default=True,
         ),
         MCPCLIENT_LOGGING: SmarterWaffleSwitch(
