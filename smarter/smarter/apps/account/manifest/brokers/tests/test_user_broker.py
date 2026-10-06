@@ -10,7 +10,7 @@ from taggit.managers import TaggableManager
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker, SAMUserBrokerError
 from smarter.apps.account.manifest.models.user.model import SAMUser
-from smarter.apps.account.models import User
+from smarter.apps.account.models import User, UserProfile
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
@@ -588,3 +588,84 @@ class TestSmarterUserBrokerBranches(TestSAMBrokerBaseClass):
         self.patch_property("manifest", None)
         with self.assertRaises(SAMUserBrokerError):
             broker.manifest_to_django_orm()
+
+    def test_account_contact_is_cached_and_needs_an_authenticated_user(self):
+        broker = self.broker
+        contact = MagicMock()
+        broker._account_contact = contact
+        self.assertIs(broker.account_contact, contact)
+        broker._account_contact = None
+        self.patch_property("brokered_user", MagicMock(is_authenticated=False))
+        self.assertIsNone(broker.account_contact)
+
+    def test_manifest_needs_an_account_or_user(self):
+        broker = self.broker
+        broker._manifest = None
+        self.patch_property("account", None)
+        self.patch_property("brokered_user", None)
+        self.assertIsNone(broker.manifest)
+
+    def test_manifest_from_a_user_needs_a_profile(self):
+        broker = self.broker
+        broker._manifest = None
+        self.patch_property("loader", None)
+        self.patch_property("brokered_user", MagicMock())
+        self.patch_property("brokered_user_profile", None)
+        with self.assertRaises(SAMUserBrokerError):
+            _ = broker.manifest
+
+    def test_get_failures(self):
+        """A user profile without a user, or a user that can't be serialized, fails the get."""
+        broker = self.broker
+        module = "smarter.apps.account.manifest.brokers.user"
+        with patch(f"{module}.UserProfile.objects.filter", return_value=[MagicMock(cached_user="not a user")]):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.get(self.request)
+        with (
+            patch(f"{module}.UserProfile.objects.filter", return_value=[MagicMock(cached_user=self.admin_user)]),
+            patch(f"{module}.UserSerializer", side_effect=[MagicMock(), RuntimeError("bad")]),
+            patch.object(SAMUserBroker, "get_model_titles", return_value=[]),
+        ):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.get(self.request)
+
+    def test_describe_failures(self):
+        """An unknown user, a user of another account, or a manifest that can't be dumped fails the describe."""
+        broker = self.broker
+        self.assertIsInstance(broker.manifest, SAMUser)
+        self.patch_property("brokered_user", MagicMock())
+        with patch.object(SAMUserBroker, "username", new_callable=PropertyMock, return_value="no_such_user"):
+            with self.assertRaises(SAMBrokerErrorNotFound):
+                broker.describe(self.request)
+        with (
+            patch.object(User.objects, "get", return_value=self.admin_user),
+            patch(
+                "smarter.apps.account.manifest.brokers.user.UserProfile.get_cached_object",
+                side_effect=UserProfile.DoesNotExist,
+            ),
+        ):
+            with self.assertRaises(SAMBrokerErrorNotFound):
+                broker.describe(self.request)
+        with (
+            patch.object(User.objects, "get", return_value=self.admin_user),
+            patch("smarter.apps.account.manifest.brokers.user.UserProfile.get_cached_object"),
+            patch.object(SAMUser, "model_dump", side_effect=RuntimeError("bad manifest")),
+        ):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.describe(self.request)
+
+    def test_delete_guards_and_failure(self):
+        broker = self.broker
+        self.patch_property("brokered_user", MagicMock())
+        with patch.object(SAMUserBroker, "params", new_callable=PropertyMock, return_value="not a dict"):
+            with self.assertRaises(SAMBrokerErrorNotImplemented):
+                broker.delete(self.request)
+        user = MagicMock()
+        user.delete.side_effect = RuntimeError("database down")
+        with (
+            patch.object(SAMUserBroker, "params", new_callable=PropertyMock, return_value={"username": "someone"}),
+            patch.object(User.objects, "get", return_value=user),
+            patch.object(SAMUserBroker, "verify_no_dependencies"),
+        ):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.delete(self.request)

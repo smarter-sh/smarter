@@ -5,10 +5,17 @@ from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.urls import reverse
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.llmclient.api.v1.urls import LLMClientApiV1ReverseViews as Names
+from smarter.apps.llmclient.api.v1.views.views import (
+    LLMClientAPIKeyView,
+    LLMClientDeployView,
+    LLMClientFunctionsView,
+    LLMClientPluginView,
+    LLMClientView,
+)
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
@@ -115,3 +122,65 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         url = self.url(Names.llmclient_functions_view_by_id, llmclient_id=self.llmclient.pk, function_id=function.pk)
         with patch.object(LLMClientFunctions, "delete", side_effect=RuntimeError("database down")):
             self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def call_view(self, view_class, method: str, data=None, **kwargs):
+        """Call a view directly, for the handlers that no url routes to with these arguments."""
+        request = getattr(APIRequestFactory(), method)("/api/v1/llm-clients/", data=data, format="json")
+        force_authenticate(request, user=self.admin_user)
+        request.user = self.admin_user
+        response = view_class.as_view()(request, **kwargs)
+        if hasattr(response, "render"):
+            response.render()
+        return response
+
+    def test_llmclient_view_without_an_llmclient(self):
+        """Getting or patching without an LLMClient is not found."""
+        self.assertStatus(self.call_view(LLMClientView, "get"), HTTPStatus.NOT_FOUND)
+        self.assertStatus(self.call_view(LLMClientView, "patch", data={"description": "x"}), HTTPStatus.NOT_FOUND)
+
+    def test_llmclient_view_queryset(self):
+        view = LLMClientView()
+        view.llmclient = self.llmclient
+        self.assertEqual(list(view.get_queryset()), [self.llmclient])
+
+    def test_deploy(self):
+        """Deploying sets deployed, and a failed save is a bad request."""
+        with patch.object(LLMClient, "save") as save:
+            self.assertStatus(
+                self.call_view(LLMClientDeployView, "post", llmclient_id=self.llmclient.pk), HTTPStatus.OK
+            )
+        save.assert_called_once()
+        with patch.object(LLMClient, "save", side_effect=RuntimeError("database down")):
+            self.assertStatus(
+                self.call_view(LLMClientDeployView, "post", llmclient_id=self.llmclient.pk), HTTPStatus.BAD_REQUEST
+            )
+
+    def test_plugin_post(self):
+        """Adding a plugin redirects to it, and a plugin that fails to load is a bad request."""
+        with patch.object(LLMClientPlugin, "load", return_value=LLMClientPlugin(id=123)):
+            response = self.call_view(LLMClientPluginView, "post", data={"name": "x"}, llmclient_id=self.llmclient.pk)
+        self.assertStatus(response, HTTPStatus.FOUND)
+        self.assertTrue(response["Location"].endswith("123/"))
+        with patch.object(LLMClientPlugin, "load", side_effect=RuntimeError("bad plugin")):
+            response = self.call_view(LLMClientPluginView, "post", data={"name": "x"}, llmclient_id=self.llmclient.pk)
+        self.assertStatus(response, HTTPStatus.BAD_REQUEST)
+
+    def test_api_key_post(self):
+        """Adding an api key redirects to it, and a failed create is a bad request."""
+        token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=self.user_profile,
+            name=f"test_llmclient_api_errors_post_{self.hash_suffix}",
+            user=self.admin_user,
+            description="test llmclient api key",
+        )
+        self.addCleanup(SmarterAuthToken.objects.filter(pk=token.pk).delete)
+        self.addCleanup(LLMClientAPIKey.objects.filter(llmclient=self.llmclient).delete)
+        kwargs = {"llmclient_id": self.llmclient.pk, "apikey_id": token.pk}
+        self.assertStatus(self.call_view(LLMClientAPIKeyView, "post", **kwargs), HTTPStatus.FOUND)
+        self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.llmclient, api_key=token).exists())
+        with patch.object(LLMClientAPIKey.objects, "create", side_effect=RuntimeError("database down")):
+            self.assertStatus(self.call_view(LLMClientAPIKeyView, "post", **kwargs), HTTPStatus.BAD_REQUEST)
+
+    def test_function_post_is_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            self.call_view(LLMClientFunctionsView, "post", llmclient_id=self.llmclient.pk)

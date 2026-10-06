@@ -18,9 +18,10 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpec,
     SAMAccountSpecConfig,
 )
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
+    SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -498,3 +499,43 @@ class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):
         self.patch_property("manifest", None)
         with self.assertRaises(SAMAccountBrokerError):
             broker.manifest_to_django_orm()
+
+    def test_commands_need_a_superuser(self):
+        """Get, apply and describe need a User, who is a superuser."""
+        broker = self.broker
+        not_superuser = MagicMock(spec=User)
+        not_superuser.is_superuser = False
+        for user in (None, not_superuser):
+            for command in (broker.get, broker.apply, broker.describe):
+                with self.subTest(user=user, command=command.__name__):
+                    with patch.object(SAMAccountBroker, "user", new_callable=PropertyMock, return_value=user):
+                        with self.assertRaises(SAMAccountBrokerError):
+                            command(self.request)
+
+    def test_commands_need_an_account_or_manifest(self):
+        broker = self.broker
+        with patch.object(SAMAccountBroker, "brokered_account", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.get(self.request)
+            with self.assertRaises(SAMBrokerErrorNotFound):
+                broker.describe(self.request)
+            self.assertEqual(broker.dependencies(), [])
+        with patch.object(SAMAccountBroker, "manifest", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.apply(self.request)
+
+    def test_get_and_describe_failures(self):
+        broker = self.broker
+        with (
+            patch(
+                "smarter.apps.account.manifest.brokers.account.AccountSerializer",
+                side_effect=[MagicMock(), RuntimeError("bad")],
+            ),
+            patch.object(SAMAccountBroker, "get_model_titles", return_value=[]),
+            patch.object(SAMAccountBroker, "brokered_account", new_callable=PropertyMock, return_value=self.account),
+        ):
+            response = broker.get(self.request)
+        self.assertNotEqual(response.status_code, 200)
+        with patch.object(SAMAccountBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("bad")):
+            with self.assertRaises(SAMBrokerError):
+                broker.describe(self.request)

@@ -192,6 +192,157 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             _ = self.client.openai_messages
 
+    # -------------------------------------------------------------------------
+    # prep_first_request: Smarter UI messages for the tools presented
+    # -------------------------------------------------------------------------
+    def prep_first_request(self, tools: list):
+        self.client.tools = tools
+        self.client.first_iteration = {}
+        self.client.iteration = 1
+        properties = {
+            "base_url": "https://api.example.com/v1/",
+            "api_key": "sk-test",
+            "model": "gpt-test",
+            "openai_messages": [],
+            "url": "https://api.example.com/v1/",
+            "provider_name": "test",
+            "temperature": 0.5,
+            "max_completion_tokens": 100,
+            "prompt": None,
+        }
+        patchers = [
+            patch.object(OpenAISmarterClient, name, new_callable=PropertyMock, return_value=value)
+            for name, value in properties.items()
+        ]
+        patchers.append(patch.object(module, "chat_request"))
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.client.prep_first_request()
+
+    def test_tools_are_presented(self):
+        """Each tool is presented with its inputs, and incomplete tool definitions are tolerated."""
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_weather",
+                    "description": "Get the weather.",
+                    "parameters": {
+                        "properties": {
+                            "location": {"description": "A city."},
+                            "unit": {"enum": ["Celsius", "Fahrenheit"]},
+                        }
+                    },
+                },
+            },
+            {"type": "function", "function": {}},
+            {},
+        ]
+        self.prep_first_request(tools)
+        presented = [content for content in self.appended() if content.startswith("Tool presented")]
+        self.assertEqual(len(presented), 3)
+        self.assertIn("location: A city., unit: Celsius, Fahrenheit", presented[0])
+
+    def test_tool_definition_must_be_a_dict(self):
+        with self.assertRaises(SmarterValueError):
+            self.prep_first_request([{"type": "function", "function": "not a dict"}])
+
+    # -------------------------------------------------------------------------
+    # handle_function_provided
+    # -------------------------------------------------------------------------
+    def test_builtin_functions_are_provided(self):
+        for function in ("get_current_weather", "date_calculator", "calculator", "not_a_builtin"):
+            self.client.handle_function_provided(function)
+        self.assertEqual(
+            sorted(self.client.available_functions), ["calculator", "date_calculator", "get_current_weather"]
+        )
+        self.assertEqual(len(self.client.tools), 3)
+
+    # -------------------------------------------------------------------------
+    # guards
+    # -------------------------------------------------------------------------
+    def test_responses_need_a_chat_completion_message(self):
+        response = MagicMock()
+        response.choices[0].message.model_dump_json.return_value = "{}"
+        response.model_dump_json.return_value = "{}"
+        with self.assertRaises(SmarterConfigurationError):
+            self.client.append_openai_response(response)
+        with self.assertRaises(SmarterConfigurationError):
+            self.client.append_openai_error_response(response, e=ValueError("bad"))
+
+    def test_handle_completion_needs_a_response(self):
+        self.client.second_iteration = None
+        with self.assertRaises(SmarterValueError):
+            self.client.handle_completion()
+        self.client.second_iteration = {}
+        self.client.first_iteration = {}
+        with self.assertRaises(SmarterValueError):
+            self.client.handle_completion()
+
+    def test_handle_plugin_selected_guards(self):
+        plugin = MagicMock()
+        with patch.object(OpenAISmarterClient, "messages", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SmarterValueError):
+                self.client.handle_plugin_selected(plugin)
+        with self.assertRaises(SmarterValueError):
+            self.client.handle_plugin_selected(plugin)
+
+    # -------------------------------------------------------------------------
+    # process_tool_call
+    # -------------------------------------------------------------------------
+    def tool_call(self, name: str, arguments: str = "{}") -> ChatCompletionMessageToolCall:
+        return ChatCompletionMessageToolCall(
+            id="call_1", type="function", function=Function(name=name, arguments=arguments)
+        )
+
+    def process(self, name: str, function=None, refusal=None, **properties):
+        """Process a tool call of ``name``, with the client's tool-call bookkeeping replaced."""
+        self.client.available_functions = {name: function or MagicMock()}
+        self.client.serialized_tool_calls = []
+        patchers = [
+            patch.object(OpenAISmarterClient, "append_message_tool_called"),
+            patch.object(OpenAISmarterClient, "handle_tool_called"),
+            patch.object(OpenAISmarterClient, "tool_budget_refusal", return_value=refusal),
+        ]
+        patchers += [
+            patch.object(OpenAISmarterClient, key, new_callable=PropertyMock, return_value=value)
+            for key, value in properties.items()
+        ]
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.client.process_tool_call(self.tool_call(name))
+
+    def test_builtin_tool_call_with_a_json_response(self):
+        self.process("calculator", function=MagicMock(return_value={"result": 2}))
+        self.assertEqual(self.client.serialized_tool_calls[0]["function_name"], "calculator")
+        self.assertEqual(self.append_message.call_args.kwargs["content"], json.dumps({"result": 2}))
+
+    def test_tool_call_refused_by_a_budget(self):
+        function = MagicMock()
+        self.process("calculator", function=function, refusal="over budget")
+        function.assert_not_called()
+        self.assertEqual(self.append_message.call_args.kwargs["content"], "over budget")
+
+    def test_unrecognized_function(self):
+        with self.assertRaises(SmarterConfigurationError):
+            self.process("not_a_function")
+
+    def test_plugin_tool_call_guards(self):
+        """A plugin tool call needs the plugin, an account and a user profile."""
+        with self.assertRaises(SmarterConfigurationError):
+            self.process(f"{PLUGIN_PREFIX}_2147483646")
+        with patch.object(module.PluginMeta, "get_cached_object", return_value=MagicMock()):
+            for properties in (
+                {"account": None},
+                {"account": MagicMock(), "user_profile": None},
+                {"account": MagicMock(), "user_profile": MagicMock()},
+            ):
+                with self.subTest(properties=list(properties)):
+                    with self.assertRaises(SmarterConfigurationError):
+                        self.process(f"{PLUGIN_PREFIX}_1", **properties)
+
 
 class TestChatProviderBaseUnits(SmarterTestBase):
     """Test ChatProviderBase's validation and request helpers, on a client without its handler state."""
