@@ -13,7 +13,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 )
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
-from smarter.apps.plugin.models import PluginDataStatic
+from smarter.apps.plugin.models import PluginDataStatic, PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
@@ -274,8 +274,23 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
         logger.info("Describe response: %s", response.content.decode())
 
+    def test_plugin_data_orm2pydantic(self):
+        """Test that the applied plugin's data converts to a camelCase dict."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        data = self.broker.plugin_data_orm2pydantic()
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data.get("description"), self.broker.plugin_data.description)
+
     def test_delete(self):
-        pass
+        """Test that delete() removes an applied plugin."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        name = self.broker.manifest.metadata.name
+        broker = self.SAMBrokerClass(self.request, self.loader)
+        response = broker.delete(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).exists())
 
     def test_deploy(self):
         """Test that deploy() raises NotImplementedError."""

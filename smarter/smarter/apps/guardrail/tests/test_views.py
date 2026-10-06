@@ -20,6 +20,7 @@ from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.urls import GuardrailReverseNames as Names
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
+from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import GuardrailTestBase
 
@@ -96,3 +97,22 @@ class TestGuardrailViews(GuardrailTestBase):
         self.assertEqual(
             self.client.get(url(Names.detailview, hashed_id="not-a-hash")).status_code, HTTPStatus.NOT_FOUND
         )
+
+    def test_detailview_unknown_id(self):
+        """Test that a valid hashed id of a Guardrail that doesn't exist is not found."""
+        response = self.client.get(url(Names.detailview, hashed_id=Guardrail(id=999999999).hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+
+class TestGuardrailResourceViews(ResourceViewsTestMixin, GuardrailTestBase):
+    """Test the Guardrail list page, list, clone, delete and rename apis, and detail page with the shared mixin."""
+
+    model = Guardrail
+    reverse_names = Names
+    id_kwarg = "guardrail_id"
+    invalidate_cache = staticmethod(invalidate_all_cached_guardrails_for_user_profile)
+    resource_name_prefix = "test_guardrail_resource_views"
+
+    @classmethod
+    def create_resource(cls, name: str) -> Guardrail:
+        return cls.create_guardrail(name)

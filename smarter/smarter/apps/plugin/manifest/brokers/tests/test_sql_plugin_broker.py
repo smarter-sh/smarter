@@ -15,7 +15,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 )
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
-from smarter.apps.plugin.models import PluginDataSql
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
@@ -416,7 +416,14 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         logger.debug("Describe response: %s", response.content.decode())
 
     def test_delete(self):
-        pass
+        """Test that delete() removes an applied plugin."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        name = self.broker.manifest.metadata.name
+        broker = self.SAMBrokerClass(self.request, self.loader)
+        response = broker.delete(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).exists())
 
     def test_deploy(self):
         """Test that deploy() raises NotImplementedError."""

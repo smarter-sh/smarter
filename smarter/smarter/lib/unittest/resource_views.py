@@ -19,10 +19,12 @@ changes a resource changes a throwaway copy, which is deleted afterwards.
 
 from http import HTTPStatus
 from typing import Callable, Optional
+from unittest.mock import patch
 
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.db import models
-from django.test import Client
-from django.urls import reverse
+from django.test import Client, RequestFactory
+from django.urls import resolve, reverse
 
 from smarter.lib import json
 
@@ -90,6 +92,14 @@ class ResourceViewsTestMixin:
     def id_url(self, name: str, resource_id: int, **kwargs) -> str:
         return self.url(name, **{self.id_kwarg: resource_id}, **kwargs)
 
+    def call_view(self, url: str, **kwargs):
+        """Call the view of ``url`` directly, as the admin user, with ``kwargs`` in place of its url parameters."""
+        view = resolve(url).func
+        request = RequestFactory().post("/", HTTP_HOST="localhost:9357")
+        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        request.user = self.admin_user  # type: ignore[attr-defined]
+        return view(request, **kwargs)
+
     # -------------------------------------------------------------------------
     # the React list page and its list api
     # -------------------------------------------------------------------------
@@ -143,6 +153,36 @@ class ResourceViewsTestMixin:
         self.assertEqual(data["name"], new_name)  # type: ignore[attr-defined]
         self.assertEqual(self.model.objects.get(pk=resource.pk).name, new_name)  # type: ignore[attr-defined]
         self.post(self.id_url("listview_api_rename", 999999999, new_name="x"), status=HTTPStatus.NOT_FOUND)
+
+    def test_list_api_invalid_ownership_filter(self):
+        """Test that an unknown ownership filter, which the url pattern doesn't route, is a bad request."""
+        response = self.call_view(self.url("listview_api", ownership_filter="all"), ownership_filter="nobody")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])  # type: ignore[attr-defined]
+
+    def test_apis_refuse_missing_parameters(self):
+        """Test that the clone, delete and rename apis, called without their url parameters, are bad requests."""
+        for name, kwargs in (
+            ("listview_api_clone", {"new_name": "x"}),
+            ("listview_api_delete", {}),
+            ("listview_api_rename", {"new_name": "x"}),
+        ):
+            with self.subTest(api=name):  # type: ignore[attr-defined]
+                response = self.call_view(self.id_url(name, self.resource.pk, **kwargs))  # type: ignore[attr-defined]
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])  # type: ignore[attr-defined]
+
+    def test_apis_report_errors(self):
+        """Test that an error while cloning, deleting or renaming a resource is a bad request."""
+        resource = self.throwaway("errors")
+        for name, method, kwargs in (
+            ("listview_api_clone", "clone", {"new_name": f"{resource.name}_copy"}),
+            ("listview_api_delete", "delete", {}),
+            ("listview_api_rename", "rename", {"new_name": f"{resource.name}_renamed"}),
+        ):
+            with self.subTest(api=name):  # type: ignore[attr-defined]
+                with patch.object(self.model, method, side_effect=RuntimeError("test error")):
+                    data = self.post(self.id_url(name, resource.pk, **kwargs), status=HTTPStatus.BAD_REQUEST)
+                self.assertIn("test error", data["error"])  # type: ignore[attr-defined]
+        self.assertTrue(self.model.objects.filter(pk=resource.pk, name=resource.name).exists())  # type: ignore[attr-defined]
 
     # -------------------------------------------------------------------------
     # the detail page

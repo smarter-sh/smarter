@@ -9,7 +9,15 @@ from unittest.mock import patch
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.llmclient.api.v1.urls import LLMClientApiV1ReverseViews as Names
-from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
+from smarter.apps.llmclient.models import (
+    LLMClient,
+    LLMClientAPIKey,
+    LLMClientCustomDomain,
+    LLMClientFunctions,
+    LLMClientPlugin,
+)
+from smarter.apps.plugin.models import PluginMeta
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 
 
@@ -108,6 +116,63 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
             response = self.api_client.post(url)
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
         deploy_custom_api.delay.assert_called_once_with(llmclient_id=llmclient.pk)
+
+    def test_plugin_view(self):
+        """Test that an LLMClient's plugin is returned, refuses invalid data, and is removed."""
+        plugin_meta = PluginMeta.objects.create(
+            name=f"test_llmclient_api_plugin_{self.hash_suffix}", user_profile=self.user_profile, plugin_class="static"
+        )
+        self.addCleanup(PluginMeta.objects.filter(pk=plugin_meta.pk).delete)
+        llmclient_plugin = LLMClientPlugin.objects.create(llmclient=self.resource, plugin_meta=plugin_meta)
+        url = self.url(Names.llmclient_plugin_view_by_id, llmclient_id=self.resource.pk, plugin_id=llmclient_plugin.pk)
+
+        response = self.api_client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+
+        response = self.api_client.patch(url, data="not json", content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:300])
+        response = self.api_client.patch(url, data={"kind": "NotAPlugin"}, format="json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:300])
+
+        list_url = self.url(Names.llmclient_plugin_list_view_by_id, llmclient_id=self.resource.pk)
+        response = self.api_client.post(list_url, data={"kind": "NotAPlugin"}, format="json")
+        self.assertIn(response.status_code, (HTTPStatus.BAD_REQUEST, HTTPStatus.METHOD_NOT_ALLOWED))
+
+        response = self.api_client.delete(url)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
+        self.assertFalse(LLMClientPlugin.objects.filter(pk=llmclient_plugin.pk).exists())
+
+    def test_api_key_view(self):
+        """Test that an LLMClient's api key is returned and removed."""
+        token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=self.user_profile,
+            name=f"test_llmclient_api_key_{self.hash_suffix}",
+            user=self.admin_user,
+            description="test llmclient api key",
+        )
+        self.addCleanup(SmarterAuthToken.objects.filter(pk=token.pk).delete)
+        # the post route takes an int apikey_id, which can't address a token, whose key is a digest.
+        llmclient_api_key = LLMClientAPIKey.objects.create(llmclient=self.resource, api_key=token)
+
+        url = self.url(
+            Names.llmclient_api_key_view_by_id, llmclient_id=self.resource.pk, apikey_id=llmclient_api_key.pk
+        )
+        response = self.api_client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+
+        response = self.api_client.delete(url)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
+        self.assertFalse(LLMClientAPIKey.objects.filter(pk=llmclient_api_key.pk).exists())
+
+    def test_function_view(self):
+        """Test that an LLMClient's function is returned and removed."""
+        function = LLMClientFunctions.objects.create(llmclient=self.resource, name="calculator")
+        url = self.url(Names.llmclient_functions_view_by_id, llmclient_id=self.resource.pk, function_id=function.pk)
+        response = self.api_client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+        response = self.api_client.delete(url)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
+        self.assertFalse(LLMClientFunctions.objects.filter(pk=function.pk).exists())
 
     def test_list(self):
         super().test_list()

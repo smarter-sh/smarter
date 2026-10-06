@@ -86,13 +86,6 @@ from smarter.lib.drf.const import namespace as drf_namespace
 logger = logging.getLogger(__name__)
 
 
-def session_test_view(request):
-    """Deprecated?"""
-    request.session["test_key"] = "test_value"
-    request.session.modified = True  # Ensure session is saved
-    return JsonResponse({"session_key": request.session.session_key, "test_key": request.session.get("test_key")})
-
-
 # -----------------------------------------------------------------------------
 # Initialize custom admin site for Smarter
 # -----------------------------------------------------------------------------

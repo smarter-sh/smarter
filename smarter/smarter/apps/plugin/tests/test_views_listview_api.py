@@ -7,9 +7,11 @@ with the account's non-admin user.
 """
 
 from http import HTTPStatus
+from unittest.mock import patch
 
-from django.test import Client
-from django.urls import reverse
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import Client, RequestFactory
+from django.urls import resolve, reverse
 
 from smarter.apps.plugin.caching import invalidate_all_cached_plugins_for_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -192,3 +194,46 @@ class TestPluginListApiViews(PluginAppTestBase):
         )
         self.post(url, status=HTTPStatus.NOT_FOUND)
         self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id).exists())
+
+    def api_url(self, name: str, **kwargs) -> str:
+        return reverse(f"{NAMESPACE}:{name}", kwargs={"llmclient_id": self.static_plugin.id, **kwargs})
+
+    def call_view(self, url: str, **kwargs):
+        """Call the view of ``url`` directly, as the admin user, with ``kwargs`` in place of its url parameters."""
+        request = RequestFactory().post("/", HTTP_HOST="localhost:9357")
+        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        request.user = self.admin_user
+        return resolve(url).func(request, **kwargs)
+
+    def test_list_invalid_ownership_filter(self):
+        """Test that an unknown ownership filter, which the url pattern doesn't route, is a bad request."""
+        response = self.call_view(self.list_url("all"), ownership_filter="nobody")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_apis_refuse_missing_parameters(self):
+        """Test that the clone, delete and rename apis, called without their url parameters, are bad requests."""
+        for url in (
+            self.api_url(PluginReverseNames.listview_api_clone, new_name="x"),
+            self.api_url(PluginReverseNames.listview_api_delete),
+            self.api_url(PluginReverseNames.listview_api_rename, new_name="x"),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_apis_report_errors(self):
+        """Test that an error while cloning, deleting or renaming a plugin is a bad request."""
+        with patch("smarter.apps.plugin.views.listview.api.PluginController") as controller:
+            controller.return_value.plugin = None
+            data = self.post(
+                self.api_url(PluginReverseNames.listview_api_clone, new_name="test_plugin_views_x"),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        self.assertIn("cannot be cloned", data["error"])
+        for name, method, kwargs in (
+            (PluginReverseNames.listview_api_delete, "delete", {}),
+            (PluginReverseNames.listview_api_rename, "rename", {"new_name": "test_plugin_views_y"}),
+        ):
+            with self.subTest(api=name), patch.object(PluginMeta, method, side_effect=RuntimeError("test error")):
+                data = self.post(self.api_url(name, **kwargs), status=HTTPStatus.BAD_REQUEST)
+                self.assertIn("test error", data["error"])
+        self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id, name=self.static_plugin.name).exists())
