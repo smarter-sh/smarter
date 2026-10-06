@@ -26,7 +26,6 @@ Smarter's IAM identity requires: ``eks:CreateNodegroup``, ``eks:DescribeNodegrou
 """
 
 import copy
-import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
@@ -39,6 +38,7 @@ from smarter.apps.llmhost.models.compute import (
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest import running_unit_tests
 
 from .exceptions import LLMHostComputeError
 
@@ -111,18 +111,21 @@ class EKSNodeGroupBackend(NodeGroupBackend):
 
     def _session(self):
         # pylint: disable=import-outside-toplevel
-        from smarter.common.helpers.aws.eks import AWSEks
+        from smarter.apps.infrastructure.providers.aws import AWSProvider
+        from smarter.apps.infrastructure.services import infrastructure
 
-        if "test" in sys.argv:
+        if running_unit_tests():
             # a safety net: the platform's AWS credentials are real, and node groups cost money.
             raise LLMHostComputeError(
                 "EKSNodeGroupBackend is disabled in tests. Install an InMemoryNodeGroupBackend with configure_nodegroups()."
             )
 
-        helper = AWSEks()
-        if not helper.ready or helper.aws_session is None:
+        provider = infrastructure.provider
+        if not isinstance(provider, AWSProvider):
+            raise LLMHostComputeError(f"EKS node groups require the AWS cloud provider, not {provider.name}.")
+        if not provider.ready or provider.session is None:
             raise LLMHostComputeError("AWS is not configured, so node groups cannot be managed.")
-        return helper.aws_session
+        return provider.session
 
     @property
     def eks(self):

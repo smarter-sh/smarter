@@ -1,13 +1,13 @@
 """
 Celery tasks for destroying llmclient domain A records.
 
-This module defines tasks for destroying A records in AWS Route53 for llmclient domains, including signal handling and logging.
+This module defines tasks for destroying A records in the cloud provider's DNS for llmclient domains, including signal handling and logging.
 
 Main Tasks
 ----------
 
 - destroy_domain_A_record(hostname, api_host_domain):
-    Destroys the A record for a given domain name in AWS Route53.
+    Destroys the A record for a given domain name in the cloud provider's DNS.
 
 Signals
 -------
@@ -28,27 +28,29 @@ Task execution and resource destruction are logged using the smarter logging lib
 Usage
 -----
 
-Import this module and call the function as needed to destroy an llmclient domain A record:
+Queue the Celery task, or call it directly to run it synchronously:
 
+    destroy_domain_A_record.delay(hostname, api_host_domain)
     destroy_domain_A_record(hostname, api_host_domain)
 
 Raises
 ------
 
 Exception
-    Any exception during task execution will be logged and may be handled by the caller.
+    Any exception during task execution will trigger a retry according to Celery settings.
 """
 
 from typing import Optional
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.signals import (
     post_destroy_domain_A_record,
     pre_destroy_domain_A_record,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.workers.celery import app
 
 from .utils import is_taskable
 
@@ -58,19 +60,26 @@ logger = logging.getSmarterLogger(
 logger_prefix = logging.formatted_text(__name__)
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+)
 def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Optional[str] = None):
     """
-    Destroy the A record for a given domain name in AWS Route53.
+    Destroy the A record for a given domain name in the cloud provider's DNS.
 
-    This function locates the hosted zone for the specified parent domain, retrieves the A record for the given hostname,
-    and deletes it from Route53. It sends pre- and post-destroy signals and logs all actions.
+    A Celery task, e.g. ``destroy_domain_A_record.delay(...)``, which can also be called directly, to
+    run synchronously, as delete_default_api does. This function locates the DNS zone of the specified parent domain, and deletes the A record of the given
+    hostname from it. It sends pre- and post-destroy signals and logs all actions.
 
     Parameters
     ----------
     hostname : str
         The domain name whose A record should be destroyed.
     api_host_domain : str
-        The parent domain used to locate the AWS Route53 hosted zone.
+        The parent domain used to locate the DNS zone.
 
     Signals
     -------
@@ -90,60 +99,27 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Option
     """
     if not is_taskable():
         return
-    if not aws_helper.route53:
-        return
 
     pre_destroy_domain_A_record.send(
         sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
     )
 
     fn_name = logger_prefix + ".destroy_domain_A_record()"
-    hostname = aws_helper.aws.domain_resolver(hostname)
-    api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
+    dns = infrastructure.dns
+    hostname = dns.resolve_domain(hostname)
+    api_host_domain = dns.resolve_domain(api_host_domain)
     logger.info("%s - %s task_id: %s", fn_name, hostname, task_id)
 
-    # locate the aws route53 hosted zone for the customer API domain
-    hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
-    logger.info(
-        "%s found hosted zone %s for parent domain %s task_id: %s", fn_name, hosted_zone_id, api_host_domain, task_id
-    )
-
-    # retrieve the A record from the environment domain hosted zone. we'll
-    # use this to create the A record in the customer API domain. example:
-    # {
-    #     "Name": "example.com.",
-    #     "Type": "A",
-    #     "TTL": 300,
-    #     "ResourceRecords": [{"Value": "192.1.1.1"}]
-    # }
-
-    a_record = aws_helper.route53.get_dns_record(
-        hosted_zone_id=hosted_zone_id,
-        record_name=hostname,
-        record_type="A",
-    )
-    if not a_record:
+    # locate the DNS zone of the customer API domain. If it doesn't exist, neither does the record.
+    zone = dns.get_zone(api_host_domain)
+    if zone is None:
         logger.error(
-            "%s a record not found for %s. Nothing to do, returning. task_id: %s", fn_name, api_host_domain, task_id
+            "%s DNS zone not found for %s. Nothing to do, returning. task_id: %s", fn_name, api_host_domain, task_id
         )
-        post_destroy_domain_A_record.send(
-            sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
-        )
-        return
-
-    logger.info("%s a_record: %s task_id: %s", fn_name, a_record, task_id)
-    record_type = a_record.get("Type", "A")
-    record_ttl = a_record.get("TTL", smarter_settings.llmclient_tasks_default_ttl)
-    alias_target = a_record.get("AliasTarget")
-    record_resource_records = a_record.get("ResourceRecords")
-    aws_helper.route53.destroy_dns_record(
-        hosted_zone_id=hosted_zone_id,
-        record_name=hostname,
-        record_type=record_type,
-        record_ttl=record_ttl,
-        alias_target=alias_target,
-        record_resource_records=record_resource_records,
-    )
+    elif dns.delete_record(zone.id, hostname, "A"):
+        logger.info("%s deleted the A record of %s from zone %s task_id: %s", fn_name, hostname, zone.id, task_id)
+    else:
+        logger.error("%s A record not found for %s. Nothing to do, returning. task_id: %s", fn_name, hostname, task_id)
     post_destroy_domain_A_record.send(
         sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
     )

@@ -25,6 +25,7 @@ from typing import Any, Optional
 
 from django.db.models import Q
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmhost.const import (
     RECONCILE_INTERVAL_SECONDS,
     RECONCILE_MAX_ATTEMPTS,
@@ -60,21 +61,15 @@ def managed_hostname(llmhost: LLMHost) -> Optional[str]:
 
 def dns_enabled() -> bool:
     """Whether LLMHost tasks manage DNS records, like LLMClient tasks."""
-    # pylint: disable=import-outside-toplevel
-    from smarter.common.helpers.aws_helpers import aws_helper
-
-    return bool(smarter_settings.llmclient_tasks_create_dns_record and aws_helper.route53)
+    return bool(smarter_settings.llmclient_tasks_create_dns_record and infrastructure.dns.ready)
 
 
 def create_dns_record(llmhost: LLMHost) -> None:
     hostname = managed_hostname(llmhost)
     if not hostname or not dns_enabled():
         return
-    # pylint: disable=import-outside-toplevel
-    from smarter.common.helpers.aws_helpers import aws_helper
-
     try:
-        aws_helper.route53.create_domain_a_record(  # type: ignore[union-attr]
+        infrastructure.dns.create_domain_a_record(
             hostname=hostname, api_host_domain=smarter_settings.environment_api_domain
         )
         logger.info("%s created the DNS record %s for %s", logger_prefix, hostname, llmhost)

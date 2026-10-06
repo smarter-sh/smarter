@@ -1,7 +1,7 @@
 """
 Test the delete_default_api task, and the receiver that queues it when an llmclient is deleted.
 
-Route53 and Kubernetes are never called: destroy_domain_A_record() and kubernetes_helper are patched.
+DNS and Kubernetes are never called: destroy_domain_A_record() and the infrastructure services are patched.
 """
 
 import importlib
@@ -31,8 +31,8 @@ class TestDeleteDefaultApi(SmarterTestBase):
         patcher = patch(f"{MODULE}.destroy_domain_A_record")
         self.destroy = patcher.start()
         self.addCleanup(patcher.stop)
-        patcher = patch(f"{MODULE}.kubernetes_helper")
-        self.kubernetes = patcher.start()
+        patcher = patch(f"{MODULE}.infrastructure")
+        self.kubernetes = patcher.start().kubernetes
         self.kubernetes.delete_ingress_resources.return_value = (True, True, True)
         self.addCleanup(patcher.stop)
 

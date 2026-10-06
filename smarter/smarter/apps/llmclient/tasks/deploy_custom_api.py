@@ -5,7 +5,7 @@ An llmclient whose custom domain is verified is served on its own subdomain of t
 its custom host: ``<llmclient>.<custom domain>``, e.g. ``support.llmclients.example.com``.
 Deploying it there takes the same two steps as deploying it on its default host:
 
-1. **DNS**: an A record for the custom host, in the custom domain's AWS Route53 hosted zone. It
+1. **DNS**: an A record for the custom host, in the custom domain's DNS zone. It
    is a copy of the A record of the platform's API domain, so it points to the platform.
 2. **Ingress**: a Kubernetes ingress for the custom host. cert-manager issues the custom host's
    own TLS certificate for it.
@@ -41,13 +41,13 @@ Exception
 
 from typing import Optional
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.signals import (
     post_deploy_custom_api,
     pre_deploy_custom_api,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -100,11 +100,11 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
 
     if smarter_settings.llmclient_tasks_create_dns_record:
         # the custom host's A record is a copy of the platform API domain's A record, in the
-        # custom domain's own hosted zone.
-        _, created = aws_helper.route53.create_domain_a_record(  # type: ignore[union-attr]
+        # custom domain's own DNS zone.
+        _, created = infrastructure.dns.create_domain_a_record(
             hostname=custom_host,
             api_host_domain=llmclient.base_api_domain,
-            hosted_zone_id=custom_domain.aws_hosted_zone_id,
+            zone_id=custom_domain.aws_hosted_zone_id,
         )
         logger.info(
             "%s %s the A record of %s task_id: %s", prefix, "created" if created else "verified", custom_host, task_id

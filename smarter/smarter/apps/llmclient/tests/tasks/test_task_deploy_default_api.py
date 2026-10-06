@@ -1,8 +1,8 @@
 """
 Test :mod:`smarter.apps.llmclient.tasks.deploy_default_api`.
 
-The tasks are called directly, which runs them synchronously, in this process. AWS and Kubernetes
-are mocked: no DNS record, ingress or certificate is read or created.
+The tasks are called directly, which runs them synchronously, in this process. The infrastructure
+services are mocked: no DNS record, ingress or certificate is read or created.
 """
 
 from unittest.mock import MagicMock, patch
@@ -36,13 +36,12 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
             name=f"test_deploy_default_api_{self.hash_suffix}", user_profile=self.user_profile
         )
         self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
-        aws_helper = MagicMock()
-        aws_helper.aws.domain_resolver.side_effect = lambda domain_name: domain_name
+        infrastructure = MagicMock()
+        infrastructure.dns.resolve_domain.side_effect = lambda domain: domain
         for target, value in (
             ("is_taskable", MagicMock(return_value=True)),
-            ("aws_helper", aws_helper),
-            ("kubernetes_helper", MagicMock()),
-            # applies the ingress manifest with the real kubernetes_helper, in tasks.utils.
+            ("infrastructure", infrastructure),
+            # applies the ingress manifest with the real infrastructure services, in tasks.utils.
             ("apply_ingress_manifest", MagicMock()),
             ("AccountContact", MagicMock()),
         ):
@@ -55,7 +54,7 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
 
     def resources(self, ready: bool):
         """Set whether the ingress, certificate and secret are ready."""
-        self.kubernetes_helper.verify_ingress_resources.return_value = (ready, ready, ready)
+        self.infrastructure.kubernetes.verify_ingress_resources.return_value = (ready, ready, ready)
 
     def refresh(self) -> LLMClient:
         return LLMClient.objects.get(pk=self.llmclient.pk)
@@ -74,8 +73,8 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
         """Test that a certificate that is not issued yet is checked again later, without waiting."""
         self.resources(ready=False)
         continue_default_api_deployment(self.llmclient.pk, stage=STAGE_CERTIFICATE, attempt=0)
-        self.kubernetes_helper.verify_ingress_resources.assert_called_once()
-        self.assertEqual(self.kubernetes_helper.verify_ingress_resources.call_args.kwargs["max_attempts"], 1)
+        self.infrastructure.kubernetes.verify_ingress_resources.assert_called_once()
+        self.assertEqual(self.infrastructure.kubernetes.verify_ingress_resources.call_args.kwargs["max_attempts"], 1)
         scheduled = self.scheduled()
         self.assertEqual(scheduled["stage"], STAGE_CERTIFICATE)
         self.assertEqual(scheduled["attempt"], 1)
@@ -136,7 +135,7 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
     def test_unknown_llmclient(self):
         """Test that the continuation of an llmclient that was deleted does nothing."""
         continue_default_api_deployment(999999999, stage=STAGE_CERTIFICATE)
-        self.kubernetes_helper.verify_ingress_resources.assert_not_called()
+        self.infrastructure.kubernetes.verify_ingress_resources.assert_not_called()
         self.apply_async.assert_not_called()
 
 
@@ -149,12 +148,12 @@ class TestDeployDefaultApi(TestAccountMixin):
             name=f"test_deploy_default_api_start_{self.hash_suffix}", user_profile=self.user_profile
         )
         self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
-        self.aws_helper = MagicMock()
-        self.aws_helper.route53.create_domain_a_record.return_value = ({}, True)
+        self.infrastructure = MagicMock()
+        self.infrastructure.dns.create_domain_a_record.return_value = ({}, True)
         self.settings = MagicMock(llmclient_tasks_create_dns_record=True, llmclient_tasks_create_ingress_manifest=True)
         for target, value in (
             ("is_taskable", MagicMock(return_value=True)),
-            ("aws_helper", self.aws_helper),
+            ("infrastructure", self.infrastructure),
             ("smarter_settings", self.settings),
             ("apply_ingress_manifest", MagicMock()),
             ("continue_default_api_deployment", MagicMock()),
@@ -168,30 +167,30 @@ class TestDeployDefaultApi(TestAccountMixin):
         LLMClient.objects.filter(pk=self.llmclient.pk).update(tls_certificate_issuance_status=status)
 
     def test_not_taskable(self):
-        """Test that nothing is done when AWS is not available."""
+        """Test that nothing is done when the infrastructure services are not available."""
         self.is_taskable.return_value = False
         self.assertIsNone(deploy_default_api(self.llmclient.pk))
-        self.aws_helper.route53.create_domain_a_record.assert_not_called()
+        self.infrastructure.dns.create_domain_a_record.assert_not_called()
 
     def test_unknown_llmclient(self):
         """Test that an llmclient that doesn't exist is not deployed."""
         self.assertIsNone(deploy_default_api(999999999))
-        self.aws_helper.route53.create_domain_a_record.assert_not_called()
+        self.infrastructure.dns.create_domain_a_record.assert_not_called()
 
-    def test_route53_not_available(self):
-        """Test that nothing is deployed without the Route53 helper."""
-        self.aws_helper.route53 = None
+    def test_dns_not_ready(self):
+        """Test that nothing is deployed when the DNS service is not ready."""
+        self.infrastructure.dns.ready = False
         self.assertIsNone(deploy_default_api(self.llmclient.pk))
         self.continue_default_api_deployment.assert_not_called()
 
     def test_already_deployed_and_verified(self):
         """Test that an llmclient that is deployed and verified only has its DNS record verified."""
-        self.aws_helper.route53.create_domain_a_record.return_value = ({}, False)
+        self.infrastructure.dns.create_domain_a_record.return_value = ({}, False)
         LLMClient.objects.filter(pk=self.llmclient.pk).update(
             deployed=True, dns_verification_status=LLMClient.DnsVerificationStatusChoices.VERIFIED
         )
         deploy_default_api(self.llmclient.pk)
-        self.aws_helper.route53.create_domain_a_record.assert_called_once()
+        self.infrastructure.dns.create_domain_a_record.assert_called_once()
         self.apply_ingress_manifest.assert_not_called()
         self.continue_default_api_deployment.assert_not_called()
 

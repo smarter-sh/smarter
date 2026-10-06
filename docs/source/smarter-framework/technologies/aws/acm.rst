@@ -1,7 +1,7 @@
 Smarter AWS ACM Helper
 ======================
 
-.. autoclass:: smarter.common.helpers.aws.acm.AWSCertificateManager
+.. autoclass:: smarter.apps.infrastructure.providers.aws.helpers.acm.AWSCertificateManager
     :members:
     :undoc-members:
     :show-inheritance:

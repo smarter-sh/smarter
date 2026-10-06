@@ -75,7 +75,7 @@ toward different parts of the stack, without needing to understand the whole thi
 - **Application developers** work in the Model Connectivity and Extensibility layers, composing multi-agent workflows with :doc:`smarter-resources/smarter-orchestrator` and wiring :doc:`smarter-resources/smarter-connection` and :doc:`smarter-resources/smarter-mcpclient` resources into applications using Python, the :doc:`Smarter Application Framework <smarter-framework>`, and its built-in :doc:`REST APIs <smarter-framework/smarter-api>`.
 - **Data scientists** work in the Model Connectivity layer, deploying and evaluating models and retrieval pipelines through :doc:`smarter-resources/smarter-llmhost` and :doc:`smarter-resources/smarter-vectorstore`.
 - **DevOps engineers** work in the Access & Governance layer, provisioning :doc:`smarter-resources/smarter-secret` and :doc:`smarter-resources/smarter-llmhost` infrastructure through the :doc:`Smarter CLI <smarter-platform/cli>`, :doc:`GitHub Actions <smarter-framework/developer-reference/devops/ci-cd>`, and `Kubernetes <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
-- **Cloud engineers** work alongside DevOps in Access & Governance and Model Connectivity, using Smarter's :doc:`AWS <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` Helper classes to scale self-hosted infrastructure.
+- **Cloud engineers** work alongside DevOps in Access & Governance and Model Connectivity, using Smarter's :doc:`infrastructure services <smarter-framework/technologies/infrastructure>`, on :doc:`AWS <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>`, to scale self-hosted infrastructure.
 
 
 .. toctree::

@@ -1,13 +1,13 @@
 """
 Celery tasks for llmclient custom domain DNS record management.
 
-This module defines Celery tasks for creating and managing DNS records for llmclient custom domains using AWS Route53.
+This module defines Celery tasks for creating and managing DNS records for llmclient custom domains in the cloud provider's DNS.
 
 Main Tasks
 ----------
 
 - create_custom_domain_dns_record(llmclient_custom_domain_id, record_name, record_type, record_value, record_ttl=600):
-    Gets or creates a DNS record in an AWS Route53 hosted zone for an llmclient custom domain. Handles pre- and post-create signals, logging, and error retries.
+    Gets or creates a DNS record in the DNS zone of an llmclient custom domain. Handles pre- and post-create signals, logging, and error retries.
 
 Signals
 -------
@@ -41,6 +41,7 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import (
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
@@ -50,8 +51,6 @@ from smarter.apps.llmclient.signals import (
     pre_create_custom_domain_dns_record,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws.route53 import AWSRoute53
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -75,14 +74,14 @@ def create_custom_domain_dns_record(
     llmclient_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
 ):
     """
-    Get or create a DNS record in an AWS Route53 hosted zone for an llmclient custom domain.
+    Get or create a DNS record in the DNS zone of an llmclient custom domain.
 
     This Celery task performs the following steps:
 
     1. Sends a pre-create signal for the DNS record.
     2. Logs the DNS record creation request.
     3. Retrieves the LLMClientCustomDomain instance by ID.
-    4. Uses AWSRoute53 helper to get or create the DNS record in the specified hosted zone.
+    4. Gets or creates the DNS record in the custom domain's DNS zone.
     5. Updates or creates the LLMClientCustomDomainDNS record in the database.
     6. Sends a post-create signal for the DNS record.
 
@@ -101,19 +100,7 @@ def create_custom_domain_dns_record(
 
     Returns
     -------
-    dict
-        The DNS record details as returned by AWS Route53, for example:
-
-        .. code-block:: python
-
-            {
-                'Name': 'example.com.',
-                'Type': 'A',
-                'TTL': 300,
-                'ResourceRecords': [
-                    {'Value': '192.0.2.44'},
-                ],
-            }
+    None
 
     Signals
     -------
@@ -130,8 +117,6 @@ def create_custom_domain_dns_record(
         Any exception raised during the creation process will trigger a retry according to Celery settings.
     """
     if not is_taskable():
-        return
-    if not isinstance(aws_helper.route53, AWSRoute53):
         return
 
     task_id = create_custom_domain_dns_record.request.id
@@ -161,12 +146,12 @@ def create_custom_domain_dns_record(
         logger.error(err)
         raise LLMClientCustomDomainNotFound(err) from e
 
-    record, _ = aws_helper.route53.get_or_create_dns_record(
-        hosted_zone_id=custom_domain.aws_hosted_zone_id,
-        record_name=record_name,
+    record, _ = infrastructure.dns.get_or_create_record(
+        zone_id=custom_domain.aws_hosted_zone_id,
+        name=record_name,
         record_type=record_type,
-        record_value=record_value,  # type: ignore
-        record_ttl=record_ttl,
+        ttl=record_ttl,
+        values=[record_value],
     )
     try:
         # note: we cannot use the get_or_create method here because
@@ -174,20 +159,21 @@ def create_custom_domain_dns_record(
         # not present.
         dns_record = LLMClientCustomDomainDNS.objects.get(
             custom_domain=custom_domain,
-            record_name=record["Name"],
-            record_type=record["Type"],
+            record_name=record.name,
+            record_type=record.type,
         )
-        dns_record.record_value = (record["ResourceRecords"],)
-        dns_record.record_ttl = (record["TTL"],)
+        dns_record.record_value = ",".join(record.values)
+        dns_record.record_ttl = record.ttl or record_ttl
         dns_record.save()
     except LLMClientCustomDomainDNS.DoesNotExist:
         dns_record = LLMClientCustomDomainDNS(
             custom_domain=custom_domain,
-            record_name=record["Name"],
-            record_type=record["Type"],
-            record_value=record["ResourceRecords"],
-            record_ttl=record["TTL"],
+            record_name=record.name,
+            record_type=record.type,
+            record_value=",".join(record.values),
+            record_ttl=record.ttl or record_ttl,
         )
+        dns_record.save()
 
     post_create_custom_domain_dns_record.send(
         sender=create_custom_domain_dns_record,

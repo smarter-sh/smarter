@@ -93,6 +93,12 @@ from any package, for example `packages/smarter-guardrail-list/`:
 - **"Tests N passed" can hide a failing file.** When a test file fails to load
   (an import or `vi.mock` error), Vitest still reports its other tests as passed.
   Always check the **"Test Files"** line for failures.
+- **Don't pipe test output straight into `grep`.** Vitest's and npm's output
+  contains ANSI color codes, so `grep` can treat it as binary and silently drop
+  the summary lines ("Test Files", "Tests", "FAIL"). Save the complete output to
+  a file, and search it with `grep -a`, or turn the colors off with
+  `NO_COLOR=1 npm run test -w <package>`. Confirm the pass and fail counts
+  before reporting a result.
 - **`NODE_ENV=production` in your shell** makes React load its production build,
   and tests fail with "React.act is not a function". `vitest.shared.ts` forces
   `NODE_ENV=test`. Keep it that way.

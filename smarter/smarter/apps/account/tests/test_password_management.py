@@ -1,7 +1,7 @@
 """
 Test the password reset views, :mod:`smarter.apps.account.views.password_management`.
 
-The password reset email is never sent: email_helper is patched.
+The password reset email is never sent: the infrastructure email service is patched.
 """
 
 from http import HTTPStatus
@@ -27,8 +27,8 @@ class TestPasswordManagement(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.client = Client()
-        patcher = patch(f"{MODULE}.email_helper")
-        self.email_helper = patcher.start()
+        patcher = patch(f"{MODULE}.infrastructure")
+        self.infrastructure = patcher.start()
         self.addCleanup(patcher.stop)
         self.request_url = reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST)
         request = RequestFactory().get("/", HTTP_HOST="testserver")
@@ -42,15 +42,17 @@ class TestPasswordManagement(TestAccountMixin):
     def test_request_reset(self):
         response = self.client.post(self.request_url, {"email": self.non_admin_user.email})
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.email_helper.send_email.assert_called_once()
-        self.assertEqual(self.email_helper.send_email.call_args.kwargs["to"], self.non_admin_user.email)
+        self.infrastructure.email.send_email.assert_called_once()
+        self.assertEqual(self.infrastructure.email.send_email.call_args.kwargs["to"], self.non_admin_user.email)
+        # the reset link is a secret: the admin gets no blind copy.
+        self.assertFalse(self.infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
 
     def test_request_reset_unknown_and_invalid_email(self):
         self.assertEqual(self.client.post(self.request_url, {"email": "nobody@example.com"}).status_code, HTTPStatus.OK)
         self.assertEqual(
             self.client.post(self.request_url, {"email": "not an email"}).status_code, HTTPStatus.BAD_REQUEST
         )
-        self.email_helper.send_email.assert_not_called()
+        self.infrastructure.email.send_email.assert_not_called()
 
     def test_generate_link_requires_a_user(self):
         with self.assertRaises(SmarterValueError):
