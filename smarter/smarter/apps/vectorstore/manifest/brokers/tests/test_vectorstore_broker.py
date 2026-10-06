@@ -2,7 +2,7 @@
 """Test SAMVectorstoreBroker."""
 
 import os
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from django.http import HttpRequest
 from qdrant_client import QdrantClient
@@ -19,7 +19,12 @@ from smarter.apps.vectorstore.models import (
 )
 from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
 from smarter.lib import json
-from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -160,3 +165,35 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
             broker = self.broker_for(self.manifest_text(), token_key=key)
             broker.apply(broker.request, **self.kwargs)  # type: ignore[arg-type]
         self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMVectorstoreBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_refusals_without_a_manifest_or_user_profile(self):
+        """Test the broker's refusals without a manifest, a Vectorstore, or a user profile."""
+        broker = self.broker_for(self.manifest_text())
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            broker.prompt(broker.request)  # type: ignore[arg-type]
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMVectorstoreBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("vectorstore", None)
+        self.assertIsNone(broker.django_orm_to_manifest_dict())
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.manifest_to_django_orm()
+        self.patch_property("user_profile", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.owned_vectorstore(SmarterJournalCliCommands.DELETE)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.get(broker.request)  # type: ignore[arg-type]
+
+    def test_apply_save_failure(self):
+        """Test that a failure to save the Vectorstore is reported as SAMVectorstoreBrokerError."""
+        broker = self.broker_for(self.manifest_text())
+        with patch.object(VectorstoreMeta, "save", side_effect=RuntimeError("database down")):
+            with self.assertRaises(SAMVectorstoreBrokerError):
+                broker.apply(broker.request, **self.kwargs)  # type: ignore[arg-type]

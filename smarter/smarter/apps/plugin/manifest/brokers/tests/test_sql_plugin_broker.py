@@ -42,6 +42,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
     plugin_class = SqlPlugin
     broker_module = "smarter.apps.plugin.manifest.brokers.sql_plugin"
     apply_builds_plugin = True
+    orm_spec_method = "plugin_sql_spec_orm2pydantic"
 
     test_smarter_sql_plugin_broker_logger_prefix = formatted_text(f"{HERE}.TestSmarterSqlPluginBroker()")
 

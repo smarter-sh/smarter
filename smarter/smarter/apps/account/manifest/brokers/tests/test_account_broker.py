@@ -2,12 +2,16 @@
 """Test SAMAccountBroker."""
 
 import os
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 from taggit.managers import TaggableManager, _TaggableManager
 
-from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
+from smarter.apps.account.manifest.brokers.account import (
+    SAMAccountBroker,
+    SAMAccountBrokerError,
+)
 from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
 from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.manifest.models.account.spec import (
@@ -17,7 +21,9 @@ from smarter.apps.account.manifest.models.account.spec import (
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
@@ -430,3 +436,65 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
 
         with self.assertRaises(ValidationError):
             self.broker.manifest.spec.config.country = "XX"
+
+
+class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):
+    """Test the SAMAccountBroker branches that the happy-path tests don't reach."""
+
+    def setUp(self):
+        super().setUp()
+        self._broker_class = SAMAccountBroker
+        self._here = os.path.abspath(os.path.dirname(__file__))
+        self._manifest_filespec = self.get_data_full_filepath("account.yaml")
+
+    @property
+    def broker(self) -> SAMAccountBroker:
+        return super().broker  # type: ignore[return-value]
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMAccountBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_error_message(self):
+        error = SAMAccountBrokerError(message="x", thing="Account")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API Account Manifest Broker Error")
+
+    def test_without_a_name(self):
+        """Without a name there's no brokered account, nor ORM meta instance."""
+        broker = self.broker
+        broker._brokered_account = None
+        broker._orm_instance = None
+        self.patch_property("name", None)
+        self.assertIsNone(broker.brokered_account)
+        broker.orm_meta_instance_setter()
+
+    def test_orm_meta_instance_setter(self):
+        """The ORM instance is reused, and an account that's missing or can't be read leaves no ORM meta instance."""
+        broker = self.broker
+        orm_instance = MagicMock(spec=Account)
+        broker._orm_instance = orm_instance
+        broker.orm_meta_instance_setter()
+        self.assertIs(broker._orm_meta_instance, orm_instance)
+
+        broker._orm_instance = None
+        self.patch_property("name", "no_such_account")
+        for error in (Account.DoesNotExist, RuntimeError("database down")):
+            with self.subTest(error=error), patch.object(Account, "get_cached_object", side_effect=error):
+                broker.orm_meta_instance_setter()
+                self.assertIsNone(broker._orm_meta_instance)
+
+    def test_conversions_need_a_manifest_and_account(self):
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMAccountBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("brokered_account", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.manifest_to_django_orm()
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            broker.django_orm_to_manifest_dict()
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMAccountBrokerError):
+            broker.manifest_to_django_orm()

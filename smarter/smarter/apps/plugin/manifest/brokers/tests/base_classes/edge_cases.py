@@ -322,3 +322,66 @@ class PluginBrokerEdgeCasesMixin:
             with patch.object(self.SAMBrokerClass, "plugin", new_callable=PropertyMock, return_value=None):  # type: ignore[attr-defined]
                 broker = self.SAMBrokerClass(self.request)  # type: ignore[attr-defined]
         self.assertIsNone(broker._manifest)
+
+    # -------------------------------------------------------------------------
+    # These apply to the brokers that set ``orm_spec_method``: api, sql.
+    # -------------------------------------------------------------------------
+    orm_spec_method: Optional[str] = None
+
+    def test_orm_conversions_without_plugin_meta(self):
+        """Without a PluginMeta there's no plugin data, data conversion or spec."""
+        if not self.orm_spec_method:
+            return
+        broker = self.broker  # type: ignore[attr-defined]
+        broker._plugin_data = None
+        self._patch_broker_property("plugin_meta", None)
+        self.assertIsNone(broker.plugin_data)
+        self.assertIsNone(broker.plugin_data_orm2pydantic())
+        self.assertIsNone(getattr(broker, self.orm_spec_method)())
+
+    def test_orm_plugin_init_resets_the_broker(self):
+        """Plugin_init() forgets the manifest, plugin and plugin data."""
+        if not self.orm_spec_method:
+            return
+        broker = self.broker  # type: ignore[attr-defined]
+        broker.plugin_init()
+        self.assertIsNone(broker._manifest)
+        self.assertIsNone(broker._plugin)
+        self.assertIsNone(broker._plugin_data)
+
+    def test_orm_cached_manifest_of_the_wrong_type(self):
+        """A cached manifest of the wrong type is rejected."""
+        if not self.orm_spec_method:
+            return
+        broker = self.broker  # type: ignore[attr-defined]
+        broker._manifest = {"kind": "Wrong"}
+        with self.assertRaises(SAMPluginBrokerError):  # type: ignore[attr-defined]
+            _ = broker.manifest
+
+    def test_manifest_from_the_orm(self):
+        """Without a loader, the manifest is built from the applied plugin's ORM records."""
+        if not self.orm_spec_method:
+            return
+        broker = self.broker  # type: ignore[attr-defined]
+        response = broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))  # type: ignore[attr-defined]
+        name = broker.manifest.metadata.name
+        plugin_meta = broker.plugin_meta
+        self.assertIsNotNone(plugin_meta)  # type: ignore[attr-defined]
+
+        self._patch_broker_property("loader", None)
+        broker._manifest = None
+        broker._plugin_meta = plugin_meta
+        manifest = broker.manifest
+        self.assertIsInstance(manifest, self.SAMBrokerClass(self.request, self.loader).SAMModelClass)  # type: ignore[attr-defined]
+        self.assertEqual(manifest.metadata.name, name)  # type: ignore[attr-defined]
+
+    def test_manifest_without_a_loader_or_plugin_meta(self):
+        """Without a loader or a PluginMeta, there's no manifest."""
+        if not self.orm_spec_method:
+            return
+        broker = self.broker  # type: ignore[attr-defined]
+        self._patch_broker_property("loader", None)
+        broker._manifest = None
+        broker._plugin_meta = None
+        self.assertIsNone(broker.manifest)

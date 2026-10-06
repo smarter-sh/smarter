@@ -1,6 +1,6 @@
 """Unit tests of OpenAISmarterClient's error formatting, budget refusals, MCP tools and guard clauses, on a client without its handler state."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from openai.types.chat import ChatCompletion
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -191,3 +191,74 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.client._messages = None
         with self.assertRaises(SmarterValueError):
             _ = self.client.openai_messages
+
+
+class TestChatProviderBaseUnits(SmarterTestBase):
+    """Test ChatProviderBase's validation and request helpers, on a client without its handler state."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
+        self.client._default_model = None
+
+    def patch_properties(self, **values) -> None:
+        for name, value in values.items():
+            patcher = patch.object(OpenAISmarterClient, name, new_callable=PropertyMock, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_prune_empty_values(self):
+        self.assertEqual(
+            self.client.prune_empty_values({"a": None, "b": {"c": None, "d": 1}, "e": [1, None]}),
+            {"b": {"d": 1}, "e": [1]},
+        )
+        with self.assertRaises(SmarterValueError):
+            self.client.prune_empty_values(["not", "a", "dict"])  # type: ignore[arg-type]
+
+    def test_validate_requires_each_property(self):
+        """Validate() names the first missing property, then rejects a model that isn't valid."""
+        required = {
+            "prompt": MagicMock(),
+            "data": {"messages": []},
+            "user": MagicMock(),
+            "default_model": "gpt-test",
+            "default_system_role": "You are a test.",
+            "default_temperature": 0.5,
+            "default_max_tokens": 100,
+        }
+        for missing in required:
+            with self.subTest(missing=missing):
+                values = {**required, missing: None}
+                with patch.multiple(
+                    OpenAISmarterClient,
+                    **{name: PropertyMock(return_value=value) for name, value in values.items()},
+                ):
+                    with self.assertRaises(SmarterValueError):
+                        self.client.validate()
+        with patch.multiple(
+            OpenAISmarterClient,
+            valid_chat_completion_models=PropertyMock(return_value=["another-model"]),
+            provider_name=PropertyMock(return_value="test-provider"),
+            **{name: PropertyMock(return_value=value) for name, value in required.items()},
+        ):
+            with self.assertRaises(SmarterValueError):
+                self.client.validate()
+
+    def test_default_model_from_the_provider(self):
+        self.patch_properties(provider=MagicMock(default_model="provider-model"))
+        self.assertEqual(self.client.default_model, "provider-model")
+        patch.stopall()
+        self.patch_properties(provider=None)
+        self.assertIsNone(self.client.default_model)
+
+    def test_get_input_text_prompt_errors(self):
+        for input_text in ("", 5):
+            with (
+                self.subTest(input_text=input_text),
+                patch(
+                    "smarter.apps.provider.services.text_completion.lib.chat_provider_base.parse_request",
+                    return_value=(None, input_text),
+                ),
+            ):
+                with self.assertRaises(SmarterValueError):
+                    self.client.get_input_text_prompt({"input_text": "x"})

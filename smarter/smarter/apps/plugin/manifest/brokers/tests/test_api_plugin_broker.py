@@ -34,6 +34,7 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
     plugin_class = ApiPlugin
     broker_module = "smarter.apps.plugin.manifest.brokers.api_plugin"
     apply_builds_plugin = True
+    orm_spec_method = "plugin_api_spec_orm2pydantic"
 
     @classmethod
     def setUpClass(cls):

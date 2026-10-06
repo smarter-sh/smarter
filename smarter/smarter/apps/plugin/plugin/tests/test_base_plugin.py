@@ -1019,3 +1019,16 @@ class TestPluginBase(PluginTestBase):
         plugin.clone(new_name="sql_clone_original_copy")
         self.assertEqual(PluginMeta.objects.get(id=plugin.id).name, "sql_clone_original")
         self.assertEqual(PluginDataSql.objects.get(plugin_id=plugin.id).sql_query, SQL_QUERY)
+
+    def test_base_abstract_members(self):
+        """Test that PluginBase's plugin data members must be implemented by a subclass."""
+        plugin = ApiPlugin(plugin_id=self.api_plugin.id, user_profile=self.user_profile)
+        for name in (
+            "plugin_data_class",
+            "plugin_data",
+            "plugin_data_serializer",
+            "plugin_data_serializer_class",
+            "plugin_data_django_model",
+        ):
+            with self.subTest(member=name), self.assertRaises(NotImplementedError):
+                getattr(PluginBase, name).fget(plugin)

@@ -1,9 +1,11 @@
 """Unit tests for UserView and UserListView API endpoints."""
 
+from unittest.mock import patch
+
 from smarter.apps.account import utils
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.account.utils import SmarterCachedObjects, smarter_cached_objects
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
@@ -29,6 +31,35 @@ class TestSmarterCachedObjects(SmarterTestBase):
         self.assertEqual(
             smarter_cached_objects.smarter_admin_user_profile.account, smarter_cached_objects.smarter_account
         )
+
+    def test_admin_user(self):
+        """A fresh instance loads the admin user, then re-queries it on the next access."""
+        cached_objects = SmarterCachedObjects()
+        admin_user = cached_objects.admin_user
+        self.assertEqual(admin_user.username, SMARTER_ADMIN_USERNAME)
+        self.assertTrue(admin_user.is_superuser)
+        self.assertEqual(cached_objects.admin_user, admin_user)
+
+    def test_admin_user_missing_raises(self):
+        """The admin user property raises when there is no such superuser."""
+        cached_objects = SmarterCachedObjects()
+        with patch.object(User.objects, "get", side_effect=User.DoesNotExist):
+            with self.assertRaises(SmarterConfigurationError):
+                _ = cached_objects.admin_user
+
+    def test_fresh_smarter_admin_user_profile(self):
+        """A fresh instance loads the admin user profile, then re-queries it on the next access."""
+        cached_objects = SmarterCachedObjects()
+        user_profile = cached_objects.smarter_admin_user_profile
+        self.assertIsInstance(user_profile, UserProfile)
+        self.assertEqual(cached_objects.smarter_admin_user_profile, user_profile)
+
+    def test_smarter_account_missing_raises(self):
+        """The smarter account property raises when the account can't be found."""
+        cached_objects = SmarterCachedObjects()
+        with patch.object(Account, "get_cached_object", return_value=None):
+            with self.assertRaises(SmarterConfigurationError):
+                _ = cached_objects.smarter_account
 
 
 class TestGetCachedDefaultAccount(TestAccountMixin):
@@ -80,6 +111,20 @@ class TestGetCachedAccountForUser(TestAccountMixin):
         with self.assertRaises(Account.DoesNotExist):
             utils.get_cached_account_for_user(user=object())  # type: ignore
 
+    def test_smarter_admin_gets_smarter_account(self):
+        account = utils.get_cached_account_for_user(user=smarter_cached_objects.smarter_admin)
+        self.assertEqual(account, smarter_cached_objects.smarter_account)
+
+    def test_unsaved_user_raises(self):
+        with self.assertRaises(Account.DoesNotExist):
+            utils.get_cached_account_for_user(user=User(username=f"unsaved_{self.hash_suffix}"))
+
+    def test_user_without_profile_raises(self):
+        user = User.objects.create(username=f"no_profile_{self.hash_suffix}")
+        self.addCleanup(user.delete)
+        with self.assertRaises(Account.DoesNotExist):
+            utils.get_cached_account_for_user(user=user, invalidate=True)
+
 
 class TestGetCachedUserForUserId(TestAccountMixin):
     """Test that get_cached_user_for_user_id returns the expected user for a given user ID and handles edge cases."""
@@ -110,6 +155,10 @@ class TestGetCachedUserForUsername(TestAccountMixin):
     def test_user_not_found(self):
         with self.assertRaises(User.DoesNotExist):
             utils.get_cached_user_for_username(username="notfound")
+
+    def test_smarter_admin(self):
+        user = utils.get_cached_user_for_username(username=SMARTER_ADMIN_USERNAME)
+        self.assertEqual(user, smarter_cached_objects.admin_user)
 
 
 class TestGetCachedAdminUserForAccount(TestAccountMixin):
@@ -170,3 +219,16 @@ class TestGetUserProfilesForAccount(TestAccountMixin):
     def test_account_required(self):
         with self.assertRaises(SmarterValueError):
             utils.get_user_profiles_for_account(None)  # type: ignore
+
+
+class TestValidResourceOwnersForUser(TestAccountMixin):
+    """Test that valid_resource_owners_for_user includes the user and the smarter admin."""
+
+    def test_no_user_profile(self):
+        owners = utils.valid_resource_owners_for_user(None)
+        self.assertEqual(owners, [smarter_cached_objects.smarter_admin_user_profile])
+
+    def test_user_profile(self):
+        owners = utils.valid_resource_owners_for_user(self.non_admin_user_profile)
+        self.assertIn(self.non_admin_user_profile, owners)
+        self.assertIn(smarter_cached_objects.smarter_admin_user_profile, owners)
