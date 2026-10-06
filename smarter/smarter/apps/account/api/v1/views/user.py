@@ -131,7 +131,7 @@ def get_user(request, user_id: Optional[int] = None):
         try:
             account = UserProfile.objects.get(user=request.user).account
             user = UserProfile.objects.get(account=account, user_id=user_id).user
-        except User.DoesNotExist:
+        except (UserProfile.DoesNotExist, User.DoesNotExist):
             logger.debug("UserListView.get_queryset() - user not found for id: %s", user_id)
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
         serializer = UserSerializer(user)
@@ -337,7 +337,8 @@ class UserListView(AccountListViewBase):
             return User.objects.all()
 
         try:
-            account_users = UserProfile.objects.filter(account__user=self.request.user).values_list("user", flat=True)
+            accounts = UserProfile.objects.filter(user=self.request.user).values("account")
+            account_users = UserProfile.objects.filter(account__in=accounts).values_list("user", flat=True)
             logger.debug(
                 "%s.get_queryset() - account users for %s: %s", self.formatted_class_name, user, list(account_users)
             )

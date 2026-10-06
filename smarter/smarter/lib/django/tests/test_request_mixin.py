@@ -1240,3 +1240,37 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.assertIn("data", json_dump)
             self.assertIn("llmclient_id", json_dump)
             self.assertIn("llmclient_name", json_dump)
+
+    def test_ordering(self):
+        """Test that request mixins are ordered by url, and can't be compared with anything else."""
+        first = SmarterRequestMixin(self.wsgi_request_factory().get("/a/"))
+        second = SmarterRequestMixin(self.wsgi_request_factory().get("/b/"))
+        self.assertTrue(first < second)
+        self.assertTrue(first <= second)
+        self.assertTrue(second > first)
+        self.assertTrue(second >= first)
+        for method in (first.__lt__, first.__le__, first.__gt__, first.__ge__):
+            with self.subTest(method=method.__name__):
+                self.assertIs(method("not a request mixin"), NotImplemented)
+
+    def test_bool_is_false_when_readiness_fails(self):
+        srm = SmarterRequestMixin(self.wsgi_request_factory().get("/"))
+        with patch.object(
+            SmarterRequestMixin, "srm_ready", new_callable=PropertyMock, side_effect=RuntimeError("broken")
+        ):
+            self.assertFalse(bool(srm))
+
+    def test_invalidate_cached_properties(self):
+        """Test that the cached properties are recomputed after they're invalidated."""
+        srm = SmarterRequestMixin(self.wsgi_request_factory().get("/"))
+        srm.__dict__["is_config"] = "stale"
+        srm.invalidate_cached_properties()
+        self.assertNotIn("is_config", srm.__dict__)
+
+    def test_smarter_client_headers(self):
+        request = self.wsgi_request_factory().get(
+            "/", headers={"X-Smarter-Client": "smarter-cli", "X-Smarter-ClientVersion": "1.2.3"}
+        )
+        srm = SmarterRequestMixin(request)
+        self.assertEqual(srm.smarter_client, "smarter-cli")
+        self.assertEqual(srm.smarter_client_version, "1.2.3")

@@ -2,13 +2,14 @@
 
 from unittest.mock import MagicMock, patch
 
+import paramiko
 import requests
 
 from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
 )
-from smarter.apps.connection.models import SqlConnection
+from smarter.apps.connection.models import ConnectionBase, SqlConnection
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
@@ -148,3 +149,49 @@ class TestSqlConnectionModel(SmarterTestBase):
         ):
             connection.test_proxy()
         self.assertIn("u:proxy-s3cret@", get.call_args.kwargs["proxies"]["http"])
+
+
+MODULE = "smarter.apps.connection.models.sql_connection"
+
+
+class TestSqlConnectionModelFailures(SmarterTestBase):
+    """Test the connection methods' failure handling, with the database and SSH clients mocked."""
+
+    def test_tcpip_unusable_connection(self):
+        """A connection that isn't usable after connecting is None."""
+        with patch(f"{MODULE}.ConnectionHandler") as handler:
+            handler.return_value.__getitem__.return_value.is_usable.return_value = False
+            self.assertIsNone(sqlite_connection().connect_tcpip())
+
+    def test_tcpip_ssh(self):
+        """An SSH tunnelled connection loads the connection's known hosts, and reports SSH and other failures."""
+        connection = sqlite_connection(ssh_known_hosts="example.com ssh-ed25519 AAAA", proxy_username="tunnel")
+        with patch(f"{MODULE}.paramiko.SSHClient") as ssh_client, patch(f"{MODULE}.ConnectionHandler") as handler:
+            db_wrapper = handler.return_value.__getitem__.return_value
+            self.assertIs(connection.connect_tcpip_ssh(), db_wrapper)
+            ssh_client.return_value.load_host_keys.assert_called_once()
+            self.assertEqual(ssh_client.return_value.connect.call_args.kwargs["username"], "tunnel")
+
+            for error in (paramiko.SSHException("refused"), RuntimeError("broken")):
+                with self.subTest(error=error):
+                    ssh_client.return_value.connect.side_effect = error
+                    self.assertIsNone(connection.connect_tcpip_ssh())
+
+    def test_ldap_failure(self):
+        with patch(f"{MODULE}.ConnectionHandler", side_effect=RuntimeError("no ldap")):
+            self.assertIsNone(sqlite_connection().connect_ldap_user_pwd())
+
+    def test_close_failure(self):
+        """A failure to close the connection is logged, and the connection is forgotten."""
+        connection = sqlite_connection()
+        connection._connection = MagicMock()
+        connection._connection.close.side_effect = RuntimeError("already closed")
+        connection.close()
+        self.assertIsNone(connection._connection)
+
+    def test_save_converts_name_to_snake_case(self):
+        connection = sqlite_connection(name="Not Snake Case")
+        with patch.object(ConnectionBase, "save") as save:
+            connection.save()
+        save.assert_called_once()
+        self.assertEqual(connection.name, "not_snake_case")

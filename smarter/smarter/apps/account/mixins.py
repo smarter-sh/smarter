@@ -871,7 +871,7 @@ class AccountMixin(SmarterHelperMixin):
         logger.debug(
             "%s.authenticate() called with api_token=%s",
             self._am_formatted_class_name,
-            mask_string(api_token.decode()),
+            mask_string(api_token.decode() if isinstance(api_token, bytes) else str(api_token)),
         )
         if self.is_authenticated:
             logger.debug(

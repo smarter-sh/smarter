@@ -1,5 +1,6 @@
 """Test :class:`smarter.apps.llmclient.models.llmclient_helper.LLMClientHelper`."""
 
+from unittest.mock import PropertyMock, patch
 from urllib.parse import urlparse
 
 from django.contrib.auth.models import AnonymousUser
@@ -10,6 +11,7 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.models.llmclient_helper import LLMClientHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.request import SmarterRequestMixin
 
 PLATFORM_HOST = urlparse(smarter_settings.environment_platform_url).netloc
 
@@ -87,3 +89,12 @@ class TestLLMClientHelper(TestAccountMixin):
         self.assertFalse(helper.is_helper_ready)
         self.assertFalse(helper.ready)
         self.assertIsNone(helper.llmclient)
+
+    def test_ready_without_a_ready_request(self):
+        """The helper is ready, even if its request isn't, as long as the helper itself is ready."""
+        helper = self.helper(llmclient_id=self.llmclient.id)
+        with patch.object(SmarterRequestMixin, "ready", new_callable=PropertyMock, return_value=False):
+            with patch.object(LLMClientHelper, "is_helper_ready", new_callable=PropertyMock, return_value=True):
+                self.assertTrue(helper.ready)
+            with patch.object(LLMClientHelper, "is_helper_ready", new_callable=PropertyMock, return_value=False):
+                self.assertFalse(helper.ready)

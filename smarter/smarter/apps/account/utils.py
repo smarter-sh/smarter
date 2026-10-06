@@ -516,12 +516,12 @@ def account_number_from_url(invalidate: Optional[bool] = False, url: Optional[st
     **Example usage**::
 
         # Extract account number from a URL
-        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/")
+        account_number = account_number_from_url(url="https://hr.3141-5926-5359.alpha.api.example.com/")
 
         # Result: '3141-5926-5359'
 
         # Invalidate cache before fetching
-        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
+        account_number = account_number_from_url(url="https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
     """
     if not url:
         return None

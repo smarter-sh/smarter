@@ -5,7 +5,7 @@ See :class:`smarter.lib.unittest.resource_api.ResourceApiTestMixin`.
 """
 
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.llmclient.api.v1.urls import LLMClientApiV1ReverseViews as Names
@@ -14,6 +14,7 @@ from smarter.apps.llmclient.models import (
     LLMClientAPIKey,
     LLMClientCustomDomain,
     LLMClientFunctions,
+    LLMClientHelper,
     LLMClientPlugin,
 )
 from smarter.apps.plugin.models import PluginMeta
@@ -173,6 +174,50 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
         response = self.api_client.delete(url)
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
         self.assertFalse(LLMClientFunctions.objects.filter(pk=function.pk).exists())
+
+    def test_get_another_users_llmclient(self):
+        """Test that a superuser gets another user's LLMClient, whose owner the view then acts as."""
+        llmclient = LLMClient.objects.create(
+            name=f"{self.resource_name_prefix}_{self.hash_suffix}_other_owner", user_profile=self.non_admin_user_profile
+        )
+        response = self.api_client.get(self.url(Names.llmclient_view_by_id, llmclient_id=llmclient.pk))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+
+    def test_post_creates_llmclient(self):
+        """Test that a valid post creates an LLMClient and redirects to it."""
+        name = f"{self.resource_name_prefix}_{self.hash_suffix}_posted"
+        url = self.url(Names.llmclient_view_by_id, llmclient_id=self.resource.pk)
+        response = self.api_client.post(
+            url, data={"name": name, "user_profile_id": self.user_profile.pk}, format="json"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
+        self.assertTrue(LLMClient.objects.filter(name=name, user_profile=self.user_profile).exists())
+
+    def test_function_patch_not_implemented(self):
+        """Test that patching an LLMClient's function isn't implemented."""
+        function = LLMClientFunctions.objects.create(llmclient=self.resource, name="calculator")
+        self.addCleanup(LLMClientFunctions.objects.filter(pk=function.pk).delete)
+        url = self.url(Names.llmclient_functions_view_by_id, llmclient_id=self.resource.pk, function_id=function.pk)
+        with self.assertRaises(NotImplementedError):
+            self.api_client.patch(url, data={}, format="json")
+
+    def test_default_api_llmclient_not_ready(self):
+        """Test that the default api is a 400 when the LLMClient can't be initialized."""
+        url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)
+        with patch.object(LLMClientHelper, "ready", new_callable=PropertyMock, return_value=False):
+            response = self.api_client.post(url, data={}, format="json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:300])
+        self.assertIn("Could not initialize", response.json()["data"]["error"]["message"])
+
+    def test_default_api_requires_authentication(self):
+        """Test that the default api is a 403 to an unauthenticated request when the LLMClient requires authentication."""
+        url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)
+        with (
+            patch.object(LLMClientHelper, "is_authentication_required", new_callable=PropertyMock, return_value=True),
+            patch("smarter.apps.llmclient.api.v1.views.base.is_authenticated_request", return_value=False),
+        ):
+            response = self.api_client.post(url, data={}, format="json")
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content[:300])
 
     def test_list(self):
         super().test_list()

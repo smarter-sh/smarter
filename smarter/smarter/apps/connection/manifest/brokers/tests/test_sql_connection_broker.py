@@ -2,11 +2,13 @@
 """Test SAMSqlConnectionBroker."""
 
 import os
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 from taggit.managers import TaggableManager, _TaggableManager
 
+from smarter.apps.connection.manifest.brokers import SAMConnectionBrokerError
 from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
@@ -23,6 +25,7 @@ from smarter.apps.connection.models import SqlConnection
 from smarter.apps.secret.models import Secret
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
+    SAMBrokerError,
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
@@ -350,3 +353,32 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         """Test that logs() raises NotImplementedError."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.logs(self.request, **self.kwargs)
+
+    def test_cached_manifest_of_the_wrong_type(self):
+        self.broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]  # pylint: disable=protected-access
+        with self.assertRaises(SAMConnectionBrokerError):
+            _ = self.broker.manifest
+
+    def test_manifest_without_a_loader_or_connection(self):
+        """Without a loader or an existing connection there's no manifest."""
+        broker = self.broker
+        broker._manifest = None  # pylint: disable=protected-access
+        with patch.object(SAMSqlConnectionBroker, "loader", new_callable=PropertyMock, return_value=None):
+            with patch.object(SAMSqlConnectionBroker, "connection", new_callable=PropertyMock, return_value=None):
+                self.assertIsNone(broker.manifest)
+
+    def test_manifest_to_django_orm_secret_errors(self):
+        """A failure to create or retrieve the password Secret is reported as a broker error."""
+        for error in (SAMBrokerError(message="no secret", thing="Secret"), RuntimeError("broken")):
+            with self.subTest(error=error), patch.object(self.broker, "get_or_create_secret", side_effect=error):
+                with self.assertRaises(SAMConnectionBrokerError):
+                    self.broker.manifest_to_django_orm()
+
+    def test_password_secret_not_found(self):
+        """A password Secret that the user can't read is None."""
+        broker = self.broker
+        broker._password_secret = None  # pylint: disable=protected-access
+        queryset = MagicMock()
+        queryset.with_read_permission_for.return_value.first.return_value = None
+        with patch.object(Secret.objects, "filter", return_value=queryset):
+            self.assertIsNone(broker.password_secret)

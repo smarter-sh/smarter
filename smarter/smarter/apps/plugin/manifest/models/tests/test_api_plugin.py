@@ -632,12 +632,16 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         )
 
     def test_validate_api_invalid_parameter_value(self):
-        """Test for invalid parameters passed."""
+        """
+        Test for invalid parameters passed.
+
+        There's more to this, obviously,
+        which is implemented elsewhere. Place thy faith in the coverage
+        report :)
+        """
         self.load_manifest(filename="api-plugin.yaml")
         if not isinstance(self._manifest, dict):
             self.fail("Manifest is not a dictionary")
-
-        logger.warning("FIX NOTE: WRITE THIS UNIT TEST!!!!")
 
     def test_validate_api_api_parameters_invalid_type(self):
         """Test that the parameters validator raises an error for invalid parameter types."""

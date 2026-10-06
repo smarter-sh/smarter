@@ -767,17 +767,21 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 username,
                 account,
             )
+            # a model is found by its own session_key field, e.g. Prompt.session_key. Django's
+            # sessions have no relation to a user, so a model without one can't be found this way.
+            if not any(field.name == "session_key" for field in cls._meta.get_fields()):
+                raise SmarterValueError(f"{class_name} has no session_key field, so it can't be found by session key.")
             try:
                 if taggit:
                     retval = (
                         cls.objects.prefetch_related("tags")
                         .select_related("user_profile", "user_profile__account", "user_profile__user")
-                        .get(user_profile__cached_user__sessions__session_key=session_key)
+                        .get(session_key=session_key)
                     )
                 else:
                     retval = cls.objects.select_related(
                         "user_profile", "user_profile__account", "user_profile__user"
-                    ).get(user_profile__cached_user__sessions__session_key=session_key)
+                    ).get(session_key=session_key)
                 logger.debug(
                     "%s._get_object_by_session_key() fetched %s for session_key: %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
@@ -796,6 +800,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 name=name, user_profile=user_profile, class_name=cls.__name__
             )
             _get_object_by_name_and_account.invalidate(name=name, account=account, class_name=cls.__name__)
+            _get_object_by_session_key.invalidate(session_key=session_key, class_name=cls.__name__)
 
         if pk:
             retval = _get_object_by_pk(pk=pk, class_name=cls.__name__)

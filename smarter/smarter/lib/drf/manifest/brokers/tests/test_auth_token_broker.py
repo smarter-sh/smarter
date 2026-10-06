@@ -2,12 +2,16 @@
 """Test SAMSmarterAuthTokenBroker."""
 
 import os
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 
 from smarter.lib import json, logging
-from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
+from smarter.lib.drf.manifest.brokers.auth_token import (
+    SAMSmarterAuthTokenBroker,
+    SAMSmarterAuthTokenBrokerError,
+)
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
     SAMSmarterAuthTokenMetadata,
 )
@@ -16,7 +20,9 @@ from smarter.lib.drf.manifest.models.auth_token.spec import (
     SAMSmarterAuthTokenSpec,
     SAMSmarterAuthTokenSpecConfig,
 )
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import (
+    SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -421,3 +427,169 @@ class TestSmarterAuthTokenBroker3(TestSmarterAuthTokenBrokerBase):
         self._broker = self.SAMBrokerClass(request)
         with self.assertRaises((SAMBrokerErrorNotFound, SAMBrokerErrorNotReady)):
             self.broker.describe(request, {"name": "nonexistent-smarter_auth_token"})  # type: ignore
+
+
+class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
+    """Test the SAMSmarterAuthTokenBroker branches that the happy-path tests don't reach."""
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMSmarterAuthTokenBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_error_message(self):
+        error = SAMSmarterAuthTokenBrokerError(message="x", thing="SmarterAuthToken")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API SmarterAuthToken Manifest Broker Error")
+
+    def test_without_a_username(self):
+        """Without a manifest or a user there's no token, nor an ORM meta instance."""
+        broker = self.broker
+        broker._smarter_auth_token = None
+        broker._orm_meta_instance = None
+        broker._orm_instance = None
+        self.patch_property("token_username", None)
+        self.assertIsNone(broker.smarter_auth_token)
+        broker.orm_meta_instance_setter()
+        self.assertIsNone(broker._orm_meta_instance)
+
+    def test_orm_meta_instance_setter(self):
+        """The ORM instance is reused, and a token that's missing or can't be read leaves no ORM meta instance."""
+        broker = self.broker
+        orm_instance = MagicMock(spec=SmarterAuthToken)
+        broker._orm_instance = orm_instance
+        broker.orm_meta_instance_setter()
+        self.assertIs(broker._orm_meta_instance, orm_instance)
+
+        broker._orm_instance = None
+        self.patch_property("token_username", self.admin_user.username)
+        for error in (SmarterAuthToken.DoesNotExist, RuntimeError("database down")):
+            with self.subTest(error=error), patch.object(SmarterAuthToken.objects, "get", side_effect=error):
+                broker.orm_meta_instance_setter()
+                self.assertIsNone(broker._orm_meta_instance)
+
+    def test_conversions_need_a_manifest_and_token(self):
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("smarter_auth_token", None)
+        with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+            broker.django_orm_to_manifest_dict()
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+            broker.manifest_to_django_orm()
+
+    def test_token_key_after_create(self):
+        broker = self.broker
+        broker._created = True
+        broker._token_key = "a-key"
+        self.assertEqual(broker.token_key, "a-key")
+
+    def test_manifest_to_django_orm_needs_a_dict_config(self):
+        broker = self.broker
+        real = broker.to_snake_case
+        calls = []
+
+        def to_snake_case(value):
+            """Convert the metadata, then fail to convert the config."""
+            calls.append(value)
+            return real(value) if len(calls) == 1 else "not a dict"
+
+        with patch.object(SAMSmarterAuthTokenBroker, "to_snake_case", side_effect=to_snake_case):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                broker.manifest_to_django_orm()
+
+    def test_django_orm_to_manifest_dict_needs_a_manifest(self):
+        self.patch_property("smarter_auth_token", MagicMock(spec=SmarterAuthToken))
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker.django_orm_to_manifest_dict()
+
+    def test_invalid_manifest_from_the_loader(self):
+        """A loader manifest that fails Pydantic validation leaves no manifest."""
+        broker = self.broker
+        broker._manifest = None
+        with patch.object(SAMLoader, "manifest_spec", new_callable=PropertyMock, return_value={"config": 42}):
+            try:
+                manifest = broker.manifest
+            except SAMSmarterAuthTokenBrokerError:
+                manifest = None
+        self.assertIsNone(manifest)
+
+    def test_get_with_an_unserializable_token(self):
+        self.broker.apply(self.request, **self.kwargs)
+        for data in ({}, RuntimeError("boom")):
+            with self.subTest(data=data):
+                serializer = MagicMock()
+                type(serializer.return_value).data = PropertyMock(
+                    side_effect=data if isinstance(data, Exception) else None, return_value=data
+                )
+                with (
+                    patch("smarter.lib.drf.manifest.brokers.auth_token.SmarterAuthTokenMiniSerializer", serializer),
+                    patch.object(SmarterAuthToken, "get_cached_objects", return_value=[self.broker.smarter_auth_token]),
+                ):
+                    with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                        self.broker.get(self.request, **self.kwargs)
+
+    def test_apply_and_delete_permissions(self):
+        """Only staff Users may apply or delete auth tokens."""
+        non_staff = MagicMock(spec=self.admin_user.__class__, is_staff=False, is_superuser=False)
+        for user in ("not a user", non_staff):
+            with self.subTest(user=user):
+                with patch.object(SAMSmarterAuthTokenBroker, "user", new_callable=PropertyMock, return_value=user):
+                    with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                        self.broker.apply(self.request, **self.kwargs)
+                    with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                        self.broker.delete(self.request, **self.kwargs)
+
+    def test_apply_needs_a_manifest(self):
+        kwargs = self.kwargs
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.apply(self.request, **kwargs)
+
+    def test_apply_for_an_unknown_user(self):
+        user_model = self.admin_user.__class__
+        with patch("smarter.lib.drf.manifest.brokers.auth_token.User.objects.get", side_effect=user_model.DoesNotExist):
+            with self.assertRaises(SAMBrokerError):
+                self.broker.apply(self.request, **self.kwargs)
+
+    def test_staff_cannot_issue_keys_for_superusers(self):
+        """A staff user who isn't a superuser can't apply a token for a superuser."""
+        staff = MagicMock(spec=self.admin_user.__class__, is_staff=True, is_superuser=False, username="staff")
+        superuser = MagicMock(is_superuser=True)
+        with (
+            patch.object(SAMSmarterAuthTokenBroker, "user", new_callable=PropertyMock, return_value=staff),
+            patch("smarter.lib.drf.manifest.brokers.auth_token.User.objects.get", return_value=superuser),
+        ):
+            with self.assertRaises(SAMBrokerError):
+                self.broker.apply(self.request, **self.kwargs)
+
+    def test_apply_save_error(self):
+        with patch.object(SmarterAuthToken, "save", side_effect=RuntimeError("database down")):
+            with self.assertRaises(Exception):
+                self.broker.apply(self.request, **self.kwargs)
+
+    def test_describe_and_delete_errors(self):
+        self.broker.apply(self.request, **self.kwargs)
+        with patch.object(SAMSmarterAuthTokenBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("x")):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                self.broker.describe(self.request, **self.kwargs)
+        with patch.object(SmarterAuthToken, "delete", side_effect=RuntimeError("x")):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                self.broker.delete(self.request, **self.kwargs)
+
+    def test_deploy_activates_and_undeploy_needs_a_token(self):
+        self.broker.apply(self.request, **self.kwargs)
+        token = self.broker.smarter_auth_token
+        token.is_active = False
+        token.save()
+        self.broker.deploy(self.request, **self.kwargs)
+        token.refresh_from_db()
+        self.assertTrue(token.is_active)
+        self.patch_property("smarter_auth_token", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.deploy(self.request, **self.kwargs)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.undeploy(self.request, **self.kwargs)

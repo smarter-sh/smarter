@@ -1,6 +1,6 @@
 """Test the branches of :mod:`smarter.lib.manifest.loader`: validate_key(), and SAMLoader's sources and formats."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import yaml
 
@@ -34,6 +34,12 @@ class TestValidateKey(SmarterTestBase):
         validate_key("name", "a", (str, [SAMSpecificationKeyOptions.REQUIRED]))
         with self.assertRaises(SAMLoaderError):
             validate_key("name", "", (str, [SAMSpecificationKeyOptions.REQUIRED]))
+
+    def test_tuple_spec_type(self):
+        """A value of the wrong type is refused, unless the key is optional."""
+        with self.assertRaises(SAMLoaderError):
+            validate_key("name", 42, (str, [SAMSpecificationKeyOptions.REQUIRED]))
+        validate_key("name", 42, (str, [SAMSpecificationKeyOptions.OPTIONAL]))
 
     def test_value_spec(self):
         validate_key("apiVersion", "smarter.sh/v1", "smarter.sh/v1")
@@ -120,3 +126,28 @@ class TestSAMLoaderSources(SmarterTestBase):
     def test_not_a_dict(self):
         with self.assertRaises(SAMLoaderError):
             SAMLoader(manifest="- a\\n- list\\n", kind="Guardrail")
+
+    def test_invalid_manifest_type(self):
+        """A manifest that's been replaced by something other than a str or dict reads as None."""
+        loader = SAMLoader(manifest=MANIFEST)
+        loader._manifest = 42
+        self.assertIsNone(loader.manifest)
+
+    def test_data_format_of_a_dict(self):
+        loader = SAMLoader(manifest=MANIFEST)
+        loader._data_format = None
+        loader._raw_data = dict(MANIFEST)
+        self.assertEqual(loader.data_format, SAMDataFormats.JSON)
+
+    def test_unsupported_data_format(self):
+        loader = SAMLoader(manifest=MANIFEST)
+        with patch.object(SAMLoader, "data_format", new_callable=PropertyMock, return_value=SAMDataFormats.UNKNOWN):
+            with self.assertRaises(SAMLoaderError):
+                loader.validate_manifest()
+
+    def test_kind_is_read_from_the_manifest(self):
+        """The specification's kind is filled in from the manifest when it's empty."""
+        loader = SAMLoader(manifest=MANIFEST)
+        # _specification is a class attribute: give this loader its own copy.
+        loader._specification = {**loader._specification, SAMKeys.KIND: None}
+        self.assertEqual(loader.kind, "Guardrail")

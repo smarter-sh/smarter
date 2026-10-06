@@ -4,11 +4,22 @@ Test the Provider manifest broker through the api/v1/cli/ commands.
 See :class:`smarter.lib.unittest.cli_brokers.CliBrokerTestMixin`.
 """
 
+from http import HTTPStatus
+from unittest.mock import patch
+
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
+from smarter.apps.provider.manifest.brokers.provider import (
+    SAMProviderBroker,
+    SAMProviderBrokerError,
+)
 from smarter.apps.provider.models import Provider
 from smarter.apps.secret.models import Secret
-from smarter.lib.unittest.cli_brokers import NOT_IMPLEMENTED, CliBrokerTestMixin
+from smarter.lib.unittest.cli_brokers import (
+    NOT_FOUND,
+    NOT_IMPLEMENTED,
+    CliBrokerTestMixin,
+)
 
 
 class TestProviderBroker(CliBrokerTestMixin, ApiV1TestBase):
@@ -63,3 +74,20 @@ class TestProviderBroker(CliBrokerTestMixin, ApiV1TestBase):
 
     def test_deploy_undeploy_logs(self):
         super().test_deploy_undeploy_logs()
+
+    def test_apply_with_an_unknown_api_key(self):
+        """Test that applying a Provider whose api key names no Secret is a 404, and creates nothing."""
+        manifest = self.prepare_manifest(self.example_manifest())
+        manifest["spec"]["provider"]["api_key"] = f"no_such_secret_{self.hash_suffix}"
+        self.cli("apply", data=manifest, with_kind=False, status=NOT_FOUND)
+        self.assertFalse(Provider.objects.filter(name=self.name).exists())
+
+    def test_get_failure(self):
+        """Test that a Provider that can't be converted to a manifest fails the get command."""
+        self.create_provider()
+        with patch.object(SAMProviderBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("broken")):
+            self.cli("get", name=self.name, status=(HTTPStatus.BAD_REQUEST, HTTPStatus.INTERNAL_SERVER_ERROR))
+
+    def test_error_message(self):
+        error = SAMProviderBrokerError(message="x", thing="Provider")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API Provider Manifest Broker Error")

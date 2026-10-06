@@ -2,7 +2,9 @@
 
 import os
 from typing import Optional
+from unittest.mock import MagicMock, PropertyMock, patch
 
+import requests
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
 from django.test import RequestFactory
@@ -10,6 +12,7 @@ from django.test import RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib import json, logging
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -451,3 +454,46 @@ class TestAbstractBrokerClass(TestAccountMixin):
         }
         to_camel_case = self.broker.to_camel_case(data=d)
         self.assertEqual(to_camel_case, d_result)
+
+    def make_broker(self, path: str = "/") -> SAMTestBroker:
+        request = RequestFactory().get(path)
+        SessionMiddleware(lambda request: HttpResponse()).process_request(request)
+        request.session.save()
+        request.user = self.non_admin_user
+        return SAMTestBroker(request, manifest=self.good_manifest_dict, kind=SmarterJournalThings.STATIC_PLUGIN.value)
+
+    def test_comparisons_with_another_type(self):
+        """Comparing a broker with anything but a broker of its class isn't implemented."""
+        broker = self.make_broker()
+        for method in (broker.__lt__, broker.__le__, broker.__gt__, broker.__ge__):
+            with self.subTest(method=method.__name__):
+                self.assertIs(method("not a broker"), NotImplemented)
+
+    def test_uri_with_query_params_and_created(self):
+        broker = self.make_broker("/path/?a=1")
+        self.assertEqual(broker.uri, "http://testserver/path/?a=1")
+        self.assertIsInstance(broker.created, bool)
+
+    def test_name_from_the_url_params(self):
+        """Without a manifest, or a loader with a name, the name comes from the name url param."""
+        broker = self.make_broker("/?name=from_param")
+        broker._name = None
+        broker._manifest = None
+        broker._loader = MagicMock(manifest_metadata={})
+        self.assertEqual(broker.name, "from_param")
+
+    def test_params_of_a_prepared_request(self):
+        """The url params of a requests.PreparedRequest are read from its url."""
+        broker = self.make_broker()
+        with_query = requests.Request("GET", "http://example.com/?a=1&b=2").prepare()
+        without_query = requests.Request("GET", "http://example.com/").prepare()
+        with patch.object(SAMTestBroker, "request", new_callable=PropertyMock, return_value=with_query):
+            self.assertEqual(broker.params.dict(), {"a": "1", "b": "2"})
+        with patch.object(SAMTestBroker, "request", new_callable=PropertyMock, return_value=without_query):
+            self.assertEqual(broker.params.dict(), {})
+
+    def test_not_ready_without_a_ready_request(self):
+        broker = self.make_broker()
+        broker._ready = False
+        with patch.object(SmarterRequestMixin, "ready", new_callable=PropertyMock, return_value=False):
+            self.assertFalse(broker.ready)

@@ -111,3 +111,15 @@ from any package, for example `packages/smarter-guardrail-list/`:
   `smarter-common` does).
 - **The pre-commit hooks use `npx --no-install`.** Without `make react-install`,
   they fail instead of downloading tools.
+
+## Coverage
+
+**Target:** at least 90% for each Django app or subsystem module, but higher
+is better. Use judgment about when enough is enough. Large blocks
+of coverage misses in a module are frowned upon. Individual module with coverage ratios far
+below the 90% target are also frowned upon. (see
+`smarter-development`).
+
+```console
+npm run coverage
+```
