@@ -587,6 +587,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
                 model_dump[SAMKeys.KIND.value] = self.kind
                 model_dump["api_key"] = self.api_key_secret
+                model_dump["proxy_password"] = self.proxy_password_secret
                 model_dump["user_profile"] = self.user_profile
                 self._connection = ApiConnection(**model_dump)
                 self._connection.save()

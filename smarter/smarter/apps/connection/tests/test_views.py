@@ -5,14 +5,16 @@ The class fixture ``connection_django_model`` is owned by the account's admin us
 """
 
 from http import HTTPStatus
+from unittest.mock import patch
 
-from django.test import Client
-from django.urls import reverse
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import Client, RequestFactory
+from django.urls import resolve, reverse
 
 from smarter.apps.connection.caching import (
     invalidate_all_cached_connections_for_user_profile,
 )
-from smarter.apps.connection.models import ApiConnection, SqlConnection
+from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlConnection
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.lib import json
 
@@ -153,6 +155,52 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
             with self.subTest(url=url):
                 data = self.post(url, status=HTTPStatus.NOT_FOUND)
                 self.assertIn("error", data)
+
+    def call_view(self, url: str, **kwargs):
+        """Call the view of ``url`` directly, as the admin user, with ``kwargs`` in place of its url parameters."""
+        request = RequestFactory().post("/", HTTP_HOST="localhost:9357")
+        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        request.user = self.admin_user
+        return resolve(url).func(request, **kwargs)
+
+    def test_list_invalid_ownership_filter(self):
+        """Test that an unknown ownership filter, which the url pattern doesn't route, is a bad request."""
+        url = self.url(ConnectionReverseNames.listview_api, ownership_filter="all")
+        self.assertEqual(self.call_view(url, ownership_filter="nobody").status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_apis_refuse_missing_parameters(self):
+        """Test that the clone, delete and rename apis, called without their url parameters, are bad requests."""
+        connection_id = self.connection_django_model.id  # type: ignore[union-attr]
+        for url in (
+            self.url(ConnectionReverseNames.listview_api_clone, connection_id=connection_id, new_name="x"),
+            self.url(ConnectionReverseNames.listview_api_delete, connection_id=connection_id),
+            self.url(ConnectionReverseNames.listview_api_rename, connection_id=connection_id, new_name="x"),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_apis_report_errors(self):
+        """Test that an error while cloning, deleting or renaming a connection is a bad request."""
+        connection = self.new_connection("test_connection_views_errors")
+        for name, model, method, kwargs in (
+            (
+                ConnectionReverseNames.listview_api_clone,
+                ApiConnection,
+                "clone",
+                {"new_name": "test_connection_views_x"},
+            ),
+            (ConnectionReverseNames.listview_api_delete, ConnectionBase, "delete", {}),
+            (
+                ConnectionReverseNames.listview_api_rename,
+                ConnectionBase,
+                "rename",
+                {"new_name": "test_connection_views_y"},
+            ),
+        ):
+            with self.subTest(api=name), patch.object(model, method, side_effect=RuntimeError("test error")):
+                data = self.post(self.url(name, connection_id=connection.id, **kwargs), status=HTTPStatus.BAD_REQUEST)
+                self.assertIn("test error", data["error"])
+        self.assertTrue(ApiConnection.objects.filter(pk=connection.pk, name=connection.name).exists())
 
 
 class TestApiConnectionDetailView(ViewTestMixin, ApiConnectionTestMixin):

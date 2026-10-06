@@ -6,9 +6,11 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.proxy.caching import invalidate_all_cached_proxies_for_user_profile
 from smarter.apps.proxy.models import Proxy
 from smarter.apps.proxy.urls import ProxyReverseNames as Names
 from smarter.lib import json
+from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import API_KEY, ProxyTestBase
 
@@ -155,3 +157,17 @@ class TestProxyDetailView(ProxyTestBase):
         self.assertEqual(
             client.get(url(Names.detailview, hashed_id="not-a-hashed-id")).status_code, HTTPStatus.NOT_FOUND
         )
+
+
+class TestProxyResourceViews(ResourceViewsTestMixin, ProxyTestBase):
+    """Test the Proxy list page, list, clone, delete and rename apis, and detail page with the shared mixin."""
+
+    model = Proxy
+    reverse_names = Names
+    id_kwarg = "proxy_id"
+    invalidate_cache = staticmethod(invalidate_all_cached_proxies_for_user_profile)
+    resource_name_prefix = "test_proxy_resource_views"
+
+    @classmethod
+    def create_resource(cls, name: str) -> Proxy:
+        return cls.create_proxy(name)
