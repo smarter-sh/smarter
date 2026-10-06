@@ -7,6 +7,7 @@ Technologies
 
    technologies/aws
    technologies/docker
+   technologies/infrastructure
    technologies/kubernetes
    technologies/opentelemetry
    technologies/python

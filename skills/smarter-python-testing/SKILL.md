@@ -23,6 +23,16 @@ docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.
   scratchpad, and read the summary at the end.
 - A log that stops partway through usually means an earlier session ran out of
   context. It doesn't mean the tests crashed.
+- **Save the complete output, then grep it with `-a`.** Smarter's logs contain
+  ANSI color codes, so `grep` treats the output as binary, prints only
+  "binary file matches", and silently drops the `Ran N tests`, `OK`, `FAILED`
+  and `FAIL:`/`ERROR:` lines. Write the whole run to a file, then search it with
+  `grep -a`, rather than piping the test run straight into `grep`. A
+  coverage report alone is not a result: always confirm the pass and fail counts.
+
+  ```console
+  docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter --noinput > /tmp/test.log 2>&1; grep -aE '^Ran |^OK|^FAILED|^(ERROR|FAIL):' /tmp/test.log"
+  ```
 
 ## Layout and conventions
 

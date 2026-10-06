@@ -9,6 +9,9 @@ from unittest.mock import MagicMock, patch
 from django.utils import timezone
 
 from smarter.apps.account.models import Charge, ChargeTypes
+from smarter.apps.llmclient.tasks.destroy_domain_a_record import (
+    destroy_domain_A_record,
+)
 from smarter.apps.llmhost import tasks
 from smarter.apps.llmhost.const import (
     RECONCILE_INTERVAL_SECONDS,
@@ -133,19 +136,23 @@ class TestLLMHostTasks(LLMHostTestBase):
     def test_dns_records(self):
         """Test that DNS records are created and destroyed when DNS is enabled."""
         llmhost = self.new_llmhost("test_tasks_dns")
-        route53 = MagicMock()
+        infrastructure = MagicMock()
         with (
             patch.object(tasks, "dns_enabled", return_value=True),
-            patch("smarter.common.helpers.aws_helpers.aws_helper") as aws_helper,
-            patch("smarter.apps.llmclient.tasks.destroy_domain_a_record.destroy_domain_A_record") as destroy_task,
+            patch.object(tasks, "infrastructure", infrastructure),
+            # the real task's delay: a MagicMock in place of the task would have a delay even if the task did not.
+            patch.object(destroy_domain_A_record, "delay") as delay,
         ):
-            aws_helper.route53 = route53
             tasks.create_dns_record(llmhost)
-            route53.create_domain_a_record.assert_called_once()
-            self.assertEqual(route53.create_domain_a_record.call_args.kwargs["hostname"], managed_hostname(llmhost))
+            infrastructure.dns.create_domain_a_record.assert_called_once()
+            self.assertEqual(
+                infrastructure.dns.create_domain_a_record.call_args.kwargs["hostname"], managed_hostname(llmhost)
+            )
             tasks.destroy_dns_record(llmhost)
-            destroy_task.delay.assert_called_once()
+            delay.assert_called_once()
+            self.assertEqual(delay.call_args.kwargs["hostname"], managed_hostname(llmhost))
         # disabled by the test base class.
-        route53.reset_mock()
-        tasks.create_dns_record(llmhost)
-        route53.create_domain_a_record.assert_not_called()
+        infrastructure.reset_mock()
+        with patch.object(tasks, "infrastructure", infrastructure):
+            tasks.create_dns_record(llmhost)
+        infrastructure.dns.create_domain_a_record.assert_not_called()

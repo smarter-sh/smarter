@@ -7,7 +7,7 @@ It provides a variety of infrastructure services such as computing power,
 storage options, and networking capabilities, enabling businesses to scale and grow efficiently.
 
 The Smarter Framework natively deploys to AWS using various services such as
-EKS, Route 53, S3, RDS, and IAM to create a scalable and secure environment for applications.
+EKS, Route 53, Certificate Manager and Simple Email Service to create a scalable and secure environment for applications.
 
 Terraform
 -----------------------------------------
@@ -16,8 +16,11 @@ See :doc:`../../smarter-platform/cloud-infrastructure` for details on using Terr
 to deploy and manage Smarter infrastructure on AWS.
 
 
-AWS Helper Classes
+AWS Provider
 -----------------------------------------
+
+The platform reaches AWS only through the :doc:`infrastructure services <infrastructure>`,
+which the AWS provider implements with Route53, AWS Certificate Manager and EKS.
 
 .. toctree::
    :maxdepth: 1
@@ -27,6 +30,3 @@ AWS Helper Classes
    aws/route53
    aws/acm
    aws/eks
-   aws/iam
-   aws/rds
-   aws/s3

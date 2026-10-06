@@ -1,13 +1,13 @@
 """
-Celery tasks for verifying llmclient ACM certificates.
+Celery tasks for verifying llmclient TLS certificates.
 
-This module defines Celery tasks for verifying AWS ACM certificates associated with llmclient custom domains, including signal handling and logging.
+This module defines Celery tasks for verifying the cloud provider's TLS certificates (e.g. AWS ACM) associated with llmclient custom domains, including signal handling and logging.
 
 Main Tasks
 ----------
 
 - verify_certificate(certificate_arn):
-    Verifies the status of an AWS ACM certificate and logs the result.
+    Verifies the status of a TLS certificate and logs the result.
 
 Signals
 -------
@@ -28,7 +28,7 @@ Task execution and certificate verification are logged using the smarter logging
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously verify an llmclient ACM certificate:
+Import this module and call the Celery task as needed to asynchronously verify an llmclient TLS certificate:
 
     verify_certificate.delay(certificate_arn)
 
@@ -39,13 +39,12 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.signals import (
     post_verify_certificate,
     pre_verify_certificate,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws.acm import AWSCertificateManager
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -66,14 +65,14 @@ logger_prefix = logging.formatted_text(__name__)
 )
 def verify_certificate(certificate_arn: str):
     """
-    Verify an AWS ACM certificate.
+    Verify a TLS certificate.
 
-    This Celery task verifies the status of an ACM certificate in AWS, sending pre- and post-verification signals and logging the result.
+    This Celery task waits for the cloud provider to issue a TLS certificate, sending pre- and post-verification signals and logging the result.
 
     Parameters
     ----------
     certificate_arn : str
-        The Amazon Resource Name (ARN) of the ACM certificate to verify.
+        The cloud provider's id of the certificate, e.g. the ARN of an AWS ACM certificate.
 
     Signals
     -------
@@ -93,8 +92,6 @@ def verify_certificate(certificate_arn: str):
     """
     if not is_taskable():
         return
-    if not isinstance(aws_helper.acm, AWSCertificateManager):
-        return False
 
     task_id = verify_certificate.request.id
 
@@ -102,7 +99,7 @@ def verify_certificate(certificate_arn: str):
     prefix = logger_prefix + ".verify_certificate()"
     logger.info("%s - %s task_id: %s", prefix, certificate_arn, task_id)
 
-    verified = aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
+    verified = infrastructure.certificates.wait_until_issued(certificate_arn)
     if verified:
         logger.info("%s - certificate %s verified. task_id: %s", prefix, certificate_arn, task_id)
     else:

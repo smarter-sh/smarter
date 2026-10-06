@@ -1,13 +1,13 @@
 """
 Celery tasks for deleting llmclient API resources.
 
-This module defines Celery tasks for deleting AWS and Kubernetes resources associated with an llmclient's default API, including Route53 DNS records and ingress resources.
+This module defines Celery tasks for deleting the DNS and Kubernetes resources associated with an llmclient's default API, including its DNS A record and ingress resources.
 
 Main Tasks
 ----------
 
 - delete_default_api(api_url, account_number, name):
-    Deletes the default domain Route53 A record and Kubernetes ingress resources (ingress, certificate, secret) for an llmclient API.
+    Deletes the default domain's DNS A record and Kubernetes ingress resources (ingress, certificate, secret) for an llmclient API.
 
 Signals
 -------
@@ -43,12 +43,12 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.apps.account.models import Account
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.signals import (
     post_delete_default_api,
     pre_delete_default_api,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -94,18 +94,18 @@ def delete_default_api(
     account_id: Optional[int] = None,
 ):
     """
-    Delete AWS and Kubernetes resources for a customer API.
+    Delete the DNS and Kubernetes resources of a customer API.
 
     Deletes the Kubernetes ingress, certificate, and secret associated with the
     llmclient's named API url, which is of the form "https://{llmclient_name}.{account_number}.api_host_domain/".
-    Also deletes the default domain Route53 A record for the llmclient.
+    Also deletes the default domain's DNS A record for the llmclient.
     Example api_url: https://stackademy-api.3141-5926-5359.alpha.api.ubc.smarter.sh/
 
     This Celery task performs the following steps:
     1. Sends a pre-delete signal for the API resources.
     2. Logs the deletion request.
     3. Extracts the domain name from the provided api_url.
-    4. Deletes the default domain Route53 A record for the llmclient.
+    4. Deletes the default domain's DNS A record for the llmclient.
     5. Deletes Kubernetes ingress resources: ingress, certificate, and secret.
     6. Logs the result of the deletion operations.
     7. Sends a post-delete signal for the API resources.
@@ -180,7 +180,7 @@ def delete_default_api(
     )
 
     destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
-    ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
+    ingress_deleted, certificate_deleted, secret_delete = infrastructure.kubernetes.delete_ingress_resources(
         hostname=hostname, namespace=smarter_settings.environment_namespace
     )
     if ingress_deleted and certificate_deleted and secret_delete:

@@ -8,7 +8,7 @@ Read these before writing a new test module. Copy their structure.
 | Resource views (list page, list api, clone, rename, delete, detail) | `smarter/smarter/apps/llmclient/tests/test_custom_domain_views.py`                   | `ResourceViewsTestMixin` plus a `ReverseNames` adapter, with only the resource-specific tests written out                                                                                |
 | Guardrail app, many modules                                         | `smarter/smarter/apps/guardrail/tests/`                                              | One module per source module, plus `base_classes.py` and `data/`                                                                                                                         |
 | Plugins, shared fixtures                                            | `smarter/smarter/apps/plugin/plugin/tests/`                                          | `base_classes.py` with mixins, and `mock_remote_skills()`                                                                                                                                |
-| Celery task, mocked AWS                                             | `smarter/smarter/apps/llmclient/tests/test_verify_custom_domain.py`                  | Calls the task function directly. `aws_helper` is a `MagicMock` patched into the task module, and `apply_async` is patched so that retries don't reach the worker                        |
+| Celery task, mocked infrastructure                                  | `smarter/smarter/apps/llmclient/tests/tasks/test_task_verify_custom_domain.py`       | Calls the task function directly. `infrastructure` is a `MagicMock` patched into the task module, and `apply_async` is patched so that retries don't reach the worker                    |
 | Management command                                                  | `smarter/smarter/apps/llmclient/tests/test_add_builtin_custom_domains.py`            | `call_command` with captured stdout. The Celery task the command queues is patched in the command module, so nothing reaches the worker                                                  |
 
 ## Skeleton: SAM broker test
@@ -77,9 +77,9 @@ MODULE = "smarter.apps.llmclient.tasks.verify_custom_domain"
 
 def setUp(self):
     super().setUp()
-    aws_helper = MagicMock()
-    aws_helper.acm.certificate_status.return_value = "ISSUED"
-    for target, value in (("aws_helper", aws_helper), ("is_taskable", MagicMock(return_value=True))):
+    infrastructure = MagicMock()
+    infrastructure.certificates.certificate_status.return_value = "ISSUED"
+    for target, value in (("infrastructure", infrastructure), ("is_taskable", MagicMock(return_value=True))):
         patcher = patch(f"{MODULE}.{target}", value)
         patcher.start()
         self.addCleanup(patcher.stop)

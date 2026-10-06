@@ -5,14 +5,12 @@ import platform
 import traceback
 from http import HTTPStatus
 
-import boto3
-from botocore.exceptions import ClientError
 from django.http import JsonResponse
 from django_redis import get_redis_connection
 
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
-from smarter.common.helpers.aws.exceptions import AWSNotReadyError
-from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.apps.infrastructure.exceptions import SmarterInfrastructureError
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -33,34 +31,19 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         this_class = f".{ApiV1CliStatusApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
-    def get_service_status(self, region_name):
-        try:
-            client = boto3.client("health", region_name=region_name)
-            response = client.describe_events(
-                filter={
-                    "regions": [
-                        region_name,
-                    ],
-                    "eventStatusCodes": ["open", "upcoming"],
-                }
-            )
-            return response
-        except ClientError as e:
-            return {"error": str(e)}
-
     def get_kubernetes_info(self) -> dict:
         """
         Return Kubernetes cluster information.
 
-        Without AWS credentials there is no EKS cluster to report on, so the
+        Without cloud credentials there is no cluster to report on, so the
         status shows the error instead of the whole status request failing.
 
-        :return: Kubernetes cluster information, or {"error": ...} if AWS is not configured
+        :return: Kubernetes cluster information, or {"error": ...} if the cloud provider is not ready
         :rtype: dict
         """
         try:
-            return aws_helper.eks.get_kubernetes_info()
-        except AWSNotReadyError as e:
+            return infrastructure.provider.get_kubernetes_cluster_info()
+        except SmarterInfrastructureError as e:
             logger.warning("%s.get_kubernetes_info() %s", self.formatted_class_name, e)
             return {"error": str(e)}
 
@@ -93,9 +76,6 @@ class ApiV1CliStatusApiView(CliBaseApiView):
                 SmarterJournalApiResponseKeys.DATA: {
                     "infrastructures": {
                         "kubernetes": self.get_kubernetes_info(),
-                        # mcdaniel: remote mysql is not part of the platform. this
-                        # should not be here.
-                        # "mysql": aws_helper.rds.get_mysql_info(),
                         "redis": self.get_redis_info(),
                     },
                     "compute": {

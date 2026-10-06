@@ -9,8 +9,8 @@ from django.shortcuts import redirect
 
 from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountReverseNames
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
@@ -79,7 +79,8 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
         subject = "Reset your password"
         to = email
-        email_helper.send_email(subject=subject, body=body, to=to, html=True)
+        # the reset link is a secret, so the admin gets no blind copy.
+        infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, bcc_admin=False)
         return HttpResponse("Email sent.", status=HTTPStatus.OK.value)
 
 

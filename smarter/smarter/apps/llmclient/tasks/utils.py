@@ -8,11 +8,8 @@ They are intended to be called asynchronously from the main application.
 import os
 from string import Template
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.aws.acm import AWSCertificateManager
-from smarter.common.helpers.aws.route53 import AWSRoute53
-from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -25,20 +22,19 @@ INGRESS_TEMPLATE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 
 
 
 def is_taskable() -> bool:
-    """Module helper function to check if aws resources are accessible for task processing."""
+    """Whether the cloud's DNS and certificate services are ready for task processing."""
     prefix = logger_prefix + f".{is_taskable.__name__}()"
-    # verifies that the aws credentials are available and valid.
-    if not aws_helper.ready():
-        logger.info("%s AWS helper is not ready. Request is not taskable.", prefix)
+    # verifies that the cloud credentials are available and valid.
+    if not infrastructure.ready:
+        logger.info("%s the cloud provider is not ready. Request is not taskable.", prefix)
         return False
 
-    # verify that route53 and acm helpers are available.
-    if not isinstance(aws_helper.route53, AWSRoute53):
-        logger.info("%s AWS Route53 helper is not available. Request is not taskable.", prefix)
+    if not infrastructure.dns.ready:
+        logger.info("%s the DNS service is not ready. Request is not taskable.", prefix)
         return False
 
-    if not isinstance(aws_helper.acm, AWSCertificateManager):
-        logger.info("%s AWS ACM helper is not available. Request is not taskable.", prefix)
+    if not infrastructure.certificates.ready:
+        logger.info("%s the certificate service is not ready. Request is not taskable.", prefix)
         return False
 
     return True
@@ -63,4 +59,4 @@ def apply_ingress_manifest(domain: str) -> None:
     }
     with open(INGRESS_TEMPLATE_PATH, encoding="utf-8") as ingress_template:
         manifest = Template(ingress_template.read()).substitute(ingress_values)
-    kubernetes_helper.apply_manifest(manifest)
+    infrastructure.kubernetes.apply_manifest(manifest)

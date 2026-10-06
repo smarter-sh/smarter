@@ -47,8 +47,8 @@ from urllib.parse import urljoin
 from django.db import transaction
 
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
@@ -170,8 +170,14 @@ class Command(SmarterCommand):
             Password: {password}
             """
             try:
-                email_helper.send_email(
-                    subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
+                # the email has the user's password, so the admin gets no blind copy.
+                infrastructure.email.send_email(
+                    subject="Your Smarter user account has been created",
+                    to=email,
+                    body=body,
+                    html=False,
+                    quiet=False,
+                    bcc_admin=False,
                 )
             # pylint: disable=broad-except
             except Exception as e:

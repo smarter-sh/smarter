@@ -5,9 +5,9 @@ A custom domain is verified when it is delegated to Smarter and its TLS certific
 which takes two steps, checked in order:
 
 1. **NS delegation**: the domain's public NS records include one of the name servers of its
-   AWS Route53 hosted zone, i.e. the customer has delegated the domain to Smarter.
-2. **TLS certificate**: the domain's AWS ACM certificate is ``ISSUED``. ACM validates the
-   certificate with a DNS record in the hosted zone, so it can only be issued after step 1.
+   DNS zone, e.g. an AWS Route53 hosted zone, i.e. the customer has delegated the domain to Smarter.
+2. **TLS certificate**: the domain's certificate, e.g. an AWS ACM certificate, is ``ISSUED``. The
+   provider validates the certificate with a DNS record in the zone, so it can only be issued after step 1.
    A certificate is requested if the domain has none.
 
 https itself is served by each LLMClient that uses the domain, on its own subdomain,
@@ -45,7 +45,7 @@ Raises
 ------
 
 LLMClientTaskError
-    If the hosted zone data is not in the expected format.
+    If the DNS zone does not exist.
 Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
@@ -55,6 +55,9 @@ from typing import Optional
 import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
+from smarter.apps.infrastructure.const import CertificateStatus
+from smarter.apps.infrastructure.services import infrastructure
+from smarter.apps.infrastructure.services.dns import normalize_name
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
 from smarter.apps.llmclient.signals import (
     post_verify_custom_domain,
@@ -62,7 +65,6 @@ from smarter.apps.llmclient.signals import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -75,7 +77,7 @@ logger = logging.getSmarterLogger(
 )
 logger_prefix = logging.formatted_text(__name__)
 
-CERTIFICATE_ISSUED = "ISSUED"
+CERTIFICATE_ISSUED = CertificateStatus.ISSUED
 
 Status = LLMClientCustomDomain.VerificationStatusChoices
 
@@ -95,9 +97,7 @@ def verify_custom_domain(
     custom_domain_id: Optional[int] = None,
 ) -> Optional[bool]:
     """
-    Verify that the custom domain of an AWS Route53 hosted zone is delegated to Smarter, and that its.
-
-    TLS certificate is issued.
+    Verify that the custom domain of a DNS zone is delegated to Smarter, and that its TLS certificate is issued.
 
     Each run checks the verification steps once, in order. If a step is not complete, the task
     records why, and schedules itself to check again in sleep_interval seconds, up to max_attempts
@@ -106,10 +106,10 @@ def verify_custom_domain(
     Parameters
     ----------
     hosted_zone_id : str, optional
-        The ID of the AWS Route53 hosted zone of the custom domain.
+        The id of the DNS zone of the custom domain, e.g. an AWS Route53 hosted zone.
     custom_domain_id : int, optional
-        The id of the custom domain, in place of its hosted zone. A custom domain that has no
-        hosted zone, because it has not been registered with ``smarter deploy``, fails at once.
+        The id of the custom domain, in place of its DNS zone. A custom domain that has no
+        DNS zone, because it has not been registered with ``smarter deploy``, fails at once.
     sleep_interval : int, optional
         The interval in seconds between verification attempts. Default is 1800 (30 minutes).
     max_attempts : int, optional
@@ -135,7 +135,7 @@ def verify_custom_domain(
         if not custom_domain.aws_hosted_zone_id:
             # nothing can be verified, and nothing will change, until the domain is registered.
             message = (
-                f"{custom_domain.domain_name} has no AWS Route53 hosted zone, because it is not registered. "
+                f"{custom_domain.domain_name} has no DNS zone, because it is not registered. "
                 "Run smarter deploy to register it."
             )
             logger.warning("%s %s task_id: %s", fn_name, message, task_id)
@@ -144,22 +144,18 @@ def verify_custom_domain(
         hosted_zone_id = custom_domain.aws_hosted_zone_id
     if not is_taskable():
         return False
-    if not aws_helper.route53:
-        return False
     hours = 24
     sleep_interval = sleep_interval or 1800
     max_attempts = max_attempts or int(hours * (3600 / sleep_interval))
 
-    hosted_zone = aws_helper.route53.get_hosted_zone_by_id(hosted_zone_id=hosted_zone_id)
-    if not isinstance(hosted_zone, dict):
-        raise LLMClientTaskError(f"expected a dict but received {type(hosted_zone)}")
-    domain_name = hosted_zone["HostedZone"]["Name"].rstrip(".")
+    zone = infrastructure.dns.get_zone_by_id(hosted_zone_id)
+    if zone is None:
+        raise LLMClientTaskError(f"DNS zone {hosted_zone_id} does not exist.")
+    domain_name = zone.name
     custom_domain = LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id).first()
 
     if attempt == 0:
-        logger.info(
-            "%s - verifying %s, AWS Route53 Hosted Zone %s task_id: %s", fn_name, domain_name, hosted_zone_id, task_id
-        )
+        logger.info("%s - verifying %s, DNS zone %s task_id: %s", fn_name, domain_name, hosted_zone_id, task_id)
         pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
         if custom_domain and not custom_domain.is_verified:
             custom_domain.set_verification_status(Status.VERIFYING, "Verification has started.")
@@ -236,7 +232,7 @@ def _verification_blocker(hosted_zone_id: str, domain_name: str, task_id: Option
     :returns: Why the first incomplete step is not complete, or None if the domain is verified.
     """
     if not _ns_records_verified(hosted_zone_id, domain_name, task_id):
-        ns_records = [record["Value"] for record in aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)]  # type: ignore[union-attr]
+        ns_records = infrastructure.dns.get_name_servers(hosted_zone_id)
         return (
             f"The NS records of {domain_name} are not delegated to Smarter yet. "
             f"Add these NS records to your root domain's DNS settings: {', '.join(ns_records)}"
@@ -248,10 +244,10 @@ def _verification_blocker(hosted_zone_id: str, domain_name: str, task_id: Option
 
 
 def _ns_records_verified(hosted_zone_id: str, domain_name: str, task_id: Optional[str]) -> bool:
-    """Check once whether the domain's public NS records include one of its Route53 hosted zone's name servers."""
+    """Check once whether the domain's public NS records include one of its DNS zone's name servers."""
     fn_name = logger_prefix + "._ns_records_verified()"
     try:
-        dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name, "NS")}
+        dns_ns_records = {normalize_name(rdata.to_text()) for rdata in dns.resolver.query(domain_name, "NS")}
     except dns.resolver.NXDOMAIN:
         logger.warning("%s domain %s does not exist.", fn_name, domain_name)
         return False
@@ -263,36 +259,33 @@ def _ns_records_verified(hosted_zone_id: str, domain_name: str, task_id: Optiona
         logger.error("%s unexpected error while querying domain %s: %s", fn_name, domain_name, str(e))
         return False
 
-    aws_ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)  # type: ignore[union-attr]
-    for i, record in enumerate(aws_ns_records, start=1):
+    name_servers = infrastructure.dns.get_name_servers(hosted_zone_id)
+    for i, name_server in enumerate(name_servers, start=1):
         logger.info(
-            "%s checking AWS NS record %s (%s of %s) against DNS NS records %s task_id: %s",
+            "%s checking name server %s (%s of %s) against DNS NS records %s task_id: %s",
             fn_name,
-            record["Value"],
+            name_server,
             i,
-            len(aws_ns_records),
+            len(name_servers),
             dns_ns_records,
             task_id,
         )
-        if record["Value"] in dns_ns_records:
+        if normalize_name(name_server) in dns_ns_records:
             return True
     return False
 
 
 def _certificate_status(domain_name: str) -> str:
     """
-    Return the status of the domain's AWS ACM certificate, e.g. PENDING_VALIDATION or ISSUED.
+    Return the status of the domain's TLS certificate, e.g. PENDING_VALIDATION or ISSUED.
 
-    If the domain has no certificate, one is requested, with its DNS validation record.
+    If the domain has no certificate, one is requested, with its DNS validation records.
     """
-    acm = aws_helper.acm
-    if acm is None:
-        return "unavailable: AWS ACM is not available"
-    certificate_arn = acm.get_certificate_arn(domain_name=domain_name)
-    if not certificate_arn:
-        certificate_arn = acm.get_or_create_certificate(domain_name=domain_name)
-        acm.get_or_create_certificate_dns_record(certificate_arn=certificate_arn)
-    return acm.certificate_status(certificate_arn=certificate_arn)
+    certificates = infrastructure.certificates
+    certificate_id, created = certificates.get_or_create_certificate(domain_name)
+    if created:
+        certificates.create_validation_records(certificate_id)
+    return certificates.certificate_status(certificate_id)
 
 
 def _deploy_llmclient_on(custom_domain: LLMClientCustomDomain) -> None:

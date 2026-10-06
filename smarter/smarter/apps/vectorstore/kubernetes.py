@@ -4,7 +4,7 @@ Self-hosted Qdrant on Kubernetes.
 Each self-hosted vectorstore gets its own Qdrant server: a StatefulSet of one replica, with a
 persistent volume for its data and snapshots, a ClusterIP Service, and a Secret with its API
 key. They are applied, observed and deleted with
-:class:`~smarter.common.helpers.k8s_helpers.KubernetesHelper`, and labeled
+:class:`~smarter.apps.infrastructure.services.kubernetes.KubernetesService`, and labeled
 ``smarter.sh/vectorstore: <name>``, so that they can be selected together.
 
 - :meth:`QdrantKubernetes.apply` creates or updates them.
@@ -19,9 +19,9 @@ from typing import Any, Callable, Optional
 
 import yaml
 
+from smarter.apps.infrastructure.services import KubernetesService, infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterException
-from smarter.common.helpers.k8s_helpers import KubernetesHelper, kubernetes_helper
 
 from .manifest.models.vectorstore.const import (
     DEFAULT_CPU,
@@ -41,7 +41,7 @@ UNPRIVILEGED_UID = 1000
 STOP_KINDS = ["statefulset", "service", "secret"]
 DESTROY_KINDS = STOP_KINDS + ["persistentvolumeclaim"]
 
-_kubernetes_factory: Optional[Callable[[], KubernetesHelper]] = None
+_kubernetes_factory: Optional[Callable[[], KubernetesService]] = None
 
 
 class VectorstoreKubernetesError(SmarterException):
@@ -49,7 +49,7 @@ class VectorstoreKubernetesError(SmarterException):
 
 
 def configure_kubernetes(factory: Optional[Callable[[], Any]]) -> None:
-    """Use another KubernetesHelper, e.g. a fake in tests.
+    """Use another Kubernetes service, e.g. a fake in tests.
 
     None restores the default.
     """
@@ -57,8 +57,8 @@ def configure_kubernetes(factory: Optional[Callable[[], Any]]) -> None:
     _kubernetes_factory = factory
 
 
-def get_kubernetes() -> KubernetesHelper:
-    return _kubernetes_factory() if _kubernetes_factory else kubernetes_helper
+def get_kubernetes() -> KubernetesService:
+    return _kubernetes_factory() if _kubernetes_factory else infrastructure.kubernetes
 
 
 def unprivileged(image: str) -> str:
@@ -80,7 +80,7 @@ class QdrantObservation:
 class QdrantKubernetes:
     """The Kubernetes resources of a self-hosted Qdrant server."""
 
-    def __init__(self, vectorstore: VectorstoreMeta, kubernetes: Optional[KubernetesHelper] = None):
+    def __init__(self, vectorstore: VectorstoreMeta, kubernetes: Optional[KubernetesService] = None):
         self.vectorstore = vectorstore
         self.kubernetes = kubernetes or get_kubernetes()
         self.name = vectorstore.kubernetes_name

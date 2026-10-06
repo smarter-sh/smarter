@@ -33,7 +33,6 @@ Example
         is_primary=True
     )
     contact.send_welcome_email()
-
 """
 
 from typing import Optional
@@ -43,8 +42,8 @@ from django.db import models
 from django.template.loader import render_to_string
 
 # our stuff
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -149,10 +148,9 @@ class AccountContact(TimestampedModel):
                 html=True,
                 from_email="support@smarter.com"
             )
-
         """
 
-        email_helper.send_email(
+        infrastructure.email.send_email(
             subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
         )
 
@@ -175,7 +173,6 @@ class AccountContact(TimestampedModel):
         **Example usage**::
 
             contact.send_welcome_email()
-
         """
         context = welcome_email_context(first_name=self.first_name)
         html_template = render_to_string("account/email/welcome.html", context)
@@ -209,7 +206,6 @@ class AccountContact(TimestampedModel):
             primary_contact = AccountContact.get_primary_contact(account)
             if primary_contact:
                 print(primary_contact.email)
-
         """
         return cls.objects.filter(account=account, is_primary=True).first()
 
@@ -246,7 +242,6 @@ class AccountContact(TimestampedModel):
                 body="We have updated our terms of service.",
                 html=False
             )
-
         """
         contacts = cls.objects.filter(account=account)
         for contact in contacts:
@@ -285,7 +280,6 @@ class AccountContact(TimestampedModel):
                 body="Please review your account settings.",
                 html=True
             )
-
         """
         prefix = logging.formatted_text(__name__ + ".AccountContact.send_email_to_primary_contact()")
         contact = cls.get_primary_contact(account)
@@ -332,7 +326,6 @@ class AccountContact(TimestampedModel):
 
             contact = AccountContact(account=account, email="jane@example.com", is_primary=True)
             contact.save()  # Ensures uniqueness and sends welcome email if needed
-
         """
         prefix = logging.formatted_text(__name__ + ".AccountContact.save()")
         logger.debug("%s called with args: %s, kwargs: %s", prefix, args, kwargs)

@@ -94,6 +94,7 @@ class SettingsDefaults:
     AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY", default=None, is_secret=True))
     AWS_REGION = get_env("AWS_REGION", default=None)
 
+    CLOUD_PROVIDER: str = get_env("CLOUD_PROVIDER", "aws")
     AWS_EKS_CLUSTER_NAME = get_env("AWS_EKS_CLUSTER_NAME")
     LLMHOST_NODE_ROLE_ARN = get_env("LLMHOST_NODE_ROLE_ARN", default=None)
     LLMHOST_NODE_SUBNET_IDS = get_env("LLMHOST_NODE_SUBNET_IDS", default=[])
