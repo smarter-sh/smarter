@@ -6,10 +6,15 @@ is_*() method returns a bool, for any string. The targeted tests below check
 the results of the branches that the probes reach.
 """
 
+import importlib.util
 import inspect
 import warnings
+from unittest.mock import patch
+
+from django.core.exceptions import ValidationError
 
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django import validators as validators_module
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -214,3 +219,29 @@ class TestSmarterValidatorBranches(SmarterTestBase):
         self.assertFalse(SmarterValidator.is_valid_username("bad user"))
         self.assertTrue(SmarterValidator.is_valid_llmclient_slug("a-slug"))
         self.assertFalse(SmarterValidator.is_valid_llmclient_slug("Bad Slug!"))
+
+    def test_module_reads_its_waffle_switch_when_apps_are_ready(self):
+        """Loading the module after Django is ready reads the VALIDATOR_LOGGING switch, and tolerates its failure."""
+        for side_effect in (None, ImportError("not yet")):
+            with self.subTest(side_effect=side_effect):
+                spec = importlib.util.spec_from_file_location("validators_under_test", validators_module.__file__)
+                module = importlib.util.module_from_spec(spec)
+                with patch("smarter.lib.django.waffle.switch_is_active", side_effect=side_effect, return_value=True):
+                    spec.loader.exec_module(module)
+                self.assertEqual(module.validator_logging_is_active, side_effect is None)
+
+    def test_url_fallbacks(self):
+        """A url that Django's URLValidator refuses must still carry a valid scheme, and is then accepted on its netloc."""
+        with self.assertRaises(SmarterValueError):
+            SmarterValidator.validate_url("192.168.1.1")
+        with patch("django.core.validators.URLValidator.__call__", side_effect=ValidationError("no")):
+            self.assertEqual(SmarterValidator.validate_url("https://example.com/"), "https://example.com/")
+
+    def test_base_domain_without_a_base_url(self):
+        with patch.object(SmarterValidator, "base_url", return_value=None):
+            self.assertIsNone(SmarterValidator.base_domain("https://example.com/"))
+
+    def test_urlify_without_a_trailing_slash(self):
+        with patch.object(SmarterValidator, "trailing_slash", return_value=None):
+            with self.assertRaises(SmarterValueError):
+                SmarterValidator.urlify("example.com")
