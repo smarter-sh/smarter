@@ -1007,21 +1007,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._orm_meta_instance = self._orm_instance
             return
 
-        if not self._name:
-            logger.debug(
-                "%s.orm_meta_instance_setter() cannot initialize %s meta instance because name is not set.",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-            )
-            return
-        if not self._user_profile:
-            logger.debug(
-                "%s.orm_meta_instance_setter() cannot initialize %s meta instance because user_profile is not set.",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-            )
-            return
-
         self._orm_meta_instance = None
         ModelClass = self.ORMMetaModelClass
 

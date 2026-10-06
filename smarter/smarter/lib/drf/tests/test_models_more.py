@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import timedelta
+from unittest.mock import patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.models import SmarterAuthToken
@@ -87,3 +88,28 @@ class TestSmarterAuthTokenMore(TestAccountMixin):
         data = SmarterAuthTokenSerializer(self.token, context={"request": None}).data
         self.assertEqual(data["id"], str(self.token.key_id))
         self.assertEqual(data["manifestUrl"], self.token.manifest_url)
+
+    def test_tags_list_of_a_non_list(self):
+        self.token.tags = "not a list"
+        self.assertEqual(self.token.tags_list, [])
+
+    def test_get_cached_objects_without_a_user_profile(self):
+        """Without a user profile or user, the query falls back to the base class's."""
+        self.assertIsNotNone(SmarterAuthToken.get_cached_objects(invalidate=True))
+
+    def test_get_cached_objects_when_the_query_fails(self):
+        """The cached queries retry without select_related() when it fails, once or twice."""
+        manager = SmarterAuthToken.objects
+        real = manager.select_related
+        for side_effect in ([Exception("first"), real("user_profile")], Exception("always")):
+            with self.subTest(side_effect=side_effect):
+                with patch.object(manager, "select_related", side_effect=side_effect):
+                    by_profile = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+                self.assertIn(self.token, list(by_profile))
+                if isinstance(side_effect, list):
+                    side_effect = [Exception("first"), real("user_profile")]
+                with patch.object(manager, "select_related", side_effect=side_effect):
+                    by_name = SmarterAuthToken.get_cached_objects(
+                        user_profile=self.user_profile, name=self.token.name, invalidate=True
+                    )
+                self.assertIn(self.token, list(by_name))
