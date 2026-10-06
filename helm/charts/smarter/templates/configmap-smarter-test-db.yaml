@@ -1,6 +1,32 @@
+# -----------------------------------------------------------------------------------
+# ConfigMap Manifest for the Smarter Test Database
+#
+# This file defines a ConfigMap containing smarter-test-db.sql, which creates and
+# seeds smarter_test_db along with its read-only test users.
+#
+# - Purpose: Provides the SQL used by the SQL Connection examples and unit tests.
+# - Usage: Mounted into the db-init Job (job-init.yaml) and piped into mariadb.
+# - Notes: Keep in sync with scripts/smarter_test_db.sql, which `make` uses locally.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication between this ConfigMap and other resources.
+# -----------------------------------------------------------------------------------
+{{- if .Values.databaseInit.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+  namespace: "{{ .Values.namespace }}"
   name: smarter-test-db
 data:
   smarter-test-db.sql: |
@@ -82,3 +108,4 @@ data:
     /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
     /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
     /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+{{- end }}
