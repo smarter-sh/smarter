@@ -86,6 +86,39 @@ class TestVerifyDnsConfiguration(CommandTestBase):
         self.run_in(SmarterEnvironments.ALPHA)
         self.assertEqual(self.dns.zones, zones)
 
+    def test_existing_a_records_are_not_overwritten(self):
+        """
+        Test that an existing A record in a child zone is left unchanged, even when it differs from the root domain's.
+
+        The root domain, e.g. smarter.sh, may be served by a CDN rather than the platform's load
+        balancer. Copying its A record over the child zones' records takes the platform offline.
+        """
+        cdn = ["198.51.100.1"]
+        provider = InMemoryProvider()
+        provider.dns.add_zone("example.com", a_record=cdn)
+        provider.dns.add_zone("platform.example.com", a_record=LOAD_BALANCER)
+        provider.dns.add_zone("api.example.com", a_record=LOAD_BALANCER)
+        self.use(provider)
+        self.run_in(SmarterEnvironments.ALPHA)
+        for domain in ("platform.example.com", "api.example.com"):
+            zone = provider.dns.get_zone(domain)
+            self.assertEqual(provider.dns.get_record(zone.id, domain, "A").values, LOAD_BALANCER, domain)
+
+    def test_new_zones_copy_the_platform_domain_a_record(self):
+        """Test that new zones copy the platform domain's A record, not the root domain's, e.g. a CDN."""
+        cdn = ["198.51.100.1"]
+        provider = InMemoryProvider()
+        provider.dns.add_zone("example.com", a_record=cdn)
+        provider.dns.add_zone("platform.example.com", a_record=LOAD_BALANCER)
+        self.use(provider)
+        self.dns = provider.dns
+        self.run_in(SmarterEnvironments.ALPHA)
+        self.assert_delegated("api.example.com", "example.com")
+        self.assert_delegated("proxy.example.com", "example.com")
+        self.assert_delegated("alpha.api.example.com", "api.example.com")
+        root_zone = provider.dns.get_zone("example.com")
+        self.assertEqual(provider.dns.get_record(root_zone.id, "example.com", "A").values, cdn)
+
     def test_local_environment(self):
         """Test that only the proxy domains are verified in the local environment."""
         output = self.run_in(SmarterEnvironments.LOCAL)
