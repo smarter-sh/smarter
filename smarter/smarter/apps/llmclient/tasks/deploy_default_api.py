@@ -104,17 +104,18 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
     Create a customer API default domain A record for an llmclient and manage deployment resources.
 
     This Celery task performs the following steps:
+
     1. Sends a pre-deploy signal for the llmclient API.
     2. Logs the deployment request.
     3. Retrieves the LLMClient instance by ID.
     4. Creates a DNS A record for the llmclient's default domain.
     5. Optionally creates and applies a Kubernetes ingress manifest for the domain.
-    6. Hands off to continue_default_api_deployment, which verifies the ingress resources and the
+    6. Hands off to ``continue_default_api_deployment``, which verifies the ingress resources and the
        certificate, and then the domain, if requested, and activates the llmclient. A certificate and
        a domain take minutes to hours to be ready, so it checks again later rather than waiting, and
        never blocks a worker.
     7. Sends post-deploy and deployment status signals.
-    9. Notifies the account owner by email upon successful deployment.
+    8. Notifies the account owner by email upon successful deployment.
 
     Parameters
     ----------

@@ -44,7 +44,7 @@ export default function GitHubStatus() {
         <a target="_blank" rel="noopener noreferrer" href="https://codecov.io/gh/smarter-sh/smarter">
           <img
             alt="Codecov"
-            src="https://codecov.io/gh/smarter-sh/smarter/branch/main/graph/badge.svg"
+            src="https://img.shields.io/codecov/c/github/smarter-sh/smarter/main?flag=python&logo=codecov"
             style={{ maxWidth: "100%" }}
           />
         </a>
