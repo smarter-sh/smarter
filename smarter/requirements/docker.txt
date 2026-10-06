@@ -324,7 +324,7 @@ more-itertools==11.0.2
     # via inflect
 msgpack==1.1.2
     # via channels-redis
-multidict==6.7.1
+multidict==6.9.1
     # via
     #   aiohttp
     #   yarl
