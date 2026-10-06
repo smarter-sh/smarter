@@ -15,7 +15,10 @@ from unittest import mock
 from django.http import HttpRequest
 
 from smarter.apps.connection.tests.factories import secret_factory
-from smarter.apps.mcpclient.manifest.brokers.mcpclient import SAMMCPClientBroker
+from smarter.apps.mcpclient.manifest.brokers.mcpclient import (
+    SAMMCPClientBroker,
+    SAMMCPClientBrokerError,
+)
 from smarter.apps.mcpclient.manifest.models.mcpclient.model import SAMMCPClient
 from smarter.apps.mcpclient.models import MCPClient, MCPConnectionStatus
 from smarter.lib import json, logging
@@ -23,6 +26,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -213,3 +217,46 @@ class TestSmarterMCPClientBroker(TestSAMBrokerBaseClass):
             with self.subTest(method=method.__name__):
                 with self.assertRaises((SAMBrokerErrorNotImplemented, SAMBrokerError)):
                     method(self.request, **self.kwargs)
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = mock.patch.object(SAMMCPClientBroker, name, new_callable=mock.PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_error_message(self):
+        error = SAMMCPClientBrokerError(message="x", thing="MCPClient")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API MCPClient Manifest Broker Error")
+
+    def test_get_by_name_and_serialization_failure(self):
+        """Test that get() filters by name, and reports a serialization failure."""
+        self.broker.apply(self.request, **self.kwargs)
+        response = self.broker.get(self.request, name="test_mcpclient")
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        with mock.patch(
+            "smarter.apps.mcpclient.manifest.brokers.mcpclient.MCPClientSerializer", side_effect=RuntimeError("broken")
+        ):
+            with self.assertRaises(SAMMCPClientBrokerError):
+                self.broker.get(self.request, name="test_mcpclient")
+
+    def test_without_a_manifest_or_user_profile(self):
+        """Test the broker's refusals without a manifest, a user profile, or a name."""
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMMCPClientBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        broker._mcpclient = None
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.manifest_to_django_orm()
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.apply(self.request, **self.kwargs)
+        self.patch_property("user_profile", None)
+        self.assertIsNone(broker.mcpclient)
+        self.assertIsNone(broker.resolve_secret(None))
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.resolve_secret("any_secret")
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.get(self.request)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.django_orm_to_manifest_dict()

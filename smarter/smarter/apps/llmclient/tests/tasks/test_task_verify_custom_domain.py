@@ -7,9 +7,14 @@ are mocked.
 
 from unittest.mock import MagicMock, patch
 
+import dns.resolver
+
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
+from smarter.apps.llmclient.tasks.exceptions import LLMClientTaskError
 from smarter.apps.llmclient.tasks.verify_custom_domain import (
+    _certificate_status,
+    _ns_records_verified,
     _verification_blocker,
     verify_custom_domain,
 )
@@ -160,3 +165,48 @@ class TestVerifyCustomDomain(TestAccountMixin):
             self.assertIsNone(_verification_blocker(self.hosted_zone_id, self.domain_name, None))
         self.aws_helper.acm.certificate_status.assert_called_once_with(certificate_arn="arn:certificate")
         self.aws_helper.acm.get_or_create_certificate.assert_not_called()
+
+    # -------------------------------------------------------------------------
+    # preconditions and the individual checks
+    # -------------------------------------------------------------------------
+    def test_not_taskable(self):
+        self.is_taskable.return_value = False
+        self.assertFalse(verify_custom_domain(self.hosted_zone_id))
+
+    def test_route53_unavailable(self):
+        self.aws_helper.route53 = None
+        self.assertFalse(verify_custom_domain(self.hosted_zone_id))
+
+    def test_malformed_hosted_zone_raises(self):
+        self.aws_helper.route53.get_hosted_zone_by_id.return_value = None
+        with self.assertRaises(LLMClientTaskError):
+            verify_custom_domain(self.hosted_zone_id)
+
+    def test_hosted_zone_that_is_not_a_custom_domain(self):
+        """A verified hosted zone with no custom domain is verified without notifying anyone."""
+        with patch(f"{MODULE}._verification_blocker", return_value=None):
+            self.assertTrue(verify_custom_domain(f"ZOTHER{self.hash_suffix}".upper()))
+        self.AccountContact.send_email_to_account.assert_not_called()
+
+    def ns_records_verified_with(self, **query_kwargs) -> bool:
+        with patch(f"{MODULE}.dns.resolver.query", **query_kwargs):
+            return _ns_records_verified(self.hosted_zone_id, self.domain_name, None)
+
+    def test_ns_records_delegated(self):
+        rdata = MagicMock()
+        rdata.to_text.return_value = "ns-1.awsdns.com."
+        self.assertTrue(self.ns_records_verified_with(return_value=[rdata]))
+
+    def test_ns_records_delegated_elsewhere(self):
+        rdata = MagicMock()
+        rdata.to_text.return_value = "ns.elsewhere.com."
+        self.assertFalse(self.ns_records_verified_with(return_value=[rdata]))
+
+    def test_ns_records_query_failures(self):
+        for error in (dns.resolver.NXDOMAIN(), dns.resolver.Timeout(), RuntimeError("boom")):
+            with self.subTest(error=type(error).__name__):
+                self.assertFalse(self.ns_records_verified_with(side_effect=error))
+
+    def test_certificate_status_without_acm(self):
+        self.aws_helper.acm = None
+        self.assertIn("unavailable", _certificate_status(self.domain_name))

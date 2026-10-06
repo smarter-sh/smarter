@@ -9,13 +9,16 @@ with the live settings, so every test restores it.
 """
 
 import importlib
+import logging
 import os
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from asgiref.sync import async_to_sync
+from pydantic import SecretStr
 
 import smarter.settings.base as base_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -145,6 +148,62 @@ class TestBaseSettings(SmarterTestBase):
         self.assertEqual(namespace["SMARTER_TEST_STR"], "hello")
         # the live module is untouched
         self.assertNotIn("SMARTER_TEST_STR", vars(base_settings))
+
+    def _reload_base_with_secret_key(self, secret_key: str) -> tuple[dict, list[str]]:
+        """Re-execute base.py with the given smarter_settings.secret_key, capturing every log message it emits."""
+        with (
+            patch.dict(os.environ),
+            patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"]),
+            patch(
+                "smarter.common.conf.smarter_settings",
+                smarter_settings.model_copy(update={"secret_key": SecretStr(secret_key)}),
+            ),
+            patch("logging.config.dictConfig"),
+            self.assertLogs("smarter.settings.base", level=logging.DEBUG) as captured,
+        ):
+            os.environ.pop("DJANGO_SECRET_KEY", None)
+            namespace = self._reload_preserving("smarter.settings.base")
+        return namespace, [record.getMessage() for record in captured.records]
+
+    def test_configured_secret_key_is_never_logged(self):
+        """A SECRET_KEY from smarter_settings is used as is, and its value never appears in a log message."""
+        secret_key = f"unit-test-secret-key-{self.hash_suffix}"
+        namespace, messages = self._reload_base_with_secret_key(secret_key)
+        self.assertEqual(namespace["SECRET_KEY"], secret_key)
+        self.assertFalse([message for message in messages if secret_key in message])
+
+    def test_randomized_secret_key_is_never_logged(self):
+        """A missing SECRET_KEY is replaced with a random value, with a warning that does not include it."""
+        namespace, messages = self._reload_base_with_secret_key(smarter_settings.default_missing_value)
+        secret_key = namespace["SECRET_KEY"]
+        self.assertNotEqual(secret_key, smarter_settings.default_missing_value)
+        self.assertEqual(len(secret_key), 64)
+        self.assertIn("SECRET_KEY not set. Using a randomized value.", messages)
+        self.assertFalse([message for message in messages if secret_key in message])
+
+    def test_new_setting_values_are_never_logged(self):
+        """A DJANGO_* environment variable that creates a new setting is logged with its value masked, whatever type is inferred."""
+        environ = {
+            "DJANGO_SMARTER_TEST_TOKEN_STR": f"unit-test-token-{self.hash_suffix}",
+            "DJANGO_SMARTER_TEST_TOKEN_INT": "8675309424242",
+            "DJANGO_SMARTER_TEST_TOKEN_LIST": f"unit-test-token-a-{self.hash_suffix}, b",
+            "DJANGO_SMARTER_TEST_TOKEN_DICT": f'{{"token": "unit-test-token-d-{self.hash_suffix}"}}',
+        }
+        with (
+            patch.dict(os.environ, environ),
+            patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"]),
+            patch("logging.config.dictConfig"),
+            self.assertLogs("smarter.settings.base", level=logging.DEBUG) as captured,
+        ):
+            namespace = self._reload_preserving("smarter.settings.base")
+        messages = [record.getMessage() for record in captured.records]
+        self.assertEqual(namespace["SMARTER_TEST_TOKEN_STR"], environ["DJANGO_SMARTER_TEST_TOKEN_STR"])
+        self.assertEqual(namespace["SMARTER_TEST_TOKEN_INT"], 8675309424242)
+        self.assertEqual(namespace["SMARTER_TEST_TOKEN_LIST"], [f"unit-test-token-a-{self.hash_suffix}", "b"])
+        self.assertEqual(namespace["SMARTER_TEST_TOKEN_DICT"], {"token": f"unit-test-token-d-{self.hash_suffix}"})
+        self.assertTrue([message for message in messages if "SMARTER_TEST_TOKEN_STR" in message])
+        for secret in ("unit-test-token", "8675309"):
+            self.assertFalse([message for message in messages if secret in message])
 
     def test_local_settings_diagnostics(self):
         """Local.py logs its configuration outside of manage.py."""

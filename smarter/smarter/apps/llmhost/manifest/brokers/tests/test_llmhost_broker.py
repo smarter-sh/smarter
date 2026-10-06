@@ -2,12 +2,17 @@
 """Test SAMLLMHostBroker."""
 
 import os
+from contextlib import ExitStack
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from smarter.apps.llmhost.manifest.brokers.llmhost import SAMLLMHostBroker
+from smarter.apps.llmhost.manifest.brokers.llmhost import (
+    SAMLLMHostBroker,
+    SAMLLMHostBrokerError,
+)
 from smarter.apps.llmhost.manifest.models.llmhost.model import SAMLLMHost
 from smarter.apps.llmhost.models import LLMHost, LLMHostEvent
+from smarter.apps.llmhost.services import LLMHostServiceError
 from smarter.apps.llmhost.services.cluster import (
     InMemoryClusterBackend,
     configure_cluster,
@@ -25,6 +30,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -191,3 +197,55 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
     def test_prompt(self):
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.prompt(self.request, **self.kwargs)
+
+    def patched(self, **properties) -> ExitStack:
+        """Replace the named broker properties for the duration of a with block."""
+        stack = ExitStack()
+        for name, value in properties.items():
+            stack.enter_context(patch.object(SAMLLMHostBroker, name, new_callable=PropertyMock, return_value=value))
+        return stack
+
+    def test_guards_without_a_user_profile_account_or_manifest(self):
+        broker = self.fresh_broker()
+        broker._llmhost = None
+        with self.patched(user_profile=None):
+            self.assertIsNone(broker.llmhost)
+            with self.assertRaises(SAMLLMHostBrokerError):
+                broker.manifest_to_django_orm()
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.get(self.request)
+        with self.patched(account=None), self.assertRaises(SAMBrokerErrorNotReady):
+            broker.django_orm_to_manifest_dict()
+        with self.patched(llmhost=None):
+            self.assertIsNone(broker.django_orm_to_manifest_dict())
+        with self.patched(manifest=None):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.manifest_to_django_orm()
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.apply(self.request)
+        with self.patched(name=None), self.assertRaises(SAMBrokerErrorNotReady):
+            broker.describe(self.request)
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMLLMHostBrokerError):
+            _ = broker.manifest
+
+    def test_service_failures(self):
+        """A failure of the LLMHost service is a broker error."""
+        broker = self.fresh_broker()
+        service = MagicMock()
+        error = LLMHostServiceError("cluster down")
+        service.delete.side_effect = RuntimeError("cluster down")
+        service.destroy.side_effect = error
+        service.logs.side_effect = error
+        with (
+            self.patched(llmhost=MagicMock(), service=service),
+            patch.object(SAMLLMHostBroker, "verify_no_dependencies"),
+            patch("smarter.apps.llmhost.tasks.destroy_dns_record"),
+        ):
+            for command in (broker.delete, broker.undeploy, broker.logs):
+                with self.subTest(command=command.__name__):
+                    with self.assertRaises(SAMLLMHostBrokerError):
+                        command(self.request, **self.kwargs)
+            with patch.object(SAMLLMHostBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("bad")):
+                with self.assertRaises(SAMLLMHostBrokerError):
+                    broker.describe(self.request, **self.kwargs)

@@ -1,5 +1,9 @@
 """Test the cached lookups of :class:`smarter.apps.plugin.models.PluginMeta`."""
 
+from unittest.mock import MagicMock, patch
+
+from smarter.apps.account.models import UserProfile
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.exceptions import SmarterValueError
 
@@ -45,3 +49,37 @@ class TestPluginMetaLookups(PluginAppTestBase):
                 )
                 self.assertIn(meta.pk, [plugin.pk for plugin in plugins])
         self.assertEqual(PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=999999999), [])
+
+    def test_kind_properties(self):
+        meta = PluginMeta(plugin_class="static")
+        self.assertTrue(meta.is_billable_resource)
+        self.assertEqual(meta.kind, SAMKinds.STATIC_PLUGIN)
+        self.assertEqual(meta.rfc1034_compliant_kind, meta.kind.value.lower())
+        with self.assertRaises(SmarterValueError):
+            _ = PluginMeta(plugin_class="nope").kind
+
+    def test_get_cached_object_without_a_user_profile_or_pk(self):
+        with patch.object(UserProfile, "get_cached_object", side_effect=UserProfile.DoesNotExist):
+            with self.assertRaises(SmarterValueError):
+                PluginMeta.get_cached_object(name=STATIC_PLUGIN_NAME)
+
+    def test_get_cached_object_without_a_plugin_class(self):
+        meta = self.static_plugin.plugin_meta
+        found = PluginMeta.get_cached_object(name=meta.name, user_profile=self.user_profile)
+        self.assertEqual(found.pk, meta.pk)
+
+    def test_get_cached_plugins_when_lookups_fail(self):
+        """A failed lookup of the user's, admin's or Smarter's plugins contributes none."""
+        with patch.object(PluginMeta, "get_cached_objects", side_effect=PluginMeta.DoesNotExist("nope")) as lookup:
+            PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=self.user_profile.id)
+        self.assertEqual(lookup.call_count, 3)
+
+    def test_get_cached_plugins_skips_duplicate_entries(self):
+        plugin = MagicMock(id=1)
+
+        def fake_cache_results(*args, **kwargs):
+            return lambda fn: lambda *a, **kw: [plugin, plugin]
+
+        with patch("smarter.apps.plugin.models.plugin_meta.cache_results", fake_cache_results):
+            plugins = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=self.user_profile.id)
+        self.assertEqual(plugins, [plugin])

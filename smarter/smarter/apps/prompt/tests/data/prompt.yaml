@@ -1,0 +1,12 @@
+apiVersion: smarter.sh/v1
+kind: Prompt
+metadata:
+  name: test_prompt_broker_direct
+  description: A Prompt manifest for testing SAMPromptBroker directly
+  version: 1.0.0
+spec:
+  sessionKey: 7c0f3e1b2a9d4c8e6f5a3b1d0e9c8b7a6f5e4d3c2b1a09f8e7d6c5b4a3928170
+  llmclient: test-prompt-broker-direct-llmclient
+  ipAddress: 192.168.1.1
+  userAgent: Mozilla/5.0
+  url: https://www.example.com/

@@ -18,13 +18,19 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.management.commands.deploy_builtin_llmclients import Command
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.loader import SAMLoader
 
 MODULE = "smarter.apps.llmclient.management.commands.deploy_builtin_llmclients"
 HERE = os.path.abspath(os.path.dirname(__file__))
-SMARTER_PROJECT_WEBSEARCH_PATH = os.path.join(HERE, "..", "data", "plugins", "plugin-smarter-websearch.yaml")
+SMARTER_PROJECT_WEBSEARCH_PATH = os.path.join(
+    PROJECT_ROOT, "apps", "llmclient", "data", "plugins", "plugin-smarter-websearch.yaml"
+)
+SMARTER_LLMCLIENT_PATH = os.path.join(
+    PROJECT_ROOT, "apps", "llmclient", "data", "llm-clients", "llmclient-smarter.yaml"
+)
 
 
 class TestDeployBuiltinLLMClients(TestAccountMixin):
@@ -69,7 +75,7 @@ class TestDeployBuiltinLLMClients(TestAccountMixin):
     def test_failed_llmclient_is_not_deployed(self):
         """Test that an LLMClient whose manifest fails to apply is not deployed."""
         with patch.object(Command, "apply_manifest", return_value=False):
-            path = os.path.join(HERE, "..", "data", "llm-clients", "llmclient-smarter.yaml")
+            path = SMARTER_LLMCLIENT_PATH
             self.assertFalse(self.command.create_and_deploy_llmclient(path))
 
     def test_url(self):
@@ -104,7 +110,7 @@ class TestDeployBuiltinLLMClients(TestAccountMixin):
 
     def test_applied_llmclient_not_found(self):
         """Test that an LLMClient that is not found after its manifest is applied is not deployed."""
-        path = os.path.join(HERE, "..", "data", "llm-clients", "llmclient-smarter.yaml")
+        path = SMARTER_LLMCLIENT_PATH
         with patch.object(Command, "apply_manifest", return_value=True):
             self.assertFalse(self.command.create_and_deploy_llmclient(path))
         self.assertIn("Error occurred while deploying llmclient", self.command.stderr.getvalue())  # type: ignore[union-attr]

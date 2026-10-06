@@ -36,6 +36,8 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
+from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
+
 logger = logging.getLogger(__name__)
 
 API_KEY_SECRET = "test_brave_api_key"
@@ -44,13 +46,17 @@ API_KEY = "test-brave-api-key-value"
 
 
 # pylint: disable=too-many-public-methods
-class TestSmarterWebsearchPluginBroker(TestSAMBrokerBaseClass):
+class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMWebsearchPluginBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
+
+    plugin_class = WebsearchPlugin
+    broker_module = "smarter.apps.plugin.manifest.brokers.websearch_plugin"
+    spec_kind = "websearch"
 
     @classmethod
     def setUpClass(cls):

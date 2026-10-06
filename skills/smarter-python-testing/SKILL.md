@@ -111,9 +111,14 @@ Run them only on purpose, with `--tag infrastructure` or
 
 ## Coverage
 
-**Target:** at least 90% for each Django app or subsystem module, and 95% where
-that takes moderate effort. Use judgment about when enough is enough (see
-`smarter-development`).
+**Target:**
+
+- in smarter.apps at least 90% overall for each Django app or subsystem module.
+- in smarter.common and smarter.lib at least 95% overall for each subsystem.
+
+Higher is better. Use judgment about when enough is enough. Large blocks
+of coverage misses in a module are frowned upon. Individual module with coverage ratios far
+below the 90% target are also frowned upon. (see `smarter-development`).
 
 ```console
 make coverage

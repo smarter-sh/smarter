@@ -1,12 +1,17 @@
 # pylint: disable=wrong-import-position
 """Test TimestampedModel model."""
 
+import datetime
+from unittest.mock import patch
+
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 
 # our stuff
 from smarter.lib import logging
+from smarter.lib.django.models import TimestampedModel
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +113,38 @@ class TestTimestampedModel(TestAccountMixin):
         representation = str(self.account)
         self.assertIsInstance(representation, str)
         self.assertIn("Account", representation)
+
+    def test_is_billable_resource(self):
+        """Test that the base model isn't a billable resource."""
+        self.assertFalse(TimestampedModel.is_billable_resource.fget(self.account))  # type: ignore[attr-defined]
+
+    def test_id_from_invalid_hashed_id(self):
+        """Test that a hashed ID that isn't valid base64, or isn't a string, decodes to None."""
+        self.assertIsNone(Account.id_from_hashed_id(f"{Account.HASH_PREFIX}a{Account.HASH_SUFFIX}"))
+        self.assertIsNone(Account.id_from_hashed_id(None))  # type: ignore[arg-type]
+
+    def test_get_object_by_invalid_locator(self):
+        """Test that a locator of another model, with a bad hash, or of no object finds nothing."""
+        self.assertIsNone(Account.get_object_by_locator(f"user-{self.account.hashed_id}"))
+        self.assertIsNone(Account.get_object_by_locator("account-notahash"))
+        self.assertIsNone(Account.get_object_by_locator(Account(id=999999999).record_locator))
+        self.assertIsNone(Account.get_object_by_locator(None))  # type: ignore[arg-type]
+
+    def test_save_wraps_validation_errors(self):
+        """Test that save() reports a failed or broken validation as a SmarterValueError."""
+        for error in (SmarterValueError("invalid"), RuntimeError("broken")):
+            with self.subTest(error=error), patch.object(Account, "validate", side_effect=error):
+                with self.assertRaises(SmarterValueError):
+                    self.account.save()
+
+    def test_elapsed_updated_edge_cases(self):
+        """Test elapsed_updated for a model that was never saved, and for a naive timestamp."""
+        self.assertIsNone(Account().elapsed_updated)
+        account = Account(updated_at=datetime.datetime.now() - datetime.timedelta(seconds=30))
+        self.assertGreaterEqual(account.elapsed_updated, 30)  # type: ignore[operator]
+
+    def test_to_json_error(self):
+        """Test that a serialization failure is reported as a SmarterValueError."""
+        with patch("smarter.lib.django.models.timestamped_model.model_to_dict", side_effect=RuntimeError("broken")):
+            with self.assertRaises(SmarterValueError):
+                self.account.to_json()

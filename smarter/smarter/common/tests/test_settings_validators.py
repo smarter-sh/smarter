@@ -13,6 +13,7 @@ from unittest.mock import Mock, PropertyMock, patch
 from pydantic import SecretStr
 
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.env import DEFAULT_MISSING_VALUE
 from smarter.common.conf.settings import Settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -152,3 +153,31 @@ class TestSettingsMethods(SmarterTestBase):
         self.assertIn("smarter_settings", dump)
         self.assertIn("settings_defaults", dump)
         self.assertEqual(list(dump.keys()), sorted(dump.keys()))
+
+
+class TestSettingsMissingDefaults(SmarterTestBase):
+    """Test the validators and urls whose default, or computed value, is missing."""
+
+    def test_aws_profile_and_region_without_defaults(self):
+        """An empty AWS profile or region is None when its default is missing, and the default otherwise."""
+        module = "smarter.common.conf.settings"
+        for name, validator in (
+            ("AWS_PROFILE", Settings.validate_aws_profile),
+            ("AWS_REGION", Settings.validate_aws_region),
+        ):
+            with self.subTest(default=name):
+                with patch(f"{module}.settings_defaults") as defaults:
+                    setattr(defaults, name, DEFAULT_MISSING_VALUE)
+                    self.assertIsNone(call(validator, "", {}))
+                    setattr(defaults, name, "the-default")
+                    self.assertEqual(call(validator, "", {}), "the-default")
+
+    def test_urls_that_cannot_be_built(self):
+        """The cdn and platform urls raise when their domain can't be made into a url."""
+        for name in ("environment_cdn_url", "root_cdn_url", "platform_url"):
+            with (
+                self.subTest(url=name),
+                patch("smarter.common.conf.settings.SmarterValidator.urlify", return_value=None),
+            ):
+                with self.assertRaises(SmarterConfigurationError):
+                    Settings.__dict__[name].func(smarter_settings)

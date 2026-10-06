@@ -32,6 +32,7 @@ from smarter.apps.proxy.services import (
     forwarded_request_headers,
     get_transport,
     is_public_address,
+    record_charges,
     resolve_proxy,
     returned_response_headers,
 )
@@ -424,3 +425,21 @@ class TestProxyForwarder(ProxyTestBase):
         response = self.forward(proxy)
         self.assertEqual(response.status_code, 307)
         self.assertEqual(len(self.fake.requests), 1)
+
+
+class TestRecordCharges(ProxyTestBase):
+    """Test that a request's tokens are charged to each of its budget resources, without failing the request."""
+
+    def test_record_charges(self):
+        proxy = MagicMock(provider_id=None)
+        usage = Usage(12, 3, 15, model="gpt-test")
+        with (
+            patch("smarter.apps.proxy.services.budget_resource_locators", return_value=["proxy-a", "account-b"]),
+            patch("smarter.apps.account.tasks.create_charge") as create_charge,
+        ):
+            create_charge.delay.side_effect = [RuntimeError("broker down"), None]
+            record_charges(proxy, MagicMock(), usage)
+        self.assertEqual(create_charge.delay.call_count, 2)
+        kwargs = create_charge.delay.call_args.kwargs
+        self.assertEqual(kwargs["resource_locator"], "account-b")
+        self.assertEqual((kwargs["total_tokens"], kwargs["model"], kwargs["provider"]), (15, "gpt-test", None))

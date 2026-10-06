@@ -1,6 +1,5 @@
 """Smarter API Manifest Loader base class."""
 
-import warnings
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -148,7 +147,7 @@ def validate_key(key: str, key_value: Any, spec: Any):
         # validate that value exists for required key
         if SAMSpecificationKeyOptions.REQUIRED in options_list and not key_value:
             raise SAMLoaderError(f"Missing required key {key}")
-        if not SAMSpecificationKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
+        if SAMSpecificationKeyOptions.OPTIONAL not in options_list and not isinstance(key_value, type_spec):
             raise SAMLoaderError(
                 f"Invalid data type for key {key}. Expected {spec[0]} but got {type(key_value)}: key_value={key_value} spec={spec[0]}"
             )
@@ -549,33 +548,6 @@ class SAMLoader(SmarterHelperMixin):
 
         :raises SAMLoaderError: If the manifest data is missing, in an unsupported format, or fails validation.
         """
-
-        def recursive_validator(recursed_data: Optional[dict] = None, recursed_spec: Optional[dict] = None):
-            warnings.warn(
-                "recursive_validator() is deprecated and will be removed in a future release.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-            this_overall_spec = recursed_spec or self.specification
-            this_data = recursed_data or self.json_data
-            if not this_data:
-                raise SAMLoaderError("Received empty or invalid data.")
-            if not isinstance(this_data, dict):
-                raise SAMLoaderError(f"Invalid data format. Expected dict but got {type(this_data)}")
-
-            for key, key_spec in this_overall_spec.items():
-                if isinstance(key, Enum):
-                    key = key.value
-                key_value = this_data.get(key)
-                if isinstance(key_spec, dict):
-                    recursive_validator(recursed_data=key_value, recursed_spec=key_spec)
-                else:
-                    validate_key(
-                        key=key,
-                        key_value=key_value,
-                        spec=key_spec,
-                    )
 
         # top-level validations of the manifest itself.
         if not self.raw_data:
