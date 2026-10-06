@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.2](https://github.com/smarter-sh/smarter/compare/v0.18.1...v0.18.2) (2026-10-06)
+
+### Bug Fixes
+
+* **infrastructure:** move cloud, kubernetes and email helpers into a service layer ([6a41d4e](https://github.com/smarter-sh/smarter/commit/6a41d4ed44832f74ca610663833b63729de16681))
+
 ## [0.18.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.1...v0.18.2-alpha.1) (2026-10-06)
 
 ### Bug Fixes
