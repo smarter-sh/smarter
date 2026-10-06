@@ -279,7 +279,10 @@ class TestBudget(TestAccountMixin):
     def test_status_and_series(self):
         """Test the budget versus the actual spending."""
         budget = self.budget(period=BudgetPeriod.DAY, periodic_limit=Decimal("10.00"), absolute_limit=Decimal("100"))
-        (constraint,) = budget.attach(self.locator, start_date=django_timezone.now() - timedelta(days=2, hours=1))
+        # one hour into the day before yesterday. Relative to midnight rather than to now, so that
+        # the series has three periods even when the test runs shortly after midnight.
+        start_date = period_start(BudgetPeriod.DAY, django_timezone.now()) - timedelta(days=2) + timedelta(hours=1)
+        (constraint,) = budget.attach(self.locator, start_date=start_date)
         self.charge(cost="3.00", created_at=django_timezone.now() - timedelta(days=1))
         self.charge(cost="2.00")
 
