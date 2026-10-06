@@ -629,11 +629,11 @@ if SECRET_KEY == smarter_settings.default_missing_value:
     random_bytes = random_string.encode("utf-8")
     hash_object = hashlib.sha256(random_bytes)
     SECRET_KEY = hash_object.hexdigest()
-    logger.warning("SECRET_KEY not set. Using randomized value: %s", SECRET_KEY)
+    logger.warning("SECRET_KEY not set. Using randomized value.")
 
 logger.debug("PROJECT_ROOT: %s", PROJECT_ROOT)
 logger.debug("BASE_DIR: %s", BASE_DIR)
-logger.debug("SECRET_KEY: %s", SECRET_KEY)
+logger.debug("SECRET_KEY is set.")
 
 
 DEBUG = smarter_settings.debug_mode
@@ -1409,6 +1409,14 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/day",
+        "user": "1000/day",
+    },
 }
 """
 The Django REST Framework configuration for Smarter, including default authentication classes,.
