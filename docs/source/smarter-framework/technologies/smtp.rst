@@ -59,9 +59,11 @@ Technical Reference
     :undoc-members:
     :show-inheritance:
     :exclude-members: __init__
+    :no-index:
 
 .. autoclass:: smarter.apps.infrastructure.services.email.SMTPEmailService
     :members:
     :undoc-members:
     :show-inheritance:
     :exclude-members: __init__
+    :no-index:

@@ -6,6 +6,7 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+import logging
 import os
 import subprocess
 import sys
@@ -47,6 +48,14 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
 contributors_github_token = os.environ.get("GITHUB_TOKEN")
 
 django.setup()
+
+# django.setup() applies Smarter's LOGGING, which sets the root logger to the
+# app's log level (often DEBUG locally). Third-party loggers inherit it, so
+# urllib3 would log every GitHub API request that sphinx_contributors makes.
+# Sphinx's own logger does not propagate to root, so build output is unaffected.
+logging.getLogger().setLevel(logging.WARNING)
+for _noisy_logger in ("urllib3", "requests_cache", "github"):
+    logging.getLogger(_noisy_logger).setLevel(logging.WARNING)
 
 ###############################################################################
 # Patch the get_field_type function in sphinxcontrib_django to be more robust
