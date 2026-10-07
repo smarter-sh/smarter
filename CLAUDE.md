@@ -36,6 +36,10 @@ holds only what applies to nearly every task.
    moderate effort.
 7. **This repository is public.** No API keys, tokens, account IDs, private
    hostnames or customer data in code, tests, docs or skills.
+8. **live prompt calls during development** It is ok for you to send live
+   billable LLM prompt requests when testing your work. Note that unit tests
+   do this as well, so, every time you run tests you are also generating
+   billable LLM requests, which is fine.
 
 ## Repository map
 
