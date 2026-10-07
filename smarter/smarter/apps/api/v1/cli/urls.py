@@ -31,7 +31,8 @@ Endpoints
      - Return information about the current IAM user
 """
 
-from django.urls import path
+from django.urls import path, re_path
+from django.views.generic.base import RedirectView
 
 from smarter.common.utils import to_snake_case
 
@@ -121,6 +122,16 @@ urlpatterns = [
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name=ApiV1CliReverseViews.logs),
     path("example-manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name=ApiV1CliReverseViews.example_manifest),
     path("json-schema/<str:kind>/", ApiV1CliSchemaApiView.as_view(), name=ApiV1CliReverseViews.json_schema),
+    # Legacy path, still requested without a trailing slash by smarter-vscode-yaml.
+    # Redirect rather than route to the view, which derives its command from the url.
+    re_path(
+        r"^schema/(?P<kind>[^/]+)/?$",
+        RedirectView.as_view(
+            pattern_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.json_schema,
+            permanent=True,
+            query_string=True,
+        ),
+    ),
     path("status/", ApiV1CliStatusApiView.as_view(), name=ApiV1CliReverseViews.status),
     path("version/", ApiV1CliVersionApiView.as_view(), name=ApiV1CliReverseViews.version),
     path("whoami/", ApiV1CliWhoamiApiView.as_view(), name=ApiV1CliReverseViews.whoami),
