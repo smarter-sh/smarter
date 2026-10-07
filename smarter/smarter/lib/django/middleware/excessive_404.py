@@ -190,6 +190,13 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
     LOG_SAMPLE_RATE = 10
 
+    # JSON schema lookups, which editors (e.g. smarter-vscode-yaml) send in
+    # bursts for every manifest kind they encounter, including obsolete ones.
+    IGNORED_PATH_PREFIXES = (
+        "/api/v1/cli/schema/",
+        "/api/v1/cli/json-schema/",
+    )
+
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
         if self.async_mode:
@@ -198,8 +205,6 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
         response = super().__call__(request)
-        if self.deserves_amnesty(request.path):
-            return response
 
         # process_response() returns a 403 for a client that has exceeded the limit.
         return self.process_response(request, response)  # type: ignore
@@ -235,6 +240,9 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         """Shared sync/async implementation."""
 
         if response.status_code != HTTPStatus.NOT_FOUND:
+            return response
+
+        if self.is_ignored_path(request.path):
             return response
 
         # Authenticated users are exempt
@@ -277,6 +285,17 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         self.increment_throttle(throttle_key)
 
         return response
+
+    def is_ignored_path(self, path: str) -> bool:
+        """
+        Determine whether 404s on this path should never count toward the throttle.
+
+        :param path: The request path.
+        :type path: str
+        :returns: True for amnesty urls and JSON schema lookups.
+        :rtype: bool
+        """
+        return self.deserves_amnesty(path) or path.startswith(self.IGNORED_PATH_PREFIXES)
 
     @classmethod
     def get_throttle_key(cls, client_ip: str) -> str:

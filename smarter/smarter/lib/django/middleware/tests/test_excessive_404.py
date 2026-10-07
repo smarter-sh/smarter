@@ -56,6 +56,27 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
             not_found(self.request())
         self.assertIsNone(cache.get(self.key))
 
+    def test_schema_paths_ignored(self):
+        """Test that schema lookups are neither counted nor blocked, sync and async."""
+        paths = ["/api/v1/cli/schema/Chatbot", "/api/v1/cli/json-schema/Chatbot/"]
+        middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
+        for path in paths:
+            middleware(self.request(path))
+        self.assertIsNone(cache.get(self.key))
+
+        cache.set(self.key, SmarterBlockExcessive404Middleware.THROTTLE_LIMIT, timeout=60)
+        for path in paths:
+            self.assertEqual(middleware(self.request(path)).status_code, HTTPStatus.NOT_FOUND)
+
+        async def get_response(request):
+            return HttpResponseNotFound()
+
+        middleware = SmarterBlockExcessive404Middleware(get_response)
+        with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
+            for path in paths:
+                self.assertEqual(asyncio.run(middleware(self.request(path))).status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(cache.get(self.key), SmarterBlockExcessive404Middleware.THROTTLE_LIMIT)
+
     def test_throttled_client_gets_403(self):
         """Test that _process_response() refuses a client that has exceeded the limit."""
         middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
