@@ -4,10 +4,13 @@ Test the guard branches of :class:`smarter.apps.llmclient.api.v1.views.base.LLMC
 The view's request-derived properties are replaced, so that each guard is reached on its own.
 """
 
+import asyncio
+import json
 from contextlib import ExitStack
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from django.http import StreamingHttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -55,6 +58,51 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         request.user = self.admin_user
         with patch(HARNESS):
             return self.view(**self.post_properties(**overrides)).post(request)
+
+    def post_with_harness(self, handler, **headers):
+        """Post() with a prompt handler, and the given request headers."""
+        request = RequestFactory().post("/api/v1/llm-clients/1/prompt/", **headers)
+        request.user = self.admin_user
+        with patch(HARNESS) as harness:
+            harness.get_smarter_harness.return_value = handler
+            return self.view(**self.post_properties()).post(request)
+
+    @staticmethod
+    def stream_events(response: StreamingHttpResponse) -> list[str]:
+        """The frames of a streaming response."""
+
+        async def collect():
+            frames = []
+            async for chunk in response.streaming_content:
+                frames.append(chunk.decode() if isinstance(chunk, (bytes, bytearray)) else chunk)
+            return frames
+
+        return asyncio.run(collect())
+
+    def test_post_returns_the_prompt_as_json(self):
+        handler = MagicMock(return_value={"statusCode": HTTPStatus.OK.value, "body": "{}"})
+        response = self.post_with_harness(handler)
+        self.assertNotIsInstance(response, StreamingHttpResponse)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(json.loads(response.content)["data"]["body"], "{}")
+
+    def test_post_streams_the_prompt_to_a_client_that_accepts_server_sent_events(self):
+        handler = MagicMock(return_value={"statusCode": HTTPStatus.UNAUTHORIZED.value, "body": "{}"})
+        response = self.post_with_harness(handler, HTTP_ACCEPT="text/event-stream, application/json")
+        self.assertIsInstance(response, StreamingHttpResponse)
+        self.assertEqual(response["Content-Type"], "text/event-stream")
+        frames = self.stream_events(response)
+        handler.assert_called_once()
+        result = json.loads(frames[-1].split("data: ", 1)[1])
+        self.assertEqual(result["status"], HTTPStatus.UNAUTHORIZED.value)
+        self.assertEqual(result["response"]["data"]["statusCode"], HTTPStatus.UNAUTHORIZED.value)
+
+    def test_post_streams_a_failed_prompt_as_an_error_result(self):
+        handler = MagicMock(side_effect=RuntimeError("the LLM is down"))
+        response = self.post_with_harness(handler, HTTP_ACCEPT="text/event-stream")
+        result = json.loads(self.stream_events(response)[-1].split("data: ", 1)[1])
+        self.assertEqual(result["status"], HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        self.assertIn("the LLM is down", json.dumps(result["response"]))
 
     def test_post_without_an_llmclient_is_not_found(self):
         self.assertEqual(self.post(llmclient=None).status_code, HTTPStatus.NOT_FOUND)
