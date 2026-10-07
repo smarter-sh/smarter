@@ -84,11 +84,6 @@ Example: `http://example.com/static/react/smarter-vectorsearch-list/manifest.jso
   "_custom": {
     "buildTime": "2026-05-31T21:17:32.505Z",
     "version": "0.2.2",
-    "config": {
-      "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/smarter-vectorsearch-list/",
-      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-    },
     "buildEnv": "production"
   }
 }

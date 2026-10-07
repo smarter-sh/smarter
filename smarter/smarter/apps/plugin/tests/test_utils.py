@@ -2,10 +2,9 @@
 """
 Test :mod:`smarter.apps.plugin.utils`.
 
-``add_example_plugins()`` applies Secret and Connection manifests with
-``manage.py apply_manifest``, and then creates each example plugin with a
-PluginController. Both are mocked, so that these tests verify the function's
-own logic without creating the examples.
+``add_example_plugins()`` creates each example plugin with a PluginController,
+which is mocked, so that these tests verify the function's own logic without
+creating the examples.
 """
 
 import os
@@ -20,8 +19,6 @@ from smarter.lib import logging
 logger = logging.getLogger(__name__)
 
 UTILS_MODULE = "smarter.apps.plugin.utils"
-EXAMPLE_MANIFESTS_APPLIED = 5
-"""The number of Secret and Connection manifests that add_example_plugins() applies."""
 
 
 class TestPluginUtils(TestAccountMixin):
@@ -63,18 +60,9 @@ class TestPluginUtils(TestAccountMixin):
             add_example_plugins(user_profile=self.admin_user)  # type: ignore[arg-type]
 
     def test_add_example_plugins(self):
-        """Test that add_example_plugins() applies the prerequisites, and then creates every example."""
-        with (
-            mock.patch(f"{UTILS_MODULE}.call_command") as call_command,
-            mock.patch(f"{UTILS_MODULE}.PluginController") as plugin_controller,
-        ):
+        """Test that add_example_plugins() creates every example."""
+        with mock.patch(f"{UTILS_MODULE}.PluginController") as plugin_controller:
             self.assertTrue(add_example_plugins(user_profile=self.user_profile))
-
-        self.assertEqual(call_command.call_count, EXAMPLE_MANIFESTS_APPLIED)
-        for call in call_command.call_args_list:
-            self.assertEqual(call.args[0], "apply_manifest")
-            self.assertEqual(call.kwargs["username"], self.admin_user.username)
-            self.assertTrue(os.path.isfile(call.kwargs["filespec"]), call.kwargs["filespec"])
 
         self.assertEqual(plugin_controller.call_count, len(self.example_files))
         created = [call.kwargs["manifest"]["metadata"]["name"] for call in plugin_controller.call_args_list]
@@ -82,15 +70,21 @@ class TestPluginUtils(TestAccountMixin):
         for call in plugin_controller.call_args_list:
             self.assertEqual(call.kwargs["user_profile"], self.user_profile)
 
-    def test_add_example_plugins_apply_failure(self):
-        """Test that add_example_plugins() stops if a prerequisite cannot be applied."""
+    def test_add_example_plugins_applies_no_fixed_name_manifests(self):
+        """Test that add_example_plugins() applies no Secret or Connection manifest.
+
+        Their names are fixed, not hash-suffixed, so applying them as a test account's superuser
+        rebinds the platform admin's Stackademy connections to the test account's Secrets, and the
+        test teardown's cascade then deletes the connections and the Stackademy plugins' data.
+        """
         with (
-            mock.patch(f"{UTILS_MODULE}.call_command", side_effect=ValueError("boom")),
-            mock.patch(f"{UTILS_MODULE}.PluginController") as plugin_controller,
+            mock.patch("django.core.management.call_command") as call_command,
+            mock.patch("smarter.apps.api.utils.apply_manifest") as apply_manifest,
+            mock.patch(f"{UTILS_MODULE}.PluginController"),
         ):
-            with self.assertRaises(SmarterValueError):
-                add_example_plugins(user_profile=self.user_profile)
-        plugin_controller.assert_not_called()
+            add_example_plugins(user_profile=self.user_profile)
+        call_command.assert_not_called()
+        apply_manifest.assert_not_called()
 
     def test_add_example_plugins_skips_failures(self):
         """Test that add_example_plugins() skips an example that cannot be created, and creates the others."""
@@ -102,10 +96,7 @@ class TestPluginUtils(TestAccountMixin):
                 raise ValueError("missing prerequisite")
             return mock.MagicMock()
 
-        with (
-            mock.patch(f"{UTILS_MODULE}.call_command"),
-            mock.patch(f"{UTILS_MODULE}.PluginController", side_effect=controller) as plugin_controller,
-        ):
+        with mock.patch(f"{UTILS_MODULE}.PluginController", side_effect=controller) as plugin_controller:
             self.assertFalse(add_example_plugins(user_profile=self.user_profile))
         self.assertEqual(plugin_controller.call_count, len(self.example_files))
 
@@ -117,7 +108,6 @@ class TestPluginUtils(TestAccountMixin):
         examples = mock.MagicMock()
         examples.plugins = [example]
         with (
-            mock.patch(f"{UTILS_MODULE}.call_command"),
             mock.patch(f"{UTILS_MODULE}.PluginExamples", return_value=examples),
             mock.patch(f"{UTILS_MODULE}.PluginController") as plugin_controller,
         ):

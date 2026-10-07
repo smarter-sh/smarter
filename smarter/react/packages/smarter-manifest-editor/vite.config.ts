@@ -1,8 +1,8 @@
 /**
  * Vite Configuration for the Manifest Editor React App
  *
- * This configuration is the same as @smarter/prompt-passthrough's, without its CDN
- * deployment and xterm.js chunking. It:
+ * This configuration is the same as @smarter/prompt-passthrough's, without its
+ * xterm.js chunking. It:
  *
  * - Builds the React assets into the Django static directory, for collectstatic.
  * - Injects build metadata (version, build time, environment) into the manifest for Django use.
@@ -26,7 +26,7 @@ const packageName = packageJson.name;
  * Vite Plugin: addCustomManifestData
  *
  * Injects custom metadata into the generated manifest.json file after each build:
- * buildTime, version, config and buildEnv. Django uses it to display build details.
+ * buildTime, version and buildEnv. Django uses it to display build details.
  */
 const addCustomManifestData: PluginOption = {
   name: "add-custom-manifest-data",
@@ -40,7 +40,6 @@ const addCustomManifestData: PluginOption = {
       manifest._custom = {
         buildTime: new Date().toISOString(),
         version: packageJson.version,
-        config: packageJson.config,
         buildEnv: process.env.NODE_ENV || "development",
       };
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));

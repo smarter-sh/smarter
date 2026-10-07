@@ -16,13 +16,21 @@ ifeq ("$(wildcard .env)","")
 endif
 include .env
 
+# Smarter Chat, the React app of the LLMClient prompt workbench, is managed in its own
+# repository, and is also published to npm as @smarter.sh/ui-chat. react-smarter-chat
+# clones it into the React workspace, which then builds, tests and lints it with the
+# other apps. Override the branch with: make react-install SMARTER_CHAT_BRANCH=alpha
+SMARTER_CHAT_REPO ?= https://github.com/smarter-sh/smarter-chat.git
+SMARTER_CHAT_BRANCH ?= main
+SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
+
 
 .PHONY: all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	react-install react-build react-build-ci react-test react-lint react-storybook \
+	react-smarter-chat react-install react-build react-build-ci react-test react-lint react-storybook \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -192,21 +200,15 @@ docker-shell:
 docker-build:
 	make docker-check && \
 	docker-compose build \
-	  --build-arg DOCKER_COLLECT_STATIC_FILES=false \
-      --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER= \
-      --build-arg DOCKER_REACT_REMOTE_CDN_URL= && \
+	  --build-arg DOCKER_COLLECT_STATIC_FILES=false && \
 	docker image prune -f
 
-# the DOCKER_REACT_REMOTE_CACHE_BUSTER build argument forces Docker to rebuild the React
-# frontend assets from the CDN distribution.
-#
-# example usage: docker-compose build  --progress=plain --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER=$(shell date +%s) --build-arg DOCKER_REACT_REMOTE_CDN_URL=https://cdn.smarter.sh/react
+# A full build, which collects the static files, including the React apps'.
+# Build the React apps first, with `cd smarter/react && npm run build`.
 docker-build-for-react:
 	make docker-check && \
 	docker-compose build  --progress=plain \
-	  --build-arg DOCKER_COLLECT_STATIC_FILES=true \
-      --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER=$(shell date +%s) \
-      --build-arg DOCKER_REACT_REMOTE_CDN_URL=
+	  --build-arg DOCKER_COLLECT_STATIC_FILES=true
 	docker image prune -f
 
 docker-run:
@@ -328,7 +330,20 @@ python-requirements:
 # ---------------------------------------------------------
 # React
 # ---------------------------------------------------------
-react-install:
+# Clone Smarter Chat into the React workspace, unless it is already there. An existing
+# clone is never changed, so that work in progress in it is safe. Its pre-commit and
+# commit-msg hooks are installed when pre-commit is available (the venv is active).
+react-smarter-chat:
+	@if [ -d "$(SMARTER_CHAT_DIR)/.git" ]; then \
+		echo "$(SMARTER_CHAT_DIR) exists, on branch $$(git -C $(SMARTER_CHAT_DIR) rev-parse --abbrev-ref HEAD)"; \
+	else \
+		git clone --branch $(SMARTER_CHAT_BRANCH) $(SMARTER_CHAT_REPO) $(SMARTER_CHAT_DIR); \
+	fi
+	@if command -v pre-commit >/dev/null 2>&1 && [ ! -f "$(SMARTER_CHAT_DIR)/.git/hooks/commit-msg" ]; then \
+		cd $(SMARTER_CHAT_DIR) && pre-commit install; \
+	fi
+
+react-install: react-smarter-chat
 	cd smarter/react && npm install --include=dev
 
 react-update:
@@ -342,7 +357,7 @@ react-build:
 	make collectstatic
 	make build
 
-react-build-ci:
+react-build-ci: react-smarter-chat
 	cd smarter/react && \
 	NODE_ENV=production npm ci --include=dev && \
 	NODE_ENV=production npm run build
@@ -434,6 +449,7 @@ help:
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
 	@echo 'python-requirements    - Compile and update Python dependency files'
 	@echo '<************************** React **************************>'
+	@echo 'react-smarter-chat     - Clone Smarter Chat into the React workspace (SMARTER_CHAT_BRANCH=main)'
 	@echo 'react-install          - Install npm dependencies for React frontend apps'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
 	@echo 'react-build-ci         - Build all React frontend apps using CI settings'

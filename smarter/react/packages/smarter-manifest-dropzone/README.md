@@ -5,8 +5,8 @@ at [http://localhost:9357/drop-zone/](http://localhost:9357/drop-zone/).
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/smarter-manifest-dropzone/ and gathered
-  by Dockerfile during builds into Django's static asset folder.
+- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
+  which the Dockerfile copies into the image.
 - [smarter.apps.drop-zone.views.views.drop-zone.DashboardView](../../smarter/apps/drop-zone/views/views/drop-zone.py)
 - [smarter.apps.drop-zone.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/drop-zone/templatetags/react_dashboard.py)
 - [templates/react/drop-zone.html](../../smarter/templates/react/drop-zone.html)
@@ -90,11 +90,6 @@ trouble shooting purposes. http://example.com/static/react/smarter-manifest-drop
   "_custom": {
     "buildTime": "2026-05-31T21:17:32.505Z",
     "version": "0.2.2",
-    "config": {
-      "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/smarter-manifest-dropzone/",
-      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-    },
     "buildEnv": "production"
   }
 }

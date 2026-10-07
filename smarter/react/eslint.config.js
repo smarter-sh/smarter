@@ -25,7 +25,14 @@ import tseslint from "typescript-eslint";
 const TESTS = ["**/*.test.{ts,tsx}", "**/test/**/*.{ts,tsx}"];
 
 export default defineConfig([
-  globalIgnores(["**/dist", "**/storybook-static", "**/coverage", "**/node_modules", "storybook/public"]),
+  globalIgnores([
+    "**/dist",
+    "**/storybook-static",
+    "**/coverage",
+    "**/node_modules",
+    "storybook/public",
+    "**/.storybook/public",
+  ]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
@@ -71,14 +78,14 @@ export default defineConfig([
     extends: [testingLibrary.configs["flat/react"], jestDom.configs["flat/recommended"], vitest.configs.recommended],
   },
   {
-    files: ["test/setup.ts"],
+    files: ["**/test/setup.ts"],
     rules: {
       // Vitest's globals are off, so Testing Library's automatic cleanup is not registered.
       "testing-library/no-manual-cleanup": "off",
     },
   },
   {
-    files: ["test/stories.ts"],
+    files: ["**/test/stories.ts"],
     rules: {
       // each story is a test, named after it, whose assertions are the story's play function.
       "vitest/valid-title": "off",

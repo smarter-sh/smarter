@@ -5,7 +5,6 @@ error branches.
 """
 
 import re
-from unittest.mock import MagicMock, patch
 
 from pydantic_core import ValidationError as PydanticValidationError
 
@@ -71,34 +70,6 @@ class TestSettingsEnvironments(SmarterTestBase):
         with self.assertRaises(SmarterConfigurationError):
             _ = settings.environment_namespace
 
-    def test_reactjs_app_loader_url_falls_back(self):
-        """The ReactJS app loader url falls back to the default when the CDN doesn't answer."""
-        settings = make_settings(environment=SmarterEnvironments.PROD)
-        responses = iter([MagicMock(status_code=404), MagicMock(status_code=200)])
-        with patch("smarter.common.conf.settings.requests.get", side_effect=lambda *a, **k: next(responses)):
-            url = settings.smarter_reactjs_app_loader_url
-        self.assertNotIn(settings.environment_cdn_domain, url)
-
-    def test_reactjs_app_loader_url_unreachable(self):
-        """When neither url answers, the intended url is returned anyway."""
-        settings = make_settings(environment=SmarterEnvironments.PROD)
-        with patch("smarter.common.conf.settings.requests.get", side_effect=ConnectionError("offline")):
-            url = settings.smarter_reactjs_app_loader_url
-        self.assertTrue(url.endswith(settings.smarter_reactjs_app_loader_path))
-
-    def test_reactjs_app_loader_url_intended(self):
-        """When the CDN answers, its url is used."""
-        settings = make_settings(environment=SmarterEnvironments.PROD)
-        with patch("smarter.common.conf.settings.requests.get", return_value=MagicMock(status_code=200)):
-            url = settings.smarter_reactjs_app_loader_url
-        self.assertTrue(url.endswith(settings.smarter_reactjs_app_loader_path))
-
-    def test_reactjs_root_div_id_requires_the_app_loader(self):
-        """The root div id can only be derived from an app-loader.js path."""
-        settings = make_settings(smarter_reactjs_app_loader_path="/ui-prompt/loader.js")
-        with self.assertRaises(SmarterConfigurationError):
-            _ = settings.smarter_reactjs_root_div_id
-
     def test_versions(self):
         """The version properties report the installed versions."""
         settings = make_settings()
@@ -140,12 +111,6 @@ class TestSettingsValidators(SmarterTestBase):
         """A plain string secret key is wrapped in a SecretStr."""
         settings = make_settings(secret_key="a-test-secret-key")
         self.assertEqual(settings.secret_key.get_secret_value(), "a-test-secret-key")
-
-    def test_reactjs_app_loader_path(self):
-        """The app loader path must be an absolute .js path."""
-        for bad in ("ui-prompt/app-loader.js", "/ui-prompt/app-loader.css", 42):
-            with self.assertRaises(CONFIG_ERRORS):
-                make_settings(smarter_reactjs_app_loader_path=bad)
 
     def test_aws_profile_and_region_defaults(self):
         """Empty AWS profile and region fall back to the defaults."""

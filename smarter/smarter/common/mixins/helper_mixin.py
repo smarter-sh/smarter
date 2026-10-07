@@ -5,6 +5,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
+from django.utils.functional import classproperty
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
@@ -110,15 +111,18 @@ class SmarterHelperMixin:
         """
         # logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
 
-    @cached_property
-    def formatted_class_name(self) -> str:
+    @classproperty
+    def formatted_class_name(cls) -> str:  # pylint: disable=no-self-argument
         """
         Returns the class name formatted for logging.
+
+        This is a class property, so it works both on instances (``self.formatted_class_name``)
+        and inside classmethods (``cls.formatted_class_name``).
 
         :return: The formatted class name as a string.
         :rtype: str
         """
-        return formatted_text(self.__class__.__name__)
+        return formatted_text(cls.__name__)
 
     @cached_property
     def unformatted_class_name(self) -> str:

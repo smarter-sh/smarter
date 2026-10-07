@@ -1,11 +1,12 @@
 """Test :class:`smarter.apps.llmclient.models.LLMClientPlugin`, the plugins of an LLMClient."""
 
 import copy
+from unittest import mock
 
 import yaml
 
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.tests.base_classes import PluginAppTestBase
 
 
@@ -38,6 +39,32 @@ class TestLLMClientPlugin(PluginAppTestBase):
         data = LLMClientPlugin.plugins_json(self.llmclient)
         self.assertEqual(len(data), 1)
         self.assertIsInstance(data[0], dict)
+
+    def test_plugins_skips_plugin_that_fails_to_load(self):
+        """A plugin that raises while loading is logged and skipped rather than failing the LLMClient.
+
+        This is the shape of a Sql plugin whose PluginDataSql row was cascade-deleted with its SqlConnection.
+        """
+        with (
+            mock.patch(
+                "smarter.apps.llmclient.models.llmclient_plugin.PluginController",
+                side_effect=PluginDataSql.DoesNotExist("No PluginDataSql found for plugin_id: 0"),
+            ),
+            self.assertLogs("smarter.apps.llmclient.models.llmclient_plugin", level="ERROR") as logs,
+        ):
+            self.assertEqual(LLMClientPlugin.plugins(self.llmclient), [])
+        self.assertIn(self.static_plugin.plugin_meta.name, logs.output[0])
+        self.assertIn("failed to load", logs.output[0])
+
+    def test_plugins_skips_plugin_that_does_not_load(self):
+        """A controller that yields no plugin is logged and skipped."""
+        controller = mock.MagicMock(plugin=None)
+        with (
+            mock.patch("smarter.apps.llmclient.models.llmclient_plugin.PluginController", return_value=controller),
+            self.assertLogs("smarter.apps.llmclient.models.llmclient_plugin", level="ERROR") as logs,
+        ):
+            self.assertEqual(LLMClientPlugin.plugins(self.llmclient), [])
+        self.assertIn("did not load", logs.output[0])
 
     def test_get_cached_objects(self):
         for invalidate in (True, False):

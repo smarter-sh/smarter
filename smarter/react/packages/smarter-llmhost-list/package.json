@@ -3,11 +3,6 @@
   "description": "A React component library for displaying a list of LLMHosts on the Smarter web console.",
   "version": "0.2.0",
   "type": "module",
-  "config": {
-    "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/smarter-llmhost-list/",
-    "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
     "build": "tsc -b && vite build",

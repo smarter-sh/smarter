@@ -1175,19 +1175,18 @@ TS-06 — Web Integration and Embedding Issues
    * - Authenticated
      - ``https://platform.smarter.sh/llm-clients/<llmclient-name>/``
 
-**CDN loader script** — must be present in ``<head>``:
+**Chat component** — the page renders ``SmarterChat``, from the
+`@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ npm package, with its
+stylesheet, and the LLMClient's url:
 
-.. code-block:: html
+.. code-block:: tsx
 
-   <script src="https://cdn.platform.smarter.sh/ui-chat/app-loader.js"></script>
+   import { SmarterChat } from "@smarter.sh/ui-chat";
+   import "@smarter.sh/ui-chat/dist/ui-chat.css";
 
-**React root element** — must exist in the DOM before the script loads:
+   <SmarterChat apiUrl="https://<llmclient-name>.<account-id>.api.smarter.sh/" showConsole={false} />
 
-.. code-block:: html
-
-   <div id="root"
-        smarter-chatbot-api-url="https://<llmclient-name>.<account-id>.api.smarter.sh/">
-   </div>
+See :doc:`Smarter Chat <../../developer-reference/react-integration/smarter-chat>`.
 
 **LLMClient not yet deployed** — verify status before embedding a public URL:
 

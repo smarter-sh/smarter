@@ -6,8 +6,8 @@ workbench/passthrough/).
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/passthrough/ and gathered
-  by Dockerfile during builds into Django's static asset folder.
+- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
+  which the Dockerfile copies into the image.
 - [smarter.apps.prompt.views.passthrough.view.PromptPassthroughView](../../smarter/apps/prompt/views/passthrough/view.py)
 - [smarter.apps.prompt.templatetags.react_prompt_passthrough.prompt_passthrough_react_assets](../../smarter/apps/prompt/templatetags/react_prompt_passthrough.py)
 - [templates/react/prompt-passthrough.html](../../smarter/templates/react/prompt-passthrough.html)
@@ -80,11 +80,6 @@ trouble shooting purposes. http://example.com/static/react/smarter-prompt-passth
   "_custom": {
     "buildTime": "2026-05-31T21:17:32.505Z",
     "version": "0.2.2",
-    "config": {
-      "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/smarter-prompt-passthrough/",
-      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-    },
     "buildEnv": "production"
   }
 }

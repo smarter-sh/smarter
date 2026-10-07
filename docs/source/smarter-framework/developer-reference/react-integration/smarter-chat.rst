@@ -1,209 +1,143 @@
 Smarter Chat
-===================
+============
 
-The Smarter project maintains a React-based drop-in chat component that can be integrated into
-any html web page. see `https://www.npmjs.com/package/@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ for details.
-This component is designed to provide seamless integration
-to the Smarter backend services, enabling real-time chat functionality with minimal
-setup and maximum configuration options.
-
-The Smarter Chat Component provides a secure, highly customizable chat interface
-that you can embed into existing web applications or websites like Wordpress/Wix/Squarespace marketing
-sites, salesforce portals, Hubspot, Shopify storefronts, Microsoft Sharepoint sites,
-or your own custom web applications.
-
-    .. raw:: html
-
-      <img src="https://cdn.smarter.sh/images/smarter-chat-ui-example.png"
-          style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
-          alt="Smarter Chat Component in Workbench Mode"/>
-
-
-Integration Steps
------------------
-
-At a high level, you will clone/fork the
-`web-integration-example <https://github.com/smarter-sh/web-integration-example>`__ repository,
-and then build and deploy the project to a publicly accessible web server (e.g., AWS S3 + CloudFront).
-This will publish both the React chat component bundle itself as well as the app-loader.js script
-that is used to load the chat component into your web page.
-
-You can refer to The Smarter Project's `reference cloud deployment <https://platform.smarter.sh>`__
-for a live example of the chat component in action.
-
-
-1. Review your smarter_settings values
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The chat component relies on certain Smarter backend configuration
-values to integrate to the Smarter backend services. If you created your cloud
-infrastructure using the `Smarter Infrastructure Terraform <https://github.com/smarter-sh/smarter-infrastructure>`__
-module, then these values should already be set correctly. Specifically:
-
-.. code-block:: python
-
-  from smarter.common.conf import smarter_settings
-
-  print(smarter_settings.environment_cdn_url)
-  'https://cdn.platform.example.com/'
-
-  # This should exactly match the value, REACT_ROOT_ELEMENT_ID,
-  # in https://github.com/smarter-sh/web-integration-example/blob/main/src/shared/constants.js
-  print(smarter_settings.smarter_reactjs_root_div_id)
-  'smarter-sh-v1-ui-chat-root'
-
-  # controlled with environment variable: SMARTER_REACTJS_APP_LOADER_PATH="/ui-chat/app-loader.js"
-  print(smarter_settings.smarter_reactjs_app_loader_path)
-  '/ui-chat/app-loader.js'
-
-  print(smarter_settings.smarter_reactjs_app_loader_url)
-  'https://cdn.platform.example.com/ui-chat/app-loader.js'
-
-See :py:class:`smarter.common.conf.Settings` for additional details on these and other
-Smarter settings values.
-
-
-2. Clone the web-integration-example repository
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-  git clone https://github.com/smarter-sh/web-integration-example.git
-
-refer to the repository's README for additional information about configuring,
-building and deployment instructions.
-
-3. Deploy the Smarter React Chat Component
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. important::
-
-  Review and update the `Makefile <https://github.com/smarter-sh/web-integration-example/blob/main/Makefile>`__
-  configuration values at the top of the file as needed. Specifically, you
-  should update the `BUCKET` and AWS Cloudfront distribution ID values, `DISTRIBUTION_ID`, for each
-  git branch target (e.g., `prod`, `alpha`, `beta`, `next`, etc).
-
-.. code-block:: bash
-
-  cd web-integration-example
-  make init      # install npm dependencies, including @smarter.sh/ui-chat
-  make build     # build the project and setup the app-loader.js script
-  make release   # deploy to AWS S3 + CloudFront (or, the static web hosting solution of your choice.)
-
-Deploy the project to `smarter_settings.smarter_reactjs_app_loader_url` and ensure that
-this URL is publicly accessible. The `web-integration-example` repository
-includes an example of this using AWS S3 and CloudFront. But you can use any static web hosting solution
-that serves the built React app.
-
-4. Check your work
-~~~~~~~~~~~~~~~~~~~~~~
-
-You should be able to load and view the app-loader.js script from any browser:
+Smarter Chat is the React chat component of the LLMClient prompt engineering workbench, the web
+console page where you chat with an :doc:`LLMClient <../../../smarter-resources/smarter-llmclient>`
+before you deploy it. Beside the chat, its Console displays the LLMClient's configuration, and the
+chat session's api calls, tool calls and plugin usage, as JSON. A toggle shows and hides the
+backend's own messages in the chat thread: the system prompt, tool results, and Smarter's notes
+about the plugins it selected. A failed prompt, for example one that the LLM provider rejects, is
+displayed in the chat thread, with the provider's error message.
 
 .. raw:: html
 
-  <img src="https://cdn.smarter.sh/images/smarter-chat-app-loader.png"
+  <img src="https://cdn.smarter.sh/images/smarter-chat-ui-example.png"
       style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
-      alt="Smarter Chat Component app-loader.js"/>
+      alt="Smarter Chat Component in Workbench Mode"/>
 
-You should additionally be able to open the deployed component URL in a browser.
-
-.. note::
-
-  This will not open the chat component itself. Instead, you will see developer
-  message confirming the existence of the page, and a link to additional technical
-  documentation.
-
-.. raw:: html
-
-  <img src="https://cdn.smarter.sh/images/smarter-chat-index.html.png"
-      style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
-      alt="Smarter Chat Component Deployed URL"/>
+Smarter Chat has two lives. In the web console, it is one of the React apps that Django hosts, built
+and served exactly as the others are. It is also published to npm as
+`@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__, so that any web page,
+for example a Wordpress or Squarespace marketing site, a Salesforce portal, a Shopify storefront or
+your own web application, can use a Smarter LLMClient as its chat backend.
 
 
+Source Code
+-----------
 
-5. Integrate the Chat Component into your Web Page
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-To integrate the Smarter Chat Component into your web page, you should
+Smarter Chat is managed in its own repository,
+`smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__, which is where it is
+versioned and published to npm. ``make react-install`` clones it into the React workspace, as
+``smarter/react/packages/smarter-chat``, which Smarter's ``.gitignore`` excludes. From then on it is
+a workspace package like any other: ``npm run build`` builds it, and ``make react-test`` and
+``make react-lint`` test and lint it, with the same TypeScript, Vite, Vitest, Storybook, ESLint and
+Prettier configuration as the other React apps.
 
-- include a DOM element with the React app id where you want the chat component to render.
-- include the app-loader.js script near the bottom of your html page
+.. code-block:: console
 
-.. literalinclude:: ../../../../../smarter/smarter/templates/prompt/workbench.html
-   :language: html
-   :caption: smarter/templates/prompt/workbench.html
+  make react-install                          # clones smarter-chat's main branch, if it isn't there yet
+  make react-install SMARTER_CHAT_BRANCH=alpha # or another branch
+  make react-storybook APP=smarter-chat       # browse its components in Storybook
 
-In this case the rendered html elements that are germain to the Chat Component
-integration would look something like the following, where
-app-loader.js injected the stylesheet link and the script elements into the DOM
-during the normal page load.
+An existing clone is never changed by ``make``, so work in progress in it is safe. Commit and push
+changes to Smarter Chat from inside ``smarter/react/packages/smarter-chat``, which is its own git
+repository. The GitHub Actions workflows clone it too, before the React build, and the React build's
+cache key includes the clone's commit.
 
-.. note::
 
-  Refer to the technical documentation included in
-  `https://github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__
-  for additional configuration options.
+How the Web Console Hosts It
+----------------------------
 
-.. code-block:: html
+The :py:class:`PromptWorkbenchView <smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView>`
+renders ``react/smarter-chat.html``. Its ``react_smarter_chat`` template tag reads the Vite
+``manifest.json`` in ``static/react/@smarter.sh/ui-chat/`` to include the app's hashed JavaScript and
+CSS files, and the template renders the app's root element, whose attributes configure it:
 
-  <head>
-    <!--
-    The React css bundle created by `make build`
-    in https://github.com/smarter-sh/web-integration-example, deployed to AWS Cloudfront,
-    and injected by app-loader.js
-    -->
-    <link rel="stylesheet"
-      crossorigin=""
-      href="https://cdn.smarter.sh/ui-chat/assets/main-C2E4fudP.css"
-      class="smarter-chat">
-  </head>
-  <body>
-    <!--
-    The root div where the React app will render the chat component,
-    as rendered by Django template engine from the template above. All values are ulimately
-    generated by smarter.common.conf.smarter_settings.
-    -->
-    <div
-      id="smarter-sh-v1-ui-chat-root"
-      class="smarter-chat"
-      django-session-cookie-name="sessionid"
-      smarter-chatbot-api-url="https://platform.smarter.sh/api/v1/llm-clients/38/"
-      smarter-cookie-domain="platform.smarter.sh"
-      smarter-csrf-cookie-name="csrftoken"
-      smarter-debug-mode="True"
-      smarter-session-cookie-name="session_key"
-      smarter-toggle-metadata="True"></div>
-  </body>
-  <!-- The React app loader script, rendered by Django template engine. -->
-  <script async=""
-      class="smarter-chat"
-      onerror="console.error('Failed to load:', this.src)"
-      src="https://cdn.smarter.sh/ui-chat/app-loader.js"></script>
-  <!--
-  the React app loader script created by `make build`
-  in https://github.com/smarter-sh/web-integration-example, deployed to AWS Cloudfront,
-  and injected by app-loader.js
-  -->
-  <script class="smarter-chat"
-      src="https://cdn.smarter.sh/ui-chat/assets/main-C4x7rKYv.js"></script>
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
 
-1. See the Chat Component in Action
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   * - Attribute
+     - Value
+   * - ``id``
+     - ``smarter-chat-root``
+   * - ``smarter-llmclient-api-url``
+     - The LLMClient's sandbox url. Smarter Chat appends ``config/`` for its configuration.
+   * - ``smarter-toggle-metadata``
+     - Whether to show the button that shows and hides the backend's messages.
+   * - ``smarter-csrf-cookie-name``
+     - Django's ``CSRF_COOKIE_NAME``. The chat sends the cookie's value as the ``X-CSRFToken`` header.
+   * - ``smarter-session-cookie-name``
+     - The cookie in which the chat saves its chat session's key, for the page's path, so that each
+       LLMClient has its own chat session.
+   * - ``smarter-django-session-cookie-name``
+     - Django's ``SESSION_COOKIE_NAME``.
+   * - ``smarter-cookie-domain``
+     - Django's ``SESSION_COOKIE_DOMAIN``.
+   * - ``react-debug-mode``
+     - The ``ENABLE_REACTAPP_DEBUG_MODE`` waffle switch, which turns on logging to the browser console.
+   * - ``smarter-request-id``
+     - A unique id of the page request, sent as the ``X-Smarter-RequestId`` header.
 
-.. raw:: html
+Smarter Chat then calls two apis, both with POST requests that the web console's session
+authenticates:
 
-   <div style="text-align: center;">
-     <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
-            autoplay loop muted playsinline
-            style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
-       Sorry, your browser doesn't support embedded videos.
-     </video>
-     <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
-       <em>Smarter Prompt Engineering Workbench Demo</em>
-     </div>
-   </div>
-   <br/>
+- the LLMClient's configuration, at ``<smarter-llmclient-api-url>config/``, served by
+  :py:class:`PromptConfigView <smarter.apps.prompt.views.detailviews.prompt_config_view.PromptConfigView>`.
+  It includes the chat session's history, which restores the chat thread when the page reloads.
+- the LLMClient's prompt api, ``chatbot.url_chatbot`` in the configuration, which receives the chat
+  thread with each new message, and returns the new messages to add to it.
 
+
+Using Smarter Chat in Your Own Web Page
+---------------------------------------
+
+Install the npm package, then render the ``SmarterChat`` component wherever you want the chat to
+appear. React 19 is a peer dependency.
+
+.. code-block:: console
+
+  npm install @smarter.sh/ui-chat
+
+.. code-block:: tsx
+
+  import { createRoot } from "react-dom/client";
+  import { SmarterChat } from "@smarter.sh/ui-chat";
+  import "@smarter.sh/ui-chat/dist/ui-chat.css";
+
+  createRoot(document.getElementById("chat")!).render(
+    <SmarterChat
+      apiUrl="https://stackademy.3141-5926-5359.api.example.com/"
+      cookieDomain="example.com"
+      showConsole={false}
+    />,
+  );
+
+``apiUrl`` is the url of a deployed LLMClient's api. Its other props are optional:
+
+- ``apiKey``: a Smarter api key, sent as ``Authorization: Token <apiKey>``, for LLMClients that
+  require authentication. Anyone who can view the page can read it, so use a key whose permissions
+  you are comfortable sharing.
+- ``toggleMetadata``, ``showConsole`` and ``debugMode``: the workbench's metadata toggle, Console,
+  and browser console logging. ``showConsole`` defaults to ``true``, which only suits wide pages.
+- ``csrfCookieName``, ``csrftoken``, ``sessionCookieName``, ``sessionCookieExpiration`` and
+  ``cookieDomain``: the cookies that the chat reads and sets.
+
+Requests from your page to the Smarter api are cross-origin, so your page's origin must be allowed
+by the Smarter platform's CORS configuration. The chat's custom ``X-Smarter-*`` request headers are
+in ``CORS_ALLOW_HEADERS``, in ``smarter.settings.base``. See the
+`smarter-chat README <https://github.com/smarter-sh/smarter-chat>`__ for its complete api.
+
+
+Technical Reference
+-------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   smarter-chat/django-view
+   smarter-chat/django-template
+   smarter-chat/template-tags
 
 
 See Also
@@ -211,5 +145,3 @@ See Also
 
 - https://www.npmjs.com/package/@smarter.sh/ui-chat
 - https://github.com/smarter-sh/smarter-chat
-- https://github.com/smarter-sh/web-integration-example
-- https://github.com/smarter-sh/smarter-infrastructure

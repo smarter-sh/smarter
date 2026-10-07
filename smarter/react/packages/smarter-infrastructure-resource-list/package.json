@@ -3,11 +3,6 @@
   "description": "A React component library for displaying the ledger of the cloud resources that the Smarter platform has created, on the Smarter web console.",
   "version": "0.1.0",
   "type": "module",
-  "config": {
-    "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/smarter-infrastructure-resource-list/",
-    "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
     "build": "tsc -b && vite build",
