@@ -41,6 +41,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
@@ -216,6 +217,33 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     llmclient: Optional[LLMClient] = None
     llmclient_helper: Optional[LLMClientHelper] = None
 
+    @property
+    def log_stream_url(self) -> str:
+        """
+        The url of the user's server log stream, which Smarter Chat displays in its Console.
+
+        :returns: The url of :func:`smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs`,
+            or an empty string if log viewing in the browser is disabled.
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.dashboard.views.terminal_emulator.api.urls import (
+            DashboardLogsApiReverseNames,
+        )
+        from smarter.apps.dashboard.views.terminal_emulator.names import (
+            DashboardLogsReverseNames,
+        )
+        from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
+
+        if not smarter_settings.enable_dashboard_server_logs:
+            return ""
+        return reverse(
+            DashboardReverseNames.namespace,
+            DashboardLogsReverseNames.namespace,
+            DashboardLogsApiReverseNames.namespace,
+            DashboardLogsApiReverseNames.stream,
+        )
+
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch method to handle the request for the main prompt application page.
@@ -356,6 +384,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN or "",
                 "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
+                "log_stream_url": self.log_stream_url,
             }
         }
         verbose_logger.debug(
