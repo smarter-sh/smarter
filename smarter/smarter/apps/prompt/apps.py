@@ -21,6 +21,7 @@ class PromptConfig(AppConfig, SmarterHelperMixin):
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
         """Import signals."""
+        from . import progress  # noqa: F401
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
 
