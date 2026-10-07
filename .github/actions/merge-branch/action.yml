@@ -22,11 +22,6 @@ inputs:
     required: true
     type: string
 
-  python-version:
-    description: "The version of Python to use, such as 3.11.0"
-    required: true
-    type: string
-
 runs:
   using: "composite"
   steps:
@@ -52,10 +47,9 @@ runs:
         git checkout ${{ inputs.source-branch }}
         git checkout ${{ inputs.target-branch }}
         git merge -Xtheirs ${{ inputs.source-branch }}
-        git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ env.GITHUB_ORGANIZATION }}/${{ github.repository }}.git
+        # github.repository is owner/name, e.g. smarter-sh/smarter.
+        git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ github.repository }}.git
         git push origin ${{ inputs.target-branch }}
-      env:
-        GITHUB_ORGANIZATION: "smarter-sh"
 
     - name: Checkout current branch
       shell: bash

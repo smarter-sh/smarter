@@ -2,9 +2,9 @@
 """
 PromptWorkbenchView is a Django class-based view responsible for serving the main prompt application page within the Smarter dashboard web app.
 
-It integrates the ReactJS prompt UI with the Django template system by injecting a React build artifact snippet
-(served from an AWS Cloudfront CDN) into the Django-rendered HTML template. The React app then takes over the UI
-from there.
+It hosts Smarter Chat, the React app of the LLMClient prompt workbench, as the web console hosts all of its
+React apps: the template includes the app's Vite build assets from Django's static files, and renders the app's
+root element, whose attributes configure it. The React app then takes over the UI from there.
 """
 
 import traceback
@@ -170,19 +170,19 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     Prompt app view for the Smarter web application.
 
     This view is responsible for serving the main prompt application page within the Smarter dashboard web app.
-    It integrates the ReactJS prompt UI with the Django template system by injecting a React build artifact snippet
-    (served from an AWS Cloudfront CDN) into the Django-rendered HTML template. The React app then takes over the UI
-    from there.
+    It hosts Smarter Chat, a React app that is built with Vite into Django's static files, like every other React
+    app of the web console. The React app then takes over the UI from there.
 
     **Key Features:**
 
     - **Django Template Integration:**
-      The view uses Django's template system to render the main prompt page. It injects the React app's loader script
-      and root div into the template, allowing seamless integration between Django and React.
+      The view renders ``react/smarter-chat.html``, whose ``react_smarter_chat`` template tag includes the React
+      app's hashed JavaScript and CSS files, from its Vite manifest.json, and whose root div passes the app its
+      configuration as attributes.
 
     - **ReactJS UI Bootstrapping:**
-      The React build (JavaScript and CSS) is loaded from a CDN and injected into the DOM. The React app is responsible
-      for rendering the interactive prompt UI after the initial page load.
+      The React app (https://github.com/smarter-sh/smarter-chat, cloned into smarter/react/packages/smarter-chat)
+      renders the interactive prompt UI after the initial page load.
 
     - **Flexible URL Patterns:**
       The view supports both sandbox and production URL formats, allowing it to work with deployed and not-yet-deployed LLMClients.
@@ -204,21 +204,14 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             - https://hr.3141-5926-5359.alpha.api.example.com/workbench/
 
     **Returns:**
-        Renders the Django template for the prompt app, injecting the React loader and configuration context.
+        Renders the Django template for the prompt app, with the React app's assets and configuration context.
 
     **See Also:**
         - `PromptConfigView` — for the endpoint that provides configuration data to the React app.
     """
 
-    template_path = "prompt/workbench.html"
-
-    # The React app originates from
-    #  - https://github.com/smarter-sh/smarter-prompt and
-    #  - https://github.com/smarter-sh/web-integration-example
-    # and is built-deployed to AWS Cloudfront. The React app is loaded from
-    # a url like: https://cdn.alpha.platform.smarter.sh/ui-prompt/index.html
-    reactjs_cdn_path = smarter_settings.smarter_reactjs_app_loader_path
-    reactjs_loader_url = smarter_settings.smarter_reactjs_app_loader_url
+    template_path = "react/smarter-chat.html"
+    root_id = "smarter-chat-root"
 
     llmclient: Optional[LLMClient] = None
     llmclient_helper: Optional[LLMClientHelper] = None
@@ -228,17 +221,17 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         Dispatch method to handle the request for the main prompt application page.
 
         This method is responsible for preparing and serving the Django template that bootstraps the ReactJS prompt UI
-        within the Smarter dashboard web app. It injects the React loader script and configuration context into the
-        template, enabling seamless integration between Django and React.
+        within the Smarter dashboard web app. It passes the React app's configuration to the template, which renders
+        it as the attributes of the app's root element.
 
         **Key Features:**
 
         - **Django Template Integration:**
-          Uses Django's template system to render the main prompt page, injecting the React app's loader script and root div.
+          Uses Django's template system to render the main prompt page, with the React app's build assets and root div.
 
         - **ReactJS UI Bootstrapping:**
-          Loads the React build (JavaScript and CSS) from a CDN and injects it into the DOM. The React app then takes over
-          rendering the interactive prompt UI after the initial page load.
+          The template includes the React build (JavaScript and CSS) from Django's static files. The React app then
+          takes over rendering the interactive prompt UI after the initial page load.
 
         - **Flexible URL Patterns:**
           Supports both sandbox and production URL formats, allowing the view to work with both deployed and not-yet-deployed LLMClients.
@@ -261,7 +254,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         Returns
         -------
         HttpResponse
-            Renders the Django template for the prompt app, injecting the React loader and configuration context.
+            Renders the Django template for the prompt app, with the React app's assets and configuration context.
 
         See Also
         --------
@@ -353,15 +346,14 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         # the basic idea is to pass the names of the necessary cookies to the React app, and then
         # it is supposed to find and read the cookies to get the prompt session key, csrf token, etc.
         context = {
-            "chatapp_workbench": {
-                "div_id": smarter_settings.smarter_reactjs_root_div_id,
-                "app_loader_url": self.reactjs_loader_url,
+            "smarter_chat": {
+                "root_id": self.root_id,
                 "llmclient_api_url": self.llmclient.sandbox_url,
                 "toggle_metadata": True,
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter prompt session, not the Django session.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                "cookie_domain": settings.SESSION_COOKIE_DOMAIN or "",
                 "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

@@ -70,11 +70,21 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(self.client.get(url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_workbench(self):
-        """Test that the prompt workbench page renders, for a request to the platform's host."""
+        """Test that the prompt workbench page renders Smarter Chat's root element, configured for the LLMClient."""
         response = self.client.get(
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIn("react/smarter-chat.html", [template.name for template in response.templates])
+        smarter_chat = response.context["smarter_chat"]
+        self.assertEqual(smarter_chat["root_id"], "smarter-chat-root")
+        self.assertEqual(smarter_chat["llmclient_api_url"], self.resource.sandbox_url)
+        content = response.content.decode()
+        self.assertIn('id="smarter-chat-root"', content)
+        self.assertIn(f'smarter-llmclient-api-url="{self.resource.sandbox_url}"', content)
+        self.assertIn(f'smarter-request-id="{smarter_chat["smarter_request_id"]}"', content)
+        # the app is built into Django's static files, not loaded from a CDN.
+        self.assertNotIn("app-loader.js", content)
 
     def test_workbench_and_config_not_found(self):
         """Test that the workbench page and config api are a 404 for an unknown LLMClient."""

@@ -5,8 +5,8 @@ at [http://localhost:9357/workbench/](http://localhost:9357/workbench/prompt_lis
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/prompt_list/ and gathered
-  by Dockerfile during builds into Django's static asset folder.
+- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
+  which the Dockerfile copies into the image.
 - [smarter.apps.prompt.views.listview.view.PromptListView](../../smarter/apps/prompt/views/listview/view.py)
 - [smarter.apps.prompt.templatetags.react_prompt_list.prompt_list_react_assets](../../smarter/apps/prompt/templatetags/react_prompt_list.py)
 - [templates/react/prompt-list.html](../../smarter/templates/react/prompt-list.html)
@@ -79,11 +79,6 @@ trouble shooting purposes. http://example.com/static/react/prompt_list/manifest.
   "_custom": {
     "buildTime": "2026-05-31T21:17:32.505Z",
     "version": "0.2.2",
-    "config": {
-      "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/prompt_list/",
-      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-    },
     "buildEnv": "production"
   }
 }

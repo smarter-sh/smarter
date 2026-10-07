@@ -141,12 +141,6 @@ class TestSettingsMethods(SmarterTestBase):
                 self.assertTrue(getattr(smarter_settings, name))
         self.assertEqual(smarter_settings.cache_path, "/home/smarter_user/.cache")
 
-    def test_reactjs_root_div_id(self):
-        div_id = smarter_settings.smarter_reactjs_root_div_id
-        self.assertNotIn("/", div_id)
-        self.assertNotIn(".", div_id)
-        self.assertTrue(div_id.endswith("root"))
-
     def test_to_json(self):
         """Test that to_json() dumps the settings, and the defaults when dump_defaults is set."""
         dump = smarter_settings.model_copy(update={"dump_defaults": True}).to_json()

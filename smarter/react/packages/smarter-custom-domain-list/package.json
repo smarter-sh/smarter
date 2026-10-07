@@ -3,11 +3,6 @@
   "description": "A React component library for displaying a list of Custom Domains on the Smarter web console.",
   "version": "0.1.0",
   "type": "module",
-  "config": {
-    "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/smarter-custom-domain-list/",
-    "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
     "build": "tsc -b && vite build",
