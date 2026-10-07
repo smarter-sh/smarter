@@ -49,6 +49,8 @@ Exception
 
 from typing import Optional
 
+from django.db import transaction
+
 from smarter.apps.account.models import AccountContact
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import LLMClient
@@ -165,61 +167,71 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
         task_id=task_id,
     )
 
-    try:
-        llmclient = LLMClient.objects.get(id=llmclient_id)
-        logger.info("%s found llmclient %s for deployment task_id: %s", fn_name, llmclient.name, task_id)
-    except LLMClient.DoesNotExist:
-        logger.error("%s LLMClient %s not found. Nothing to do, returning. task_id: %s", fn_name, llmclient_id, task_id)
-
-        llmclient_deploy_failed.send(
-            sender=deploy_default_api,
-            llmclient_id=llmclient_id,
-            with_domain_verification=with_domain_verification,
-            task_id=task_id,
-        )
-        return None
-
-    if not infrastructure.dns.ready:
-        logger.error(
-            "%s the DNS service is not ready. Cannot deploy llmclient %s. task_id: %s",
-            fn_name,
-            llmclient.name,
-            task_id,
-        )
-        llmclient_deploy_failed.send(
-            sender=deploy_default_api, llmclient_id=llmclient_id, with_domain_verification=with_domain_verification
-        )
-        post_deploy_default_api.send(
-            sender=deploy_default_api,
-            llmclient_id=llmclient_id,
-            with_domain_verification=with_domain_verification,
-            task_id=task_id,
-        )
-        return None
-
-    domain_name = llmclient.default_host
-    if smarter_settings.llmclient_tasks_create_dns_record:
-        _, created = infrastructure.dns.create_domain_a_record(
-            hostname=domain_name, api_host_domain=llmclient.base_api_domain
-        )
-        if created:
-            logger.info(
-                "%s created A record for llmclient %s at domain %s task_id: %s",
-                fn_name,
-                llmclient.name,
-                domain_name,
-                task_id,
-            )
-        else:
-            logger.info(
-                "%s verified the A record for llmclient %s at domain %s. task_id: %s",
-                fn_name,
-                llmclient.name,
-                domain_name,
-                task_id,
+    # an llmclient's deploy and undeploy tasks run on different workers, e.g. when a manifest is applied
+    # and then deployed. Each locks the llmclient's row until its A record and state are consistent, so
+    # that neither reads state that the other is about to change, nor destroys a record that the other
+    # just created. See undeploy_default_api.
+    with transaction.atomic():
+        try:
+            llmclient = LLMClient.objects.select_for_update().get(id=llmclient_id)
+            logger.info("%s found llmclient %s for deployment task_id: %s", fn_name, llmclient.name, task_id)
+        except LLMClient.DoesNotExist:
+            logger.error(
+                "%s LLMClient %s not found. Nothing to do, returning. task_id: %s", fn_name, llmclient_id, task_id
             )
 
-    if llmclient.deployed and llmclient.dns_verification_status == llmclient.DnsVerificationStatusChoices.VERIFIED:
+            llmclient_deploy_failed.send(
+                sender=deploy_default_api,
+                llmclient_id=llmclient_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            return None
+
+        if not infrastructure.dns.ready:
+            logger.error(
+                "%s the DNS service is not ready. Cannot deploy llmclient %s. task_id: %s",
+                fn_name,
+                llmclient.name,
+                task_id,
+            )
+            llmclient_deploy_failed.send(
+                sender=deploy_default_api, llmclient_id=llmclient_id, with_domain_verification=with_domain_verification
+            )
+            post_deploy_default_api.send(
+                sender=deploy_default_api,
+                llmclient_id=llmclient_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            return None
+
+        domain_name = llmclient.default_host
+        if smarter_settings.llmclient_tasks_create_dns_record:
+            _, created = infrastructure.dns.create_domain_a_record(
+                hostname=domain_name, api_host_domain=llmclient.base_api_domain
+            )
+            if created:
+                logger.info(
+                    "%s created A record for llmclient %s at domain %s task_id: %s",
+                    fn_name,
+                    llmclient.name,
+                    domain_name,
+                    task_id,
+                )
+            else:
+                logger.info(
+                    "%s verified the A record for llmclient %s at domain %s. task_id: %s",
+                    fn_name,
+                    llmclient.name,
+                    domain_name,
+                    task_id,
+                )
+        already_deployed = (
+            llmclient.deployed and llmclient.dns_verification_status == llmclient.DnsVerificationStatusChoices.VERIFIED
+        )
+
+    if already_deployed:
         logger.info(
             "%s LLMClient %s is already deployed and verified at domain %s. Nothing to do. task_id: %s",
             fn_name,
@@ -295,8 +307,15 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
                 countdown=CERTIFICATE_FIRST_CHECK_SECONDS,
             )
             return
-        continue_default_api_deployment(
-            llmclient_id, with_domain_verification, task_id=task_id, stage=STAGE_CERTIFICATE
+        # the certificate was issued before, e.g. for a redeployment. kubectl takes seconds, so
+        # its verification runs as its own task, rather than holding this worker for longer.
+        continue_default_api_deployment.apply_async(
+            kwargs={
+                "llmclient_id": llmclient_id,
+                "with_domain_verification": with_domain_verification,
+                "task_id": task_id,
+                "stage": STAGE_CERTIFICATE,
+            },
         )
         return
 
@@ -427,9 +446,11 @@ def continue_default_api_deployment(
             llmclient.save(asynchronous=True)
             pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
             llmclient_dns_verification_initiated.send(
-                sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id
+                sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type="A", task_id=task_id
             )
-        result = check_domain(infrastructure.dns.resolve_domain(domain_name), record_type="A", task_id=task_id)
+        result = check_domain(
+            infrastructure.dns.resolve_domain(domain_name), record_type="A", task_id=task_id, llmclient=llmclient
+        )
         if result == DomainCheck.PENDING and attempt + 1 < VERIFY_DOMAIN_MAX_ATTEMPTS:
             check_again(STAGE_DOMAIN, attempt + 1, VERIFY_DOMAIN_INTERVAL)
             return
@@ -441,7 +462,9 @@ def continue_default_api_deployment(
                 llmclient.name,
                 task_id,
             )
-            llmclient_dns_failed.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
+            llmclient_dns_failed.send(
+                sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type="A", task_id=task_id
+            )
             post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
             llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.FAILED
             llmclient.save(asynchronous=True)

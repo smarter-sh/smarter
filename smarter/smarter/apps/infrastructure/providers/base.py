@@ -100,6 +100,19 @@ class CloudProvider(InfrastructureService):
         :returns: True if it was written.
         """
 
+    def get_kubernetes_token(self) -> Optional[tuple[str, float]]:
+        """
+        Return a bearer token for the platform's Kubernetes cluster, which kubectl uses instead of its kubeconfig's.
+
+        The kubeconfig of a managed cluster usually runs a command to fetch a token, e.g. ``aws eks
+        get-token``, on every kubectl call, which takes seconds. A provider that can create a token
+        itself returns one, which is used until it expires.
+
+        :returns: The token and when it expires, as a :func:`time.time`, or None for kubectl to use
+            its kubeconfig's credentials.
+        """
+        return None
+
     @abstractmethod
     def get_kubernetes_cluster_info(self) -> dict[str, Any]:
         """

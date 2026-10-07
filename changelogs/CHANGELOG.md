@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.18.4-alpha.1...v0.18.4-alpha.2) (2026-10-07)
+
+### Bug Fixes
+
+* **llmclient:** stop deploy/undeploy race and speed up kubectl calls ([5faaad9](https://github.com/smarter-sh/smarter/commit/5faaad9f4db29adee9ebaf0a82f45ab526a7b9d1))
+
 ## [0.18.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.3...v0.18.4-alpha.1) (2026-10-06)
 
 ### Bug Fixes
