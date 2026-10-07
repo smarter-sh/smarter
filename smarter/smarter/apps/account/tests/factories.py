@@ -1,68 +1,114 @@
 """Dict factories for testing views."""
 
-import logging
-import random
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from smarter.apps.account.models import (
     Account,
-    PaymentMethod,
-    Secret,
+    AccountContact,
     User,
     UserProfile,
 )
-from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.utils import camel_to_snake, hash_factory
-from smarter.lib.django import waffle
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import hash_factory, to_snake_case
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.unittest.base_classes import SmarterTestBase
 
+HERE = formatted_text(__name__)
+COMMON_VERSION = "0.0.1"
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 
 def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = camel_to_snake(f"testAdminUser_{hashed_slug}")
+    username = to_snake_case(f"testAdminUser_{hashed_slug}")
     email = f"test-admin-{hashed_slug}@mail.com"
     first_name = f"TestAdminFirstName_{hashed_slug}"
     last_name = f"TestAdminLastName_{hashed_slug}"
+
+    account = account or Account.objects.create(
+        name=f"test_account_admin_user_{hashed_slug}",
+        description="Account for admin user testing purposes",
+        version=COMMON_VERSION,
+        is_default_account=False,
+        is_active=True,
+        company_name=f"TestAccount_AdminUser_{hashed_slug}",
+        phone_number="123-456-789",
+        address1="Smarter Way 4U",
+        address2="Suite 100",
+        city="Smarter",
+        state="WY",
+        postal_code="12345",
+        country="USA",
+        language="EN",
+        timezone="America/New_York",
+        currency="USD",
+        annotations=[
+            {"smarter.sh/created_by": "admin_user_factory"},
+            {"smarter.sh/purpose": "testing"},
+            {"smarter.sh/hash": hashed_slug},
+        ],
+    )
+    account.tags.set(["test", "admin", "account"])
+
     user = User.objects.create_user(
         email=email,
         first_name=first_name,
         last_name=last_name,
-        username=username,
+        username=username,  # type: ignore[arg-type]
         password="12345",
         is_active=True,
         is_staff=True,
         is_superuser=True,
     )
-    logger.info("admin_user_factory() Created admin user: %s", username)
-    account = account or Account.objects.create(
-        company_name=f"TestAccount_AdminUser_{hashed_slug}", phone_number="123-456-789"
+
+    user_profile = UserProfile.objects.create(
+        name=user.username,
+        description="Admin user profile for testing purposes",
+        version=COMMON_VERSION,
+        user=user,
+        account=account,
+        is_test=True,
+        annotations=[{"smarter.sh/role": "admin"}, {"smarter.sh/environment": "test"}],
     )
-    logger.info("admin_user_factory() Created account: %s", account.id)  # type: ignore[return-value]
-    user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
-    logger.info("admin_user_factory() Created user profile %s", user_profile)
+    user_profile.tags.set(["admin", "test"])
 
     return user, account, user_profile
 
 
 def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = camel_to_snake(f"testAdminUser_{hashed_slug}")
+    username = str(to_snake_case(f"testMortalUser_{hashed_slug}"))
     email = f"test-mortal-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
+
+    account = account or Account.objects.create(
+        name=f"test_account_mortal_user_{hashed_slug}",
+        description="Account for mortal user testing purposes",
+        version=COMMON_VERSION,
+        is_default_account=False,
+        is_active=True,
+        company_name=f"TestAccount_MortalUser_{hashed_slug}",
+        phone_number="123-456-789",
+        address1="Smarter Way 4U",
+        address2="Suite 100",
+        city="Smarter",
+        state="WY",
+        postal_code="12345",
+        country="USA",
+        language="EN",
+        timezone="America/New_York",
+        currency="USD",
+        annotations=[
+            {"smarter.sh/created_by": "mortal_user_factory"},
+            {"smarter.sh/purpose": "testing"},
+            {"smarter.sh/hash": hashed_slug},
+        ],
+    )
+    account.tags.set(["test", "mortal", "account"])
+
     user = User.objects.create_user(
         email=email,
         first_name=first_name,
@@ -73,27 +119,37 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
         is_staff=False,
         is_superuser=False,
     )
-    logger.info("mortal_user_factory() Created mortal user: %s", username)
-    account = account or Account.objects.create(
-        company_name=f"TestAccount_MortalUser_{hashed_slug}", phone_number="123-456-789"
+
+    user_profile = UserProfile.objects.create(
+        name=user.username,
+        description="Mortal user profile for testing purposes",
+        version=COMMON_VERSION,
+        user=user,
+        account=account,
+        is_test=True,
+        annotations=[{"smarter.sh/role": "mortal"}, {"smarter.sh/environment": "test"}],
     )
-    logger.info("mortal_user_factory() Created/set account: %s", account.id)  # type: ignore[return-value]
-    user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
-    logger.info("mortal_user_factory() Created user profile %s", user_profile)
+    user_profile.tags.set(["mortal", "test"])
 
     return user, account, user_profile
 
 
 def factory_account_teardown(user: User, account: Optional[Account], user_profile: UserProfile):
     if user and account and not user_profile:
-        user_profile = get_cached_user_profile(user=user, account=account)
+        user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:
         user_profile = UserProfile.objects.filter(user=user).first()
+
+    try:
+        if user_profile:
+            AccountContact.objects.filter(email=user_profile.user.email, account=user_profile.account).delete()
+    except AccountContact.DoesNotExist:
+        pass
     try:
         if user_profile:
             lbl = str(user_profile)
             user_profile.delete()
-            logger.info("factory_account_teardown() Deleted user profile for %s", lbl)
+            logger.debug("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
 
     except UserProfile.DoesNotExist:
         pass
@@ -101,16 +157,46 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user:
             lbl = str(user)
             user.delete()
-            logger.info("factory_account_teardown() Deleted user: %s", lbl)
+            logger.debug("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
     except User.DoesNotExist:
         pass
     try:
         if account:
             lbl = str(account)
             account.delete()
-            logger.info("factory_account_teardown() Deleted account: %s", lbl)
+            logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
+
+    # This cleans up sloppy test runs where the unit tests created test artifacts but failed to clean them up.
+    accounts: list[Account] = []
+    test_user_profiles = UserProfile.objects.filter(is_test=True)
+    for user_profile in test_user_profiles:
+        if user_profile.account not in accounts:
+            accounts.append(user_profile.account)
+        user = user_profile.user
+        user_profile.delete()
+        user.delete()
+        logger.warning(
+            "%s.factory_account_teardown() had to intervene to delete test UserProfile: %s (account: %s)",
+            HERE,
+            user_profile,
+            user_profile.account,
+        )
+    for account in accounts:
+        account.delete()
+        logger.warning("%s.factory_account_teardown() had to intervene to delete test Account: %s", HERE, account)
+
+    account_contacts = AccountContact.objects.filter(is_test=True)
+    if account_contacts.exists():
+        for account_contact in account_contacts:
+            logger.warning(
+                "%s.factory_account_teardown() had to intervene to delete test AccountContact: %s (account: %s)",
+                HERE,
+                account_contact,
+                account_contact.account,
+            )
+        account_contacts.delete()
 
 
 def billing_address_factory():
@@ -126,75 +212,3 @@ def billing_address_factory():
         "zip": "12345",
         "country": "US",
     }
-
-
-def payment_method_factory(account: Account):
-    """
-    Factory for creating a PaymentMethod object for testing.
-    """
-
-    payment_method = PaymentMethod.objects.create(
-        account=account,
-        name=camel_to_snake("TestPaymentMethod" + SmarterTestBase.generate_hash_suffix()),
-        stripe_id="test-stripe-id",
-        card_type="test_card_type",
-        card_last_4=random.randint(1000, 9999),
-        card_exp_month=random.randint(1, 12),
-        card_exp_year=random.randint(datetime.now().year, datetime.now().year + 7),
-        is_default=True,
-    )
-    logger.info("payment_method_factory() Created payment method: %s", payment_method.name)
-    return payment_method
-
-
-def payment_method_factory_teardown(payment_method: PaymentMethod):
-    try:
-        if payment_method:
-            lbl = str(payment_method)
-            payment_method.delete()
-            logger.info("payment_method_factory_teardown() Deleted payment method: %s", lbl)
-    except PaymentMethod.DoesNotExist:
-        pass
-    except Exception as e:
-        logger.error("payment_method_factory_teardown() Error deleting payment method: %s", e)
-        raise
-
-
-def secret_factory(
-    user_profile: UserProfile, name: str, description: str, value: str, expiration: Optional[datetime] = None
-) -> Secret:
-    """
-    Create a Secret object for testing.
-
-    Args:
-        user_profile (UserProfile): The UserProfile associated with the secret.
-        name (str): The name of the secret.
-        description (str): A description of the secret.
-        value (str): The value of the secret.
-
-    Returns:
-        Secret: The created Secret object.
-    """
-    encrypted_value = Secret.encrypt(value)
-    secret = Secret.objects.create(
-        user_profile=user_profile,
-        name=camel_to_snake(name),
-        description=description,
-        encrypted_value=encrypted_value,
-        expires_at=expiration,
-    )
-    logger.info("secret_factory() Created secret: %s", secret)
-    return secret
-
-
-def factory_secret_teardown(secret: Secret):
-    try:
-        if secret:
-            lbl = str(secret)
-            secret.delete()
-            logger.info("factory_secret_teardown() Deleted secret: %s", lbl)
-    except Secret.DoesNotExist:
-        pass
-    except Exception as e:
-        logger.error("factory_secret_teardown() Error deleting secret: %s", e)
-        raise

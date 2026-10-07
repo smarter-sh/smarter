@@ -1,10 +1,17 @@
 name: Send Mail
+description: "Send an email using AWS SES"
 branding:
   icon: "play-circle"
   color: "green"
 inputs:
   environment:
     description: "The environment to deploy"
+    required: true
+  deployment-domain:
+    description: "The deployment domain"
+    required: true
+  subdomain:
+    description: "The subdomain to deploy"
     required: true
   aws-access-key-id:
     description: "The AWS access key ID"
@@ -46,7 +53,7 @@ runs:
       shell: bash
       run: |
         aws ses send-email \
-          --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
-          --destination "ToAddresses=lpm0073@gmail.com,shalimhoms_12@hotmail.com,kent@querium.com" \
+          --from "no-reply@${{ inputs.deployment-domain }}" \
+          --destination "ToAddresses=lpm0073@gmail.com,kent@querium.com,shoesaphone@gmail.com" \
           --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
-          --reply-to-addresses "no-reply@${{ inputs.environment }}.platform.smarter.sh"
+          --reply-to-addresses "no-reply@${{ inputs.deployment-domain }}"

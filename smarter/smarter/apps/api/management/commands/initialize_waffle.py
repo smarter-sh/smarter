@@ -1,27 +1,74 @@
 """Initialize Waffle flags and switches."""
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 from waffle.models import Switch
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.waffle import SmarterWaffleSwitch, SmarterWaffleSwitches
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
-    """Initialize Waffle flags and switches."""
+class Command(SmarterCommand):
+    """
+    Management command to initialize and synchronize Waffle feature switches for the Smarter platform.
+
+    This command ensures that all required Waffle switches, as defined by the Smarter application, are present and correctly initialized in the database. It also removes any orphaned switches that are no longer needed, maintaining a clean and consistent feature flag environment.
+
+    **Key Features and Workflow:**
+
+    - Iterates through the list of expected switches and creates any that are missing, defaulting them to the "off" state.
+    - Verifies the existence of each switch, providing feedback for each verification or creation.
+    - Identifies and deletes orphaned switches that are present in the database but not defined in the current application configuration.
+    - In local development environments, enables the ``ENABLE_REACTAPP_DEBUG_MODE`` switch for enhanced debugging capabilities.
+
+    **Usage:**
+
+    This command is intended to be run during deployment, environment setup, or whenever the set of feature switches may have changed. It helps prevent configuration drift and ensures that feature flags are always in sync with the application’s requirements.
+
+    **Error Handling and Output:**
+
+    - Provides clear console output for each switch that is verified, created, or deleted.
+    - Handles all operations atomically to avoid partial updates or inconsistent states.
+
+    **Intended Audience:**
+
+    Developers, system administrators, and DevOps engineers responsible for managing feature flags and application configuration in Smarter environments. This command is especially useful for onboarding new environments or cleaning up after configuration changes.
+
+    .. seealso::
+
+        :py:class:`waffle.models.Switch` - The Django Waffle model representing feature switches.
+        :py:class:`smarter.lib.django.waffle.SmarterWaffleSwitches` - The class defining all Smarter-specific Waffle switches.
+        :py:data:`smarter.common.conf.settings.smarter_settings` - The Smarter settings module for environment detection.
+
+    """
 
     def handle(self, *args, **options):
         """ensure that switches exist. If not, then create them"""
+        waffle_switches = SmarterWaffleSwitches()
 
         def verify_switch(switch_name):
             """Initialize a switch."""
             if not Switch.objects.filter(name=switch_name).exists():
-                call_command("waffle_switch", switch_name, "off", "--create")
+                switch_defaults: SmarterWaffleSwitch = waffle_switches.switches[switch_name]  # type: ignore
+                if switch_defaults.default:
+                    call_command("waffle_switch", switch_name, "on", "--create")
+                else:
+                    call_command("waffle_switch", switch_name, "off", "--create")
+                switch = Switch.objects.get(name=switch_name)
+                switch.note = switch_defaults.comment
+                switch.save()
+                print(f"Created switch {switch_name}")
             else:
+                switch = Switch.objects.get(name=switch_name)
+                if switch.note != waffle_switches.switches[switch_name].comment:  # type: ignore
+                    switch.note = waffle_switches.switches[switch_name].comment  # type: ignore
+                    switch.save()
+                    print(f"Updated comment for switch {switch_name}")
                 print(f"Verified switch {switch_name}")
+
+        self.handle_begin()
 
         smarter_switches = SmarterWaffleSwitches().all.copy()
 
@@ -35,4 +82,6 @@ class Command(BaseCommand):
                 switch.delete()
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            call_command("waffle_switch", SmarterWaffleSwitches.REACTAPP_DEBUG_MODE, "on")
+            call_command("waffle_switch", SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE, "on")
+
+        self.handle_completed_success()

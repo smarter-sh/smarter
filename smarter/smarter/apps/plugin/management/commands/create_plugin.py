@@ -1,22 +1,26 @@
-# pylint: disable=W0613
-"""This module is used to create a new plugin using manage.py"""
+# pylint: disable=W0613,R0914
+"""This module is used to create a new plugin using manage.py."""
 
-import sys
 from typing import Optional
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_user_for_username,
+)
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
-    """Django manage.py create_plugin command. This command is used to create a plugin from a yaml import file."""
+class Command(SmarterCommand):
+    """Django manage.py create_plugin command.
+
+    This command is used to create a plugin from a yaml import file.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -29,51 +33,58 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """create the plugin."""
+        """Create the plugin."""
+        self.handle_begin()
         account_number: Optional[str] = options["account_number"]
         file_path: Optional[str] = options["file_path"]
         username: Optional[str] = options["username"]
 
-        account: Account
-        user: User
+        account: Optional[Account]
+        user: Optional[User]
 
         self.stdout.write(f"manage.py create_plugin: account_number: {account_number} file_path: {file_path}")
 
-        try:
-            user = User.objects.get(username=username)  # type: ignore
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"manage.py create_plugin: User {username} does not exist."))
-            sys.exit(1)
+        if username:
+            try:
+                user = get_cached_user_for_username(username=username)
+                if user is None:
+                    raise User.DoesNotExist(f"User with username {username} does not exist.")
+            except User.DoesNotExist as e:
+                self.handle_completed_failure(e, f"User {username} does not exist.")
 
         try:
-            account = Account.objects.get(account_number=account_number)
-        except Account.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"manage.py create_plugin: Account {account_number} does not exist."))
-            sys.exit(1)
+            account = Account.get_cached_object(invalidate=False, account_number=account_number)  # type: ignore[assignment]
+            if account is None:
+                raise Account.DoesNotExist(f"Account with account number {account_number} does not exist.")
+        except Account.DoesNotExist as e:
+            self.handle_completed_failure(e, f"Account {account_number} does not exist.")
 
         try:
-            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
-        except UserProfile.DoesNotExist:
-            self.stdout.write(
-                self.style.ERROR(f"manage.py create_plugin: UserProfile for {user} and {account} does not exist.")
+            user_profile = UserProfile.get_cached_object(user=user, account=account)  # type: ignore
+        except UserProfile.DoesNotExist as e:
+            self.handle_completed_failure(e, f"UserProfile for {user} and {account} does not exist.")
+
+        try:
+            loader = SAMLoader(
+                api_version=SmarterApiVersions.V1,
+                file_path=file_path,
             )
-            sys.exit(1)
+        except SAMLoaderError as e:
+            self.handle_completed_failure(e, f"manage.py create_plugin. {file_path} is not a valid manifest.")
+            raise
 
-        loader = SAMLoader(
-            api_version=SmarterApiVersions.V1,
-            file_path=file_path,
-        )
+        if not loader.ready or loader.manifest_kind not in SAM_MAP:
+            err = SmarterValueError(f"{file_path} is not a plugin manifest.")
+            self.handle_completed_failure(err, "manage.py create_plugin. SAMLoader is not ready.")
+            raise err
 
-        if not loader.ready:
-            self.stdout.write(self.style.ERROR("manage.py create_plugin. SAMLoader is not ready."))
-            sys.exit(1)
         plugin_class = SAM_MAP[loader.manifest_kind]
         manifest = plugin_class(**loader.pydantic_model_dump())
         self.stdout.write(f"Creating {plugin_class.__name__} {manifest.metadata.name} for account {account}...")
-        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
+        controller = PluginController(user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
 
         if isinstance(plugin, PluginBase) and plugin.ready:
-            self.stdout.write(self.style.SUCCESS(f"Plugin {plugin.name} for account {account} created successfully."))
+            self.handle_completed_success(msg=f"Plugin {plugin.name} created successfully.")
         else:
-            self.stdout.write(self.style.ERROR("Encountered an error while attempting to create the plugin."))
+            self.handle_completed_failure(None, "Encountered an error while attempting to create the plugin.")

@@ -1,0 +1,49 @@
+---
+# OpenAI gpt-oss-120b: a mixture-of-experts model with 5.1B active parameters, whose MXFP4
+# weights fit one 80 GB GPU.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: gpt_oss_120b
+  description: OpenAI gpt-oss-120b, an open-weight reasoning model, served by vLLM on one NVIDIA H100 80GB.
+  version: 1.0.0
+  tags:
+  - openai
+  - gpt-oss
+  - vllm
+  - chat
+  - reasoning
+  - large
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/openai/gpt-oss-120b
+spec:
+  model:
+    source: huggingface
+    repository: openai/gpt-oss-120b
+    revision: main
+    servedName: gpt-oss-120b
+    license: apache-2.0
+    architecture: gpt_oss
+    parameterCount: 120412337472
+    contextWindow: 131072
+    quantization: mxfp4
+    capabilities:
+      reasoning: true
+  engine:
+    name: vllm
+    contextLength: 65536
+    gpuMemoryUtilization: 0.95
+  compute: gpu_h100_8x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 80
+    cpu: '4'
+    memory: 84Gi
+    shmSize: 16Gi
+  storage:
+    size: 150Gi
+  healthCheck:
+    startupTimeoutSeconds: 5400

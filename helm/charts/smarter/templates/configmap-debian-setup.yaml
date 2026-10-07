@@ -1,0 +1,60 @@
+# -----------------------------------------------------------------------------------
+# ConfigMap Manifest for Debian Setup Script
+#
+# This file defines a ConfigMap containing the install.sh script for setting up
+# a Debian-based Bastion or Job server in the Smarter project.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Provides a shell script to install required packages and AWS CLI.
+# - Usage: Mounted into Bastion/Job Pods; values are set in values.yaml.
+# - Notes: Update the script as needed for your environment or package requirements.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+# -----------------------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+  namespace: {{ .Values.namespace }}
+  name: debian-setup-script
+data:
+  install.sh: |
+    #!/bin/bash
+    ################################################################################
+    # The Smarter Project - https://smarter.sh
+    # install.sh
+    #
+    # This script installs the necessary packages and tools for the Smarter Bastion
+    # Server. It is designed to be run on a minimal Debian-based Linux distribution
+    # and will install the required packages and tools to enable basic administration
+    # of the MariaDB database and AWS resources that are only accessible from within
+    # the cluster.
+    ################################################################################
+    set -e
+
+    echo "Smarter Bastion/Job Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      curl unzip ca-certificates less mariadb-client vim \
+      git openssh-client iputils-ping net-tools dnsutils htop lsof tcpdump wget rsync jq nano zip tar sudo procps traceroute socat iproute2
+
+    echo "Smarter Bastion/Job Server: Installing AWS CLI"
+    update-ca-certificates
+    curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+    unzip awscliv2.zip
+    ./aws/install
+    rm -rf aws awscliv2.zip
+    rm -rf /var/lib/apt/lists/*
+
+    echo "Smarter Bastion/Job Server: Setup script completed"

@@ -1,0 +1,29 @@
+---
+# Web search and web page retrieval, from Exa.
+# Documentation: https://docs.exa.ai/reference/exa-mcp
+#
+# This server requires no authentication.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: exa
+  description: Web search and web page retrieval, from Exa.
+  version: 1.0.0
+  tags:
+    - search
+    - web
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://docs.exa.ai/reference/exa-mcp
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.exa.ai/mcp
+    authType: none
+    allowedTools:
+      - web_search_exa
+      - web_fetch_exa
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

@@ -8,7 +8,6 @@ from django.core.management import call_command
 from smarter.apps.plugin.tests.base_classes import TestPluginClassBase
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
-
 logger = getLogger(__name__)
 
 
@@ -41,7 +40,7 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     def test_retrieve_plugin(self):
         """Test retrieving a plugin."""
 
-        logger.info("test_retrieve_plugin() - creating plugin for account %s", self.account.account_number)
+        logger.debug("test_retrieve_plugin() - creating plugin for account %s", self.account.account_number)
         call_command(
             "create_plugin",
             "--account_number",
@@ -51,7 +50,7 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
             "--file_path",
             f"{self.file_path}",
         )
-        logger.info("test_retrieve_plugin() - retrieving plugin...")
+        logger.debug("test_retrieve_plugin() - retrieving plugin...")
         call_command(
             "retrieve_plugin",
             "--account_number",

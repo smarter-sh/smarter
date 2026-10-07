@@ -1,0 +1,19 @@
+---
+# An MCPClient that authenticates with a bearer token, from the Secret
+# test_mcpclient_token.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: test_mcpclient_bearer
+  description: An MCPClient with a bearer token, for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.example.com/mcp
+    authType: bearer_token
+    credentials: test_mcpclient_token
+    allowedTools: []
+    priority: 20

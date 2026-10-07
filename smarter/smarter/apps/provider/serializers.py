@@ -1,13 +1,17 @@
 # pylint: disable=C0115
-"""
-Serializer classes for the Provider app.
-"""
+"""Serializer classes for the Provider app."""
+
+from rest_framework import serializers
 
 from smarter.apps.account.serializers import (
-    AccountMiniSerializer,
-    SecretSerializer,
+    MetaDataWithOwnershipModelSerializer,
     UserMiniSerializer,
+    UserProfileSerializer,
 )
+from smarter.apps.provider.manifest.models.provider.const import (
+    MANIFEST_KIND as PROVIDER_KIND,
+)
+from smarter.apps.secret.serializers import SecretMiniSerializer
 from smarter.common.exceptions import SmarterException
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
@@ -23,20 +27,63 @@ from .models import (
 )
 
 
-class ProviderSerializer(SmarterCamelCaseSerializer):
+class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
     """PluginMeta model serializer."""
 
-    owner = UserMiniSerializer(read_only=True)
-    account = AccountMiniSerializer(read_only=True)
-    api_key = SecretSerializer(read_only=True)
+    user_profile = UserProfileSerializer()
+    api_key = SecretMiniSerializer(read_only=True)
+    is_official_provider = serializers.BooleanField(read_only=True)
+    tos_accepted = serializers.BooleanField(read_only=True)
+    rfc1034_compliant_name = serializers.CharField(read_only=True)
+    tos_accepted_by = UserMiniSerializer(read_only=True)
 
     class Meta:
         model = Provider
-        fields = "__all__"
-        read_only_fields = ["created_at", "updated_at", "owner", "account"]
+        kind = PROVIDER_KIND
+        fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "user_profile",
+            "status",
+            "description",
+            "version",
+            "annotations",
+            "tags",
+            "manifest_url",
+            "ready",
+            "is_default",
+            "is_active",
+            "is_verified",
+            "is_featured",
+            "is_deprecated",
+            "is_flagged",
+            "is_suspended",
+            "base_url",
+            "api_key",
+            "default_model",
+            "connectivity_test_path",
+            "logo",
+            "website_url",
+            "ownership_requested",
+            "contact_email",
+            "contact_email_verified",
+            "support_email",
+            "support_email_verified",
+            "docs_url",
+            "terms_of_service_url",
+            "privacy_policy_url",
+            "is_official_provider",
+            "tos_accepted",
+            "tos_accepted_at",
+            "tos_accepted_by",
+            "rfc1034_compliant_name",
+        ]
+        read_only_fields = ["created_at", "updated_at", "manifest_url", "ready"]
 
     def get_queryset(self):
-        name = self.request.GET.get("name")
+        name = self.request.GET.get("name")  # type: ignore
         if name:
             provider = get_provider(provider_name=name)
             return Provider.objects.filter(pk=provider.pk)
@@ -51,7 +98,7 @@ class ProviderSerializer(SmarterCamelCaseSerializer):
         return queryset
 
 
-class ProviderModelSerializer(SmarterCamelCaseSerializer):
+class ProviderModelSerializer(MetaDataWithOwnershipModelSerializer):
     """ProviderModel model serializer."""
 
     provider = ProviderSerializer(read_only=True)
@@ -63,8 +110,8 @@ class ProviderModelSerializer(SmarterCamelCaseSerializer):
 
     def get_queryset(self):
 
-        name = self.request.GET.get("name")
-        model_name = self.request.GET.get("model_name")
+        name = self.request.GET.get("name")  # type: ignore
+        model_name = self.request.GET.get("model_name")  # type: ignore
 
         if name and model_name:
             try:
@@ -97,8 +144,8 @@ class ProviderVerificationSerializer(SmarterCamelCaseSerializer):
         read_only_fields = ["created_at", "updated_at", "provider"]
 
     def get_queryset(self):
-        name = self.request.GET.get("name")
-        verification_type = self.request.GET.get("verification_type")
+        name = self.request.GET.get("name")  # type: ignore
+        verification_type = self.request.GET.get("verification_type")  # type: ignore
 
         if name:
             try:
@@ -127,13 +174,13 @@ class ProviderModelVerificationSerializer(SmarterCamelCaseSerializer):
     def get_queryset(self):
         try:
             provider_model = get_model_for_provider(
-                provider_name=self.request.GET.get("name"), model_name=self.request.GET.get("model_name")
+                provider_name=self.request.GET.get("name"), model_name=self.request.GET.get("model_name")  # type: ignore
             )
         except SmarterException:
             return ProviderModelVerification.objects.none()
 
         queryset = ProviderModelVerification.objects.filter(provider_model=provider_model)
-        verification_type = self.request.GET.get("verification_type")
+        verification_type = self.request.GET.get("verification_type")  # type: ignore
         if verification_type:
             queryset = queryset.filter(verification_type__iexact=verification_type)
         return queryset

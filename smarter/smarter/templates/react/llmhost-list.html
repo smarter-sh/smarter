@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_llmhost_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the llmhost list
+  see: smarter.apps.llmhost.templatetags.react_llmhost_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% llmhost_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/llmhost-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ llmhost_list.root_id }}"
+    django-csrf-cookie-name="{{ llmhost_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ llmhost_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ llmhost_list.cookie_domain }}"
+    smarter-llmhost-list-api-url="{{ llmhost_list.llmhost_list_api_url }}"
+    react-debug-mode="{{ llmhost_list.react_debug_mode }}"
+    smarter-request-id="{{ llmhost_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the llmhost list
+  see: smarter.apps.llmhost_list.templatetags.react_llmhost_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% llmhost_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/llmhost-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

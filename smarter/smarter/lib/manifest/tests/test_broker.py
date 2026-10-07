@@ -1,18 +1,21 @@
-"""Test abstract Broker class"""
+"""Test abstract Broker class."""
 
-import json
-import logging
 import os
 from typing import Optional
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from django.test import Client
+import requests
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.http import HttpResponse
+from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib import json, logging
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    BrokerNotImplemented,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
@@ -23,7 +26,6 @@ from smarter.lib.manifest.models import AbstractSAMBase
 
 from .abstractbroker_test_class import SAMTestBroker
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,11 +33,12 @@ logger = logging.getLogger(__name__)
 class TestAbstractBrokerClass(TestAccountMixin):
     """
     Test abstract Broker class coverage gaps.
+
     531
     """
 
     good_manifest_path: Optional[str] = None
-    good_manifest_text: Optional[str] = None
+    good_manifest_dict: Optional[dict] = None
     broker: Optional[SAMTestBroker] = None
 
     @classmethod
@@ -44,22 +47,30 @@ class TestAbstractBrokerClass(TestAccountMixin):
         super().setUpClass()
         path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
         cls.good_manifest_path = os.path.join(path, "good-plugin-manifest.yaml")
-        cls.good_manifest_text = cls.get_readonly_yaml_file(cls.good_manifest_path)  # type: ignore[assignment]
+        cls.good_manifest_dict = cls.get_readonly_yaml_file(cls.good_manifest_path)
 
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        client = Client()
-        client.force_login(self.non_admin_user)
-        response = client.get("/")
-        request = response.wsgi_request
+
+        # pylint: disable=W0613
+        def get_response(request):
+            return HttpResponse()
+
+        factory = RequestFactory()
+        request = factory.get("/")
+
+        SessionMiddleware(get_response).process_request(request)
+        request.session.save()
+
+        request.user = self.non_admin_user
 
         if not hasattr(request, "user"):
             raise ValueError("Request does not have a user attribute")
 
         self.broker = SAMTestBroker(
             request,
-            manifest=self.good_manifest_text,
+            manifest=self.good_manifest_dict,
             kind=SmarterJournalThings.STATIC_PLUGIN.value,
         )
 
@@ -144,14 +155,84 @@ class TestAbstractBrokerClass(TestAccountMixin):
 
     def test_str_(self) -> None:
         # 248,
-        self.assertEqual(str(self.broker), "smarter.sh/v1 Plugin Broker")
+        if not self.broker:
+            self.fail("Broker is not initialized")
+
+        str_rep = str(self.broker)
+        self.assertIsInstance(str_rep, str)
+        self.assertIn("SAMTestBroker", str_rep)
+        self.assertIn("name", str_rep)
+        self.assertIn("user_profile", str_rep)
+
+    def test_repr(self):
+        if not self.broker:
+            self.fail("Broker is not initialized")
+        rep = repr(self.broker)
+        self.assertIsInstance(rep, str)
+
+    def test_bool(self):
+        if not self.broker:
+            self.fail("Broker is not initialized")
+        self.assertTrue(bool(self.broker))
+
+    def test_hash(self):
+        if not self.broker:
+            self.fail("Broker is not initialized")
+        h = hash(self.broker)
+        self.assertIsInstance(h, int)
+
+    def test_eq(self):
+        if not self.broker:
+            self.fail("Broker is not initialized")
+        if not self.broker.name:
+            raise ValueError("Broker name is not set")
+        if not self.broker.request:
+            raise ValueError("Broker request is not set")
+
+        broker2 = SAMTestBroker(
+            self.broker.request,
+            manifest=self.good_manifest_dict,
+            kind=SmarterJournalThings.STATIC_PLUGIN.value,
+        )
+        broker2.name_cached_property_setter(self.broker.name)
+        broker2.kind_setter(self.broker.kind)
+
+        self.assertTrue(self.broker == broker2)
+        broker2.name_cached_property_setter("other_name")
+        self.assertFalse(self.broker == broker2)
+
+    def test_lt_le_gt_ge(self):
+        if not self.broker:
+            self.fail("Broker is not initialized")
+        if not self.broker.name:
+            raise ValueError("Broker name is not set")
+        if not self.broker.request:
+            raise ValueError("Broker request is not set")
+
+        broker2 = SAMTestBroker(
+            self.broker.request,
+            manifest=self.good_manifest_dict,
+            kind=SmarterJournalThings.STATIC_PLUGIN.value,
+        )
+        broker2.name_cached_property_setter(self.broker.name)
+        broker2.kind_setter(self.broker.kind)
+
+        # Equal
+        self.assertFalse(self.broker < broker2)
+        self.assertTrue(self.broker <= broker2)
+        self.assertFalse(self.broker > broker2)
+        self.assertTrue(self.broker >= broker2)
+        # Change name to make broker2 greater
+        broker2.name_cached_property_setter("zzz_name")
+        self.assertTrue(self.broker < broker2)
+        self.assertTrue(broker2 > self.broker)
 
     def test_model_class(self) -> None:
         # 255
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.model_class
+            self.broker.ORMModelClass
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message, "Smarter API Plugin manifest broker: None() not implemented error."
@@ -162,43 +243,44 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         self.assertIsNotNone(self.broker.manifest)
-        self.assertIsInstance(self.broker.manifest, AbstractSAMBase)
+        self.assertIsInstance(self.broker.manifest, (AbstractSAMBase, dict))
 
     def test_apply(self) -> None:
         # 284,
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.apply(request=self.broker.request, kwargs=None)
-        except SAMBrokerReadOnlyError as e:
-            self.assertEqual(
-                e.get_formatted_err_message, "Smarter API Plugin manifest broker: apply() not implemented error."
-            )
+            self.broker.apply(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
+        except SAMBrokerErrorNotImplemented as e:
+            self.assertIn("apply() not implemented", e.get_formatted_err_message)
 
     def test_chat(self) -> None:
         # 293,
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.chat(request=self.broker.request, kwargs=None)
+            self.broker.prompt(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
-                "Smarter API Plugin manifest broker: chat() not implemented error.  chat() not implemented",
+                "Smarter API Plugin manifest broker: prompt() not implemented error.  prompt() not implemented",
             )
 
     def test_describe(self) -> None:
         # 300,
         if not self.broker:
             raise ValueError("Broker is not initialized")
-        logger.info("Testing describe method of SAMTestBroker")
-        logger.info("Broker: %s", self.broker)
-        logger.info("User: %s %s", self.broker.request.user, self.non_admin_user)
-        logger.info("Account: %s %s", self.broker.account, self.account)
-        logger.info("UserProfile: %s %s", self.broker.user_profile, self.non_admin_user_profile)
+        if not self.broker.request or not self.broker.request.user:
+            raise ValueError("Broker request or request user is not set")
+
+        logger.debug("Testing describe method of SAMTestBroker")
+        logger.debug("Broker: %s", self.broker)
+        logger.debug("User: %s %s", self.broker.request.user, self.non_admin_user)
+        logger.debug("Account: %s %s", self.broker.account, self.account)
+        logger.debug("UserProfile: %s %s", self.broker.user_profile, self.non_admin_user_profile)
 
         try:
-            self.broker.describe(request=self.broker.request, kwargs=None)
+            self.broker.describe(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertIn(
                 "Smarter API Plugin manifest broker: describe() not implemented error.", e.get_formatted_err_message
@@ -209,7 +291,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.delete(request=self.broker.request, kwargs=None)
+            self.broker.delete(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
@@ -221,7 +303,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.deploy(request=self.broker.request, kwargs=None)
+            self.broker.deploy(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
@@ -233,7 +315,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.example_manifest(request=self.broker.request, kwargs=None)
+            self.broker.example_manifest(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
@@ -245,7 +327,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.get(request=self.broker.request, kwargs=None)
+            self.broker.get(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
@@ -257,7 +339,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.logs(request=self.broker.request, kwargs=None)
+            self.broker.logs(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
@@ -269,7 +351,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.undeploy(request=self.broker.request, kwargs=None)
+            self.broker.undeploy(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
@@ -353,8 +435,8 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "test_camel_case2": "test_camel_case2",
             "test_camel_case3": "test_camel_case3",
         }
-        camel_to_snake = self.broker.camel_to_snake(data=d)
-        self.assertEqual(camel_to_snake, d_result)
+        to_snake_case = self.broker.to_snake_case(data=d)
+        self.assertEqual(to_snake_case, d_result)
 
     def test_snake_to_camel(self) -> None:
         # 516,
@@ -370,12 +452,48 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "testCamelCase2": "test_camel_case2",
             "testCamelCase3": "test_camel_case3",
         }
-        snake_to_camel = self.broker.snake_to_camel(data=d)
-        self.assertEqual(snake_to_camel, d_result)
+        to_camel_case = self.broker.to_camel_case(data=d)
+        self.assertEqual(to_camel_case, d_result)
 
-    def test_BrokerNotImplemented(self) -> None:
-        # 531,
-        try:
-            BrokerNotImplemented()
-        except SAMBrokerErrorNotImplemented:
-            pass
+    def make_broker(self, path: str = "/") -> SAMTestBroker:
+        request = RequestFactory().get(path)
+        SessionMiddleware(lambda request: HttpResponse()).process_request(request)
+        request.session.save()
+        request.user = self.non_admin_user
+        return SAMTestBroker(request, manifest=self.good_manifest_dict, kind=SmarterJournalThings.STATIC_PLUGIN.value)
+
+    def test_comparisons_with_another_type(self):
+        """Comparing a broker with anything but a broker of its class isn't implemented."""
+        broker = self.make_broker()
+        for method in (broker.__lt__, broker.__le__, broker.__gt__, broker.__ge__):
+            with self.subTest(method=method.__name__):
+                self.assertIs(method("not a broker"), NotImplemented)
+
+    def test_uri_with_query_params_and_created(self):
+        broker = self.make_broker("/path/?a=1")
+        self.assertEqual(broker.uri, "http://testserver/path/?a=1")
+        self.assertIsInstance(broker.created, bool)
+
+    def test_name_from_the_url_params(self):
+        """Without a manifest, or a loader with a name, the name comes from the name url param."""
+        broker = self.make_broker("/?name=from_param")
+        broker._name = None
+        broker._manifest = None
+        broker._loader = MagicMock(manifest_metadata={})
+        self.assertEqual(broker.name, "from_param")
+
+    def test_params_of_a_prepared_request(self):
+        """The url params of a requests.PreparedRequest are read from its url."""
+        broker = self.make_broker()
+        with_query = requests.Request("GET", "http://example.com/?a=1&b=2").prepare()
+        without_query = requests.Request("GET", "http://example.com/").prepare()
+        with patch.object(SAMTestBroker, "request", new_callable=PropertyMock, return_value=with_query):
+            self.assertEqual(broker.params.dict(), {"a": "1", "b": "2"})
+        with patch.object(SAMTestBroker, "request", new_callable=PropertyMock, return_value=without_query):
+            self.assertEqual(broker.params.dict(), {})
+
+    def test_not_ready_without_a_ready_request(self):
+        broker = self.make_broker()
+        broker._ready = False
+        with patch.object(SmarterRequestMixin, "ready", new_callable=PropertyMock, return_value=False):
+            self.assertFalse(broker.ready)

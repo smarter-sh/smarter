@@ -1,0 +1,52 @@
+---
+# Mistral 7B Instruct v0.3, with Mistral's own tokenizer and weights format.
+# Gated: accept the conditions at the model card, and store a Hugging Face token in the Secret huggingface_token.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: mistral_7b_instruct_v0_3
+  description: Mistral 7B Instruct v0.3, served by vLLM on one NVIDIA A10G, with tool calling.
+  version: 1.0.0
+  tags:
+  - mistral
+  - vllm
+  - chat
+  - tool-calling
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3
+spec:
+  model:
+    source: huggingface
+    repository: mistralai/Mistral-7B-Instruct-v0.3
+    revision: main
+    servedName: mistral-7b-instruct-v0.3
+    tokenSecret: huggingface_token
+    license: apache-2.0
+    architecture: mistral
+    parameterCount: 7248023552
+    contextWindow: 32768
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 16384
+    args:
+    - --tokenizer-mode
+    - mistral
+    - --config-format
+    - mistral
+    - --load-format
+    - mistral
+    - --enable-auto-tool-choice
+    - --tool-call-parser
+    - mistral
+  compute: gpu_a10g_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 19
+    cpu: '4'
+    memory: 22Gi

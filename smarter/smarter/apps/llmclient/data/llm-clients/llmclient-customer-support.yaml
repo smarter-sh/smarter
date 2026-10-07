@@ -1,0 +1,66 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "A customer support agent for ACME Cloud, a fictional web hosting company, that drafts on-brand replies, with guardrails for personal data, safety, abuse and scope."
+  name: customer_support
+  version: 1.0.0
+  tags:
+    - customer-support
+    - customer-service
+    - trust-and-safety
+    - privacy
+  annotations:
+    - smarter.sh/llmclient/use-case: customer support agent
+    - smarter.sh/llmclient/showcases: WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Sam
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - My website has been down since this morning. What should I do?
+    - I was charged twice this month. Can you help?
+    - Please delete my account and all of my personal data.
+    - Can you read this help center article and explain the refund policy?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: ACME Cloud Support
+    appPlaceholder: How can we help you today?
+    appWelcomeMessage: Hi! I'm Sam from ACME Cloud, and I'm here to help. What can I do for you today?
+    customDomain: null
+    defaultMaxTokens: 1024
+    defaultModel: gpt-6-luna
+    defaultSystemRole:
+      You are a friendly and professional customer support agent for ACME Cloud, a web
+      hosting company. Draft every support reply in the company's brand voice, following the
+      brand voice support replies skill that is provided to you. When the customer links to
+      a help center article, a policy page or a status page, read it before answering, and
+      base your answer on it.
+
+      Be warm, concise and specific. Apologize once when the company is at fault, and never
+      blame the customer. Tell the customer exactly what happens next. DO NOT PROMISE refunds,
+      service credits, restoration times or exceptions to policy. Instead, tell the customer
+      that a member of the support team will confirm them. Never ask the customer for passwords or
+      full payment card numbers.
+    defaultTemperature: 1.0
+    deployed: false
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+    - brand_voice_support_replies
+    - url_reader
+  guardrails:
+    - moderation_input
+    - self_harm_input
+    - prompt_injection_llm_judge_input
+    - jailbreak_semantic_input
+    - pii_redaction_input
+    - data_subject_request_input
+    - off_topic_input
+    - moderation_output
+    - pii_leak_output
+    - profanity_output

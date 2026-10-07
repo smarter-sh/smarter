@@ -1,6 +1,6 @@
-"""Plugin utils module."""
+# pylint: disable=W0613
+"""Plugin utils module for core plugin functionality."""
 
-import logging
 import os
 import re
 from typing import Any, Optional, Union
@@ -8,10 +8,13 @@ from typing import Any, Optional, Union
 import yaml
 
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_smarter_admin_user_profile,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -21,7 +24,7 @@ from .base import PluginBase
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -29,7 +32,32 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Plugins:
-    """A class for working with multiple plugins."""
+    """
+    A class for managing and interacting with multiple plugins.
+
+    This class provides methods to retrieve, serialize, and work with plugins associated with a user and account. It loads plugins using metadata and controllers, and exposes their data in dictionary and JSON formats.
+
+    :param user: The user for whom plugins are loaded.
+    :type user: User
+    :param account: The account context for plugin retrieval.
+    :type account: Account
+
+    .. note::
+
+        A plugin that cannot be loaded, for example one whose plugin data
+        is missing, is logged and skipped.
+
+    .. seealso::
+
+        :class:`PluginController` for plugin instantiation.
+        :class:`PluginMeta` for plugin metadata.
+
+    **Example usage**::
+
+        plugins = Plugins(user=my_user, account=my_account)
+        plugin_dicts = plugins.data
+        plugin_json = plugins.to_json()
+    """
 
     account: Optional[Account] = None
     user_profile: Optional[UserProfile] = None
@@ -38,21 +66,52 @@ class Plugins:
     def __init__(self, user: User, account: Account):
 
         self.plugins = []
-        self.account = account or get_cached_user_profile(user=user).account
-        self.user_profile = get_cached_user_profile(user=user, account=account)
+        self.account = account or UserProfile.get_cached_object(user=user).account
+        self.user_profile = UserProfile.get_cached_object(user=user, account=account)
 
-        for plugin in PluginMeta.objects.filter(account=self.account):
+        # plugins for this user profile, followed by those of the smarter admin user profile
+        smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
+        for user_profile in (self.user_profile, smarter_admin_user_profile):
+            for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):
+                plugin = self.load_plugin(plugin_meta=plugin_meta, user_profile=user_profile)
+                if plugin is not None:
+                    self.plugins.append(plugin)
+
+    @staticmethod
+    def load_plugin(plugin_meta: PluginMeta, user_profile: UserProfile) -> Optional[PluginBase]:
+        """
+        Load a plugin, or log and skip it if it cannot be loaded.
+
+        One malformed plugin, for example one whose plugin data is missing,
+        should not prevent the others from being listed.
+
+        :param plugin_meta: The plugin's PluginMeta.
+        :type plugin_meta: PluginMeta
+        :param user_profile: The plugin's owner.
+        :type user_profile: Optional[UserProfile]
+        :returns: The plugin, or None if it cannot be loaded.
+        :rtype: Optional[PluginBase]
+        """
+        try:
             plugin_controller = PluginController(
-                user_profile=self.user_profile,
-                account=self.account,
-                user=user,
-                plugin_meta=plugin,
+                user_profile=user_profile,
+                plugin_meta=plugin_meta,
             )
             if not plugin_controller or not plugin_controller.plugin:
                 raise PluginDataValueError(
-                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
+                    f"PluginController could not be created for plugin_id: {plugin_meta.id}, user_profile: {user_profile}"  # type: ignore[arg-type]
                 )
-            self.plugins.append(plugin_controller.plugin)
+            return plugin_controller.plugin
+        # pylint: disable=W0718
+        except Exception as e:
+            base_logger.warning(
+                "Plugins.load_plugin() skipping plugin %s (id: %s) for %s, which cannot be loaded: %s",
+                plugin_meta.name,
+                plugin_meta.id,  # type: ignore[reportAttributeAccessIssue]
+                user_profile,
+                e,
+            )
+            return None
 
     @property
     def data(self) -> list[dict]:
@@ -73,14 +132,34 @@ class Plugins:
 
 
 class PluginExample:
-    """A class for working with built-in yaml-based plugin examples."""
+    """
+    A class for loading and working with built-in YAML-based plugin examples.
+
+    This class reads plugin example files in YAML format, parses their contents, and exposes metadata and serialization methods for inspection and testing.
+
+    :param filepath: The directory path containing the YAML file.
+    :type filepath: str
+    :param filename: The name of the YAML file to load.
+    :type filename: str
+
+    .. seealso::
+
+        :class:`PluginExamples` for managing collections of plugin examples.
+
+    **Example usage**::
+
+        example = PluginExample(filepath="/path/to/examples", filename="my_plugin.yaml")
+        print(example.name)
+        print(example.to_yaml())
+        print(example.to_json())
+    """
 
     _filename: Optional[str]
     _json: Optional[Union[list, dict]]
     _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
-        """Initialize the class from a yaml file"""
+        """Initialize the class from a yaml file."""
         with open(os.path.join(filepath, filename), encoding="utf-8") as file:
             self._yaml = file.read()
             self._json = yaml.safe_load(self._yaml)
@@ -98,7 +177,7 @@ class PluginExample:
         try:
             retval = self._json["metadata"]["name"] if isinstance(self._json, dict) else None
         except KeyError:
-            logger.warning("PluginExample: %d is malformed and has no metadata.name", self.filename)
+            logger.warning("PluginExample: %s is malformed and has no metadata.name", self.filename)
             retval = self.convert_filename()
         return retval
 
@@ -106,7 +185,7 @@ class PluginExample:
         """Return the plugin as a yaml string."""
         return self._yaml
 
-    # FIX NOTE: this fails on Plugin.create() due to missing tags
+    # TODO: this fails on Plugin.create() due to missing tags
     # django.core.exceptions.ValidationError: ["Invalid data: missing meta_data['tags']"]
     def to_json(self) -> Optional[Union[dict, list]]:
         """Return the plugin as a dictionary."""
@@ -128,7 +207,35 @@ class PluginExample:
 
 
 class PluginExamples:
-    """A class for working with a collection of PluginExample instances."""
+    """
+    A class for managing a collection of :class:`PluginExample` instances.
+
+    This class loads all YAML-based plugin examples from a specified directory, providing access to the collection and utility methods for counting and retrieving examples.
+
+    :param args: Optional positional arguments (unused).
+    :type args: tuple
+    :param kwargs: Optional keyword arguments (unused).
+    :type kwargs: dict
+
+    .. note::
+
+        Only files ending with ``.yaml`` in the plugins path are loaded as examples.
+
+    .. tip::
+
+        Use :meth:`count` to get the number of loaded plugin examples, and the :meth:`plugins` property to access the list.
+
+    .. seealso::
+
+        :class:`PluginExample` for individual example details.
+
+    **Example usage**::
+
+        examples = PluginExamples()
+        print(examples.count())
+        for example in examples.plugins:
+            print(example.filename, example.name)
+    """
 
     _plugin_examples: list[PluginExample] = []
     HERE = os.path.abspath(os.path.dirname(__file__))

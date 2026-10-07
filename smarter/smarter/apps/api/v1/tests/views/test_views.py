@@ -1,14 +1,15 @@
 # pylint: disable=W0707,W0718,W0613
 """Views for unit tests."""
-import json
-import logging
+
+import os
 
 from rest_framework import serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.drf.view_helpers import (
+from smarter.lib import json, logging
+from smarter.lib.drf.views.helpers import (
     SmarterUnauthenticatedAPIListView,
     SmarterUnauthenticatedAPIView,
 )
@@ -17,8 +18,8 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedListAPIView,
 )
 
-
 logger = logging.getLogger(__name__)
+STACKADEMY_COURSES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stackademy_courses.json")
 faux_dict = {
     "message": "This is a test JSON response. This data is static, and it is not real.",
     "status": "success",
@@ -59,6 +60,10 @@ class TestJsonDictView(SmarterUnauthenticatedAPIView):
         """Handle GET requests and return a faux JSON dictionary."""
         return Response(faux_dict, status=status.HTTP_200_OK)
 
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
+
 
 class TestJsonListView(SmarterUnauthenticatedAPIListView):
     """Returns a list of JSON dicts for testing purposes."""
@@ -74,6 +79,10 @@ class TestJsonListView(SmarterUnauthenticatedAPIListView):
         queryset = self.get_queryset()
         return Response(queryset, status=status.HTTP_200_OK)
 
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
+
 
 class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
     """Returns a JSON dict for testing purposes."""
@@ -81,6 +90,10 @@ class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON dictionary."""
         return Response(faux_dict, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
 
 
 class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
@@ -97,27 +110,29 @@ class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
         queryset = self.get_queryset()
         return Response(queryset, status=status.HTTP_200_OK)
 
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
+
 
 class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
     """A placeholder view for the Stackademy course catalog."""
 
     def catalogue(self) -> list[dict]:
 
-        with open("./stackaemy_courses.json", encoding="utf-8") as file:
+        # the file is beside this module, not in the working directory.
+        with open(STACKADEMY_COURSES, encoding="utf-8") as file:
             try:
                 return json.load(file)
             except json.JSONDecodeError as e:
                 raise SmarterConfigurationError(
-                    "Failed to decode JSON from stackaemy_courses.json. "
+                    "Failed to decode JSON from stackademy_courses.json. "
                     "Please ensure the file is correctly formatted."
                 ) from e
         return None
 
     def get(self, request: Request, *args, **kwargs):
-        """
-        Handle GET requests and return the faux Stackacademy
-        course catalog.
-        """
+        """Handle GET requests and return the faux Stackacademy course catalog."""
         course_id = request.query_params.get("course_id")
         max_cost = request.query_params.get("max_cost")
         description = request.query_params.get("description")
@@ -142,3 +157,7 @@ class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
             filtered = [c for c in filtered if description.lower() in c["description"].lower()]
 
         return Response(filtered, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)

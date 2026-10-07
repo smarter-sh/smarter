@@ -1,0 +1,38 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: data_subject_request_input
+  description: Escalates privacy requests, such as requests to delete, export or correct personal data,
+    to human review, because GDPR, CCPA and similar laws set deadlines for answering them.
+  version: 1.0.0
+  tags:
+  - compliance
+  - gdpr
+  - ccpa
+  - privacy
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: compliance
+    strategy: keyword
+    keywords:
+    - delete my data
+    - delete my account
+    - erase my data
+    - right to be forgotten
+    - right to erasure
+    - export my data
+    - download my data
+    - copy of my data
+    - data subject access request
+    - DSAR
+    - do not sell my personal information
+    - opt out of the sale
+    action: escalate
+    severity: 3
+    priority: 50

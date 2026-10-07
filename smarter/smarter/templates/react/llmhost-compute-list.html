@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_llmhost_compute_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the llmhost compute list
+  see: smarter.apps.llmhost.templatetags.react_llmhost_compute_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% llmhost_compute_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/llmhost-compute-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ llmhost_compute_list.root_id }}"
+    django-csrf-cookie-name="{{ llmhost_compute_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ llmhost_compute_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ llmhost_compute_list.cookie_domain }}"
+    smarter-llmhost-compute-list-api-url="{{ llmhost_compute_list.llmhost_compute_list_api_url }}"
+    react-debug-mode="{{ llmhost_compute_list.react_debug_mode }}"
+    smarter-request-id="{{ llmhost_compute_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the llmhost compute list
+  see: smarter.apps.llmhost.templatetags.react_llmhost_compute_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% llmhost_compute_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/llmhost-compute-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

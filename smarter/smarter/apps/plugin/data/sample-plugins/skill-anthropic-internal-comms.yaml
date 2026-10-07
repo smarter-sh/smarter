@@ -1,0 +1,34 @@
+---
+# A SkillPlugin that refers to Anthropic's internal-comms skill by the GitHub
+# URL of its SKILL.md file. The skill's bundled examples are retrieved too.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: anthropic_internal_comms
+  pluginClass: skill
+  description: Anthropic's internal-comms skill, for writing status reports, newsletters and other internal communications.
+  version: 0.1.0
+  tags:
+    - writing
+    - communications
+    - anthropic
+  annotations:
+    - smarter.sh/anthropic-internal-comms/source: https://github.com/anthropics/skills
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - status report
+      - newsletter
+      - leadership update
+      - incident report
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant that writes clear, well-organized internal communications.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  skillData:
+    source:
+      url: https://github.com/anthropics/skills/blob/main/skills/internal-comms/SKILL.md

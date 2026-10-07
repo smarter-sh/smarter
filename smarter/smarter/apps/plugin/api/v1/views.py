@@ -1,15 +1,13 @@
 # pylint: disable=W0718
 """PluginMeta views."""
 
-import json
 from http import HTTPStatus
 from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
-from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework import status
@@ -17,52 +15,75 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
-from smarter.apps.account.utils import get_cached_user_profile
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
+from smarter.apps.plugin.manifest.controller import (
+    PLUGIN_MAP,
+    SAM_MAP,
+    PluginController,
+)
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json, logging
+from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class PluginView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
-    def get(self, request: WSGIRequest, plugin_id):
+    def get(self, request: ASGIRequest, plugin_id):
+
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
+            logger.error(
+                "%s.get() is not allowed because %s switch is inactive.",
+                self.formatted_class_name,
+                SmarterWaffleSwitches.ALLOW_API_GET,
+            )
+            return JsonResponse(
+                {"error": "GET method is not allowed for this endpoint."}, status=HTTPStatus.METHOD_NOT_ALLOWED
+            )
+
         return get_plugin(request, plugin_id)
 
-    def put(self, request: WSGIRequest):
+    def put(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        if plugin_id is not None:
+            return update_plugin(request, plugin_id)
         return create_plugin(request)
 
-    def post(self, request: WSGIRequest):
+    def post(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        if plugin_id is not None:
+            return update_plugin(request, plugin_id)
         return create_plugin(request)
 
-    def patch(self, request: WSGIRequest):
-        return update_plugin(request)
+    def patch(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        return update_plugin(request, plugin_id)
 
-    def delete(self, request: WSGIRequest, plugin_id):
+    def delete(self, request: ASGIRequest, plugin_id):
         return delete_plugin(request, plugin_id)
 
 
 class PluginCloneView(SmarterAuthenticatedAPIView):
     """Plugin clone view for smarter api."""
 
-    def post(self, request: WSGIRequest, plugin_id, new_name):
+    def post(self, request: ASGIRequest, plugin_id, new_name):
+
         user = get_resolved_user(request.user)
         if not user:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-        user_profile = get_cached_user_profile(user=user)
+        user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             return JsonResponse(
@@ -82,17 +103,25 @@ class PluginListView(SmarterAuthenticatedListAPIView):
     serializer_class = PluginMetaSerializer
 
     def get_queryset(self):
-        plugins = PluginMeta.objects.filter(author__user=self.request.user)
+        plugins = PluginMeta.objects.with_ownership_permission_for(user=self.user_profile.user).order_by("-created_at")  # type: ignore
         return plugins
 
 
 class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     """Add example plugins to a user profile."""
 
-    def post(self, request: WSGIRequest, user_id=None):
+    def post(self, request: ASGIRequest, user_id=None):
+        @cache_results()
+        def cached_user_by_id(user_id: int) -> Optional[User]:
+            """Retrieve User by ID with caching."""
+            try:
+                return User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return None
+
         try:
-            user = User.objects.get(id=user_id) if user_id else request.user
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
+            user = cached_user_by_id(user_id) if user_id else request.user
+            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -132,14 +161,14 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 
         raise SmarterValueError("Invalid data format: expected JSON or YAML.")
 
-    def _create(self, request: WSGIRequest):
+    def _create(self, request: ASGIRequest):
         data = self.parse_yaml_file(data=request.body.decode("utf-8"))
         return create_plugin(request=request, data=data)
 
-    def put(self, request: WSGIRequest):
+    def put(self, request: ASGIRequest):
         return self._create(request)
 
-    def post(self, request: WSGIRequest):
+    def post(self, request: ASGIRequest):
         return self._create(request)
 
 
@@ -148,19 +177,18 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
+
     plugin: Optional[PluginBase] = None
 
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
 
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(
@@ -182,7 +210,7 @@ def get_plugin(request, plugin_id):
 def create_plugin(request, data: Optional[dict] = None):
     """Create a plugin from a json representation in the body of the request."""
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -203,8 +231,6 @@ def create_plugin(request, data: Optional[dict] = None):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
             manifest=data,  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -217,60 +243,73 @@ def create_plugin(request, data: Optional[dict] = None):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
+    base_url = f"{smarter_settings.api_schema}://{request.get_host()}/"
     plugins_api_url = urljoin(base_url, "/api/v1/plugins/")
 
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 
 
-def update_plugin(request: WSGIRequest):
-    """update a plugin from a json representation in the body of the request."""
-    user = get_resolved_user(request.user)
-    data: str
+def update_plugin(request: ASGIRequest, plugin_id: Optional[int] = None):
+    """
+    Update a plugin from a json representation in the body of the request.
 
+    :param plugin_id: The id of the plugin to update, from the url. If provided, it must
+        be the plugin that the manifest names.
+    """
+    user = get_resolved_user(request.user)
     if not user:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
     try:
-        user_profile = get_cached_user_profile(user=user)
+        user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-
-    try:
-        data = request.body.decode("utf-8")
-        if not isinstance(data, dict):
-            return JsonResponse(
-                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        data["user_profile"] = user_profile
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-
-    try:
-        data = json.loads(data)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON format"}, status=HTTPStatus.BAD_REQUEST)
-
     if not user_profile:
         return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.UNAUTHORIZED)
+
     try:
-        plugin_controller = PluginController(
-            user_profile=user_profile,
-            account=user_profile.account,
-            user=user_profile.user,
-            manifest=SAMPluginCommon(**data),  # type: ignore[arg-type]
+        # a DRF request has already parsed its body; a plain django request has not.
+        data = getattr(request, "data", None)
+        if data is None:
+            data = PluginUploadView.parse_yaml_file(request.body.decode("utf-8"))
+    except Exception as e:
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+    if not isinstance(data, dict) or not data:
+        return JsonResponse(
+            {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+            status=HTTPStatus.BAD_REQUEST,
         )
-        if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
-                f"PluginController could not be created for data: {data}, user_profile: {user_profile}"
-            )
-        plugin = plugin_controller.plugin
-        if not plugin:
+    data = dict(data)
+
+    kind = data.get("kind")
+    if kind not in PLUGIN_MAP:
+        return JsonResponse(
+            {"error": f"Invalid manifest kind {kind}. Expected one of: {list(PLUGIN_MAP)}"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    manifest_name = (data.get("metadata") or {}).get("name")
+
+    if plugin_id is not None:
+        try:
+            plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)  # type: ignore[attr-defined]
+        except PluginMeta.DoesNotExist:
+            plugin_meta = None
+        if not plugin_meta:
             return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
-        if not data:
-            return JsonResponse({"error": "No data provided for update"}, status=HTTPStatus.BAD_REQUEST)
-        plugin.update()
+        if manifest_name != plugin_meta.name:
+            return JsonResponse(
+                {"error": f"Manifest name {manifest_name} does not match plugin {plugin_id}: {plugin_meta.name}"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    elif not PluginMeta.objects.filter(name=manifest_name, user_profile=user_profile).exists():
+        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+
+    try:
+        manifest = SAM_MAP[kind](**data)  # type: ignore[arg-type]
+        # a PluginController prefers the stored PluginMeta to the manifest, so
+        # the plugin is instantiated from the manifest, which updates it.
+        plugin = PLUGIN_MAP[kind](manifest=manifest, user_profile=user_profile)  # type: ignore[call-arg]
+        if not plugin or not plugin.ready:
+            raise PluginDataValueError(f"Plugin {manifest_name} is not ready after update.")
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -280,18 +319,16 @@ def update_plugin(request: WSGIRequest):
 
 
 def delete_plugin(request, plugin_id):
-    """delete a plugin by id."""
+    """Delete a plugin by id."""
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(

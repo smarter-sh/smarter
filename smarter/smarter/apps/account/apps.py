@@ -2,16 +2,26 @@
 
 from django.apps import AppConfig
 
+from smarter.common.const import SMARTER_APP_NAME
+from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
-class AccountConfig(AppConfig):
+from .const import namespace as app_name
+
+logger = logging.getLogger(__name__)
+
+
+class AccountConfig(AppConfig, SmarterHelperMixin):
     """Account app configuration."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.account"
-    verbose_name = "Smarter Account"
+    name = f"smarter.apps.{app_name.lower()}"
+    verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
         """Import signals."""
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
+
+        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", self.formatted_state_ready)

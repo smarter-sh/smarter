@@ -1,0 +1,74 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage: developer support packages for code syntax and type checking, testing,
+#        formatting, security, quality, vanity, debugging, build & packaging
+#
+#       pip-compile smarter/requirements/in/local.in --upgrade -o smarter/requirements/local.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+-r base.in
+-r mariadb.in
+
+pip-tools>=7.6.1  # 7.5.x is incompatible with pip 26.2+ (stdlib_pkgs was removed)
+
+# Django dev tools
+# ------------
+django-extensions                  # a collection of custom extensions for the Django Framework.
+
+
+# type annotations for packages that don't include them
+# ------------
+pandas-stubs
+types-cachetools
+types-lxml
+types-Markdown
+types-paramiko
+types-PyYAML
+types-requests
+django-stubs                       # Type annotations for Django
+djangorestframework-stubs          # type annotations for djangorestframework
+mypy_extensions                    # Type annotations for Python
+
+
+# tests
+# ------------
+pytest
+pytest_mock
+
+
+# Code linters, formatters, and security scanners
+# ------------
+bandit                              # security linter
+black                               # code formatter
+codespell                           # typo checker
+coverage                            # test coverage
+flake8                              # code linter
+flake8-coding                       # coding style linter
+
+mypy                                # static type checker
+pre-commit                          # git hook manager
+pydocstringformatter                # docstring formatter
+pylint                              # code linter
+pylint-django                       # Django support for pylint
+tox                                 # testing tool
+watchdog                            # file system monitoring
+
+# Documentation
+sphinx                              # for Readthedocs
+sphinx-rtd-theme                    # Sphinx theme for Readthedocs
+autodoc_pydantic                    # Sphinx extension for Pydantic models
+sphinxcontrib-django                # Sphinx for django settings
+sphinx-copybutton                   # Sphinx code copy button extension
+sphinx-autodoc-typehints            # Sphinx type hint annotation improvements
+sphinx_contributors                 # Sphinx GitHub contributors list
+sphinx-design                       # Adds drop downs and other fancy styling
+sphinx-contributors                 # lists the people who have contributed to this GitHub repo
+sphinx-sitemap                      # site map generator
+
+
+# Dockerfile requirements
+# ------------
+watchdog

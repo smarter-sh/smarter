@@ -1,0 +1,71 @@
+[
+  {
+    "id": 1,
+    "name": "Hello World",
+    "body": {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hello world"
+        }
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "name": "Message Roles",
+    "body": {
+      "max_tokens": 1024,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "assistant",
+          "content": "Hello! How can I assist you today?"
+        },
+        {
+          "role": "user",
+          "content": "What is the capital of France?"
+        }
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "name": "Function Call",
+    "body": {
+      "max_tokens": 1024,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the weather like in New York?"
+        }
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "getWeather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "The city and state, e.g. San Francisco, CA"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": ["celsius", "fahrenheit"]
+                }
+              },
+              "required": ["location"]
+            }
+          }
+        }
+      ]
+    }
+  }
+]

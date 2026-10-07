@@ -1,42 +1,48 @@
+# -----------------------------------------------------------------------------------
+# Job Manifest for Smarter Database Initialization
+#
+# This file defines a Kubernetes Job to initialize the MariaDB database for the Smarter app.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Creates the database if it does not exist, typically run as a Helm hook.
+# - Usage: Only rendered if databaseInit.enabled is set in values.yaml.
+# - Notes: Update resource requests/limits and SQL logic as needed for your environment.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+# -----------------------------------------------------------------------------------
+{{- if .Values.databaseInit.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-smarter-job-db-init-{{ now | unixEpoch }}"
-  labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.appJobName }}"
+  namespace: "{{ .Values.namespace }}"
   annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
     "helm.sh/hook": post-upgrade,post-install
     "helm.sh/hook-delete-policy": hook-succeeded
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-job-init"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
+  ttlSecondsAfterFinished: 3600
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: "{{ .Values.appJobName }}"
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-job-init"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
         jobTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node-group
-                    operator: In
-                    values:
-                      - smarter
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node-group
-                    operator: In
-                    values:
-                      - smarter
+        {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:
-        - key: "node-group"
-          operator: "Equal"
-          value: "smarter"
-          effect: "NoSchedule"
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
       automountServiceAccountToken: true
       containers:
         - resources:
@@ -48,116 +54,50 @@ spec:
               cpu: "1"
           args:
             - |
-              mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.MYSQL_DATABASE }};"
-              mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.MYSQL_PASSWORD }}';"
-              mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "ALTER USER '{{ .Values.env.MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.MYSQL_PASSWORD }}';"
-              mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.MYSQL_DATABASE }}.* TO '{{ .Values.env.MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER DATABASE {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER USER '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} < /home/smarter_user/sql/smarter-test-db.sql
               python manage.py makemigrations
               python manage.py migrate
-              python manage.py create_smarter_admin --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
-              python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Staff --last_name User --admin
-              python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Customer --last_name User
-              python manage.py create_account --account_number 5680-6558-6577 --company_name 'University of British Columbia'
-              python manage.py create_user --account_number 5680-6558-6577 --username admin_ubc --email admin_ubc@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name UBC --last_name Admin --admin
-              python manage.py create_account --account_number 4386-2072-3294 --company_name 'Beta Users'
-              python manage.py create_user --account_number 4386-2072-3294 --username admin_beta --email admin_beta@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Beta --last_name Admin --admin
-              python manage.py initialize_waffle
-              python manage.py initialize_wagtail
-              python manage.py verify_dns_configuration
+              python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/QueriumCorp/smarter-demo
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
-              python manage.py load_from_github --account_number 5680-6558-6577 --url https://github.com/smarter-sh/examples --repo_version 2
-              python manage.py load_from_github --account_number 4386-2072-3294 --url https://github.com/smarter-sh/examples --repo_version 2
-              python manage.py add_plugin_examples --username admin
-              python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
-              python manage.py deploy_builtin_chatbots --account_number 4386-2072-3294
-              python manage.py deploy_builtin_chatbots --account_number 5680-6558-6577
-              python manage.py initialize_providers
-              python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user
-              python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
-              python manage.py update_secret --name smarter_test_db --username admin --value "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
-              python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin
-              python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
+              python manage.py add_plugin_examples
+              python manage.py deploy_example_llmclient
+              python manage.py deploy_builtin_llmclients --account_number 3141-5926-5359
+              python manage.py create_stackademy
 
           command:
             - /bin/sh
             - -c
           env:
-            - name: ROOT_DOMAIN
-              value: "{{ .Values.env.ROOT_DOMAIN }}"
-            - name: AWS_REGION
-              value: "{{ .Values.env.AWS_REGION }}"
-            - name: AWS_ACCESS_KEY_ID
-              value: "{{ .Values.env.AWS_ACCESS_KEY_ID }}"
-            - name: AWS_SECRET_ACCESS_KEY
-              value: "{{ .Values.env.AWS_SECRET_ACCESS_KEY}}"
-            - name: ENVIRONMENT
-              value: "{{ .Values.env.ENVIRONMENT }}"
-            - name: DEBUG_MODE
-              value: "{{ .Values.env.DEBUG_MODE }}"
-            - name: DJANGO_SETTINGS_MODULE
-              value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
-            - name: DUMP_DEFAULTS
-              value: "{{ .Values.env.DUMP_DEFAULTS }}"
-            - name: FERNET_ENCRYPTION_KEY
-              value: "{{ .Values.env.FERNET_ENCRYPTION_KEY }}"
-            - name: MYSQL_HOST
-              value: "{{ .Values.env.MYSQL_HOST }}"
-            - name: MYSQL_PORT
-              value: "{{ .Values.env.MYSQL_PORT }}"
-            - name: MYSQL_DATABASE
-              value: "{{ .Values.env.MYSQL_DATABASE }}"
-            - name: MYSQL_USER
-              value: "{{ .Values.env.MYSQL_USER }}"
-            - name: MYSQL_PASSWORD
-              value: "{{ .Values.env.MYSQL_PASSWORD }}"
-            - name: MYSQL_ROOT_USERNAME
-              value: "{{ .Values.env.MYSQL_ROOT_USERNAME }}"
-            - name: MYSQL_ROOT_PASSWORD
-              value: "{{ .Values.env.MYSQL_ROOT_PASSWORD }}"
-            - name: OPENAI_API_KEY
-              value: "{{ .Values.env.OPENAI_API_KEY }}"
-            - name: PINECONE_API_KEY
-              value: "{{ .Values.env.PINECONE_API_KEY }}"
-            - name: PINECONE_ENVIRONMENT
-              value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
-            - name: GOOGLE_MAPS_API_KEY
-              value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
-            - name: GEMINI_API_KEY
-              value: "{{ .Values.env.GEMINI_API_KEY }}"
-            - name: LLAMA_API_KEY
-              value: "{{ .Values.env.LLAMA_API_KEY }}"
-            - name: MAILCHIMP_API_KEY
-              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
-            - name: SECRET_KEY
-              value: "{{ .Values.env.SECRET_KEY }}"
-            - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
-            - name: CACHES_LOCATION
-              value: "{{ .Values.env.CACHES_LOCATION }}"
-            - name: CELERY_BROKER_URL
-              value: "{{ .Values.env.CELERY_BROKER_URL }}"
-            - name: CELERY_RESULT_BACKEND
-              value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
-            - name: SOCIAL_AUTH_GITHUB_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
-            - name: SOCIAL_AUTH_GITHUB_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
-
-          image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          imagePullPolicy: Always
-          name: "{{ .Values.appJobName }}"
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $env := .Values.app.env }}
+            - name: {{ $env.name }}
+              value: {{ $env.value | quote }}
+            {{- end }}
+          image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+          name: "{{ .Values.global.appName }}-job-init"
+          volumeMounts:
+            - name: smarter-test-db
+              mountPath: /home/smarter_user/sql/smarter-test-db.sql
+              subPath: smarter-test-db.sql
+              readOnly: true
+      volumes:
+        - name: smarter-test-db
+          configMap:
+            name: smarter-test-db
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never
       schedulerName: default-scheduler
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
+{{- end }}

@@ -1,7 +1,11 @@
 ---
 #------------------------------------------------------------------------------
-# - Build from Dockerfile
-# - Run manage.py unit tests
+# - Deploy to AWS Elastic Kubernetes Service (EKS)
+#
+# IMPORTANT: Before running this workflow, ensure that you have first built your
+# AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
+# Additionally, make sure the following secrets are configured in your
+# [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
 #------------------------------------------------------------------------------
 name: Deploy
 
@@ -9,8 +13,13 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: ca-central-1
   ROOT_DOMAIN: "smarter.sh"
+  NAMESPACE_BASE: "smarter-ubc"
+  PLATFORM_SUBDOMAIN: "ubc"
+  DEBUG_MODE: "true"
+  ENVIRONMENT: "alpha"
+  VERSION: "latest"
 
 jobs:
   deploy:
@@ -18,11 +27,17 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout_code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Ensures all history and tags are fetched
+          fetch-tags: true
 
       - name: Set environment variable
         id: setenv
         run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "DEBUG_MODE=${{ secrets.DEBUG_MODE }}" >> $GITHUB_ENV
+          fi
           if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
             echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
@@ -36,36 +51,89 @@ jobs:
             exit 1
           fi
 
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Deploy
         uses: ./.github/actions/deploy
         with:
+          eks-cluster-name: ${{ secrets.EKS_CLUSTER_NAME }}
           environment: ${{ env.ENVIRONMENT }}
+          namespace-base: ${{ env.NAMESPACE_BASE }}
+          authentication-backends: "${{ secrets.AUTHENTICATION_BACKENDS }}"
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          cohere-api-key: ${{ secrets.COHERE_API_KEY }}
+          debug-mode: ${{ env.DEBUG_MODE }}
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
+          dockerhub-tag: ${{ env.VERSION }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
+          fireworks-api-key: ${{ secrets.FIREWORKS_API_KEY }}
+          google-service-account-b64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
           google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
           llama-api-key: ${{ secrets.LLAMA_API_KEY }}
+          mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
+          mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
+          mistral-api-key: ${{ secrets.MISTRAL_API_KEY }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          platform-subdomain: ${{ env.PLATFORM_SUBDOMAIN }}
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
           pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
-          smarter-mysql-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}
+          root-domain: ${{ env.ROOT_DOMAIN }}
+          smarter-branding-address1: ${{ secrets.SMARTER_BRANDING_ADDRESS1 }}
+          smarter-branding-address2: ${{ secrets.SMARTER_BRANDING_ADDRESS2 }}
+          smarter-branding-city: ${{ secrets.SMARTER_BRANDING_CITY }}
+          smarter-branding-state: ${{ secrets.SMARTER_BRANDING_STATE }}
+          smarter-branding-postal-code: ${{ secrets.SMARTER_BRANDING_POSTAL_CODE }}
+          smarter-branding-country: ${{ secrets.SMARTER_BRANDING_COUNTRY }}
+          smarter-branding-currency: ${{ secrets.SMARTER_BRANDING_CURRENCY }}
+          smarter-branding-timezone: ${{ secrets.SMARTER_BRANDING_TIMEZONE }}
+          smarter-branding-contact-url: ${{ secrets.SMARTER_BRANDING_CONTACT_URL }}
+          smarter-branding-corporate-name: ${{ secrets.SMARTER_BRANDING_CORPORATE_NAME }}
+          smarter-branding-support-email: ${{ secrets.SMARTER_BRANDING_SUPPORT_EMAIL }}
+          smarter-branding-support-hours: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
+          smarter-branding-support-phone-number: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
+          smarter-email-admin: ${{ secrets.SMARTER_EMAIL_ADMIN }}
+          smarter-logo: ${{ secrets.SMARTER_LOGO }}
+          smarter-mariadb-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}
+          smarter-settings-output: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
           social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
           social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
           social-auth-github-secret: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
           social-auth-linkedin-oauth2-key: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
           social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
-          mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
-          mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
+          tavily-api-key: ${{ secrets.TAVILY_API_KEY }}
+          togetherai-api-key: ${{ secrets.TOGETHERAI_API_KEY }}
+
+      - name: Set deployment domain
+        id: set-deployment-domain
+        shell: bash
+        run: |
+          if [ "${{ env.ENVIRONMENT }}" = "prod" ]; then
+            echo "DEPLOYMENT_DOMAIN=${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh" >> "$GITHUB_ENV"
+          else
+            echo "DEPLOYMENT_DOMAIN=${{ env.ENVIRONMENT }}.${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh" >> "$GITHUB_ENV"
+          fi
 
       - name: Send Email
         uses: ./.github/actions/send-mail
         with:
           environment: ${{ env.ENVIRONMENT }}
+          subdomain: ${{ env.PLATFORM_SUBDOMAIN }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          subject: "GHA - Deployed ${{ env.ENVIRONMENT }}.platform.smarter.sh"
-          body: "${{ env.ENVIRONMENT }}.platform.smarter.sh was deployed successfully."
+          deployment-domain: ${{ env.DEPLOYMENT_DOMAIN }}
+          subject: "GHA - Deployed ${{ env.DEPLOYMENT_DOMAIN }} v${{ env.VERSION }}"
+          body: "${{ env.DEPLOYMENT_DOMAIN }} version ${{ env.VERSION }} was deployed successfully."
+        env:
+          VERSION: ${{ env.VERSION }}
+          DEPLOYMENT_DOMAIN: ${{ env.DEPLOYMENT_DOMAIN }}

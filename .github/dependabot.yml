@@ -1,20 +1,25 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/smarter/requirements"
-    schedule:
-      interval: "monthly"
-    target-branch: "alpha"
+  - package-ecosystem: "python"
+    directory: "smarter/requirements/in"
     labels:
       - "dependencies"
       - "python"
       - "automated pr"
+    schedule:
+      interval: "annually"
+    target-branch: "alpha"
     assignees:
       - "lpm0073"
     reviewers:
       - "lpm0073"
   - package-ecosystem: "npm"
     directory: "/"
+    ignore:
+      # v10+ requires conventional-changelog-writer@9, but
+      # @semantic-release/release-notes-generator@14 still bundles writer@8.
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "javascript"
@@ -38,3 +43,15 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+  - package-ecosystem: "helm"
+    directory: "/helm/charts/smarter"
+    labels:
+      - "dependencies"
+      - "automated pr"
+    assignees:
+      - "lpm0073"
+    reviewers:
+      - "lpm0073"
+    target-branch: "alpha"
+    schedule:
+      interval: "quarterly"

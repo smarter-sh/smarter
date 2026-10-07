@@ -1,0 +1,47 @@
+---
+# Alibaba Qwen2.5 7B Instruct, consistently among the most downloaded models on Hugging Face.
+# Apache 2.0, and not gated: no Hugging Face token is required.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: qwen2_5_7b_instruct
+  description: Alibaba Qwen2.5 7B Instruct, served by vLLM on one NVIDIA A10G, with tool calling.
+  version: 1.0.0
+  tags:
+  - qwen
+  - alibaba
+  - vllm
+  - chat
+  - tool-calling
+  - multilingual
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/Qwen/Qwen2.5-7B-Instruct
+spec:
+  model:
+    source: huggingface
+    repository: Qwen/Qwen2.5-7B-Instruct
+    revision: main
+    servedName: qwen2.5-7b-instruct
+    license: apache-2.0
+    architecture: qwen2
+    parameterCount: 7615616512
+    contextWindow: 32768
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 16384
+    args:
+    - --enable-auto-tool-choice
+    - --tool-call-parser
+    - hermes
+  compute: gpu_a10g_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 20
+    cpu: '4'
+    memory: 23Gi

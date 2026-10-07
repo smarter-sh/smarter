@@ -4,6 +4,12 @@ import yaml
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser
 
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
+
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(f"{__name__}.YAMLParser()")
+
 
 class YAMLParser(BaseParser):
     """A custom parser for YAML request payloads."""
@@ -14,6 +20,8 @@ class YAMLParser(BaseParser):
         # pylint: disable=W0707
         try:
             data = stream.read().decode("utf-8")
-            return yaml.safe_load(data)
+            retval = yaml.safe_load(data)
+            logger.debug("%s.parse() - successfully parsed YAML data: %s", logger_prefix, retval)
+            return retval
         except ValueError as exc:
-            raise ParseError(f"YAML parse error - {str(exc)}")
+            raise ParseError(f"{logger_prefix}.parse() YAML parse error - {str(exc)}")

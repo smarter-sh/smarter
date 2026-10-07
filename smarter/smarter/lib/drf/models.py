@@ -1,29 +1,44 @@
 """DRF knox authtoken model and manager."""
 
+import hmac
 import uuid
 from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Optional
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from knox import crypto
-from knox.models import AuthToken, AuthTokenManager
+from knox.models import AuthToken
 from knox.settings import CONSTANTS
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import (
+    MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
+    User,
+    UserProfile,
+)
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.lib.django.model_helpers import TimestampedModel
-
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.cache import cache_results
 
 logger = getLogger(__name__)
-
 
 ###############################################################################
 # API Key Management
 ###############################################################################
-class SmarterAuthTokenManager(AuthTokenManager):
-    """API Key manager."""
+
+
+class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
+    """
+    API Key manager.
+
+    This is a custom manager derived from a combination of
+    Knox's AuthTokenManager and and Smarter's SmarterQuerySetWithPermissions
+    Queryset to provide both knox token management functionality as well as
+    Smarter's permission-based querying behavior.
+    """
 
     def create(
         self,
@@ -53,7 +68,8 @@ class SmarterAuthTokenManager(AuthTokenManager):
             **kwargs,
         )
         logger.info(
-            "Creating API Key for user %s with token %s and expiry %s",
+            "%s Creating API Key for user %s with token %s and expiry %s",
+            formatted_text("lib.drf.models.SmarterAuthTokenManager.create()"),
             user,
             token_key,
             expiry,
@@ -62,8 +78,58 @@ class SmarterAuthTokenManager(AuthTokenManager):
         return auth_token, token
 
 
-class SmarterAuthToken(AuthToken, TimestampedModel):
-    """API Key model."""
+class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
+    """
+    Represents a Smarter API Key used for authenticating and authorizing access to the Smarter platform.
+
+    This model extends Knox's `AuthToken` and includes additional metadata and management features
+    for API keys, such as naming, description, activation status, and usage tracking.
+
+    **Parameters:**
+        key_id (UUIDField): Unique identifier for the API key.
+        name (str): Human-readable name for the API key.
+        description (str, optional): Optional description of the API key's purpose.
+        last_used_at (datetime, optional): Timestamp of the last usage of the API key.
+        is_active (bool): Indicates whether the API key is currently active.
+
+    **Usage Example:**
+
+        .. code-block:: python
+
+            # Creating an API key for a staff user
+            user = User.objects.get(username="admin")
+            token, key = SmarterAuthToken.objects.create(
+                user=user,
+                name="Production Key",
+                description="Key for production API access"
+            )
+
+            # Activating or deactivating the key
+            token.activate()
+            token.deactivate()
+
+            # Toggling active status
+            token.toggle_active()
+
+            # Tracking usage
+            token.accessed()
+
+    .. note::
+
+        - API keys can only be created for staff users. Attempting to create a key for a non-staff user
+          will raise a `SmarterBusinessRuleViolation`.
+        - The `identifier` property returns a masked version of the key digest for display purposes.
+
+    .. warning::
+
+        - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
+
+    Related Models
+    --------------
+
+    - ``User``: The owner of the API key.
+    - ``MetaDataModel``: Provides created/modified timestamps and SAM metadata.
+    """
 
     objects = SmarterAuthTokenManager()
 
@@ -73,14 +139,120 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
         verbose_name_plural = "API Keys"
 
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255, blank=True, null=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    tags = models.JSONField(default=list, blank=True)
 
     @property
-    def identifier(self):
-        return "******" + str(self.digest)[-4:]
+    def record_locator(self) -> str:
+        """
+        Returns the record locator, which is derived from key_id.
+
+        The primary key of a knox AuthToken is a digest string, not an integer id,
+        so the TimestampedModel hashed_id-based record locator cannot be used.
+        """
+        return f"{self.__class__.__name__.lower()}-{self.key_id}"
+
+    @property
+    def tags_list(self) -> list[str]:
+        """Returns the tag names.
+
+        tags is a JSONField list here, not a taggit manager.
+        """
+        tags = self.tags
+        if not isinstance(tags, list):
+            return []
+        return [str(tag) for tag in tags]
+
+    @classmethod
+    def get_object_by_locator(cls, locator: str) -> Optional["SmarterAuthToken"]:
+        """Retrieves a SmarterAuthToken from a record locator created by record_locator."""
+        prefix = f"{cls.__name__.lower()}-"
+        if not locator.startswith(prefix):
+            return None
+        try:
+            return cls.objects.get(key_id=uuid.UUID(locator[len(prefix) :]))
+        except (ValueError, cls.DoesNotExist):
+            return None
+
+    @property
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """
+        Returns the token's public identifier, its key_id, as a string.
+
+        A knox AuthToken has no integer id: its primary key is its digest. The api, the
+        urls and the web console identify a token by its key_id instead.
+        """
+        return str(self.key_id)
+
+    @property
+    def hashed_id(self) -> str:  # type: ignore[override]
+        """Returns the token's public identifier.
+
+        See :attr:`id`.
+        """
+        return self.id
+
+    def clone(
+        self,
+        new_name: Optional[str] = None,
+        new_version: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "SmarterAuthToken":
+        """
+        Create a new API key with this key's metadata.
+
+        A clone is a new key: the manager creates its own token, digest and key_id, which
+        MetaDataWithOwnershipModel.clone() would otherwise copy from this key.
+
+        :param new_name: The name of the new key. Defaults to this key's name, suffixed with "_clone".
+        :param new_version: The version of the new key. Defaults to this key's version.
+        :param user_profile: The owner of the new key. Defaults to this key's owner.
+        :returns: The new key.
+        :rtype: SmarterAuthToken
+        """
+        user_profile = user_profile or self.user_profile
+        clone, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user=user_profile.user,
+            user_profile=user_profile,
+            name=new_name or f"{self.name}_clone",
+            description=self.description,
+            version=new_version or self.version,
+            annotations=self.annotations,
+            tags=self.tags,
+            is_active=self.is_active,
+        )
+        return clone
+
+    def validate_token(self, token: str) -> bool:
+        """Return True if token is this api key's token, which is stored only as its digest."""
+        if not token or token[: CONSTANTS.TOKEN_KEY_LENGTH] != self.token_key:
+            return False
+        return hmac.compare_digest(crypto.hash_token(token), self.digest)
+
+    @property
+    def identifier(self) -> str:
+        """Returns the token's digest, masked for logging."""
+        return self.mask_string(self.digest)
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL of the token's manifest detail page, which identifies the token by its key_id.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.manifest_url  # '/authtoken/d55cfbe5-89ec-4c11-90b9-3e9ec4bbbd85/'
+        """
+        # pylint: disable=C0415
+        from smarter.lib.drf.urls import AuthTokenReverseNames
+
+        return reverse(
+            f"{AuthTokenReverseNames.namespace}:{AuthTokenReverseNames.detailview}",
+            kwargs={"authtoken_id": self.key_id},
+        )
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:
@@ -88,14 +260,6 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
         if self.created is None:
             self.created = timezone.now()
         super().save(*args, **kwargs)
-
-    def has_permissions(self, user) -> bool:
-        """Determine if the authenticated user has permissions to manage this key."""
-        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            return False
-        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
-            return False
-        return user.is_staff or user.is_superuser
 
     def activate(self):
         """Activate the API key."""
@@ -117,6 +281,128 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
         if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
             self.last_used_at = datetime.now()
             self.save()
+
+    @classmethod
+    def get_cached_objects(
+        cls,
+        invalidate: Optional[bool] = False,
+        user_profile: Optional[UserProfile] = None,
+        user: Optional[User] = None,
+        name: Optional[str] = None,
+        **kwargs,
+    ) -> models.QuerySet["SmarterAuthToken"]:
+        """
+        Retrieve API keys with caching based on user profile and optional name filter using caching.
+
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool, optional
+        :param user_profile: The user profile for which to retrieve API keys.
+        :type user_profile: UserProfile, optional
+        :param user: The user for which to retrieve API keys (used if user_profile is not provided).
+        :type user: User, optional
+        :param name: Optional name filter to retrieve API keys with a specific name.
+        :type name: str, optional
+
+        :returns: A queryset of SmarterAuthToken objects matching the criteria.
+        :rtype: QuerySet[SmarterAuthToken]
+        """
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
+        logger.debug(
+            "%s called with user_profile=%s, user=%s, name=%s, invalidate=%s",
+            logger_prefix,
+            user_profile,
+            user,
+            name,
+            invalidate,
+        )
+
+        # pylint: disable=W0613
+        @cache_results(cls.cache_expiration)
+        def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
+
+            if not user_profile:
+                return cls.objects.none()
+
+            try:
+                queryset = cls.objects.select_related(
+                    "user_profile", "user_profile__account", "user_profile__user"
+                ).filter(user=user_profile.cached_user)
+                logger.debug(
+                    "%s._get_cached_objects_for_user_profile() fetched and cached objects for user_profile_id: %s",
+                    logger_prefix,
+                    user_profile_id,
+                )
+                return queryset
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error retrieving cached objects: %s", e)
+                try:
+                    queryset = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).filter(user=user_profile.cached_user)
+                    return queryset
+                except Exception as e2:
+                    logger.error("Error retrieving objects without cache: %s", e2)
+                    queryset = cls.objects.filter(user=user_profile.cached_user)
+                    return queryset
+
+        # pylint: disable=W0613
+        @cache_results(cls.cache_expiration)
+        def _get_cached_objects_for_user_profile_and_name(
+            user_profile_id: int, name: str
+        ) -> models.QuerySet["SmarterAuthToken"]:
+            """
+            Retrieve API keys for a specific user profile and name with caching.
+
+            :param user_profile_id: The ID of the user profile for which to retrieve API keys.
+            :type user_profile_id: int
+            :param name: The name of the API key to retrieve.
+            :type name: str
+
+            :returns: A queryset of SmarterAuthToken objects matching the criteria.
+            :rtype: QuerySet[SmarterAuthToken]
+            """
+            if not user_profile:
+                return cls.objects.none()
+
+            try:
+                queryset = cls.objects.select_related(
+                    "user_profile", "user_profile__account", "user_profile__user"
+                ).filter(user=user_profile.cached_user, name=name)
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error retrieving cached objects: %s", e)
+                try:
+                    queryset = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).filter(user=user_profile.cached_user, name=name)
+                except Exception as e2:
+                    logger.error("Error retrieving objects without cache: %s", e2)
+                    queryset = cls.objects.filter(user=user_profile.cached_user, name=name)
+            logger.debug(
+                "%s._get_cached_objects_for_user_profile_and_name() fetched and cached objects for user_profile_id: %s, name: %s",
+                logger_prefix,
+                user_profile_id,
+                name,
+            )
+            return queryset
+
+        if invalidate:
+            # Invalidate the cache for both functions
+            _get_cached_objects_for_user_profile.invalidate(user_profile_id=user_profile.id if user_profile else None)  # type: ignore
+            _get_cached_objects_for_user_profile_and_name.invalidate(
+                user_profile_id=user_profile.id if user_profile else None, name=name  # type: ignore
+            )
+
+        if not user_profile and user:
+            user_profile = UserProfile.get_cached_object(user=user)
+
+        if user_profile and name:
+            return _get_cached_objects_for_user_profile_and_name(user_profile.id, name)  # type: ignore
+        elif user_profile:
+            return _get_cached_objects_for_user_profile(user_profile.id)  # type: ignore
+        else:
+            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate, taggit=False)  # type: ignore
 
     def __str__(self):
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

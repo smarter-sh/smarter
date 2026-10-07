@@ -1,0 +1,31 @@
+---
+# Search and manage Jira issues and Confluence pages, with Atlassian's Remote MCP Server.
+# Documentation: https://support.atlassian.com/rovo/docs/getting-started-with-the-atlassian-remote-mcp-server/
+#
+# Prerequisite: a Smarter Secret named atlassian_mcp_access_token, containing an OAuth
+# access token issued by Atlassian's MCP authorization server. Smarter does not yet
+# perform the OAuth flow itself, and does not refresh the token.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: atlassian
+  description: Search and manage Jira issues and Confluence pages, with Atlassian's Remote MCP Server.
+  version: 1.0.0
+  tags:
+    - project-management
+    - jira
+    - confluence
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://support.atlassian.com/rovo/docs/getting-started-with-the-atlassian-remote-mcp-server/
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.atlassian.com/v1/mcp
+    authType: oauth2
+    credentials: atlassian_mcp_access_token
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

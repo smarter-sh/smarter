@@ -1,0 +1,59 @@
+---
+apiVersion: smarter.sh/v1
+kind: ApiPlugin
+metadata:
+  name: test_api_plugin
+  pluginClass: api
+  description: Get test data from the Smarter test api.
+  version: 0.1.0
+  tags:
+    - api
+    - test
+  annotations:
+    - smarter.sh/api-test/display-name: API Test Plugin
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: You are a helpful assistant for the Smarter platform test api.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 256
+  connection: test_api_connection
+  apiData:
+    # {kind} is interpolated into the path. the local Smarter test api serves
+    # /api/v1/tests/unauthenticated/list/ and /api/v1/tests/unauthenticated/dict/
+    endpoint: /api/v1/tests/unauthenticated/{kind}/
+    method: GET
+    urlParams:
+      - key: source
+        value: smarter
+    headers:
+      # overridden by the ApiConnection's token authentication.
+      - name: Authorization
+        value: Bearer manifestToken
+      - name: Accept
+        value: application/json
+      - name: X-Request-ID
+        value: testRequestId
+    body: null
+    parameters:
+      - name: kind
+        type: string
+        description: The kind of test data to return.
+        required: true
+        enum:
+          - list
+          - dict
+        default: list
+      - name: source
+        type: string
+        description: The source of the request.
+        required: false
+    testValues:
+      - name: kind
+        value: list
+      - name: source
+        value: smarter
+    limit: 10

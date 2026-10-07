@@ -1,0 +1,43 @@
+---
+# OpenAI gpt-oss-20b: a mixture-of-experts model with 3.6B active parameters, and MXFP4
+# weights of about 13 GB. It requires a recent vLLM, whose MXFP4 support varies by GPU generation:
+# check the vLLM gpt-oss recipe for your GPU, and pin engine.image accordingly.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: gpt_oss_20b
+  description: OpenAI gpt-oss-20b, an open-weight reasoning model, served by vLLM on one NVIDIA L40S.
+  version: 1.0.0
+  tags:
+  - openai
+  - gpt-oss
+  - vllm
+  - chat
+  - reasoning
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/openai/gpt-oss-20b
+spec:
+  model:
+    source: huggingface
+    repository: openai/gpt-oss-20b
+    revision: main
+    servedName: gpt-oss-20b
+    license: apache-2.0
+    architecture: gpt_oss
+    parameterCount: 21511953984
+    contextWindow: 131072
+    quantization: mxfp4
+    capabilities:
+      reasoning: true
+  engine:
+    name: vllm
+    contextLength: 32768
+  compute: gpu_l40s_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 15
+    cpu: '4'
+    memory: 19Gi

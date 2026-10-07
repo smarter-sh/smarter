@@ -1,54 +1,61 @@
 # pylint: disable=C0114,C0115
 """Plugin admin."""
+
 import re
 
 from django.contrib import admin
+from django.core.handlers.asgi import ASGIRequest
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
+from smarter.lib import logging
 
+from .manifest.enum import (
+    SAMPluginCommonMetadataClassValues,
+)
 from .models import (
-    ApiConnection,
     PluginDataApi,
+    PluginDataSkill,
     PluginDataSql,
     PluginDataStatic,
+    PluginDataWebsearch,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
     PluginSelectorHistory,
-    SqlConnection,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # Register your models here.
 class PluginSelectorInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginSelector
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
 class PluginPromptInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginPrompt
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
 class PluginDataInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginDataStatic
     extra = 0  # This will not show extra empty forms
@@ -58,12 +65,12 @@ class PluginDataInline(admin.StackedInline):
         verbose_name_plural = "Plugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
 class PluginDataApiInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginDataApi
     extra = 0  # This will not show extra empty forms
@@ -73,12 +80,12 @@ class PluginDataApiInline(admin.StackedInline):
         verbose_name_plural = "ApiPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
 class PluginDataSqlInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginDataSql
     extra = 0  # This will not show extra empty forms
@@ -88,12 +95,48 @@ class PluginDataSqlInline(admin.StackedInline):
         verbose_name_plural = "SqlPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
-class PluginStaticAdmin(RestrictedModelAdmin):
-    """Plugin model admin."""
+class PluginDataSkillInline(admin.StackedInline):
+    """Inline form for Plugin."""
+
+    model = PluginDataSkill
+    extra = 0  # This will not show extra empty forms
+
+    class Meta:
+        verbose_name = "SkillPlugin Data"
+        verbose_name_plural = "SkillPlugin Data"
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+
+class PluginDataWebsearchInline(admin.StackedInline):
+    """Inline form for Plugin."""
+
+    model = PluginDataWebsearch
+    extra = 0  # This will not show extra empty forms
+
+    class Meta:
+        verbose_name = "WebsearchPlugin Data"
+        verbose_name_plural = "WebsearchPlugin Data"
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+
+class PluginStaticAdmin(SmarterCustomerModelAdmin):
+    """
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
 
     model = PluginMeta
 
@@ -105,24 +148,32 @@ class PluginStaticAdmin(RestrictedModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
-    list_display = ("id", "author", "plugin_name", "version", "created_at", "updated_at")
+    list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
+        """Visibility is determined by ownership and role."""
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.filter(plugin_class="static").distinct()
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugin_class="static").distinct()
-        except UserProfile.DoesNotExist:
+        if not isinstance(user, User):
             return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(id__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
+        )
 
 
-class PluginApiAdmin(RestrictedModelAdmin):
-    """Plugin model admin."""
+class PluginApiAdmin(SmarterCustomerModelAdmin):
+    """
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
 
     model = PluginMeta
 
@@ -134,24 +185,33 @@ class PluginApiAdmin(RestrictedModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataApiInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
-    list_display = ("id", "author", "plugin_name", "version", "created_at", "updated_at")
+    list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
+        """Visibility is determined by ownership and role."""
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.filter(plugin_class="api").distinct()
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugin_class="api").distinct()
-        except UserProfile.DoesNotExist:
+        if not isinstance(user, User):
             return qs.none()
 
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(id__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
+        )
 
-class PluginSqlAdmin(RestrictedModelAdmin):
-    """Plugin model admin."""
+
+class PluginSqlAdmin(SmarterCustomerModelAdmin):
+    """
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
 
     model = PluginMeta
 
@@ -163,25 +223,104 @@ class PluginSqlAdmin(RestrictedModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSqlInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
-    list_display = ("id", "author", "plugin_name", "version", "created_at", "updated_at")
+    list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
+        """Visibility is determined by ownership and role."""
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.filter(plugin_class="sql").distinct()
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugin_class="sql").distinct()
-        except UserProfile.DoesNotExist:
+        if not isinstance(user, User):
             return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(id__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
+        )
 
 
-class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
+class PluginSkillAdmin(SmarterCustomerModelAdmin):
+    """
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
+
+    model = PluginMeta
+
+    def plugin_name(self, obj):
+        name = obj.name
+        formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+        return formatted_name
+
+    inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSkillInline]
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
+
+    def get_queryset(self, request):
+        """Visibility is determined by ownership and role."""
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(id__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.SKILL.value)
+        )
+
+
+class PluginWebsearchAdmin(SmarterCustomerModelAdmin):
+    """
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
+
+    model = PluginMeta
+
+    def plugin_name(self, obj):
+        name = obj.name
+        formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+        return formatted_name
+
+    inlines = [PluginSelectorInline, PluginPromptInline, PluginDataWebsearchInline]
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
+
+    def get_queryset(self, request):
+        """Visibility is determined by ownership and role."""
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(id__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.WEBSEARCH.value)
+        )
+
+
+class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     """
     Plugin Selection History model admin.
+
+    This descends from
+    PluginSelector, so visibility is determined by the parent Plugin and role.
     """
 
     model = PluginSelectorHistory
@@ -201,77 +340,13 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
     )
 
     def get_queryset(self, request):
+        """Visibility is determined by ownership of the parent Plugin and role."""
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            plugins = PluginSelector.objects.filter(plugin__account=account)
-            return qs.filter(plugin_selector__in=plugins)
-        except UserProfile.DoesNotExist:
+        if not isinstance(user, User):
             return qs.none()
-
-
-class SqlConnectionAdmin(RestrictedModelAdmin):
-    """PluginDataSql Connection model admin."""
-
-    model = SqlConnection
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-
-    list_display = (
-        "created_at",
-        "account",
-        "name",
-        "db_engine",
-        "hostname",
-        "database",
-        "username",
-        "updated_at",
-    )
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
-
-
-class ApiConnectionAdmin(RestrictedModelAdmin):
-    """PluginDataApi Connection model admin."""
-
-    model = ApiConnection
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-
-    list_display = (
-        "created_at",
-        "account",
-        "name",
-        "base_url",
-        "api_key",
-        "updated_at",
-    )
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        plugins = PluginMeta.objects.with_ownership_permission_for(user=user)
+        return qs.filter(plugin_selector__plugin__in=plugins)
 
 
 # Plugin Models
@@ -296,9 +371,23 @@ class PluginMetaSql(PluginMeta):
         verbose_name_plural = "Plugin Meta (SQL)"
 
 
+class PluginMetaSkill(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Skill)"
+        verbose_name_plural = "Plugin Meta (Skill)"
+
+
+class PluginMetaWebsearch(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Websearch)"
+        verbose_name_plural = "Plugin Meta (Websearch)"
+
+
 smarter_restricted_admin_site.register(PluginMetaStatic, PluginStaticAdmin)
 smarter_restricted_admin_site.register(PluginMetaApi, PluginApiAdmin)
 smarter_restricted_admin_site.register(PluginMetaSql, PluginSqlAdmin)
-smarter_restricted_admin_site.register(SqlConnection, SqlConnectionAdmin)
+smarter_restricted_admin_site.register(PluginMetaSkill, PluginSkillAdmin)
+smarter_restricted_admin_site.register(PluginMetaWebsearch, PluginWebsearchAdmin)
 smarter_restricted_admin_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
-smarter_restricted_admin_site.register(ApiConnection, ApiConnectionAdmin)

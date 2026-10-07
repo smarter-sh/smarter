@@ -1,21 +1,20 @@
-"""Test SAMLoader"""
+"""Test SAMLoader."""
 
-import logging
 import os
 
 import yaml
 
+from smarter.lib import logging
 from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 
 
 class TestManifestLoader(SmarterTestBase):
-    """Test SAMLoader"""
+    """Test SAMLoader."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -23,10 +22,10 @@ class TestManifestLoader(SmarterTestBase):
         self.path = os.path.join(HERE, "data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
         self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
-        self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
+        self.url = "https://cdn.smarter.sh/cli/example-manifests/plugin.yaml"
 
     def test_valid_manifest(self):
-        """Test that we can load a valid manifest"""
+        """Test that we can load a valid manifest."""
         loader = SAMLoader(manifest=self.good_manifest_text)
         self.assertTrue(loader.ready, msg="loader is not ready")
         self.assertIsInstance(loader.json_data, dict)
@@ -40,7 +39,7 @@ class TestManifestLoader(SmarterTestBase):
 
         # validate that all items in manifest_metadata_keys are in SAMMetadataKeys
         for key in loader.manifest_metadata_keys:
-            self.assertIn(key, SAMMetadataKeys.all_values())
+            self.assertIn(key, SAMMetadataKeys.all_slugs())
 
         self.assertIsInstance(loader.manifest_spec_keys, list)
         self.assertIsInstance(loader.manifest_status_keys, list)
@@ -79,12 +78,12 @@ class TestManifestLoader(SmarterTestBase):
         self.assertIsNone(loader.get_key("bad"))
 
     def test_invalid_api_version(self):
-        """Test that we can load a valid manifest"""
+        """Test that we can load a valid manifest."""
         with self.assertRaises(SAMLoaderError):
             SAMLoader(api_version="bad", manifest=self.good_manifest_text)
 
     def test_missing_metadata(self):
-        """Test that we can load a valid manifest"""
+        """Test that we can load a valid manifest."""
 
         def test_missing(element: str):
             try:
@@ -94,11 +93,13 @@ class TestManifestLoader(SmarterTestBase):
                 self.fail(f"Failed to load manifest: {e}")
             self.assertTrue(loader.ready, msg="loader is not ready")
             json_data = loader.json_data
+            if not isinstance(json_data, dict):
+                self.fail("json_data is not a dict")
             del json_data[element]
 
             # convert back to yaml
             yaml_data = yaml.dump(json_data)
-            with self.assertRaises(SAMLoaderError):
+            with self.assertRaises(SAMLoaderError, msg=f"Expected SAMLoaderError when {element} is missing"):
                 SAMLoader(manifest=yaml_data)
 
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:

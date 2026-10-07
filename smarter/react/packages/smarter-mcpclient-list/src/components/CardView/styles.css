@@ -1,0 +1,37 @@
+.card-view {
+  display: block;
+}
+
+.mcpclient-card > .card-header {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.smarter-mcpclient-card {
+}
+
+.user-mcpclient-card {
+}
+
+.card-body > p {
+  margin-bottom: 2px !important;
+}
+
+.mcpclient-list-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.mcpclient-list-card-header {
+  position: relative;
+}
+
+.mcpclient-list-card-title {
+  border-bottom: 1px solid red;
+  padding-bottom: 6px;
+}
+
+.mcpclient-list-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

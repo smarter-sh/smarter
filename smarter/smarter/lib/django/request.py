@@ -1,10 +1,11 @@
+# pylint: disable=C0302
 """
 Smarter request mixin.
 
 This is a helper class for the Django request object that resolves
-known url patterns for Smarter chatbots. key features include:
+known url patterns for Smarter llmclients. key features include:
 - lazy loading of the user, account, user profile and session_key.
-- meta data for describing chatbot characteristics.
+- meta data for describing llmclient characteristics.
 - session_key generation.
 - url parsing and validation.
 - url pattern recognition.
@@ -13,205 +14,233 @@ known url patterns for Smarter chatbots. key features include:
 
 import hashlib
 import inspect
-import json
-import logging
 import re
-import warnings
+import uuid
 from datetime import datetime
 from functools import cached_property
 from typing import Any, Optional, Union
 from unittest.mock import MagicMock
-from urllib.parse import ParseResult, urlparse, urlunsplit
+from urllib.parse import ParseResult, urlparse
 
 import tldextract
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
+from django.contrib.auth.models import AnonymousUser
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, QueryDict
+from django.http.request import RawPostDataException
+from rest_framework.exceptions import ParseError
 from rest_framework.request import Request as RestFrameworkRequest
 
-from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.mixins import AccountMixin, UserType
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     account_number_from_url,
-    get_cached_account,
     get_cached_admin_user_for_account,
 )
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.conf import smarter_settings
+from smarter.common.const import (
+    SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_IS_INTERNAL_API_REQUEST,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
-from smarter.common.utils import hash_factory, mask_string, smarter_build_absolute_uri
+from smarter.common.utils import (
+    hash_factory,
+    mask_string,
+    rfc1034_compliant_to_snake,
+    smarter_build_absolute_uri,
+)
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
+from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-# Match netloc: chatbot_name.account_number.api.environment_api_domain
+# Match netloc: llmclient_name.account_number.api.environment_api_domain
 netloc_pattern_named_url = re.compile(
-    rf"^(?P<chatbot_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_platform_domain)}(:\d+)?$"
+    rf"^(?P<llmclient_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_platform_domain)}(:\d+)?$"
 )
 
 
-def should_log(level):
+# pylint: disable=W0613
+def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING) and level >= logging.INFO
+    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, all_switches=[SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING])
+verbose_logger = logging.getSmarterLogger(__name__, condition_func=should_log_verbose)
+
+SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock]]
+"""Type alias for all Smarter request types."""
 
 
 class SmarterRequestMixin(AccountMixin):
     """
-    Helper class for the Django request object that enforces authentication and
-    provides lazy loading of the user, account, user profile and session_key.
+    Helper class for the Django request object that enforces authentication and provides lazy loading of the user, account, user profile, and session_key.
 
-    Works with any Django request object and any valid url, but is designed
-    as a helper class for Smarter ChatBot urls.
+    This mixin works with any Django request object and any valid URL, but is designed
+    as a helper class for Smarter LLMClient URLs.
 
-    Fix note: we've been boxed into making the request object an optional positional
-    argument, because Django view lifecycles do not recognize the request object
-    until well after class __init__(). Meanwhile, SmarterRequestMixin is
-    included as a mixin in the Smarter base view classes.
+    .. note::
+        The request object is an optional positional argument due to Django view lifecycles,
+        which do not recognize the request object until after class ``__init__()``.
+        ``SmarterRequestMixin`` is included as a mixin in the Smarter base view classes.
 
-    valid end points:
-        1.) root end points for named urls. Public or authenticated chats
-            self.is_chatbot_named_url==True
-        --------
-        - http://example.3141-5926-5359.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
-        - http://example.3141-5926-5359.api.localhost:8000/config		        -> smarter.apps.prompt.views.ChatConfigView
+    **Valid endpoints:**
 
-        2.) authenticated sandbox end points. Authenticated chats
-            self.is_chatbot_sandbox_url==True
-        --------
-        - http://localhost:8000/workbench/<str:name>/				            -> smarter.apps.prompt.views.ChatAppWorkbenchView
-        - http://localhost:8000/workbench/<str:name>/config/			            -> smarter.apps.prompt.views.ChatConfigView
+    1. Root endpoints for named URLs (public or authenticated chats)
+       (``self.is_llmclient_named_url == True``)
 
-        3.) smarter.sh/v1 end points. Public or authenticated chats
-            self.is_chatbot_smarter_api_url==True
-        --------
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/	-> smarter.apps.prompt.views.ChatConfigView
+       - ``http://example.3141-5926-5359.api.localhost:9357/`` → ``smarter.apps.llmclient.api.v1.views.default.DefaultLLMClientApiView``
+       - ``http://example.3141-5926-5359.api.localhost:9357/config`` → ``smarter.apps.prompt.views.PromptConfigView``
 
-        4.) command-line interface api end points. Authenticated chats
-            self.is_chatbot_cli_api_url==True
-        --------
-        - http://localhost:8000/api/v1/cli/chat/<str:name>/			            -> smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView -> * non-brokered view based on url returned by ChatConfigView
-        - http://localhost:8000/api/v1/cli/chat/config/<str:name>/", 		    -> smarter.apps.chatbot.api.v1.cli..views.nonbrokered.chat_config.ApiV1CliChatConfigApiView	-> ChatConfigView
+    2. Authenticated sandbox endpoints (authenticated chats)
+       (``self.is_llmclient_sandbox_url == True``)
 
-        5.) wtf are these???????
-        - http://localhost:8000/api/v1/chat/        ** these seem to be dead ends
-        - http://localhost:8000/api/v1/chat/
+       - ``http://localhost:9357/workbench/<str:name>/`` → ``smarter.apps.prompt.views.PromptWorkbenchView``
+       - ``http://localhost:9357/workbench/<str:name>/config/`` → ``smarter.apps.prompt.views.PromptConfigView``
 
-    example urls:
-    - http://testserver
-    - http://localhost:8000/
-    - http://localhost:8000/docs/
-    - http://localhost:8000/dashboard/
-    - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
-    - http://example.com/contact/
-    - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
-    - http://example.3141-5926-5359.api.localhost:8000/
-    - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://example.3141-5926-5359.api.localhost:8000/config/
-    - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://localhost:8000/api/v1/workbench/1/chat/
-    - http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
-    - https://hr.smarter.querium.com/
+    3. smarter.sh/v1 endpoints (public or authenticated chats)
+       (``self.is_llmclient_smarter_api_url == True``)
 
-    session_key is a unique identifier for a chat session.
-    It originates from generate_session_key() in this class.
+       - ``http://localhost:9357/api/v1/workbench/<int:llmclient_id>/prompt/`` → ``smarter.apps.llmclient.api.v1.views.default.DefaultLLMClientApiView``
+       - ``http://localhost:9357/api/v1/workbench/<int:llmclient_id>/prompt/config/`` → ``smarter.apps.prompt.views.PromptConfigView``
+
+    4. Command-line interface API endpoints (authenticated chats)
+       (``self.is_llmclient_cli_api_url == True``)
+
+       - ``http://localhost:9357/api/v1/cli/prompt/<str:name>/`` → ``smarter.apps.llmclient.api.v1.cli.views.nonbrokered.prompt.ApiV1CliPromptApiView``
+       - ``http://localhost:9357/api/v1/cli/prompt/config/<str:name>/`` → ``smarter.apps.llmclient.api.v1.cli.views.nonbrokered.chat_config.ApiV1CliPromptConfigApiView``
+
+    5. Other endpoints (possibly deprecated or unused)
+       - ``http://localhost:9357/api/v1/prompt/``
+
+    **Example URLs:**
+
+    - ``http://testserver``
+    - ``http://localhost:9357/``
+    - ``http://localhost:9357/docs/``
+    - ``http://localhost:9357/dashboard/``
+    - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/``
+    - ``http://example.com/contact/``
+    - ``http://localhost:9357/workbench/example/config/?session_key=...``
+    - ``https://hr.3141-5926-5359.alpha.api.example.com/``
+    - ``https://hr.3141-5926-5359.alpha.api.example.com/config/?session_key=...``
+    - ``http://example.3141-5926-5359.api.localhost:9357/``
+    - ``http://example.3141-5926-5359.api.localhost:9357/?session_key=...``
+    - ``http://example.3141-5926-5359.api.localhost:9357/config/``
+    - ``http://example.3141-5926-5359.api.localhost:9357/config/?session_key=...``
+    - ``http://localhost:9357/api/v1/workbench/1/prompt/``
+    - ``http://localhost:9357/api/v1/cli/prompt/smarter/?new_session=false&uid=mcdaniel``
+    - ``https://hr.smarter.sh/``
+
+    :ivar session_key: Unique identifier for a prompt session, generated by :meth:`generate_session_key`.
     """
 
     __slots__ = (
         "_instance_id",
         "_smarter_request",
+        "_smarter_request_user",
         "_timestamp",
         "_url",
         "_url_account_number",
-        "_parse_result",
+        "_parsed_url",
         "_params",
         "_session_key",
         "_data",
         "_cache_key",
+        "_srm_ready",
     )
 
     # pylint: disable=W0613
-    def __init__(self, request: Optional[HttpRequest], *args, **kwargs):
+    def __init__(self, *args, request: Optional[HttpRequest] = None, **kwargs):
         self._instance_id = id(self)
-        self._smarter_request: Optional[HttpRequest] = request
+        self._smarter_request: Optional[HttpRequest] = None
+        self._smarter_request_user: Optional[UserType] = None
         self._timestamp = datetime.now()
-        self._url: Optional[str] = None
+        self._url: Optional[ParseResult] = None
         self._url_account_number: Optional[str] = None
-        self._parse_result: ParseResult
+        self._parsed_url: Optional[ParseResult] = None
         self._params: Optional[QueryDict] = None
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
         self._data: Optional[dict] = None
         self._cache_key: Optional[str] = None
+        self._srm_ready: bool = False
 
-        if request:
-            self.init(request, *args, **kwargs)
-        else:
-            logger.warning(
-                "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
-                self.formatted_class_name,
-            )
-            super().__init__(request, *args, api_token=self.api_token, **kwargs)
-
-    def init(self, request: HttpRequest, *args, **kwargs):
-        """
-        Handles initializations that require a valid request. This is called
-        from __init__() iif the request object is passed. It is also called
-        from the smarter_request setter.
-        """
-        url = smarter_build_absolute_uri(self.smarter_request)
-
-        logger.info(
-            "%s.init() - initializing with request=%s, args=%s, kwargs=%s", self.formatted_class_name, url, args, kwargs
-        )
-
-        if url is None:
-            raise SmarterValueError(
-                f"{self.formatted_class_name}.__init__() - request url is None or empty. request={request}"
-            )
-
-        self._parse_result = urlparse(url)
-        if not self._parse_result.scheme or not self._parse_result.netloc:
-            raise SmarterValueError(f"{self.formatted_class_name} - request url is not a valid URL. url={url}")
-
-        # rebuild the url minus any query parameters
-        # example:
-        # a request url like https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
-        # will return https://hr.3141-5926-5359.alpha.api.smarter.sh/config/
-        self._url = urlunsplit((self._parse_result.scheme, self._parse_result.netloc, self._parse_result.path, "", ""))
-        self._url = SmarterValidator.urlify(self._url)
-
-        super().__init__(request, *args, api_token=self.api_token, **kwargs)
-
-        logger.info(
-            "%s.init() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s user_profile=%s, account=%s",
-            self.formatted_class_name,
-            self._instance_id,
+        stack = inspect.stack()
+        caller = stack[1]
+        module_name = caller.frame.f_globals["__name__"]
+        verbose_logger.debug(
+            "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
+            self.srm_formatted_class_name,
+            self.formatted_text(module_name),
             request,
             args,
             kwargs,
-            request.META.get("HTTP_AUTHORIZATION") if request and hasattr(request, "META") else None,
-            self.user_profile if self.user_profile else None,
-            self.account if self.account else None,
         )
+        request = request or next(
+            (req for req in args if isinstance(req, (RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock))), None
+        )
+        # ---------------------------------------------------------------------
+        # the following reassignments are not necessarily technically required,
+        # but they make it explicit what arguments are being passed to
+        # the parent AccountMixin class, and this gives us an opportunity to
+        # log the values for debugging purposes.
+        # ---------------------------------------------------------------------
+        user = kwargs.pop("user", None) or next((user for user in args if isinstance(user, User)), None)
+        if user:
+            verbose_logger.debug(
+                "%s.__init__() - found a user argument: %s",
+                self.srm_formatted_class_name,
+                user,
+            )
+            self._smarter_request_user = user
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (user_profile for user_profile in args if isinstance(user_profile, UserProfile)), None
+        )
+        if user_profile:
+            verbose_logger.debug(
+                "%s.__init__() - found a user_profile argument: %s",
+                self.srm_formatted_class_name,
+                user_profile,
+            )
+        account = kwargs.pop("account", None) or next(
+            (account for account in args if isinstance(account, Account)), None
+        )
+        if account:
+            verbose_logger.debug(
+                "%s.__init__() - found an account argument: %s",
+                self.srm_formatted_class_name,
+                account,
+            )
+        self._smarter_request = request
+        AccountMixin.__init__(
+            self,
+            request=request,
+            account=account,
+            user=self._smarter_request_user,
+            user_profile=user_profile,
+            api_token=self.api_token,
+        )
+        if request:
+            self.smarter_request = request
+        else:
+            verbose_logger.debug(
+                "%s.__init__() - no request provided. Cannot initialize. Calling super().__init__() with args=%s, kwargs=%s",
+                self.srm_formatted_class_name,
+                args,
+                kwargs,
+            )
+            return None
 
-        if isinstance(self._session_key, str):
-            SmarterValidator.validate_session_key(self._session_key)
-            logger.info(
-                "%s.init() - session_key is set to %s from kwargs",
-                self.formatted_class_name,
-                self._session_key,
+        if not self.smarter_request:
+            raise SmarterValueError(
+                f"{self.srm_formatted_class_name}.__init__() - did not find a request object. SmarterRequestMixin cannot be initialized."
             )
 
-        if self._parse_result and self.is_chatbot_named_url:
-            account_number = account_number_from_url(self.url)
+        if self.parsed_url and self.is_llmclient_named_url:
+            account_number = self.url_account_number
             if account_number:
                 self._url_account_number = account_number
                 if self.account and self.account.account_number != account_number:
@@ -219,29 +248,172 @@ class SmarterRequestMixin(AccountMixin):
                         f"account number from url ({account_number}) does not match existing account ({self.account.account_number})."
                     )
 
-            if self.account and not self._user:
-                logger.warning(
-                    "%s.init() - account (%s) is set but user is not.",
-                    self.formatted_class_name,
-                    self.account,
-                )
+        self.eval_llmclient_url()
 
-        self.eval_chatbot_url()
+        logger.debug(
+            "%s.__init__() - finished %s",
+            self.srm_formatted_class_name,
+            SmarterRequestMixin.__repr__(self),
+        )
 
-        if self.is_requestmixin_ready:
-            self.helper_logger(
-                f"init() {self._instance_id} initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
+        self._srm_log_ready_status()
+
+    def __str__(self) -> str:
+        """
+        String representation of the SmarterRequestMixin instance.
+
+        :return: A string describing the instance.
+        :rtype: str
+        """
+        return f"{self.formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
+
+    def __repr__(self) -> str:
+        """
+        Official string representation of the SmarterRequestMixin instance.
+
+        :return: A string representation suitable for debugging.
+        :rtype: str
+        """
+        return self.__str__()
+
+    def __bool__(self) -> bool:
+        """
+        Boolean representation of the SmarterRequestMixin instance.
+
+        :return: True if the instance is srm_ready, False otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.srm_ready
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.__bool__() - encountered an error while checking srm_ready: %s",
+                self.srm_formatted_class_name,
+                e,
+                exc_info=True,
             )
-        else:
-            msg = f"{self.formatted_class_name}.init() - request {self._instance_id} is not ready. request={self.smarter_request}"
-            logger.warning(msg)
+            return False
 
-        logger.info("SmarterRequestMixin().init() - finished %s", self.dump())
+    def __hash__(self) -> int:
+        """
+        Hash representation of the SmarterRequestMixin instance.
+
+        :return: An integer hash of the instance.
+        :rtype: int
+        """
+        return hash(
+            (
+                self.url,
+                self.user_profile,
+            )
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Equality comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instances are equal, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return False
+        return self.url == other.url and self.user_profile == other.user_profile
+
+    def __lt__(self, other: Any) -> bool:
+        """
+        Less-than comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is less than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) < (other.url, other.user_profile)
+
+    def __le__(self, other: Any) -> bool:
+        """
+        Less-than-or-equal comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is less than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) <= (other.url, other.user_profile)
+
+    def __gt__(self, other: Any) -> bool:
+        """
+        Greater-than comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is greater than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) > (other.url, other.user_profile)
+
+    def __ge__(self, other: Any) -> bool:
+        """
+        Greater-than-or-equal comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is greater than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) >= (other.url, other.user_profile)
+
+    def setup(self, *args, request: Optional[HttpRequest] = None, user: Optional[UserType] = None, **kwargs):
+        """
+        Setup method to initialize the SmarterRequestMixin with the request and user.
+
+        This method is called during the setup phase of a Django view. It initializes
+        the request and user attributes of the mixin. The request is set using the
+        smarter_request property setter, which also handles URL parsing and user authentication.
+
+        :param args: Positional arguments passed to the setup method.
+        :param request: The HTTP request object to be associated with this mixin instance.
+        :param user: The user associated with the request, if available.
+        :param kwargs: Keyword arguments passed to the setup method.
+        :return: None
+        """
+        logger.debug(
+            "%s.setup() called with args: %s, kwargs: %s, request: %s, user: %s",
+            self.srm_formatted_class_name,
+            args,
+            kwargs,
+            request,
+            user,
+        )
+        self.smarter_request = request
+        super().setup(*args, user=user, **kwargs)
 
     def invalidate_cached_properties(self):
         """
-        Invalidate cached properties to force re-evaluation.
-        This is useful for testing or when the request object changes.
+        Invalidates all cached properties on the instance to force re-evaluation.
+
+        This method removes all attributes cached by `@cached_property` decorators
+        from the instance's `__dict__`. It is useful for testing or when the request
+        object changes and you need to ensure that all dependent properties are recalculated.
+
+        Example::
+
+            from smarter.lib.django.request import SmarterRequestMixin
+
+            class Foo(SmarterRequestMixin):
+                pass
+
+            foo = Foo(request)
+            foo.invalidate_cached_properties(request)
+
+        Raises:
+            None
         """
         for cls in self.__class__.__mro__:
             for name, value in inspect.getmembers(cls):
@@ -249,60 +421,329 @@ class SmarterRequestMixin(AccountMixin):
                     self.__dict__.pop(name, None)
 
     @property
-    def smarter_request(self) -> HttpRequest:
-        """renaming this to avoid potential name collisions in child classes"""
+    def smarter_request(self) -> SmarterRequestType:
+        """
+        Returns the current request object.
+
+        This property is named to avoid potential name collisions in child classes.
+        This property is preferred over standard Django request types in that
+        it more elegantly resolves idiosyncratic usage like Unit tests, Sphinx docs,
+        and other non-standard request objects.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            req = request_mixin.smarter_request
+
+        :return: The current request object.
+        """
         return self._smarter_request
 
     @smarter_request.setter
-    def smarter_request(self, request: HttpRequest):
+    def smarter_request(self, request: SmarterRequestType):
+        self.clear_cached_properties()
         self._smarter_request = request
+        self._data = None
+        verbose_logger.debug(
+            "%s.smarter_request setter - request set to: %s",
+            self.srm_formatted_class_name,
+            request,
+        )
         if request is not None:
-            logger.info(
-                "%s.smarter_request setter called with request: %s",
-                self.formatted_class_name,
-                smarter_build_absolute_uri(request),
-            )
-            self.init(request)
+            url = smarter_build_absolute_uri(request) if request else None
+            if not url:
+                raise SmarterValueError(
+                    f"{self.srm_formatted_class_name}.smarter_request setter - could not build url from request: {request}"
+                )
+            self._url = urlparse(url)
 
-    @cached_property
-    def auth_header(self) -> Optional[str]:
-        """Get the Authorization header from the request."""
+            verbose_logger.debug(
+                "%s.smarter_request setter - url set to: %s",
+                self.srm_formatted_class_name,
+                self._url,
+            )
+            if self.is_authenticated:
+                if not self.user:
+                    self._smarter_request_user = request.user  # type: ignore
+                    verbose_logger.debug(
+                        "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
+                        self.srm_formatted_class_name,
+                        self.smarter_request_user,
+                        request.user.is_authenticated,
+                    )
+                    self.user = self._smarter_request_user
+                else:
+                    if (self.user != request.user) and not isinstance(self.user, AnonymousUser):
+                        raise SmarterValueError(
+                            f"{self.srm_formatted_class_name}.smarter_request setter - user mismatch: existing user: {self.user}, request user: {request.user}"
+                        )
+            else:
+                # this duplicates the functionality of the DRF
+                # authentication class. there are a variety of
+                # cases where SmarterRequestMixin is initialized
+                # before DRF reaches the point in its lifecycle
+                # where authentication is performed. in those cases,
+                # we attempt to authenticate here, to the same overall
+                # effect.
+                verbose_logger.debug(
+                    "%s.smarter_request setter - request does not have an authenticated user. Attempting to authenticate.",
+                    self.srm_formatted_class_name,
+                )
+                self.authenticate()
+        verbose_logger.debug(
+            "%s.smarter_request setter - finished setting smarter_request. request: %s, url: %s, smarter_request_user: %s",
+            self.srm_formatted_class_name,
+            request,
+            self.url,
+            self.smarter_request_user,
+        )
+
+    @property
+    def smarter_request_user(self) -> Optional[UserType]:
+        """
+        Returns the user associated with the request.
+
+        This property is named to avoid potential name collisions in child classes.
+        It retrieves the user from the request object if available.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            user = request_mixin.smarter_request_user
+
+        :return: The user associated with the request, or None if not available.
+        """
+        return self._smarter_request_user
+
+    @property
+    def smarter_client(self) -> Optional[str]:
+        """
+        Get the smarter client name from the request.
+
+        This property checks for the "X-Smarter-Client" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            client_name = request_mixin.smarter_client
+
+        :return: The value of the "X-Smarter-Client" header as a string, or None if not present.
+        """
         return (
-            self._smarter_request.META.get("HTTP_AUTHORIZATION")
-            if self._smarter_request and hasattr(self._smarter_request, "META")
+            self._smarter_request.headers.get("X-Smarter-Client")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def smarter_client_version(self) -> Optional[str]:
+        """
+        Get the smarter client version from the request.
+
+        This property checks for the "X-Smarter-ClientVersion" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            client_version = request_mixin.smarter_client_version
+
+        :return: The value of the "X-Smarter-ClientVersion" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-ClientVersion")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def smarter_client_type(self) -> Optional[str]:
+        """
+        Get the smarter client type from the request.
+
+        This property checks for the "X-Smarter-ClientType" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            client_type = request_mixin.smarter_client_type
+
+        :return: The value of the "X-Smarter-ClientType" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-ClientType")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def smarter_request_id(self) -> Optional[str]:
+        """
+        Get the smarter request ID from the request.
+
+        This property checks for the "X-Smarter-RequestId" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            request_id = request_mixin.smarter_request_id
+
+        :return: The value of the "X-Smarter-RequestId" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-RequestId")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    def generate_smarter_request_id(self) -> str:
+        """Generates a unique identifier for the request."""
+        return uuid.uuid4().hex
+
+    @property
+    def smarter_capabilities(self) -> Optional[str]:
+        """
+        Get the smarter capabilities from the request.
+
+        This property checks for the "X-Smarter-Capabilities" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            capabilities = request_mixin.smarter_capabilities
+
+        :return: The value of the "X-Smarter-Capabilities" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-Capabilities")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def auth_header(self) -> Optional[str]:
+        """
+        Get the Authorization header from the request.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            print(request_mixin.auth_header)
+
+        This property checks for the "Authorization" header in the request headers or in the Django META dictionary.
+
+        :return: The value of the "Authorization" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("Authorization")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
 
     @cached_property
     def api_token(self) -> Optional[bytes]:
-        """Get the API token from the request."""
+        """
+        Get the API token from the request.
+
+        :return: The API token as bytes if present in the Authorization header, otherwise None.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            token = request_mixin.api_token
+
+        :return: The API token as bytes, or None if not present.
+        """
         if isinstance(self.auth_header, str) and self.auth_header.startswith("Token "):
+            verbose_logger.debug(
+                "%s.api_token() - found Token auth header.",
+                self.srm_formatted_class_name,
+            )
             return self.auth_header.split("Token ")[1].encode()
+
+        if isinstance(self.auth_header, str) and self.auth_header.startswith("Bearer "):
+            verbose_logger.debug(
+                "%s.api_token() - found Bearer auth header.",
+                self.srm_formatted_class_name,
+            )
+            return self.auth_header.split("Bearer ")[1].encode()
         return None
 
-    @cached_property
+    @property
     def qualified_request(self) -> bool:
         """
-        A cursory screening of the wsgi request object to look for
-        any disqualifying conditions that confirm that this is not a
-        request that we are interested in.
+        A cursory screening of the WSGI request object to look for any disqualifying conditions that confirm this is not a request that we are interested in.
+
+        The request is considered "qualified" if **all** of the following are true:
+
+        - The request object (`self._smarter_request`) is present.
+        - The URL path is present and non-empty.
+        - The request does **not** originate from an internal AWS Kubernetes subnet (netloc starts with `192.168`).
+        - The path is **not** in the list of `amnesty_urls`.
+        - The path does **not** start with `/admin/`.
+        - The path does **not** start with `/docs/`.
+        - The path does **not** end with a static file extension (e.g., `.css`, `.js`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.woff`, `.woff2`, `.ttf`, `.eot`, `.ico`).
+
+        :return: True if the request passes all checks and is of interest, otherwise False.
+
+        Example::
+
+            # True case: a valid llmclient request
+            request_mixin = SmarterRequestMixin(request)
+            if request_mixin.qualified_request:
+                print("This is a qualified llmclient request.")
+
+            # False case: a static asset or admin/docs request
+            static_request = SmarterRequestMixin(static_asset_request)
+            if not static_request.qualified_request:
+                print("This request is not of interest.")
         """
         if not self._smarter_request:
+            verbose_logger.debug(
+                "%s.qualified_request() - request is None. Not a qualified request.",
+                self.srm_formatted_class_name,
+            )
             return False
-        path = self._parse_result.path if self._parse_result else None
+        path = self.parsed_url.path if self.parsed_url else None
         if not path:
+            verbose_logger.debug(
+                "%s.qualified_request() - request path is None or empty. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return False
 
         if self.parsed_url and self.parsed_url.netloc and self.parsed_url.netloc[:7] == "192.168":
+            verbose_logger.debug(
+                "%s.qualified_request() - request originates from internal AWS Kubernetes subnet. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             # internal processes running in a AWS kubernetes internal subnet.
-            # definitely not a chatbot request.
+            # definitely not an llmclient request.
             return False
 
         if path in self.amnesty_urls:
+            verbose_logger.debug(
+                "%s.qualified_request() - request path is in amnesty_urls. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
+            # amnesty urls are not llmclient requests.
             return False
-        if path.startswith("/admin/"):
+
+        if self.url_path_parts and self.url_path_parts[0] == "admin":
+            verbose_logger.debug(
+                "%s.qualified_request() - request path starts with /admin/. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return False
-        if path.startswith("/docs/"):
+        if self.url_path_parts and self.url_path_parts[0] == "docs":
+            verbose_logger.debug(
+                "%s.qualified_request() - request path starts with /docs/. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return False
 
         static_extensions = [
@@ -319,71 +760,174 @@ class SmarterRequestMixin(AccountMixin):
             ".eot",
             ".ico",
         ]
-        if any(path.endswith(ext) for ext in static_extensions):
+        if isinstance(path, str) and any(path.replace("/", "").endswith(ext) for ext in static_extensions):
+            verbose_logger.debug(
+                "%s.qualified_request() - request path ends with a static file extension. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
+            # static asset requests are not llmclient requests.
             return False
 
+        verbose_logger.debug(
+            "%s.qualified_request() - request is qualified: %s",
+            self.srm_formatted_class_name,
+            self.url,
+        )
         return True
 
     @property
-    def url(self) -> str:
+    def url(self) -> Optional[str]:
         """
-        The str representation of the ParseResult object stored in _parse_result.
+        The string representation of the ParseResult object stored in _parsed_url.
+
+        :return: The URL as a string.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            url_str = request_mixin.url
+            print(url_str)  # e.g., 'https://example.com/path/'
         """
-        if not isinstance(self._parse_result, ParseResult):
-            raise SmarterValueError(
-                f"The URL has not been initialized as a ParseResult. Received type: {type(self._parse_result)}"
-            )
+        if not self.smarter_request:
+            return None
         if self._url:
-            return self._url
-
-        logger.error(
-            "%s.url() property was accessed before it was initialized. request: %s",
-            self.formatted_class_name,
-            self.smarter_request,
-        )
-        raise SmarterValueError("The URL has not been initialized. Please check the request object.")
-
-    @property
-    def parsed_url(self) -> ParseResult:
-        """
-        expose our private url
-        """
-        if not isinstance(self._parse_result, ParseResult):
-            raise SmarterValueError("The URL has not been initialized as a ParseResult.")
-        return self._parse_result
-
-    @property
-    def url_path_parts(self) -> list:
-        """
-        Extract the path parts from the URL.
-        """
-        return self.parsed_url.path.strip("/").split("/")
-
-    @property
-    def params(self) -> Optional[QueryDict]:
-        """
-        The query string parameters from the Django request object. This extracts
-        the query string parameters from the request object and converts them to a
-        dictionary. This is used in child views to pass optional command-line
-        parameters to the broker.
-        """
-        if not self._params:
+            if isinstance(self._url, ParseResult):
+                return self._url.geturl()
             try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))
-            except AttributeError as e:
+                url = SmarterValidator.urlify(self._url)
+                parsed = urlparse(url)
+                base_url = parsed._replace(query="", fragment="").geturl()
+                if isinstance(base_url, ParseResult):
+                    raise SmarterValueError("Unexpected ParseResult type for base_url.")
+                return base_url
+            except SmarterValueError as e:
                 logger.error(
-                    "%s.params() internal error. Could not parse query string parameters: %s",
-                    self.formatted_class_name,
+                    "%s.url() property encountered an error while validating URL: %s",
+                    self.srm_formatted_class_name,
                     e,
                 )
                 return None
+
+        logger.warning(
+            "%s.url() property was accessed before it was initialized. request: %s",
+            self.srm_formatted_class_name,
+            self.smarter_request,
+        )
+        return None
+
+    @property
+    def parsed_url(self) -> Optional[ParseResult]:
+        """
+        Expose the private ParseResult URL object as a public property.
+
+        :return: The parsed URL as a `ParseResult` object.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            parsed = request_mixin.parsed_url
+            print(parsed.netloc)  # e.g., 'example.com'
+        """
+        if self._parsed_url is None and self.url is not None:
+            verbose_logger.debug(
+                "%s.parsed_url() - parsing URL: %s %s", self.srm_formatted_class_name, self.url, type(self.url)
+            )
+            if isinstance(self.url, ParseResult):
+                self._parsed_url = self.url
+            else:
+                self._parsed_url = urlparse(self.url) if isinstance(self.url, str) else None
+            verbose_logger.debug(
+                "%s.parsed_url() - parsed URL: %s",
+                self.srm_formatted_class_name,
+                self._parsed_url,
+            )
+        return self._parsed_url
+
+    @cached_property
+    def url_path_parts(self) -> list[str]:
+        """
+        Extract the path parts from the URL.
+
+        :return: A list of strings representing each part of the URL path.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            parts = request_mixin.url_path_parts
+            print(parts)  # e.g., ['api', 'v1', 'workbench', '1', 'prompt']
+        """
+        if not self.parsed_url:
+            return []
+        path = self.parsed_url.path
+        if isinstance(path, bytes):
+            path = path.decode("utf-8")
+        return path.strip("/").split("/")
+
+    @cached_property
+    def params(self) -> QueryDict:
+        """
+        The query string parameters from the Django request object.
+
+        This extracts the query string parameters from the request object and converts them to a dictionary.
+        Used in child views to pass optional command-line parameters to the broker.
+
+        :return: QueryDict containing the query string parameters.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            params = request_mixin.params
+            print(params)  # e.g., {'session_key': 'abc123', 'uid': 'xyz'}
+        """
+        if not self.smarter_request:
+            logger.warning(
+                "%s.params() - request is None or not set. Cannot extract query string parameters.",
+                self.srm_formatted_class_name,
+            )
+            return QueryDict("")
+        if not hasattr(self.smarter_request, "META"):
+            logger.warning(
+                "%s.params() - request does not have META attribute. Cannot extract query string parameters.",
+                self.srm_formatted_class_name,
+            )
+            return QueryDict("")
+        if self.smarter_request.META is None:
+            logger.warning(
+                "%s.params() - request.META is None. Cannot extract query string parameters.",
+                self.srm_formatted_class_name,
+            )
+            return QueryDict("")
+        # Always construct QueryDict, even if QUERY_STRING is empty
+        query_string = self.smarter_request.META.get("QUERY_STRING", "")
+        if not query_string:
+            verbose_logger.debug(
+                "%s.params() - request has no query string parameters.",
+                self.srm_formatted_class_name,
+            )
+        if not self._params:
+            try:
+                self._params = QueryDict(query_string)  # type: ignore
+                if not self._params:
+                    raise AttributeError("No query string parameters found.")
+            except AttributeError:
+                return QueryDict("")
         return self._params
 
     @property
     def uid(self) -> Optional[str]:
         """
-        Unique identifier for the client. This is assumed to be a
-        combination of the machine mac address and the hostname.
+        Unique identifier for the client.
+
+        This is assumed to be a combination of the machine MAC address and the hostname.
+
+        :return: The client UID as a string, or None if not available.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            uid = request_mixin.uid
+            print(uid)  # e.g., '00:1A:2B:3C:4D:5E-myhost'
         """
         return self.params.get("uid") if isinstance(self.params, QueryDict) else None
 
@@ -391,23 +935,37 @@ class SmarterRequestMixin(AccountMixin):
     def cache_key(self) -> Optional[str]:
         """
         Returns a cache key for the request.
-        This is used to cache the chat request thread.
 
-        The key is a combination of the class name, authenticated username,
-        the chat name, and the client UID. Currently used by the
-        ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
+        This is used to cache the prompt request thread. The key is a combination of:
+        - the class name,
+        - authenticated username,
+        - the prompt name,
+        - and the client UID.
 
-        :param name: a generic object or resource name
-        :param uid: UID of the client, assumed to have been created from the
-         machine mac address and the hostname of the client
+        Currently used by the ApiV1CliPromptConfigApiView and ApiV1CliPromptApiView as a means of sharing the session_key.
+
+        :param name: A generic object or resource name.
+        :param uid: UID of the client, assumed to have been created from the machine MAC address and the hostname of the client.
+        :return: A unique cache key string.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            key = request_mixin.cache_key
+            print(key)  # e.g., 'a1b2c3d4e5f6...'
         """
         if self._cache_key:
+            verbose_logger.debug(
+                "%s.cache_key() - returning cached cache key: %s",
+                self.srm_formatted_class_name,
+                self._cache_key,
+            )
             return self._cache_key
 
         if not self.smarter_request:
             logger.warning(
                 "%s.cache_key() - request is None or not set. Cannot generate cache key.",
-                self.formatted_class_name,
+                self.srm_formatted_class_name,
             )
             return None
 
@@ -419,44 +977,85 @@ class SmarterRequestMixin(AccountMixin):
         hash_string = hash_object.hexdigest()
         self._cache_key = hash_string
 
+        verbose_logger.debug(
+            "%s.cache_key() - generated cache key: %s",
+            self.srm_formatted_class_name,
+            self._cache_key,
+        )
+
         return self._cache_key
 
     @property
-    def session_key(self):
+    def session_key(self) -> str:
         """
-        Getter for the session_key property. The session_key is a unique identifier
-        for a chat session. It is used to identify the chat session across multiple requests.
+        Getter for the session_key property.
+
+        The session_key is a unique identifier for a prompt session.
+        It is used to identify the prompt session across multiple requests.
+        If the session_key is not already set, it attempts to find it
+        in the URL parameters. Barring that, it generates a new one.
+
+        :return: The session key as a string.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            session_key = request_mixin.session_key
+            print(session_key)  # e.g., '38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc'
         """
         if not self._session_key:
             self._session_key = self.find_session_key() or self.generate_session_key()
             SmarterValidator.validate_session_key(self._session_key)
-            logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, self._session_key)
+            verbose_logger.debug(
+                "%s.session_key() - setting session_key to %s", self.srm_formatted_class_name, self._session_key
+            )
         return self._session_key
 
     @property
-    def smarter_request_chatbot_id(self) -> Optional[int]:
+    def smarter_request_llmclient_id(self) -> Optional[int]:
         """
-        Extract the chatbot id from the URL.
-        example: http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
+        Extract the llmclient id from the URL.
+
+        Example:
+
+            http://localhost:9357/workbench/llm-clients/rMTAwMDAyNwx/prompt/
+
+            returns the pk id that when decoded from the hashed ID format
+            corresponds to the llmclient id.
+
+        :return: The llmclient id as an integer, or None if not found.
         """
-        if not self.smarter_request:
-            return None
-        if not self.qualified_request:
+        if not self.is_llmclient:
             return None
 
-        if self.is_chatbot_smarter_api_url:
+        hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
+        if hashed_id:
+            return TimestampedModel.id_from_hashed_id(hashed_id)
+
+        if self.is_llmclient_smarter_api_url:
             path_parts = self.url_path_parts
-            return int(path_parts[3])
+            return int(path_parts[3]) if isinstance(path_parts, list) and len(path_parts) > 3 else None
 
-        if self.is_chatbot_named_url:
-            # can't get from ChatBot bc of circular import
+        if self.is_llmclient_named_url:
+            # can't get from LLMClient bc of circular import
+            return None
+
+        if self.is_llmclient_sandbox_url:
             return None
 
     @property
     def url_account_number(self) -> Optional[str]:
         """
-        http://example.3141-5926-5359.api.localhost:8000/config
-        SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
+        Extract the account number from the URL using the pattern defined in.
+
+        SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.
+
+        Example:
+            http://example.3141-5926-5359.api.localhost:9357/config
+
+            returns "3141-5926-5359"
+
+        :return: The account number as a string, or None if not found.
         """
         if self._url_account_number:
             return self._url_account_number
@@ -465,165 +1064,312 @@ class SmarterRequestMixin(AccountMixin):
             return None
         if not self.qualified_request:
             return None
-        self._url_account_number = account_number_from_url(self.url)
+        self._url_account_number = account_number_from_url(self.url)  # type: ignore
         return self._url_account_number
 
     @cached_property
-    def smarter_request_chatbot_name(self) -> Optional[str]:
+    def smarter_request_llmclient_name(self) -> Optional[str]:
         """
-        Extract the chatbot name from the URL.
-        http://example.3141-5926-5359.api.localhost:8000/config
+        Extract the llmclient name from the URL.
+
+        Example:
+            http://example.3141-5926-5359.api.localhost:9357/config
+
+            returns "example"
+
+        :return: The llmclient name as a string, or None if not found.
         """
-        if not self.is_chatbot:
+        if not self.is_llmclient:
+            verbose_logger.debug(
+                "%s.smarter_request_llmclient_name() - request is not an llmclient url: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return None
 
-        # 1.) http://example.api.localhost:8000/config
-        if self.is_chatbot_named_url and self.parsed_url is not None:
+        # 1.) http://example-username.api.localhost:9357/config
+        if self.is_llmclient_named_url and self.parsed_url is not None:
             netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             retval = netloc_parts[0] if netloc_parts else None
+
+            # if the name is hyphenated, then split on hyphen and take first part.
+            if retval and "-" in retval:
+                retval = retval.split("-")[0]
+
+            retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
+            verbose_logger.debug(
+                "%s.smarter_request_llmclient_name() - extracted llmclient name from named url: %s",
+                self.srm_formatted_class_name,
+                retval,
+            )
             return retval
 
-        # 2.) example: http://localhost:8000/workbench/<str:name>/config/
-        if self.is_chatbot_sandbox_url:
+        # 2.) example: http://localhost:9357/workbench/<str:name>/config/
+        if self.is_llmclient_sandbox_url:
             try:
                 retval = self.url_path_parts[1]
+
+                # if the name is hyphenated, then split on hyphen and take first part.
+                if retval and "-" in retval:
+                    retval = retval.split("-")[0]
+
+                retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
+                verbose_logger.debug(
+                    "%s.smarter_request_llmclient_name() - extracted llmclient name from sandbox url: %s",
+                    self.srm_formatted_class_name,
+                    retval,
+                )
                 return retval
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
-                    "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
-                    self.formatted_class_name,
+                    "%s.smarter_request_llmclient_name() - failed to extract llmclient name from sandbox url: %s",
+                    self.srm_formatted_class_name,
                     self.url,
                 )
-        # 3.) http://localhost:8000/api/v1/workbench/<int:chatbot_id>
+
+        # 3.) http://localhost:9357/api/v1/workbench/<int:llmclient_id>
         # no name. nothing to do in this case.
-        if self.is_chatbot_smarter_api_url:
+        if self.is_llmclient_smarter_api_url:
+            verbose_logger.debug(
+                "%s.smarter_request_llmclient_name() - smarter api url has no llmclient name: %s",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return None
 
-        # 4.) http://localhost:8000/api/v1/cli/chat/config/<str:name>/
-        #     http://localhost:8000/api/v1/cli/chat/<str:name>/
-        if self.is_chatbot_cli_api_url:
+        # 4.) http://localhost:9357/api/v1/cli/prompt/config/<str:name>/
+        #     http://localhost:9357/api/v1/cli/prompt/<str:name>/
+        if self.is_llmclient_cli_api_url:
             try:
                 retval = self.url_path_parts[-1]
+
+                # if the name is hyphenated, then split on hyphen and take first part.
+                if retval and "-" in retval:
+                    retval = retval.split("-")[0]
+
+                retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
+                verbose_logger.debug(
+                    "%s.smarter_request_llmclient_name() - extracted llmclient name from cli api url: %s",
+                    self.srm_formatted_class_name,
+                    retval,
+                )
                 return retval
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
-                    "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
-                    self.formatted_class_name,
+                    "%s.smarter_request_llmclient_name() - failed to extract llmclient name from cli url: %s",
+                    self.srm_formatted_class_name,
                     self.url,
                 )
 
+        verbose_logger.debug(
+            "%s.smarter_request_llmclient_name() - could not extract llmclient name from url: %s",
+            self.srm_formatted_class_name,
+            self.url,
+        )
         return None
 
     @property
     def timestamp(self):
         """
-        create a consistent timestamp
-        based on the time that this object was instantiated.
+        Create a consistent timestamp based on the time that this object was instantiated.
+
+        :return: The timestamp as a `datetime` object.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            ts = request_mixin.timestamp
+            print(ts)  # e.g., 2025-12-01 12:34:56.789012
         """
         return self._timestamp
 
-    @property
+    @cached_property
     def data(self) -> Optional[Union[dict, list, str]]:
         """
         Get the request body data as a dictionary, list or str.
-        used for setting the session_key.
+
+        Used for setting the session_key.
+
+        :return: The request body data as a dict, list, or str, or None if not available.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            data = request_mixin.data
+            print(data)  # e.g., {'session_key': 'abc123', ...}
         """
         if self._data:
             return self._data
 
+        body: Union[dict, bytes, str, bytearray, None] = None
+        body_str: Union[dict, bytes, str, bytearray, None] = None
+
+        verbose_logger.debug(
+            "%s.data() - parsing request body for: %s",
+            self.srm_formatted_class_name,
+            self.smarter_request,
+        )
+
         if not self.smarter_request:
+            verbose_logger.debug(
+                "%s.data() - request is None. Cannot parse request body.",
+                self.srm_formatted_class_name,
+            )
             return None
         if not self.qualified_request:
+            verbose_logger.debug(
+                "%s.data() - request is not a qualified_request. Cannot parse request body: %s",
+                self.srm_formatted_class_name,
+                self.smarter_request,
+            )
             return None
-
-        if not self.smarter_request:
-            logger.warning("%s.data() - request is None or not set.", self.formatted_class_name)
-            return {}
-        try:
-            body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
-            if body is not None:
-                body_str = body.decode("utf-8").strip()
-
-                try:
-                    self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
-                    logger.info(
-                        "%s.data() - initialized json from request body: %s",
-                        self.formatted_class_name,
-                        body_str,
-                    )
-                except json.JSONDecodeError:
-                    try:
-                        self._data = yaml.safe_load(body_str) if body_str else {}
-                        logger.info(
-                            "%s.data() - initialized json from parsed yaml request body: %s",
-                            self.formatted_class_name,
-                            body_str,
-                        )
-                    except yaml.YAMLError:
-                        logger.error(
-                            "%s.data() - failed to parse request body: %s",
-                            self.formatted_class_name,
-                            body_str,
-                        )
-                self._data = self._data or {}
-        except json.JSONDecodeError:
+        if isinstance(self.smarter_request, RestFrameworkRequest) and "multipart" not in (
+            self.smarter_request.content_type or ""
+        ):
+            # DRF's .data consumes the request stream. Read the raw body first, which Django
+            # caches, so that plan-B below can still parse it if DRF's parser rejects it.
+            # For example, the cli sends yaml manifests with a json content type.
             try:
-                body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
-                if body is not None:
+                self.smarter_request.body  # pylint: disable=pointless-statement
+            except RawPostDataException:
+                pass
+        try:
+            # plan-A is to use .data attribute if available (DRF Request)
+            # and created with our custom smarter.lib.drf.parsers.YAMLParser()
+            # which populates .data with parsed YAML or JSON.
+            body_str = self.smarter_request.data  # type: ignore
+            verbose_logger.debug(
+                "%s.data() - using .data attribute from request: %s %s",
+                self.srm_formatted_class_name,
+                type(body_str),
+                body_str,
+            )
+        except (AttributeError, ParseError):
+            body_str = None
+        if not body_str and "multipart" not in (getattr(self.smarter_request, "content_type", None) or ""):
+            # after a ParseError, DRF caches empty data, so later calls get {} instead of an error.
+            verbose_logger.debug(
+                "%s.data() - request %s has no parseable .data attribute. Falling back to .body attribute.",
+                self.srm_formatted_class_name,
+                self.smarter_request,
+            )
+            try:
+                body = self.smarter_request.body
+                verbose_logger.debug(
+                    "%s.data() - read .body attribute from request: %s %s",
+                    self.srm_formatted_class_name,
+                    type(body),
+                    body,
+                )
+            except RawPostDataException as e:
+                logger.error(
+                    "%s.data() - failed to read request body due to RawPostDataException: %s",
+                    self.srm_formatted_class_name,
+                    e,
+                )
+            if not isinstance(body, (str, bytearray, bytes)):
+                logger.warning(
+                    "%s.data() - request body is not a string or bytes. Cannot parse request body: %s",
+                    self.srm_formatted_class_name,
+                    body,
+                )
+            try:
+                if isinstance(body, (bytearray, bytes)):
                     body_str = body.decode("utf-8").strip()
-                    self._data = yaml.safe_load(body_str) if body_str else {}
-                    logger.info(
-                        "%s.data() - initialized from parsed request body as yaml: %s",
-                        self.formatted_class_name,
+            except (AttributeError, UnicodeDecodeError):
+                logger.warning(
+                    "%s.data() - request body could not be decoded as utf-8: %s", self.srm_formatted_class_name, body
+                )
+                body_str = body if isinstance(body, str) else None
+
+        if body_str is not None:
+            try:
+                self._data = (
+                    body_str
+                    if isinstance(body_str, (dict, list))
+                    else json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
+                )  # type: ignore
+                verbose_logger.debug(
+                    "%s.data() - initialized json from request body: %s",
+                    self.srm_formatted_class_name,
+                    json.dumps(self._data, indent=4),
+                )
+            except json.JSONDecodeError:
+                try:
+                    self._data = yaml.safe_load(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
+                    if isinstance(self._data, (dict, list)):
+                        verbose_logger.debug(
+                            "%s.data() - initialized json from parsed yaml request body: %s",
+                            self.srm_formatted_class_name,
+                            json.dumps(self._data, indent=4),
+                        )
+                except yaml.YAMLError:
+                    logger.error(
+                        "%s.data() - failed to parse request body: %s",
+                        self.srm_formatted_class_name,
                         body_str,
                     )
-            except yaml.YAMLError:
-                logger.error(
-                    "%s - failed to parse request body as JSON or YAML. request.body=%s",
-                    self.formatted_class_name,
-                    body_str,
-                )
+        if self._data is not None:
+            verbose_logger.debug(
+                "%s.data() - request body parsed successfully: %s",
+                self.srm_formatted_class_name,
+                json.dumps(self._data, indent=4),
+            )
+        else:
+            verbose_logger.debug(
+                "%s.data() - request body is empty or could not be parsed and has been defaulted to {}",
+                self.srm_formatted_class_name,
+            )
 
         self._data = self._data or {}
-        self.helper_logger(f"request body json={self._data}")
-
         return self._data
 
-    @cached_property
+    @property
     def unique_client_string(self) -> str:
         """
-        Generate a unique string based on:
-         - account number
-         - url
-         - user agent
-         - ip address
-         - timestamp
-        Used for generating session_key and client_key.
-        """
-        if not self.smarter_request:
-            return "unique_client_string"
-        account_number = self.account.account_number if self.account else "####-####-####"
-        url = self.url if self.url else "http://localhost:8000/"
-        timestamp = self.timestamp.isoformat()
-        return f"{account_number}.{url}.{self.user_agent}.{self.ip_address}.{timestamp}"
+        Generate a unique string based on several request attributes.
 
-    @property
-    def client_key(self) -> Optional[str]:
+        This string is used for generating `session_key` and `client_key`.
+
+        The unique string is composed of:
+            - Account number
+            - URL
+            - User agent
+            - IP address
+            - Timestamp
+
+        Returns:
+            str: A unique string representing the client and request context.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            unique_str = request_mixin.unique_client_string
+            print(unique_str)
         """
-        for smarter.sh/v1 api endpoints, the client_key is used to identify the client.
-        Generate a unique client key based on the client's IP address, user agent, and the current datetime.
-        """
-        warnings.warn(
-            "The 'client_key' property is deprecated and will be removed in a future version.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.session_key
+        if not self.account:
+            return f"{self.url}{self.user_agent}{self.ip_address}"
+        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
 
     @cached_property
     def ip_address(self) -> Optional[str]:
+        """
+        Get the client's IP address from the request object.
+
+        This property attempts to extract the IP address from the request's META dictionary,
+        using the "REMOTE_ADDR" key. If the IP address is not available, it returns None.
+
+        Returns:
+            Optional[str]: The client's IP address as a string, or None if not found.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            ip = request_mixin.ip_address
+            print(ip)  # e.g., '192.168.1.100'
+        """
         if (
             self.smarter_request is not None
             and hasattr(self.smarter_request, "META")
@@ -632,8 +1378,23 @@ class SmarterRequestMixin(AccountMixin):
             return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
         return None
 
-    @cached_property
+    @property
     def user_agent(self) -> Optional[str]:
+        """
+        Get the client's user agent string from the request object.
+
+        This property attempts to extract the user agent from the request's META dictionary,
+        using the "HTTP_USER_AGENT" key. If the user agent is not available, it returns a default value.
+
+        Returns:
+            Optional[str]: The client's user agent string, or None if not found.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            ua = request_mixin.user_agent
+            print(ua)  # e.g., 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...'
+        """
         if (
             self.smarter_request is not None
             and hasattr(self.smarter_request, "META")
@@ -647,200 +1408,450 @@ class SmarterRequestMixin(AccountMixin):
             return self.smarter_request.META.get("HTTP_USER_AGENT", "user_agent")
         return None
 
-    @property
+    @cached_property
     def is_config(self) -> bool:
         """
-        Returns True if the url resolves to a config endpoint.
+        Returns True if the URL resolves to a config endpoint.
 
-        examples:
-        - http://testserver/api/v1/cli/chat/config/testc7098865f39202d5/
-        - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
-        - http://example.api.localhost:8000/config
+        Examples:
+            http://testserver/api/v1/cli/prompt/config/testc7098865f39202d5/
+            http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+            http://localhost:9357/api/v1/workbench/<int:llmclient_id>/prompt/config/
+            http://example.api.localhost:9357/config
 
+        Returns:
+            bool: True if the URL is a config endpoint, otherwise False.
         """
-        return "config" in self.url_path_parts
+        if not self.is_llmclient:
+            verbose_logger.debug("%s.is_config() - not an llmclient url: %s", self.srm_formatted_class_name, self.url)
+            return False
+        if not isinstance(self.url_path_parts, list):
+            verbose_logger.debug(
+                "%s.is_config() - url_path_parts is not a list: %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
+            return False
+        if "config" not in self.url_path_parts:
+            verbose_logger.debug(
+                "%s.is_config() - 'config' not in url_path_parts: %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
+            return False
+        verbose_logger.debug("%s.is_config() - url is a config endpoint: %s", self.srm_formatted_class_name, self.url)
+        return True
 
     @cached_property
     def is_dashboard(self) -> bool:
         """
-        Returns True if the url resolves to a dashboard endpoint.
+        Returns True if the URL resolves to a dashboard endpoint.
+
+        Returns:
+            bool: True if the URL is a dashboard endpoint, otherwise False.
         """
         if not self.smarter_request:
+            verbose_logger.debug("%s.is_dashboard() - smarter_request is None", self.srm_formatted_class_name)
             return False
-        return self.url_path_parts[-1] == "dashboard"
+        if not isinstance(self.url_path_parts, list):
+            verbose_logger.debug("%s.is_dashboard() - url_path_parts is not a list", self.srm_formatted_class_name)
+            return False
+        if len(self.url_path_parts) == 0:
+            verbose_logger.debug("%s.is_dashboard() - url_path_parts is empty", self.srm_formatted_class_name)
+            return False
+        try:
+            if self.url_path_parts[-1] != "dashboard":
+                verbose_logger.debug(
+                    "%s.is_dashboard() - last url_path_part is not 'dashboard': %s",
+                    self.srm_formatted_class_name,
+                    self.url_path_parts[-1],
+                )
+                return False
+            if self.parsed_url and "/dashboard/" not in self.parsed_url.path:
+                verbose_logger.debug(
+                    "%s.is_dashboard() - '/dashboard/' not in url path: %s",
+                    self.srm_formatted_class_name,
+                    self.parsed_url.path,
+                )
+                return False
+            return True
+        except IndexError:
+            return False
 
     @cached_property
     def is_workbench(self) -> bool:
         """
-        Returns True if the url resolves to a workbench endpoint.
+        Returns True if the URL resolves to a workbench endpoint.
+
+        Returns:
+            bool: True if the URL is a workbench endpoint, otherwise False.
         """
         if not self.smarter_request:
+            verbose_logger.debug("%s.is_dashboard() - smarter_request is None", self.srm_formatted_class_name)
             return False
-        return self.url_path_parts[-1] == "workbench"
+        if not isinstance(self.url_path_parts, list):
+            verbose_logger.debug("%s.is_dashboard() - url_path_parts is not a list", self.srm_formatted_class_name)
+            return False
+        if len(self.url_path_parts) == 0:
+            verbose_logger.debug("%s.is_dashboard() - url_path_parts is empty", self.srm_formatted_class_name)
+            return False
+        try:
+            if self.url_path_parts[-1] != "workbench":
+                verbose_logger.debug(
+                    "%s.is_workbench() - last url_path_part is not 'workbench': %s",
+                    self.srm_formatted_class_name,
+                    self.url_path_parts[-1],
+                )
+                return False
+            if self.parsed_url and "/workbench/" not in self.parsed_url.path:
+                verbose_logger.debug(
+                    "%s.is_workbench() - '/workbench/' not in url path: %s",
+                    self.srm_formatted_class_name,
+                    self.parsed_url.path,
+                )
+                return False
+            return True
+        except IndexError:
+            return False
 
     @cached_property
     def is_environment_root_domain(self) -> bool:
+        """
+        Returns True if the URL resolves to the environment root domain.
+
+        Returns:
+            bool: True if the URL is the environment root domain, otherwise False.
+        """
         if not self.smarter_request:
+            verbose_logger.debug(
+                "%s.is_environment_root_domain() - smarter_request is None", self.srm_formatted_class_name
+            )
             return False
         if not self.parsed_url:
+            verbose_logger.debug("%s.is_environment_root_domain() - parsed_url is None", self.srm_formatted_class_name)
             return False
-        return self.parsed_url.netloc == smarter_settings.environment_platform_domain and self.parsed_url.path == "/"
+
+        netloc_match = self.parsed_url.netloc == smarter_settings.environment_platform_domain
+        if not netloc_match:
+            verbose_logger.debug(
+                "%s.is_environment_root_domain() - netloc does not match. expected=%s actual=%s",
+                self.srm_formatted_class_name,
+                smarter_settings.environment_platform_domain,
+                self.parsed_url.netloc,
+            )
+            return False
+        path_match = self.parsed_url.path == "/"
+        if not path_match:
+            verbose_logger.debug(
+                "%s.is_environment_root_domain() - path does not match. expected='/' actual=%s",
+                self.srm_formatted_class_name,
+                self.parsed_url.path,
+            )
+            return False
+        return netloc_match and path_match
 
     @cached_property
-    def is_chatbot(self) -> bool:
+    def is_llmclient(self) -> bool:
         """
-        Returns True if the url resolves to a chatbot. Conditions are called in a lazy
-        sequence intended to avoid unnecessary processing.
-        examples:
-        - http://localhost:8000/api/v1/prompt/1/chat/
-        - http://localhost:8000/api/v1/cli/chat/example/
-        - http://example.3141-5926-5359.api.localhost:8000/
-        - http://localhost:8000/workbench/<str:name>/chat/
-        - http://localhost:8000/api/v1/chatbots/1556/chat/
+        Returns True if the URL resolves to an llmclient endpoint.
+
+        Conditions are checked in a lazy sequence to avoid unnecessary processing.
+
+        Examples:
+            - http://localhost:9357/api/v1/prompt/1/prompt/
+            - http://localhost:9357/api/v1/cli/prompt/example/
+            - http://example.3141-5926-5359.api.localhost:9357/
+            - http://localhost:9357/api/v1/llm-clients/1556/prompt/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
+
+        Returns:
+            bool: True if the URL is an llmclient endpoint, otherwise False.
         """
 
-        return self.qualified_request and (
-            self.is_chatbot_named_url
-            or self.is_chatbot_sandbox_url
-            or self.is_chatbot_smarter_api_url
-            or self.is_chatbot_cli_api_url
+        retval = self.qualified_request and (
+            self.is_llmclient_named_url
+            or self.is_llmclient_sandbox_url
+            or self.is_llmclient_smarter_api_url
+            or self.is_llmclient_cli_api_url
         )
+        verbose_logger.debug(
+            "%s.is_llmclient() - is url an llmclient: %s -> %s", self.srm_formatted_class_name, self.url, retval
+        )
+        return retval
 
     @cached_property
     def is_smarter_api(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/
-        examples:
-        - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
-        - http://api.localhost:8000/
+        Returns True if the URL is of the form http://localhost:9357/api/v1/.
+
+        Examples:
+            - path_parts: ['api', 'v1', 'llm-clients', '1', 'prompt']
+            - http://api.localhost:9357/
+
+        Returns:
+            bool: True if the URL matches the smarter API pattern, otherwise False.
         """
         if not self.smarter_request:
+            verbose_logger.debug("%s.is_smarter_api() - request is None", self.srm_formatted_class_name)
             return False
         if not self.url:
+            verbose_logger.debug("%s.is_smarter_api() - url is None or empty", self.srm_formatted_class_name)
             return False
-        if "api" in self.url_path_parts:
+
+        # Check for 'api' in path parts or in the host (netloc)
+        in_path = isinstance(self.url_path_parts, list) and "api" in self.url_path_parts
+        in_host = self.parsed_url and "api" in self.parsed_url.netloc.split(".")
+        if in_path or in_host:
+            verbose_logger.debug(
+                "%s.is_smarter_api() - url is a smarter api url: %s", self.srm_formatted_class_name, self.url
+            )
             return True
+
+        verbose_logger.debug(
+            "%s.is_smarter_api() - url is not a smarter api url: %s", self.srm_formatted_class_name, self.url
+        )
         return False
 
     @cached_property
-    def is_chatbot_smarter_api_url(self) -> bool:
+    def is_llmclient_smarter_api_url(self) -> bool:
         """
-        Returns True if the url is of the form
-        - http://localhost:8000/api/v1/workbench/1/chat/
-          path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+        Returns True if the URL is of the form:
 
-        - http://localhost:8000/api/v1/chatbots/1556/chat/
-          path_parts: ['api', 'v1', 'chatbots', '<int:pk>', 'chat']
+            - http://localhost:9357/api/v1/llm-clients/32/config/
 
+            - http://localhost:9357/api/v1/workbench/1/prompt/
+              path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
 
+            - http://localhost:9357/api/v1/llm-clients/1556/prompt/
+              path_parts: ['api', 'v1', 'llm-clients', '<int:pk>', 'prompt']
+
+            - http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/prompt/
+              path_parts: ['api', 'v1', 'llm-clients', '<str:hashed_id>', 'prompt']
+
+        Returns:
+            bool: True if the URL matches a smarter API llmclient endpoint, otherwise False.
         """
-        if not self.smarter_request:
-            return False
         if not self.qualified_request:
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - request is not qualified", self.srm_formatted_class_name
+            )
             return False
         if not self.parsed_url:
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - url is None or empty", self.srm_formatted_class_name
+            )
             return False
 
+        if not isinstance(self.url_path_parts, list):
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - url_path_parts is not a list", self.srm_formatted_class_name
+            )
+            return False
         if len(self.url_path_parts) != 5:
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - url_path_parts does not have 5 parts: %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
             return False
         if self.url_path_parts[0] != "api":
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - first part is not 'api': %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
             return False
         if self.url_path_parts[1] != "v1":
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - second part is not 'v1': %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
             return False
-        if self.url_path_parts[2] not in ["workbench", "chatbots"]:
+        if self.url_path_parts[2] not in ["workbench", "llm-clients"]:
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - third part is not 'workbench' or 'llm-clients': %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
             return False
         if not self.url_path_parts[3].isnumeric():
-            # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+            # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - fourth part is not numeric: %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
             return False
-        if self.url_path_parts[4] != "chat":
-            # expecting 'chat' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+        if self.url_path_parts[4] not in ["prompt", "config"]:
+            # expecting 'prompt' or 'config' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
+            verbose_logger.debug(
+                "%s.is_llmclient_smarter_api_url() - fifth part is not 'prompt' or 'config': %s",
+                self.srm_formatted_class_name,
+                self.url_path_parts,
+            )
             return False
 
+        verbose_logger.debug(
+            "%s.is_llmclient_smarter_api_url() - url is a smarter api llmclient url: %s",
+            self.srm_formatted_class_name,
+            self.url,
+        )
         return True
 
     @cached_property
-    def is_chatbot_cli_api_url(self) -> bool:
+    def is_llmclient_cli_api_url(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/cli/chat/example/
-        path_parts: ['api', 'v1', 'cli', 'chat', 'example']
+        Returns True if the URL is of the form http://localhost:9357/api/v1/cli/prompt/example/.
+
+        The expected path parts are:
+            ['api', 'v1', 'cli', 'prompt', 'example']
+
+        Returns:
+            bool: True if the URL matches the CLI llmclient API pattern, otherwise False.
         """
         if not self.smarter_request:
+            verbose_logger.debug("%s.is_llmclient_cli_api_url() - request is None", self.srm_formatted_class_name)
             return False
         if not self.is_smarter_api:
+            verbose_logger.debug(
+                "%s.is_llmclient_cli_api_url() - request is not smarter api", self.srm_formatted_class_name
+            )
             return False
 
         path_parts = self.url_path_parts
-        if path_parts[2] != "cli":
-            return False
-        if path_parts[3] != "chat":
+        try:
+            if path_parts[2] != "cli":
+                verbose_logger.debug(
+                    "%s.is_llmclient_cli_api_url() - third part is not 'cli': %s",
+                    self.srm_formatted_class_name,
+                    path_parts,
+                )
+                return False
+            if path_parts[3] != "prompt":
+                verbose_logger.debug(
+                    "%s.is_llmclient_cli_api_url() - fourth part is not 'prompt': %s",
+                    self.srm_formatted_class_name,
+                    path_parts,
+                )
+                return False
+        except IndexError:
+            verbose_logger.debug(
+                "%s.is_llmclient_cli_api_url() - url_path_parts index out of range: %s",
+                self.srm_formatted_class_name,
+                path_parts,
+            )
             return False
 
+        verbose_logger.debug(
+            "%s.is_llmclient_cli_api_url() - url is a cli llmclient api url: %s",
+            self.srm_formatted_class_name,
+            self.url,
+        )
         return True
 
     @cached_property
-    def is_chatbot_named_url(self) -> bool:
+    def is_llmclient_named_url(self) -> bool:
         """
-        Returns True if the url is of the form
-        - https://example.3141-5926-5359.api.smarter.sh/
-        - http://example.3141-5926-5359.api.localhost:8000/
-        - http://example.3141-5926-5359.api.localhost:8000/config/
+        Returns True if the url is of the form:
+
+            - https://example-username.3141-5926-5359.api.example.com/
+            - http://example-username.3141-5926-5359.api.localhost:9357/
+            - http://example-username.3141-5926-5359.api.localhost:9357/config/
+
+        Returns:
+            bool: True if the URL matches the named llmclient pattern, otherwise False.
         """
-        if not self.smarter_request:
+
+        if not self.qualified_request:
+            verbose_logger.debug(
+                "%s.is_llmclient_named_url() - request is not qualified", self.srm_formatted_class_name
+            )
             return False
         if not self.url:
+            verbose_logger.debug("%s.is_llmclient_named_url() - url is None or empty", self.srm_formatted_class_name)
             return False
         if not smarter_settings.environment_api_domain in self.url:
+            verbose_logger.debug(
+                "%s.is_llmclient_named_url() - url %s does not contain environment_api_domain: %s",
+                self.srm_formatted_class_name,
+                self.url,
+                smarter_settings.environment_api_domain,
+            )
             return False
         account_number = self.url_account_number
         if account_number is not None:
-            logger.info(
-                "%s.is_chatbot_named_url() - url is a named url with account number: %s",
-                self.formatted_class_name,
+            verbose_logger.debug(
+                "%s.is_llmclient_named_url() - url %s is a named url with account number: %s",
+                self.srm_formatted_class_name,
+                self.url,
                 account_number,
             )
             if self.account is None:
                 # lazy load the account from the account number
-                self.account = get_cached_account(account_number=account_number)
+                self.account = Account.get_cached_object(account_number=account_number)
             return True
 
         # Accept root path or root with trailing slash
-        if isinstance(self._parse_result, ParseResult) and self._parse_result.path not in ("", "/"):
+        if isinstance(self.parsed_url, ParseResult) and self.parsed_url.path not in ("", "/"):
+            verbose_logger.debug(
+                "%s.is_llmclient_named_url() - url %s path is not root or trailing slash: %s",
+                self.srm_formatted_class_name,
+                self.url,
+                self.parsed_url.path,
+            )
             return False
 
-        if isinstance(self._parse_result, ParseResult) and netloc_pattern_named_url.match(self._parse_result.netloc):
+        if isinstance(self.parsed_url, ParseResult) and netloc_pattern_named_url.match(self.parsed_url.netloc):
+            verbose_logger.debug(
+                "%s.is_llmclient_named_url() - url %s is a named url without account number.",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return True
 
+        verbose_logger.debug(
+            "%s.is_llmclient_named_url() - url %s is not a named url.",
+            self.srm_formatted_class_name,
+            self.url,
+        )
         return False
 
     @cached_property
-    def is_chatbot_sandbox_url(self) -> bool:
+    def is_llmclient_sandbox_url(self) -> bool:
         """
-        example urls:
-        - https://alpha.platform.smarter.sh/workbench/example/
-          https://<environment_domain>/workbench/<name>
-          path_parts: ['workbench', 'example']
+        Example URLs for llmclient sandbox endpoints.
 
-        - http://localhost:8000/workbench/<str:name>/chat/
-        - https://alpha.platform.smarter.sh/workbench/example/config/
-          https://<environment_domain>/workbench/<name>/config/
-          path_parts: ['workbench', 'example', 'config']
+        Examples:
+            Web console urls:
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
 
-        - http://localhost:8000/api/v1/prompt/1/chat/
-          http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
+            Api urls:
+            - http://localhost:9357/api/v1/prompt/1/prompt/
+            - http://localhost:9357/api/v1/prompt/1/config/
 
+            Manifest view urls:
+            https://alpha.platform.smarter.sh/workbench/llm-clients/hashed_id/
+            https://<environment_domain>/workbench/llm-clients/<str:hashed_id>/
+            path_parts: ['workbench', 'llm-clients', 'rxy123hashedx']
+
+        Returns:
+            bool: True if the URL matches an llmclient sandbox endpoint, otherwise False.
         """
-        if not self.smarter_request:
-            logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
-            return False
         if not self.qualified_request:
-            logger.warning("%s.is_chatbot_sandbox_url() - request is not qualified.", self.formatted_class_name)
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - request is not qualified.", self.srm_formatted_class_name
+            )
             return False
-        if not self._parse_result:
-            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
+        if not self.parsed_url:
+            logger.warning("%s.is_llmclient_sandbox_url() - url is None or not set.", self.srm_formatted_class_name)
             return False
 
-        # smarter api - http://localhost:8000/api/v1/prompt/1/chat/
+        # smarter api - http://localhost:9357/api/v1/prompt/1/prompt/
         path_parts = self.url_path_parts
         if (
             len(path_parts) == 5
@@ -848,56 +1859,83 @@ class SmarterRequestMixin(AccountMixin):
             and path_parts[1] == "v1"
             and path_parts[2] == "prompt"
             and path_parts[3].isnumeric()
-            and path_parts[4] == "chat"
+            and path_parts[4] == "prompt"
         ):
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s is an llmclient sandbox smarter api url.",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return True
 
         # ---------------------------------------------------------------------
-        # workbench urls: http://localhost:8000/workbench/<str:name>/chat/
+        # workbench urls: http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
         # ---------------------------------------------------------------------
+        hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
+        if hashed_id is None:
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s does not contain a valid TimestampedModel hashed_id.",
+                self.srm_formatted_class_name,
+                self.url,
+            )
+            return False
+
+        verbose_logger.debug(
+            "%s.is_llmclient_sandbox_url() - url %s contains hashed_id: %s",
+            self.srm_formatted_class_name,
+            self.url,
+            hashed_id,
+        )
 
         # valid path_parts:
-        #   ['workbench', '<slug>', 'chat']
-        #   ['workbench', '<slug>', 'config']
+        #   ['workbench', 'llm-clients', '<str:hashed_id>', 'prompt']
+        #   ['workbench', 'llm-clients', '<str:hashed_id>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - parsed_url.netloc (%s) does not match environment_platform_domain (%s).",
-                self.formatted_class_name,
-                self.parsed_url.netloc,
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s netloc does not match environment platform domain: %s",
+                self.srm_formatted_class_name,
+                self.url,
                 smarter_settings.environment_platform_domain,
             )
             return False
-        if len(path_parts) != 3:
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - path_parts length is not 3. path_parts: %s",
-                self.formatted_class_name,
+        if len(path_parts) != 4:
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s does not have exactly 4 path parts: %s",
+                self.srm_formatted_class_name,
+                self.url,
                 path_parts,
             )
             return False
         if path_parts[0] != "workbench":
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - path_parts[0] is not 'workbench'. path_parts: %s",
-                self.formatted_class_name,
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s first path part is not 'workbench': %s",
+                self.srm_formatted_class_name,
+                self.url,
                 path_parts,
             )
             return False
-        if not path_parts[1].isalpha():
-            # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - path_parts[1] is not alpha. path_parts: %s",
-                self.formatted_class_name,
+        if path_parts[1] != "llm-clients":
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s second path part is not 'llm-clients': %s",
+                self.srm_formatted_class_name,
+                self.url,
                 path_parts,
             )
             return False
-        if path_parts[-1] in ["config", "chat"]:
+        if path_parts[-1] in ["config", "prompt", "manifest"]:
             # expecting:
-            #   ['workbench', '<slug>', 'chat']
+            #   ['workbench', '<slug>', 'prompt']
             #   ['workbench', '<slug>', 'config']
+            verbose_logger.debug(
+                "%s.is_llmclient_sandbox_url() - url %s is an llmclient sandbox url.",
+                self.srm_formatted_class_name,
+                self.url,
+            )
             return True
 
-        logger.warning(
-            "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
-            self.formatted_class_name,
+        verbose_logger.debug(
+            "%s.is_llmclient_sandbox_url() - could not verify whether url is an llmclient sandbox url: %s",
+            self.srm_formatted_class_name,
             path_parts,
         )
         return False
@@ -906,50 +1944,75 @@ class SmarterRequestMixin(AccountMixin):
     def is_default_domain(self) -> bool:
         """
         Returns True if the URL is the default domain for the environment.
-        example: api.alpha.platform.smarter.sh
+
+        Example:
+            api.alpha.platform.smarter.sh
+
+        :return:
+            bool: True if the URL is the default environment domain, otherwise False.
         """
         if not self.smarter_request:
+            verbose_logger.debug(
+                "%s.is_default_domain() - request is None. Cannot determine default domain.",
+                self.srm_formatted_class_name,
+            )
             return False
         if not self.url:
+            verbose_logger.debug(
+                "%s.is_default_domain() - url is None or empty. Cannot determine default domain.",
+                self.srm_formatted_class_name,
+            )
             return False
+        verbose_logger.debug(
+            "%s.is_default_domain() - checking if url %s contains default domain %s",
+            self.srm_formatted_class_name,
+            self.url,
+            smarter_settings.environment_api_domain,
+        )
         return smarter_settings.environment_api_domain in self.url
 
     @cached_property
     def path(self) -> Optional[str]:
         """
         Extracts the path from the URL.
-        :return: The path or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns '/chatbot/'
+        :return:
+            Optional[str]: The path as a string, or None if not found.
+
+        Examples:
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
+              returns '/llm-client/'
         """
         if not self.smarter_request:
+            verbose_logger.debug("%s.path() - request is None. Cannot extract path.", self.srm_formatted_class_name)
             return None
-        if not self.url:
-            return None
-        if not self.parsed_url:
-            return None
-        if self.parsed_url.path == "":
+        if self.parsed_url and self.parsed_url.path == "":
             return "/"
-        return self.parsed_url.path
+        return self.parsed_url.path if self.parsed_url else None
 
     @cached_property
     def root_domain(self) -> Optional[str]:
         """
         Extracts the root domain from the URL.
+
         :return: The root domain or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-            returns 'smarter.sh'
+        Example::
 
-        - http://localhost:8000/
-            returns 'localhost'
+            request_mixin = SmarterRequestMixin(request)
+            print(request_mixin.root_domain)
+            # For 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/' → 'smarter.sh'
+            # For 'http://localhost:9357/' → 'localhost'
         """
         if not self.smarter_request:
+            verbose_logger.debug(
+                "%s.root_domain() - request is None. Cannot extract root domain.", self.srm_formatted_class_name
+            )
             return None
         if not self.url:
+            verbose_logger.debug(
+                "%s.root_domain() - url is None or empty. Cannot extract root domain.", self.srm_formatted_class_name
+            )
             return None
         url = SmarterValidator.urlify(self.url, environment=smarter_settings.environment)  # type: ignore
         if url:
@@ -958,41 +2021,53 @@ class SmarterRequestMixin(AccountMixin):
                 return f"{extracted.domain}.{extracted.suffix}"
             if extracted.domain:
                 return extracted.domain
+        logger.warning(
+            "%s.root_domain() - failed to extract root domain from url: %s", self.srm_formatted_class_name, self.url
+        )
         return None
 
     @cached_property
     def subdomain(self) -> Optional[str]:
         """
         Extracts the subdomain from the URL.
+
         :return: The subdomain or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns 'hr.3141-5926-5359.alpha'
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            sub = request_mixin.subdomain
+            print(sub)  # e.g., 'hr.3141-5926-5359.alpha' for
+                        # 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/'
         """
         if not self.smarter_request:
             return None
         if not self.url:
             return None
         extracted = tldextract.extract(self.url)
-        return extracted.subdomain
+        return extracted.subdomain or None
 
     @cached_property
     def api_subdomain(self) -> Optional[str]:
         """
         Extracts the API subdomain from the URL.
 
-        example: https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-        returns 'hr'
+        :return: The API subdomain or None if not found.
+
+        example::
+
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
+            returns 'hr'
         """
         if not self.smarter_request:
             return None
-        if not self.is_chatbot:
+        if not self.is_llmclient:
             return None
         try:
             result = urlparse(self.url)
-            domain_parts = result.netloc.split(".")
-            return domain_parts[0]
+            netloc = result.netloc.decode() if isinstance(result.netloc, bytes) else result.netloc
+            domain_parts = netloc.split(".")  # type: ignore
+            return str(domain_parts[0]) if len(domain_parts) > 0 else None
         except TypeError:
             return None
 
@@ -1000,11 +2075,13 @@ class SmarterRequestMixin(AccountMixin):
     def domain(self) -> Optional[str]:
         """
         Extracts the domain from the URL.
+
         :return: The domain or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
+        examples::
+
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
+              returns 'hr.3141-5926-5359.alpha.api.example.com'
         """
         if not self.smarter_request:
             return None
@@ -1013,60 +2090,70 @@ class SmarterRequestMixin(AccountMixin):
         return self.parsed_url.netloc if self.parsed_url else None
 
     @cached_property
-    def formatted_class_name(self) -> str:
+    def srm_formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
-        """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.SmarterRequestMixin()"
+        Returns the class name in a formatted string along with the name of this mixin.
 
-    @cached_property
-    def is_requestmixin_ready(self) -> bool:
+        :return: Formatted class name string.
         """
-        Returns True if the request mixin is ready for processing.
-        This is a convenience property to check if the request is ready.
+        class_name = f"{__name__}.{SmarterRequestMixin.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    @property
+    def srm_ready(self) -> bool:
         """
+        Returns True if the request mixin is srm_ready for processing.
+
+        This is a convenience property to check if the request is srm_ready.
+
+        :return: True if the request mixin is srm_ready, False otherwise.
+        """
+        if self._srm_ready:
+            return self._srm_ready
         # cheap and easy way to fail.
-        if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
-            logger.warning(
-                "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
-                self.formatted_class_name,
-                self._instance_id,
+        if not self.am_ready:
+            # AccountMixin is legitimately not ready for anonymous requests
+            # (e.g. CORS preflight OPTIONS probes, unauthenticated callers).
+            # That's an expected, routine state, not a problem, so this
+            # doesn't warrant WARNING-level attention.
+            logger.debug(
+                "%s.srm_ready() - AccountMixin is not srm_ready. Cannot process request.",
+                self.srm_formatted_class_name,
+            )
+            return False
+        if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, ASGIRequest, MagicMock]):
+            verbose_logger.debug(
+                "%s.srm_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
+                self.srm_formatted_class_name,
                 type(self._smarter_request).__name__,
             )
             return False
-        if not isinstance(self._parse_result, ParseResult):
+        if not isinstance(self.parsed_url, ParseResult):
             logger.warning(
-                "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
-                self.formatted_class_name,
-                self._instance_id,
-                type(self._parse_result).__name__,
+                "%s.srm_ready() - _parsed_url is not a ParseResult. Received %s. Cannot process request.",
+                self.srm_formatted_class_name,
+                type(self._parsed_url).__name__,
             )
             return False
-        if not isinstance(self._url, str):
+        if not isinstance(self.url, str):
             logger.warning(
-                "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
-                self.formatted_class_name,
-                self._instance_id,
-                type(self._url).__name__,
+                "%s.srm_ready() - _url is not a string. Received %s. Cannot process request.",
+                self.srm_formatted_class_name,
+                type(self.url).__name__,
             )
             return False
-        return True
+        self._srm_ready = True
+        return self._srm_ready
 
     @property
-    def ready(self) -> bool:
+    def _srm_ready_state(self) -> str:
         """
-        returns True if the request is ready for processing.
+        Returns a string representation of the request mixin's srm_ready state.
+
+        :return: A string indicating whether the request mixin is srm_ready or not.
         """
-        retval = bool(super().ready)
-        if not retval:
-            logger.warning(
-                "%s.ready() - %s super().ready returned False. This might cause problems with other initializations.",
-                self.formatted_class_name,
-                self._instance_id,
-            )
-        return retval and self.is_requestmixin_ready
+
+        return self.formatted_state_ready if self.srm_ready else self.formatted_state_not_ready
 
     # --------------------------------------------------------------------------
     # instance methods
@@ -1085,44 +2172,70 @@ class SmarterRequestMixin(AccountMixin):
     def generate_session_key(self) -> str:
         """
         Generate a session_key based on a unique string and the current datetime.
+
+        :return: A unique session key string.
         """
         session_key = hash_factory(length=64)
-        self.helper_logger(f"Generated new session key: {session_key}")
+        verbose_logger.debug(
+            "%s.generate_session_key() Generated new session key: %s", self.srm_formatted_class_name, session_key
+        )
         return session_key
 
     def find_session_key(self) -> Optional[str]:
         """
-        returns the unique chat session key value for this request.
-        session_key is managed by the /config/ endpoint for the chatbot
+        Returns the unique prompt session key value for this request.
 
-        The React app calls this endpoint at app initialization to get a
-        json dict that includes, among other pertinent info, this session_key
-        which uniquely identifies the device and the individual chatbot session
-        for the device.
+        The session_key is managed by the /config/ endpoint for the llmclient. The React app calls this endpoint at app initialization to get a JSON dict that includes, among other info, this session_key, which uniquely identifies the device and the individual llmclient session for the device.
 
-        for subsequent chat prompt requests the session_key is intended to be
-        sent in the body of the request as a key-value pair,
-        e.g. {"session_key": "1234567890"}.
+        For subsequent prompt prompt requests, the session_key is intended to be sent in the body of the request as a key-value pair, e.g. {"session_key": "1234567890"}.
 
-        But, this method will also check the request headers for the session_key.
-        Get the session key from one of the following:
-         - url parameter http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - a session_key generator
+        This method will also check the request headers and cookies for the session_key. The session key can be found in one of the following:
 
+         - URL parameter: http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+         - Request JSON body: {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - Request header: {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - Cookie
+         - A session_key generator
+
+        :return: The session key as a string, or None if not found.
         """
         if self._session_key:
             return self._session_key
 
         session_key: Optional[str]
 
+        # dump all headers for debugging, body and full url
+        if self.url:
+            verbose_logger.debug(
+                "%s.find_session_key() - request headers: %s",
+                self.srm_formatted_class_name,
+                (
+                    json.dumps(dict(self.smarter_request.headers), indent=4)
+                    if self.smarter_request
+                    else "No request available"
+                ),
+            )
+            verbose_logger.debug(
+                "%s.find_session_key() - request body data: %s",
+                self.srm_formatted_class_name,
+                self.data if self.data else "No data available",
+            )
+            verbose_logger.debug(
+                "%s.find_session_key() - full request url: %s",
+                self.srm_formatted_class_name,
+                self.url if self.url else "No url available",
+            )
+
         # this is our expected case. we look for the session key in the parsed url.
-        session_key = session_key_from_url(self.url)
+        session_key = session_key_from_url(self.url) if self.url else None
         if session_key:
+            session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from url: {session_key}",
+
+            verbose_logger.debug(
+                "%s.find_session_key() - initialized from url: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
@@ -1131,9 +2244,12 @@ class SmarterRequestMixin(AccountMixin):
             session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
             session_key = session_key.strip() if isinstance(session_key, str) else None
             if session_key:
+                session_key = session_key.rstrip("/")
                 SmarterValidator.validate_session_key(session_key)
-                self.helper_logger(
-                    f"session_key() - initialized from request body: {session_key}",
+                verbose_logger.debug(
+                    "%s.find_session_key() - initialized from request body: %s",
+                    self.srm_formatted_class_name,
+                    session_key,
                 )
                 return session_key
 
@@ -1141,9 +2257,12 @@ class SmarterRequestMixin(AccountMixin):
         session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
         session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
+            session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from cookie data of the request object: {session_key}",
+            verbose_logger.debug(
+                "%s.find_session_key() - initialized from cookie data of the request object: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
@@ -1151,33 +2270,117 @@ class SmarterRequestMixin(AccountMixin):
         session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) if self.smarter_request else None
         session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
+            session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from the get() parameters of the request object: {session_key}",
+            verbose_logger.debug(
+                "%s.find_session_key() - initialized from the get() parameters of the request object: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
+        verbose_logger.debug(
+            "%s.find_session_key() - session key not found in url, request body, cookies, or get parameters.",
+            self.srm_formatted_class_name,
+        )
+        return None
+
+    def eval_llmclient_url(self):
+        """
+        If we are an llmclient, based on analysis of the URL format then we need to make a follow up check of the user and account.
+
+        Examples:
+
+            - http://example.3141-5926-5359.api.localhost:9357/
+            - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
+            - http://localhost:9357/api/v1/cli/prompt/example/
+
+        1.) For named urls, we extract the account number from the url,
+            then we load the account and admin user for that account.
+
+        2.) For smarter api urls, we would extract the llmclient id from the url,
+            then we would load the llmclient, account, and admin user for that account.
+
+        3.) For cli api urls, we would extract the llmclient name from the url,
+            then we would load the llmclient, account, and admin user for that account.
+        """
+        if not self.is_llmclient:
+            return
+        if self.is_llmclient_named_url:
+            # http://example.3141-5926-5359.api.localhost:9357/
+            if not self.account:
+                account_number = self.url_account_number
+                if account_number:
+                    self.account = Account.get_cached_object(account_number=account_number)  # type: ignore
+            if self.account and not self.user:
+                self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+        if self.is_llmclient_smarter_api_url:
+            # https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
+            pass
+        if self.is_llmclient_cli_api_url:
+            # http://localhost:9357/api/v1/cli/prompt/example/
+            pass
+
+    # pylint: disable=W0221
+    def authenticate(self) -> bool:
+        """Authenticates the request using the provided API token."""
+        if self.api_token:
+            verbose_logger.debug("%s.authenticate() - authenticating with api_token.", self.srm_formatted_class_name)
+            return super().authenticate(api_token=self.api_token)
+        return False
+
+    def clear_cached_properties(self):
+        """Clears all cached properties in this mixin."""
+        self._smarter_request = None
+        self._url = None
+        self._url_account_number = None
+        self._parsed_url = None
+        self._params = None
+        self._session_key = None
+        self._data = None
+        self._cache_key = None
+
+        # Clear cached_property values
+        for cls in self.__class__.__mro__:
+            for name, value in inspect.getmembers(cls):
+                if isinstance(value, cached_property):
+                    # name is the property name decorated with @cached_property
+                    self.__dict__.pop(name, None)
+
+    def _srm_log_ready_status(self):
+        """Logs the srm_ready status of the SmarterRequestMixin."""
+        msg = f"{self.srm_formatted_class_name} is {self._srm_ready_state} - {self.url if self._url else 'URL not initialized'} - authenticated user: {self.user_profile if self.user_profile else 'Anonymous'}"
+        if self.srm_ready:
+            logger.debug(msg)
+        else:
+            logger.warning(msg)
+
+    def log_ready_status(self):
+        """Logs the ready status of the view."""
+        msg = f"{self.formatted_class_name} is {self.ready_state}"
+        logger.info(msg)
+
     def to_json(self) -> dict[str, Any]:
         """
-        serializes the object.
+        Serializes the object.
+
+        :return: A dictionary representation of the object.
         """
-        if not self.is_requestmixin_ready:
-            return super().to_json()
-        return {
-            "ready": self.ready,
+        retval = {
+            "srm_ready": self.srm_ready,
             "url": self.url,
             "session_key": self.session_key,
             "auth_header": self.auth_header[:10] + "****" if self.auth_header else None,
             "api_token": mask_string(self.api_token.decode()) if self.api_token else None,
             "data": self.data,
-            "chatbot_id": self.smarter_request_chatbot_id,
-            "chatbot_name": self.smarter_request_chatbot_name,
+            "llmclient_id": self.smarter_request_llmclient_id,
+            "llmclient_name": self.smarter_request_llmclient_name,
             "is_smarter_api": self.is_smarter_api,
-            "is_chatbot": self.is_chatbot,
-            "is_chatbot_smarter_api_url": self.is_chatbot_smarter_api_url,
-            "is_chatbot_named_url": self.is_chatbot_named_url,
-            "is_chatbot_sandbox_url": self.is_chatbot_sandbox_url,
-            "is_chatbot_cli_api_url": self.is_chatbot_cli_api_url,
+            "is_llmclient": self.is_llmclient,
+            "is_llmclient_smarter_api_url": self.is_llmclient_smarter_api_url,
+            "is_llmclient_named_url": self.is_llmclient_named_url,
+            "is_llmclient_sandbox_url": self.is_llmclient_sandbox_url,
+            "is_llmclient_cli_api_url": self.is_llmclient_cli_api_url,
             "is_default_domain": self.is_default_domain,
             "path": self.path,
             "root_domain": self.root_domain,
@@ -1186,7 +2389,6 @@ class SmarterRequestMixin(AccountMixin):
             "domain": self.domain,
             "timestamp": self.timestamp.isoformat(),
             "unique_client_string": self.unique_client_string,
-            "client_key": self.client_key,
             "ip_address": self.ip_address,
             "user_agent": self.user_agent,
             "parsed_url": str(self.parsed_url) if self.parsed_url else None,
@@ -1202,37 +2404,78 @@ class SmarterRequestMixin(AccountMixin):
             "is_environment_root_domain": self.is_environment_root_domain,
             **super().to_json(),
         }
+        return self.sorted_dict(retval)
 
-    def eval_chatbot_url(self):
+    def is_internal_api_request(self, request: HttpRequest) -> bool:
         """
-        If we are a chatbot, based on analysis of the URL format
-        then we need to make a follow up check of the user and account.
-        """
-        if not self.is_chatbot:
-            return
-        if self.is_chatbot_named_url:
-            # http://example.3141-5926-5359.api.localhost:8000/
-            if not self.account:
-                account_number = account_number_from_url(self.url)
-                if account_number:
-                    self.account = get_cached_account(account_number=account_number)  # type: ignore
-            if self.account and not self.user:
-                self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-        if self.is_chatbot_smarter_api_url:
-            # https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
-            pass
-        if self.is_chatbot_cli_api_url:
-            # http://localhost:8000/api/v1/cli/chat/example/
-            pass
+        Check if the request is an internal API request.
 
-    def helper_logger(self, message: str):
-        """
-        Create a log entry
-        """
-        logger.info("%s %s", self.formatted_class_name, message)
+        This method checks for a custom attribute on the request object that indicates
+        whether the request is an internal API request. This can be used to bypass
+        certain authentication or permission checks for internal requests.
 
-    def dump(self):
+        :param request: The Django request object.
+        :type request: HttpRequest
+        :return: True if it's an internal API request, False otherwise.
+        :rtype: bool
         """
-        Dump the object to the console.
+        retval = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
+        logger.debug(
+            "%s.is_internal_api_request() - request %s internal API request: %s",
+            self.srm_formatted_class_name,
+            request,
+            retval,
+        )
+        return retval
+
+    def set_is_internal_api_request(self, request: HttpRequest, value: bool = True) -> HttpRequest:
         """
-        return json.dumps(self.to_json(), indent=4)
+        Set the internal API request attribute on the request object.
+
+        This method allows you to mark a request as an internal API request by setting
+        a custom attribute on the request object. This can be used in middleware or views
+        to indicate that the request should be treated as internal.
+
+        :param request: The Django request object.
+        :type request: HttpRequest
+        :param value: The value to set for the internal API request attribute (default is True).
+        :type value: bool
+        :return: The modified Django request object.
+        :rtype: HttpRequest
+        """
+        if not isinstance(request, (HttpRequest, RestFrameworkRequest)):
+            raise SmarterValueError(f"Expected request to be an instance of HttpRequest, got {type(request).__name__}")
+
+        logger.debug(
+            "%s.set_is_internal_api_request() - setting request %s internal API request to: %s",
+            self.srm_formatted_class_name,
+            request.path,
+            value,
+        )
+        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, value)
+        if isinstance(request, RestFrameworkRequest):
+            # a DRF Request that is passed on to a nested Django view: flag the wrapped HttpRequest too.
+            setattr(request._request, SMARTER_IS_INTERNAL_API_REQUEST, value)  # pylint: disable=protected-access
+        return request
+
+    @property
+    def is_authenticated(self) -> bool:
+        """Returns True if the request is authenticated, False otherwise."""
+
+        try:
+            return self.smarter_request.user.is_authenticated  # type: ignore
+        except AttributeError:
+            logger.debug(
+                "%s.is_authenticated() - request.user is not set or does not have is_authenticated attribute.",
+                self.srm_formatted_class_name,
+            )
+            return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.warning(
+                "%s.is_authenticated() - unexpected error while checking authentication: %s",
+                self.srm_formatted_class_name,
+                str(e),
+            )
+
+        return False

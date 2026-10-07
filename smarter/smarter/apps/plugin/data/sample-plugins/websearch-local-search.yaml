@@ -1,0 +1,42 @@
+---
+# A WebsearchPlugin that is localized to French-speaking users in France: the
+# Brave Search API ranks French results in French first. Restaurants, shops and
+# services, for example, are then local to the user.
+#
+# Prerequisite: a Smarter Secret named brave_search_api_key.
+#
+# Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: local_search_fr
+  pluginClass: websearch
+  description: Recherche sur le web des informations locales pour les utilisateurs en France.
+  version: 0.1.0
+  tags:
+    - websearch
+    - localization
+    - french
+  annotations:
+    - smarter.sh/local-search-fr/use-case: localized search
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      Vous êtes un assistant serviable. Répondez en français, et citez l'url de
+      chaque source que vous utilisez.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  websearchData:
+    search:
+      provider: brave
+      apiKey: brave_search_api_key
+      maxResults: 5
+      country: fr
+      language: fr
+    fetch:
+      maxCharacters: 20000
