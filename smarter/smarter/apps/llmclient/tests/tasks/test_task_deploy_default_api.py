@@ -9,6 +9,10 @@ from unittest.mock import MagicMock, patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.signals import (
+    llmclient_dns_failed,
+    llmclient_dns_verification_initiated,
+)
 from smarter.apps.llmclient.tasks import deploy_default_api as module
 from smarter.apps.llmclient.tasks.deploy_default_api import (
     CERTIFICATE_CHECK_INTERVAL,
@@ -114,6 +118,33 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
         self.assertEqual(llmclient.dns_verification_status, LLMClient.DnsVerificationStatusChoices.VERIFIED)
         self.AccountContact.send_email_to_primary_contact.assert_called_once()
         self.apply_async.assert_not_called()
+
+    def test_dns_signals_carry_the_llmclient(self):
+        """Test that the DNS verification signals carry the llmclient, which their receivers log."""
+        received = []
+
+        def receiver(signal_name):
+            def handler(sender, **kwargs):
+                received.append((signal_name, kwargs.get("llmclient")))
+
+            return handler
+
+        handlers = {
+            "initiated": receiver("initiated"),
+            "failed": receiver("failed"),
+        }
+        llmclient_dns_verification_initiated.connect(handlers["initiated"])
+        llmclient_dns_failed.connect(handlers["failed"])
+        self.addCleanup(llmclient_dns_verification_initiated.disconnect, handlers["initiated"])
+        self.addCleanup(llmclient_dns_failed.disconnect, handlers["failed"])
+
+        with patch(f"{MODULE}.check_domain", return_value=DomainCheck.MISSING) as check_domain:
+            continue_default_api_deployment(self.llmclient.pk, stage=STAGE_DOMAIN)
+
+        self.assertEqual([name for name, _ in received], ["initiated", "failed"])
+        for _, llmclient in received:
+            self.assertEqual(llmclient.pk, self.llmclient.pk)
+        self.assertEqual(check_domain.call_args.kwargs["llmclient"].pk, self.llmclient.pk)
 
     def test_domain_missing_fails(self):
         """Test that a domain whose DNS record does not exist fails at once, without checking again."""
@@ -225,9 +256,30 @@ class TestDeployDefaultApi(TestAccountMixin):
         )
 
     def test_certificate_issued_continues(self):
-        """Test that the certificate of an llmclient whose certificate is issued is verified at once."""
+        """
+        Test that the certificate of an llmclient whose certificate is issued is verified at once, by its own task.
+
+        Verifying it runs kubectl, which takes seconds, so it does not hold this worker.
+        """
         self.set_certificate_status(LLMClient.TlsCertificateIssuanceStatusChoices.ISSUED)
         deploy_default_api(self.llmclient.pk)
-        self.continue_default_api_deployment.apply_async.assert_not_called()
-        self.continue_default_api_deployment.assert_called_once()
-        self.assertEqual(self.continue_default_api_deployment.call_args.kwargs["stage"], STAGE_CERTIFICATE)
+        self.continue_default_api_deployment.assert_not_called()
+        self.continue_default_api_deployment.apply_async.assert_called_once()
+        call = self.continue_default_api_deployment.apply_async.call_args
+        self.assertEqual(call.kwargs["kwargs"]["stage"], STAGE_CERTIFICATE)
+        self.assertNotIn("countdown", call.kwargs)
+
+    def test_reads_state_under_lock(self):
+        """
+        Test that the llmclient's state is read with its row locked, rather than from a stale read.
+
+        An undeploy that ran on another worker saved the llmclient as not deployed. The deploy must
+        not take it to be deployed and verified already.
+        """
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(
+            deployed=False, dns_verification_status=LLMClient.DnsVerificationStatusChoices.NOT_VERIFIED
+        )
+        with patch.object(LLMClient.objects, "select_for_update", wraps=LLMClient.objects.select_for_update) as lock:
+            deploy_default_api(self.llmclient.pk)
+        lock.assert_called_once()
+        self.apply_ingress_manifest.assert_called_once_with(self.llmclient.default_host)

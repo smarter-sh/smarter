@@ -208,7 +208,9 @@ workerInfrastructure:
       cpu: "250m"
       memory: "512Mi"
     limits:
-      cpu: "1"
+      # 2, the minimum that Django settings recommend. Each of its 4 concurrent tasks runs kubectl and
+      # the aws cli, which are CPU bound while they start, and slowed one another down on 1.
+      cpu: "2"
       memory: "2Gi"
 
 beat:

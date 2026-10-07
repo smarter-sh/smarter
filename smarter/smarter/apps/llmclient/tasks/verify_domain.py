@@ -1,7 +1,7 @@
 """
 Celery tasks for verifying llmclient domain DNS records.
 
-This module defines Celery tasks for verifying that Internet domain names resolve to the expected DNS records (NS or other),
+This module defines Celery tasks for verifying that Internet domain names resolve to DNS records of the expected type, e.g. A,
 including signal handling, llmclient deployment status updates, and retry logic.
 
 Main Tasks
@@ -97,7 +97,11 @@ class DomainCheck(str, Enum):
 
 
 def check_domain(
-    domain_name: str, record_type: str = "A", hosted_zone_id: Optional[str] = None, task_id: Optional[str] = None
+    domain_name: str,
+    record_type: str = "A",
+    hosted_zone_id: Optional[str] = None,
+    task_id: Optional[str] = None,
+    llmclient: Optional[LLMClient] = None,
 ) -> DomainCheck:
     """
     Check once that a domain's DNS record exists, and that the domain resolves.
@@ -109,6 +113,7 @@ def check_domain(
     :param record_type: The DNS record type, e.g. A.
     :param hosted_zone_id: The DNS zone of the record, by default that of the environment's api domain.
     :param task_id: The Celery task id, for logging and signals.
+    :param llmclient: The LLMClient that the domain serves, if any, which is sent with the signals.
     """
     fn_name = f"{logger_prefix}.check_domain()"
     if not hosted_zone_id:
@@ -128,28 +133,31 @@ def check_domain(
 
     # 2. verify that the domain resolves
     try:
-        dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name)}
+        addresses = {rdata.to_text() for rdata in dns.resolver.query(domain_name, record_type)}
     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
         logger.warning("%s unable to resolve domain %s task_id: %s", fn_name, domain_name, task_id)
         llmclient_dns_failed.send(
-            sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+            sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
         return DomainCheck.PENDING
     except dns.resolver.Timeout:
         logger.warning("%s timeout exceeded while querying the domain %s task_id: %s", fn_name, domain_name, task_id)
         llmclient_dns_failed.send(
-            sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+            sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
         return DomainCheck.PENDING
 
     logger.info(
-        "%s successfully resolved domain %s using NS records %s task_id: %s",
+        "%s successfully resolved domain %s to %s records %s task_id: %s",
         fn_name,
         domain_name,
-        dns_ns_records,
+        record_type,
+        addresses,
         task_id,
     )
-    llmclient_dns_verified.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
+    llmclient_dns_verified.send(
+        sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
+    )
     return DomainCheck.VERIFIED
 
 
@@ -169,9 +177,9 @@ def verify_domain(
     attempt: int = 0,
 ) -> Optional[bool]:
     """
-    Verify that an Internet domain name resolves to NS records.
+    Verify that an Internet domain name resolves, e.g. to its A records.
 
-    This Celery task checks that a domain name resolves to the expected DNS records (NS or other),
+    This Celery task checks that a domain name resolves to DNS records of the expected type,
     sending verification signals and updating llmclient deployment status as appropriate. If the domain
     does not resolve yet, it schedules itself to check again in VERIFY_DOMAIN_INTERVAL seconds, up to
     VERIFY_DOMAIN_MAX_ATTEMPTS times, rather than sleeping.
@@ -225,7 +233,7 @@ def verify_domain(
         logger.info("%s - verifying domain %s task_id: %s", fn_name, domain_name, task_id)
         pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
         llmclient_dns_verification_initiated.send(
-            sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+            sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
     logger.info(
         "%s - Attempt %s of %s to verify domain %s task_id: %s",
@@ -237,7 +245,13 @@ def verify_domain(
     )
 
     resolved_domain_name = infrastructure.dns.resolve_domain(domain_name)
-    result = check_domain(resolved_domain_name, record_type=record_type, hosted_zone_id=hosted_zone_id, task_id=task_id)
+    result = check_domain(
+        resolved_domain_name,
+        record_type=record_type,
+        hosted_zone_id=hosted_zone_id,
+        task_id=task_id,
+        llmclient=llmclient,
+    )
 
     if result == DomainCheck.PENDING and attempt + 1 < VERIFY_DOMAIN_MAX_ATTEMPTS:
         # check again later, without blocking this worker while the DNS record propagates.
@@ -261,7 +275,11 @@ def verify_domain(
         )
         if llmclient:
             llmclient_dns_failed.send(
-                sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+                sender=verify_domain,
+                llmclient=llmclient,
+                domain_name=domain_name,
+                record_type=record_type,
+                task_id=task_id,
             )
             llmclient.dns_verification_status = LLMClient.DnsVerificationStatusChoices.FAILED
             llmclient.save(asynchronous=True)
