@@ -24,6 +24,10 @@ from smarter.apps.llmclient.serializers import LLMClientSerializer
 from smarter.apps.llmclient.signals import llmclient_called
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Prompt, PromptHelper
+from smarter.apps.prompt.progress import (
+    prompt_event_stream_response,
+    wants_event_stream,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
@@ -571,6 +575,10 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         - This method is a critical integration point for llmclient conversations in the Smarter platform.
         - It enforces domain-based routing and robust error handling for missing or invalid llmclient context.
         - The response format is standardized for journaling and auditing purposes.
+        - A client whose Accept header includes ``text/event-stream`` receives the prompt's
+          progress (LLM requests, tool, plugin and MCP server calls) as Server-Sent Events while
+          it runs, and then the same JSON response in a final ``result`` event. See
+          :mod:`smarter.apps.prompt.progress`.
 
         See Also
         --------
@@ -648,21 +656,42 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             raise SmarterLLMClientException(
                 f"UserProfile is not a valid UserProfile instance. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_profile_type={type(self.user_profile)}"
             )
-        response = handler(
-            self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins, functions=self.functions
-        )
-        # the prompt's own status, e.g. the status of the LLM provider's error response.
-        status = response.get("statusCode", HTTPStatus.OK.value) if isinstance(response, dict) else HTTPStatus.OK.value
-        response = {
-            SmarterJournalApiResponseKeys.DATA: response,
-        }
-        response = SmarterJournaledJsonResponse(
-            request=request,
-            data=response,
-            command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
-            thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
-            status=status,
-            safe=False,
-        )
-        self.helper_logger(f"{self.formatted_class_name} response={response}")
-        return response
+
+        def complete() -> HttpResponse:
+            response = handler(
+                self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins, functions=self.functions  # type: ignore[union-attr]
+            )
+            # the prompt's own status, e.g. the status of the LLM provider's error response.
+            status = (
+                response.get("statusCode", HTTPStatus.OK.value) if isinstance(response, dict) else HTTPStatus.OK.value
+            )
+            response = {
+                SmarterJournalApiResponseKeys.DATA: response,
+            }
+            response = SmarterJournaledJsonResponse(
+                request=request,
+                data=response,
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
+                thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
+                status=status,
+                safe=False,
+            )
+            self.helper_logger(f"{self.formatted_class_name} response={response}")
+            return response
+
+        def on_error(e: Exception) -> HttpResponse:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                safe=False,
+                thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+            )
+
+        # a client that accepts Server-Sent Events receives the prompt's progress, e.g. its tool
+        # calls, while it runs, and then the same json response. See smarter.apps.prompt.progress.
+        if wants_event_stream(request):
+            return prompt_event_stream_response(complete, on_error)
+        return complete()
