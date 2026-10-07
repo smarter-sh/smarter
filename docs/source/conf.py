@@ -126,11 +126,13 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_contributors",
     "sphinx_copybutton",
-    "sphinx_autodoc_typehints",
     "sphinx_design",
     "sphinx.ext.todo",
     "sphinx.ext.intersphinx",
+    # napoleon must load before sphinx_autodoc_typehints, which otherwise parses
+    # NumPy/Google sections as raw reST and reports "Unexpected indentation".
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
     "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
     "sphinx_sitemap",
