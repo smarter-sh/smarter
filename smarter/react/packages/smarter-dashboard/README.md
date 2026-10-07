@@ -5,8 +5,8 @@ at [http://localhost:9357/dashboard/](http://localhost:9357/dashboard/).
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/smarter-dashboard/ and gathered
-  by Dockerfile during builds into Django's static asset folder.
+- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
+  which the Dockerfile copies into the image.
 - [smarter.apps.dashboard.views.views.dashboard.DashboardView](../../smarter/apps/dashboard/views/views/dashboard.py)
 - [smarter.apps.dashboard.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/dashboard/templatetags/react_dashboard.py)
 - [templates/react/dashboard.html](../../smarter/templates/react/dashboard.html)
@@ -90,11 +90,6 @@ trouble shooting purposes. http://example.com/static/react/smarter-dashboard/man
   "_custom": {
     "buildTime": "2026-05-31T21:17:32.505Z",
     "version": "0.2.2",
-    "config": {
-      "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/smarter-dashboard/",
-      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
-    },
     "buildEnv": "production"
   }
 }

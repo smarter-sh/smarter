@@ -260,9 +260,6 @@ class TestSettings(SmarterTestBase):
     def test_smarter_mysql_test_database_password(self):
         self.assertIsNotNone(smarter_settings.smarter_mysql_test_database_password)
 
-    def test_smarter_reactjs_app_loader_path(self):
-        self.assertIsNotNone(smarter_settings.smarter_reactjs_app_loader_path)
-
     def test_social_auth_google_oauth2_key(self):
         self.assertIsNotNone(smarter_settings.social_auth_google_oauth2_key)
 
@@ -391,12 +388,6 @@ class TestSettings(SmarterTestBase):
 
     def test_smarter_api_key_max_lifetime_days_property(self):
         self.assertIsNotNone(smarter_settings.smarter_api_key_max_lifetime_days)
-
-    def test_smarter_reactjs_app_loader_url_property(self):
-        self.assertIsNotNone(smarter_settings.smarter_reactjs_app_loader_url)
-
-    def test_smarter_reactjs_root_div_id_property(self):
-        self.assertIsNotNone(smarter_settings.smarter_reactjs_root_div_id)
 
     def test_version_property(self):
         self.assertIsNotNone(smarter_settings.version)
