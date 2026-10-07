@@ -15,6 +15,7 @@ import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.management.commands.deploy_builtin_llmclients import Command
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.plugin.models import PluginMeta
@@ -31,6 +32,7 @@ SMARTER_PROJECT_WEBSEARCH_PATH = os.path.join(
 SMARTER_LLMCLIENT_PATH = os.path.join(
     PROJECT_ROOT, "apps", "llmclient", "data", "llm-clients", "llmclient-smarter.yaml"
 )
+SIMPLE_LLMCLIENT_PATH = os.path.join(PROJECT_ROOT, "apps", "llmclient", "data", "llm-clients", "llmclient-simple.yaml")
 
 
 class TestDeployBuiltinLLMClients(TestAccountMixin):
@@ -77,6 +79,55 @@ class TestDeployBuiltinLLMClients(TestAccountMixin):
         with patch.object(Command, "apply_manifest", return_value=False):
             path = SMARTER_LLMCLIENT_PATH
             self.assertFalse(self.command.create_and_deploy_llmclient(path))
+
+    def test_llmclient_is_applied_as_deployed(self):
+        """Test that a built-in llmclient manifest is applied with deployed set to true, rather than as it is."""
+        self.assertFalse(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH)["spec"]["config"]["deployed"])
+        with (
+            patch.object(Command, "apply_manifest", return_value=True) as apply_manifest,
+            patch(f"{MODULE}.LLMClient.objects.get"),
+        ):
+            self.assertTrue(self.command.create_and_deploy_llmclient(SIMPLE_LLMCLIENT_PATH))
+        manifest = apply_manifest.call_args.args[0]
+        self.assertTrue(manifest.json_data["spec"]["config"]["deployed"])
+        self.assertIn("deployed: true", manifest.yaml_data)
+        # the built-in manifest itself is unchanged.
+        self.assertFalse(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH)["spec"]["config"]["deployed"])
+
+    def test_deployed_llmclient_is_not_undeployed(self):
+        """
+        Test that deploying a built-in llmclient that is deployed queues neither an undeploy nor a deploy.
+
+        Applying a built-in manifest, which is not deployed, and then deploying the llmclient
+        queued an undeploy task, which destroyed the llmclient's A record, and then a deploy task,
+        which created it again.
+        """
+        name = f"test_deploy_builtin_simple_{self.hash_suffix}"
+        manifest = copy.deepcopy(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH))
+        manifest["metadata"]["name"] = name
+        path = self.write_manifest(manifest)
+        # apply_manifest applies built-in manifests as the smarter admin.
+        user_profile = smarter_cached_objects.smarter_admin_user_profile
+        self.command.user_profile = user_profile
+
+        with (
+            patch("smarter.apps.llmclient.receivers.deploy_default_api") as deploy_default_api,
+            patch("smarter.apps.llmclient.receivers.undeploy_default_api") as undeploy_default_api,
+            patch("smarter.apps.llmclient.receivers.delete_default_api"),
+        ):
+            # deleted while delete_default_api is patched, so that no task is queued.
+            self.addCleanup(LLMClient.objects.filter(name=name).delete)
+            self.assertTrue(self.command.create_and_deploy_llmclient(path), self.command.stderr.getvalue())  # type: ignore[union-attr]
+            self.assertTrue(LLMClient.objects.get(user_profile=user_profile, name=name).deployed)
+            deploy_default_api.delay.assert_called_once()
+            deploy_default_api.reset_mock()
+
+            # deploying it again, e.g. when production is redeployed, changes nothing.
+            self.assertTrue(self.command.create_and_deploy_llmclient(path), self.command.stderr.getvalue())  # type: ignore[union-attr]
+            self.assertTrue(LLMClient.objects.get(user_profile=user_profile, name=name).deployed)
+            deploy_default_api.delay.assert_not_called()
+            undeploy_default_api.delay.assert_not_called()
+            LLMClient.objects.filter(name=name).delete()
 
     def test_url(self):
         """Test that the url is required, and validated."""

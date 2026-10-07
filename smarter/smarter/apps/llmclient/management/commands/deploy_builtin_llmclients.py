@@ -1,5 +1,6 @@
 """This module is used to deploy a customer API."""
 
+import copy
 import glob
 import io
 import os
@@ -142,7 +143,13 @@ class Command(SmarterCommand):
         - get a response
         - check the response
         - get the llmclient by name
-        - deploy the llmclient as a Celery task
+
+        The manifest is applied with ``spec.config.deployed`` set to true, rather than applied as it
+        is and then deployed. A built-in manifest is not deployed, so applying it would undeploy an
+        llmclient that is deployed, whose undeploy task destroys its A record, only for the deploy that
+        follows to create it again. Resolvers that query the domain in between cache the NXDOMAIN for
+        minutes. Applied this way, ``LLMClient.save()`` queues a deploy task only for an llmclient that
+        is not deployed yet, and nothing for one that is.
         """
         if not self.user_profile:
             raise SmarterValueError("UserProfile is required to create and deploy an llmclient.")
@@ -151,15 +158,15 @@ class Command(SmarterCommand):
             f"Creating and deploying llmclient from manifest {filespec} for user_profile {self.user_profile}."
         )
 
-        manifest = SAMLoader(file_path=filespec)
+        manifest_data = copy.deepcopy(SAMLoader(file_path=filespec).json_data or {})
+        manifest_data.setdefault("spec", {}).setdefault("config", {})["deployed"] = True
+        manifest = SAMLoader(manifest=manifest_data)
         if not self.apply_manifest(manifest, filespec):
             return False
 
         try:
             sam_llmclient = SAMLLMClient(**manifest.pydantic_model_dump())
-            llmclient = LLMClient.objects.get(user_profile=self.user_profile, name=sam_llmclient.metadata.name)
-            llmclient.deployed = True
-            llmclient.save()
+            LLMClient.objects.get(user_profile=self.user_profile, name=sam_llmclient.metadata.name)
             return True
         # pylint: disable=W0718
         except Exception as e:
