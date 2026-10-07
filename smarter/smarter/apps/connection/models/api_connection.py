@@ -20,8 +20,9 @@ from smarter.apps.connection.signals import (
     api_connection_success,
 )
 from smarter.apps.secret.models import Secret
+from smarter.common.const import SmarterHttpMethods
 from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -165,7 +166,7 @@ class ApiConnection(ConnectionBase):
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
         if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
-            snake_case_name = camel_to_snake(self.name)
+            snake_case_name = to_snake_case(self.name)
             logger.warning(
                 "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
                 self.formatted_class_name,
@@ -181,31 +182,52 @@ class ApiConnection(ConnectionBase):
         super().validate()
         return self.test_connection()
 
+    # pylint: disable=too-many-arguments
     def execute_query(
-        self, endpoint: str, params: Optional[dict] = None, limit: Optional[int] = None
+        self,
+        endpoint: str,
+        params: Optional[dict] = None,
+        limit: Optional[int] = None,
+        *,
+        method: str = SmarterHttpMethods.GET,
+        headers: Optional[dict[str, str]] = None,
+        body: Optional[Union[dict[str, Any], list[Any]]] = None,
     ) -> Union[dict[str, Any], list[Any], bool]:
         """
         Execute the API query and return the results.
+
         This method constructs the full URL by combining the base URL and the endpoint,
-        and sends a GET request to the API with the provided parameters.
+        and sends an HTTP request to the API with the provided parameters, headers and body.
+        Authentication headers derived from this connection's ``auth_method`` and ``api_key``
+        take precedence over any caller-supplied ``Authorization`` header.
 
         :param endpoint: The API endpoint to query.
-        :param params: A dictionary of parameters to include in the API request.
+        :param params: A dictionary of URL query string parameters to include in the API request.
         :param limit: The maximum number of rows to return from the API response.
+        :param method: The HTTP method to use. One of :py:class:`smarter.common.const.SmarterHttpMethods`. Defaults to ``GET``.
+        :param headers: Optional HTTP request headers to include in the API request.
+        :param body: Optional JSON request body. Only sent for ``POST``, ``PUT`` and ``PATCH`` requests.
         :return: The API response as a JSON object or False if the request fails.
         """
         params = params or {}
+        method = (method or SmarterHttpMethods.GET).upper()
         url = urljoin(self.base_url, endpoint)
-        headers = {}
-        if self.auth_method == "basic" and self.api_key:
-            headers["Authorization"] = f"Basic {self.api_key}"
-        elif self.auth_method == "token" and self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+        headers = dict(headers or {})
+        api_key = self.api_key.get_secret() if self.api_key else None
+        if self.auth_method == "basic" and api_key:
+            headers["Authorization"] = f"Basic {api_key}"
+        elif self.auth_method == "token" and api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
 
+        request_kwargs: dict[str, Any] = {"headers": headers, "params": params, "timeout": self.timeout}
+        if body and method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH):
+            request_kwargs["json"] = body
+
+        response = None
         try:
             api_connection_attempted.send(sender=self.__class__, connection=self)
             api_connection_query_attempted.send(sender=self.__class__, connection=self)
-            response = requests.get(url, headers=headers, params=params, timeout=self.timeout)
+            response = requests.request(method, url, **request_kwargs)
             response.raise_for_status()
             if response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]:
                 api_connection_success.send(sender=self.__class__, connection=self)
@@ -215,7 +237,7 @@ class ApiConnection(ConnectionBase):
                     if isinstance(response_data, list):
                         response_data = response_data[:limit]
                     elif isinstance(response_data, dict):
-                        response_data = {k: v[:limit] for k, v in response_data.items() if isinstance(v, list)}
+                        response_data = {k: v[:limit] if isinstance(v, list) else v for k, v in response_data.items()}
                     return response_data
                 return response.json()
             else:

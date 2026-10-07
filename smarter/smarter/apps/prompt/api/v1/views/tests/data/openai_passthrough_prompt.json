@@ -1,7 +1,7 @@
 {
-    "model": "gpt-4o-mini",
-    "temperature": 0.50,
-    "max_tokens": 1024,
+    "model": "gpt-6-luna",
+    "temperature": 1.0,
+    "max_completion_tokens": 1024,
     "messages": [
         {
             "role": "system",

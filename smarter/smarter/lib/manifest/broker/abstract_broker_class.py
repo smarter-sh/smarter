@@ -4,8 +4,9 @@
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
+from functools import wraps
 from http import HTTPStatus
-from typing import Any, Optional, Type, Union
+from typing import Any, Callable, Iterable, List, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -13,6 +14,7 @@ from django.core import serializers
 from django.core.handlers.asgi import ASGIRequest
 from django.db import IntegrityError, models
 from django.http import HttpRequest, QueryDict
+from pydantic import ValidationError
 from requests import PreparedRequest
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
@@ -31,7 +33,6 @@ from smarter.apps.account.utils import (
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -47,14 +48,19 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.keys import unknown_keys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
 from .error_classes import (
     SAMBrokerError,
+    SAMBrokerErrorDependencies,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMBrokerInternalError,
     SAMBrokerReadOnlyError,
 )
 
@@ -72,6 +78,38 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+def memoized_dependencies(func: Callable[..., List["AbstractBroker"]]) -> Callable[..., List["AbstractBroker"]]:
+    """Memoize a broker's :meth:`AbstractBroker.dependencies` for the life of the broker instance.
+
+    The dependencies are queried, and their brokers built, once per broker instance.
+    :meth:`AbstractBroker.verify_no_dependencies` clears the memo before it checks, so that
+    a delete always sees the current dependencies.
+
+    Example:
+
+    .. code-block:: python
+
+        class SAMGuardrailBroker(AbstractBroker):
+
+            @memoized_dependencies
+            def dependencies(self) -> List[AbstractBroker]:
+                ...
+
+    :param func: The broker's ``dependencies()`` method.
+    :type func: Callable[..., List[AbstractBroker]]
+    :return: The memoized method.
+    :rtype: Callable[..., List[AbstractBroker]]
+    """
+
+    @wraps(func)
+    def wrapper(self: "AbstractBroker") -> List["AbstractBroker"]:
+        if self._dependencies is None:
+            self._dependencies = func(self)
+        return self._dependencies
+
+    return wrapper
 
 
 class AbstractBroker(ABC, SmarterRequestMixin):
@@ -112,6 +150,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _orm_instance: Optional[MetaDataWithOwnershipModel] = None
     _ready: bool = False
     _is_ready_abstract_broker: bool = False
+    _dependencies: Optional[List["AbstractBroker"]] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -237,11 +276,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         logger.debug("%s.__init__() is complete.", self.abstract_broker_logger_prefix)
 
     def __str__(self):
-        """
-        Returns the string representation of the broker, expresssed as
+        """Returns the string representation of the broker, expresssed as.
+
         "{apiVersion} {kind} Broker".
 
-        example: "smarter.sh/v1 ChatBot Broker"
+        example: "smarter.sh/v1 LLMClient Broker"
 
         :return: The string representation of the broker.
         :rtype: str
@@ -249,7 +288,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         user_profile = self.user_profile or "Anonymous"
         name = self._name or "Unknown"
 
-        return f"{formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
+        return (
+            f"{self.formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
+        )
 
     def __repr__(self) -> str:
         """
@@ -353,7 +394,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        prefix = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text_blue(prefix)
 
     @property
     def abstract_broker_logger_prefix(self) -> str:
@@ -362,7 +404,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def formatted_class_name(self) -> str:
@@ -371,7 +414,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def formatted_class_name_cache_invalidations(self) -> str:
@@ -380,7 +424,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker cache invalidations.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text_blue(class_name)
 
     @property
     def is_ready_abstract_broker(self) -> bool:
@@ -403,21 +448,40 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._is_ready_abstract_broker,
         )
         # ---------------------------------------------------------------------
-        # there are three possible ways for us to be ready.
+        # there are five possible ways for us to be ready.
         # ---------------------------------------------------------------------
+        if self.request and "example-manifest" in self.request.path:
+            # 1.) if the request path indicates this is an example-manifest operation
+            logger.debug(
+                "%s.is_ready_abstract_broker() request path indicates this is an example-manifest operation. Marking as ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            self._is_ready_abstract_broker = True
+            return self._is_ready_abstract_broker
+        if self.request and "json-schema" in self.request.path:
+            # 2.) if the request path indicates this is a json-schema operation
+            logger.debug(
+                "%s.is_ready_abstract_broker() request path indicates this is a json-schema operation. Marking as ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            self._is_ready_abstract_broker = True
+            return self._is_ready_abstract_broker
         if bool(self._manifest):
+            # 3.) if we have a manifest.
             logger.debug(
                 "%s.is_ready_abstract_broker() manifest is loaded.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.loader) and self.loader.ready:
+            # 4.) we have a loader and it's in a ready state.
             logger.debug(
                 "%s.is_ready_abstract_broker() loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
+            # 5.) we have an ORM meta instance.
             logger.debug(
                 "%s.is_ready_abstract_broker() %s instance is available.",
                 self.abstract_broker_logger_prefix,
@@ -446,14 +510,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
-        if not self.is_accountmixin_ready:
+        if not self.srm_ready:
             logger.warning(
-                "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
-            )
-        if not self.is_requestmixin_ready:
-            logger.warning(
-                "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
+                "%s.is_ready_abstract_broker() - SmarterRequestMixin is not ready. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
         if not bool(self._manifest):
@@ -494,7 +553,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: True if the broker is ready for operations.
         :rtype: bool
         """
-        logger.debug("%s.ready() called. Current ready state: %s", self.abstract_broker_logger_prefix, self._ready)
         if self._ready:
             return self._ready
         retval = super().ready
@@ -531,8 +589,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def params(self) -> Optional[QueryDict]:
         """
-        Return the query parameters from the url of the request. there are two
-        scenarios to consider:
+        Return the query parameters from the url of the request.
+
+        There are two scenarios to consider:
+
         1. the request is a Django HttpRequest object (the expected case)
         2. the request is a Python PreparedRequest object (the edge case)
 
@@ -610,7 +670,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def kind_setter(self, value: str):
         """
-        Set the kind of manifest. Validates that the kind is a
+        Set the kind of manifest.
+
+        Validates that the kind is a
         valid SmarterJournalThings value.
 
         :raises SmarterValueError: If the kind is not valid.
@@ -637,17 +699,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def name(self) -> Optional[str]:
         """
-        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
+        Retrieve the unique name identifier for the LLMClient instance managed by this broker.
 
-        This property accesses the name used to distinguish the ChatBot within the database and across
+        This property accesses the name used to distinguish the LLMClient within the database and across
         the Smarter platform. The name is first returned from an internal cache if available. If not cached,
         and if a manifest is present, the name is extracted from the manifest's metadata and stored for
         subsequent access.
 
         The name is essential for database queries, model lookups, and for associating related resources
-        such as API keys, plugins, and functions with the correct ChatBot instance.
+        such as API keys, plugins, and functions with the correct LLMClient instance.
 
-        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
+        :returns: The name of the LLMClient as a string, or ``None`` if the name is not set or cannot be determined.
         :rtype: Optional[str]
 
         .. note::
@@ -657,34 +719,30 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         if self._name:
             return self._name
-        logger.debug("%s.name() name is not cached. Attempting to retrieve name.", self.abstract_broker_logger_prefix)
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
             self._name = self._manifest.metadata.name
             logger.debug(
                 "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
             )
             return self._name
-        else:
-            logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
-        if self.loader:
+        if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
+            self._name = self._manifest.metadata.name
+            logger.debug(
+                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+            )
+            return self._name
+        if self._loader:
             logger.debug(
                 "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
                 self.abstract_broker_logger_prefix,
             )
-            if isinstance(self.manifest, AbstractSAMBase) and self.manifest.metadata and self.manifest.metadata.name:
-                self._name = self.manifest.metadata.name
+            self._name = self._loader.manifest_metadata.get("name")
+            if self._name:
                 logger.debug(
-                    "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+                    "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
                 )
                 return self._name
-            else:
-                self._name = self.loader.manifest_metadata.get("name")
-                if self._name:
-                    logger.debug(
-                        "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
-                    )
-                    return self._name
-                logger.debug("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
+            logger.warning("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
@@ -692,31 +750,29 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 logger.debug(
                     "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
                 )
-            else:
-                logger.debug("%s.name() url params do not contain a name", self.abstract_broker_logger_prefix)
         if not self._name:
-            logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
+            logger.warning("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
         return self._name
 
     def manifest_to_django_orm(self) -> dict[str, Any]:
         """
-        Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM ChatBot model.
+        Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM LLMClient model.
 
         This method extracts all relevant metadata from the loaded manifest
         and transforms it into a dictionary format compatible with Django ORM operations. The manifest's configuration
         is first dumped and converted from camelCase to snake_case to match Django's field naming conventions.
 
         The resulting dictionary includes the account, name, description, and version fields from the manifest metadata.
-        This dictionary is intended to be used to supplement the model spec when instantiating or updating a ChatBot ORM model instance in the database.
+        This dictionary is intended to be used to supplement the model spec when instantiating or updating a LLMClient ORM model instance in the database.
 
         If the manifest is not loaded or is invalid, an exception is raised to indicate that the broker is not ready
         to perform the transformation.
 
-        :returns: A dictionary containing all metadata fields required to create or update a Django ORM ChatBot model.
+        :returns: A dictionary containing all metadata fields required to create or update a Django ORM LLMClient model.
         :rtype: dict
 
         :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
-        :raises SAMChatbotBrokerError: If the manifest metadata cannot be converted to a dictionary.
+        :raises SAMLLMClientBrokerError: If the manifest metadata cannot be converted to a dictionary.
         """
         if not isinstance(self.manifest, AbstractSAMBase):
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind)
@@ -727,10 +783,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 command=SmarterJournalCliCommands.APPLY,
             )
         metadata = self.manifest.metadata.model_dump()
-        metadata = self.camel_to_snake(metadata)
+        # annotation keys are user data, such as "smarter.sh/created-by", so they keep their case.
+        has_annotations = "annotations" in metadata
+        annotations = metadata.pop("annotations", None)
+        metadata = self.to_snake_case(metadata)
+        if has_annotations and isinstance(metadata, dict):
+            metadata["annotations"] = annotations
         if not isinstance(metadata, dict):
             raise SAMBrokerError(
-                message=f"Manifest metadata could not be converted to a dictionary. Expected a dictionary after camel_to_snake transformation, but got {type(metadata)}",
+                message=f"Manifest metadata could not be converted to a dictionary. Expected a dictionary after to_snake_case transformation, but got {type(metadata)}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
@@ -748,10 +809,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def name_cached_property_setter(self, value: str):
         """
-        A workaround to the limitation that you cannot use both @cached_property and
-        a setter for the same attribute name (name). In Python, you cannot have a
-        property (or cached_property) and a setter with the same name unless you use the
-        @property decorator (not @cached_property).
+        A workaround to the limitation that you cannot use both @cached_property and a setter for the same attribute name (name).
+
+        In Python, you cannot have a property (or cached_property) and a setter with the same name unless you use
+        the @property decorator (not @cached_property).
 
         We need the cached_property so that the lazy evaluation of the name only happens
         once, and subsequent accesses return the cached value for performance.
@@ -805,14 +866,32 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The SAMLoader instance for this broker.
         :rtype: Optional[SAMLoader]
         """
-        if self._loader and self._loader.ready:
+        if isinstance(self._loader, SAMLoader) and self._loader.ready:
             return self._loader
-        logger.debug(
-            "%s.loader() getter - loader is not ready. Current loader state: %s",
-            self.abstract_broker_logger_prefix,
-            self._loader,
-        )
+        if self._loader:
+            logger.warning(
+                "%s.loader() getter - loader is set but is not in a ready state.",
+                self.abstract_broker_logger_prefix,
+            )
+
         return None
+
+    def raise_for_unknown_keys(self, manifest: Any) -> None:
+        """
+        Raise a validation error if the manifest has keys that its Pydantic model does not define.
+
+        The models ignore such keys, so that a misspelled key, e.g. ``defaultTemperatura``, would
+        otherwise be silently ignored, rather than be reported to the client as an error.
+        """
+        model = self._pydantic_model
+        if not isinstance(manifest, dict) or not issubclass(model, AbstractSAMBase) or model is AbstractSAMBase:
+            return
+        unknown = unknown_keys(model, manifest)
+        if unknown:
+            raise SAMValidationError(
+                f"The {self.kind} manifest has keys that it does not define: {', '.join(unknown)}. "
+                "Check their spelling, or remove them."
+            )
 
     @loader.setter
     def loader(self, value: SAMLoader):
@@ -835,6 +914,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             raise SAMBrokerError(
                 f"loader manifest kind '{value.manifest_kind}' does not match broker kind '{self.kind}'"
             )
+        self.raise_for_unknown_keys(value.json_data)
         self._loader = value
 
         logger.debug("%s.loader() setter set loader to %s", self.abstract_broker_logger_prefix, self._loader)
@@ -882,7 +962,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def orm_meta_instance(self) -> Optional[MetaDataWithOwnershipModel]:
         """
-        Return the Django ORM meta model instance for the broker. This is a cached
+        Return the Django ORM meta model instance for the broker.
+
+        This is a cached
         property that retrieves the ORM meta instance based on the user_profile
         and kind. For simple relational models, the ORM meta class is the same
         as the ORM class, and the meta instance is the same as the ORM instance.
@@ -907,31 +989,22 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         logger.debug(
             "%s.orm_meta_instance_setter() called for %s %s owned by %s",
             self.abstract_broker_logger_prefix,
-            self.kind,
-            self.name,
-            self.user_profile,
+            self._kind,
+            self._name,
+            self._user_profile,
         )
+        if not self._name or not self._user_profile:
+            logger.debug(
+                "%s.orm_meta_instance_setter() cannot initialize ORM meta instance because name or user_profile is not set.",
+                self.abstract_broker_logger_prefix,
+            )
+            return
         if self.ORMMetaModelClass == self.ORMModelClass and self._orm_instance:
             logger.debug(
                 "%s.orm_meta_instance_setter() ORMMetaModelClass is the same as ORMModelClass and orm_instance is already set. Setting orm_meta_instance to orm_instance.",
                 self.abstract_broker_logger_prefix,
             )
             self._orm_meta_instance = self._orm_instance
-            return
-
-        if not self.name:
-            logger.debug(
-                "%s.orm_meta_instance_setter() cannot initialize %s meta instance because name is not set.",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-            )
-            return
-        if not self.user_profile:
-            logger.debug(
-                "%s.orm_meta_instance_setter() cannot initialize %s meta instance because user_profile is not set.",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-            )
             return
 
         self._orm_meta_instance = None
@@ -941,8 +1014,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             "%s.orm_meta_instance_setter() - Attempting to initialize %s using %s owned by %s.",
             self.abstract_broker_logger_prefix,
             ModelClass.__name__,
-            self.name,
-            self.user_profile,
+            self._name,
+            self._user_profile,
         )
         try:
             self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
@@ -1058,7 +1131,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
         """
-        Return the Django ORM model instance for the broker. There are
+        Return the Django ORM model instance for the broker.
+
+        There are
         multiple strategies to retrieve the ORM instance:
 
         1. If the instance is already cached in self._orm_instance, return it.
@@ -1067,7 +1142,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
            If not found, attempt to retrieve using the admin user_profile for the account.
            If still not found, attempt to retrieve using the Smarter platform admin user_profile.
         4. Cache the retrieved instance for future access.
-
 
         :return: The Django ORM model instance for the broker.
         :rtype: Optional[MetaDataWithOwnershipModel]
@@ -1273,7 +1347,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @abstractmethod
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         """
-        The Pydantic model representing the manifest. If the manifest
+        The Pydantic model representing the manifest.
+
+        If the manifest
         has not been initialized yet, this property will attempt to
         initialize it using the SAMLoader.
 
@@ -1284,8 +1360,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def manifest_setter(self, value: Optional[Union[AbstractSAMBase, dict[str, Any]]]):
         """
-        Set the manifest for the broker and override all AbstractBroker
-        model properties based on the manifest data.
+        Set the manifest for the broker and override all AbstractBroker model properties based on the manifest data.
 
         :param value: The manifest to set, either as a Pydantic model or a dictionary.
         :type value: Optional[Union[AbstractSAMBase, dict]]
@@ -1372,9 +1447,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Abstract Methods
     ###########################################################################
     def cache_invalidations(self) -> None:
-        """
-        Handle broker specific cache invalidation logic.
-        """
+        """Handle broker specific cache invalidation logic."""
         logger.debug(
             "%s.cache_invalidations() called for %s",
             self.abstract_broker_logger_cache_invalidation_prefix,
@@ -1388,10 +1461,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # unpredictable downstream behavior.
         cache_invalidate.send(sender=self.__class__, user_profile=self.user_profile)
 
-    # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
+    @abstractmethod
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
-        Apply a manifest, which works like an upsert operation. Designed
+        Apply a manifest, which works like an upsert operation.
+
+        This abstract method should be implemented by subclasses to provide
+        the logic for applying a manifest to create or update a resource.
+
+        Designed
         around the Kubernetes ``kubectl apply`` command.
 
         This method processes a Smarter YAML manifest and either creates or updates
@@ -1413,38 +1491,32 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         .. todo:: Research why this is not an abstract method.
         """
-        logger.debug(
-            "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            self.abstract_broker_logger_prefix,
-            request,
-            args,
-            kwargs,
-            self.account,
-            self.user,
+        raise SAMBrokerErrorNotImplemented(
+            message="apply() not implemented", thing=self.thing, command=SmarterJournalCliCommands.APPLY
         )
 
     @abstractmethod
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Invoke a chat operation.
+        Invoke a prompt operation.
 
         This abstract method should be implemented by subclasses to provide
-        chat-based interactions with the broker resource.
+        prompt-based interactions with the broker resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
-        :return: A SmarterJournaledJsonResponse containing the chat response.
+        :return: A SmarterJournaledJsonResponse containing the prompt response.
         :rtype: SmarterJournaledJsonResponse
         """
         raise SAMBrokerErrorNotImplemented(
-            message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
+            message="prompt() not implemented", thing=self.thing, command=SmarterJournalCliCommands.PROMPT
         )
 
     @abstractmethod
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """describe a resource.
+        """Describe a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1458,8 +1530,141 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
+    def dependencies(self) -> List["AbstractBroker"]:
+        """Return brokers for the resources that depend on this resource.
+
+        A resource depends on this resource when it refers to it, so that deleting this resource
+        would break it, or would delete it too. For example, an LLMClient that lists a Guardrail
+        in its ``spec.guardrails`` depends on that Guardrail. The dependents are queried from the
+        Django ORM, and may belong to other users. :meth:`verify_no_dependencies` uses them to
+        refuse to delete a resource that is still in use.
+
+        Example:
+
+        .. code-block:: python
+
+            broker = SAMGuardrailBroker(request=request, name="stupid_input", kind="Guardrail")
+            for dependency in broker.dependencies():
+                print(dependency.kind, dependency.name)
+            # LLMClient smarter_example
+
+        :return: A broker for each resource that depends on this resource, or an empty list.
+        :rtype: List[AbstractBroker]
+        """
+        raise SAMBrokerErrorNotImplemented(message="dependencies() not implemented", thing=self.thing)
+
+    def dependency_broker(
+        self,
+        kind: str,
+        instance: models.Model,
+        name: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "AbstractBroker":
+        """Return a broker for a resource that depends on this resource.
+
+        The broker is initialized from the ORM, for the resource's own owner, which may be
+        another user than this broker's.
+
+        :param kind: The SAM kind of the resource, e.g. ``SAMKinds.LLM_CLIENT.value``.
+        :type kind: str
+        :param instance: The resource's Django ORM instance. It has a ``user_profile``.
+        :type instance: models.Model
+        :param name: The resource's manifest name. Defaults to ``instance.name``.
+        :type name: Optional[str]
+        :param user_profile: The resource's owner. Defaults to ``instance.user_profile``.
+        :type user_profile: Optional[UserProfile]
+        :return: A broker for the resource.
+        :rtype: AbstractBroker
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        broker_class = Brokers.get_broker(kind)
+        if broker_class is None:
+            raise SAMBrokerInternalError(f"No broker for kind {kind}", thing=self.thing)
+        return broker_class(
+            None,
+            name=name or getattr(instance, "name"),
+            kind=kind,
+            user_profile=user_profile or getattr(instance, "user_profile"),
+        )
+
+    def dependency_brokers(self, kind: str, instances: Iterable[models.Model]) -> List["AbstractBroker"]:
+        """Return a broker for each resource that depends on this resource.
+
+        :param kind: The SAM kind of the resources, e.g. ``SAMKinds.LLM_CLIENT.value``.
+        :type kind: str
+        :param instances: The resources' Django ORM instances.
+        :type instances: Iterable[models.Model]
+        :return: A broker for each resource, without duplicates.
+        :rtype: List[AbstractBroker]
+        """
+        unique = {instance.pk: instance for instance in instances}
+        return [self.dependency_broker(kind, instance) for instance in unique.values()]
+
+    def verify_no_dependencies(self, command: Optional[SmarterJournalCliCommands] = None) -> None:
+        """Raise an error if other resources depend on this resource.
+
+        Call this in :meth:`delete`, before deleting anything.
+
+        :param command: The command that is being processed.
+        :type command: Optional[SmarterJournalCliCommands]
+        :raises SAMBrokerErrorDependencies: If :meth:`dependencies` returns any brokers.
+        """
+        # query the current dependencies, not those memoized by @memoized_dependencies.
+        self._dependencies = None
+        dependencies = self.dependencies()
+        if dependencies:
+            visible = self.visible_dependencies(dependencies)
+            names = sorted(f"{dependency.kind} {dependency.name}" for dependency in visible)
+            hidden = len(dependencies) - len(visible)
+            if hidden:
+                names.append(f"{hidden} {inflect_engine.plural('resource', hidden)} in other accounts")
+            raise SAMBrokerErrorDependencies(
+                f"Cannot delete {self.kind} {self.name}, because these resources depend on it: {', '.join(names)}. "
+                "Delete them, or remove their references to it, first.",
+                thing=self.kind,
+                command=command,
+            )
+
+    def visible_dependencies(self, dependencies: Optional[List["AbstractBroker"]] = None) -> List["AbstractBroker"]:
+        """Return the dependencies that the authenticated user may read.
+
+        A dependency may belong to another account, e.g. an LLMClient that uses a built-in
+        Guardrail. Superusers may read every dependency. Other users may read those of their
+        own account.
+
+        :param dependencies: The dependencies to filter. Defaults to :meth:`dependencies`.
+        :type dependencies: Optional[List[AbstractBroker]]
+        :return: The dependencies that the authenticated user may read.
+        :rtype: List[AbstractBroker]
+        """
+        dependencies = self.dependencies() if dependencies is None else dependencies
+        if self.user is not None and getattr(self.user, "is_superuser", False):
+            return dependencies
+        return [dependency for dependency in dependencies if self.account and dependency.account == self.account]
+
+    def dependencies_status(self) -> List[dict]:
+        """Return the ``status.dependencies`` of a manifest: the kind and name of each visible dependency.
+
+        Example:
+
+        .. code-block:: python
+
+            broker.dependencies_status()
+            # [{"kind": "LLMClient", "name": "smarter_example"}]
+
+        :return: A dict with the ``kind`` and ``name`` of each dependency that the authenticated user may read.
+        :rtype: List[dict]
+        """
+        return [
+            {"kind": dependency.kind, "name": dependency.name}
+            for dependency in sorted(self.visible_dependencies(), key=lambda d: (str(d.kind), str(d.name)))
+        ]
+
+    @abstractmethod
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """delete a resource.
+        """Delete a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1474,7 +1679,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """deploy a resource.
+        """Deploy a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1506,7 +1711,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """get information about specified resources.
+        """Get information about specified resources.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1521,7 +1726,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """get logs for a resource.
+        """Get logs for a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1536,7 +1741,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """undeploy a resource.
+        """Undeploy a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1567,6 +1772,39 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return self.json_response_ok(command=command, data=data)
 
+    @classmethod
+    def validation_errors(cls, manifest: dict) -> list[dict[str, Any]]:
+        """Validate a manifest against the broker's Pydantic model, without saving it.
+
+        Pydantic's errors keep their ``loc``, the path of the invalid value in the manifest.
+        Errors that the model's validators raise as other exceptions, e.g. ``SAMValidationError``,
+        have an empty ``loc``.
+
+        Example:
+
+        .. code-block:: python
+
+            SAMGuardrailBroker.validation_errors({"apiVersion": "smarter.sh/v1", "kind": "Guardrail"})
+            # [{"loc": ["metadata"], "message": "Field required", "type": "missing"}, ...]
+
+        :param manifest: The manifest, as a dict.
+        :type manifest: dict
+        :return: The manifest's errors, as dicts with a ``loc``, a ``message`` and a ``type``, or an empty list.
+        :rtype: list[dict[str, Any]]
+        """
+        try:
+            cls._pydantic_model.model_validate(manifest)
+        except ValidationError as e:
+            return [
+                {"loc": [str(part) for part in error["loc"]], "message": error["msg"], "type": error["type"]}
+                for error in e.errors()
+            ]
+        # pylint: disable=broad-except
+        except Exception as e:
+            message = getattr(e, "message", None) or str(e) or type(e).__name__
+            return [{"loc": [], "message": message, "type": type(e).__name__}]
+        return []
+
     ###########################################################################
     # Smarter object helpers
     ###########################################################################
@@ -1579,7 +1817,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         expiration: Optional[datetime] = None,
     ) -> Secret:
         """
-        Get or create a Smarter Secret in the database. This is used to store
+        Get or create a Smarter Secret in the database.
+
+        This is used to store
         secrets that are passed in the manifest.
 
         :param user_profile: The UserProfile to associate the secret with.
@@ -1733,6 +1973,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         else:
             kind = self.kind
             message = message or f"{kind} {self.name} {operated} successfully"
+        if command == SmarterJournalCliCommands.DESCRIBE and isinstance(data.get(SAMKeys.STATUS.value), dict):
+            try:
+                data[SAMKeys.STATUS.value]["dependencies"] = self.dependencies_status()
+            except SAMBrokerError as e:
+                logger.warning(
+                    "%s.json_response_ok() could not add the dependencies of %s %s to its status: %s",
+                    self.abstract_broker_logger_prefix,
+                    self.kind,
+                    self.name,
+                    e,
+                )
         retval = self._retval(data=data, message=message)
         return SmarterJournaledJsonResponse(
             request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
@@ -1861,8 +2112,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def json_response_err(self, command: SmarterJournalCliCommands, e: Exception) -> SmarterJournaledJsonResponse:
         """
-        Return a structured error response that can be unpacked and rendered
-        by the cli in a variety of formats.
+        Return a structured error response that can be unpacked and rendered by the cli in a variety of formats.
 
         :param command: The command that was executed.
         :type command: SmarterJournalCliCommands
@@ -1899,8 +2149,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     def set_and_verify_name_param(self, *args, command: Optional[SmarterJournalCliCommands] = None, **kwargs):
         """
-        Set self.name from the 'name' query string param and then verify that it
-        was actually passed.
+        Set self.name from the 'name' query string param and then verify that it was actually passed.
 
         :param command: The command being executed, for error reporting purposes.
         :type command: Optional[SmarterJournalCliCommands]
@@ -1914,7 +2163,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> Optional[list[dict[str, str]]]:
         """
-        For tabular output from get() implementations. Returns a list of field names and types
+        For tabular output from get() implementations.
+
+        Returns a list of field names and types
         from the Django model serializer.
 
         :param serializer: The Django model serializer instance.
@@ -1924,7 +2175,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         fields_and_types: list[dict[str, str]] = []
         for field_name, field in serializer.fields.items():
-            item = self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
+            # the field name is camelCased to match the keys of the camelCased items that get() returns
+            item = {"name": self.to_camel_case(field_name), "type": type(field).__name__}
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
             else:
@@ -1939,6 +2191,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     def clean_cli_param(self, param, param_name: str = "unknown", url: Optional[str] = None) -> Optional[str]:
         """
         - Remove any leading or trailing whitespace from the param.
+
         - Ensure that the param is a string.
         - Return the cleaned param.
 
@@ -1952,7 +2205,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: Optional[str]
         """
         class_name = self.__class__.__name__ + "().clean_cli_param()"
-        class_name = formatted_text(class_name)
+        class_name = self.formatted_text(class_name)
         retval = param.strip() if isinstance(param, str) else param
 
         if isinstance(param, str):
@@ -2080,8 +2333,11 @@ class BrokerNotImplemented(AbstractBroker):
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
-    def chat(self, request: SmarterRequest, *args, **kwargs):
-        super().chat(request, args, kwargs)
+    def prompt(self, request: SmarterRequest, *args, **kwargs):
+        super().prompt(request, args, kwargs)
+
+    def dependencies(self) -> List[AbstractBroker]:
+        return super().dependencies()
 
     def delete(self, request: SmarterRequest, *args, **kwargs):
         super().delete(request, args, kwargs)

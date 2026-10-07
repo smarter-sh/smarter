@@ -23,44 +23,58 @@ from .views.json_schema import (
     DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
     DocsJsonSchemaApiView,
-    DocsJsonSchemaChatBotView,
-    DocsJsonSchemaChatHistoryView,
-    DocsJsonSchemaChatPluginUsageView,
-    DocsJsonSchemaChatToolCallView,
-    DocsJsonSchemaChatView,
+    DocsJsonSchemaBudgetView,
+    DocsJsonSchemaCustomDomainView,
+    DocsJsonSchemaGuardrailView,
+    DocsJsonSchemaLLMClientView,
+    DocsJsonSchemaLLMHostComputeView,
+    DocsJsonSchemaLLMHostView,
+    DocsJsonSchemaMCPClientView,
+    DocsJsonSchemaOrchestratorView,
     DocsJsonSchemaPluginView,
+    DocsJsonSchemaPromptView,
     DocsJsonSchemaProviderView,
+    DocsJsonSchemaProxyView,
     DocsJsonSchemaSecretView,
+    DocsJsonSchemaSkillView,
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaSqlView,
     DocsJsonSchemaUserView,
+    DocsJsonSchemaVectorsearchView,
     DocsJsonSchemaVectorstoreView,
+    DocsJsonSchemaWebsearchView,
 )
 from .views.manifest import (
     DocsExampleManifestAccountView,
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
-    DocsExampleManifestChatBotView,
-    DocsExampleManifestChatHistoryView,
-    DocsExampleManifestChatPluginUsageView,
-    DocsExampleManifestChatToolCallView,
-    DocsExampleManifestChatView,
+    DocsExampleManifestBudgetView,
+    DocsExampleManifestCustomDomainView,
+    DocsExampleManifestGuardrailView,
+    DocsExampleManifestLLMClientView,
+    DocsExampleManifestLLMHostComputeView,
+    DocsExampleManifestLLMHostView,
+    DocsExampleManifestMCPClientView,
+    DocsExampleManifestOrchestratorView,
     DocsExampleManifestPluginView,
+    DocsExampleManifestPromptView,
     DocsExampleManifestProviderView,
+    DocsExampleManifestProxyView,
     DocsExampleManifestSecretView,
+    DocsExampleManifestSkillView,
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
+    DocsExampleManifestVectorsearchView,
     DocsExampleManifestVectorstoreView,
+    DocsExampleManifestWebsearchView,
 )
 from .views.views import JsonSchemasView, ManifestsView
 
 
 class DocsReverseNames:
-    """
-    Centralized reverse view names for the docs app.
-    """
+    """Centralized reverse view names for the docs app."""
 
     namespace = namespace
     example_manifests = "example_manifests"
@@ -98,41 +112,6 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.ACCOUNT.value),
     ),
     path(
-        json_schema_path(SAMKinds.AUTH_TOKEN.value),
-        DocsJsonSchemaApiKeyView.as_view(),
-        name=json_schema_name(SAMKinds.AUTH_TOKEN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT.value),
-        DocsJsonSchemaChatView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT_HISTORY.value),
-        DocsJsonSchemaChatHistoryView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_HISTORY.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT_PLUGIN_USAGE.value),
-        DocsJsonSchemaChatPluginUsageView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT_TOOL_CALL.value),
-        DocsJsonSchemaChatToolCallView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_TOOL_CALL.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHATBOT.value),
-        DocsJsonSchemaChatBotView.as_view(),
-        name=json_schema_name(SAMKinds.CHATBOT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.STATIC_PLUGIN.value),
-        DocsJsonSchemaPluginView.as_view(),
-        name=json_schema_name(SAMKinds.STATIC_PLUGIN.value),
-    ),
-    path(
         json_schema_path(SAMKinds.API_CONNECTION.value),
         DocsJsonSchemaApiConnectionView.as_view(),
         name=json_schema_name(SAMKinds.API_CONNECTION.value),
@@ -143,9 +122,89 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.API_PLUGIN.value),
     ),
     path(
+        json_schema_path(SAMKinds.AUTH_TOKEN.value),
+        DocsJsonSchemaApiKeyView.as_view(),
+        name=json_schema_name(SAMKinds.AUTH_TOKEN.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.BUDGET.value),
+        DocsJsonSchemaBudgetView.as_view(),
+        name=json_schema_name(SAMKinds.BUDGET.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.CUSTOM_DOMAIN.value),
+        DocsJsonSchemaCustomDomainView.as_view(),
+        name=json_schema_name(SAMKinds.CUSTOM_DOMAIN.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.GUARDRAIL.value),
+        DocsJsonSchemaGuardrailView.as_view(),
+        name=json_schema_name(SAMKinds.GUARDRAIL.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.LLM_CLIENT.value),
+        DocsJsonSchemaLLMClientView.as_view(),
+        name=json_schema_name(SAMKinds.LLM_CLIENT.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.LLM_HOST.value),
+        DocsJsonSchemaLLMHostView.as_view(),
+        name=json_schema_name(SAMKinds.LLM_HOST.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.LLM_HOST_COMPUTE.value),
+        DocsJsonSchemaLLMHostComputeView.as_view(),
+        name=json_schema_name(SAMKinds.LLM_HOST_COMPUTE.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.MCP_CLIENT.value),
+        DocsJsonSchemaMCPClientView.as_view(),
+        name=json_schema_name(SAMKinds.MCP_CLIENT.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.ORCHESTRATOR.value),
+        DocsJsonSchemaOrchestratorView.as_view(),
+        name=json_schema_name(SAMKinds.ORCHESTRATOR.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.PROMPT.value),
+        DocsJsonSchemaPromptView.as_view(),
+        name=json_schema_name(SAMKinds.PROMPT.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.PROVIDER.value),
+        DocsJsonSchemaProviderView.as_view(),
+        name=json_schema_name(SAMKinds.PROVIDER.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.PROXY.value),
+        DocsJsonSchemaProxyView.as_view(),
+        name=json_schema_name(SAMKinds.PROXY.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.SECRET.value),
+        DocsJsonSchemaSecretView.as_view(),
+        name=json_schema_name(SAMKinds.SECRET.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.STATIC_PLUGIN.value),
+        DocsJsonSchemaPluginView.as_view(),
+        name=json_schema_name(SAMKinds.STATIC_PLUGIN.value),
+    ),
+    path(
         json_schema_path(SAMKinds.SQL_CONNECTION.value),
         DocsJsonSchemaSqlConnectionView.as_view(),
         name=json_schema_name(SAMKinds.SQL_CONNECTION.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.SKILL_PLUGIN.value),
+        DocsJsonSchemaSkillView.as_view(),
+        name=json_schema_name(SAMKinds.SKILL_PLUGIN.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.WEBSEARCH_PLUGIN.value),
+        DocsJsonSchemaWebsearchView.as_view(),
+        name=json_schema_name(SAMKinds.WEBSEARCH_PLUGIN.value),
     ),
     path(
         json_schema_path(SAMKinds.SQL_PLUGIN.value),
@@ -158,14 +217,9 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.USER.value),
     ),
     path(
-        json_schema_path(SAMKinds.SECRET.value),
-        DocsJsonSchemaSecretView.as_view(),
-        name=json_schema_name(SAMKinds.SECRET.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.PROVIDER.value),
-        DocsJsonSchemaProviderView.as_view(),
-        name=json_schema_name(SAMKinds.PROVIDER.value),
+        json_schema_path(SAMKinds.VECTORSEARCH.value),
+        DocsJsonSchemaVectorsearchView.as_view(),
+        name=json_schema_name(SAMKinds.VECTORSEARCH.value),
     ),
     path(
         json_schema_path(SAMKinds.VECTORSTORE.value),
@@ -181,39 +235,89 @@ urlpatterns = [
         name=manifest_name(SAMKinds.ACCOUNT.value),
     ),
     path(
+        manifest_path(SAMKinds.API_CONNECTION.value),
+        DocsExampleManifestApiConnectionView.as_view(),
+        name=manifest_name(SAMKinds.API_CONNECTION.value),
+    ),
+    path(
+        manifest_path(SAMKinds.API_PLUGIN.value),
+        DocsExampleManifestApiView.as_view(),
+        name=manifest_name(SAMKinds.API_PLUGIN.value),
+    ),
+    path(
         manifest_path(SAMKinds.AUTH_TOKEN.value),
         DocsExampleManifestApiKeyView.as_view(),
         name=manifest_name(SAMKinds.AUTH_TOKEN.value),
     ),
     path(
-        manifest_path(SAMKinds.CHAT.value),
-        DocsExampleManifestChatView.as_view(),
-        name=manifest_name(SAMKinds.CHAT.value),
+        manifest_path(SAMKinds.BUDGET.value),
+        DocsExampleManifestBudgetView.as_view(),
+        name=manifest_name(SAMKinds.BUDGET.value),
     ),
     path(
-        manifest_path(SAMKinds.CHAT_HISTORY.value),
-        DocsExampleManifestChatHistoryView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_HISTORY.value),
+        manifest_path(SAMKinds.CUSTOM_DOMAIN.value),
+        DocsExampleManifestCustomDomainView.as_view(),
+        name=manifest_name(SAMKinds.CUSTOM_DOMAIN.value),
     ),
     path(
-        manifest_path(SAMKinds.CHAT_PLUGIN_USAGE.value),
-        DocsExampleManifestChatPluginUsageView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_PLUGIN_USAGE.value),
+        manifest_path(SAMKinds.GUARDRAIL.value),
+        DocsExampleManifestGuardrailView.as_view(),
+        name=manifest_name(SAMKinds.GUARDRAIL.value),
     ),
     path(
-        manifest_path(SAMKinds.CHAT_TOOL_CALL.value),
-        DocsExampleManifestChatToolCallView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_TOOL_CALL.value),
+        manifest_path(SAMKinds.LLM_CLIENT.value),
+        DocsExampleManifestLLMClientView.as_view(),
+        name=manifest_name(SAMKinds.LLM_CLIENT.value),
     ),
     path(
-        manifest_path(SAMKinds.CHATBOT.value),
-        DocsExampleManifestChatBotView.as_view(),
-        name=manifest_name(SAMKinds.CHATBOT.value),
+        manifest_path(SAMKinds.LLM_HOST.value),
+        DocsExampleManifestLLMHostView.as_view(),
+        name=manifest_name(SAMKinds.LLM_HOST.value),
     ),
     path(
-        manifest_path(SAMKinds.STATIC_PLUGIN.value),
-        DocsExampleManifestPluginView.as_view(),
-        name=manifest_name(SAMKinds.STATIC_PLUGIN.value),
+        manifest_path(SAMKinds.LLM_HOST_COMPUTE.value),
+        DocsExampleManifestLLMHostComputeView.as_view(),
+        name=manifest_name(SAMKinds.LLM_HOST_COMPUTE.value),
+    ),
+    path(
+        manifest_path(SAMKinds.MCP_CLIENT.value),
+        DocsExampleManifestMCPClientView.as_view(),
+        name=manifest_name(SAMKinds.MCP_CLIENT.value),
+    ),
+    path(
+        manifest_path(SAMKinds.ORCHESTRATOR.value),
+        DocsExampleManifestOrchestratorView.as_view(),
+        name=manifest_name(SAMKinds.ORCHESTRATOR.value),
+    ),
+    path(
+        manifest_path(SAMKinds.PROMPT.value),
+        DocsExampleManifestPromptView.as_view(),
+        name=manifest_name(SAMKinds.PROMPT.value),
+    ),
+    path(
+        manifest_path(SAMKinds.PROVIDER.value),
+        DocsExampleManifestProviderView.as_view(),
+        name=manifest_name(SAMKinds.PROVIDER.value),
+    ),
+    path(
+        manifest_path(SAMKinds.PROXY.value),
+        DocsExampleManifestProxyView.as_view(),
+        name=manifest_name(SAMKinds.PROXY.value),
+    ),
+    path(
+        manifest_path(SAMKinds.SECRET.value),
+        DocsExampleManifestSecretView.as_view(),
+        name=manifest_name(SAMKinds.SECRET.value),
+    ),
+    path(
+        manifest_path(SAMKinds.SKILL_PLUGIN.value),
+        DocsExampleManifestSkillView.as_view(),
+        name=manifest_name(SAMKinds.SKILL_PLUGIN.value),
+    ),
+    path(
+        manifest_path(SAMKinds.WEBSEARCH_PLUGIN.value),
+        DocsExampleManifestWebsearchView.as_view(),
+        name=manifest_name(SAMKinds.WEBSEARCH_PLUGIN.value),
     ),
     path(
         manifest_path(SAMKinds.SQL_CONNECTION.value),
@@ -226,14 +330,9 @@ urlpatterns = [
         name=manifest_name(SAMKinds.SQL_PLUGIN.value),
     ),
     path(
-        manifest_path(SAMKinds.API_CONNECTION.value),
-        DocsExampleManifestApiConnectionView.as_view(),
-        name=manifest_name(SAMKinds.API_CONNECTION.value),
-    ),
-    path(
-        manifest_path(SAMKinds.API_PLUGIN.value),
-        DocsExampleManifestApiView.as_view(),
-        name=manifest_name(SAMKinds.API_PLUGIN.value),
+        manifest_path(SAMKinds.STATIC_PLUGIN.value),
+        DocsExampleManifestPluginView.as_view(),
+        name=manifest_name(SAMKinds.STATIC_PLUGIN.value),
     ),
     path(
         manifest_path(SAMKinds.USER.value),
@@ -241,14 +340,9 @@ urlpatterns = [
         name=manifest_name(SAMKinds.USER.value),
     ),
     path(
-        manifest_path(SAMKinds.SECRET.value),
-        DocsExampleManifestSecretView.as_view(),
-        name=manifest_name(SAMKinds.SECRET.value),
-    ),
-    path(
-        manifest_path(SAMKinds.PROVIDER.value),
-        DocsExampleManifestProviderView.as_view(),
-        name=manifest_name(SAMKinds.PROVIDER.value),
+        manifest_path(SAMKinds.VECTORSEARCH.value),
+        DocsExampleManifestVectorsearchView.as_view(),
+        name=manifest_name(SAMKinds.VECTORSEARCH.value),
     ),
     path(
         manifest_path(SAMKinds.VECTORSTORE.value),

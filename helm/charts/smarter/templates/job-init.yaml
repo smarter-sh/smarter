@@ -1,11 +1,11 @@
 # -----------------------------------------------------------------------------------
 # Job Manifest for Smarter Database Initialization
 #
-# This file defines a Kubernetes Job to initialize the MySQL database for the Smarter app.
+# This file defines a Kubernetes Job to initialize the MariaDB database for the Smarter app.
 #
 # - Maintainer: <your team/contact>
 # - Purpose: Creates the database if it does not exist, typically run as a Helm hook.
-# - Usage: Only rendered if databaseScheduledBackup.enabled is set in values.yaml.
+# - Usage: Only rendered if databaseInit.enabled is set in values.yaml.
 # - Notes: Update resource requests/limits and SQL logic as needed for your environment.
 #
 # Note:
@@ -14,7 +14,7 @@
 # between backing services. If the label is missing then the network policies are
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
-{{- if .Values.databaseScheduledBackup.enabled }}
+{{- if .Values.databaseInit.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -54,18 +54,20 @@ spec:
               cpu: "1"
           args:
             - |
-              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.SMARTER_MYSQL_DATABASE }};"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER DATABASE {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
               mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';"
               mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER USER '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';"
               mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;"
+              mariadb -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} < /home/smarter_user/sql/smarter-test-db.sql
               python manage.py makemigrations
               python manage.py migrate
               python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/QueriumCorp/smarter-demo
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
               python manage.py add_plugin_examples
-              python manage.py deploy_example_chatbot
-              python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
+              python manage.py deploy_example_llmclient
+              python manage.py deploy_builtin_llmclients --account_number 3141-5926-5359
               python manage.py create_stackademy
 
           command:
@@ -83,6 +85,15 @@ spec:
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           name: "{{ .Values.global.appName }}-job-init"
+          volumeMounts:
+            - name: smarter-test-db
+              mountPath: /home/smarter_user/sql/smarter-test-db.sql
+              subPath: smarter-test-db.sql
+              readOnly: true
+      volumes:
+        - name: smarter-test-db
+          configMap:
+            name: smarter-test-db
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never

@@ -1,11 +1,10 @@
 """Vectorstore app configuration."""
 
-import logging
-
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
 from .const import namespace as app_name
 
@@ -13,9 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class VectorstoreConfig(AppConfig, SmarterHelperMixin):
-    """
-    Configuration for the vectorstore app.
-    """
+    """Configuration for the vectorstore app."""
 
     default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name.lower()}"

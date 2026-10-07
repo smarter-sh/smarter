@@ -1,6 +1,5 @@
 """
-This module defines the complete set of host patterns for the Smarter Framework,
-organized by logical group.
+This module defines the complete set of host patterns for the Smarter Framework, organized by logical group.
 
 Web Console Hosts
 -----------------
@@ -42,24 +41,24 @@ API Subdomain Hosts
    * - next.api.example.com
      - Next environment for the API.
 
-Named ChatBot Hosts
--------------------
-.. list-table:: Named ChatBot Hosts
+Named LLMClient Hosts
+---------------------
+.. list-table:: Named LLMClient Hosts
    :header-rows: 1
 
    * - Host
      - Description
-   * - <chatbot_name>.<account_number>.api.example.com
-     - Deployed named chatbot on production API.
-   * - <chatbot_name>.<account_number>.alpha.api.example.com
-     - Deployed named chatbot on alpha API.
-   * - <chatbot_name>.<account_number>.beta.api.example.com
-     - Deployed named chatbot on beta API.
-   * - <chatbot_name>.<account_number>.next.api.example.com
-     - Deployed named chatbot on next API.
+   * - <llmclient_name>.<account_number>.api.example.com
+     - Deployed named llmclient on production API.
+   * - <llmclient_name>.<account_number>.alpha.api.example.com
+     - Deployed named llmclient on alpha API.
+   * - <llmclient_name>.<account_number>.beta.api.example.com
+     - Deployed named llmclient on beta API.
+   * - <llmclient_name>.<account_number>.next.api.example.com
+     - Deployed named llmclient on next API.
 
 Each host pattern is mapped to the appropriate Django URL configuration for the
-console, API, or chatbot endpoints, and supports multiple environments for
+console, API, or llmclient endpoints, and supports multiple environments for
 development, staging, and production.
 """
 
@@ -68,8 +67,8 @@ from django_hosts import host, patterns
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.urls import api as smarter_api_urls
-from smarter.urls import chatbots as smarter_chatbots_urls
 from smarter.urls import console as smarter_console_urls
+from smarter.urls import llmclients as smarter_llmclients_urls
 
 host_patterns = patterns(
     "",
@@ -124,29 +123,29 @@ host_patterns = patterns(
         name=f"{SmarterEnvironments.NEXT}_{smarter_settings.api_subdomain}",
     ),  # for https://next.api.platform.example.com/
     # -------------------------------------------------------------------------
-    # Deployed named ChatBots
+    # Deployed named LLMClients
     # eg https://education.3141-5926-5359.alpha.api.example.com/
     # -------------------------------------------------------------------------
     host(
-        rf"(?P<chatbot_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_chatbots_urls,
-        name="chatbot_named_api",
-    ),  # for https://<chatbot_name>.<account_number>.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name="llmclient_named_api",
+    ),  # for https://<llmclient_name>.<account_number>.api.platform.example.com/
     host(
-        rf"(?P<chatbot_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_chatbots_urls,
-        name=f"chatbot_named_{SmarterEnvironments.ALPHA}_api",
-    ),  # for https://<chatbot_name>.<account_number>.alpha.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name=f"llmclient_named_{SmarterEnvironments.ALPHA}_api",
+    ),  # for https://<llmclient_name>.<account_number>.alpha.api.platform.example.com/
     host(
-        rf"(?P<chatbot_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_chatbots_urls,
-        name=f"chatbot_named_{SmarterEnvironments.BETA}_api",
-    ),  # for https://<chatbot_name>.<account_number>.beta.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name=f"llmclient_named_{SmarterEnvironments.BETA}_api",
+    ),  # for https://<llmclient_name>.<account_number>.beta.api.platform.example.com/
     host(
-        rf"(?P<chatbot_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
-        smarter_chatbots_urls,
-        name=f"chatbot_named_{SmarterEnvironments.NEXT}_api",
-    ),  # for https://<chatbot_name>.<account_number>.next.api.platform.example.com/
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        smarter_llmclients_urls,
+        name=f"llmclient_named_{SmarterEnvironments.NEXT}_api",
+    ),  # for https://<llmclient_name>.<account_number>.next.api.platform.example.com/
 )
 
 __all__ = ["host_patterns"]

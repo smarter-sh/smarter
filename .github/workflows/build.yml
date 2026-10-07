@@ -22,12 +22,9 @@ env:
   AWS_REGION: ca-central-1
   ROOT_DOMAIN: "smarter.sh"
   PLATFORM_SUBDOMAIN: "ubc"
-  DOCKER_REACT_REMOTE_CDN_URL: ""
   ENVIRONMENT: "prod"
-  REACT_FOLDER_HASH: "no-value"
   AWS_ECR_REPO: "no-value"
   DATESTAMP: "no-value"
-  TAG: "no-value"
   LATEST_RELEASE: "no-value"
   MAJOR_RELEASE: "0"
   MINOR_RELEASE: "0"
@@ -72,13 +69,14 @@ jobs:
         id: get-latest-version-tag
         shell: bash
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            VERSION_TAG=$(git describe --tags --abbrev=0)
-            TAG="$VERSION_TAG"
-          else
-            TAG="${GITHUB_REF_NAME}"
-          fi
-          echo "TAG=$TAG" >> $GITHUB_ENV
+          VERSION_TAG=$(git describe --tags --abbrev=0)
+          echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+      - name: Set version
+        id: set-version
+        shell: bash
+        run: |
+          python scripts/bump_version.py $TAG --cicd
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -201,46 +199,16 @@ jobs:
           fi
           echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
-      - name: React manifest.json Hash
-        id: react-cache-hash
-        shell: bash
-        run: |
-          if [ -d "smarter/smarter/react" ]; then
-            find smarter/smarter/react -type f -print0 | sort -z | xargs -0 cat | sha256sum | awk '{print $1}' > react-folder.sha256
-            echo "REACT_FOLDER_HASH=$(cat react-folder.sha256)" >> $GITHUB_ENV
-          else
-            echo "React folder does not exist, skipping hash."
-            echo "REACT_FOLDER_HASH=no-content" >> $GITHUB_ENV
-            touch react-folder.sha256
-          fi
-
-      - name: Cache React manifest.json Hash
-        uses: actions/cache@v5
-        id: react-manifest-cache
-        with:
-          path: react-folder.sha256
-          key: react-folder-${{ env.REACT_FOLDER_HASH }}
-
-      - name: Install Node
-        id: install-node
-        if: steps.react-manifest-cache.outputs.cache-hit != 'true'
-        uses: actions/setup-node@v6
-        with:
-          node-version: 25
-
-      - name: Cache React Build Output
-        uses: actions/cache@v5
-        id: react-build-cache
-        with:
-          path: smarter/smarter/static/react/
-          key: react-build-${{ env.REACT_FOLDER_HASH }}
-
-      - name: Build React Components
-        id: build-react-components
-        if: steps.react-build-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          make react-build
+      #------------------------------------------------------------------------
+      # Build the React components, or restore them from the cache that
+      # test.yml shares. On a cache hit, Node and the build are skipped.
+      #
+      # Vite writes the builds into smarter/smarter/static/react/, which the
+      # Docker build copies into the image with the rest of ./smarter.
+      #------------------------------------------------------------------------
+      - name: Build React components
+        id: react-build
+        uses: ./.github/actions/react-build
 
       # -----------------------------------------------------------------------
       # Build and push to AWS ECR
@@ -268,16 +236,12 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
-            DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
         env:
           DOCKER_BUILDKIT: 1
           BUILDKIT_PROGRESS: plain
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
-          DOCKER_REACT_REMOTE_CACHE_BUSTER: ${{ env.REACT_FOLDER_HASH }}
-          DOCKER_REACT_REMOTE_CDN_URL: ${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
 
       - name: Trigger ECR image scan
         id: trigger-scan
@@ -311,11 +275,7 @@ jobs:
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
-            DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
         env:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
-          DOCKER_REACT_REMOTE_CACHE_BUSTER: ${{ env.REACT_FOLDER_HASH }}
-          DOCKER_REACT_REMOTE_CDN_URL: ${{ env.DOCKER_REACT_REMOTE_CDN_URL }}

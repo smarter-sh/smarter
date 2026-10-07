@@ -2,15 +2,16 @@
 """Test SAMUserBroker."""
 
 import datetime
-import logging
 import os
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from taggit.managers import TaggableManager
 
-from smarter.apps.account.manifest.brokers.user import SAMUserBroker
+from smarter.apps.account.manifest.brokers.user import SAMUserBroker, SAMUserBrokerError
 from smarter.apps.account.manifest.models.user.model import SAMUser
-from smarter.lib import json
+from smarter.apps.account.models import User, UserProfile
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
@@ -25,12 +26,13 @@ logger = logging.getLogger(__name__)
 class TestSmarterUserBroker(TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMUserBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
 
     def setUp(self):
-        """test-level setup."""
+        """Test-level setup."""
         super().setUp()
         self._broker_class = SAMUserBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
@@ -101,9 +103,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         logger.info("%s.test_setup() SAMUserBroker initialized successfully for testing.", self.formatted_class_name)
 
     def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
+        """Test that the is_valid property returns True."""
         self.assertTrue(self.broker.is_valid)
 
     def test_broker_initialization(self):
@@ -206,7 +206,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_example_manifest(self):
         """
-        test example_manifest method.
+        Test example_manifest method.
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         {
             "data": {
@@ -245,9 +245,14 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_example_manifest(response)
         self.assertTrue(is_valid_response)
 
+        # the example is placeholder data, not a description of a real user, such as the smarter admin.
+        data = json.loads(response.content.decode("utf-8"))["data"]
+        self.assertEqual(data["spec"]["config"]["email"], "example.user@example.com")
+        self.assertFalse(User.objects.filter(email=data["spec"]["config"]["email"]).exists())
+
     def test_get(self):
         """
-        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
             "data": {
                 "apiVersion": "smarter.sh/v1",
@@ -268,7 +273,6 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
                 "command": "get"
             }
             }
-
         """
         response = self.broker.get(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
@@ -279,7 +283,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_apply(self):
         """
-        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
             "data": {
                 "ready": true,
@@ -442,7 +446,6 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
                 "command": "describe"
             }
             }
-
         """
         response = self.broker.describe(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
@@ -456,7 +459,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_deploy(self):
         """
-        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
                 "message": "User test_admin_user_ec61fb424a68796a deployed successfully",
                 "api": "smarter.sh/v1",
@@ -474,7 +477,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_undeploy(self):
         """
-        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
                 "message": "User test_admin_user_ec61fb424a68796a undeployed successfully",
                 "api": "smarter.sh/v1",
@@ -491,25 +494,20 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         logger.info("Undeploy response: %s", response.content.decode())
 
     def test_chat_not_implemented(self):
-        """test chat method raises not implemented."""
+        """Test prompt method raises not implemented."""
 
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
+            self.broker.prompt(self.request, **self.kwargs)
 
     def test_delete_user_not_found(self):
-        """
-        test delete method raises not found for missing user.
-
-        """
+        """Test delete method raises not found for missing user."""
         self.request._body = None
         self._broker = self.SAMBrokerClass(self.request)
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.delete(self.request, {"name": "nonexistent-user"})
 
     def test_describe_user_not_found(self):
-        """
-        Test describe method raises not found for missing user.
-        """
+        """Test describe method raises not found for missing user."""
         self.request._body = None
         self._broker = self.SAMBrokerClass(self.request)
         # with self.assertRaises(SAMBrokerErrorNotFound):
@@ -523,3 +521,151 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         response = self.broker.logs(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
+
+
+class TestSmarterUserBrokerBranches(TestSAMBrokerBaseClass):
+    """Test the SAMUserBroker branches that the happy-path tests don't reach."""
+
+    def setUp(self):
+        super().setUp()
+        self._broker_class = SAMUserBroker
+        self._here = os.path.abspath(os.path.dirname(__file__))
+        self._manifest_filespec = self.get_data_full_filepath("user.yaml")
+
+    @property
+    def broker(self) -> SAMUserBroker:
+        return super().broker  # type: ignore[return-value]
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMUserBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_error_message(self):
+        error = SAMUserBrokerError(message="x", thing="User")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API User Manifest Broker Error")
+
+    def test_brokered_user_lookups(self):
+        """Without a name there's no brokered user, an unknown name finds none, and a user without one has no profile."""
+        broker = self.broker
+        broker._brokered_user = None
+        broker._brokered_user_profile = None
+        broker._name = None
+        self.patch_property("name", None)
+        self.assertIsNone(broker.brokered_user)
+        self.assertIsNone(broker.brokered_user_profile)
+        self.assertIsNone(broker.account_contact)
+
+        patch.stopall()
+        broker._name = "no_such_user"
+        self.assertIsNone(broker.brokered_user)
+
+    def test_orm_meta_instance_setter(self):
+        """The ORM instance is reused, and a user that's missing or can't be read leaves no ORM meta instance."""
+        broker = self.broker
+        orm_instance = MagicMock(spec=User)
+        broker._orm_instance = orm_instance
+        broker.orm_meta_instance_setter()
+        self.assertIs(broker._orm_meta_instance, orm_instance)
+
+        broker._orm_instance = None
+        self.patch_property("name", None)
+        broker.orm_meta_instance_setter()
+        patch.stopall()
+
+        self.patch_property("name", "no_such_user")
+        for error in (User.DoesNotExist, RuntimeError("database down")):
+            with self.subTest(error=error), patch.object(User.objects, "get", side_effect=error):
+                broker.orm_meta_instance_setter()
+                self.assertIsNone(broker._orm_meta_instance)
+
+    def test_conversions_need_a_manifest(self):
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMUserBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMUserBrokerError):
+            broker.manifest_to_django_orm()
+
+    def test_account_contact_is_cached_and_needs_an_authenticated_user(self):
+        broker = self.broker
+        contact = MagicMock()
+        broker._account_contact = contact
+        self.assertIs(broker.account_contact, contact)
+        broker._account_contact = None
+        self.patch_property("brokered_user", MagicMock(is_authenticated=False))
+        self.assertIsNone(broker.account_contact)
+
+    def test_manifest_needs_an_account_or_user(self):
+        broker = self.broker
+        broker._manifest = None
+        self.patch_property("account", None)
+        self.patch_property("brokered_user", None)
+        self.assertIsNone(broker.manifest)
+
+    def test_manifest_from_a_user_needs_a_profile(self):
+        broker = self.broker
+        broker._manifest = None
+        self.patch_property("loader", None)
+        self.patch_property("brokered_user", MagicMock())
+        self.patch_property("brokered_user_profile", None)
+        with self.assertRaises(SAMUserBrokerError):
+            _ = broker.manifest
+
+    def test_get_failures(self):
+        """A user profile without a user, or a user that can't be serialized, fails the get."""
+        broker = self.broker
+        module = "smarter.apps.account.manifest.brokers.user"
+        with patch(f"{module}.UserProfile.objects.filter", return_value=[MagicMock(cached_user="not a user")]):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.get(self.request)
+        with (
+            patch(f"{module}.UserProfile.objects.filter", return_value=[MagicMock(cached_user=self.admin_user)]),
+            patch(f"{module}.UserSerializer", side_effect=[MagicMock(), RuntimeError("bad")]),
+            patch.object(SAMUserBroker, "get_model_titles", return_value=[]),
+        ):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.get(self.request)
+
+    def test_describe_failures(self):
+        """An unknown user, a user of another account, or a manifest that can't be dumped fails the describe."""
+        broker = self.broker
+        self.assertIsInstance(broker.manifest, SAMUser)
+        self.patch_property("brokered_user", MagicMock())
+        with patch.object(SAMUserBroker, "username", new_callable=PropertyMock, return_value="no_such_user"):
+            with self.assertRaises(SAMBrokerErrorNotFound):
+                broker.describe(self.request)
+        with (
+            patch.object(User.objects, "get", return_value=self.admin_user),
+            patch(
+                "smarter.apps.account.manifest.brokers.user.UserProfile.get_cached_object",
+                side_effect=UserProfile.DoesNotExist,
+            ),
+        ):
+            with self.assertRaises(SAMBrokerErrorNotFound):
+                broker.describe(self.request)
+        with (
+            patch.object(User.objects, "get", return_value=self.admin_user),
+            patch("smarter.apps.account.manifest.brokers.user.UserProfile.get_cached_object"),
+            patch.object(SAMUser, "model_dump", side_effect=RuntimeError("bad manifest")),
+        ):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.describe(self.request)
+
+    def test_delete_guards_and_failure(self):
+        broker = self.broker
+        self.patch_property("brokered_user", MagicMock())
+        with patch.object(SAMUserBroker, "params", new_callable=PropertyMock, return_value="not a dict"):
+            with self.assertRaises(SAMBrokerErrorNotImplemented):
+                broker.delete(self.request)
+        user = MagicMock()
+        user.delete.side_effect = RuntimeError("database down")
+        with (
+            patch.object(SAMUserBroker, "params", new_callable=PropertyMock, return_value={"username": "someone"}),
+            patch.object(User.objects, "get", return_value=user),
+            patch.object(SAMUserBroker, "verify_no_dependencies"),
+        ):
+            with self.assertRaises(SAMUserBrokerError):
+                broker.delete(self.request)

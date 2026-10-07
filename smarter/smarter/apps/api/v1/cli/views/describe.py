@@ -1,12 +1,12 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'describe' view"""
-
-import logging
+"""Smarter API command-line interface 'describe' view."""
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-from .base import CliBaseApiView
+from smarter.lib import logging
+
+from .base import APIV1CLIViewError, CliBaseApiView
 from .swagger import (
     COMMON_SWAGGER_PARAMETERS,
     COMMON_SWAGGER_RESPONSES,
@@ -31,12 +31,10 @@ class ApiV1CliDescribeApiView(CliBaseApiView):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliDescribeApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliDescribeApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(operation_description="""
 Executes the 'describe' command for all Smarter resources.  The resource name is passed in the url query parameters.
@@ -51,6 +49,8 @@ The response from this endpoint is a JSON object containing a representation of 
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
+        if self.broker is None:
+            raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.describe(request, *args, **kwargs)
         return response
 
@@ -80,5 +80,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         logger.debug(
             "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
+        if self.broker is None:
+            raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.describe(request, *args, **kwargs)
         return response

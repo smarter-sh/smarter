@@ -1,4 +1,4 @@
-"""Smarter API Account Manifest"""
+"""Smarter API Vectorstore Manifest."""
 
 from typing import ClassVar, Optional
 
@@ -16,7 +16,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 
 
 class SAMVectorstore(AbstractSAMBase):
-    """Smarter API Manifest - Vectorstore"""
+    """Smarter API Manifest - Vectorstore."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

@@ -1,7 +1,5 @@
 """Smarter API Manifest Loader base class."""
 
-import logging
-import warnings
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -9,9 +7,8 @@ import requests
 import yaml
 
 from smarter.common.api import SmarterApiVersions
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import json
+from smarter.lib import json, logging
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
@@ -56,8 +53,6 @@ class SAMLoaderError(SAMExceptionBase):
         - All manifest validation and parsing errors should use this class for consistency and traceability.
         - The `get_formatted_err_message` property provides a static, human-readable error label for logging and display.
 
-
-
     .. attention::
 
         - Catching this exception broadly may mask specific validation issues. Always inspect the error message for details.
@@ -65,14 +60,11 @@ class SAMLoaderError(SAMExceptionBase):
           use the appropriate exception class.
 
     :raises: This class is raised directly or via subclassing for any manifest loader error.
-
     """
 
     @property
     def get_formatted_err_message(self):
-        """
-        Return the static formatted error message for SAMLoader errors.
-        """
+        """Return the static formatted error message for SAMLoader errors."""
         return "Smarter API Manifest Loader Error"
 
 
@@ -155,7 +147,7 @@ def validate_key(key: str, key_value: Any, spec: Any):
         # validate that value exists for required key
         if SAMSpecificationKeyOptions.REQUIRED in options_list and not key_value:
             raise SAMLoaderError(f"Missing required key {key}")
-        if not SAMSpecificationKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
+        if SAMSpecificationKeyOptions.OPTIONAL not in options_list and not isinstance(key_value, type_spec):
             raise SAMLoaderError(
                 f"Invalid data type for key {key}. Expected {spec[0]} but got {type(key_value)}: key_value={key_value} spec={spec[0]}"
             )
@@ -246,7 +238,6 @@ class SAMLoader(SmarterHelperMixin):
 
     The loader uses Python's standard logging library to emit warnings and errors during
     the validation process, aiding in debugging and traceability.
-
     """
 
     _api_version: str = SmarterApiVersions.V1
@@ -558,33 +549,6 @@ class SAMLoader(SmarterHelperMixin):
         :raises SAMLoaderError: If the manifest data is missing, in an unsupported format, or fails validation.
         """
 
-        def recursive_validator(recursed_data: Optional[dict] = None, recursed_spec: Optional[dict] = None):
-            warnings.warn(
-                "recursive_validator() is deprecated and will be removed in a future release.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-            this_overall_spec = recursed_spec or self.specification
-            this_data = recursed_data or self.json_data
-            if not this_data:
-                raise SAMLoaderError("Received empty or invalid data.")
-            if not isinstance(this_data, dict):
-                raise SAMLoaderError(f"Invalid data format. Expected dict but got {type(this_data)}")
-
-            for key, key_spec in this_overall_spec.items():
-                if isinstance(key, Enum):
-                    key = key.value
-                key_value = this_data.get(key)
-                if isinstance(key_spec, dict):
-                    recursive_validator(recursed_data=key_value, recursed_spec=key_spec)
-                else:
-                    validate_key(
-                        key=key,
-                        key_value=key_value,
-                        spec=key_spec,
-                    )
-
         # top-level validations of the manifest itself.
         if not self.raw_data:
             logger.warning("%s.validate_manifest() Received empty or invalid data.", self.formatted_class_name)
@@ -625,6 +589,7 @@ class SAMLoader(SmarterHelperMixin):
     def manifest_spec_keys(self) -> list[str]:
         """
         Returns a list of all spec keys defined in the SAMSpecKeys enumeration.
+
         This should be overridden by child classes to provide the specific spec keys
         relevant to their manifest type.
 
@@ -637,6 +602,7 @@ class SAMLoader(SmarterHelperMixin):
     def manifest_status_keys(self) -> list[str]:
         """
         Returns a list of all status keys defined in the SAMStatusKeys enumeration.
+
         This should be overridden by child classes to provide the specific status keys
         relevant to their manifest type.
 
@@ -724,9 +690,9 @@ class SAMLoader(SmarterHelperMixin):
 
         :return: The formatted class name as a string.
         :rtype: str
-
         """
-        return formatted_text(SAMLoader.__name__)
+        class_name = f"{__name__}.{SAMLoader.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def loader_ready_state(self) -> str:
         """

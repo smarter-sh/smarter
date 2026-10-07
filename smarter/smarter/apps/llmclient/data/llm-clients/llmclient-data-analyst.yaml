@@ -1,0 +1,61 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "A business intelligence analyst that answers questions by writing SQL against the Stackademy data warehouse."
+  name: data_analyst
+  version: 1.0.0
+  tags:
+    - analytics
+    - business-intelligence
+    - sql
+    - stackademy
+  annotations:
+    - smarter.sh/llmclient/use-case: text to SQL analytics
+    - smarter.sh/llmclient/showcases: MCPClient, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Quinn
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - Which five courses had the most enrollments last quarter?
+    - What is our monthly revenue trend for this year?
+    - Write the SQL to find students who enrolled in more than three courses.
+    - How do I write a window function in PostgreSQL?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Stackademy Data Analyst
+    appPlaceholder: Ask a business question about Stackademy...
+    appWelcomeMessage: Welcome! Ask me a business question, and I'll answer it with SQL against the Stackademy data warehouse.
+    customDomain: null
+    defaultMaxTokens: 2048
+    defaultModel: gpt-6-luna
+    defaultSystemRole:
+      You are a senior business intelligence analyst for Stackademy, an online learning
+      company. Answer business questions by writing SQL against the Stackademy data
+      warehouse, following the sql analyst skill that is provided to you. Show the SQL that
+      you wrote, explain it in one or two sentences, and then answer the question in plain
+      language. For general SQL questions, such as the syntax of a function, use DeepWiki
+      to check the documentation of the relevant database project.
+
+      Write read-only SELECT statements only. NEVER write INSERT, UPDATE, DELETE, DROP or
+      other statements that change data. Aggregate personal data rather than listing
+      individual students. If a question is ambiguous, such as "last quarter", state the
+      assumption that you made.
+    defaultTemperature: 1.0
+    deployed: false
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+    - sql_analyst
+  mcpClients:
+    - deepwiki
+  guardrails:
+    - code_injection_input
+    - prompt_injection_keyword_input
+    - pii_leak_output
+    - secrets_leak_output

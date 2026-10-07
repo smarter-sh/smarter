@@ -1,17 +1,18 @@
 # pylint: disable=W0613
-"""
-This module contains passthrough views for interacting directly with the LLM
-provider backend API.
-"""
+"""This module contains passthrough views for interacting directly with the LLM provider backend API."""
 
-import logging
 from http import HTTPStatus
 from typing import Any
 
 from django.core.handlers.asgi import ASGIRequest
+from django.http import JsonResponse
 from openai.types.chat.chat_completion import ChatCompletion
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import (
+    SmarterBudgetExceeded,
+    UserProfile,
+    charge_authorization,
+)
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.protocols import (
     OpenAICompatiblePassthroughProtocol,
@@ -21,7 +22,7 @@ from smarter.apps.provider.services.text_completion.providers import (
 )
 from smarter.common.exceptions import SmarterIlligalInvocationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpErrorResponse,
@@ -58,20 +59,20 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     This endpoint allows authenticated users to send arbitrary prompt dicts
     to the underlying LLM provider (such as OpenAI). The request body should
     be a JSON object containing any valid parameters accepted by the
-    provider's chat completion API.
+    provider's prompt completion API.
 
-    :param request: The HTTP request object, expected to have a JSON body with chat completion parameters.
+    :param request: The HTTP request object, expected to have a JSON body with prompt completion parameters.
     :type request: rest_framework.request.ASGIRequest
     :param args: Additional positional arguments (unused).
     :param kwargs: Additional keyword arguments. May include 'provider' to select the LLM provider.
-    :return: A JSON response containing the provider's chat completion result, or an error message.
+    :return: A JSON response containing the provider's prompt completion result, or an error message.
     :rtype: SmarterJournaledJsonResponse | SmarterJournaledJsonErrorResponse | SmarterHttpResponseBadRequest | SmarterHttpResponseForbidden | SmarterHttpResponseNotFound
 
     :signals:
-        - ``chat_started``: Sent before the chat completion request is made.
-        - ``chat_completion_request``: Sent with the prompt data before calling the provider.
-        - ``chat_completion_response``: Sent after a successful response from the provider.
-        - ``chat_finished``: Sent after the chat completion process is finished.
+        - ``prompt_started``: Sent before the prompt completion request is made.
+        - ``chat_request``: Sent with the prompt data before calling the provider.
+        - ``chat_response``: Sent after a successful response from the provider.
+        - ``prompt_finished``: Sent after the prompt completion process is finished.
         - ``chat_response_failure``: Sent if an exception occurs during the provider call.
 
     :raises SmarterHttpResponseForbidden: If the user is not authenticated.
@@ -81,8 +82,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
 
     .. seealso::
 
-        - The OpenAI API documentation for chat completions: https://developers.openai.com/api/reference/overview/chat/create
-        - :class:`openai.types.chat.chat_completion.ChatCompletion`
+        - The OpenAI API documentation for prompt completions: https://developers.openai.com/api/reference/overview/prompt/create
+        - :class:`openai.types.prompt.chat_completion.ChatCompletion`
     """
 
     provider_name: str
@@ -91,6 +92,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     def setup(self, request: ASGIRequest, *args, **kwargs):
         """
         Set the provider_name and handler based on the URL kwargs.
+
         The handler can be any function that implements the
         :class:`OpenAICompatiblePassthroughProtocol` interface.
 
@@ -98,7 +100,9 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
 
             - :class:`OpenAICompatiblePassthroughProtocol`
         """
-        self.provider_name = kwargs.pop("provider_name")
+        provider_name = kwargs.pop("provider_name")
+        provider_name = self.to_snake_case(provider_name)
+        self.provider_name = provider_name
         super().setup(request, *args, **kwargs)
         try:
             self.handler = openai_compatible_client.get_passthrough_handler(request, self.provider_name)
@@ -111,31 +115,6 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
         )
 
-    def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="GET method not supported for passthrough endpoint"
-        )
-
-    def put(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="PUT method not supported for passthrough endpoint"
-        )
-
-    def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="DELETE method not supported for passthrough endpoint"
-        )
-
-    def patch(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="PATCH method not supported for passthrough endpoint"
-        )
-
-    def options(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="OPTIONS method not supported for passthrough endpoint"
-        )
-
     def post(
         self, request: ASGIRequest, *args, **kwargs
     ) -> (
@@ -144,10 +123,16 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
         | SmarterHttpErrorResponse
         | SmarterHttpResponseForbidden
     ):
-        """
-        Handle POST requests to the passthrough endpoint for direct LLM
-        provider API access.
-        """
+        """Handle POST requests to the passthrough endpoint for direct LLM provider API access."""
+        try:
+            charge_authorization(
+                [self.user_profile.record_locator, self.user_profile.account.record_locator],  # type: ignore
+                self.__class__.__name__,
+            )
+        except SmarterBudgetExceeded as e:
+            return JsonResponse(  # type: ignore[return-value]
+                data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
+            )
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")
         kwargs.pop("provider_name")
         logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
@@ -191,8 +176,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
                 request=request,
                 e=e,
                 error_message=str(e),
-                command=SmarterJournalCliCommands.CHAT,
-                thing=SmarterJournalThings.CHAT,
+                command=SmarterJournalCliCommands.PROMPT,
+                thing=SmarterJournalThings.PROMPT,
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -203,8 +188,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             return SmarterJournaledJsonResponse(
                 request=request,
                 data=retval.model_dump(),
-                command=SmarterJournalCliCommands.CHAT,
-                thing=SmarterJournalThings.CHAT,
+                command=SmarterJournalCliCommands.PROMPT,
+                thing=SmarterJournalThings.PROMPT,
                 status=HTTPStatus.OK,
             )
 

@@ -236,7 +236,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
             return self.get_response(request)
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = self.get_response(request)
+        response = super().__call__(request)
         response = self.process_response(request, response)
 
         if response is not None:
@@ -245,18 +245,18 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return self.get_response(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
-
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
-            return await sync_to_async(self.get_response)(request)
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await sync_to_async(self.get_response)(request)
+        response = await super().__acall__(request)
         response = await self.async_process_response(request, response)
         return response
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def process_response(self, request: HttpRequest, response):
 
@@ -273,9 +273,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return await sync_to_async(self.minify_response)(response)
 
     def should_skip(self, request: HttpRequest, response) -> bool:
-        """
-        Determine whether minification should be skipped.
-        """
+        """Determine whether minification should be skipped."""
 
         if isinstance(response, FileResponse):
             return True
@@ -309,9 +307,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return False
 
     def minify_response(self, response):
-        """
-        Minify HTML response content.
-        """
+        """Minify HTML response content."""
 
         try:
 
@@ -326,18 +322,16 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
             response.content = minified_html.encode("utf-8")
             response["Content-Length"] = str(len(response.content))
 
-            logger.debug("%s minified HTML response", self.formatted_class_name)
+            logger.debug("%s.minify_response() - minified HTML response", self.formatted_class_name)
 
         except Exception as exc:  # pylint: disable=broad-except
-            logging.exception("%s failed to minify HTML: %s", self.formatted_class_name, exc)
+            logging.exception("%s.minify_response() - failed to minify HTML: %s", self.formatted_class_name, exc)
 
         return response
 
     @staticmethod
     def decode_content(content) -> str:
-        """
-        Decode response content safely.
-        """
+        """Decode response content safely."""
 
         if isinstance(content, bytes):
             return content.decode("utf-8", errors="replace").lstrip()
@@ -346,9 +340,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @classmethod
     def looks_like_xml(cls, html: str) -> bool:
-        """
-        Detect XML/RSS/Feed responses.
-        """
+        """Detect XML/RSS/Feed responses."""
 
         html = html.lower()
 
@@ -356,17 +348,13 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def remove_comments(soup: BeautifulSoup) -> None:
-        """
-        Remove HTML comments from soup.
-        """
+        """Remove HTML comments from soup."""
 
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
     @staticmethod
     def serialize_html(soup: BeautifulSoup) -> str:
-        """
-        Serialize minimized HTML.
-        """
+        """Serialize minimized HTML."""
 
         return soup.decode(formatter="minimal")

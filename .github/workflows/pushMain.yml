@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.PAT }}
+    # merge-main reads new_release_published through needs.semantic-release.outputs,
+    # which is empty unless the job declares it here.
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
 
     steps:
       - uses: actions/checkout@v6
@@ -67,7 +71,7 @@ jobs:
       - name: Push updates to branch for major version
         id: push_major
         if: steps.semantic.outputs.new_release_published == 'true'
-        run: "git push https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git HEAD:refs/heads/v${{steps.semantic.outputs.new_release_major_version}}"
+        run: "git push --force https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git HEAD:refs/heads/v${{steps.semantic.outputs.new_release_major_version}}"
         shell: bash
 
   merge-main:

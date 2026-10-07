@@ -4,6 +4,12 @@
 
 smarter/smarter/static/react/
 
+# Smarter Chat, the React app of the LLMClient prompt workbench, is managed
+# in its own repository, https://github.com/smarter-sh/smarter-chat.
+# `make react-install` clones it into the React workspace.
+# -------------------------------------
+smarter/react/packages/smarter-chat/
+
 # -------------------------------------
 # Helm chart artifacts. charts are compressed
 # binary files that do not belong in GitHub.
@@ -34,9 +40,10 @@ service-account.b64
 
 # application local dev run-time data
 # -------------------------------------
+.mypy_cache
 .ruff_cache
 celerybeat-schedule
-mysql-data
+mariadb-data
 db.sqlite3
 .cache.sqlite
 staticfiles
@@ -55,6 +62,9 @@ staticfiles
 # -------------------------------------
 **/.coverage
 **/.coverage.*
+# React test coverage reports (make react-test), and Storybook builds
+smarter/react/coverage/
+**/storybook-static/
 htmlcov
 
 # Jupyter Notebook
@@ -105,4 +115,4 @@ venv
 # ReactJS run-time artifacts
 # -------------------------------------
 node_modules
-package-lock.json
+/package-lock.json

@@ -1,11 +1,11 @@
 # pylint: disable=wrong-import-position
 """Test SAMSecretBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
 
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.secret.manifest.models.secret.metadata import SAMSecretMetadata
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
@@ -13,7 +13,12 @@ from smarter.apps.secret.manifest.models.secret.spec import (
     SAMSecretSpec,
     SAMSecretSpecConfig,
 )
-from smarter.lib import json
+from smarter.apps.secret.models import Secret
+from smarter.apps.secret.tests.factories import (
+    factory_secret_teardown,
+    secret_factory,
+)
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
@@ -27,13 +32,16 @@ logger = logging.getLogger(__name__)
 class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMSecretBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
 
     def setUp(self):
         """
-        test-level setup. Before we delve into the actual unit tests, we need to
+        Test-level setup.
+
+        Before we delve into the actual unit tests, we need to
         ensure that our test environment is properly configured and that we
         can initialize the precursors for testing the SAMSecretBroker.
         """
@@ -87,9 +95,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         self.assertTrue(self.ready)
 
     def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
+        """Test that the is_valid property returns True."""
         self.assertTrue(self.broker.is_valid)
 
     def test_sam_broker_initialization(self):
@@ -169,7 +175,8 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_example_manifest(self):
         """
-        test example_manifest method.
+        Test example_manifest method.
+
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
@@ -181,7 +188,9 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_get(self):
         """
-        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test get method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.get(self.request, **self.kwargs)
@@ -192,7 +201,9 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_apply(self):
         """
-        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test apply method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.apply(self.request, **self.kwargs)
@@ -230,9 +241,33 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         )
         self.assertEqual(self.broker.manifest.spec.config.expiration_date, self.broker.secret.expires_at)
 
+    def test_apply_does_not_overwrite_platform_secret(self):
+        """Test that apply() creates the user's own Secret when the Smarter platform admin already owns a Secret of the same name, leaving the platform's untouched."""
+        name = self.broker.manifest.metadata.name
+        Secret.objects.filter(user_profile=self.user_profile, name=name).delete()
+        platform_secret = secret_factory(
+            user_profile=smarter_cached_objects.smarter_admin_user_profile,
+            name=name,
+            description="platform secret",
+            value="platform-value",
+        )
+        self.addCleanup(factory_secret_teardown, platform_secret)
+
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+
+        secret = Secret.objects.get(user_profile=self.user_profile, name=name)
+        self.assertNotEqual(secret.id, platform_secret.id)
+        self.assertEqual(secret.get_secret(update_last_accessed=False), self.broker.manifest.spec.config.value)
+        platform_secret.refresh_from_db()
+        self.assertEqual(platform_secret.user_profile, smarter_cached_objects.smarter_admin_user_profile)
+        self.assertEqual(platform_secret.get_secret(update_last_accessed=False), "platform-value")
+
     def test_describe(self):
         """
-        Stub: test describe method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Stub: test describe method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.apply(self.request, **self.kwargs)
@@ -250,7 +285,9 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_deploy(self):
         """
-        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test deploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         with self.assertRaises(SAMBrokerErrorNotImplemented):
@@ -258,31 +295,30 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_undeploy(self):
         """
-        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test undeploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.undeploy(self.request, **self.kwargs)
 
     def test_chat_not_implemented(self):
-        """test chat method raises not implemented."""
+        """Test prompt method raises not implemented."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
+            self.broker.prompt(self.request, **self.kwargs)
 
     def test_delete_secret_not_found(self):
-        """
-        test delete method raises not found for missing secret.
-        """
+        """Test delete method raises not found for missing secret."""
 
         pass
 
     def test_describe_secret_not_found(self):
-        """
-        Test describe method raises not found for missing secret.
-        """
-        self.broker.user = None
+        """Test describe method raises not found for missing secret."""
+        # the broker's user is immutable, so ask for a secret that does not exist instead.
+        kwargs = {**self.kwargs, "name": f"nonexistent_secret_{self.hash_suffix}"}
         with self.assertRaises(SAMBrokerErrorNotFound):
-            self.broker.describe(self.request, **self.kwargs)
+            self.broker.describe(self.request, **kwargs)
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""

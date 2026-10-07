@@ -1,6 +1,7 @@
 #!/bin/bash
+###############################################################################
 # Artifact Hub verification push script
-
+###############################################################################
 
 source ../.env
 echo $PAT | oras login ghcr.io -u mcdaniel0073 --password-stdin

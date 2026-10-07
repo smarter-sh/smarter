@@ -1,5 +1,5 @@
 """
-smarter.common.utils
+Smarter.common.utils
 ====================
 
 Utility functions for the Smarter framework.
@@ -13,12 +13,12 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 """
 
 from .conversion import (
-    camel_to_snake,
-    camel_to_snake_dict,
-    pascal_to_snake,
-    snake_to_camel,
+    ConvertibleCaseType,
+    search_replace,
+    to_camel_case,
     to_snake_case,
 )
+from .decorators import camel_case, snake_case
 from .diagnostics import get_diagnostics
 from .dict import dict_is_contained_in, dict_is_subset, recursive_sort_dict
 from .file_handlers import get_readonly_csv_file, get_readonly_yaml_file
@@ -36,11 +36,11 @@ from .utils import (
 from .version import get_semantic_version
 
 __all__ = [
+    "camel_case",
+    "snake_case",
     "is_async_context",
     "bool_environment_variable",
-    "camel_to_snake",
     "to_snake_case",
-    "camel_to_snake_dict",
     "dict_is_contained_in",
     "dict_is_subset",
     "generate_fernet_encryption_key",
@@ -52,12 +52,13 @@ __all__ = [
     "get_readonly_csv_file",
     "get_readonly_yaml_file",
     "mask_string",
-    "pascal_to_snake",
     "rfc1034_compliant_str",
     "rfc1034_compliant_to_snake",
     "recursive_sort_dict",
     "request_to_json",
     "RequestData",
     "uri",
-    "snake_to_camel",
+    "to_camel_case",
+    "search_replace",
+    "ConvertibleCaseType",
 ]

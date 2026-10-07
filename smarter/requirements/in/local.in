@@ -10,8 +10,9 @@
 
 -r constraints.in
 -r base.in
+-r mariadb.in
 
-pip-tools
+pip-tools>=7.6.1  # 7.5.x is incompatible with pip 26.2+ (stdlib_pkgs was removed)
 
 # Django dev tools
 # ------------
@@ -62,7 +63,10 @@ autodoc_pydantic                    # Sphinx extension for Pydantic models
 sphinxcontrib-django                # Sphinx for django settings
 sphinx-copybutton                   # Sphinx code copy button extension
 sphinx-autodoc-typehints            # Sphinx type hint annotation improvements
+sphinx_contributors                 # Sphinx GitHub contributors list
 sphinx-design                       # Adds drop downs and other fancy styling
+sphinx-contributors                 # lists the people who have contributed to this GitHub repo
+sphinx-sitemap                      # site map generator
 
 
 # Dockerfile requirements

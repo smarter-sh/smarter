@@ -1,6 +1,4 @@
-"""
-Django Account Authentication views.
-"""
+"""Django Account Authentication views."""
 
 import traceback
 from typing import Union
@@ -10,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
 
 from smarter.apps.account.models import User, get_resolved_user
-from smarter.common.helpers.email_helpers import email_helper
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -107,8 +105,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
             else:
                 # pylint: disable=broad-exception-raised
                 raise Exception(
-                    "%s.post() Authentication failed immediately after registration. This is a bug."
-                    % self.formatted_class_name
+                    f"{self.formatted_class_name}.post() Authentication failed immediately after registration. This is a bug."
                 )
         return self.get(request=request)
 
@@ -119,6 +116,12 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
     template_path = "account/activation.html"
     email_template_path = "account/authentication/email/account-activation.html"
     expiring_token = ExpiringTokenGenerator()
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AccountActivationEmailView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
 
@@ -162,7 +165,8 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
             to,
             url,
         )
-        email_helper.send_email(subject=subject, body=body, to=to, html=True)
+        # the activation link is a secret, so the admin gets no blind copy.
+        infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, bcc_admin=False)
 
         # render a page to let the user know the email was sent. Add a link to resend the email.
         email_resend_url = reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATION)
@@ -175,6 +179,12 @@ class AccountActivateView(SmarterNeverCachedWebView):
 
     template_path = "account/welcome.html"
     expiring_token = ExpiringTokenGenerator()
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AccountActivateView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs):
         logger.debug(
@@ -233,3 +243,9 @@ class AccountDeactivateView(SmarterAuthenticatedNeverCachedWebView):
     """View for the account deactivation page."""
 
     template_path = "account/account-deactivated.html"
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AccountDeactivateView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)

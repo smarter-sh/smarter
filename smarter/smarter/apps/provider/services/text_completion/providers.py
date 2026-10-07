@@ -1,18 +1,18 @@
 """
-smarter.apps.provider.services.text_completion.providers
+Smarter.apps.provider.services.text_completion.providers
 ==================================================================
 
 Service-level entry point for text completions supporting multiple LLM provider companies.
-This module provides a unified interface for accessing and managing chat completion providers,
+This module provides a unified interface for accessing and managing prompt completion providers,
 enabling seamless integration with a variety of large language model (LLM) backends.
 
 **Protocols Supported:**
 
-1. **Smarter Chat Protocol**
-    - Implements: SmarterChatHandlerProtocol
+1. **Smarter Prompt Protocol**
+    - Implements: SmarterChatHarnessProtocol
     - Indirect service layer for /api/v1/prompts/smarter/<str:provider>/
     - Returns: SmarterChatCompletionResponseType
-    - Used for native Smarter chat API requests, supporting Smarter's extensibility model.
+    - Used for native Smarter prompt API requests, supporting Smarter's extensibility model.
 
 2. **OpenAI-Compatible Passthrough Protocol**
     - Implements: OpenAICompatiblePassthroughProtocol
@@ -22,7 +22,7 @@ enabling seamless integration with a variety of large language model (LLM) backe
 
 **Key Features:**
 
-- Centralized access to all configured chat providers and their handlers.
+- Centralized access to all configured prompt providers and their handlers.
 - Supports both Smarter-native and OpenAI-compatible request/response formats.
 - Provides default provider selection and handler resolution.
 - Abstracts provider-specific complexities, including authentication and model selection.
@@ -42,16 +42,15 @@ enabling seamless integration with a variety of large language model (LLM) backe
    :type: OpenAICompatibleClientFactory
 
    Singleton instance of :class:`OpenAICompatibleClientFactory` configured for the Smarter-native protocol.
-   This is the main entry point for consumers needing Smarter-native chat completion handling.
+   This is the main entry point for consumers needing Smarter-native prompt completion handling.
 
 .. py:data:: openai_compatible_client
    :type: OpenAICompatibleClientFactory
 
    Singleton instance of :class:`OpenAICompatibleClientFactory` configured for the OpenAI-compatible passthrough protocol.
-   This is the main entry point for consumers needing OpenAI-compatible chat completion handling and passthrough.
+   This is the main entry point for consumers needing OpenAI-compatible prompt completion handling and passthrough.
 """
 
-import logging
 from functools import cached_property
 from typing import Any, List, Optional, Union
 
@@ -62,7 +61,7 @@ from rest_framework.request import Request
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.clients import OpenAIPassthroughClient
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
@@ -71,6 +70,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -80,7 +80,7 @@ from .lib.protocols import (
     OpenAICompatibleChatCompletionResponseType,
     OpenAICompatiblePassthroughProtocol,
     SmarterChatCompletionResponseType,
-    SmarterChatHandlerProtocol,
+    SmarterChatHarnessProtocol,
 )
 
 ProviderRequestType = Union[ASGIRequest, Request, HttpRequest]
@@ -97,10 +97,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class ClientTypeEnum(SmarterEnumAbstract):
-    """
-    Client type distinguishes between the kind of handler we want
-    from the provider.
-    """
+    """Client type distinguishes between the kind of handler we want from the provider."""
 
     SMARTER = OpenAISmarterClient.__name__
     PASSTHROUGH = OpenAIPassthroughClient.__name__
@@ -108,16 +105,16 @@ class ClientTypeEnum(SmarterEnumAbstract):
 
 class OpenAICompatibleClientFactory(SmarterHelperMixin):
     """
-    Service-level factory for OpenAI-compatible chat completion clients.
+    Service-level factory for OpenAI-compatible prompt completion clients.
 
-    This class provides a unified interface for instantiating and managing chat completion clients
+    This class provides a unified interface for instantiating and managing prompt completion clients
     that support both Smarter-native and OpenAI-compatible passthrough protocols. It enables seamless
     integration with multiple LLM provider backends, abstracting provider-specific complexities such as
     authentication, model selection, and handler resolution.
 
     **Key Features:**
 
-    - Centralized access to all configured chat providers and their handlers.
+    - Centralized access to all configured prompt providers and their handlers.
     - Supports both Smarter-native and OpenAI-compatible request/response formats.
     - Provides default provider selection and handler resolution.
     - Abstracts provider-specific details, including authentication and model selection.
@@ -149,6 +146,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
     def default_handler_name(self) -> str:
         """
         Returns the name of the platform-wide default provider.
+
         If no default provider is found, it raises a SmarterValueError.
 
         :return: The name of the default provider.
@@ -245,7 +243,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
 
         :param request: The incoming HTTP request object.
         :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.
-        :return: An OpenAI-compatible passthrough handler function that can be used to process chat completion requests.
+        :return: An OpenAI-compatible passthrough handler function that can be used to process prompt completion requests.
         :rtype: OpenAICompatiblePassthroughProtocol
         """
 
@@ -256,7 +254,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             *args,
             **kwargs,
         ) -> OpenAICompatibleChatCompletionResponseType:
-            """Expose the handler method of the default provider"""
+            """Expose the handler method of the default provider."""
 
             client = self.get_openai_client_for_provider(provider_name=provider_name or self.default_handler_name, user=request.user)  # type: ignore
             handler = client.handler(request, user_profile, data, *args, **kwargs)  # type: ignore
@@ -265,26 +263,26 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         provider_name = provider_name or self.default_handler_name
         return get_handler
 
-    def get_smarter_handler(
+    def get_smarter_harness(
         self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs
-    ) -> SmarterChatHandlerProtocol:
+    ) -> SmarterChatHarnessProtocol:
         """
         A convenience method to get a handler by provider name.
 
         :param request: The incoming HTTP request object.
         :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.
-        :return: A handler function that can be used to process chat completion requests according to the Smarter chat protocol.
-        :rtype: SmarterChatHandlerProtocol
+        :return: A handler function that can be used to process prompt completion requests according to the Smarter prompt protocol.
+        :rtype: SmarterChatHarnessProtocol
         """
 
         def get_handler(
             user_profile: UserProfile,
-            chat: Chat,
+            prompt: Prompt,
             data: Union[dict[str, Any], list],
             plugins: Optional[List[PluginBase]] = None,
             functions: Optional[list[str]] = None,
         ) -> SmarterChatCompletionResponseType:
-            """Expose the handler method of the default provider"""
+            """Expose the handler method of the default provider."""
 
             client_orm = self.get_client_orm_by_provider_name_and_user(
                 provider_name=provider_name or self.default_handler_name, user=request.user  # type: ignore
@@ -298,7 +296,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 default_model=client_orm.default_model,
             )
             handler = smarter_openai_compatible_provider.handler(
-                user_profile, chat, data, plugins=plugins, functions=functions
+                user_profile, prompt, data, plugins=plugins, functions=functions
             )
             return handler
 
@@ -316,28 +314,28 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
 
     def handler(
         self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs
-    ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
+    ) -> Union[SmarterChatHarnessProtocol, OpenAICompatiblePassthroughProtocol]:
         """
         A convenience method to get a handler by provider name.
 
         :param request: The incoming HTTP request object.
         :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.
-        :return: A handler function that can be used to process chat completion requests according to the specified protocol.
-        :rtype: Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]
+        :return: A handler function that can be used to process prompt completion requests according to the specified protocol.
+        :rtype: Union[SmarterChatHarnessProtocol, OpenAICompatiblePassthroughProtocol]
         """
         if self.client_type == ClientTypeEnum.PASSTHROUGH:
             return self.get_passthrough_handler(request=request, provider_name=provider_name, **kwargs)
-        return self.get_smarter_handler(request=request, provider_name=provider_name, **kwargs)
+        return self.get_smarter_harness(request=request, provider_name=provider_name, **kwargs)
 
     def default_handler(
         self, request: ProviderRequestType, **kwargs
-    ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
+    ) -> Union[SmarterChatHarnessProtocol, OpenAICompatiblePassthroughProtocol]:
         """
         A convenience method to get the default handler.
 
         :param request: The incoming HTTP request object.
-        :return: A handler function that can be used to process chat completion requests according to the specified protocol.
-        :rtype: Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]
+        :return: A handler function that can be used to process prompt completion requests according to the specified protocol.
+        :rtype: Union[SmarterChatHarnessProtocol, OpenAICompatiblePassthroughProtocol]
         """
         return self.handler(request=request, provider_name=self.default_handler_name, **kwargs)
 

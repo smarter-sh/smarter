@@ -1,7 +1,7 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-import logging
+import copy
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -27,6 +27,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.apps.plugin.plugin.tests.base_classes import mock_remote_skills
 from smarter.apps.plugin.plugin.utils import PluginExamples
 from smarter.apps.plugin.serializers import (
     PluginMetaSerializer,
@@ -46,10 +47,11 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
-from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
+from smarter.apps.secret.models import Secret
+from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 
 # python stuff
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
@@ -193,7 +195,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
-        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(plugin.plugin_meta.name, snake_case_name)  # type: ignore
 
         self.assertEqual(
@@ -258,7 +260,7 @@ class TestPluginBase(TestAccountMixin):
 
         # ensure that we can go from json output to a string and back to json without error
         # taking into account that the PluginMeta name will always save in snake_case format.
-        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
         assert_equal_with_dump(to_json[SAMKeys.METADATA.value]["name"], snake_case_name, "Plugin name (snake_case)")
 
         assert_equal_with_dump(
@@ -354,8 +356,21 @@ class TestPluginBase(TestAccountMixin):
     def test_add_sample_plugins(self):
         """Test utility function to add sample plugins to a user account."""
 
-        # add the sample plugins to the user account
-        add_example_plugins(user_profile=self.user_profile)
+        # the WebsearchPlugin examples need their search provider's api key Secret.
+        for secret_name in ("brave_search_api_key", "tavily_api_key"):
+            if not Secret.objects.filter(user_profile=self.user_profile, name=secret_name).exists():
+                secret = Secret.objects.create(
+                    user_profile=self.user_profile,
+                    name=secret_name,
+                    description="placeholder web search api key for unit tests",
+                    encrypted_value=Secret.encrypt(value="not-a-real-api-key"),
+                )
+                self.addCleanup(secret.delete)
+
+        # add the sample plugins to the user account. the remote SkillPlugin examples
+        # are retrieved from the test skill, since unit tests must not depend on GitHub.
+        with mock_remote_skills():
+            add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
         plugins = PluginMeta.objects.filter(user_profile__account=self.account)
@@ -364,11 +379,7 @@ class TestPluginBase(TestAccountMixin):
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.
         for plugin in plugins:
-            self.assertTrue(
-                PluginController(
-                    account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin
-                ).ready
-            )
+            self.assertTrue(PluginController(user_profile=self.user_profile, plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
@@ -376,30 +387,25 @@ class TestPluginBase(TestAccountMixin):
         with self.assertRaises((SmarterPluginError, SAMValidationError)):
             self.plugin_class(data={})
 
-        bad_data = self.data.copy()
-        bad_data.pop(SAMKeys.METADATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.SELECTOR.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.PROMPT.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.DATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.METADATA.value].pop("name")
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
+        # every malformed manifest must be rejected. Depending on where it is caught, that
+        # is the loader, the plugin (which reports a loader that is not ready as a
+        # SAMValidationError), or Pydantic. deepcopy, so that each case removes one thing.
+        rejected = (SAMLoaderError, SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
+        removals = [
+            (SAMKeys.METADATA.value,),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.DATA.value),
+            (SAMKeys.METADATA.value, "name"),
+        ]
+        for removal in removals:
+            bad_data = copy.deepcopy(self.data)
+            parent = bad_data
+            for key in removal[:-1]:
+                parent = parent[key]
+            parent.pop(removal[-1])
+            with self.subTest(removed=".".join(removal)), self.assertRaises(rejected):
+                self.plugin_class(data=bad_data)
 
     def test_pydantic_validation_errors(self):
         """Test that the StaticPlugin raises an error when given bad data."""
@@ -435,11 +441,6 @@ class TestPluginBase(TestAccountMixin):
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MAXTOKENS.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("description")
         with self.assertRaises((TypeError, PydanticValidationError)):
             self.plugin_data(data=bad_data)
 
@@ -536,7 +537,7 @@ class TestPluginBase(TestAccountMixin):
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
 
-        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
 
         self.assertEqual(
@@ -607,7 +608,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
@@ -625,7 +626,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for SqlConnection"""
+"""Test Api v1 CLI commands for SqlConnection."""
 
 from http import HTTPStatus
 from typing import Optional
@@ -36,7 +36,7 @@ logger = logging.getSmarterLogger(
 
 class TestApiCliV1SqlConnection(ApiV1CliTestBase):
     """
-    Test Api v1 CLI commands for SqlConnection
+    Test Api v1 CLI commands for SqlConnection.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -70,9 +70,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         super().tearDown()
 
     def sqlconnection_factory(self):
-        """
-        Create a sqlconnection for testing purposes.
-        """
+        """Create a sqlconnection for testing purposes."""
         self.password = secret_factory(
             user_profile=self.user_profile,
             name=self.name,
@@ -83,11 +81,11 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             user_profile=self.user_profile,
             name=self.name,
             kind=KIND,
-            description="local mysql test sqlconnection - ",
+            description="local mysql test sqlconnection",
             db_engine=DbEngines.MYSQL.value,
             authentication_method=DBMSAuthenticationMethods.TCPIP.value,
             timeout=300,
-            hostname="smarter-mysql",
+            hostname="smarter-mariadb",
             port=3306,
             database="smarter",
             username="smarter",
@@ -121,7 +119,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 
     def test_example_manifest(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
 
         path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
@@ -131,7 +129,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_describe(self) -> None:
-        """Test describe command"""
+        """Test describe command."""
         self.sqlconnection = self.sqlconnection_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
@@ -153,7 +151,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.sqlconnection.delete()
 
     def test_apply(self) -> None:
-        """Test apply command"""
+        """Test apply command."""
 
         password_secret = secret_factory(
             user_profile=self.user_profile,
@@ -163,7 +161,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         )
 
         # load the manifest from the yaml file
-        loader = SAMLoader(file_path="smarter/apps/plugin/tests/mock_data/sql-connection.yaml")
+        loader = SAMLoader(file_path="smarter/apps/connection/tests/mock_data/sql-connection.yaml")
         self.assertTrue(loader.ready, msg="loader is not ready")
 
         # use the manifest to creata a new sqlconnection Pydantic model
@@ -187,7 +185,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         password_secret.delete()
 
     def test_get(self) -> None:
-        """Test get command"""
+        """Test get command."""
 
         self.sqlconnection = self.sqlconnection_factory()
         path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
@@ -221,7 +219,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
                         {
                             "name": "smarter_test_base_7e1abbdf13b16e06",
                             "description": "local mysql test sqlconnection - ",
-                            "hostname": "smarter-mysql",
+                            "hostname": "smarter-mariadb",
                             "port": 3306,
                             "database": "smarter",
                             "username": "smarter",
@@ -250,8 +248,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         # validate top-level keys
         self.assertIn("message", response)
         self.assertEqual(response["message"], "SqlConnections got successfully")
-        self.assertIn("thing", response)
-        self.assertEqual(response["thing"], "SqlConnection")
+        self.assertEqual(response["metadata"]["thing"], "SqlConnection")
         self.assertIn("metadata", response.keys())
         self.assertIn(
             "count", response[SmarterJournalApiResponseKeys.DATA][SmarterJournalApiResponseKeys.METADATA].keys()
@@ -304,7 +301,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
                         {
                             "name": "smarter_test_base_21b4ec52db9ba67b",
                             "description": "local mysql test sqlconnection - ",
-                            "hostname": "smarter-mysql",
+                            "hostname": "smarter-mariadb",
                             "port": 3306,
                             "database": "smarter",
                             "username": "smarter",
@@ -327,8 +324,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertIn("data", response)
         self.assertIn("message", response)
         self.assertEqual(response["message"], "SqlConnections got successfully")
-        self.assertIn("thing", response)
-        self.assertEqual(response["thing"], "SqlConnection")
+        self.assertEqual(response["metadata"]["thing"], "SqlConnection")
         self.assertIn("metadata", response)
 
         data = response["data"]
@@ -363,10 +359,12 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             {"name": "proxyUsername", "type": "CharField"},
             {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
         ]
-        self.assertEqual(data_data["titles"], expected_titles)
+        # the serializer has more fields than these, so check that they are all present
+        for title in expected_titles:
+            self.assertIn(title, data_data["titles"])
 
     def test_deploy(self) -> None:
-        """Test deploy command"""
+        """Test deploy command."""
         # create a sqlconnection so that we have something to deploy
         self.sqlconnection = self.sqlconnection_factory()
 
@@ -380,7 +378,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_undeploy(self) -> None:
-        """Test undeploy command"""
+        """Test undeploy command."""
 
         # create a sqlconnection so that we have something to undeploy
         self.sqlconnection = self.sqlconnection_factory()
@@ -395,7 +393,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_logs(self) -> None:
-        """Test logs command"""
+        """Test logs command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -406,7 +404,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_delete(self) -> None:
-        """Test delete command"""
+        """Test delete command."""
         # create a sqlconnection so that we have something to delete
         self.sqlconnection = self.sqlconnection_factory()
 

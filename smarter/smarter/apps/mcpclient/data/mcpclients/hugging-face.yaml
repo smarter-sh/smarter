@@ -1,0 +1,31 @@
+---
+# Search the Hugging Face Hub for models, datasets and Spaces.
+# Documentation: https://huggingface.co/settings/mcp
+#
+# Prerequisite: a Smarter Secret named hugging_face_token, containing a Hugging Face
+# access token from https://huggingface.co/settings/tokens. The server also works
+# anonymously, with fewer tools: set authType to none and remove credentials.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: hugging_face
+  description: Search the Hugging Face Hub for models, datasets and Spaces.
+  version: 1.0.0
+  tags:
+    - machine-learning
+    - models
+    - datasets
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://huggingface.co/settings/mcp
+spec:
+  config:
+    transport: http
+    endpointUrl: https://huggingface.co/mcp
+    authType: bearer_token
+    credentials: hugging_face_token
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

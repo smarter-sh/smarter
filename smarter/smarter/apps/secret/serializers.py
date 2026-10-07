@@ -1,8 +1,11 @@
-"""Account serializers for Smarter API"""
+"""Account serializers for Smarter API."""
 
 from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
+)
+from smarter.apps.secret.manifest.models.secret.const import (
+    MANIFEST_KIND as SECRET_KIND,
 )
 from smarter.apps.secret.models import Secret
 
@@ -34,7 +37,6 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
     .. seealso::
 
             For user profile details, see :class:`UserProfileSerializer`.
-
     """
 
     user_profile = UserProfileSerializer()
@@ -42,10 +44,27 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
-        fields = "__all__"
+        kind = SECRET_KIND
+        fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "user_profile",
+            "description",
+            "version",
+            "annotations",
+            "tags",
+            "manifest_url",
+            "ready",
+            "expires_at",
+            "last_accessed",
+        ]
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "last_accessed",
             "expires_at",
+            "manifest_url",
+            "ready",
         ]
 
 
@@ -68,14 +87,16 @@ class SecretMiniSerializer(MetaDataWithOwnershipModelSerializer):
         from smarter.apps.account.serializers import SecretMiniSerializer
         serializer = SecretMiniSerializer(secret_instance)
         data = serializer.data
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
-        fields = ["id", "name"]
+        kind = SECRET_KIND
+        fields = ["id", "name", "manifest_url", "ready"]
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "id",
             "name",
+            "manifest_url",
+            "ready",
         ]

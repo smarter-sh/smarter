@@ -1,8 +1,7 @@
 # pylint: disable=W0718
-"""Smarter API User Manifest handler"""
+"""Smarter API User Manifest handler."""
 
-import logging
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -23,6 +22,8 @@ from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
 )
+from smarter.common.utils.decorators import camel_case
+from smarter.lib import logging
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -57,23 +58,27 @@ class SAMTestBroker(AbstractBroker):
     def username(self) -> Optional[str]:
         return self._username
 
+    def apply(self, request, *args, **kwargs):
+        """Not implemented: the abstract broker's apply() raises SAMBrokerErrorNotImplemented."""
+        return super().apply(request, *args, **kwargs)
+
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API User manifest into a Django ORM model.
-        """
+        """Transform the Smarter API User manifest into a Django ORM model."""
         config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API User manifest dict.
         """
         if not self.user:
             raise SAMUserBrokerError("No user set for the broker")
         user_dict = model_to_dict(self.user) if isinstance(self.user, User) else {}
-        user_dict = self.snake_to_camel(user_dict)
+        user_dict = self.to_camel_case(user_dict)
         user_dict.pop("id")  # type: ignore[union-attr]
 
         data = {
@@ -175,7 +180,6 @@ class SAMTestBroker(AbstractBroker):
                 print(meta.name, meta.account)
             else:
                 print("No plugin metadata found.")
-
         """
         if self._plugin_meta:
             return self._plugin_meta
@@ -209,10 +213,11 @@ class SAMTestBroker(AbstractBroker):
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMTestBroker()"
+        class_name = f"{__name__}.{self.__class__.__name__}()[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def kind(self) -> str:
@@ -223,13 +228,12 @@ class SAMTestBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
-        SAMPluginCommon() is a Pydantic model
-        that is used to represent the Smarter API User manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        SAMPluginCommon() is a Pydantic model that is used to represent the Smarter API User manifest.
+
+        The Pydantic model is initialized with the data from the manifest loader, which is generally passed to the
+        model constructor as **data. However, this top-level manifest model has to be explicitly initialized,
+        whereas its child models are automatically cascade-initialized by the Pydantic model, implicitly passing
+        **data to each child's constructor.
         """
         if self._manifest:
             return self._manifest
@@ -246,11 +250,14 @@ class SAMTestBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        return super().chat(request=request, kwargs=kwargs)
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().prompt(request=request, kwargs=kwargs)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().describe(request=request, kwargs=kwargs)
+
+    def dependencies(self) -> List[AbstractBroker]:
+        return []
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().delete(request=request, kwargs=kwargs)

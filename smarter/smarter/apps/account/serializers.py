@@ -1,13 +1,21 @@
-"""Account serializers for Smarter API"""
+"""Account serializers for Smarter API."""
+
+from typing import List
+
+from rest_framework import serializers
 
 from smarter.apps.account.models import (
     Account,
     AccountContact,
+    Budget,
     User,
     UserProfile,
 )
+from smarter.lib import logging
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class UserSerializer(MetaDataModelSerializer):
@@ -34,7 +42,6 @@ class UserSerializer(MetaDataModelSerializer):
         from smarter.apps.account.serializers import UserSerializer
         serializer = UserSerializer(user_instance)
         data = serializer.data
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -77,7 +84,6 @@ class UserMiniSerializer(SmarterCamelCaseSerializer):
 
     .. seealso::
         For full user details, use :class:`UserSerializer`.
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -114,13 +120,49 @@ class AccountSerializer(MetaDataModelSerializer):
 
     .. seealso::
         For lightweight account representations, use :class:`AccountMiniSerializer`.
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = Account
         fields = "__all__"
+
+
+class BudgetSerializer(MetaDataModelSerializer):
+    """
+    Serializer for the :class:`Budget` model, with the number of resources it is attached to, and of those it locks.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import BudgetSerializer
+        data = BudgetSerializer(budget).data
+    """
+
+    resources = serializers.SerializerMethodField()
+    locked = serializers.SerializerMethodField()
+    manifest_url = serializers.SerializerMethodField()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = Budget
+        fields = "__all__"
+
+    def get_resources(self, obj: Budget) -> int:
+        return obj.constraints.filter(is_active=True).count()  # type: ignore[attr-defined]
+
+    def get_manifest_url(self, obj: Budget) -> str:
+        """The URL of the Budget's detail view, which renders its manifest."""
+        # pylint: disable=C0415
+        from django.urls import reverse
+
+        from smarter.apps.account.views.budget.urls import BudgetReverseNames
+
+        return reverse(
+            f"{BudgetReverseNames.namespace}:{BudgetReverseNames.detailview}", kwargs={"hashed_id": obj.hashed_id}
+        )
+
+    def get_locked(self, obj: Budget) -> int:
+        return obj.constraints.filter(is_active=True, locks__isnull=False).distinct().count()  # type: ignore[attr-defined]
 
 
 class AccountMiniSerializer(SmarterCamelCaseSerializer):
@@ -148,13 +190,38 @@ class AccountMiniSerializer(SmarterCamelCaseSerializer):
 
     .. seealso::
         For full account details, use :class:`AccountSerializer`.
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = Account
         fields = ("account_number",)
+
+
+class ChargeSerializer(SmarterCamelCaseSerializer):
+    """
+    Read-only serializer for the ``Charge`` model.
+
+    This serializer converts :class:`Charge` model instances to and from the
+    JSON representation used by the Smarter API. Field names are automatically
+    converted between Django's ``snake_case`` convention and the API's
+
+    ``camelCase`` convention by the
+
+    :class:`SmarterCamelCaseSerializer` base class.
+
+    This serializer is intended for read operations only. All model fields are
+    exposed, and every field is marked as read-only, preventing creation or
+    modification through this serializer.
+
+    :inherits: SmarterCamelCaseSerializer
+    """
+
+    # pylint: disable=C0115
+    class Meta:
+        model = User
+        fields = ["__all__"]
+        read_only_fields = fields
 
 
 class UserProfileSerializer(SmarterCamelCaseSerializer):
@@ -171,7 +238,6 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
 
             Only the ``user`` and ``account`` fields are included in serialization.
 
-
     **Example usage**::
 
         from smarter.apps.account.serializers import UserProfileSerializer
@@ -180,7 +246,6 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
 
     .. seealso::
         For more detailed user or account data, use :class:`UserSerializer` or :class:`AccountSerializer`.
-
     """
 
     user = UserMiniSerializer()
@@ -209,7 +274,6 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
 
             All fields are read-only in this serializer.
 
-
     **Example usage**::
 
         from smarter.apps.account.serializers import AccountContactSerializer
@@ -219,7 +283,6 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
     .. seealso::
 
             For full account details, use :class:`AccountSerializer`.
-
     """
 
     account = AccountMiniSerializer()
@@ -237,11 +300,16 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
 
 
 class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
-    """
-    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+    """Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+
+    It also adds ``can_delete``, which is True if the authenticated user may delete the resource
+    now: they have ownership permission for it, and no other resource depends on it. Subclasses
+    set ``Meta.kind`` to the resource's SAM kind, which ``can_delete`` needs to find its broker.
+    Every subclass includes it, whatever its ``Meta.fields``.
     """
 
     user_profile = UserProfileSerializer(read_only=True)
+    can_delete = serializers.SerializerMethodField()
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataModelSerializer.Meta):
@@ -254,3 +322,64 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
         # ----------------------------------------------------------------------------------------
         # model = MetaDataModel
         # abstract = True
+
+    def get_field_names(self, declared_fields, info) -> List[str]:
+        """
+        Return the field names to serialize, always including ``can_delete``.
+
+        DRF omits an inherited declared field from a subclass whose ``Meta.fields`` is a list
+        that does not name it, so ``can_delete`` is added here for every subclass.
+        """
+        field_names = list(super().get_field_names(declared_fields, info))
+        if "can_delete" not in field_names:
+            field_names.append("can_delete")
+        return field_names
+
+    def get_can_delete(self, obj) -> bool:
+        """
+        Return True if the authenticated user may delete the resource now.
+
+        The user can delete the object if a.) they have permission and b.)
+        no dependencies existing on the object based on the SAMBroker
+        enforcement rules.
+
+        The user must have ownership permission for the resource, as in
+        :meth:`MetaDataWithOwnershipModelManager.with_ownership_permission_for`, and no other
+        resource may depend on it, as in :meth:`AbstractBroker.dependencies`.
+
+        .. note::
+
+            This builds a broker, and queries its dependencies, for each resource that the user
+            may delete. Serializing a long list of resources is correspondingly slower.
+
+        :param obj: The resource.
+        :type obj: MetaDataWithOwnershipModel
+        :return: Whether the user may delete the resource, or None if the serializer has no request
+            in its context, or does not know the resource's kind.
+        :rtype: Optional[bool]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        # the serializer's Meta.kind, or the resource's own kind, e.g. a PluginMeta's enum or a ConnectionBase's str.
+        obj_kind = getattr(obj, "kind", None)
+        kind = getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
+        broker_class = Brokers.get_broker(kind) if kind else None
+        if request is None or broker_class is None:
+            return False
+        if not isinstance(user, User):
+            return False
+        if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
+            return False
+        try:
+            broker = broker_class(None, name=obj.name, kind=kind, user_profile=obj.user_profile)
+            return not broker.dependencies()
+        # an incomplete resource, e.g. a plugin without its plugin data, can fail to initialize its broker.
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning(
+                "%s.get_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
+            )
+            return False

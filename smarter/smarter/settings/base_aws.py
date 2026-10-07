@@ -1,12 +1,11 @@
 # pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 
-import logging
 import os
 import sys
 
 from smarter.common.conf import smarter_settings
-from smarter.lib import json
+from smarter.lib import json, logging
 
 from .base import *
 
@@ -48,6 +47,7 @@ DATABASES = {
         "PASSWORD": os.getenv("SMARTER_MYSQL_PASSWORD"),
         "HOST": os.getenv("SMARTER_MYSQL_HOST"),
         "PORT": os.getenv("SMARTER_MYSQL_PORT", "3306"),  # default MySQL port
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 
@@ -80,7 +80,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain

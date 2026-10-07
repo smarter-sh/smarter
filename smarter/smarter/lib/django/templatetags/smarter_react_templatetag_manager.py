@@ -1,6 +1,5 @@
 """
-Vite-generated React manifest.json loader and asset collector base class for Django
-templatetags.
+Vite-generated React manifest.json loader and asset collector base class for Django templatetags.
 
 This module provides a reusable base class and supporting types for
 managing Vite-generated React manifest.json files and collecting
@@ -29,7 +28,7 @@ In a Django template, use the registered template tag for your app to get asset 
     {% load react_dashboard %}
     {% dashboard_react_assets as assets %}
     {% for css_file in assets.css %}
-        <link class="smarter" rel="stylesheet" href="{% static 'react/dashboard/' %}{{ css_file }}">
+        <link class="smarter" rel="stylesheet" href="{% static 'react/smarter-dashboard/' %}{{ css_file }}">
     {% endfor %}
 
 Example React manifest.json
@@ -81,21 +80,18 @@ from django.conf import settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 
 logger = logging.getLogger(__name__)
 
 register = template.Library()
 
-CACHE_TIMEOUT = 60 * 60 * 24 * 365  # 1 year in seconds. basically 'forever' for static assets.
 ManifestValues = dict[str, Any]
 ManifestType = dict[str, ManifestValues]
 
 
 class AssetDict(TypedDict):
     """
-    TypedDict representing the structure of assets returned for a
-    manifest.json entry point.
+    TypedDict representing the structure of assets returned for a manifest.json entry point.
 
     Attributes
     ----------
@@ -111,9 +107,7 @@ class AssetDict(TypedDict):
 
 class SmarterReactTemplateTagManager(SmarterHelperMixin):
     """
-    Base class for per-React-app singleton managers that load
-    and analyze Vite-generated React manifest.json files in order
-    to generate ordered lists of JS and CSS assets.
+    Base class for per-React-app singleton managers that load and analyze Vite-generated React manifest.json files in order to generate ordered lists of JS and CSS assets.
 
     This class is intended to be instantiated once per React app, providing a
     long-lived singleton that manages loading and caching the React manifest.json
@@ -146,8 +140,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         self.app_name = app_name
         self.templatetag_name = templatetag_name
         self.entry_key = self.find_entry_key()
-        logger.debug(
-            "%s[%s] registered %s Template Tag for React app '%s'",
+        logger.info(
+            "%s[%s] %s is registered to React app '%s'",
             self.formatted_class_name,
             id(self),
             self.templatetag_name,
@@ -166,45 +160,58 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             return self._manifest
 
         def _load_manifest() -> ManifestType:
-            """
-            Load the manifest.json from the static files directory and
-            cache the result.
-            """
+            """Load the manifest.json from the static files directory and cache the result."""
             manifest_path = os.path.join(settings.STATIC_ROOT, f"react/{self.app_name}/manifest.json")
-            retval: ManifestType
-            with open(manifest_path, encoding="utf-8") as f:
-                try:
-                    retval = json.load(f)
-                except json.JSONDecodeError as e:
-                    logger.error(
-                        "%s.load_manifest() Failed to parse manifest.json at %s: %s",
-                        self.formatted_class_name,
-                        manifest_path,
-                        e,
-                    )
-                    raise SmarterValueError(f"Failed to parse manifest.json at {manifest_path}: {e}") from e
+            retval: ManifestType = {}
+            try:
+                with open(manifest_path, encoding="utf-8") as f:
+                    try:
+                        retval = json.load(f)
+                    except json.JSONDecodeError as e:
+                        logger.error(
+                            "%s.load_manifest() Failed to parse manifest.json at %s: %s",
+                            self.formatted_class_name,
+                            manifest_path,
+                            e,
+                        )
+                        logger.error(
+                            "%s.load_manifest() failed to parse manifest.json at %s: content: %s. This error was raised %s",
+                            self.formatted_class_name,
+                            manifest_path,
+                            f.read(),
+                            e,
+                        )
+            except FileNotFoundError:
+                logger.error(
+                    "%s.load_manifest() manifest.json not found at expected path: %s. Ensure Vite build has been run and static files are collected.",
+                    self.formatted_class_name,
+                    manifest_path,
+                )
+            if not isinstance(retval, dict):
+                logger.error(
+                    "%s.load_manifest() manifest.json is not a dictionary. Received an object of type %s",
+                    self.formatted_class_name,
+                    type(retval),
+                )
+                return {}
             logger.debug(
                 "%s.load_manifest() loaded and cached manifest.json for %s: %s",
                 self.formatted_class_name,
                 self.app_name,
-                logging.formatted_json(retval),
+                logging.formatted_json(retval) if retval else "None",
             )
-            if not isinstance(retval, dict):
-                logger.error(
-                    "%s.load_manifest() manifest.json is not a dictionary: %s", self.formatted_class_name, type(retval)
-                )
-                raise SmarterValueError(f"manifest.json is not a dictionary: {type(retval)}")
             return retval
 
-        self._manifest = _load_manifest()
+        manifest_data = _load_manifest()
+        if manifest_data:
+            self._manifest = manifest_data
         return self._manifest
 
     def collect_assets(
         self, manifest: ManifestType, key: str, asset_type: str, seen: set[str] | None = None
     ) -> list[str]:
         """
-        Recursively collect assets from a manifest entry and its imports,
-        preserving dependency order.
+        Recursively collect assets from a manifest entry and its imports, preserving dependency order.
 
         Assets are collected in the order required for correct script or style
         loading in the DOM: dependencies (as listed in the "imports" array) are
@@ -254,6 +261,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
     def find_entry_key(self) -> str:
         """
         Locate the top-level key and dict in the manifest where the dict contains the key 'isEntry'.
+
         Returns the key if found, else raises an error.
 
         Example entry dict:
@@ -274,17 +282,18 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                     ]
                 }
         """
+        if not self.manifest:
+            return None  # type: ignore[return-value]
         REACT_ENTRY_KEY = "isEntry"
         for key, value in self.manifest.items():
             if isinstance(value, dict) and REACT_ENTRY_KEY in value:
                 return key
         raise SmarterValueError(f"No entry with '{REACT_ENTRY_KEY}' found in manifest.json for app '{self.app_name}'")
 
+    @cached_property
     def reactapp_build_assets(self) -> AssetDict:
         """
-        Load CSS and JS files for a Vite-generated React manifest.json entry
-        point from the manifest, including all dependencies, cache and return
-        them as an ordered dictionary.
+        Load CSS and JS files for a Vite-generated React manifest.json entry point from the manifest, including all dependencies, cache and return them as an ordered dictionary.
 
         This function retrieves the JavaScript and CSS assets for a given manifest.json
         entry point (defaulting to "index.html") by loading the manifest and collecting
@@ -309,27 +318,28 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                 ]
             }
         """
-
-        # pylint: disable=W0613
-        @cache_results(timeout=CACHE_TIMEOUT)
-        def _collect_reactapp_assets(cache_key: int) -> AssetDict:
-
-            css_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="css")
-            js_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="file")
-
-            assets: AssetDict = {
-                "js": js_files,
-                "css": css_files,
-            }
-            serialized_assets = json.dumps(assets)
-
-            logger.debug(
-                "%s[%s].reactapp_build_assets() caching build assets for React app %s: %s",
+        if not self.manifest:
+            logger.error(
+                "%s.reactapp_build_assets() No manifest.json found for app '%s'. Cannot collect assets.",
                 self.formatted_class_name,
-                id(self),
                 self.app_name,
-                logging.formatted_json(json.loads(serialized_assets)),
             )
-            return assets
+            return {"js": [], "css": []}
 
-        return _collect_reactapp_assets(cache_key=id(self))
+        css_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="css")  # type: ignore[assignment]
+        js_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="file")  # type: ignore[assignment]
+
+        assets: AssetDict = {
+            "js": js_files,
+            "css": css_files,
+        }
+        serialized_assets = json.dumps(assets)
+
+        logger.debug(
+            "%s[%s].reactapp_build_assets() caching build assets for React app %s: %s",
+            self.formatted_class_name,
+            id(self),
+            self.app_name,
+            logging.formatted_json(json.loads(serialized_assets)),
+        )
+        return assets

@@ -1,0 +1,28 @@
+---
+# A Guardrail for the guardrail app's tests: redact credit card numbers and email
+# addresses, in the user's message and the LLM's reply.
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: test_guardrail
+  description: A guardrail for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+    - pii
+  annotations:
+    - smarter.sh/guardrail/test/purpose: unit testing
+spec:
+  config:
+    stage: both
+    category: pii
+    strategy: detector
+    detectors:
+      - credit_card
+      - email
+    action: redact
+    replacement: "[REDACTED {label}]"
+    severity: 4
+    mode: enforce
+    priority: 10
+    isActive: true

@@ -1,0 +1,38 @@
+---
+# An LLMHost for the broker's tests: an ungated Hugging Face model, served by vLLM on one GPU.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: test_broker_llmhost
+  description: An LLMHost for testing the SAMLLMHostBroker.
+  version: 1.0.0
+  tags:
+    - test
+    - qwen
+  annotations:
+    - smarter.sh/llmhost/test/purpose: broker unit testing
+spec:
+  model:
+    source: huggingface
+    repository: Qwen/Qwen2.5-7B-Instruct
+    revision: main
+    servedName: qwen2.5-7b-instruct
+    license: apache-2.0
+    architecture: qwen2
+    parameterCount: 7615616512
+    contextWindow: 32768
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 16384
+    args:
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - hermes
+  compute: gpu_a10g_1x
+  resources:
+    gpuCount: 1
+    cpu: "4"
+    memory: 24Gi

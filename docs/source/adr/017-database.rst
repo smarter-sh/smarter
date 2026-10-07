@@ -11,7 +11,7 @@ Supporting multiple database backends can increase complexity and maintenance ov
 
 Decision
 --------
-We limit support for SQL databases to those directly supported by Django. Moreover, we want to avoid adding code that is specific to a single database vendor's feature. We prefer MySQL, and this is our default database.
+We limit support for SQL databases to those directly supported by Django. Moreover, we want to avoid adding code that is specific to a single database vendor's feature. We prefer MariaDB, and this is our default database.
 
 Alternatives Considered
 -----------------------
@@ -24,7 +24,7 @@ Consequences
   - Simplifies maintenance and reduces compatibility issues.
   - Ensures stability by relying on Django’s supported databases.
   - Promotes portability across different environments.
-  - Provides a consistent default (MySQL) for deployments.
+  - Provides a consistent default (MariaDB) for deployments.
 - **Negative:**
   - Limits the use of features unique to specific database vendors.
   - May restrict database choices for some deployments.

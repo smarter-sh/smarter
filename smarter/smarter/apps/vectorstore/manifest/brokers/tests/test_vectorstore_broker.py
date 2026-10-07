@@ -1,294 +1,199 @@
 # pylint: disable=wrong-import-position
 """Test SAMVectorstoreBroker."""
 
-import logging
 import os
+from unittest.mock import PropertyMock, patch
 
 from django.http import HttpRequest
+from qdrant_client import QdrantClient
 
-from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
-from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
-    SAMVectorstoreMetadata,
+from smarter.apps.account.tests.factories import mortal_user_factory
+from smarter.apps.vectorstore.manifest.brokers.vectorstore import (
+    SAMVectorstoreBroker,
+    SAMVectorstoreBrokerError,
 )
-from smarter.apps.vectorstore.manifest.models.vectorstore.model import SAMVectorstore
-from smarter.apps.vectorstore.manifest.models.vectorstore.spec import (
-    SAMVectorstoreSpec,
+from smarter.apps.vectorstore.models import (
+    VectorstoreDocumentStatus,
+    VectorstoreMeta,
+    VectorstoreStatus,
 )
+from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
 from smarter.lib import json
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
 )
+from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
-logger = logging.getLogger(__name__)
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
-    """
-    Test the Smarter SAMVectorstoreBroker.
-    TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
-    """
+class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
+    """Test the Vectorstore broker: apply, describe, get, deploy, undeploy, delete, logs and example_manifest."""
 
     def setUp(self):
-        """
-        test-level setup. Before we delve into the actual unit tests, we need to
-        ensure that our test environment is properly configured and that we
-        can initialize the precursors for testing the SAMVectorstoreBroker.
-        """
         super().setUp()
         self._broker_class = SAMVectorstoreBroker
-        self._here = os.path.abspath(os.path.dirname(__file__))
+        self._here = HERE
         self._manifest_filespec = self.get_data_full_filepath("vectorstore.yaml")
+        self.vs_name = f"test_vs_broker_{self.hash_suffix}"
+        self.addCleanup(VectorstoreMeta.objects.filter(name=self.vs_name).delete)
+        # the database: an in-memory Qdrant, rather than the self-hosted server's address.
+        self.qdrant = QdrantClient(location=":memory:")
+        patcher = patch("smarter.apps.vectorstore.backends.qdrant.QdrantClient", return_value=self.qdrant)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-        logger.debug(
-            "%s.setUp() completed test-level setup with manifest\n%s", self.formatted_class_name, self.loader.yaml_data
-        )
-
-    @property
-    def ready(self) -> bool:
-        """Return True if the broker is ready."""
-        if not super().ready:
-            return False
-
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
-        self.assertIsInstance(self.request, HttpRequest)
-
-        return True
+    def manifest_text(self, model: str = "test-embedding", storage: str = "1Gi") -> str:
+        with open(self.manifest_filespec, encoding="utf-8") as f:
+            return f.read().format(name=self.vs_name, provider=self.provider.name, model=model, storage=storage)
 
     @property
-    def SAMBrokerClass(self) -> type[SAMVectorstoreBroker]:
-        """Return the SAMVectorstoreBroker class definition for this test."""
-        return SAMVectorstoreBroker
+    def loader(self) -> SAMLoader:
+        if not self._loader:
+            self._loader = SAMLoader(manifest=self.manifest_text())
+        return self._loader
 
     @property
-    def broker(self) -> SAMVectorstoreBroker:
-        return super().broker  # type: ignore
+    def kwargs(self) -> dict:
+        return {SAMMetadataKeys.NAME.value: self.vs_name}
 
-    def test_setup(self):
-        """Verify that setup initialized the broker correctly."""
-        self.assertTrue(self.ready)
-        self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
-        self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
-        self.assertIsInstance(self.broker, SAMVectorstoreBroker)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
-        self.assertIsInstance(self.broker, SAMVectorstoreBroker)
-        logger.debug(
-            "%s.test_setup() SAMVectorstoreBroker initialized successfully for testing.", self.formatted_class_name
-        )
+    def broker_for(self, text: str, token_key: str = "") -> SAMVectorstoreBroker:
+        request = HttpRequest()
+        request.headers = {"Authorization": f"Token {token_key or self.token_key}"}  # type: ignore
+        request._body = text.encode("utf-8")  # pylint: disable=protected-access
+        return SAMVectorstoreBroker(request=request, loader=SAMLoader(manifest=text))
 
-    def test_ready(self):
-        """Test that the test setup is ready."""
-        self.assertTrue(self.ready)
+    def apply(self, **kwargs) -> VectorstoreMeta:
+        broker = self.broker_for(self.manifest_text(**kwargs))
+        broker.apply(broker.request, **self.kwargs)  # type: ignore[arg-type]
+        return VectorstoreMeta.objects.get(name=self.vs_name)
 
-    def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
-        self.assertTrue(self.broker.is_valid)
-
-    def test_sam_broker_initialization(self):
-        """Test that the SAMVectorstoreBroker initializes correctly."""
-        # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**self.loader.manifest_metadata}
-        logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
-        SAMVectorstore(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
-            metadata=SAMVectorstoreMetadata(**metadata),
-            spec=SAMVectorstoreSpec(**self.loader.manifest_spec),
-        )
-
-    def test_broker_initialization(self):
-        """Test that the broker initializes with required properties."""
-        broker: SAMVectorstoreBroker = self.SAMBrokerClass(self.request, self.loader)
-        self.assertIsInstance(broker, SAMVectorstoreBroker)
-        self.assertEqual(broker.kind, "Vectorstore")
-        self.assertIsNotNone(broker.ORMModelClass)
-        self.assertEqual(broker.ORMModelClass.__name__, "Vectorstore")
-
-    def test_initialization_from_class(self):
-        """Test initialization of SAMVectorstoreBroker from class."""
-        self.assertIsInstance(self.loader, SAMLoader)
-        broker: SAMVectorstoreBroker = self.SAMBrokerClass(self.request, self.loader)
-        self.assertIsInstance(broker, SAMVectorstoreBroker)
-        self.assertTrue(broker.ready)
-
-    def test_to_json(self):
-        """Test to_json method returns JSON serializable output."""
-        d = json.loads(json.dumps(self.broker.to_json()))
-        self.assertIsInstance(d, dict)
-
-    def test_manifest_initialization(self):
-        """Test that the manifest property can initialize the broker and model."""
-        broker = self.SAMBrokerClass(self.request, self.broker.manifest)
-        self.assertIsInstance(broker, SAMVectorstoreBroker)
-
-    def test_manifest_model_initialization(self):
-        """Test that the manifest property can initialize a SAMVectorstore model."""
-        if not isinstance(self.broker.manifest, SAMVectorstore):
-            self.fail(f"Broker manifest is not an instance of SAMVectorstore: {type(self.broker.manifest)}")
-        sam_vectorstore = SAMVectorstore(**self.broker.manifest.model_dump())
-        self.assertIsInstance(sam_vectorstore, SAMVectorstore)
-
-    def test_formatted_class_name(self):
-        """Test formatted_class_name returns a string containing SAMVectorstoreBroker."""
-        name = self.broker.formatted_class_name
-        self.assertIsInstance(name, str)
-        self.assertIn("SAMVectorstoreBroker", name)
-
-    def test_kind_property(self):
-        """Test kind property returns 'Vectorstore'."""
-        self.assertEqual(self.broker.kind, "Vectorstore")
-
-    def test_manifest_property(self):
-        """Test manifest property returns a SAMVectorstore or None if not ready."""
-        try:
-            _ = self.broker.manifest
-        # pylint: disable=broad-except
-        except Exception as e:
-            self.fail(f"manifest property raised: {e}")
-
-    def test_manifest_to_django_orm(self):
-        """Test manifest_to_django_orm returns a dict."""
-        if self.broker.manifest:
-            orm_dict = self.broker.manifest_to_django_orm()
-            self.assertIsInstance(orm_dict, dict)
-
-    def test_django_orm_to_manifest_dict(self):
-        """Test django_orm_to_manifest_dict returns a dict or raises if manifest is not set."""
-        if self.broker.manifest:
-            manifest = self.broker.django_orm_to_manifest()
-            manifest_dict = manifest.model_dump() if manifest else None
-            self.assertIsInstance(manifest_dict, dict)
-
-    def test_example_manifest(self):
-        """
-        test example_manifest method.
-        Verify that it returns a SmarterJournaledJsonResponse with expected structure
-        (see user broker test for details)
-        """
-        response = self.broker.example_manifest(self.request)
-        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
-        self.assertTrue(is_valid_response)
-        is_valid_response = self.validate_example_manifest(response)
-        self.assertTrue(is_valid_response)
-
-    def test_get(self):
-        """
-        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
-        (see user broker test for details)
-        """
-        response = self.broker.get(self.request, **self.kwargs)
-        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
-        self.assertTrue(is_valid_response)
-        is_valid_response = self.validate_get(response)
-        self.assertTrue(is_valid_response)
+    def data(self, response) -> dict:
+        return json.loads(response.content.decode("utf-8"))["data"]
 
     def test_apply(self):
-        """
-        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
-        (see user broker test for details)
-        """
+        """Test that apply creates the Vectorstore, without creating its database."""
         response = self.broker.apply(self.request, **self.kwargs)
-        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
-        self.assertTrue(is_valid_response)
-        is_valid_response = self.validate_apply(response)
-        self.assertTrue(is_valid_response)
-
-        # metadata fields
-        if not isinstance(self.broker, SAMVectorstoreBroker):
-            self.fail(f"Broker is not an instance of SAMVectorstoreBroker: {type(self.broker)}")
-        if not isinstance(self.broker.manifest, SAMVectorstore):
-            self.fail(f"Broker manifest is not an instance of SAMVectorstore: {type(self.broker.manifest)}")
-        if not isinstance(self.broker.vectorstore_meta, SAMVectorstoreMetadata):
-            self.fail(
-                f"Broker vectorstore_meta is not an instance of SAMVectorstoreMetadata: {type(self.broker.vectorstore_meta)}"
-            )
-        self.assertEqual(self.broker.manifest.metadata.name, self.broker.vectorstore_meta.name)
-        self.assertEqual(self.broker.manifest.metadata.version, self.broker.vectorstore_meta.version)
-        self.assertEqual(self.broker.manifest.metadata.description, self.broker.vectorstore_meta.description)
-
-        # verify that user_profile.tags (TaggableManager) contains the same tags.
-        manifest_tags = set(self.broker.manifest.metadata.tags or [])
-        django_orm_tags = set(self.broker.vectorstore_meta.tags_list) if self.broker.vectorstore_meta.tags else set()
-        self.assertEqual(manifest_tags, django_orm_tags)
-
-        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that user_profile.annotations (JSONField) contains the same annotations.
-        def sort_annotations(annotations):
-            return sorted(annotations, key=lambda d: sorted(d.items()))
-
-        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
-        account_annotations = sort_annotations(self.broker.vectorstore_meta.annotations or [])
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        vectorstore = VectorstoreMeta.objects.get(name=self.vs_name)
         self.assertEqual(
-            manifest_annotations,
-            account_annotations,
-            f"Account annotations do not match manifest annotations. manifest: {manifest_annotations}, account: {account_annotations}",
+            (vectorstore.backend, vectorstore.hosting, vectorstore.dimension), ("qdrant", "self_hosted", 32)
         )
+        self.assertEqual(vectorstore.embeddings_provider, self.provider)
+        self.assertEqual(vectorstore.status, VectorstoreStatus.PENDING)
+        self.assertEqual(vectorstore.spec["selfHosted"]["storage"], "1Gi")
+        self.assertEqual(vectorstore.tags_list, ["test"])
+        self.assertEqual(self.kubernetes.applied, [])
 
-    def test_describe(self):
-        """
-        Stub: test describe method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
-        (see user broker test for details)
-        """
-        response = self.broker.apply(self.request, **self.kwargs)
-        if not isinstance(self.broker.manifest, SAMVectorstore):
-            self.fail(f"Broker manifest is not an instance of SAMVectorstore: {type(self.broker.manifest)}")
-        kwargs = {
-            "name": self.broker.manifest.metadata.name,
-        }
-        response = self.broker.describe(self.request, kwargs)
-        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
-        self.assertTrue(is_valid_response)
-
-    def test_delete(self):
-        """Stub: test delete method."""
-
-    def test_deploy(self):
-        """
-        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
-        (see user broker test for details)
-        """
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.deploy(self.request, **self.kwargs)
-
-    def test_undeploy(self):
-        """
-        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
-        (see user broker test for details)
-        """
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.undeploy(self.request, **self.kwargs)
-
-    def test_chat_not_implemented(self):
-        """test chat method raises not implemented."""
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
-
-    def test_delete_secret_not_found(self):
-        """
-        test delete method raises not found for missing secret.
-        """
-
-    def test_describe_secret_not_found(self):
-        """
-        Test describe method raises not found for missing secret.
-        """
-        self.broker.user = None
+    def test_unknown_provider_and_connection(self):
+        text = self.manifest_text().replace(self.provider.name, "no_such_provider")
         with self.assertRaises(SAMBrokerErrorNotFound):
-            self.broker.describe(self.request, **self.kwargs)
+            self.broker_for(text).apply(self.request, **self.kwargs)
+        managed = self.manifest_text().replace(
+            "hosting: self_hosted", "hosting: managed\n  connection: no_such_connection"
+        )
+        managed = managed[: managed.index("  selfHosted:")] + managed[managed.index("  maintenance:") :]
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker_for(managed).apply(self.request, **self.kwargs)
+        self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
 
-    def test_logs_returns_ok(self):
-        """Stub: test logs method returns ok response."""
+    def test_lifecycle(self):
+        """Test deploy, describe, logs, undeploy and delete."""
+        self.apply()
+        data = self.data(self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs))
+        self.assertEqual(data["status"]["vectorstoreStatus"], "ready", data["status"])
+        self.assertTrue(data["status"]["apiKeySecret"].startswith("vectorstore_"))
+        self.assertEqual(len(self.kubernetes.applied), 1)
 
+        described = self.data(self.broker_for(self.manifest_text()).describe(self.request, **self.kwargs))
+        self.assertEqual(described["kind"], "Vectorstore")
+        self.assertEqual(described["spec"]["embeddings"]["model"], "test-embedding")
+        self.assertEqual(described["status"]["vectorCount"], 0)
+
+        logs = self.data(self.broker_for(self.manifest_text()).logs(self.request, **self.kwargs))
+        self.assertIn("vectorstore=", logs["logs"])
+
+        data = self.data(self.broker_for(self.manifest_text()).undeploy(self.request, **self.kwargs))
+        self.assertEqual(data["status"]["vectorstoreStatus"], "stopped")
+
+        self.broker_for(self.manifest_text()).delete(self.request, **self.kwargs)
+        self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
+        self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
+
+    def test_immutable_while_deployed(self):
+        """Test that a deployed Vectorstore's storage cannot change, and its embeddings model may, reloading its documents."""
+        vectorstore = self.apply()
+        self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs)
+        with self.assertRaisesRegex(SAMVectorstoreBrokerError, "selfHosted.storage"):
+            self.apply(storage="2Gi")
+
+        document = vectorstore.documents.create(  # type: ignore[attr-defined]
+            name="a.txt", source="text", content="text", sha256="b" * 64, status=VectorstoreDocumentStatus.LOADED
+        )
+        with patch("smarter.apps.vectorstore.tasks.load_vectorstore_document.delay") as delay:
+            self.apply(model="test-embedding-2")
+        delay.assert_called_once_with(document.pk)
+        document.refresh_from_db()
+        self.assertEqual(document.status, VectorstoreDocumentStatus.PENDING)
+
+    def test_get_and_example(self):
+        self.apply()
+        self.assertTrue(self.validate_get(self.broker.get(self.request, **self.kwargs)))
+        self.assertTrue(self.validate_example_manifest(self.broker.example_manifest(self.request)))
+
+    def test_staff_only(self):
+        """Test that a user who is not staff may not apply, nor delete, a Vectorstore."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.lib.drf.models import SmarterAuthToken
+
+        user, _, user_profile = mortal_user_factory(account=self.account)
+        user.is_staff = True  # API keys are only for staff
+        user.save()
+        token, key = SmarterAuthToken.objects.create(
+            user_profile=user_profile, name=f"test_vs_{self.hash_suffix}", user=user, description="t", is_active=True
+        )  # type: ignore
+        self.addCleanup(token.delete)
+        user.is_staff = False
+        user.save()
+        self.addCleanup(user_profile.delete)
+        with self.assertRaises(Exception):
+            broker = self.broker_for(self.manifest_text(), token_key=key)
+            broker.apply(broker.request, **self.kwargs)  # type: ignore[arg-type]
+        self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMVectorstoreBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_refusals_without_a_manifest_or_user_profile(self):
+        """Test the broker's refusals without a manifest, a Vectorstore, or a user profile."""
+        broker = self.broker_for(self.manifest_text())
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.logs(self.request, **self.kwargs)
+            broker.prompt(broker.request)  # type: ignore[arg-type]
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMVectorstoreBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("vectorstore", None)
+        self.assertIsNone(broker.django_orm_to_manifest_dict())
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.manifest_to_django_orm()
+        self.patch_property("user_profile", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.owned_vectorstore(SmarterJournalCliCommands.DELETE)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.get(broker.request)  # type: ignore[arg-type]
+
+    def test_apply_save_failure(self):
+        """Test that a failure to save the Vectorstore is reported as SAMVectorstoreBrokerError."""
+        broker = self.broker_for(self.manifest_text())
+        with patch.object(VectorstoreMeta, "save", side_effect=RuntimeError("database down")):
+            with self.assertRaises(SAMVectorstoreBrokerError):
+                broker.apply(broker.request, **self.kwargs)  # type: ignore[arg-type]

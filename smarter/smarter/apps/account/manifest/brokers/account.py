@@ -1,9 +1,9 @@
 # pylint: disable=W0718
-"""Smarter API Account Manifest handler"""
+"""Smarter API Account Manifest handler."""
 
 import datetime
 import traceback
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from django.core import serializers
 from rest_framework.serializers import ModelSerializer
@@ -17,10 +17,7 @@ from smarter.apps.account.manifest.models.account.spec import (
 )
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import (
-    smarter_cached_objects,
-)
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -31,6 +28,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -71,6 +69,7 @@ class SAMAccountBrokerError(SAMBrokerError):
 class SAMAccountBroker(AbstractBroker):
     """
     Handles Smarter API Account Manifest operations, including loading, validating, and parsing YAML manifests, and mapping them to Django ORM and Pydantic models.
+
     This broker transforms between Django ORM and Pydantic models, ensuring data consistency for serialization and API responses.
 
     This broker is responsible for:
@@ -111,7 +110,6 @@ class SAMAccountBroker(AbstractBroker):
     .. versionadded:: 1.0.0
 
         Initial implementation of the Smarter API Account Manifest Broker.
-
     """
 
     # override the base abstract manifest model with the Account model
@@ -121,82 +119,19 @@ class SAMAccountBroker(AbstractBroker):
     _orm_instance: Optional[Account] = None
     _orm_meta_instance: Optional[Account] = None
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SAMAccountBroker instance.
-
-        This constructor initializes the broker by calling the parent class's
-        constructor, which will attempt to bootstrap the class instance
-        with any combination of raw manifest data (in JSON or YAML format),
-        a manifest loader, or existing Django ORM models. If a manifest
-        loader is provided and its kind matches the expected kind for this broker,
-        the manifest is initialized using the loader's data.
-
-        This class can bootstrap itself in any of the following ways:
-
-        - request.body (yaml or json string)
-        - name + account (determined via authentication of the request object)
-        - SAMLoader instance
-        - manifest instance
-        - filepath to a manifest file
-
-        If raw manifest data is provided, whether as a string or a dictionary,
-        or a SAMLoader instance, the base class constructor will only goes as
-        far as initializing the loader. The actual manifest model initialization
-        is deferred to this constructor, which checks the loader's kind.
-
-        :param args: Positional arguments passed to the parent constructor.
-        :param kwargs: Keyword arguments passed to the parent constructor.
-
-        **Example:**
-
-        .. code-block:: python
-
-            broker = SAMAccountBroker(loader=loader, plugin_meta=plugin_meta)
-        """
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
-
-        :returns: ``True`` if the broker is ready, ``False`` otherwise.
-        :rtype: bool
-        """
-        retval = super().ready
-        if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
-            return False
-        retval = self._manifest is not None or self.brokered_account is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
-        return retval
-
-    @property
     def brokered_account(self) -> Optional[Account]:
         """
-        In order to disambiguate between the AccountMixin.account
+        In order to disambiguate between the AccountMixin.account.
+
         (the authenticated account making the request) and the Account
         resource being brokered, we use the term "brokered_account".
 
@@ -248,10 +183,10 @@ class SAMAccountBroker(AbstractBroker):
         **Example usage**::
 
             logger.info(broker.formatted_class_name)
-
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMAccountBroker.__name__}[{id(self)}]"
+        this_class = f".{SAMAccountBroker.__name__}[{id(self)}]"
+        return f"{parent_class}{self.formatted_text(this_class)}"
 
     @property
     def kind(self) -> str:
@@ -295,7 +230,6 @@ class SAMAccountBroker(AbstractBroker):
         .. warning::
 
             If the manifest loader or manifest metadata is missing, or if the account is not set, the manifest will not be initialized and None may be returned or an exception raised.
-
 
         **Example usage**::
 
@@ -393,9 +327,7 @@ class SAMAccountBroker(AbstractBroker):
     # Transformation methods
     ###########################################################################
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API Account manifest into a Django ORM model.
-        """
+        """Transform the Smarter API Account manifest into a Django ORM model."""
         if not isinstance(self.manifest, SAMAccount):
             raise SAMAccountBrokerError(
                 message=f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}",
@@ -404,7 +336,7 @@ class SAMAccountBroker(AbstractBroker):
             )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMAccountBrokerError(
                 message=f"Invalid config dump for {self.kind} manifest: {config_dump}",
@@ -430,6 +362,7 @@ class SAMAccountBroker(AbstractBroker):
             **config_dump,
         }
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Converts a Django ORM `Account` model instance into a Pydantic-compatible Smarter API Account manifest dictionary.
@@ -457,7 +390,6 @@ class SAMAccountBroker(AbstractBroker):
 
         .. versionchanged:: 1.0.0
             Method now ensures camelCase conversion and excludes the primary key field.
-
         """
         if self.brokered_account is None:
             raise SAMBrokerErrorNotFound(
@@ -545,10 +477,7 @@ class SAMAccountBroker(AbstractBroker):
             return None
 
     def orm_meta_instance_setter(self) -> None:
-        """
-        Override of parent method to initialize the Django ORM meta model
-        instance for the broker.
-        """
+        """Override of parent method to initialize the Django ORM meta model instance for the broker."""
         if self._orm_instance:
             logger.debug(
                 "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
@@ -596,11 +525,16 @@ class SAMAccountBroker(AbstractBroker):
 
     def cache_invalidations(self) -> None:
         """
-        Handle broker specific cache invalidation logic. Invalidates
+        Handle broker specific cache invalidation logic.
+
+        Invalidates
         the cache for the `Account` and `UserProfile` models.
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         Account.get_cached_object(invalidate=True, pk=self.brokered_account.id)  # type: ignore
+        # brokered_account is retrieved by name, which is cached separately from pk.
+        Account.get_cached_object(invalidate=True, name=self.brokered_account.name)  # type: ignore
+        Account.get_cached_object(invalidate=True, account_number=self.brokered_account.account_number)  # type: ignore
         UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
         return super().cache_invalidations()
 
@@ -619,7 +553,6 @@ class SAMAccountBroker(AbstractBroker):
             - :class:`SAMKeys`
             - :class:`SAMMetadataKeys`
             - :class:`SAMAccountSpecKeys`
-
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -627,13 +560,10 @@ class SAMAccountBroker(AbstractBroker):
 
         metadata = SAMAccountMetadata(
             name="example_account",
-            description="Example database connection",
+            description="An example Smarter API manifest for an Account",
             version="0.1.0",
-            tags=["example", "sql", "connection"],
-            annotations=[
-                {"smarter.sh/connection": "example_connection"},
-                {"smarter.sh/created_by": "smarter_sql_connection_broker"},
-            ],
+            tags=["example"],
+            annotations=[],
             accountNumber="123456789",
         )
         spec = SAMAccountSpec(
@@ -668,7 +598,7 @@ class SAMAccountBroker(AbstractBroker):
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        get the manifest(s) for the Smarter API Account.
+        Get the manifest(s) for the Smarter API Account.
 
         :param request: The HTTP request object.
         :type request: "HttpRequest"
@@ -727,7 +657,7 @@ class SAMAccountBroker(AbstractBroker):
                 logger.debug("%s.get() processing Account: %s", self.formatted_class_name, account)
                 self.brokered_account = account
                 model_dump = AccountSerializer(account).data
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error("Error in %s: %s", command, e)
@@ -765,10 +695,6 @@ class SAMAccountBroker(AbstractBroker):
         :raises SAMBrokerErrorNotReady: If the broker's account is not set.
         :raises SAMBrokerError: If an error occurs during the apply process.
 
-        .. important::
-
-            Calls ``super().apply()`` to ensure the manifest is loaded and validated before applying changes.
-
         .. caution::
 
             Fields that are not editable (such as ``id``, ``created_at``, ``updated_at``, and ``account_number``) are removed from the data before saving.
@@ -782,10 +708,8 @@ class SAMAccountBroker(AbstractBroker):
 
             - :meth:`manifest_to_django_orm`
             - :meth:`django_orm_to_manifest_dict`
-
         """
         logger.debug("%s.apply() called", self.formatted_class_name)
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -851,24 +775,24 @@ class SAMAccountBroker(AbstractBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Chat functionality is not implemented for the Smarter API Account.
+        Prompt functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
         :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
-        :raises SAMBrokerErrorNotImplemented: Always raised to indicate that chat is not implemented.
+        :raises SAMBrokerErrorNotImplemented: Always raised to indicate that prompt is not implemented.
 
-        :returns: A JSON response indicating that chat is not implemented.
+        :returns: A JSON response indicating that prompt is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.chat() called", self.formatted_class_name)
-        command = self.chat.__name__
+        logger.debug("%s.prompt() called", self.formatted_class_name)
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -917,9 +841,29 @@ class SAMAccountBroker(AbstractBroker):
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the Users that belong to this Account.
+
+        :return: A User broker for each of the Account's users.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+
+        account = self.brokered_account
+        if not account:
+            return []
+        user_profiles = UserProfile.objects.filter(account=account).select_related("user")
+        return [
+            self.dependency_broker(
+                SAMKinds.USER.value, user_profile.user, name=user_profile.user.username, user_profile=user_profile
+            )
+            for user_profile in user_profiles
+        ]
+
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             Delete functionality is not implemented for the Smarter API Account.
@@ -941,7 +885,6 @@ class SAMAccountBroker(AbstractBroker):
 
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             Deploy functionality is not implemented for the Smarter API Account.
@@ -984,7 +927,6 @@ class SAMAccountBroker(AbstractBroker):
 
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             Logs functionality is not implemented for the Smarter API Account.

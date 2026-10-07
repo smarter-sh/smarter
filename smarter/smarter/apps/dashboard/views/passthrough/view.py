@@ -38,34 +38,37 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
 
 
 class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Renders a passthrough template for the prompt app that accepts a raw JSON
-    dict for an LLM provider, passes this directly to the LLM provider API,
-    and renders the API response in the template.
+    Renders a passthrough template for the prompt app that accepts a raw JSON dict for an LLM provider, passes this directly to the LLM provider API, and renders the API response in the template.
 
     :param request: Django HTTP request object.
     :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).
+    :param kwargs: Keyword arguments, must include 'name' (llmclient name) and 'kind' (llmclient type).
     :type kwargs: dict
 
-    :returns: Rendered HTML page with chatbot manifest details, or a 404 error page if the chatbot is not found or parameters are invalid.
+    :returns: Rendered HTML page with llmclient manifest details, or a 404 error page if the llmclient is not found or parameters are invalid.
     :rtype: HttpResponse
-
 
     **Example usage**::
 
         GET /dashboard/passthrough/
-
     """
 
     template_path = "prompt/passthrough.html"
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptPassthroughView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
@@ -82,7 +85,9 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         :param request: The incoming HTTP GET request from the client.
         :type request: django.http.HttpRequest
         :param args: Additional positional arguments forwarded by the URL dispatcher.
+        :type args: tuple
         :param kwargs: Additional keyword arguments forwarded by the URL dispatcher.
+        :type kwargs: dict
         :returns: An HTTP 200 response rendering ``react/prompt-passthrough.html``
             with the passthrough context dictionary.
         :rtype: django.http.HttpResponse
@@ -124,6 +129,8 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
                 "llm_provider_id": "1",  # default value for the provider_id. The React component will set the user-selected provider_id here and use it when making requests to the api_url.
                 "template_id": "1",  # default value for the template_id. The React component will set the user-selected template_id here and use it when making requests to the api_url.
                 "provider_api_url": provider_api_url,  # list of providers (openai, googleai, anthropic, etc.) and their details (capabilities, pricing, etc.
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.generate_smarter_request_id(),
             }
         }
         self.template_path = "react/prompt-passthrough.html"

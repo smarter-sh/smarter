@@ -1,5 +1,5 @@
 """
-smarter.lib.drf.middleware
+Smarter.lib.drf.middleware
 ==========================
 
 Middleware for Smarter token authentication using SmarterTokenAuthentication.
@@ -21,10 +21,7 @@ Features
 
 Classes
 -------
-.. autosummary::
-   :toctree:
-
-   SmarterTokenAuthenticationMiddleware
+- :class:`SmarterTokenAuthenticationMiddleware`
 
 Signals
 -------
@@ -47,6 +44,7 @@ Dependencies
 
 from __future__ import annotations
 
+import inspect
 import traceback
 from collections.abc import Awaitable
 from datetime import timedelta
@@ -102,16 +100,15 @@ else:
 
 
 class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
-    """
-    Middleware for token authentication using SmarterTokenAuthentication.
-    """
+    """Middleware for token authentication using SmarterTokenAuthentication."""
 
     sync_capable = True
     async_capable = True
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        class_name = f"{__name__}.{self.__class__.__name__}"
+        return self.formatted_text(class_name)
 
     def __call__(self, request: Request) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
@@ -119,7 +116,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
             return self.__acall__(request)
 
         if self.deserves_amnesty(request.path):
-            return self.get_response(request)
+            return super().__call__(request)
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
@@ -128,7 +125,11 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
     async def __acall__(self, request: Request):
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        return await sync_to_async(self.process_request)(request)
+        # process_request() returns get_response()'s coroutine, in async mode, which must be awaited.
+        response = await sync_to_async(self.process_request)(request)
+        if inspect.isawaitable(response):
+            response = await response
+        return response
 
     def process_request(self, request: Request):
 
@@ -224,9 +225,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         return str(prefix)
 
     def extract_token(self, authorization_header: str) -> str | None:
-        """
-        Extract token from Authorization header.
-        """
+        """Extract token from Authorization header."""
 
         if not authorization_header:
             return None
@@ -258,6 +257,10 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
     @staticmethod
     def authenticate_request(request: Request):
 
+        logger.debug(
+            "%s.authenticate_request() called", logging.formatted_text(SmarterTokenAuthenticationMiddleware.__name__)
+        )
+
         request.auth = SmarterTokenAuthentication()
 
         user_auth_tuple = request.auth.authenticate(request)
@@ -277,9 +280,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         user,
         auth_obj,
     ) -> None:
-        """
-        Warn on tokens exceeding configured lifetime.
-        """
+        """Warn on tokens exceeding configured lifetime."""
 
         digest = getattr(auth_obj, "digest", None)
 

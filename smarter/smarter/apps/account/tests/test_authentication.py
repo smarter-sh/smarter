@@ -14,7 +14,6 @@ AccountReverseNames:
 
     <a href="{% url 'dashboard_account_dashboard_overview' %}">Go to Dashboard Overview</a>
 
-
     API_KEYS_LIST = "api_keys_list"
     ACCOUNT_LOGIN = "account_login"
     ACCOUNT_LOGOUT = "account_logout"
@@ -59,7 +58,6 @@ AccountReverseNames:
         path("users/", UsersView.as_view(), name=AccountReverseNames.ACCOUNT_USERS),
         path("user/<int:user_id>/", UserView.as_view(), name=AccountReverseNames.ACCOUNT_USER),
     ]
-
 """
 
 from http import HTTPStatus
@@ -91,8 +89,8 @@ logger = logging.getLogger(__name__)
 class TestLoginView(TestAccountMixin):
     """
     Test Account LoginView.
-    path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN)
 
+    path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN)
     """
 
     test_logger_prefix = logging.formatted_text(f"{__name__}.TestLoginView()")
@@ -102,10 +100,8 @@ class TestLoginView(TestAccountMixin):
         side_effect=[True, True, True, True, True, True, True, True],
     )
     def test_get_login_view_renders_for_anonymous(self, mock_waffle):
-        """
-        GET request to LoginView for anonymous user should render sign-in page with correct context.
-        """
-        request = self.request_factory()
+        """GET request to LoginView for anonymous user should render sign-in page with correct context."""
+        request = self.request_factory().get("/login/")
         request.user = AnonymousUser()  # type: ignore
         view = LoginView()
         response = view.get(request)
@@ -118,9 +114,7 @@ class TestLoginView(TestAccountMixin):
         self.assertIn(view.is_github_oauth_enabled, (True, False))
 
     def test_get_login_view_redirects_authenticated_user(self):
-        """
-        GET request to LoginView for authenticated user should redirect to root.
-        """
+        """GET request to LoginView for authenticated user should redirect to root."""
         request = self.request_factory().get("/login/")
         request.user = self.admin_user
         view = LoginView()
@@ -135,9 +129,7 @@ class TestLoginView(TestAccountMixin):
             self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_login_success(self):
-        """
-        POST valid credentials for admin_user should log in and redirect.
-        """
+        """POST valid credentials for admin_user should log in and redirect."""
         self.admin_user.set_password("12345")
         self.admin_user.save()
         data = {"email": self.admin_user.email, "password": "12345"}
@@ -159,9 +151,7 @@ class TestLoginView(TestAccountMixin):
             self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_login_invalid_password(self):
-        """
-        POST invalid password for admin_user should return bad request.
-        """
+        """POST invalid password for admin_user should return bad request."""
 
         data = {"email": self.admin_user.email, "password": "wrongpassword"}
         request = self.request_factory().post("/login/", data)
@@ -179,9 +169,7 @@ class TestLoginView(TestAccountMixin):
         )
 
     def test_post_login_unknown_user(self):
-        """
-        POST unknown email should return forbidden.
-        """
+        """POST unknown email should return forbidden."""
         data = {"email": "unknown@example.com", "password": "irrelevant"}
         request = self.request_factory().post("/login/", data)
         request.user = AnonymousUser()
@@ -198,9 +186,7 @@ class TestLoginView(TestAccountMixin):
         )
 
     def test_post_login_invalid_form(self):
-        """
-        POST with missing fields should return bad request.
-        """
+        """POST with missing fields should return bad request."""
         data = {"email": ""}  # missing password
         request = self.request_factory().post("/login/", data)
         request.user = AnonymousUser()
@@ -436,16 +422,14 @@ class TestLoginView(TestAccountMixin):
 class TestLogoutView(TestAccountMixin):
     """
     Test Account LogoutView.
-    path("login/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT)
 
+    path("login/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT)
     """
 
     test_logger_prefix = logging.formatted_text(f"{__name__}.TestLogoutView()")
 
     def test_get_logout_view_redirects_authenticated_user(self):
-        """
-        GET request to LogoutView for authenticated user should log out and redirect to root.
-        """
+        """GET request to LogoutView for authenticated user should log out and redirect to root."""
         request = self.request_factory().get("/logout/")
         request.user = self.admin_user
         middleware = SessionMiddleware(lambda request: HttpResponse())
@@ -461,9 +445,7 @@ class TestLogoutView(TestAccountMixin):
         self.assertEqual(response.url, "/")
 
     def test_get_logout_view_redirects_anonymous_user(self):
-        """
-        GET request to LogoutView for anonymous user should redirect to root (logout is idempotent).
-        """
+        """GET request to LogoutView for anonymous user should redirect to root (logout is idempotent)."""
         request = self.request_factory().get("/logout/")
         request.user = AnonymousUser()
         middleware = SessionMiddleware(lambda request: HttpResponse())
@@ -477,9 +459,7 @@ class TestLogoutView(TestAccountMixin):
         self.assertEqual(response.url, "/")
 
     def test_post_logout_view_redirects_authenticated_user(self):
-        """
-        POST request to LogoutView for authenticated user should log out and redirect to root.
-        """
+        """POST request to LogoutView for authenticated user should log out and redirect to root."""
         request = self.request_factory().post("/logout/")
         request.user = self.admin_user
         middleware = SessionMiddleware(lambda request: HttpResponse())
@@ -495,9 +475,7 @@ class TestLogoutView(TestAccountMixin):
         self.assertEqual(response.url, "/")
 
     def test_post_logout_view_redirects_anonymous_user(self):
-        """
-        POST request to LogoutView for anonymous user should redirect to root (logout is idempotent).
-        """
+        """POST request to LogoutView for anonymous user should redirect to root (logout is idempotent)."""
         request = self.request_factory().post("/logout/")
         request.user = AnonymousUser()
         middleware = SessionMiddleware(lambda request: HttpResponse())
@@ -515,15 +493,14 @@ class TestLogoutView(TestAccountMixin):
 class TestAccountInactiveView(TestAccountMixin):
     """
     Test AccountInactiveView.
+
     path("inactive/", AccountInactiveView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE)
     """
 
     test_logger_prefix = logging.formatted_text(f"{__name__}.TestAccountInactiveView()")
 
     def test_get_inactive_view_renders_authenticated_user(self):
-        """
-        GET request to AccountInactiveView for authenticated user should render the inactive page.
-        """
+        """GET request to AccountInactiveView for authenticated user should render the inactive page."""
         request = self.request_factory().get("/inactive/")
         request.user = self.admin_user
         middleware = SessionMiddleware(lambda request: HttpResponse())
@@ -536,9 +513,7 @@ class TestAccountInactiveView(TestAccountMixin):
         )
 
     def test_get_inactive_view_renders_anonymous_user(self):
-        """
-        GET request to AccountInactiveView for anonymous user should render the inactive page.
-        """
+        """GET request to AccountInactiveView for anonymous user should render the inactive page."""
         request = self.request_factory().get("/inactive/")
         request.user = AnonymousUser()
         middleware = SessionMiddleware(lambda request: HttpResponse())
@@ -554,6 +529,7 @@ class TestAccountInactiveView(TestAccountMixin):
 class TestAccountRegisterView(TestAccountMixin):
     """
     Test AccountRegisterView.
+
     path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER)
     """
 
@@ -574,9 +550,7 @@ class TestAccountRegisterView(TestAccountMixin):
         super().tearDown()
 
     def test_get_register_view_renders_for_anonymous(self):
-        """
-        GET request to AccountRegisterView for anonymous user should render sign-up page with form.
-        """
+        """GET request to AccountRegisterView for anonymous user should render sign-up page with form."""
         request = self.request_factory().get("/register/")
         request.user = None  # type: ignore
         view = AccountRegisterView()
@@ -586,9 +560,7 @@ class TestAccountRegisterView(TestAccountMixin):
         )
 
     def test_get_register_view_redirects_authenticated_user(self):
-        """
-        GET request to AccountRegisterView for authenticated user should redirect to root.
-        """
+        """GET request to AccountRegisterView for authenticated user should redirect to root."""
         request = self.request_factory().get("/register/")
         request.user = self.admin_user
         view = AccountRegisterView()
@@ -601,9 +573,7 @@ class TestAccountRegisterView(TestAccountMixin):
         self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_register_view_valid_form(self):
-        """
-        POST valid registration data should create user, log in, and redirect to /welcome/.
-        """
+        """POST valid registration data should create user, log in, and redirect to /welcome/."""
         data = {
             "email": self.test_create_username,
             "password": "testpass123",
@@ -624,9 +594,7 @@ class TestAccountRegisterView(TestAccountMixin):
             self.assertEqual(response.url, "/welcome/")  # type: ignore
 
     def test_post_register_view_invalid_form(self):
-        """
-        POST invalid registration data should re-render the form with errors.
-        """
+        """POST invalid registration data should re-render the form with errors."""
         data = {"email": "", "password": ""}  # All fields missing/invalid
         request = self.request_factory().post("/register/", data)
         request.user = AnonymousUser()
@@ -645,6 +613,7 @@ class TestAccountRegisterView(TestAccountMixin):
 class TestAccountActivationEmailView(TestAccountMixin):
     """
     Test AccountActivationEmailView.
+
     path("activation/", AccountActivationEmailView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATION)
     """
 
@@ -655,11 +624,9 @@ class TestAccountActivationEmailView(TestAccountMixin):
         self.url = reverse(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ACTIVATION)
         logger.debug("%s.setUp() URL set to %s", self.test_logger_prefix, self.url)
 
-    @patch("smarter.apps.account.views.authentication.account_views.email_helper")
-    def test_get_authenticated_admin_user_sends_email_and_renders(self, mock_email_helper):
-        """
-        GET request with authenticated admin user should send activation email and render response.
-        """
+    @patch("smarter.apps.account.views.authentication.account_views.infrastructure")
+    def test_get_authenticated_admin_user_sends_email_and_renders(self, mock_infrastructure):
+        """GET request with authenticated admin user should send activation email and render response."""
         request = self.request_factory().get(self.url)
         request.user = self.admin_user
         view = AccountActivationEmailView()
@@ -667,13 +634,12 @@ class TestAccountActivationEmailView(TestAccountMixin):
         self.assertEqual(
             response.status_code, HTTPStatus.OK, f"Expected OK for authenticated GET but got {response.status_code}"
         )
-        mock_email_helper.send_email.assert_called_once()
+        mock_infrastructure.email.send_email.assert_called_once()
+        self.assertFalse(mock_infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
 
-    @patch("smarter.apps.account.views.authentication.account_views.email_helper")
-    def test_get_authenticated_non_admin_user_sends_email_and_renders(self, mock_email_helper):
-        """
-        GET request with authenticated non-admin user should send activation email and render response.
-        """
+    @patch("smarter.apps.account.views.authentication.account_views.infrastructure")
+    def test_get_authenticated_non_admin_user_sends_email_and_renders(self, mock_infrastructure):
+        """GET request with authenticated non-admin user should send activation email and render response."""
         request = self.request_factory().get(self.url)
         request.user = self.non_admin_user
         view = AccountActivationEmailView()
@@ -681,12 +647,11 @@ class TestAccountActivationEmailView(TestAccountMixin):
         self.assertEqual(
             response.status_code, HTTPStatus.OK, f"Expected OK for authenticated GET but got {response.status_code}"
         )
-        mock_email_helper.send_email.assert_called_once()
+        mock_infrastructure.email.send_email.assert_called_once()
+        self.assertFalse(mock_infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
 
     def test_get_anonymous_user_returns_not_found(self):
-        """
-        GET request with anonymous user should return not found.
-        """
+        """GET request with anonymous user should return not found."""
         request = self.request_factory().get(self.url)
         request.user = AnonymousUser()
         view = AccountActivationEmailView()
@@ -698,9 +663,7 @@ class TestAccountActivationEmailView(TestAccountMixin):
         )
 
     def test_get_user_without_is_authenticated_returns_not_found(self):
-        """
-        GET request with user missing is_authenticated should return not found.
-        """
+        """GET request with user missing is_authenticated should return not found."""
         request = self.request_factory().get(self.url)
         request.user = AnonymousUser()
         view = AccountActivationEmailView()

@@ -1,43 +1,124 @@
 # The Smarter Project
 
-[![Latest Release](https://img.shields.io/github/v/release/smarter-sh/smarter?label=release)](https://github.com/smarter-sh/smarter/releases)
 ![Build Status](https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main)
-![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
-[![Documentation Status](https://readthedocs.org/projects/smarter/badge/?version=latest)](https://docs.smarter.sh/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)<br>[![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
+![Test Status](https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main)
+![Deploy Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
+[![Python coverage](https://img.shields.io/codecov/c/github/smarter-sh/smarter/main?flag=python&label=Python%20coverage&logo=codecov)](https://codecov.io/gh/smarter-sh/smarter?flags%5B0%5D=python)
+[![React coverage](https://img.shields.io/codecov/c/github/smarter-sh/smarter/main?flag=react&label=React%20coverage&logo=codecov)](https://codecov.io/gh/smarter-sh/smarter?flags%5B0%5D=react)
+[![Latest Release](https://img.shields.io/github/v/release/smarter-sh/smarter?label=release)](https://github.com/smarter-sh/smarter/releases)
+[![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
 [![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
-[![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>[![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-6.0-green?logo=django)](https://www.djangoproject.com/)
-[![Pydantic](https://img.shields.io/badge/Pydantic-2.13-blue?logo=pydantic)](https://docs.pydantic.dev/)
-[![Django Rest Framework](https://img.shields.io/badge/Django%20Rest%20Framework-3.17-3a3a3a?logo=django)](https://www.django-rest-framework.org/)<br>[![hack.d Lawrence McDaniel](https://img.shields.io/badge/Author-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
+[![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)
+[![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>
 
-This repo contains source code for the Smarter REST API and the web based
-authoring platform.
+Smarter is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
+for teaching AI.
 
-Smarter is a declarative extensible AI authoring and resource management system.
-It is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
-for teaching cloud computing at scale, and generative AI prompt engineering
-techniques including advanced use of LLM tool calling involving secure
-integrations to remote data sources like Sql databases and remote APIs.
+The Smarter Project is an open source, cloud-native
+[platform](https://docs.smarter.sh/en/latest/smarter-platform.html) and
+[developer framework](https://docs.smarter.sh/en/latest/smarter-framework.html)
+for building sophisticated AI applications **without writing a single line of
+Python**. An application that searches the web, queries your databases, calls
+your APIs, uses the tools of any MCP server, and defends itself against prompt
+injection and data leaks is described in one short YAML file, and deployed with
+one command:
+
+```console
+smarter apply -f my-ai-application.yaml
+```
+
+![Smarter Manifest](https://cdn.smarter.sh/docs/smarter-framework/smarter-manifest.png)
+![Smarter Web Console](https://cdn.smarter.sh/github.com/smarter-sh/react/dashboard-screenshot.png)
+
+## Why Smarter?
+
+- **No code. Just a manifest.** A [Smarter Manifest (SAM)](https://docs.smarter.sh/en/latest/smarter-framework/smarter-manifests.html)
+  declares **what** an application is, rather than programming **how** it
+  works. Prompt engineers, business analysts, and product managers can build,
+  read, and change production AI applications themselves, and manifests are
+  versioned, reviewed, and deployed from CI/CD like the rest of your
+  infrastructure.
+- **Every way to reach external data.** Each approach is a
+  [Resource](https://docs.smarter.sh/en/latest/smarter-resources.html) that
+  you declare in a manifest, with no code: [Remote APIs](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/api.html),
+  [Remote SQL](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/sql.html),
+  [MCP servers](https://docs.smarter.sh/en/latest/smarter-resources/smarter-mcpclient.html),
+  [the web](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/websearch.html),
+  [skills](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/skill.html),
+  and [your own documents](https://docs.smarter.sh/en/latest/smarter-resources/smarter-vectorstore.html).
+- **Governed from the first prompt.** Deterministic
+  [Guardrails](https://docs.smarter.sh/en/latest/smarter-resources/smarter-guardrail.html)
+  inspect every message on its way to the model and every reply on its way
+  back, and every intervention is recorded.
+- **Contained by design.** No code execution, private networks, hardened
+  outbound requests, role-based access at every layer, and credentials the
+  model never holds. See [Security](https://docs.smarter.sh/en/latest/smarter-platform/security.html).
+- **Composed like an orchestra.** An
+  [LLMClient](https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmclient.html)
+  combines a model from any provider with the plugins, MCP clients, and
+  guardrails it needs, simply by listing them by name, and an
+  [Orchestrator](https://docs.smarter.sh/en/latest/smarter-resources/smarter-orchestrator.html)
+  coordinates several LLMClients in multi-agent workflows.
+- **Built for teams.** Every Resource has an owner and is shared with everyone
+  in the owner's [Account](https://docs.smarter.sh/en/latest/smarter-resources/smarter-account.html).
+- **Runs at scale, on your infrastructure.** Start with a single Docker
+  container on your laptop, then go to production on Kubernetes with the
+  [Smarter Helm chart](https://artifacthub.io/packages/helm/project-smarter/smarter).
+  No managed-service dependency and no vendor lock-in.
 
 ## At a Glance
 
-- [1-click Quickstart](https://github.com/smarter-sh/smarter-deploy) deployment
-  with Docker.
-- declarative manifest based resource management
-- no-code LLM tool call extensibility that facilitates integrations to remote
-  data sources like Sql databases and remote APIs
-- [command-line interface](https://smarter.sh/cli) for Windows, macOS, Linux
-  and Docker
-- [rest api](https://platform.smarter.sh/docs/swagger/)
-- web console / prompt engineer workbench
-- robust developer ecosystem: [PyPi](https://github.com/smarter-sh/smarter-python)
-  , [NPM](https://www.npmjs.com/package/@smarter.sh/ui-chat), [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest)
-  and more
-- publicly accessible [online documentation](https://platform.smarter.sh/docs/)
-  and self onboarding resources
-- open source UI components for jump starting projects
+- **Get started**:
+  [Quick Start Guide](https://docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html) |
+  [Prerequisites](https://docs.smarter.sh/en/latest/smarter-platform/prerequisites.html) |
+  [Troubleshooting](https://docs.smarter.sh/en/latest/smarter-platform/trouble-shooting.html) |
+  [Tutorial](https://docs.smarter.sh/learn/)
+- **Platform**
+  - A proxy server that gives secure, governed, auditable access to AI
+    providers and resources, without exposing secrets or the underlying vendor
+    accounts.
+  - Build every AI resource with declarative YAML manifests, with no Python
+    programming, much as you would with [Kubernetes](https://kubernetes.io/).
+  - Manage resources with the
+    [web console](https://docs.smarter.sh/en/latest/smarter-platform/smarter-web-console.html),
+    the [REST API](https://docs.smarter.sh/en/latest/smarter-framework/smarter-api.html),
+    and the [command-line interface](https://smarter.sh/cli).
+  - Runs at scale on Kubernetes, with automatic horizontal scaling of
+    application servers and background workers.
+  - Built-in [logging](https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/smarter-journal.html),
+    [cost accounting](https://docs.smarter.sh/en/latest/smarter-platform/cost-accounting.html),
+    and [security](https://docs.smarter.sh/en/latest/smarter-platform/security.html).
+- **Knowledge and tools**
+  - API, SQL, Websearch, Skill, and Static
+    [Plugins](https://docs.smarter.sh/en/latest/smarter-resources/smarter-plugin.html).
+  - [MCPClients](https://docs.smarter.sh/en/latest/smarter-resources/smarter-mcpclient.html)
+    for the Model Context Protocol ecosystem.
+  - [Vectorstores](https://docs.smarter.sh/en/latest/smarter-resources/smarter-vectorstore.html)
+    for semantic search over your own content.
+- **Trust and safety**
+  - Input and output Guardrails for moderation, self-harm, personal data, data
+    subject requests, leaked secrets, profanity, fabricated citations, prompt
+    injection, jailbreaks, and code injection.
+  - End-to-end audit, from each
+    [Prompt](https://docs.smarter.sh/en/latest/smarter-resources/smarter-prompt.html)
+    back to the Account that authorized it.
+- **Models and workflows**
+  - Works with many [AI model providers](https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html),
+    including OpenAI, Google AI, Meta AI, and DeepSeek, as well as self-hosted
+    models with [LLMHost](https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmhost.html).
+  - Multi-agent workflows with Orchestrator.
+  - A prompt engineering workbench for testing applications before you deploy
+    them.
+- **Developer framework**
+  - For when you do want to write code: built on Django, Django REST Framework,
+    and Pydantic, and the same framework that Smarter itself is built on.
+  - Automated AWS cloud infrastructure and Kubernetes management.
+  - A [React component](https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/smarter-chat.html)
+    that adds a Smarter chat to any web page.
+  - [Python SDK](https://pypi.org/project/smarter-api/),
+    [NPM packages](https://www.npmjs.com/package/@smarter.sh/ui-chat), and a
+    [VS Code extension](https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest).
 
 ## Quickstart
 
@@ -118,7 +199,7 @@ Kubernetes, on-site in your data center or in the cloud.
 **Smarter** is cost effective when running at scale. It is extensible and
 architected on the philosophy of a compact core that does not require
 customization nor forking. It is horizontally scalable. It is natively
-multi-tenant, and can be installed alongside your existing systems. ## Quickstart
+multi-tenant, and can be installed alongside your existing systems.
 
 ## Helm Chart
 

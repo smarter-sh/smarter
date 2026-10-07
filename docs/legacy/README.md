@@ -62,7 +62,7 @@ _Why do we use it: We're less interested in NodeJS itself as opposed to its pack
 
 [Django](https://www.djangoproject.com/) is a free and open-source, Python-based web framework that runs on a web server. It follows the model–template–views architectural pattern. It is community supported and maintained by the Django Software Foundation.
 
-_Why do we use it: Aside from being a fantastic web framework, Django is arguably the best way to integrate Python to sophisticated backing services like MySQL, Redis and Celery. Django's Object Relational Model is unparalled in this regard._
+_Why do we use it: Aside from being a fantastic web framework, Django is arguably the best way to integrate Python to sophisticated backing services like MariaDB, Redis and Celery. Django's Object Relational Model is unparalled in this regard._
 
 ### Django REST Framework
 

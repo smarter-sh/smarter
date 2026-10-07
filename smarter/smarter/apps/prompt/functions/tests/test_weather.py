@@ -1,14 +1,11 @@
-"""
-Test mixins for the plugin module.
-"""
-
-import logging
+"""Test mixins for the plugin module."""
 
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
     Function,
 )
 
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -27,19 +24,15 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class GetCurrentWeather(SmarterTestBase):
-    """
-    Test get_current_weather() functions.
-    """
+    """Test get_current_weather() functions."""
 
     def test_get_current_weather(self):
         """Test get_current_weather() function."""
-        location = "Cambridge, MA, near Kendall Square"
-        unit = "METRIC"
         function = Function(
             name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
         )
         tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
-        json_result = get_current_weather(tool_call=tool_call, location=location, unit=unit)
+        json_result = get_current_weather(tool_call=tool_call)
         self.assertIsInstance(json_result, list)
         logger.info("json_result: %s", json_result)
         logger.info("type of json_result: %s", type(json_result))
@@ -47,12 +40,9 @@ class GetCurrentWeather(SmarterTestBase):
 
     def test_get_current_weather2(self):
         """Test get_current_weather() function with default unit."""
-        location = "Cambridge, MA, near Kendall Square"
-        function = Function(
-            name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
-        )
+        function = Function(name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square"}')
         tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
-        json_result = get_current_weather(tool_call, location=location)
+        json_result = get_current_weather(tool_call)
         self.assertIsInstance(json_result, list)
         logger.info("json_result: %s", json_result)
         logger.info("type of json_result: %s", type(json_result))

@@ -1,25 +1,24 @@
 # pylint: disable=W0613,C0115,R0913
 """
-Celery tasks for chat app.
+Celery tasks for prompt app.
 
-These tasks are i/o intensive operations for creating chat and plugin history records with
+These tasks are i/o intensive operations for creating prompt and plugin history records with
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
 """
 
-import logging
-
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.workers.celery import app
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
 
 
 def should_log(level):
@@ -31,61 +30,71 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_level = logger.getEffectiveLevel()
 module_prefix = "smarter.apps.prompt.tasks."
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_chat_history(chat_id, request, response, messages):
-    logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_chat_history()"), chat_id)
+def create_prompt_history(prompt_id, request, response, messages):
+    logger.debug("%s prompt_id: %s", formatted_text(module_prefix + "create_prompt_history()"), prompt_id)
     try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist:
-        logger.error("%s chat_id: %s does not exist", formatted_text(module_prefix + "create_chat_history()"), chat_id)
+        prompt = Prompt.objects.get(id=prompt_id)
+    except Prompt.DoesNotExist:
+        logger.error(
+            "%s prompt_id: %s does not exist", formatted_text(module_prefix + "create_prompt_history()"), prompt_id
+        )
         return
-    ChatHistory.objects.create(chat=chat, request=request, response=response, messages=messages)
-
-
-def aggregate_chat_history():
-    """summarize detail chatbot history into aggregate records."""
-    logger.info("%s", formatted_text(module_prefix + "aggregate_chat_history()"))
+    PromptHistory.objects.create(prompt=prompt, request=request, response=response, messages=messages)
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_chat(session_key, chatbot_id):
+def aggregate_prompt_history():
+    """Summarize detail llmclient history into aggregate records."""
+    logger.debug("%s", formatted_text(module_prefix + "aggregate_prompt_history()"))
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+)
+def create_prompt(session_key, llmclient_id):
     """
-    Create chat record with flattened LLM response.
+    Create prompt record with flattened LLM response.
+
     DELETE THIS? IT IS NOT USED.
     """
-    chatbot = ChatBot.objects.get(id=chatbot_id)
-    Chat.objects.create(session_key=session_key, chatbot=chatbot)
+    llmclient = LLMClient.objects.get(id=llmclient_id)
+    Prompt.objects.create(session_key=session_key, llmclient=llmclient)
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response):
-    """Create chat tool call history record."""
-    logger.info("%s", formatted_text(module_prefix + "create_chat_tool_call_history()"))
-    chat = None
+def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
+    """Create prompt tool call history record."""
+    logger.debug("%s", formatted_text(module_prefix + "create_prompt_tool_call_history()"))
+    prompt = None
     plugin_meta = None
 
     try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist as e:
-        raise SmarterValueError(f"Chat with id {chat_id} does not exist") from e
+        prompt = Prompt.objects.get(id=prompt_id)
+    except Prompt.DoesNotExist as e:
+        raise SmarterValueError(f"Prompt with id {prompt_id} does not exist") from e
 
     try:
         if plugin_meta_id:
@@ -93,8 +102,8 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
     except PluginMeta.DoesNotExist as e:
         raise SmarterValueError(f"PluginMeta with id {plugin_meta_id} does not exist") from e
 
-    ChatToolCall.objects.create(
-        chat=chat,
+    PromptToolCall.objects.create(
+        prompt=prompt,
         plugin=plugin_meta,
         function_name=function_name,
         function_args=function_args,
@@ -105,20 +114,20 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_chat_plugin_usage(*args, **kwargs):
+def create_prompt_plugin_usage(*args, **kwargs):
     """Create plugin usage record."""
-    chat_id = kwargs.get("chat_id", None)
+    prompt_id = kwargs.get("prompt_id", None)
     plugin_id = kwargs.get("plugin_id", None)
 
-    logger.info(
-        "%s chat_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), chat_id, plugin_id
+    logger.debug(
+        "%s prompt_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), prompt_id, plugin_id
     )
-    if chat_id is None:
-        raise SmarterValueError("chat_id is required")
+    if prompt_id is None:
+        raise SmarterValueError("prompt_id is required")
 
     if plugin_id is None:
         raise SmarterValueError("plugin_id is required")
@@ -127,17 +136,17 @@ def create_chat_plugin_usage(*args, **kwargs):
     if input_text is None:
         raise SmarterValueError("input_text is required")
     try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist as e:
-        raise SmarterValueError(f"Chat with id {chat_id} does not exist") from e
+        prompt = Prompt.objects.get(id=prompt_id)
+    except Prompt.DoesNotExist as e:
+        raise SmarterValueError(f"Prompt with id {prompt_id} does not exist") from e
 
     try:
         plugin_meta = PluginMeta.objects.get(id=plugin_id)
     except PluginMeta.DoesNotExist as e:
         raise SmarterValueError(f"PluginMeta with id {plugin_id} does not exist") from e
 
-    ChatPluginUsage.objects.create(
-        chat=chat,
+    PromptPluginUsage.objects.create(
+        prompt=prompt,
         plugin=plugin_meta,
         input_text=input_text,
     )

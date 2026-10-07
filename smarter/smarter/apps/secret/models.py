@@ -1,12 +1,12 @@
-"""Secret models"""
+"""Secret models."""
 
-import logging
 from typing import Optional
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 # smarter stuff
@@ -24,6 +24,7 @@ from smarter.apps.secret.signals import (
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -90,6 +91,35 @@ class Secret(MetaDataWithOwnershipModel):
     )
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
 
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.secret.urls import SecretReverseNames
+
+        return reverse(
+            f"{SecretReverseNames.namespace}:{SecretReverseNames.detailview}",
+            kwargs={"hashed_id": self.hashed_id},  # type: ignore
+        )
+
+    @property
+    def ready(self) -> bool:
+        return super().ready and self.encrypted_value is not None
+
     def save(self, *args, **kwargs):
         """
         Encrypt and persist the secret value for this instance.
@@ -106,7 +136,6 @@ class Secret(MetaDataWithOwnershipModel):
 
             Only the encrypted value is stored in the database; the plaintext value is never persisted.
 
-
         .. note::
 
             Emits a signal on creation or edit for audit and notification purposes.
@@ -119,7 +148,6 @@ class Secret(MetaDataWithOwnershipModel):
                 encrypted_value=Secret.encrypt("my-api-key")
             )
             secret.save()
-
         """
         is_new = self.pk is None
         if not self.name or not self.encrypted_value:
@@ -152,7 +180,6 @@ class Secret(MetaDataWithOwnershipModel):
         **Example usage**::
 
             secret_value = secret.get_secret(update_last_accessed=True)
-
         """
         try:
             if update_last_accessed:
@@ -181,7 +208,6 @@ class Secret(MetaDataWithOwnershipModel):
 
             if secret.is_expired():
                 print("This secret is no longer valid.")
-
         """
         if not self.expires_at:
             return False
@@ -221,7 +247,6 @@ class Secret(MetaDataWithOwnershipModel):
         .. seealso::
 
             :meth:`get_fernet` -- Returns the Fernet encryption object.
-
         """
         if not value or not isinstance(value, str):
             raise SmarterValueError("Value must be a non-empty string")
@@ -255,7 +280,6 @@ class Secret(MetaDataWithOwnershipModel):
         .. seealso::
 
             :meth:`encrypt` -- Uses the Fernet object to encrypt values.
-
         """
         encryption_key = smarter_settings.fernet_encryption_key.get_secret_value()
         if not encryption_key:
@@ -277,7 +301,7 @@ class Secret(MetaDataWithOwnershipModel):
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
         **kwargs,
-    ) -> Optional["Secret"]:
+    ) -> "Secret":
         """
         Retrieve a model instance using caching to optimize performance.
 
@@ -301,7 +325,7 @@ class Secret(MetaDataWithOwnershipModel):
         :param account: The account associated with the model instance.
 
         :returns: The model instance if found, otherwise None.
-        :rtype: Optional[Secret]
+        :rtype: Secret
         """
         logger_prefix = formatted_text(__name__ + "." + Secret.__name__ + ".get_cached_object()")
         logger.debug(
@@ -328,11 +352,13 @@ class Secret(MetaDataWithOwnershipModel):
         if isinstance(retval, Secret):
             return retval
         logger.debug(
-            "%s super().get_cached_object() did not return a Secret instance. Got: %s. Returning None.",
+            "%s super().get_cached_object() did not return a Secret instance. Got: %s. Raising DoesNotExist.",
             logger_prefix,
             type(retval),
         )
-        return None
+        raise Secret.DoesNotExist(
+            f"Secret with pk={pk}, name={name}, user_profile={user_profile}, account={account} does not exist."
+        )
 
 
 __all__ = ["Secret"]

@@ -1,8 +1,5 @@
-"""
-URLs for Smarter web console.
-"""
+"""URLs for Smarter web console."""
 
-import logging
 import sys
 
 from django.apps import apps
@@ -11,7 +8,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
 from django.contrib.admindocs import urls as admindocs_urls
-from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from django.views.static import serve
@@ -26,6 +22,8 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
+from smarter.apps.account.views.budget import urls as budget_urls
+from smarter.apps.account.views.budget.const import namespace as budget_namespace
 from smarter.apps.account.views.password_management import (
     PasswordConfirmView,
     PasswordResetRequestView,
@@ -33,7 +31,6 @@ from smarter.apps.account.views.password_management import (
 )
 from smarter.apps.api import urls
 from smarter.apps.api.const import namespace as api_namespace
-from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
 from smarter.apps.connection.const import namespace as connection_namespace
 from smarter.apps.dashboard import urls as dashboard_urls
@@ -51,32 +48,43 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.guardrail import urls as guardrail_urls
+from smarter.apps.guardrail.const import namespace as guardrail_namespace
+from smarter.apps.infrastructure import urls as infrastructure_urls
+from smarter.apps.infrastructure.const import namespace as infrastructure_namespace
+from smarter.apps.llmclient import urls as llmclient_urls
+from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.llmclient.const import namespace as llmclient_namespace
+from smarter.apps.llmhost import urls as llmhost_urls
+from smarter.apps.llmhost.const import namespace as llmhost_namespace
+from smarter.apps.mcpclient import urls as mcp_urls
+from smarter.apps.mcpclient.const import namespace as mcp_namespace
+from smarter.apps.orchestrator import urls as orchestrator_urls
+from smarter.apps.orchestrator.const import namespace as orchestrator_namespace
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
-from smarter.apps.prompt.views.detailview import ChatConfigView
+from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.proxy import urls as proxy_urls
+from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorsearch import urls as vectorsearch_urls
+from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterSwitchAdmin
+from smarter.lib.drf import urls as drf_urls
+from smarter.lib.drf.const import namespace as drf_namespace
 
 logger = logging.getLogger(__name__)
-
-
-def session_test_view(request):
-    """
-    Deprecated?
-    """
-    request.session["test_key"] = "test_value"
-    request.session.modified = True  # Ensure session is saved
-    return JsonResponse({"session_key": request.session.session_key, "test_key": request.session.get("test_key")})
 
 
 # -----------------------------------------------------------------------------
@@ -87,7 +95,8 @@ admin.autodiscover()
 
 Switch = get_waffle_switch_model()
 """
-Add a custom admin site that is accessible to staff users, but excludes
+Add a custom admin site that is accessible to staff users, but excludes.
+
 superuser-only models.
 """
 smarter_restricted_admin_site.register(Switch, SmarterSwitchAdmin)
@@ -99,21 +108,23 @@ EXCLUDED_MODELS = [
     "waffle.Flag",
 ]
 """
-superuser-only models to exclude from registration with
+Superuser-only models to exclude from registration with.
+
 smarter_restricted_admin_site, which is accessible to staff users.
 """
 
 SMARTER_APP_LABELS = [
     "account",
     "api",
-    "chatbot",
+    "llmclient",
     "plugin",
     "prompt",
     "provider",
     "vectorstore",
 ]
 """
-app labels that are independently registered at the app level
+App labels that are independently registered at the app level.
+
 using the admin module. These are granuarly registered with the
 appropriate permission configuration at the app level, so we can skip them here
 when we loop through all models for registration with smarter_restricted_admin_site.
@@ -159,24 +170,31 @@ urlpatterns = [
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
     path("api/", include(urls, namespace=api_namespace)),
+    path("authtoken/", include(drf_urls, namespace=drf_namespace)),
+    path("budget/", include(budget_urls, namespace=budget_namespace)),
     path("connection/", include(connection_urls, namespace=connection_namespace)),
+    path("guardrail/", include(guardrail_urls, namespace=guardrail_namespace)),
+    path("infrastructure/", include(infrastructure_urls, namespace=infrastructure_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
+    path("llmclient/", include(llmclient_urls, namespace=llmclient_namespace)),
+    path("llmhost/", include(llmhost_urls, namespace=llmhost_namespace)),
+    path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
+    path("orchestrator/", include(orchestrator_urls, namespace=orchestrator_namespace)),
     path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
+    path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
-    path("session-test/", session_test_view, name="session_test"),
-    path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
-    path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
+    path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
-    # Chatbots.
+    # LLMClients.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
     # -----------------------------------
-    path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
-    path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
+    path("prompt/", DefaultLLMClientApiView.as_view(), name=f"{name_prefix}_chat"),
+    path("config/", PromptConfigView.as_view(), name=f"{name_prefix}_config"),
     # -----------------------------------
     # password management
     # -----------------------------------
@@ -221,6 +239,28 @@ urlpatterns = [
     path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
 
+if smarter_settings.enable_proxy:
+    urlpatterns += [
+        path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
+    ]
+    logger.info("%s Proxy web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )
+if smarter_settings.enable_vectorstore:
+    urlpatterns += [
+        path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
+    ]
+    logger.info("%s Vectorstore web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list
@@ -228,23 +268,15 @@ urlpatterns = [
 urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
 if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_settings.debug_mode and not "test" in sys.argv:
-    # we need to limit this to local because the debug toolbar is only installed on the local build
-    # debug_model == True does not not guarantee that the debug toolbar is actually installed
-    try:
-        import debug_toolbar
+    import debug_toolbar
 
-        urlpatterns += [
-            path("__debug__/", include(debug_toolbar.urls)),
-        ]
-        logger.debug(
-            "%s Debug mode is enabled, and debug_toolbar is installed. Added debug_toolbar URLs to urlpatterns.",
-            formatted_text(__name__),
-        )
-    except ImportError:
-        logger.warning(
-            "%s Debug mode is enabled, but debug_toolbar is not installed. Install debug_toolbar to use the Django Debug Toolbar.",
-            formatted_text(__name__),
-        )
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
+    logger.debug(
+        "%s added debug_toolbar URLs to urlpatterns.",
+        logging.formatted_text(__name__),
+    )
 
 
 __all__ = ["urlpatterns"]

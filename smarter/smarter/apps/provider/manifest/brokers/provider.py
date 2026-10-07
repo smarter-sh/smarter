@@ -1,9 +1,8 @@
 # pylint: disable=W0718
-"""Smarter API Provider Manifest handler"""
+"""Smarter API Provider Manifest handler."""
 
 import datetime
-import logging
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.http import HttpRequest
 
@@ -19,7 +18,11 @@ from smarter.apps.provider.manifest.models.provider.spec import (
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.apps.secret.models import Secret
+from smarter.common.utils.decorators import camel_case
+from smarter.lib import logging
 from smarter.lib.django import waffle
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -30,6 +33,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -51,6 +55,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 MAX_RESULTS = 1000
 """
 Maximum number of results to return for list operations.
+
 This limit helps prevent performance issues and excessive data retrieval.
 
 TODO: Make this configurable via smarter_settings.
@@ -67,7 +72,7 @@ class SAMProviderBrokerError(SAMBrokerError):
 
 class SAMProviderBroker(AbstractBroker):
     """
-    Smarter API Provider Manifest Broker
+    Smarter API Provider Manifest Broker.
 
     This class manages the lifecycle of Smarter API Provider manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
     **Responsibilities:**
@@ -98,13 +103,17 @@ class SAMProviderBroker(AbstractBroker):
     .. todo::
 
        Make the maximum results for list operations configurable via `smarter_settings`.
-
     """
 
     # override the base abstract manifest model with the Provider model
     _manifest: Optional[SAMProvider] = None
     _pydantic_model: Type[SAMProvider] = SAMProvider
     _provider: Optional[Provider] = None
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        logger.info(msg)
 
     @property
     def provider(self) -> Optional[Provider]:
@@ -125,7 +134,27 @@ class SAMProviderBroker(AbstractBroker):
 
            - :class:`smarter.apps.provider.models.Provider`
         """
+        if self._provider is None and self.name and self.account:
+            self._provider = Provider.objects.filter(user_profile__account=self.account, name=self.name).first()
         return self._provider
+
+    @property
+    def logo_url(self) -> Optional[str]:
+        """
+        Return the Provider's logo as a URL, if it has one.
+
+        A manifest may set the logo to an absolute URL, which the ImageField
+        stores as its file name. Return that as-is: ``logo.url`` would
+        prefix it with the storage backend's base URL, which yields a bogus
+        CDN URL under S3 and an invalid relative path under FileSystemStorage.
+
+        :returns: The logo URL, or `None` if the Provider has no logo.
+        """
+        if not self.provider or not self.provider.logo:
+            return None
+        if SmarterValidator.is_valid_url(self.provider.logo.name):
+            return self.provider.logo.name
+        return self.provider.logo.url
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -141,7 +170,6 @@ class SAMProviderBroker(AbstractBroker):
 
            The returned dictionary may include fields that are not editable in the Django ORM model. Ensure you filter out read-only fields before saving.
 
-
         **Example usage:**
 
         .. code-block:: python
@@ -155,11 +183,10 @@ class SAMProviderBroker(AbstractBroker):
 
            - :meth:`django_orm_to_manifest_dict`
            - :class:`smarter.apps.account.models.Provider`
-
         """
         metadata = super().manifest_to_django_orm()
         dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
-        dump = self.camel_to_snake(dump)
+        dump = self.to_snake_case(dump)
         if not isinstance(self.manifest, SAMProvider):
             raise SAMProviderBrokerError(
                 f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}", thing=self.kind
@@ -168,8 +195,10 @@ class SAMProviderBroker(AbstractBroker):
             raise SAMProviderBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
             )
-        return {**metadata, **dump}
+        # the metadata name, rather than the spec's, identifies the Provider, as with every other kind.
+        return {**dump, **metadata}
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Convert a Django ORM `Provider` model instance into a dictionary formatted for Pydantic manifest consumption.
@@ -198,7 +227,6 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SamKeys`
            - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
            - :class:`smarter.lib.manifest.enumSAMProviderSpecKeys`
-
         """
         if not isinstance(self.provider, Provider):
             raise SAMProviderBrokerError(f"Expected type Provider but got {type(self.provider)}", thing=self.kind)
@@ -219,7 +247,7 @@ class SAMProviderBroker(AbstractBroker):
             base_url=self.provider.base_url,
             api_key="*****" if self.provider.api_key else None,
             connectivity_test_path=self.provider.connectivity_test_path,
-            logo=self.provider.logo.url if self.provider.logo else None,
+            logo=self.logo_url,
             website_url=self.provider.website_url,
             contact_email=self.provider.contact_email,
             support_email=self.provider.support_email,
@@ -280,7 +308,6 @@ class SAMProviderBroker(AbstractBroker):
         .. code-block:: python
 
            logger.debug(broker.formatted_class_name)
-
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.{SAMProviderBroker.__name__}[{id(self)}]"
@@ -298,7 +325,6 @@ class SAMProviderBroker(AbstractBroker):
 
            if broker.kind == "Provider":
                print("This broker handles Provider manifests.")
-
         """
         return MANIFEST_KIND
 
@@ -394,7 +420,6 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.apps.SamKeys`
            - :class:`SAMMetadataKeys`
            - :class:`SAMProviderSpecKeys`
-
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -410,7 +435,7 @@ class SAMProviderBroker(AbstractBroker):
             ],
         )
         spec_provider = SAMProviderSpecProvider(
-            name="AcmeLLM",
+            name="acme_llm_company",
             description="Leading provider of innovative LLM solutions.",
             base_url="https://api.acme-llm.com",
             api_key="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -484,7 +509,6 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
-
         """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -527,7 +551,6 @@ class SAMProviderBroker(AbstractBroker):
         """
         Apply the manifest data to the Django ORM `Provider` model and persist changes to the database.
 
-
         .. note::
 
             tags are handled separately because they are of type TaggableManager and
@@ -541,7 +564,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. note::
 
-           This method first calls ``super().apply()`` to ensure the manifest is loaded and validated before applying changes.
+           This method copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
 
         .. attention::
 
@@ -549,7 +572,6 @@ class SAMProviderBroker(AbstractBroker):
 
         :raises: :class:`SAMProviderBrokerError`
            If the user instance is not set or is invalid
-
 
         **Example usage:**
 
@@ -563,9 +585,7 @@ class SAMProviderBroker(AbstractBroker):
            - :meth:`manifest_to_django_orm`
            - :class:`smarter.apps.provider.models.Provider`
            - :class:`SAMProviderBrokerError`
-
         """
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         if not self.user:
@@ -596,15 +616,31 @@ class SAMProviderBroker(AbstractBroker):
             SAMProviderSpecKeys.TOS_ACCEPTED_BY.value,
             "tags",
         ]
+        data = self.manifest_to_django_orm()
+        # the manifest's api key is the name of a Secret, rather than the Secret itself.
+        api_key_name = data.pop(SAMProviderSpecKeys.API_KEY.value, None)
+        api_key: Optional[Secret] = None
+        if api_key_name:
+            try:
+                api_key = Secret.get_cached_object(invalidate=True, name=api_key_name, user_profile=self.user_profile)
+            except Secret.DoesNotExist as e:
+                raise SAMBrokerErrorNotFound(
+                    f"Failed to apply {self.kind} {self.name}. Secret {api_key_name} not found",
+                    thing=self.kind,
+                    command=command,
+                ) from e
         try:
-            data = self.manifest_to_django_orm()
             tags = data.get("tags", [])
             for field in readonly_fields:
                 data.pop(field, None)
+            if self.provider is None:
+                self._provider = Provider(user_profile=self.user_profile)
             for key, value in data.items():
                 setattr(self.provider, key, value)
             if not isinstance(self.provider, Provider):
                 raise SAMProviderBrokerError("Provider is not set", thing=self.kind, command=command)
+            if api_key:
+                self.provider.api_key = api_key
             self.provider.save()
             self.provider.tags.set(tags)
         except Exception as e:
@@ -616,15 +652,14 @@ class SAMProviderBroker(AbstractBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for the Smarter API Provider manifest.
 
         :raises: :class:`SAMBrokerErrorNotImplemented`
-            Always raised to indicate that the chat operation is not implemented for this manifest type.
+            Always raised to indicate that the prompt operation is not implemented for this manifest type.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
@@ -632,9 +667,9 @@ class SAMProviderBroker(AbstractBroker):
 
         :returns: Never returns; always raises an exception.
         """
-        command = self.chat.__name__
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -650,12 +685,11 @@ class SAMProviderBroker(AbstractBroker):
            If the provider with the specified name does not exist or is not associated with the account.
         :raises: :class:`SAMProviderBrokerError`
            If serialization fails for the provider.
-
         """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
-        name = kwargs.get("name")
+        name = self.name or kwargs.get("name")
         try:
             self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
         except Provider.DoesNotExist as e:
@@ -673,6 +707,51 @@ class SAMProviderBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that use this Provider.
+
+        Proxies and Vectorstores refer to the Provider itself. LLMClients, plugins and Guardrails
+        refer to a Provider by name, so they only depend on this Provider when no other active
+        Provider has the same name.
+
+        :return: A broker for each Proxy, Vectorstore, LLMClient, plugin and Guardrail that uses this Provider.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.guardrail.models import Guardrail
+        from smarter.apps.llmclient.models import LLMClient
+        from smarter.apps.plugin.models import PluginMeta, PluginPrompt
+        from smarter.apps.proxy.models import Proxy
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+
+        provider = self.provider
+        if not provider and self.name and self.user_profile:
+            provider = Provider.objects.filter(user_profile=self.user_profile, name=self.name).first()
+        if not provider:
+            return []
+        retval = self.dependency_brokers(SAMKinds.PROXY.value, Proxy.objects.filter(provider=provider))
+        retval += self.dependency_brokers(
+            SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(embeddings_provider=provider)
+        )
+        name = provider.name
+        if Provider.objects.filter(name__iexact=name, is_active=True).exclude(pk=provider.pk).exists():
+            return retval
+        retval += self.dependency_brokers(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(provider__iexact=name))
+        plugins = PluginMeta.objects.filter(
+            id__in=PluginPrompt.objects.filter(provider__iexact=name).values("plugin_id")
+        )
+        for plugin_meta in plugins:
+            retval.append(self.dependency_broker(plugin_meta.kind.value, plugin_meta))
+        guardrails = [
+            guardrail
+            for guardrail in Guardrail.objects.all()
+            if str((guardrail.config or {}).get("provider") or "").lower() == name.lower()
+        ]
+        retval += self.dependency_brokers(SAMKinds.GUARDRAIL.value, guardrails)
+        return retval
+
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the Smarter API Provider manifest by removing the corresponding Django ORM `Provider` model instance.
@@ -687,7 +766,6 @@ class SAMProviderBroker(AbstractBroker):
            If the provider with the specified name does not exist.
         :raises: :class:`SAMProviderBrokerError`
            If deletion fails for the provider.
-
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
@@ -715,6 +793,8 @@ class SAMProviderBroker(AbstractBroker):
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
 
+        self._provider = provider
+        self.verify_no_dependencies(command)
         if provider:
             try:
                 provider.delete()

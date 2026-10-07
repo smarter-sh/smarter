@@ -1,0 +1,43 @@
+---
+# The Smarter Project's GitHub repository smarter-sh/smarter-infrastructure, the Smarter cloud infrastructure, through GitMCP.
+# Repository: https://github.com/smarter-sh/smarter-infrastructure
+# Documentation: https://gitmcp.io
+#
+# GitMCP serves one MCP server per repository, so this client can read only smarter-sh/smarter-infrastructure.
+# The smarter LLMClient uses one such client for each of The Smarter Project's repositories that
+# it may read: see the other smarter-project-github*.yaml manifests.
+#
+# This server requires no authentication. allowedTools omits GitMCP's generic tool that fetches
+# any url, so that the LLM reads only this repository.
+#
+# GitMCP abbreviates this repository's name to smarter in its tool names, the same as the
+# smarter repository's. Smarter gives each MCPClient's tools a unique function name, and the
+# tool descriptions name the repository, so the LLM can tell them apart.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: smarter_project_github_infrastructure
+  description: Reads and searches the documentation and source code of the Smarter cloud infrastructure, in The Smarter Project's GitHub repository smarter-sh/smarter-infrastructure.
+  version: 1.0.0
+  tags:
+    - smarter
+    - documentation
+    - github
+    - code
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://gitmcp.io
+    - smarter.sh/mcpclient/repository: https://github.com/smarter-sh/smarter-infrastructure
+spec:
+  config:
+    transport: http
+    endpointUrl: https://gitmcp.io/smarter-sh/smarter-infrastructure
+    authType: none
+    allowedTools:
+      - fetch_smarter_docs
+      - search_smarter_docs
+      - search_smarter_code
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 3600
+    isActive: true
+    priority: 100

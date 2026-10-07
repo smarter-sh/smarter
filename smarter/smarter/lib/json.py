@@ -25,7 +25,6 @@ The following symbols are re-exported unmodified from :mod:`json`:
 import datetime
 import decimal
 import json
-import logging
 import uuid
 
 # pylint: disable=unused-import
@@ -36,6 +35,10 @@ from json import (  # unmodified re-export
     loads,
 )
 
+from pydantic import HttpUrl, TypeAdapter
+
+from smarter.lib import logging
+
 logger = logging.getLogger(__name__)
 formatted_logger_prefix = "SmarterJSONEncoder"
 
@@ -43,6 +46,7 @@ formatted_logger_prefix = "SmarterJSONEncoder"
 class Promise:
     """
     Base class for the proxy class created in the closure of the lazy function.
+
     It's used to recognize promises in code.
     """
 
@@ -89,7 +93,8 @@ def duration_iso_string(duration):
 
 class SmarterJSONEncoder(json.JSONEncoder):
     """
-    JSONEncoder subclass that knows how to encode odd types like
+    JSONEncoder subclass that knows how to encode odd types like.
+
      - date/time
      - decimal
      - UUIDs
@@ -124,6 +129,8 @@ class SmarterJSONEncoder(json.JSONEncoder):
             return str(o)
         elif isinstance(o, set):
             return list(o)
+        elif isinstance(o, HttpUrl):
+            return str(o)
         else:
             # Handle Django's GenericRelatedObjectManager and Django's
             # TaggableManager without importing them directly in order to avoid
@@ -135,6 +142,9 @@ class SmarterJSONEncoder(json.JSONEncoder):
                 return list(o.all())
 
             # Handle TaggedItem
+            if type(o).__name__ == "Tag" and getattr(type(o), "__module__", None) == "taggit.models":
+                # e.g. a TaggableManager field of model_to_dict(), which is a list of Tags.
+                return o.name
             if type(o).__name__ == "TaggedItem" and getattr(type(o), "__module__", None) == "taggit.models":
                 retval = o.tag.name
                 logger.debug("%s.default() Serializing TaggedItem with tag: %s", formatted_logger_prefix, retval)
@@ -167,7 +177,8 @@ def dumps(
     **kw,
 ):
     """
-    JSON dump with
+    JSON dump with.
+
     - SmarterJSONEncoder as default encoder
     - indent of 2
     - default of str
@@ -180,7 +191,7 @@ def dumps(
         check_circular=check_circular,
         allow_nan=allow_nan,
         cls=cls or SmarterJSONEncoder,
-        indent=indent or 2,
+        indent=2 if indent is None else indent,
         separators=separators,
         default=default or str,
         sort_keys=sort_keys,

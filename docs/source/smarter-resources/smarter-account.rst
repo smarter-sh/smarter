@@ -23,7 +23,7 @@ Usage
 
 .. seealso::
 
-  - :doc:`Example Manifests <secret/sam/example-manifests>`: An example manifest for creating a Smarter Secret using SAM.
+  - :doc:`Example Manifests <secret/manifest/example-manifests/secret>`: An example manifest for creating a Smarter Secret using SAM.
 
 Technical Reference
 -------------------
@@ -32,6 +32,7 @@ Technical Reference
    :maxdepth: 1
 
    account/api
+   account/commands
    account/const
    account/models
    account/receivers
@@ -40,5 +41,4 @@ Technical Reference
    account/serializers
    account/signals
    account/tasks
-   account/views
    account/utils

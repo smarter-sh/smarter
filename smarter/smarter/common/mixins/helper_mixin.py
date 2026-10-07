@@ -1,22 +1,24 @@
-"""Common classes"""
+"""Common classes."""
 
 import re
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
+from django.utils.functional import classproperty
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
+    SmarterFormattedTextColorCodes,
+    formatted_json,
     formatted_text,
-    formatted_text_green,
-    formatted_text_red,
+)
+from smarter.common.utils import (
+    ConvertibleCaseType,
 )
 from smarter.common.utils import (
     bool_environment_variable as utils_bool_environment_variable,
 )
-from smarter.common.utils import camel_to_snake as utils_camel_to_snake
-from smarter.common.utils import camel_to_snake_dict as utils_camel_to_snake_dict
 from smarter.common.utils import dict_is_contained_in as utils_dict_is_contained_in
 from smarter.common.utils import dict_is_subset as utils_dict_is_subset
 from smarter.common.utils import (
@@ -25,7 +27,6 @@ from smarter.common.utils import (
 from smarter.common.utils import get_readonly_csv_file as utils_get_readonly_csv_file
 from smarter.common.utils import get_readonly_yaml_file as utils_get_readonly_yaml_file
 from smarter.common.utils import mask_string as util_mask_string
-from smarter.common.utils import pascal_to_snake as utils_pascal_to_snake
 from smarter.common.utils import recursive_sort_dict as utils_recursive_sort_dict
 from smarter.common.utils import rfc1034_compliant_str as utils_rfc1034_compliant_str
 from smarter.common.utils import (
@@ -34,12 +35,9 @@ from smarter.common.utils import (
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
-from smarter.common.utils import snake_to_camel as utils_snake_to_camel
+from smarter.common.utils import to_camel_case as utils_snake_to_camel
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
-from smarter.lib.cache import cache_results
-
-from .logger import logger
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -49,12 +47,10 @@ FOREVER = 60 * 60 * 24 * 365  # 1 year in seconds
 
 
 class SmarterReadyState:
-    """
-    Constants representing the ready state of a Smarter class, formatted for logging.
-    """
+    """Constants representing the ready state of a Smarter class, formatted for logging."""
 
-    READY = formatted_text_green("READY")
-    NOT_READY = formatted_text_red("NOT_READY")
+    READY = formatted_text("READY", SmarterFormattedTextColorCodes.BRIGHT_GREEN)
+    NOT_READY = formatted_text("NOT_READY", SmarterFormattedTextColorCodes.DARK_RED)
 
 
 class SmarterHelperMixin:
@@ -104,24 +100,29 @@ class SmarterHelperMixin:
     - ``recursive_sort_dict(data)``: Recursively sorts a dictionary.
     - ``get_readonly_csv_file(file_path)``: Opens a CSV file in read-only mode.
     - ``get_readonly_yaml_file(file_path)``: Opens a YAML file in read-only mode.
-    - Case conversion utilities: ``to_snake_case``, ``camel_to_snake``, ``camel_to_snake_dict``, ``snake_case``, ``snake_to_camel``, ``pascal_to_snake``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
-
-
+    - Case conversion utilities: ``to_snake_case``, ``to_snake_case``, ``to_snake_case``, ``snake_case``, ``to_camel_case``, ``to_snake_case``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
     """
 
     def __init__(self, *args, **kwargs):
-        logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
+        """
+        Note: this needs to exist; something in the Python MRO requires it, even if it does nothing.
 
-    @cached_property
-    def formatted_class_name(self) -> str:
+        If you remove this, you will get a mysterious error about something downstream expecting exactly one object.
+        """
+        # logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
+
+    @classproperty
+    def formatted_class_name(cls) -> str:  # pylint: disable=no-self-argument
         """
         Returns the class name formatted for logging.
 
+        This is a class property, so it works both on instances (``self.formatted_class_name``)
+        and inside classmethods (``cls.formatted_class_name``).
+
         :return: The formatted class name as a string.
         :rtype: str
-
         """
-        return formatted_text(self.__class__.__name__)
+        return formatted_text(cls.__name__)
 
     @cached_property
     def unformatted_class_name(self) -> str:
@@ -158,13 +159,25 @@ class SmarterHelperMixin:
     @property
     def ready(self) -> bool:
         """
-        Indicates whether the object is ready for use. This is a placeholder
+        Indicates whether the object is ready for use.
+
+        This is a placeholder
         that should be overridden in subclasses.
 
         :return: True if ready, False otherwise.
         :rtype: bool
         """
         return True
+
+    @cached_property
+    def health_check_urls(self) -> list[str]:
+        """
+        Returns a list of URL paths that are considered health check endpoints.
+
+        :return: List of health check URL path strings.
+        :rtype: list[str]
+        """
+        return ["readiness", "healthz"]
 
     @cached_property
     def amnesty_urls(self) -> list[str]:
@@ -174,11 +187,12 @@ class SmarterHelperMixin:
         :return: List of URL path strings that are exempt.
         :rtype: list[str]
         """
-        return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
+        return self.health_check_urls + ["favicon.ico", "robots.txt", "sitemap.xml"]
 
     def deserves_amnesty(self, slug: str) -> bool:
         """
         Determines if a given URL deserves amnesty based on the amnesty URLs list.
+
         This excuses certain endpoints (like health checks) from select middleware
         checks.
 
@@ -206,13 +220,13 @@ class SmarterHelperMixin:
         :raises SmarterValueError: If the URI cannot be built from the request.
         """
 
-        # pylint: disable=W0613
-        @cache_results()
-        def _smarter_build_absolute_uri(pk=id(self)):
-            return utils_smarter_build_absolute_uri(request)
+        # not cached: a cache key of the instance would return the first request's url
+        # for every later request of a long-lived instance, e.g. a middleware.
+        return utils_smarter_build_absolute_uri(request)
 
-        return _smarter_build_absolute_uri()
-
+    ###########################################################################
+    # String utilities
+    ###########################################################################
     def mask_string(
         self, string: Optional[str] = "", mask_char: str = "*", mask_length: int = 4, string_length: int = 8
     ) -> str:
@@ -237,6 +251,63 @@ class SmarterHelperMixin:
         return util_mask_string(
             string=string, mask_char=mask_char, mask_length=mask_length, string_length=string_length  # type: ignore
         )
+
+    def formatted_text(self, text: str, color_code: str = SmarterFormattedTextColorCodes.DEFAULT) -> str:
+        """
+        Formats text with ANSI color codes for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :param color_code: The ANSI color code to apply.
+        :type color_code: str
+        :return: The formatted text with ANSI color codes.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=color_code)
+
+    def formatted_text_green(self, text: str) -> str:
+        """
+        Formats text in bright green for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :return: The formatted text in bright green.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BRIGHT_GREEN)
+
+    def formatted_text_red(self, text: str) -> str:
+        """
+        Formats text in dark red for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :return: The formatted text in dark red.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.DARK_RED)
+
+    def formatted_text_blue(self, text: str) -> str:
+        """
+        Formats text in bold dark blue for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :return: The formatted text in bold dark blue.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BOLD_DARK_BLUE)
+
+    def formatted_json(self, json_obj: Union[dict, list]) -> str:
+        """
+        Formats a JSON object as a pretty-printed string with ANSI color codes for logging.
+
+        :param json_obj: The JSON object (dict or list) to format.
+        :type json_obj: Union[dict, list]
+        :return: A string representation of the JSON object with ANSI color codes.
+        :rtype: str
+        """
+        return formatted_json(json_obj)
 
     def bool_environment_variable(self, var_name: str, default: bool = False) -> bool:
         """
@@ -311,6 +382,7 @@ class SmarterHelperMixin:
     def dict_is_contained_in(self, dict1: dict, dict2: dict) -> bool:
         """
         Checks if one dictionary is contained within another.
+
         This method determines if all key-value pairs in `dict1` are present in `dict2`.
 
         :param dict1: The dictionary to check for containment.
@@ -389,30 +461,7 @@ class SmarterHelperMixin:
     # Case conversion utilities
     ###########################################################################
 
-    def to_snake_case(self, obj: object) -> str:
-        """
-        Converts a string to snake_case.
-
-        This method takes a string in any case format (e.g., camelCase, PascalCase, kebab-case)
-        and converts it to snake_case, which is commonly used in Python for variable and function names.
-
-        :param obj: The object to convert to snake_case.
-        :type obj: object
-        :return: The converted string in snake_case.
-        :rtype: str
-        """
-
-        @cache_results(timeout=FOREVER)
-        def _string_to_snake_case(string_name: str) -> str:
-            return utils_to_snake_case(string_name)
-
-        if isinstance(obj, str):
-            return _string_to_snake_case(obj)
-
-        string_name = obj.__name__ if hasattr(obj, "__name__") else str(obj)  # type: ignore[attr-defined]
-        return _string_to_snake_case(string_name)
-
-    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+    def to_snake_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
         Converts a camelCase or PascalCase string to snake_case.
 
@@ -421,75 +470,30 @@ class SmarterHelperMixin:
 
         :param data: The camelCase or PascalCase string to convert.
         :type data: Union[str, dict, list]
+        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
+        :type convert_values: bool
         :return: The converted string in snake_case.
         :rtype: Optional[Union[str, dict, list]]
         """
 
-        @cache_results(timeout=FOREVER)
-        def _string_camel_to_snake(string_name: str) -> str:
-            return utils_camel_to_snake(string_name)  # type: ignore
+        return utils_to_snake_case(data, convert_values=convert_values)
 
-        if isinstance(data, str):
-            return _string_camel_to_snake(data)
-        return utils_camel_to_snake(data)
-
-    def camel_to_snake_dict(self, data: dict) -> dict:
-        """
-        Converts all keys in a dictionary from camelCase to snake_case.
-
-        This method takes a dictionary with keys in camelCase format and returns a new dictionary
-        with all keys converted to snake_case. The values are preserved as they are.
-
-        :param data: The dictionary with camelCase keys to convert.
-        :type data: dict
-        :return: A new dictionary with keys converted to snake_case.
-        :rtype: dict
-        """
-        return utils_camel_to_snake_dict(data)
-
-    def snake_to_camel(
-        self, data: Union[str, dict, list], convert_values: bool = False
-    ) -> Optional[Union[str, dict, list]]:
+    def to_camel_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
         Converts a snake_case string to camelCase.
 
         This method takes a string in snake_case format and converts it to camelCase.
         It is useful for standardizing naming conventions across different formats.
 
-        :param name: The snake_case string to convert.
-        :type name: str
+        :param data: The snake_case string to convert.
+        :type data: ConvertibleCaseType
+        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
+        :type convert_values: bool
         :return: The converted string in camelCase.
         :rtype: Optional[Union[str, dict, list]]
         """
 
-        @cache_results(timeout=FOREVER)
-        def _string_snake_to_camel(name: str) -> str:
-            return utils_snake_to_camel(name)  # type: ignore
-
-        if isinstance(data, str):
-            return _string_snake_to_camel(data)
         return utils_snake_to_camel(data, convert_values=convert_values)
-
-    def pascal_to_snake(self, name: Union[str, dict, list]) -> Union[str, dict, list]:
-        """
-        Converts a PascalCase string to snake_case.
-
-        This method takes a string in PascalCase format and converts it to snake_case.
-        It is useful for standardizing naming conventions across different formats.
-
-        :param name: The PascalCase string to convert.
-        :type name: Union[str, dict, list]
-        :return: The converted string in snake_case.
-        :rtype: Union[str, dict, list]
-        """
-
-        @cache_results(timeout=FOREVER)
-        def _string_pascal_to_snake(name: str) -> str:
-            return utils_pascal_to_snake(name)  # type: ignore
-
-        if isinstance(name, str):
-            return _string_pascal_to_snake(name)
-        return utils_pascal_to_snake(name)
 
     def rfc1034_compliant_str(self, name: str) -> str:
         """
@@ -504,11 +508,7 @@ class SmarterHelperMixin:
         :rtype: str
         """
 
-        @cache_results(timeout=FOREVER)
-        def _utils_rfc1034_compliant_str(name: str) -> str:
-            return utils_rfc1034_compliant_str(name)
-
-        return _utils_rfc1034_compliant_str(name)
+        return utils_rfc1034_compliant_str(name)
 
     def rfc1034_compliant_to_snake(self, name: str) -> str:
         """
@@ -523,11 +523,7 @@ class SmarterHelperMixin:
         :rtype: str
         """
 
-        @cache_results(timeout=FOREVER)
-        def _rfc1034_compliant_to_snake(name: str) -> str:
-            return utils_rfc1034_compliant_to_snake(name)
-
-        return _rfc1034_compliant_to_snake(name)
+        return utils_rfc1034_compliant_to_snake(name)
 
 
 __all__ = [

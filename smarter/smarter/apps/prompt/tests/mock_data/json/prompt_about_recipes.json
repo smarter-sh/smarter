@@ -6,7 +6,7 @@
   "messages": [
     {
       "role": "system",
-      "content": "you are a helpful chatbot."
+      "content": "you are a helpful llmclient."
     },
     {
       "role": "user",

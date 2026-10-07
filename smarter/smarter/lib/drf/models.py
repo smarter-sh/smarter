@@ -1,17 +1,17 @@
 """DRF knox authtoken model and manager."""
 
+import hmac
 import uuid
 from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Optional
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from knox import crypto
 from knox.models import AuthToken
 from knox.settings import CONSTANTS
-from taggit.managers import TaggableManager
-from taggit.models import TaggedItemBase
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
@@ -32,7 +32,9 @@ logger = getLogger(__name__)
 
 class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
     """
-    API Key manager. This is a custom manager derived from a combination of
+    API Key manager.
+
+    This is a custom manager derived from a combination of
     Knox's AuthTokenManager and and Smarter's SmarterQuerySetWithPermissions
     Queryset to provide both knox token management functionality as well as
     Smarter's permission-based querying behavior.
@@ -127,7 +129,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
     - ``User``: The owner of the API key.
     - ``MetaDataModel``: Provides created/modified timestamps and SAM metadata.
-
     """
 
     objects = SmarterAuthTokenManager()
@@ -143,8 +144,115 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     tags = models.JSONField(default=list, blank=True)
 
     @property
-    def identifier(self):
-        return "******" + str(self.digest)[-4:]
+    def record_locator(self) -> str:
+        """
+        Returns the record locator, which is derived from key_id.
+
+        The primary key of a knox AuthToken is a digest string, not an integer id,
+        so the TimestampedModel hashed_id-based record locator cannot be used.
+        """
+        return f"{self.__class__.__name__.lower()}-{self.key_id}"
+
+    @property
+    def tags_list(self) -> list[str]:
+        """Returns the tag names.
+
+        tags is a JSONField list here, not a taggit manager.
+        """
+        tags = self.tags
+        if not isinstance(tags, list):
+            return []
+        return [str(tag) for tag in tags]
+
+    @classmethod
+    def get_object_by_locator(cls, locator: str) -> Optional["SmarterAuthToken"]:
+        """Retrieves a SmarterAuthToken from a record locator created by record_locator."""
+        prefix = f"{cls.__name__.lower()}-"
+        if not locator.startswith(prefix):
+            return None
+        try:
+            return cls.objects.get(key_id=uuid.UUID(locator[len(prefix) :]))
+        except (ValueError, cls.DoesNotExist):
+            return None
+
+    @property
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """
+        Returns the token's public identifier, its key_id, as a string.
+
+        A knox AuthToken has no integer id: its primary key is its digest. The api, the
+        urls and the web console identify a token by its key_id instead.
+        """
+        return str(self.key_id)
+
+    @property
+    def hashed_id(self) -> str:  # type: ignore[override]
+        """Returns the token's public identifier.
+
+        See :attr:`id`.
+        """
+        return self.id
+
+    def clone(
+        self,
+        new_name: Optional[str] = None,
+        new_version: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "SmarterAuthToken":
+        """
+        Create a new API key with this key's metadata.
+
+        A clone is a new key: the manager creates its own token, digest and key_id, which
+        MetaDataWithOwnershipModel.clone() would otherwise copy from this key.
+
+        :param new_name: The name of the new key. Defaults to this key's name, suffixed with "_clone".
+        :param new_version: The version of the new key. Defaults to this key's version.
+        :param user_profile: The owner of the new key. Defaults to this key's owner.
+        :returns: The new key.
+        :rtype: SmarterAuthToken
+        """
+        user_profile = user_profile or self.user_profile
+        clone, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user=user_profile.user,
+            user_profile=user_profile,
+            name=new_name or f"{self.name}_clone",
+            description=self.description,
+            version=new_version or self.version,
+            annotations=self.annotations,
+            tags=self.tags,
+            is_active=self.is_active,
+        )
+        return clone
+
+    def validate_token(self, token: str) -> bool:
+        """Return True if token is this api key's token, which is stored only as its digest."""
+        if not token or token[: CONSTANTS.TOKEN_KEY_LENGTH] != self.token_key:
+            return False
+        return hmac.compare_digest(crypto.hash_token(token), self.digest)
+
+    @property
+    def identifier(self) -> str:
+        """Returns the token's digest, masked for logging."""
+        return self.mask_string(self.digest)
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL of the token's manifest detail page, which identifies the token by its key_id.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.manifest_url  # '/authtoken/d55cfbe5-89ec-4c11-90b9-3e9ec4bbbd85/'
+        """
+        # pylint: disable=C0415
+        from smarter.lib.drf.urls import AuthTokenReverseNames
+
+        return reverse(
+            f"{AuthTokenReverseNames.namespace}:{AuthTokenReverseNames.detailview}",
+            kwargs={"authtoken_id": self.key_id},
+        )
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:
@@ -184,8 +292,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         **kwargs,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
-        Retrieve API keys with caching based on user profile and optional name
-        filter using caching.
+        Retrieve API keys with caching based on user profile and optional name filter using caching.
 
         :param invalidate: If True, invalidate the cache for this query.
         :type invalidate: bool, optional

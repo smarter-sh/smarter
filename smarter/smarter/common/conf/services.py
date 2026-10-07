@@ -1,8 +1,9 @@
 """
-Services enabled for this solution. This is intended to be permanently read-only
+Services enabled for this solution.
+
+This is intended to be permanently read-only
 """
 
-import logging
 from functools import lru_cache  # utility for caching function/method results
 from typing import List, Tuple, Union  # type hint utilities
 
@@ -16,13 +17,17 @@ from botocore.exceptions import (
 from smarter.common.conf.const import get_env
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}.Services")
 
 
 class Services:
-    """Services enabled for this solution. This is intended to be permanently read-only"""
+    """Services enabled for this solution.
+
+    This is intended to be permanently read-only
+    """
 
     # enabled
     AWS_CLI = ("aws-cli", True)
@@ -89,7 +94,7 @@ class Services:
 
     @classmethod
     def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
-        """Raise an error if the service is disabled"""
+        """Raise an error if the service is disabled."""
         if not cls.enabled(service):
             if Services.is_connected_to_aws():
                 raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
@@ -98,7 +103,7 @@ class Services:
 
     @classmethod
     def to_dict(cls):
-        """Convert Services to dict"""
+        """Convert Services to dict."""
         return {
             key: value
             for key, value in Services.__dict__.items()
@@ -109,7 +114,7 @@ class Services:
 
     @classmethod
     def enabled_services(cls) -> List[str]:
-        """Return a list of enabled services"""
+        """Return a list of enabled services."""
         return [
             getattr(cls, key)[0]
             for key in dir(cls)
@@ -120,7 +125,28 @@ class Services:
         ]
 
 
-AWS_REGIONS = ["us-east-1"]
+# The regions that AWS enables by default on every account (no opt-in required).
+# Used when AWS is not reachable; otherwise replaced by ec2.describe_regions().
+# us-east-1 must stay first: AWS_REGION defaults to AWS_REGIONS[0].
+AWS_REGIONS = [
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2",
+    "ca-central-1",
+    "sa-east-1",
+    "eu-central-1",
+    "eu-north-1",
+    "eu-west-1",
+    "eu-west-2",
+    "eu-west-3",
+    "ap-northeast-1",
+    "ap-northeast-2",
+    "ap-northeast-3",
+    "ap-south-1",
+    "ap-southeast-1",
+    "ap-southeast-2",
+]
 AWS_REGION = get_env("AWS_REGION", default=AWS_REGIONS[0])
 if Services.enabled(Services.AWS_EC2):
     try:

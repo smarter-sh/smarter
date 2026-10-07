@@ -36,6 +36,10 @@ inputs:
   dockerhub-pat:
     description: "The DockerHub personal access token"
     required: false
+  dockerhub-tag:
+    description: "The DockerHub tag to use for the Docker image"
+    required: false
+    default: "latest"
   environment:
     description: "The environment to deploy: alpha, beta, next, prod"
     required: true
@@ -129,8 +133,8 @@ inputs:
   smarter-logo:
     description: "The URL to the Smarter logo image"
     required: true
-  smarter-mysql-test_database_password:
-    description: "The MySQL test database password"
+  smarter-mariadb-test_database_password:
+    description: "The MariaDB test database password"
     required: true
   smarter-settings-output:
     description: "True to enable verbose console output of the settings at startup."
@@ -154,6 +158,9 @@ inputs:
   social-auth-linkedin-oauth2-secret:
     description: "The LinkedIn OAuth2 secret"
     required: true
+  tavily-api-key:
+    description: "The Tavily web search API key, which the built-in smarter LLMClient's websearch plugin uses"
+    required: false
   togetherai-api-key:
     description: "The TogetherAI API key"
     required: false
@@ -198,6 +205,22 @@ runs:
     - name: Checkout code
       id: checkout_code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 0 # Ensures all history and tags are fetched
+        fetch-tags: true
+
+    - name: Get latest release version
+      id: get-latest-version-tag
+      shell: bash
+      run: |
+        VERSION_TAG=$(git describe --tags --abbrev=0)
+        echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+    - name: Set version
+      id: set-version
+      shell: bash
+      run: |
+        python scripts/bump_version.py $TAG --cicd
 
     # authenticate AWS CLI
     - name: Configure AWS credentials
@@ -253,7 +276,7 @@ runs:
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ inputs.dockerhub-tag }}" >> $GITHUB_ENV
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
@@ -266,7 +289,7 @@ runs:
     # MYSQL_DATABASE: smarter_api_dev
     # MYSQL_USER: smarter_api_dev
     # MYSQL_PASSWORD: top-secret-password
-    - name: Configure MySQL from Kubernetes secret
+    - name: Configure MariaDB from Kubernetes secret
       id: get-mysql-secret
       uses: ./.github/actions/k8s-get-secret
       with:
@@ -279,7 +302,7 @@ runs:
     # example:
     # MYMYSQL_ROOT_USERNAMESQL_USER: root
     # MYSQL_ROOT_PASSWORD: top-secret-password
-    - name: Configure MySQL from Kubernetes secret
+    - name: Configure MariaDB from Kubernetes secret
       id: get-mysql-root-secret
       uses: ./.github/actions/k8s-get-secret
       with:
@@ -409,7 +432,7 @@ runs:
             "SMARTER_MYSQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
             "SMARTER_MYSQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
             "SMARTER_MYSQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
-            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": ${{ inputs.smarter-mysql-test_database_password && format('"{0}"', inputs.smarter-mysql-test_database_password) || 'null' }},
+            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": ${{ inputs.smarter-mariadb-test_database_password && format('"{0}"', inputs.smarter-mariadb-test_database_password) || 'null' }},
             "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
             "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
             "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
@@ -429,6 +452,7 @@ runs:
             "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
             "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
             "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
+            "SMARTER_TAVILY_API_KEY": ${{ inputs.tavily-api-key && format('"{0}"', inputs.tavily-api-key) || 'null' }},
             "SMARTER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
             "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
             "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
@@ -489,6 +513,7 @@ runs:
           --set mariadb.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
           --set mariadb.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
           --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
+          --set global.image.pullPolicy="IfNotPresent" \
           --values /tmp/values.yaml
 
     # Clean up secrets file

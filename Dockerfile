@@ -29,7 +29,7 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   license="GNU AGPL v3" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
-  org.opencontainers.image.version="0.14.0-beta.1" \
+  org.opencontainers.image.version="9999.9999.9999.dev9999" \
   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
   org.opencontainers.image.url="https://smarter.sh/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
@@ -59,8 +59,7 @@ ENV ENVIRONMENT=$ENVIRONMENT
 # wget                      used to download build artifacts in later stages
 # git                       used by manage.py commands and dependency installs
 # curl                      used below in this Dockerfile to download kubectl and AWS CLI
-# jq                        used below in this Dockerfile to parse React manifest.json
-#                           files to determine which static assets download.
+# jq                        command-line JSON processor, for diagnostics and admin tasks
 # unzip                     used below in this Dockerfile to install AWS CLI
 # procps                    provides the 'ps' command for container health checks
 # redis-tools               provides Redis CLI utilities for diagnostics and admin tasks
@@ -98,7 +97,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 
 FROM system_packages AS kubectl
 
-# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent
+# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for LLMClient/Agent
 # deployments in which dedicated Kubernetes ingress and TLS certificates are created. There
 # are Kubernetes builds for both amd64 and arm64 architectures (we build both for DockerHub
 # multi-arch support).
@@ -191,190 +190,27 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 # https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
 # smarter locally for non-developers.
 COPY ./smarter/requirements requirements
-RUN pip install pip==25.3 setuptools wheel pip-tools && \
+RUN pip install --upgrade pip
+RUN pip install setuptools wheel pip-tools && \
   pip install --no-cache-dir -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
-############################# react build args ################################
-# Serves as a form of cache busting for any arg changes related to React
-# components.
-FROM venv AS react_build_args
-
-
-# from .env file, alternatively from docker-compose.yml.
-# This is used to control the base URL for downloading React
-# component assets from the CDN.
-ARG DOCKER_REACT_REMOTE_CDN_URL=
-
-# for cache busting when downloading React component assets from the CDN.
-# When used, a timestamp or hash of the latest React component builds can be
-# generated and passed in as a build argument to ensure that Docker does not
-# use a cached layer with old React assets.
-ARG DOCKER_REACT_REMOTE_CACHE_BUSTER=
-
-##################### install react components from CDN #######################
-# Optional: for downloading React component assets from the CDN.
-#
-# The Smarter web console UI is built as a set of React components that are
-# optionally published to a CDN using Vite. If enabled, this stage of
-# the Docker build process will download the latest production-ready builds of
-# these components from the CDN into the smarter/smarter/static/react/ directory.
-FROM react_build_args AS react_cdn_distribution
-
-ENV DOCKER_REACT_REMOTE_CACHE_BUSTER=${DOCKER_REACT_REMOTE_CACHE_BUSTER}
-ENV DOCKER_REACT_REMOTE_CDN_URL=${DOCKER_REACT_REMOTE_CDN_URL}
-ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
-
-# Download all manifests and compute a combined hash for cache busting
-RUN if [ -n "$DOCKER_REACT_REMOTE_CDN_URL" ]; then \
-  for app in $REACT_COMPONENTS; do \
-    url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/manifest.json"; \
-    echo "Downloading manifest for ${app} from ${url}"; \
-    echo "Last-Modified for $url: $(curl -sI "$url" | grep -i '^Last-Modified:')"; \
-    curl -fsSL "$url" -o "/tmp/${app}_manifest.json"; \
-    sha256sum "/tmp/${app}_manifest.json" | awk '{print $1}' > "/tmp/${app}_manifest.hash"; \
-  done && \
-  cat /tmp/*_manifest.hash | sha256sum | awk '{print $1}' > /tmp/react_manifests.hash; \
-else \
-  echo "Skipping manifest download and hash: DOCKER_REACT_REMOTE_CDN_URL is empty"; \
-fi
-
-
-############################ build remote react ###############################
-# The Smarter web console UI includes several React components, such as the
-# main dashboard, prompt (Chatbots) list, terminal emulator, and prompt passthrough.
-# Vite pushes builds of these React components to a CDN which is used as a general
-# purpose distribution mechanism for the latest production-ready builds of these components.
-#
-# The downloaded assets are placed in smarter/smarter/static/react/,
-# from which Django collects its static files. This directory is ignored by git
-# because it contains build assets rather than source code, so, these assets
-# are always fetched as part of the Docker build process rather than being
-# committed to the repository.
-#
-# Developers: Note that Vite also saves locally to this same directory for local development.
-# Thus, you can still use the Makefile command `make collectstatic`
-# to build React components locally if needed, but the default and recommended workflow
-# is to rely on the CDN downloads for all environments.
-#
-# example manifest.json file for reference: https://cdn.smarter.sh/react/terminal_emulator/manifest.json
-# {
-#   "_rolldown-runtime.js": {
-#     "file": "assets/rolldown-runtime.js",
-#     "name": "rolldown-runtime"
-#   },
-#   "_xterm-kHJ-D0s7.css": {
-#     "file": "assets/xterm-kHJ-D0s7.css",
-#     "src": "_xterm-kHJ-D0s7.css"
-#   },
-#   "_xterm.js": {
-#     "file": "assets/xterm.js",
-#     "name": "xterm",
-#     "imports": [
-#       "_rolldown-runtime.js"
-#     ],
-#     "css": [
-#       "assets/xterm-kHJ-D0s7.css"
-#     ]
-#   },
-#   "index.html": {
-#     "file": "assets/index.js",
-#     "name": "index",
-#     "src": "index.html",
-#     "isEntry": true,
-#     "imports": [
-#       "_rolldown-runtime.js",
-#       "_xterm.js"
-#     ],
-#     "css": [
-#       "assets/index-58MXwt-L.css"
-#     ]
-#   }
-# }
-FROM react_cdn_distribution AS react_assets
-
-ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
-ENV REACT_STAGING_FOLDER=/tmp/react_assets
-RUN mkdir -p ${REACT_STAGING_FOLDER}
-
-WORKDIR ${REACT_STAGING_FOLDER}
-
-
-# set -e : fail immediately on error.
-# set --u : fail on undefined variables
-#
-# Notes:
-# - build FAILS if manifest.json cannot be downloaded
-# - downloads EVERY unique asset referenced anywhere in manifest.json
-# - preserves nested paths like assets/foo.js
-# - safely handles:
-#     - imports
-#     - css
-#     - entrypoints
-#     - runtime chunks
-#     - arbitrary manifest complexity
-RUN if [ -n "${DOCKER_REACT_REMOTE_CDN_URL:-}" ]; then \
-    set -eu; \
-    for app in ${REACT_COMPONENTS}; do \
-        echo "Collecting assets for React component: ${app}"; \
-        APP_ROOT="${REACT_STAGING_FOLDER}/${app}"; \
-        MANIFEST="${APP_ROOT}/manifest.json"; \
-        \
-        mkdir -p "${APP_ROOT}"; \
-        \
-        url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/manifest.json"; \
-        echo "Downloading manifest for ${app} from ${url}"; \
-        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-            "${url}" \
-            -o "${MANIFEST}"; \
-        \
-        echo "Downloaded manifest for ${app}:"; \
-        cat "${MANIFEST}"; \
-        \
-        url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/index.html"; \
-        echo "Downloading index.html for ${app} from ${url}"; \
-        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-            "${url}" \
-            -o "${APP_ROOT}/index.html"; \
-        \
-        jq -r ' \
-            [ \
-              .[] | \
-              (.file), \
-              (.css[]?) \
-            ] \
-            | unique[] \
-        ' "${MANIFEST}" \
-        | while read -r ASSET_FILE; do \
-            [ -n "${ASSET_FILE}" ] || continue; \
-            \
-            DEST_PATH="${APP_ROOT}/${ASSET_FILE}"; \
-            DEST_DIR="$(dirname "${DEST_PATH}")"; \
-            \
-            mkdir -p "${DEST_DIR}"; \
-            \
-            url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/${ASSET_FILE}"; \
-            echo "Downloading asset: ${url}"; \
-            curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-                "${url}" \
-                -o "${DEST_PATH}"; \
-        done; \
-    done; \
-fi
-
 ############################## application ##################################
-FROM react_assets AS application
+FROM venv AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
+#
+# The web console's React apps must be built before the Docker build, with
+# `make react-build` locally or the React build action in GitHub Actions.
+# Vite writes them into smarter/smarter/static/react/, which is ignored by
+# git, and is copied into the image with the rest of ./smarter.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llmclient/data/ ./data/manifests/
+RUN mkdir -p /home/smarter_user/smarter/staticfiles
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
-
-COPY --from=react_assets /tmp/react_assets/ /home/smarter_user/smarter/smarter/static/react/
-
 
 ################################# permissions #######################################
 # This stage is for setting file permissions for the smarter_user. We want to approach
@@ -397,11 +233,13 @@ FROM application AS permissions
 # .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
 
 USER root
+
 RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
   find /home/smarter_user/ -type f -exec chmod 400 {} + && \
   find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
   find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
+  chmod 700 /home/smarter_user/smarter/staticfiles && \
   chmod -R 700 /home/smarter_user/data && \
   chmod -R 700 /home/smarter_user/.cache && \
   chmod 755 /home/smarter_user/smarter/manage.py ; fi
@@ -429,11 +267,11 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 # but the static assets do not change, we can take advantage of Docker's
 # caching mechanism.
 #
-# Separately, we also need to verify that the React component assets have been
-# added to the smarter/static/react directory. This can happen in either of two ways:
-# - locally built outside of this Dockerfile, and then copied into the directory (this is the default)
-# - downloaded from the CDN in the steps above
+# Separately, we also need to verify that the React component assets, which are
+# built outside of this Dockerfile, are in the smarter/static/react directory.
 FROM data AS collect_assets
+
+USER smarter_user
 
 # from .env file. This is used to control whether we collect static files during the build process.
 ARG DOCKER_COLLECT_STATIC_FILES=true
@@ -443,13 +281,18 @@ ENV DOCKER_COLLECT_STATIC_FILES=${DOCKER_COLLECT_STATIC_FILES}
 
 RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
       if [ ! -d "smarter/static/react" ] || [ -z "$(ls -A smarter/static/react)" ]; then \
-        echo "Error: smarter/static/react is missing or empty" >&2; exit 1; \
+        echo "Error: smarter/static/react is missing or empty" >&2; ls -lha smarter/static; exit 1; \
       fi; \
       python manage.py collectstatic --noinput; \
     else \
       echo "Skipping collectstatic"; \
     fi
 
+RUN echo "Inspecting /home/smarter_user/smarter/staticfiles" && \
+    ls -lha /home/smarter_user/smarter/staticfiles/react/ || true && \
+    if [ ! -d "/home/smarter_user/smarter/staticfiles" ] || [ -z "$(ls -A /home/smarter_user/smarter/staticfiles 2>/dev/null)" ]; then \
+      echo "Error: /home/smarter_user/smarter/staticfiles is missing or empty" >&2; exit 1; \
+    fi
 ################################# final #######################################
 # This is the final stage that will be used to run the application.
 # Uvicorn is used as the application server.

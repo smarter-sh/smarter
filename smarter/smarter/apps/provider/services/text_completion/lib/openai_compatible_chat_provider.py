@@ -1,10 +1,7 @@
 # pylint: disable=W0602,C0302
-"""
-Base class for chat providers.
-"""
+"""Base class for prompt providers."""
 
 import ast
-import logging
 import re
 import time
 import traceback
@@ -21,11 +18,18 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from openai.types.completion_usage import CompletionUsage
 
 from smarter.apps.account.models import (
-    CHARGE_TYPE_PLUGIN,
-    CHARGE_TYPE_PROMPT_COMPLETION,
-    CHARGE_TYPE_TOOL,
+    ChargeTypes,
+    SmarterBudgetExceeded,
     UserProfile,
+    charge_authorization,
 )
+from smarter.apps.guardrail.services import (
+    GuardrailBlockedError,
+    GuardrailPipeline,
+    GuardrailStage,
+    PipelineDisposition,
+)
+from smarter.apps.mcpclient.toolkit import MCPToolkit
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta, PluginPrompt
 from smarter.apps.plugin.plugin.base import PluginBase
@@ -42,20 +46,20 @@ from smarter.apps.prompt.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
 )
-from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.receivers import (
     llm_tool_presented,
     llm_tool_requested,
     llm_tool_responded,
 )
 from smarter.apps.prompt.signals import (
-    chat_completion_plugin_called,
-    chat_completion_request,
-    chat_completion_response,
-    chat_completion_tool_called,
-    chat_finished,
+    chat_plugin_called,
+    chat_request,
+    chat_response,
     chat_response_failure,
-    chat_started,
+    chat_tool_called,
+    prompt_finished,
+    prompt_started,
 )
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.lib.protocols import (
@@ -63,6 +67,7 @@ from smarter.apps.provider.services.text_completion.lib.protocols import (
 )
 from smarter.apps.provider.services.text_completion.utils import (
     http_response_factory,
+    pair_tool_messages,
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
@@ -71,13 +76,13 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .chat_provider_base import SmarterChatProviderBase
-from .exception_map import EXCEPTION_MAP
+from .exception_map import exception_status_and_message
 from .internal_keys import _InternalKeys
 
 
@@ -88,29 +93,45 @@ def should_log(level):
 
 
 OPENAI_TOOL_CHOICE = "auto"
+REASONING_EFFORT_NONE = "none"
+
+TOOLS_REQUIRE_NO_REASONING_MODELS: set[str] = {"gpt-6-luna"}
+"""
+Models whose v1/chat/completions endpoint rejects function tools unless reasoning_effort is 'none'.
+
+OpenAI returns a 400 for these models when a request has tools and omits reasoning_effort, because
+their default effort is not 'none'. The set is not exhaustive: a model that fails this way at runtime
+is added to it, so each process pays for the failed request at most once per model. reasoning_effort
+is never sent otherwise, because older models such as gpt-4o-mini, and some OpenAI-compatible
+providers, reject the parameter.
+"""
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
+BLOCKED_MESSAGE_PLACEHOLDER = "[This message was blocked by a guardrail.]"
+"""What replaces a user message that an input guardrail blocked, in the conversation's history."""
+
+
 class OpenAISmarterClient(SmarterChatProviderBase):
     """
-    Chat provider for OpenAI-compatible text completion APIs.
+    Prompt provider for OpenAI-compatible text completion APIs.
 
     This provider class enables seamless integration with any vendor or service
-    that implements the OpenAI chat completion API, including both OpenAI and third-party providers
+    that implements the OpenAI prompt completion API, including both OpenAI and third-party providers
     that adhere to the same protocol and message formats.
 
     **Key Features:**
 
-        - Supports OpenAI's chat completion API and compatible alternatives.
+        - Supports OpenAI's prompt completion API and compatible alternatives.
         - Handles message formatting, tool calls, plugin integration, and billing.
-        - Manages multi-step chat completion workflows, including tool and plugin responses.
+        - Manages multi-step prompt completion workflows, including tool and plugin responses.
         - Provides hooks for plugin selection, function registration, and error handling.
 
     **Usage:**
 
-        Inherit from this class to implement a chat provider that communicates with any OpenAI-compatible API endpoint.
+        Inherit from this class to implement a prompt provider that communicates with any OpenAI-compatible API endpoint.
         This class is suitable for use cases where you want to support multiple LLM vendors with a unified interface.
 
     **Example:**
@@ -121,24 +142,36 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 pass
 
             provider = MyProvider()
-            response = provider.handler(user_profile, chat, data)
+            response = provider.handler(user_profile, prompt, data)
 
     .. seealso::
-        - https://developers.openai.com/api/reference/overview/chat
+        - https://developers.openai.com/api/reference/overview/prompt
         - :class:`SmarterChatProviderBase`
+    """
+
+    mcp_toolkit: Optional[MCPToolkit] = None
+    """The MCP tools of the current prompt.
+
+    See :meth:`handle_mcp_clients`.
+    """
+
+    guardrail_pipeline: Optional[GuardrailPipeline] = None
+    """The MCP tools of the current prompt.
+
+    See :meth:`handle_mcp_clients`.
     """
 
     @property
     def openai_messages(self) -> list[dict[str, Any]]:
         """
-        Return a sanitized list of messages compatible with OpenAI's chat completion API.
+        Return a sanitized list of messages compatible with OpenAI's prompt completion API.
 
         This property processes the internal message list, removing Smarter-specific annotations
         (such as metadata about tool calls and interim completion token charges) to ensure that
         only valid OpenAI message fields are included. This is essential for avoiding API errors
         related to unexpected or extraneous fields.
 
-        :returns: A list of dictionaries representing chat messages, formatted for OpenAI's API.
+        :returns: A list of dictionaries representing prompt messages, formatted for OpenAI's API.
         :rtype: list[dict[str, Any]]
 
         :raises SmarterValueError: If the internal message list is not a list.
@@ -178,7 +211,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         .. seealso::
 
-            - https://developers.openai.com/api/reference/overview/chat/create
+            - https://developers.openai.com/api/reference/overview/prompt/create
             - :class:`OpenAIMessageKeys`
         """
         if not isinstance(self.messages, list):
@@ -205,12 +238,15 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if _InternalKeys.SMARTER_IS_NEW in message_copy:
                 del message_copy[_InternalKeys.SMARTER_IS_NEW]
             retval.append(message_copy)
-        return retval
+        # the thread may come from the client, which keeps the tool replies but not the
+        # assistant's tool_calls, and OpenAI refuses a tool reply without its tool call.
+        return pair_tool_messages(retval)
 
     @property
     def new_messages(self) -> list[dict[str, Any]]:
         """
         Return a list of messages that are marked as new.
+
         This property filters the internal message list to return only those messages
         that have the 'smarter_is_new' flag set to True.
 
@@ -231,8 +267,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def prep_first_request(self):
         """
-        Prepare the first request for the chat completion. This is called
-        at the beginning of the chat completion process.
+        Prepare the first request for the prompt completion.
+
+        This is called
+        at the beginning of the prompt completion process.
 
         :raises SmarterValueError: If the messages are not a list, or if tool definitions are invalid.
 
@@ -309,18 +347,20 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 content = content + f"\n\nTool definition:\n--------------------\n{json.dumps(tool, indent=4)}"
                 self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
-        # send a chat completion request signal. this triggers a variety of db records to be created
+        # send a prompt completion request signal. this triggers a variety of db records to be created
         # asynchronously in the background via Celery tasks.
-        chat_completion_request.send(
+        chat_request.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             iteration=self.iteration,
             data=self.first_iteration[_InternalKeys.REQUEST_KEY],
         )
 
     def prep_second_request(self):
         """
-        Prepare the second request for the chat completion. This is called
+        Prepare the second request for the prompt completion.
+
+        This is called
         in response to a tool call that requires a second request to the LLM.
 
         :returns: None
@@ -337,9 +377,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             _InternalKeys.MODEL_KEY: self.model,
             _InternalKeys.MESSAGES_KEY: self.openai_messages,
         }
-        chat_completion_request.send(
+        chat_request.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             iteration=self.iteration,
             data=self.second_iteration[_InternalKeys.REQUEST_KEY],
         )
@@ -347,10 +387,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     def append_openai_response(self, response: ChatCompletion) -> None:
         """
         Append the OpenAI-compatible response message to the internal message list.
+
         2025-06-20: updated to use model_dump_json() to ensure compatibility with Pydantic v2.
         2025-10-02: updated to validate that the response message is indeed a ChatCompletionMessage.
 
-        :param response: The OpenAI-compatible chat completion response.
+        :param response: The OpenAI-compatible prompt completion response.
         :type response: ChatCompletion
 
         :returns: None
@@ -369,7 +410,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         Append an error message to the internal message list based on the OpenAI response.
 
-        :param response: The OpenAI chat completion response containing the error.
+        :param response: The OpenAI prompt completion response containing the error.
         :type response: ChatCompletion
 
         :returns: None
@@ -378,9 +419,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         def extract_json_objects(text) -> Optional[dict[str, Any]]:
             """
-            Evaluate the text to attempt to extract any JSON objects that
-            may be present. This is useful for extracting json error
-            information that might exist inside of the error messages.
+            Evaluate the text to attempt to extract any JSON objects that may be present.
+
+            This is useful for extracting json error information that might exist inside of the error messages.
 
             Find all curly-brace blocks (non-greedy) and attempt to parse
             them as JSON objects.
@@ -436,7 +477,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_response(self) -> None:
         """
-        handle internal billing, and append messages to the response for prompt completion and the billing summary
+        Handle internal billing, and append messages to the response for prompt completion and the billing summary.
 
         :returns: None
         :rtype: None
@@ -457,7 +498,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
+        resource_locators = [self.provider.record_locator, self.prompt.llmclient.record_locator]  # type: ignore[assignment]
+        self._insert_charge_by_type(resource_locators, ChargeTypes.PROMPT_COMPLETION.value)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
             content=f"{self.provider_name} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
@@ -491,23 +533,30 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             else self.second_iteration[_InternalKeys.RESPONSE_KEY] if self.second_iteration else None
         )
 
-        chat_completion_response.send(
+        chat_response.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             iteration=self.iteration,
             request=serialized_request,
             response=serialized_response,
             messages=self.messages,
         )
 
-    def handle_tool_called(self, function_name: str, function_args: str) -> None:
+    def handle_tool_called(
+        self, function_name: str, function_args: str, extra_resource_locators: Optional[list[str]] = None
+    ) -> None:
         """
-        handle a built-in tool call. example: get_current_weather()
+        Handle a built-in tool call.
+
+        example: get_current_weather()
 
         :param function_name: The name of the tool function called.
         :type function_name: str
         :param function_args: The arguments passed to the tool function.
         :type function_args: str
+        :param extra_resource_locators: The record locators of any other resources that the tool
+            call used, e.g. an MCPClient, to include in the charge.
+        :type extra_resource_locators: Optional[list[str]]
 
         :returns: None
         :rtype: None
@@ -515,23 +564,29 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         logger.debug("%s.handle_tool_called() - %s", self.formatted_class_name, function_name)
         request = (self.first_iteration[_InternalKeys.REQUEST_KEY],)
         response = (self.first_iteration[_InternalKeys.RESPONSE_KEY],)
-        chat_completion_tool_called.send(
+        chat_tool_called.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             plugin=None,
             function_name=function_name,
             function_args=function_args,
             request=request,
             response=response,
         )
-        self._insert_charge_by_type(CHARGE_TYPE_TOOL)
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        if isinstance(self.prompt, Prompt) and self.prompt.llmclient:
+            resource_locators.append(self.prompt.llmclient.record_locator)
+        resource_locators.extend(extra_resource_locators or [])
+        self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
         )
 
     def handle_plugin_called(self, plugin: PluginBase) -> None:
         """
-        handle a plugin tool call. example: SqlPlugin, ApiPlugin, StaticPlugin etc.
+        Handle a plugin tool call.
+
+        example: SqlPlugin, ApiPlugin, StaticPlugin etc.
 
         :param plugin: The plugin instance that was called.
         :type plugin: PluginBase
@@ -540,18 +595,26 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :rtype: None
         """
         logger.debug("%s.handle_plugin_called() - %s", self.formatted_class_name, plugin.name)
-        chat_completion_plugin_called.send(
+        chat_plugin_called.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             plugin=plugin,
             input_text=self.input_text,
         )
-        self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
-        self.db_insert_chat_plugin_usage(chat=self.chat, plugin=plugin, input_text=self.input_text)
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        resource_locators.append(self.prompt.llmclient.record_locator)  # type: ignore[union-attr]
+        resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
+        if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
+            resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
+
+        self._insert_charge_by_type(resource_locators, ChargeTypes.PLUGIN.value)
+        self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):
         """
-        Process a tool call from the LLM. This method handles both built-in tool calls
+        Process a tool call from the LLM.
+
+        This method handles both built-in tool calls
         and plugin tool calls.
 
         :param tool_call: The tool call data from the LLM.
@@ -584,12 +647,27 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.append_message_tool_called(tool_call=tool_call)
 
         function_response = None
-        if function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
+        extra_resource_locators: list[str] = []
+        budget_refusal = self.tool_budget_refusal(function_name)
+        if budget_refusal is not None:
+            # a budget forbids charges to the plugin or MCP server, so the LLM is told why instead.
+            function_response = budget_refusal
+        elif function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
             function_response = function_to_call(tool_call=tool_call)
-            self.handle_tool_called(function_name=function_name, function_args=function_args)
+
+        elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            mcpclient = self.mcp_toolkit.mcpclient_for(function_name)
+            function_response = self.mcp_toolkit.call(function_name, function_args)
+            if mcpclient is not None:
+                serialized_tool_call[_InternalKeys.SMARTER_MCPCLIENT_KEY] = {
+                    "id": mcpclient.id,  # type: ignore[attr-defined]
+                    "name": mcpclient.name,
+                    "tool": self.mcp_toolkit.functions[function_name].tool_name,
+                }
+                extra_resource_locators.append(mcpclient.record_locator)
 
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
-            plugin_id = int(function_name[-4:])
+            plugin_id = int(function_name.rsplit("_", 1)[-1])
             try:
                 plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)
             except PluginMeta.DoesNotExist as e:
@@ -644,16 +722,61 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
             )
         self.serialized_tool_calls.append(serialized_tool_call)
+        self.handle_tool_called(
+            function_name=function_name,
+            function_args=function_args,
+            extra_resource_locators=extra_resource_locators,
+        )
         llm_tool_responded.send(
             sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
         )
+
+    def authorize_budgets(self) -> None:
+        """
+        Check the budgets of everything that a prompt completion is charged to, before calling the LLM.
+
+        :raises SmarterBudgetExceeded: if a budget's resource lock forbids charges to the provider,
+            the llmclient, the user, or their account.
+        """
+        resources = [
+            getattr(self, "provider", None),
+            getattr(self.prompt, "llmclient", None),
+            self.user_profile,
+            getattr(self.user_profile, "account", None),
+        ]
+        charge_authorization(
+            [resource.record_locator for resource in resources if resource is not None], self.__class__.__name__
+        )
+
+    def tool_budget_refusal(self, function_name: str) -> Optional[str]:
+        """
+        Check the budget of the plugin or MCP server that a tool call would use.
+
+        :returns: The tool response that tells the LLM why the tool cannot be used, or None if it can.
+        """
+        resource = None
+        if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            resource = self.mcp_toolkit.mcpclient_for(function_name)
+        elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
+            try:
+                resource = PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1]))
+            except (PluginMeta.DoesNotExist, ValueError):
+                return None
+        if resource is None:
+            return None
+        try:
+            charge_authorization(resource.record_locator, self.__class__.__name__)
+        except SmarterBudgetExceeded as e:
+            return json.dumps({"error": "budget_exceeded", "message": e.message})
+        return None
 
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
         """
         Handle a plugin being selected.
 
         does the prompt have anything to do with any of the search terms defined in a plugin?
-        TODO: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
+        The LLMClient's model, temperature and max_completion_tokens are used whichever plugins
+        are selected: a plugin customizes the prompt's messages and tools, not the LLM settings.
         2025-10-02: updated to validate that messages and tools are lists.
         2025-10-02: updated to use plugin.plugin_meta.name for the plugin name.
 
@@ -674,9 +797,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: plugin_prompt must be an instance of PluginPrompt, got {type(plugin.plugin_prompt)}"
             )
-        self.model = plugin.plugin_prompt.model
-        self.temperature = plugin.plugin_prompt.temperature
-        self.max_completion_tokens = plugin.plugin_prompt.max_completion_tokens
         self.messages = plugin.customize_prompt(self.messages)
         if self.tools is None:
             self.tools = []
@@ -685,6 +805,151 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
         llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
+
+    def append_guardrail_message(self, stage: str, result: Any) -> None:
+        """Append a Smarter message that summarizes what the guardrails of a stage did, if anything."""
+        triggered = [finding.guardrail_name for finding in result.triggered_findings]
+        failed = [outcome.guardrail_name for outcome in result.outcomes if outcome.error]
+        if not triggered and not failed:
+            return
+        content = f"Smarter {stage} guardrails: {result.disposition.value}."
+        if triggered:
+            content += f" Triggered: {', '.join(sorted(set(triggered)))}."
+        if failed:
+            content += f" Failed to run: {', '.join(sorted(set(failed)))}."
+        self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
+
+    def handle_input_guardrails(self) -> None:
+        """
+        Run the LLMClient's input guardrails on the user's message.
+
+        The guardrails are those listed in the LLMClient manifest's ``spec.guardrails``. If
+        they redact or transform the user's message, the message is replaced, so that the LLM,
+        the plugins and the persisted history see the changed message.
+
+        :raises GuardrailBlockedError: If a guardrail blocks the user's message.
+        """
+        self.guardrail_pipeline = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None or not isinstance(self.messages, list):
+            return
+        pipeline = GuardrailPipeline.for_llmclient(llmclient, session_key=self.prompt.session_key)  # type: ignore[union-attr]
+        if not pipeline.guardrails:
+            return
+        self.guardrail_pipeline = pipeline
+        result = pipeline.run_pre({"messages": self.messages})
+        if result.disposition in (PipelineDisposition.REDACTED, PipelineDisposition.TRANSFORMED):
+            self.messages = result.payload["messages"]
+            for message in reversed(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY:
+                    content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
+                    if isinstance(content, str):
+                        self.input_text = content
+                        if isinstance(self.request_meta_data, dict) and "input_text" in self.request_meta_data:
+                            self.request_meta_data["input_text"] = content
+                    break
+        if result.blocked:
+            # the blocked message is replaced in the conversation's history, so that it is
+            # not sent to the LLM with the history of the conversation's later prompts.
+            for message in reversed(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY:
+                    message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = BLOCKED_MESSAGE_PLACEHOLDER
+                    break
+            self.input_text = BLOCKED_MESSAGE_PLACEHOLDER
+            if isinstance(self.request_meta_data, dict) and "input_text" in self.request_meta_data:
+                self.request_meta_data["input_text"] = BLOCKED_MESSAGE_PLACEHOLDER
+        self.append_guardrail_message("input", result)
+        if result.blocked:
+            raise GuardrailBlockedError(result.fallback_message or "", None)
+
+    def handle_output_guardrails(self, response: ChatCompletion) -> ChatCompletion:
+        """
+        Run the LLMClient's output guardrails on the LLM's final reply.
+
+        :param response: The LLM's final response.
+        :returns: The response, with its reply redacted or transformed, or replaced with the
+            guardrail's message if a guardrail blocks it.
+        """
+        if self.guardrail_pipeline is None or not self.guardrail_pipeline.guardrails_for(GuardrailStage.POST):
+            return response
+        payload = json.loads(response.model_dump_json())
+        result = self.guardrail_pipeline.run_post(payload)
+        self.append_guardrail_message("output", result)
+        if result.blocked:
+            payload["choices"] = payload["choices"][:1]
+            message = payload["choices"][0]["message"]
+            message.update({"content": result.fallback_message, "refusal": None, "tool_calls": None})
+            payload["choices"][0]["finish_reason"] = "content_filter"
+            return ChatCompletion.model_validate(payload)
+        if result.disposition in (PipelineDisposition.REDACTED, PipelineDisposition.TRANSFORMED):
+            return ChatCompletion.model_validate(result.payload)
+        return response
+
+    def handle_mcp_clients(self) -> None:
+        """
+        Offer the LLM the tools of the LLMClient's MCP servers.
+
+        The LLMClient's active MCPClients, listed in its manifest's ``spec.mcpClients``, are
+        loaded into an :class:`~smarter.apps.mcpclient.toolkit.MCPToolkit`, whose tools are
+        added to the request, and whose servers' instructions are added to the system prompt.
+        An MCP server that cannot be reached is skipped, and reported in a Smarter message.
+
+        :returns: None
+        :rtype: None
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmclient.models import LLMClientMCPClients
+
+        self.mcp_toolkit = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None:
+            return
+        mcpclients = LLMClientMCPClients.mcpclients_for(llmclient)
+        if not mcpclients:
+            return
+        logger.debug(
+            "%s.handle_mcp_clients() loading MCPClients: %s",
+            self.formatted_class_name,
+            [mcpclient.name for mcpclient in mcpclients],
+        )
+        self.mcp_toolkit = MCPToolkit(mcpclients).load()
+        if self.mcp_toolkit.tools:
+            if self.tools is None:
+                self.tools = []
+            if self.available_functions is None:
+                self.available_functions = {}
+            self.tools.extend(self.mcp_toolkit.tools)
+            for function_name in self.mcp_toolkit.functions:
+                self.available_functions[function_name] = self.mcp_toolkit.call
+        instructions = self.mcp_toolkit.system_prompt()
+        if instructions and isinstance(self.messages, list):
+            for i, message in enumerate(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+                    content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
+                    self.messages[i] = {
+                        **message,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{instructions}",
+                    }
+                    break
+            else:
+                self.messages.insert(
+                    0,
+                    {
+                        OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: instructions,
+                    },
+                )
+        if self.mcp_toolkit.connected:
+            names = ", ".join(mcpclient.name for mcpclient in self.mcp_toolkit.connected)
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+                content=f"Smarter added the tools of these MCP servers: {names}",
+            )
+        for name, error in self.mcp_toolkit.errors.items():
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_ERROR_KEY,
+                content=f"Smarter could not use the {name} MCP server: {error}",
+            )
 
     def handle_function_provided(self, function: str) -> None:
         """
@@ -720,10 +985,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_completion(self) -> dict:
         """
-        Handle chat completion response. This method
+        Handle prompt completion response.
+
+        This method
         formats the final response to be returned to the client.
 
-        :returns: A dictionary representing the final chat completion response.
+        :returns: A dictionary representing the final prompt completion response.
         :rtype: dict
         """
         logger.debug("%s.handle_completion() called", self.formatted_class_name)
@@ -741,7 +1008,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
             "first_iteration": json.loads(json.dumps(self.first_iteration)),
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            _InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],  # type: ignore[call-arg]
+            _InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins or []],  # type: ignore[call-arg]
             _InternalKeys.MESSAGES_KEY: self.new_messages,
         }
         if self.tools:
@@ -752,7 +1019,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def request_meta_data_factory(self):
         """
-        Return a dictionary of request meta data. This includes
+        Return a dictionary of request meta data.
+
+        This includes
         the model, temperature, max_completion_tokens, and input_text.
 
         :returns: A dictionary of request meta data.
@@ -766,18 +1035,50 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             "input_text": self.input_text,
         }
 
+    def create_first_completion(self, completions_kwargs: dict[str, Any]) -> ChatCompletion:
+        """
+        Send the first request, which is the only one that offers the LLM tools.
+
+        Some reasoning models reject function tools on v1/chat/completions unless reasoning_effort
+        is 'none'. Requests with tools set reasoning_effort to 'none' for the models in
+        :data:`TOOLS_REQUIRE_NO_REASONING_MODELS`. If another model rejects the request for that
+        reason, it is retried once with reasoning_effort set to 'none' and the model is added to the set.
+        """
+        has_tools = bool(completions_kwargs.get(_InternalKeys.TOOLS_KEY))
+        if has_tools and self.model in TOOLS_REQUIRE_NO_REASONING_MODELS:
+            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
+        try:
+            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+        except openai.BadRequestError as e:
+            if (
+                not has_tools
+                or _InternalKeys.REASONING_EFFORT_KEY in completions_kwargs
+                or e.param != _InternalKeys.REASONING_EFFORT_KEY
+            ):
+                raise
+            base_logger.warning(
+                "%s %s - model %s rejected function tools at its default reasoning_effort. Retrying with reasoning_effort='%s'.",
+                self.formatted_class_name,
+                formatted_text("create_first_completion()"),
+                self.model,
+                REASONING_EFFORT_NONE,
+            )
+            TOOLS_REQUIRE_NO_REASONING_MODELS.add(str(self.model))
+            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
+            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+
     def handler(
         self,
         user_profile: UserProfile,
-        chat: Chat,
+        prompt: Prompt,
         data: Union[dict[str, Any], list],
         plugins: Optional[list[PluginBase]] = None,
         functions: Optional[list[str]] = None,
     ) -> SmarterChatCompletionResponseType:
         """
-        Process a chat prompt request and invoke the appropriate OpenAI-compatible API endpoint.
+        Process a prompt prompt request and invoke the appropriate OpenAI-compatible API endpoint.
 
-        This method orchestrates the entire chat completion workflow, including:
+        This method orchestrates the entire prompt completion workflow, including:
 
         - Validating input and internal state.
         - Initializing or updating the message thread.
@@ -789,8 +1090,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         :param user_profile: The user_profile instance making the request.
         :type user_profile: UserProfile
-        :param chat: The chat session instance associated with this request.
-        :type chat: Chat
+        :param prompt: The prompt session instance associated with this request.
+        :type prompt: Prompt
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
         :type data: Union[dict[str, Any], list]
 
@@ -834,7 +1135,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         Example usage::
 
             response = provider.handler(
-                chat=chat_instance,
+                prompt=chat_instance,
                 data=request_data,
                 plugins=[plugin1, plugin2],
                 functions=[function_definition_1, function_definition_2],
@@ -843,44 +1144,48 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         plugins_list = [plugin.name for plugin in plugins] if plugins else []
         logger.debug(
-            "%s.handler() called with user_profile=%s, chat=%s, plugins=%s, functions=%s",
+            "%s.handler() called with user_profile=%s, prompt=%s, plugins=%s, functions=%s",
             self.formatted_class_name,
             user_profile,
-            chat,
+            prompt,
             plugins_list,
             functions,
         )
-        self._chat = chat
+        self._chat = prompt
         self.user_profile = user_profile
-        if chat and chat.user_profile:
-            self._user_profile = chat.user_profile
-            self._account = chat.user_profile.account
-            self._user = chat.user_profile.user
+        if prompt and prompt.user_profile:
+            self._user_profile = prompt.user_profile
+            self._account = prompt.user_profile.account
+            self._user = prompt.user_profile.user
             logger.debug(
-                "%s.handler() - reinitialized user_profile from chat: %s, user_profile: %s",
+                "%s.handler() - reinitialized user_profile from prompt: %s, user_profile: %s",
                 self.formatted_class_name,
-                chat,
+                prompt,
                 self._user_profile,
             )
         self.data = data  # type: ignore[assignment]
         self.plugins = plugins
         self.functions = functions
 
-        chat_started.send(sender=self.handler, chat=self.chat, data=self.data)
+        prompt_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
+        # the status and the message of an error, e.g. a 400 from the LLM provider, if any.
+        error_status: Optional[int] = None
+        error_message: Optional[str] = None
         self.iteration = 1
         openai.api_key = self.api_key
         openai.base_url = self.base_url
 
-        if not isinstance(self.chat, Chat):
+        if not isinstance(self.prompt, Prompt):
             raise SmarterValueError(
-                f"{self.formatted_class_name}: chat must be an instance of Chat, got {type(self.chat)}"
+                f"{self.formatted_class_name}: prompt must be an instance of Prompt, got {type(self.prompt)}"
             )
 
         try:
             self.validate()
-            self.model = self.chat.chatbot.default_model or self.default_model
-            self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
-            self.max_completion_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
+            self.authorize_budgets()
+            self.model = self.prompt.llmclient.default_model or self.default_model
+            self.temperature = self.prompt.llmclient.default_temperature or self.default_temperature
+            self.max_completion_tokens = self.prompt.llmclient.default_max_tokens or self.default_max_tokens
             if not self.data:
                 raise SmarterValueError(f"{self.formatted_class_name}: data is required")
             self.input_text = self.get_input_text_prompt(data=self.data)
@@ -890,7 +1195,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             # message history in the database, if it exists,
             # and append the user_profile's message.
             #
-            # using the persisted message history ensures that the chat
+            # using the persisted message history ensures that the prompt
             # provider has a consistent view of the conversation history
             # and that system and meta messages are preserved in their
             # original form and order.
@@ -904,13 +1209,20 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 # and a user_profile message.
                 self.messages = self.get_message_thread(data=self.data)
 
+            # run the llmclient's input guardrails on the user's message. A block raises
+            # GuardrailBlockedError, which is answered with the guardrail's message below.
+            self.handle_input_guardrails()
+
             # add plugins to the prompt if any are selected
             if self.plugins:
                 for plugin in self.plugins:
                     if plugin.selected(user=self.user_profile.user, input_text=self.input_text, messages=self.messages):
                         self.handle_plugin_selected(plugin=plugin)
 
-            # add all functions that are included in the chatbot definition
+            # add the tools and instructions of the llmclient's MCP servers
+            self.handle_mcp_clients()
+
+            # add all functions that are included in the llmclient definition
             if self.functions:
                 for function in self.functions:
                     self.handle_function_provided(function)
@@ -938,11 +1250,14 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 completions_kwargs,
             )
 
-            self.first_response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            self.first_response = self.create_first_completion(completions_kwargs)
             if not isinstance(self.first_response, ChatCompletion):
                 raise SmarterValueError(
                     f"{self.formatted_class_name}: first_response must be a ChatCompletion, got {type(self.first_response)}"
                 )
+            if self.first_response.choices and self.first_response.choices[0].message.tool_calls is None:
+                # this is the final response, so the output guardrails run on it
+                self.first_response = self.handle_output_guardrails(self.first_response)
             self.handle_response()
             self.append_openai_response(self.first_response)
             response_message = self.first_response.choices[0].message
@@ -989,8 +1304,57 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     temperature=self.temperature,
                     max_completion_tokens=self.max_completion_tokens,
                 )
+                self.second_response = self.handle_output_guardrails(self.second_response)
                 self.append_openai_response(self.second_response)
                 self.handle_response()
+
+        # an input guardrail blocked the user's message, so the LLM is not called
+        except GuardrailBlockedError as blocked:
+            created_time = int(time.time())
+            self.iteration = 1
+            self.first_response = ChatCompletion(
+                id="guardrail_blocked",
+                model=self.model or "unknown",
+                choices=[
+                    Choice(
+                        message=ChatCompletionMessage(
+                            role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=blocked.message
+                        ),
+                        finish_reason="content_filter",
+                        index=0,
+                    )
+                ],
+                usage=CompletionUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+                system_fingerprint="guardrail_blocked_" + str(created_time),
+                created=created_time,
+                object="chat.completion",
+            )
+            self.handle_response()
+            self.append_openai_response(self.first_response)
+
+        # a budget forbids more charges, so the LLM is not called, and the person is told why.
+        except SmarterBudgetExceeded as exceeded:
+            created_time = int(time.time())
+            self.iteration = 1
+            self.first_response = ChatCompletion(
+                id="budget_exceeded",
+                model=self.model or "unknown",
+                choices=[
+                    Choice(
+                        message=ChatCompletionMessage(
+                            role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=exceeded.message
+                        ),
+                        finish_reason="stop",
+                        index=0,
+                    )
+                ],
+                usage=CompletionUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+                system_fingerprint="budget_exceeded_" + str(created_time),
+                created=created_time,
+                object="chat.completion",
+            )
+            self.handle_response()
+            self.append_openai_response(self.first_response)
 
         # handle anything that went wrong
         # pylint: disable=broad-exception-caught
@@ -999,7 +1363,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             chat_response_failure.send(
                 sender=self.handler,
                 iteration=self.iteration,
-                chat=self.chat,
+                prompt=self.prompt,
                 request_meta_data=self.request_meta_data,
                 exception=e,
                 first_iteration=self.first_iteration,
@@ -1007,17 +1371,16 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 messages=self.messages,
                 stack_trace=stack_trace,
             )
-            # pylint: disable=W0612
-            status_code, _message = EXCEPTION_MAP.get(
-                type(e), (HTTPStatus.INTERNAL_SERVER_ERROR.value, "Internal server error")
-            )
+            error_status, error_message = exception_status_and_message(e)
             created_time = int(time.time())
             self.first_response = ChatCompletion(
                 id="error_response",
                 model=self.model or "unknown",
                 choices=[
                     Choice(
-                        message=ChatCompletionMessage(role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=str(e)),
+                        message=ChatCompletionMessage(
+                            role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=error_message
+                        ),
                         finish_reason="stop",
                         index=0,
                     )
@@ -1030,19 +1393,25 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             self.handle_response()
             self.append_openai_error_response(self.first_response, e)
 
-        # done! for better or worse. We process and return LLM errors as a 200
-        # response with the error message in the body, so that the client can
-        # display the error message in the prompt engineers workbench.
+        # done! for better or worse. An error is kept in the message history, so that the
+        # prompt engineers workbench can display it, and is returned with its own status,
+        # e.g. the status of the LLM provider's error response, and its message.
         response = self.handle_completion()
 
-        chat_finished.send(
+        prompt_finished.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             request=self.first_iteration.get(_InternalKeys.REQUEST_KEY),
             response=response,
             messages=self.messages,
         )
-        retval = http_response_factory(status=HTTPStatus.OK, body=response)
+        if error_status is not None and error_status != HTTPStatus.OK.value:
+            retval = http_response_factory(
+                status=error_status,
+                body={"error": {"status": error_status, "message": error_message}, "response": response},
+            )
+        else:
+            retval = http_response_factory(status=HTTPStatus.OK, body=response)
         if not isinstance(retval, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: http_response_factory() should have returned a dictionary, but instead returned {type(retval)}"

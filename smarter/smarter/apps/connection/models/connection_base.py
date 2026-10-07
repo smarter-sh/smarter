@@ -3,14 +3,15 @@
 from abc import abstractmethod
 
 from django.db import models
+from django.urls import reverse
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     User,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -19,7 +20,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 logger_prefix = formatted_text(f"{__name__}")
 
 
-class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
+class ConnectionBase(MetaDataWithOwnershipModel):
     """
     Abstract base class for all connection models in the Smarter platform.
 
@@ -61,16 +62,75 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
     )
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the class name formatted for logging.
 
         :return: The formatted class name as a string.
         :rtype: str
-
         """
 
-        return formatted_text(self.__class__.__module__ + "." + self.__class__.__name__)
+        class_name = f"{__name__}.{ConnectionBase.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    @property
+    def manifest_url(self) -> str:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        .. warning::
+
+            ToDo: This should be implemented by the subclass. This base *SHOULD* return a NotImplementedError.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        if self.kind == SAMKinds.SQL_CONNECTION.value:
+            # pylint: disable=C0415
+            from smarter.apps.connection.urls import ConnectionReverseNames
+
+            return reverse(
+                f"{ConnectionReverseNames.namespace}:{ConnectionReverseNames.sql_detailview}",
+                kwargs={"hashed_id": self.hashed_id},
+            )
+        elif self.kind == SAMKinds.API_CONNECTION.value:
+            # pylint: disable=C0415
+            from smarter.apps.connection.urls import ConnectionReverseNames
+
+            return reverse(
+                f"{ConnectionReverseNames.namespace}:{ConnectionReverseNames.api_detailview}",
+                kwargs={"hashed_id": self.hashed_id},
+            )
+        else:
+            logger.error(
+                "%s.manifest_url: Unsupported connection kind '%s' for connection '%s'. Cannot construct manifest URL.",
+                self.formatted_class_name,
+                self.kind,
+                self.name,
+            )
+            raise SmarterConfigurationError(f"Unsupported connection kind '{self.kind}' for connection '{self.name}'.")
 
     @property
     @abstractmethod

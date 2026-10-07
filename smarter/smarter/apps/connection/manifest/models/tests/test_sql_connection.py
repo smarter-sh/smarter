@@ -8,7 +8,6 @@ which really should be (or might already be) in the broker test bank.
 
 # pylint: disable=W0104
 
-import logging
 import os
 from typing import Optional
 
@@ -34,7 +33,8 @@ from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_to_snake, camel_to_snake_dict
+from smarter.common.utils import to_snake_case
+from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -44,7 +44,8 @@ MANIFEST_PATH_SQL_CONNECTION = os.path.abspath(
     os.path.join(DATA_PATH, "manifest", "brokers", "tests", "data", "sql-connection.yaml")
 )
 """
-Path to the SqlConnection manifest file 'sql-connection.yaml' which
+Path to the SqlConnection manifest file 'sql-connection.yaml' which.
+
 contains the actual connection parameters for the remote test database.
 
 Note that we're borrowing the sql-connection.yaml file from the
@@ -105,9 +106,7 @@ class TestSAMSqlConnection(TestSAMBrokerBaseClass):
             )
 
     def test_alternative_initialization(self):
-        """
-        Test that the SAMSqlConnection model can be initialized using a single dict.
-        """
+        """Test that the SAMSqlConnection model can be initialized using a single dict."""
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
@@ -259,7 +258,7 @@ class TestSAMSqlConnection(TestSAMBrokerBaseClass):
 
 
 class TestSqlConnectionLegacy(TestConnectionBase):
-    """Test SqlConnection Django ORM and Manifest Loader"""
+    """Test SqlConnection Django ORM and Manifest Loader."""
 
     _model: Optional[SAMSqlConnection] = None
 
@@ -298,7 +297,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid SQL connection engine: {invalid_db_engine}. Must be one of {DbEngines.all_values()}",
+            f"Invalid SQL connection engine: {invalid_db_engine}. Must be one of {DbEngines.all()}",
             str(context.exception),
         )
 
@@ -532,7 +531,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid authentication method: {invalid_auth_method}. Must be one of {DBMSAuthenticationMethods.all_values()}",
+            f"Invalid authentication method: {invalid_auth_method}. Must be one of {DBMSAuthenticationMethods.all()}",
             str(context.exception),
         )
 
@@ -544,7 +543,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         if not self.model:
             self.fail("Model should not be None after loading the manifest")
 
-        valid_auth_method = DBMSAuthenticationMethods.all_values()[0]
+        valid_auth_method = DBMSAuthenticationMethods.all()[0]
         self._manifest["spec"]["connection"]["authenticationMethod"] = valid_auth_method
         self._loader = None
         self._model = None  # type: ignore[assignment]
@@ -594,7 +593,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-mariadb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -623,7 +622,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
         logger.debug("test_django_orm_tcpip model_dump: %s", model_dump)
 
         django_model = SqlConnection(**model_dump)
@@ -632,7 +631,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
@@ -678,7 +677,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-mariadb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -709,7 +708,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
 
         logger.debug("test_django_orm_tcpip_ssl model_dump: %s", model_dump)
 
@@ -721,7 +720,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
@@ -764,7 +763,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-mariadb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -811,14 +810,14 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             )
             model_dump["proxyPassword"] = proxy_secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
 
         logger.debug("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
 
         # pylint: disable=W0612
         example_output = {
             "dbEngine": "django.db.backends.mysql",
-            "hostname": "smarter-mysql",
+            "hostname": "smarter-mariadb",
             "port": 3306,
             "database": "smarter",
             "username": "smarter",
@@ -849,7 +848,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)

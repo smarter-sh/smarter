@@ -3,26 +3,18 @@
 from smarter.common.enum import SmarterEnumAbstract
 
 
-###############################################################################
-# Enums for manifest keys in error handlers and other on-screen messages
-###############################################################################
-class VectorstoreModelEnum(SmarterEnumAbstract):
-    """Smarter Vectorstore Model enumeration."""
-
-
 class SAMVectorstoreSpecKeys(SmarterEnumAbstract):
-    """Smarter API Vectorstore Manifest Specification Keys enumeration."""
+    """The keys of a Vectorstore manifest's spec."""
 
     BACKEND = "backend"
-    HOST = "host"
-    PORT = "port"
-    AUTH_CONFIG = "auth_config"
-    PASSWORD = "password"
-    CONFIG = "config"
-    IS_ACTIVE = "is_active"
-    STATUS = "status"
-    PROVIDER = "provider"
-    PROVIDER_MODEL = "provider_model"
+    HOSTING = "hosting"
+    CONNECTION = "connection"
+    IS_ACTIVE = "isActive"
+    INDEX = "index"
+    EMBEDDINGS = "embeddings"
+    SELF_HOSTED = "selfHosted"
+    PINECONE = "pinecone"
+    MAINTENANCE = "maintenance"
 
 
-__all__ = ["VectorstoreModelEnum", "SAMVectorstoreSpecKeys"]
+__all__ = ["SAMVectorstoreSpecKeys"]

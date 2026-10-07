@@ -25,8 +25,11 @@ Smarter (ie multiple EKS clusters) within the same AWS account.
 Production deployment involves the following steps:
 
 1. Build AWS Infrastructure using the `Smarter Official Terraform Modules <https://github.com/smarter-sh/smarter-infrastructure>`__.
-2. Build and deploy the Smarter Chat ReactJS component to the CDN using `Smarter Chat <https://github.com/smarter-sh/smarter-chat>`__ and `Smarter Web Integration Example <https://github.com/smarter-sh/smarter-web-integration-example>`__.
-3. Deploy the Smarter Platform to your Kubernetes cluster using the `Official Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
+2. Deploy the Smarter Platform to your Kubernetes cluster using the `Official Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
+
+The web console's React apps, including :doc:`Smarter Chat <../../smarter-framework/developer-reference/react-integration/smarter-chat>`,
+the chat of the Prompt Engineer Workbench, are built into the Smarter Docker image's static files, so they need no
+separate deployment.
 
 
 A modest amount of advance planning and an understanding of some basic organizational principles within Smarter will save you time and heartache.
@@ -147,160 +150,16 @@ being used in this repo, before proceeding.
     once they've been created.
 
 
-II. ReactJS Component
-----------------------
-
-The Chat functionality in the Smarter Prompt Engineer Workbench is delivered
-as a ReactJS component served from a CDN at runtime. You will need to build
-and deploy this component separately from the main Smarter Platform application.
-The source code of this component is mature and stable, and generally
-only changes in response to regular version bumps of a minimal set of
-dependencies. This component can safely run for months (or even years)
-without needing to be updated.
-
-.. note::
-
-  The ReactJS component is designed to work generically with any web application.
-  The Smarter Project manages `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__,
-  an npm package that is published to the npm registry directly from the source code
-  located in `smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__.
-
-  While the @smarter.sh/ui-chat npm component is not used as part of this deployment process per se,
-  it bears mentioning that it **can** be seamlessly integrated into any web architecture
-  using the patterns described below in `smarter-sh/web-integration-example <https://github.com/smarter-sh/web-integration-example>`__,
-  including Wordpress, Joomla, Drupal, Microsoft Sharepoint, .Net, Salesforce, Squarespace,
-  Wix, Shopify, Angular, HubSpot, custom React applications, and more.
-  The Smarter Web Console is just one arbitrary example of how to do this.
-
-
-Setting this up for production is a 2-step process.
-First, you will use `smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__
-to build and deploy the ReactJS component to your CDN (ie 'cdn.platform.example.com/ui-chat')
-which should have been automatically created for you by `smarter-sh/smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__.
-Afterwards, you will use `smarter-sh/web-integration-example <https://github.com/smarter-sh/web-integration-example>`__
-to configure and deploy the app loader that Smarter uses
-to actually load the ReactJS component into the Web Console DOM.
-The app loader is a small JavaScript IIFE that is referenced in the Django template
-for the Web Console Prompt Engineer Workbench. It is served from the same CDN,
-and is responsible for adding elements to the web console DOM for the
-ReactJS component js and css build bundles.
-
-See the script tag at the very bottom of the Django template below.
-
-.. literalinclude:: ../../../../smarter/smarter/templates/prompt/workbench.html
-  :language: html
-
-The rendered html template will include a script tag similar to the following
-that references the app-loader.js script.
-
-.. code-block:: html
-
-  <script
-    async=""
-    class="smarter-chat"
-    src="https://cdn.platform.example.com/ui-chat/app-loader.js">
-  </script>
-
-The IIFE in turn is responsible for adding these two elements to the DOM
-at run-time:
-
-.. code-block:: html
-
-  <head>
-    <!-- ReactJS css production bundle ... -->
-    <link
-      rel="stylesheet"
-      crossorigin=""
-      href="https://cdn.platform.example.com/ui-chat/assets/main-DcfW1mPt.css"
-      class="smarter-chat">
-    <!-- more head elements ... -->
-  </head>
-  <body>
-    <!-- ReactJS js production bundle ... -->
-    <script
-      class="smarter-chat"
-      src="https://cdn.platform.example.com/ui-chat/assets/main-BHcMZHtf.js">
-    </script>
-    <!-- more body elements ... -->
-  </body>
-
-The js bundle, itself an IIFE, will initiate the ReactJS bootstrap process to render
-the Chat app into the DOM element with the id ``{{ chatapp_workbench.div_id }}`` which
-by default will resolve to ``"smarter-sh-v1-ui-chat-root"``.
-This is the root div for the ReactJS app,
-and is where all of the React components will be rendered as children.
-This div is rendered by the Django template engine from the template above,
-and all of its attributes are generated from the context variable created in
-`ChatAppWorkbenchView.dispatch() <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/views/detailview/chatapp_workbench_view.py#L160>`__. See below.
-
-.. literalinclude:: ../../../../smarter/smarter/apps/prompt/views/detailview/chatapp_workbench_view.py
-  :language: python
-  :lines: 160-
-
-The rendered div will look something like the following.
-
-.. code-block:: html
-
-  <div
-    id="smarter-sh-v1-ui-chat-root"
-    class="smarter-chat"
-    django-session-cookie-name="sessionid"
-    smarter-chatbot-api-url="https://platform.example.com/api/v1/chatbots/4/"
-    smarter-cookie-domain="platform.example.com"
-    smarter-csrf-cookie-name="csrftoken"
-    smarter-debug-mode="True"
-    smarter-session-cookie-name="session_key"
-    smarter-toggle-metadata="True"
-    style="height: 88vh;">
-  </div>
-
-
-.. important::
-
-  The attribute value of ``id`` ('smarter-sh-v1-ui-chat-root' by default) must agree with the value of
-  REACT_ROOT_ELEMENT_ID in `web-integration-example/src/shared/constants.js <https://github.com/smarter-sh/web-integration-example/blob/main/src/shared/constants.js>`__
-  ('smarter-sh-v1-ui-chat-root' unless you have modified it) as this is the
-  'root' element id that the IIFE in the React bundle will look for.
-
-
-Smarter Chat Additional documentation:
-
-- README at `smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__.
-- `Makefile <https://github.com/smarter-sh/smarter-chat/blob/main/Makefile>`__.
-  This Makefile provides working shortcuts for all major operations. Importantly,
-  The deployment process is fully automated and can be completed with a single command.
-- `.env.example <https://github.com/smarter-sh/smarter-chat/blob/main/.env.example>`__.
-
-Smarter Web Integration Example Additional documentation:
-
-- README at `smarter-sh/web-integration-example <https://github.com/smarter-sh/web-integration-example>`__.
-- `Makefile <https://github.com/smarter-sh/web-integration-example/blob/main/Makefile>`__.
-  This Makefile provides working shortcuts for all major operations. Importantly,
-  The deployment process is fully automated and can be completed with a single command.
-- `.env.example <https://github.com/smarter-sh/web-integration-example/blob/main/.env.example>`__.
-
-.. raw:: html
-
-   <div style="text-align: center;">
-     <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
-            autoplay loop muted playsinline
-            style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
-       Sorry, your browser doesn't support embedded videos.
-     </video>
-     <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
-       <em>Smarter Prompt Engineering Workbench Demo</em>
-     </div>
-   </div>
-   <br/>
-
-
-III. Smarter Platform Application
------------------------------------
+II. Smarter Platform Application
+--------------------------------
 
 The Smarter Platform application is deployed to Kubernetes using the `official Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
 The application itself consists of a Python-Django backend that supports an
 API and a Web Console frontend. This single code base is deployed to Kubernetes as
-an application server and also as a Celery worker and a Celery Beat worker.
+an application server, two Celery workers, and a Celery Beat worker. One Celery worker runs the
+operational tasks, such as recording prompts and charges, and the other runs the infrastructure
+tasks, which deploy and verify DNS records, certificates and node groups, so that a deployment never
+delays the operational tasks. See :doc:`ADR-030 <../../adr/030-task-queues>`.
 The application follows 12-factor app principles and is designed to be horizontally
 scalable and resilient to failure.
 

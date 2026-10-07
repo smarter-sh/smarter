@@ -1,8 +1,8 @@
 # pylint: disable=W0718
-"""Smarter API SmarterAuthToken Manifest handler"""
+"""Smarter API SmarterAuthToken Manifest handler."""
 
 import traceback
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 from django.core import serializers
 from django.core.handlers.asgi import ASGIRequest
@@ -10,6 +10,7 @@ from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import User
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
@@ -31,6 +32,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -51,8 +53,8 @@ class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
         return "Smarter API SmarterAuthToken Manifest Broker Error"
 
 
-class SmarterAuthTokenSerializer(ModelSerializer):
-    """API key serializer for smarter api."""
+class SmarterAuthTokenMiniSerializer(ModelSerializer):
+    """API key serializer for smarter api that excludes SAM ownership information."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -62,7 +64,9 @@ class SmarterAuthTokenSerializer(ModelSerializer):
 
 class SAMSmarterAuthTokenBroker(AbstractBroker):
     """
-    Smarter API SmarterAuthToken Manifest Broker. This class is responsible for
+    Smarter API SmarterAuthToken Manifest Broker.
+
+    This class is responsible for
     - loading, validating and parsing the Smarter Api yaml SmarterAuthToken manifests
     - using the manifest to initialize the corresponding Pydantic model
 
@@ -80,45 +84,48 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     _token_key: Optional[str]
     _orm_instance: Optional[SmarterAuthToken]
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SAMSmarterAuthTokenBroker with the given arguments.
-        The constructor initializes the parent class and sets up the manifest
-        and user attributes.
-        """
+    def __init__(self, *args, **kwargs) -> None:
         self._smarter_auth_token = None
         self._token_key = None
         self._created = False
         super().__init__(*args, **kwargs)
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        logger.info(msg)
 
     @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
-        return logging.formatted_text(f"{__name__}.{SAMSmarterAuthToken.__name__}()[{id(self)}]")
+        class_name = f"{__name__}.{SAMSmarterAuthToken.__name__}()[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def smarter_auth_token(self) -> Optional[SmarterAuthToken]:
         """
-        The SmarterAuthToken object is a Django ORM model subclass from knox.AuthToken
-        that represents a SmarterAuthToken api key. The SmarterAuthToken object is
-        used to store the authentication hash and Smarter metadata for the Smarter API.
-        The SmarterAuthToken object is retrieved from the database, if it exists,
-        or created from the manifest if it does not.
+        The SmarterAuthToken object is a Django ORM model subclass from knox.AuthToken that represents a SmarterAuthToken api key.
+
+        The SmarterAuthToken object is used to store the authentication hash and Smarter metadata for the Smarter
+        API. The SmarterAuthToken object is retrieved from the database, if it exists, or created from the manifest
+        if it does not.
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token
+        if isinstance(self._orm_meta_instance, SmarterAuthToken):
+            # the same instance that orm_meta_instance_setter() retrieved, so that both stay in sync
+            self._smarter_auth_token = self._orm_meta_instance
+            return self._smarter_auth_token
 
-        if not self.manifest:
+        username = self.token_username
+        if not username:
             logger.debug(
-                "%s.smarter_auth_token() Manifest not set. Cannot retrieve SmarterAuthToken.",
+                "%s.smarter_auth_token() neither a manifest nor a user is set. Cannot retrieve SmarterAuthToken.",
                 self.formatted_class_name,
             )
             return None
 
-        username = self.manifest.spec.config.username
         try:
             logger.debug(
                 "%s.smarter_auth_token() Retrieving SmarterAuthToken for user %s with name %s",
@@ -141,11 +148,24 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
         return self._smarter_auth_token
 
+    @property
+    def token_username(self) -> Optional[str]:
+        """
+        The username of the SmarterAuthToken's owner.
+
+        This is the manifest's spec.config.username when there is a manifest. Otherwise,
+        for the cli commands that only pass a name (describe, delete, deploy, undeploy),
+        it is the user who made the request.
+        """
+        if self.manifest:
+            return self.manifest.spec.config.username
+        if isinstance(self.user, User):
+            return self.user.username
+        return None
+
     @smarter_auth_token.setter
     def smarter_auth_token(self, value: SmarterAuthToken) -> None:
-        """
-        Set the SmarterAuthToken object.
-        """
+        """Set the SmarterAuthToken object."""
         self._smarter_auth_token = value
         logger.debug(
             "%s.smarter_auth_token() set to %s",
@@ -157,6 +177,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     def token_key(self) -> Optional[str]:
         """
         The token_key is the actual API key that is used to authenticate with the Smarter API.
+
         The token_key is generated by the SmarterAuthToken object when it is created and
         it is only available immediately after the object is created.
         """
@@ -164,9 +185,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             return self._token_key
 
     def manifest_to_django_orm(self) -> dict[str, Any]:
-        """
-        Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model.
-        """
+        """Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model."""
         logger.debug("%s.manifest_to_django_orm() called", self.formatted_class_name)
         if not isinstance(self.manifest, SAMSmarterAuthToken):
             raise SAMSmarterAuthTokenBrokerError(
@@ -176,7 +195,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMSmarterAuthTokenBrokerError(
                 message=f"Invalid config dump for {self.kind} manifest: {config_dump}. Got type {type(config_dump)}",
@@ -195,9 +214,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         )
         return retval
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API SAMSmarterAuthToken manifest dict.
         """
         logger.debug("%s.django_orm_to_manifest_dict() called", self.formatted_class_name)
@@ -227,13 +248,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMSmarterAuthToken]:
         """
-        SAMSmarterAuthToken() is a Pydantic model
-        that is used to represent the Smarter API SAMSmarterAuthToken manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
+        SAMSmarterAuthToken() is a Pydantic model that is used to represent the Smarter API.
+
+        SAMSmarterAuthToken manifest.
+
+        The Pydantic model is initialized with the data from the manifest loader, which is
+        generally passed to the model constructor as ``**data``. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
         are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        passing ``**data`` to each child's constructor.
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMSmarterAuthToken):
@@ -322,10 +345,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     def SerializerClass(self) -> Type[ModelSerializer]:
         """
         Return the Serializer class for the SmarterAuthToken model.
+
         This is used to serialize and deserialize the SmarterAuthToken
         model for API responses and requests.
         """
-        return SmarterAuthTokenSerializer
+        return SmarterAuthTokenMiniSerializer
 
     @property
     def ORMMetaModelClass(self) -> Type[SmarterAuthToken]:
@@ -392,9 +416,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             return None
 
     def orm_meta_instance_setter(self) -> None:
-        """
-        Override the base method to initialize the ORM meta model for the broker.
-        """
+        """Override the base method to initialize the ORM meta model for the broker."""
         if self._orm_instance:
             logger.debug(
                 "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
@@ -402,9 +424,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
             self._orm_meta_instance = self._orm_instance
             return
-        if not self._manifest:
+        username = self.token_username
+        if not username:
             logger.debug(
-                "%s.orm_meta_instance_setter() - manifest is not set. Cannot retrieve ORM meta instance for %s.",
+                "%s.orm_meta_instance_setter() - neither a manifest nor a user is set. Cannot retrieve ORM meta instance for %s.",
                 self.formatted_class_name,
                 SmarterAuthToken.__name__,
             )
@@ -420,9 +443,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
         self._orm_meta_instance = None
         try:
-            self._orm_meta_instance = SmarterAuthToken.objects.get(
-                user__username=self._manifest.spec.config.username, name=self.name
-            )
+            self._orm_meta_instance = SmarterAuthToken.objects.get(user__username=username, name=self.name)
             logger.debug(
                 "%s.orm_meta_instance_setter() - initialized ORM meta: %s",
                 self.formatted_class_name,
@@ -445,9 +466,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
 
     def cache_invalidations(self) -> None:
-        """
-        Invalidate any relevant caches when the manifest or SmarterAuthToken data changes.
-        """
+        """Invalidate any relevant caches when the manifest or SmarterAuthToken data changes."""
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         SmarterAuthToken.get_cached_object(invalidate=True, user=self.user, name=self.name, taggit=False)  # type: ignore
         return super().cache_invalidations()
@@ -492,12 +511,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:
             try:
-                model_dump = SmarterAuthTokenSerializer(smarter_auth_token).data
+                model_dump = SmarterAuthTokenMiniSerializer(smarter_auth_token).data
                 if not model_dump:
                     raise SAMSmarterAuthTokenBrokerError(
                         f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMSmarterAuthTokenBrokerError(
@@ -509,7 +528,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=SmarterAuthTokenMiniSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
@@ -517,16 +536,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
     def apply(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
-        Note that there are fields included in the manifest that are not editable
+        Apply the manifest.
+
+        This method copies the manifest data to the Django ORM model and
+        saves the model to the database. Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
         the save() command. These fields are defined in the readonly_fields list.
         """
         logger.debug("%s.apply() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = [
@@ -629,11 +646,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        logger.debug("%s.chat() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-        command = self.chat.__name__
+    def prompt(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug("%s.prompt() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
@@ -653,6 +670,25 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     f"{self.kind} {self.smarter_auth_token.name} error: {str(e)}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the LLMClients that use this auth token.
+
+        :return: A broker for each LLMClient that lists this auth token in its ``spec.apiKey``.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
+
+        smarter_auth_token = self.smarter_auth_token
+        if not smarter_auth_token:
+            return []
+        llmclients = LLMClient.objects.filter(
+            id__in=LLMClientAPIKey.objects.filter(api_key=smarter_auth_token).values("llmclient_id")
+        )
+        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
 
     def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
@@ -676,6 +712,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 command=command,
             )
 
+        self.verify_no_dependencies(command)
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()

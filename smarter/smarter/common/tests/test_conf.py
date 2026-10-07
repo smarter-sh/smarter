@@ -1,18 +1,18 @@
 # pylint: disable=wrong-import-position
-"""
-Test configuration Settings class.
-"""
+"""Test configuration Settings class."""
 
-import logging
 import re
 
 # 3rd party stuff
+from django.test import tag
 from pydantic import SecretStr
 
 # our stuff
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.runner import INFRASTRUCTURE
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ class TestSettings(SmarterTestBase):
     ###########################################################################
     # Pydantic BaseSettings fields tests
     ###########################################################################
+    @tag(INFRASTRUCTURE)
     def test_ready(self):
         """Test settings are in a ready state."""
         self.assertTrue(smarter_settings.ready())
@@ -67,10 +68,6 @@ class TestSettings(SmarterTestBase):
             self.assertTrue(
                 re.match(r"^[a-zA-Z0-9.-]+(:[0-9]+)?$", host), f"Invalid host: {host} {smarter_settings.allowed_hosts}"
             )
-
-    def test_another_training_example(self):
-        self.assertIsNotNone(smarter_settings.anthropic_api_key)
-        self.assertIsInstance(smarter_settings.anthropic_api_key, SecretStr)
 
     def test_api_description(self):
         self.assertIsNotNone(smarter_settings.api_description)
@@ -93,6 +90,7 @@ class TestSettings(SmarterTestBase):
     def test_aws_regions(self):
         self.assertIsNotNone(smarter_settings.aws_regions)
 
+    @tag(INFRASTRUCTURE)
     def test_aws_region(self):
         self.assertIsNotNone(smarter_settings.aws_region)
 
@@ -135,29 +133,36 @@ class TestSettings(SmarterTestBase):
     def test_chat_cache_expiration(self):
         self.assertIsNotNone(smarter_settings.chat_cache_expiration)
 
-    def test_chatbot_cache_expiration(self):
-        self.assertIsNotNone(smarter_settings.chatbot_cache_expiration)
+    def test_llmclient_cache_expiration(self):
+        self.assertIsNotNone(smarter_settings.llmclient_cache_expiration)
 
-    def test_chatbot_max_returned_history(self):
-        self.assertIsNotNone(smarter_settings.chatbot_max_returned_history)
+    def test_llmclient_max_returned_history(self):
+        self.assertIsNotNone(smarter_settings.llmclient_max_returned_history)
 
-    def test_chatbot_tasks_create_dns_record(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_create_dns_record)
+    def test_llmclient_tasks_create_dns_record(self):
+        self.assertIsNotNone(smarter_settings.llmclient_tasks_create_dns_record)
 
-    def test_chatbot_tasks_create_ingress_manifest(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_create_ingress_manifest)
+    def test_llmclient_tasks_create_ingress_manifest(self):
+        self.assertIsNotNone(smarter_settings.llmclient_tasks_create_ingress_manifest)
 
-    def test_chatbot_tasks_default_ttl(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_default_ttl)
+    def test_llmclient_tasks_default_ttl(self):
+        self.assertIsNotNone(smarter_settings.llmclient_tasks_default_ttl)
 
-    def test_chatbot_tasks_celery_max_retries(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_celery_max_retries)
+    def test_llmclient_tasks_celery_max_retries(self):
+        self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_max_retries)
 
-    def test_chatbot_tasks_celery_retry_backoff(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_celery_retry_backoff)
+    def test_llmclient_tasks_celery_retry_backoff(self):
+        self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_retry_backoff)
 
-    def test_chatbot_tasks_celery_task_queue(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_celery_task_queue)
+    def test_llmclient_tasks_celery_task_queue(self):
+        self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_task_queue)
+
+    def test_infrastructure_tasks_celery_task_queue(self):
+        """Test that infrastructure tasks have their own queue, so that they never block operational tasks."""
+        self.assertTrue(smarter_settings.infrastructure_tasks_celery_task_queue)
+        self.assertNotEqual(
+            smarter_settings.infrastructure_tasks_celery_task_queue, smarter_settings.llmclient_tasks_celery_task_queue
+        )
 
     def test_plugin_max_data_results(self):
         self.assertIsNotNone(smarter_settings.plugin_max_data_results)
@@ -189,23 +194,11 @@ class TestSettings(SmarterTestBase):
     def test_fernet_encryption_key(self):
         self.assertIsNotNone(smarter_settings.fernet_encryption_key)
 
-    def test_gemini_api_key(self):
-        self.assertIsNotNone(smarter_settings.gemini_api_key)
-
-    def test_google_maps_api_key(self):
-        self.assertIsNotNone(smarter_settings.google_maps_api_key)
-
-    def test_google_service_account(self):
-        self.assertIsNotNone(smarter_settings.google_service_account)
-
     def test_internal_ip_prefixes(self):
         self.assertIsNotNone(smarter_settings.internal_ip_prefixes)
 
     def test_log_level(self):
         self.assertIsNotNone(smarter_settings.log_level)
-
-    def test_llama_api_key(self):
-        self.assertIsNotNone(smarter_settings.llama_api_key)
 
     def test_local_hosts(self):
         self.assertIsNotNone(smarter_settings.local_hosts)
@@ -243,17 +236,11 @@ class TestSettings(SmarterTestBase):
     def test_openai_api_organization(self):
         self.assertIsNotNone(smarter_settings.openai_api_organization)
 
-    def test_openai_api_key(self):
-        self.assertIsNotNone(smarter_settings.openai_api_key)
-
     def test_openai_endpoint_image_n(self):
         self.assertIsNotNone(smarter_settings.openai_endpoint_image_n)
 
     def test_openai_endpoint_image_size(self):
         self.assertIsNotNone(smarter_settings.openai_endpoint_image_size)
-
-    def test_pinecone_api_key(self):
-        self.assertIsNotNone(smarter_settings.pinecone_api_key)
 
     def test_root_domain(self):
         self.assertIsNotNone(smarter_settings.root_domain)
@@ -272,9 +259,6 @@ class TestSettings(SmarterTestBase):
 
     def test_smarter_mysql_test_database_password(self):
         self.assertIsNotNone(smarter_settings.smarter_mysql_test_database_password)
-
-    def test_smarter_reactjs_app_loader_path(self):
-        self.assertIsNotNone(smarter_settings.smarter_reactjs_app_loader_path)
 
     def test_social_auth_google_oauth2_key(self):
         self.assertIsNotNone(smarter_settings.social_auth_google_oauth2_key)
@@ -404,12 +388,6 @@ class TestSettings(SmarterTestBase):
 
     def test_smarter_api_key_max_lifetime_days_property(self):
         self.assertIsNotNone(smarter_settings.smarter_api_key_max_lifetime_days)
-
-    def test_smarter_reactjs_app_loader_url_property(self):
-        self.assertIsNotNone(smarter_settings.smarter_reactjs_app_loader_url)
-
-    def test_smarter_reactjs_root_div_id_property(self):
-        self.assertIsNotNone(smarter_settings.smarter_reactjs_root_div_id)
 
     def test_version_property(self):
         self.assertIsNotNone(smarter_settings.version)

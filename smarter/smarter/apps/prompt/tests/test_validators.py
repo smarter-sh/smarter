@@ -1,16 +1,8 @@
-# pylint: disable=wrong-import-position
 """Test configuration Settings class."""
 
-# python stuff
 import os
-import sys
 
-from smarter.lib.unittest.base_classes import SmarterTestBase
-
-PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-sys.path.append(PYTHON_ROOT)  # noqa: E402
-
-from smarter.apps.provider.services.text_completion.const import (  # noqa: E402
+from smarter.apps.provider.services.text_completion.const import (
     OpenAIEndPoint,
     OpenAIObjectTypes,
 )
@@ -24,8 +16,9 @@ from smarter.apps.provider.services.text_completion.validators import (
     validate_temperature,
 )
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from ..tests.test_setup import get_test_file  # noqa: E402
+from ..tests.test_setup import get_test_file
 
 
 class TestValidators(SmarterTestBase):

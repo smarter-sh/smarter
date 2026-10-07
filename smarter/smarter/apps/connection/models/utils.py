@@ -1,6 +1,4 @@
-"""
-Connection models utils
-"""
+"""Connection models utils."""
 
 from typing import Union
 

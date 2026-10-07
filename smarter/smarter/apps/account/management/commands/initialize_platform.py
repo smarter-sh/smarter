@@ -1,5 +1,3 @@
-"""Django manage.py initialize_platform command."""
-
 import logging
 
 from django.core.management import call_command
@@ -32,19 +30,22 @@ class Command(SmarterCommand):
             help="The value to encrypt and persist. If not provided and you are running locally, the default 'smarter' will be used.",
         )
 
+    # pylint: disable=broad-except
     def handle(self, *args, **options):
         """
-        Initialize the Smarter platform. Creates the minimal resources necessary to start using Smarter.
+        Initialize the Smarter platform.
+
+        Creates the minimal resources necessary to start using Smarter.
 
         1. Create an admin user with the provided username, email, and password.
         2. Create example accounts and users.
-        4. Verify DNS configuration.
-        5. Load example projects from GitHub.
-        6. Add plugin examples.
-        7. Deploy example chatbots.
-        8. Initialize providers.
-        9. Create StackAcademy SQL and API chatbots.
-        10. Apply manifests and update secrets for database connections.
+        3. Verify DNS configuration.
+        4. Load example projects from GitHub.
+        5. Add plugin examples.
+        6. Deploy example llmclients.
+        7. Initialize providers, and the built-in Proxies of their APIs.
+        8. Create StackAcademy SQL and API llmclients.
+        9. Apply manifests and update secrets for database connections.
         """
         self.handle_begin()
 
@@ -98,21 +99,66 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         try:
             call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize Waffle switches: %s", e)
 
         try:
+            call_command("add_builtin_guardrails")
+        except Exception as e:
+            logger.error("Failed to initialize Guardrails: %s", e)
+
+        try:
+            # applied, not deployed: an example CustomDomain, whose verification fails.
+            call_command("add_builtin_custom_domains")
+        except Exception as e:
+            logger.error("Failed to initialize CustomDomains: %s", e)
+
+        try:
+            call_command("add_builtin_budgets")  # Detached budgets, which superusers can attach to resources
+        except Exception as e:
+            logger.error("Failed to initialize Budgets: %s", e)
+
+        try:
+            call_command("add_builtin_mcpclients")
+        except Exception as e:
+            logger.error("Failed to initialize MCPClients: %s", e)
+
+        try:
+            call_command("add_builtin_llmhost_compute")
+        except Exception as e:
+            logger.error("Failed to initialize LLMHostCompute: %s", e)
+
+        try:
+            # after LLMHostCompute: each built-in LLMHost's spec.compute must exist.
+            call_command("add_builtin_llmhost")
+        except Exception as e:
+            logger.error("Failed to initialize LLMHosts: %s", e)
+
+        try:
             call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to initialize providers: %s", e)
+
+        try:
+            # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
+            call_command("add_builtin_proxies")
+        except Exception as e:
+            logger.error("Failed to initialize Proxies: %s", e)
+
+        try:
+            call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
+        except Exception as e:
+            logger.error("Failed to initialize vectorstore providers: %s", e)
+
+        try:
+            call_command("add_builtin_vectorstores")  # Applied, not deployed: example vector databases
+        except Exception as e:
+            logger.error("Failed to apply the built-in vectorstores: %s", e)
 
         try:
             call_command(
                 "verify_dns_configuration"
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
-        # pylint: disable=broad-except
         except Exception as e:
             logger.error("Failed to verify DNS configuration: %s", e)
 

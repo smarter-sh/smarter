@@ -1,0 +1,32 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: pii_redaction_input
+  description: 'Redacts personal data from the user''s message before it is sent to the LLM: credit card
+    numbers that pass the Luhn check, US social security numbers, email addresses, phone numbers and IBANs.
+    Use it when prompts must not share customers'' personal data with a third-party LLM provider.'
+  version: 1.0.0
+  tags:
+  - pii
+  - privacy
+  - gdpr
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: pii
+    strategy: detector
+    detectors:
+    - credit_card
+    - us_ssn
+    - email
+    - phone_number
+    - iban
+    action: redact
+    replacement: '[REDACTED]'
+    severity: 4
+    priority: 10

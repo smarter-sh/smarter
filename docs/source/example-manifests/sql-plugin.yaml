@@ -14,13 +14,13 @@ spec:
   connection: example_connection
   prompt:
     maxTokens: 2048
-    model: gpt-4o-mini
+    model: gpt-6-luna
     provider: openai
     systemRole:
       You are a helpful assistant for Smarter platform. You can provide
       information about the admin account of the Smarter platform.
 
-    temperature: 0.5
+    temperature: 1.0
   selector:
     directive: search_terms
     searchTerms:
@@ -28,9 +28,6 @@ spec:
       - users
       - admin
   sqlData:
-    description:
-      Query the Django User model to retrieve detailed account information
-      about the admin account for the Smarter platform .
     limit: 1
     parameters:
       - default: admin

@@ -1,3 +1,10 @@
+# exclude pure-version files from Git merges.
+smarter/smarter/__version__.py merge=ours
+Dockerfile merge=ours
+helm/charts/smarter/Chart.yaml merge=ours
+helm/charts/smarter/values.yaml merge=ours
+pyproject.toml merge=ours
+
 # Auto detect text files and perform LF normalization
 # * text eol=lf
 smarter/smarter/static/assets/*

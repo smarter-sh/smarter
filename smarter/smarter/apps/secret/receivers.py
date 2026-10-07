@@ -1,8 +1,6 @@
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
 
-import logging
-
 from django.contrib.auth.signals import user_logged_in
 from django.core import serializers
 from django.db.models.signals import post_delete, post_save
@@ -11,20 +9,15 @@ from django.forms.models import model_to_dict
 
 from smarter.apps.account.models import (
     Account,
-    Charge,
-    DailyBillingRecord,
     User,
     UserProfile,
 )
-from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import get_cached_default_account
-from smarter.apps.dashboard.context_processors import cache_invalidations
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.broker import AbstractBroker
 
 from .manifest.transformers.secret import SecretTransformer
 from .models import Secret
@@ -55,6 +48,7 @@ module_prefix = f"{__name__}"
 def user_logged_in_receiver(sender, request, user: User, **kwargs):
     """
     Signal receiver for user login.
+
         Verify that a UserProfile record exists for the user.
         If not, create one with the default account.
     """
@@ -74,11 +68,14 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
 def user_post_save(sender: User, instance: User, created, **kwargs):
     """
     Signal receiver for created/saved of User model.
+
     Assumed to be called on all logins since Django's
     default behavior is to update the last_login field on
     each login, which triggers a save.
     """
-    logger.info(
+    from smarter.apps.dashboard.context_processors import cache_invalidations
+
+    logger.debug(
         "%s User post_save: %s, created: %s",
         formatted_text(f"{module_prefix}.user_post_save()"),
         instance,
@@ -108,7 +105,7 @@ def user_post_delete(sender: User, instance: User, **kwargs):
 @receiver(post_save, sender=UserProfile)
 def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, **kwargs):
     """Signal receiver for created/saved of UserProfile model."""
-    logger.info(
+    logger.debug(
         "%s UserProfile post_save: %s, created: %s",
         formatted_text(f"{module_prefix}.user_profile_post_save()"),
         instance,
@@ -135,8 +132,8 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
     if created:
         logger.info("%s Account created: %s", model_prefix, account_json)
     else:
-        logger.info("%s Account updated: %s", model_prefix, account_json)
-        logger.info(
+        logger.debug("%s Account updated: %s", model_prefix, account_json)
+        logger.debug(
             "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
         )
 
@@ -152,35 +149,11 @@ def account_post_delete(sender: Account, instance: Account, **kwargs):
     )
 
 
-@receiver(post_save, sender=Charge)
-def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
-    """Signal receiver for created/saved of Charge model."""
-    charge_json = json.dumps(model_to_dict(instance))
-    logger.info(
-        "%s Charge post_save: %s, created: %s",
-        formatted_text(f"{module_prefix}.charge_post_save()"),
-        charge_json,
-        created,
-    )
-
-
-@receiver(post_save, sender=DailyBillingRecord)
-def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBillingRecord, created, **kwargs):
-    """Signal receiver for created/saved of DailyBillingRecord model."""
-    daily_billing_record_json = json.dumps(model_to_dict(instance))
-    logger.info(
-        "%s DailyBillingRecord: %s, created: %s",
-        formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
-        daily_billing_record_json,
-        created,
-    )
-
-
 @receiver(post_save, sender=Secret)
 def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
     """Signal receiver for created/saved of Secret model."""
     secret_json = json.dumps(model_to_dict(instance))
-    logger.info(
+    logger.debug(
         "%s Secret: %s, id: %s created: %s, user_profile: %s",
         formatted_text(f"{module_prefix}.secret_post_save()"),
         secret_json,
@@ -303,16 +276,4 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         user_profile,
         json_data,
         tags,
-    )
-
-
-@receiver(broker_ready)
-def broker_ready_receiver(sender, broker: AbstractBroker, **kwargs):
-    """Signal receiver for broker_ready signal."""
-    logger.info(
-        "%s %s %s for %s is ready.",
-        formatted_text(f"{module_prefix}.broker_ready()"),
-        broker.kind,
-        str(broker),
-        broker.name,
     )

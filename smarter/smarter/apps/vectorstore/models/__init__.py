@@ -1,21 +1,30 @@
-"""
-Vectorstore models.
-"""
+"""Vectorstore models."""
 
-from .embeddings_interface import EmbeddingsInterface
-from .index_model import IndexModelInterface
-from .vectorstore_interface import VectorstoreInterface
+from .document import (
+    PAGE_BREAK,
+    VectorstoreDocument,
+    VectorstoreDocumentSource,
+    VectorstoreDocumentStatus,
+)
+from .snapshot import VectorstoreSnapshot, VectorstoreSnapshotStatus
 from .vectorstore_meta import (
-    VectorestoreMeta,
     VectorstoreBackendKind,
+    VectorstoreHostingKind,
+    VectorstoreMeta,
+    VectorstoreMetricKind,
     VectorstoreStatus,
 )
 
 __all__ = [
-    "EmbeddingsInterface",
-    "IndexModelInterface",
-    "VectorstoreInterface",
-    "VectorestoreMeta",
+    "PAGE_BREAK",
     "VectorstoreBackendKind",
+    "VectorstoreDocument",
+    "VectorstoreDocumentSource",
+    "VectorstoreDocumentStatus",
+    "VectorstoreHostingKind",
+    "VectorstoreMeta",
+    "VectorstoreMetricKind",
+    "VectorstoreSnapshot",
+    "VectorstoreSnapshotStatus",
     "VectorstoreStatus",
 ]

@@ -44,12 +44,11 @@ which properly formats the error details for CLI client consumption.
                 status = HTTPStatus.BAD_REQUEST.value
             elif type(e) in (
                 SmarterChatappViewError,
-                SmarterChatBotException,
+                SmarterLLMClientException,
                 DocsError,
                 SmarterPluginError,
                 SmarterConfigurationError,
-                SmarterAWSError,
-                KubernetesHelperException,
+                SmarterInfrastructureError,
                 SmarterJournalEnumException,
                 SmarterException,
             ):

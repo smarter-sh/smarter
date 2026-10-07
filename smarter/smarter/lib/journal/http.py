@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
-import logging
 from http import HTTPStatus
 from typing import Optional, Union
 
@@ -11,14 +10,13 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
     HttpAnonymousRequestSerializer,
     HttpAuthenticatedRequestSerializer,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.token_authentication import SmarterAnonymousUser
 from smarter.lib.json import SmarterJSONEncoder
 
 from .enum import (
@@ -35,8 +33,7 @@ logger = logging.getLogger(__name__)
 
 class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     """
-    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses
-    with additional manifest structure and metadata.
+    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses with additional manifest structure and metadata.
 
     This class is designed to provide a consistent response format for all Smarter API endpoints,
     embedding contextual information about the request and operation performed. It automatically
@@ -84,18 +81,20 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         status: int = HTTPStatus.OK.value,
         **kwargs,
     ):
-        data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
-        data[SmarterJournalApiResponseKeys.METADATA] = {
-            SCLIResponseMetadata.COMMAND: str(command),
-            SmarterJournalApiResponseKeys.THING: str(thing),
-        }
+        if not isinstance(data, (dict, list)):
+            # wrap any other data, e.g. a string, before adding the api version and metadata to it.
+            data = {"response": data}
+        if isinstance(data, dict):
+            data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
+            data[SmarterJournalApiResponseKeys.METADATA] = {
+                SCLIResponseMetadata.COMMAND: str(command),
+                SmarterJournalApiResponseKeys.THING: str(thing),
+            }
 
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
 
         def anonymous_serialized_request(request) -> dict:
-            """
-            handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`.
-            """
+            """Handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`."""
             try:
                 return HttpAnonymousRequestSerializer(request).data
             except AttributeError:
@@ -108,9 +107,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 return {}
 
         def authenticated_serialized_request(request) -> dict:
-            """
-            handles the same but for authenticated requests
-            """
+            """Handles the same but for authenticated requests."""
             try:
                 return HttpAuthenticatedRequestSerializer(request).data
             except AttributeError:
@@ -147,19 +144,21 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 user = None
                 request_data = anonymous_serialized_request(request)
 
+            serializable_data = None
             try:
                 serializable_data = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
                 journal = SAMJournal.objects.create(
-                    user=user or (SmarterAnonymousUser() if user is None else user),
+                    # SAMJournal.user is a User, or None for an anonymous request.
+                    user=user if user and getattr(user, "is_authenticated", False) else None,
                     thing=thing,
                     command=command,
                     request=request_data,
                     response=serializable_data,
-                    status=status,
+                    status_code=status,
                 )
-                data[SmarterJournalApiResponseKeys.METADATA] = {
-                    SCLIResponseMetadata.KEY: journal.key,
-                }
+                if isinstance(data, dict):
+                    # add the journal's key to the metadata, which keeps its command and thing.
+                    data[SmarterJournalApiResponseKeys.METADATA][SCLIResponseMetadata.KEY] = journal.key
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
@@ -174,33 +173,20 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 )
                 logger.error("%s could not create journal entry: %s", logger_prefix, e)
 
-        if not isinstance(data, (dict, list)):
-            logger.error("%s data argument is not dict or list: %s", logger_prefix, type(data))
-
         # Only pass allowed kwargs to JsonResponse
         allowed_kwargs = {}
         allowed_keys = {"content_type", "status", "status", "headers", "reason"}
         for k in list(kwargs.keys()):
             if k in allowed_keys:
                 allowed_kwargs[k] = kwargs.pop(k)
-        if isinstance(data, (dict, list)):
-            super().__init__(
-                data=data,
-                encoder=encoder,
-                safe=safe,
-                json_dumps_params=json_dumps_params,
-                status=status,
-                **allowed_kwargs,
-            )
-        else:
-            super().__init__(
-                data={"response": data},
-                encoder=encoder,
-                safe=safe,
-                json_dumps_params=json_dumps_params,
-                status=status,
-                **allowed_kwargs,
-            )
+        super().__init__(
+            data=data,
+            encoder=encoder,
+            safe=safe and isinstance(data, dict),
+            json_dumps_params=json_dumps_params,
+            status=status,
+            **allowed_kwargs,
+        )
 
 
 class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
@@ -245,7 +231,6 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 "context": "thing=account, command=create"
             }
         }
-
     """
 
     # pylint: disable=too-many-arguments,too-many-locals
@@ -275,7 +260,11 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         url = self.smarter_build_absolute_uri(request) or "Unknown URL"
         status = status or HTTPStatus.INTERNAL_SERVER_ERROR
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
-        cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
+        cause = (
+            f"{type(e.__cause__).__name__}: {e.__cause__}"
+            if isinstance(e, BaseException) and e.__cause__ is not None
+            else "Python Exception"
+        )
         context = (
             str(e.__context__)
             if isinstance(e, dict) and hasattr(e, "__context__")

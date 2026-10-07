@@ -1,0 +1,13 @@
+/* The manifest's problems, in the editor card's footer. */
+.manifest-editor-problems {
+  font-size: 0.925rem;
+}
+
+.manifest-editor-problems .btn-link {
+  color: var(--bs-gray-800);
+  text-decoration: none;
+}
+
+.manifest-editor-problems .btn-link:hover {
+  color: var(--bs-danger);
+}
