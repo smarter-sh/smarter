@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.5](https://github.com/smarter-sh/smarter/compare/v0.18.4...v0.18.5) (2026-10-07)
+
+### Bug Fixes
+
+* **llmclient:** stop deploy_builtin_llmclients from undeploying deployed llmclients ([5a1a7dd](https://github.com/smarter-sh/smarter/commit/5a1a7dd80708ce41ae54edf8fab976125943cd6c))
+
 ## [0.18.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.4...v0.18.5-alpha.1) (2026-10-07)
 
 ### Bug Fixes
