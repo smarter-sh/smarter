@@ -1,0 +1,44 @@
+---
+# DeepSeek-R1-Distill-Qwen-7B: DeepSeek-R1's reasoning, distilled into Qwen2.5-Math-7B.
+# The reasoning parser returns the thinking separately, as reasoning_content.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: deepseek_r1_distill_qwen_7b
+  description: DeepSeek-R1-Distill-Qwen-7B, a reasoning model, served by vLLM on one NVIDIA A10G.
+  version: 1.0.0
+  tags:
+  - deepseek
+  - vllm
+  - chat
+  - reasoning
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+spec:
+  model:
+    source: huggingface
+    repository: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+    revision: main
+    servedName: deepseek-r1-distill-qwen-7b
+    license: mit
+    architecture: qwen2
+    parameterCount: 7615616512
+    contextWindow: 131072
+    quantization: bf16
+    capabilities:
+      reasoning: true
+  engine:
+    name: vllm
+    contextLength: 16384
+    args:
+    - --reasoning-parser
+    - deepseek_r1
+  compute: gpu_a10g_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 20
+    cpu: '4'
+    memory: 23Gi

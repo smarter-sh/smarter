@@ -1,22 +1,50 @@
-"""This module is used to create a superuser account."""
+"""
+This module provides a Django management command to create or update a superuser ("Smarter admin") account, user profile, and a corresponding API key for the platform.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py create_smarter_admin`` command.
+
+Command-line Arguments
+=======================
+-u, --username : str, optional
+    The username for the new superuser (defaults to value from settings).
+-e, --email : str, optional
+    The email address for the new superuser (defaults to username@domain).
+-p, --password : str, optional
+    The password for the new superuser. If not specified, a random password is generated.
+
+Functionality
+=============
+- Ensures there is a platform admin account in the system, fully populated.
+- Creates or updates User and UserProfile for the superuser.
+- Creates a default AccountContact if absent.
+- Creates and displays a new API key (auth token) for the superuser if one does not exist.
+- Most account and contact attributes are populated from configuration settings.
+
+Usage Example
+=============
+    python manage.py create_smarter_admin --username=admin --email=admin@example.com --password=s3cret
+"""
 
 import secrets
 import string
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
-    SMARTER_COMPANY_NAME,
+    SMARTER_ADMIN_USERNAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SMARTER_CUSTOMER_SUPPORT_PHONE,
 )
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Create a new Smarter superuser."""
 
     def add_arguments(self, parser):
@@ -26,33 +54,40 @@ class Command(BaseCommand):
         parser.add_argument("-p", "--password", type=str, help="The password for the new superuser")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
-        username = options["username"]
-        email = options["email"]
+        """Create the superuser account."""
+        self.handle_begin()
+
+        username = options["username"] or SMARTER_ADMIN_USERNAME
+        email = options["email"] or f"{username}@{smarter_settings.root_api_domain}"
         password = options["password"]
 
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
-            company_name=SMARTER_COMPANY_NAME,
         )
+        account.name = f"{smarter_settings.platform_name} Admin Account"
+        account.description = f"automatically-generated {smarter_settings.platform_name} Admin account"
+        account.company_name = smarter_settings.branding_corporate_name
         account.is_default_account = True
-        account.phone_number = "+1 (512) 833-6955"
-        account.address1 = "1700 South Lamar Blvd"
-        account.address2 = "Suite 338"
-        account.city = "Austin"
-        account.state = "TX"
-        account.postal_code = "78704"
-        account.country = "USA"
-        account.timezone = "America/Chicago"
-        account.currency = "USD"
+        account.phone_number = smarter_settings.branding_support_phone_number
+        account.address1 = smarter_settings.branding_address1
+        account.address2 = smarter_settings.branding_address2
+        account.city = smarter_settings.branding_city
+        account.state = smarter_settings.branding_state
+        account.postal_code = smarter_settings.branding_postal_code
+        account.country = smarter_settings.branding_country
+        account.timezone = smarter_settings.branding_timezone
+        account.currency = smarter_settings.branding_currency
         account.save()
 
         if created:
-            self.stdout.write(self.style.SUCCESS(f"Created account: {account.account_number} {account.company_name}"))
+            self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
 
-        user, created = User.objects.get_or_create(
-            username=username, email=email, is_superuser=True, is_staff=True, is_active=True
-        )
+        user, created = User.objects.get_or_create(username=username)
+        user.email = email
+        user.is_superuser = True
+        user.is_staff = True
+        user.is_active = True
+        user.save()
         if created:
             if not password:
                 password_length = 16
@@ -62,42 +97,40 @@ class Command(BaseCommand):
             user.set_password(password)
             user.save()
 
-            self.stdout.write(self.style.SUCCESS(f"Created superuser {username} {email} has been created."))
-            self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+            self.handle_completed_success(msg=f"Created superuser {username} {email} has been created.")
         else:
-            self.stdout.write(self.style.SUCCESS(f"User {username} updated."))
-
+            self.handle_completed_success(msg=f"User {username} updated.")
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
-                )
+            self.handle_completed_success(
+                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account}"
             )
+        else:
+            self.handle_completed_success(
+                msg=f"User profile already exists for {user_profile.user}, account {user_profile.account}"
+            )
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.pk)  # prime the cache
 
-        try:
-            account_contact = AccountContact.objects.get(
-                account=account,
-                is_primary=True,
-            )
-        except AccountContact.DoesNotExist:
-            account_contact = AccountContact(
-                account=account,
-                first_name="Smarter",
-                last_name="Admin",
-                email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
-                phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
-                is_primary=True,
-            )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
-                )
+        account_contact, created = AccountContact.objects.get_or_create(
+            account=account,
+            is_primary=True,
+        )
+        if created:
+            account_contact.first_name = "Smarter"
+            account_contact.last_name = "Admin"
+            account_contact.email = SMARTER_CUSTOMER_SUPPORT_EMAIL
+            account_contact.phone = SMARTER_CUSTOMER_SUPPORT_PHONE
+            account_contact.save()
+            self.handle_completed_success(
+                msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
             )
 
         # ensure that the Smarter admin user has at least one auth token (api key)
+        # not cached: a cached result from before this command created a key would still be empty.
         if not SmarterAuthToken.objects.filter(user=user).exists():
             _, token_key = SmarterAuthToken.objects.create(
-                name="smarter-admin-key", user=user, description="created by manage.py"
+                user_profile=user_profile, name="smarter-admin-key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
-            self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
+            self.handle_completed_success(msg=f"created API key: {token_key}")
+            return
+        self.handle_completed_success()

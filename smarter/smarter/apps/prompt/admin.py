@@ -1,98 +1,107 @@
 # pylint: disable=W0212
-"""Django admin configuration for the chat app."""
+"""Django admin configuration for the prompt app."""
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
 
 
-class ChatAdmin(RestrictedModelAdmin):
-    """chat history model admin."""
+class ChatAdmin(SmarterCustomerModelAdmin):
+    """
+    Prompt model admin.
 
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-    list_display = [field.name for field in Chat._meta.fields]
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Chats is
+    determined by ownership and role.
+    """
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
-
-
-class ChatHistoryAdmin(RestrictedModelAdmin):
-    """chat history model admin."""
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-        "chat_history",
-    )
-    list_display = ["chat", "chat_history"]
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(chat__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
-
-
-class ChatPluginUsageAdmin(RestrictedModelAdmin):
-    """plugin selection history model admin."""
+    model = Prompt
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatPluginUsage._meta.fields]
+    list_display = [field.name for field in Prompt._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(chat__account=account)
-        except UserProfile.DoesNotExist:
+        if not isinstance(user, User):
             return qs.none()
+        return Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
-class ChatToolCallHistoryAdmin(RestrictedModelAdmin):
-    """chat tool call history model admin."""
+class ChatHistoryAdmin(SmarterCustomerModelAdmin):
+    """
+    PromptHistory model admin.
+
+    This descends from Prompt, so visibility is
+    determined by the parent Prompt and role.
+    """
+
+    model = PromptHistory
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "prompt_history",
+    )
+    list_display = ["prompt", "prompt_history"]
+
+    def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        prompts = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PromptHistory.objects.filter(prompt__in=prompts)
+
+
+class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
+    """Plugin selection history model admin."""
+
+    model = PromptPluginUsage
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatToolCall._meta.fields]
+    list_display = [field.name for field in PromptPluginUsage._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(chat__account=account)
-        except UserProfile.DoesNotExist:
+        if not isinstance(user, User):
             return qs.none()
+        prompts = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PromptPluginUsage.objects.filter(prompt__in=prompts)
 
 
-smarter_restricted_admin_site.register(Chat, ChatAdmin)
-smarter_restricted_admin_site.register(ChatHistory, ChatHistoryAdmin)
-smarter_restricted_admin_site.register(ChatPluginUsage, ChatPluginUsageAdmin)
-smarter_restricted_admin_site.register(ChatToolCall, ChatToolCallHistoryAdmin)
+class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
+    """Prompt tool call history model admin."""
+
+    model = PromptToolCall
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = [field.name for field in PromptToolCall._meta.fields]
+
+    def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        prompts = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PromptToolCall.objects.filter(prompt__in=prompts)
+
+
+smarter_restricted_admin_site.register(Prompt, ChatAdmin)
+smarter_restricted_admin_site.register(PromptHistory, ChatHistoryAdmin)
+smarter_restricted_admin_site.register(PromptPluginUsage, ChatPluginUsageAdmin)
+smarter_restricted_admin_site.register(PromptToolCall, ChatToolCallHistoryAdmin)

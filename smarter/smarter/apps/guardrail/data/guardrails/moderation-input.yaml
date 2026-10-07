@@ -1,0 +1,34 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: moderation_input
+  description: Blocks hateful, harassing, violent, sexual and illicit messages, as classified by OpenAI's
+    omni-moderation model, which is free to use.
+  version: 1.0.0
+  tags:
+  - toxicity
+  - moderation
+  - trust-and-safety
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: toxicity
+    strategy: moderation
+    categories:
+    - harassment/threatening
+    - hate
+    - hate/threatening
+    - illicit/violent
+    - sexual/minors
+    - violence
+    - violence/graphic
+    threshold: 0.7
+    action: block
+    message: Your message was not processed because it may violate our usage policies.
+    severity: 4
+    priority: 30

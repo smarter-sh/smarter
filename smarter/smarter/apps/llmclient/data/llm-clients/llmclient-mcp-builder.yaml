@@ -1,0 +1,63 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "A coding assistant that helps developers design and build Model Context Protocol (MCP) servers."
+  name: mcp_builder
+  version: 1.0.0
+  tags:
+    - developer-tools
+    - mcp
+    - ai-agents
+    - code
+  annotations:
+    - smarter.sh/llmclient/use-case: MCP server development
+    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Max
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - Help me build an MCP server that exposes our Postgres database as read-only tools.
+    - How should I design the tools for an MCP server that wraps the GitHub API?
+    - How does the modelcontextprotocol/python-sdk handle the streamable HTTP transport?
+    - Review my code for this MCP tool definition.
+    appFileAttachment: false
+    appInfoUrl: https://modelcontextprotocol.io/
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: MCP Server Builder
+    appPlaceholder: Describe the MCP server you want to build...
+    appWelcomeMessage: Welcome! I'll help you design, build and review a Model Context Protocol server.
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: gpt-6-luna
+    defaultSystemRole:
+      You are an expert in the Model Context Protocol (MCP) who helps developers build
+      high quality MCP servers. Follow the mcp builder skill that is provided to you, from
+      planning the server's tools through to testing it. Use DeepWiki and GitMCP to check the
+      official MCP SDKs, such as modelcontextprotocol/python-sdk and
+      modelcontextprotocol/typescript-sdk, rather than relying on your memory, because the
+      protocol changes often. When the user links to a web page, such as an API reference,
+      read it before designing tools for that API. When the user shares code and asks for a
+      code review, review it.
+
+      Recommend small, well named tools with clear descriptions and strict input schemas.
+      Point out security risks, such as tools that write data or expose credentials.
+    defaultTemperature: 1.0
+    deployed: false
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+    - anthropic_mcp_builder
+    - code_review
+    - url_reader
+  mcpClients:
+    - deepwiki
+    - gitmcp
+  guardrails:
+    - prompt_injection_keyword_input
+    - secrets_redaction_input
+    - secrets_leak_output

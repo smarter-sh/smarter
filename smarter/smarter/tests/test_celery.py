@@ -7,7 +7,7 @@ from celery import Celery
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 # our stuff
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 
 class TestCelery(SmarterTestBase):

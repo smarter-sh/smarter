@@ -3,9 +3,8 @@
 
 from http import HTTPStatus
 
-from django.urls import reverse
-
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.lib.django.shortcuts import reverse
 
 from .base_class import ApiV1CliTestBase
 

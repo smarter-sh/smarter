@@ -1,21 +1,21 @@
 """Configuration for OpenAPI documentation generation for Swagger and Redoc."""
 
-from django.conf import settings
 from drf_yasg import openapi
+from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from smarter.apps.api import urls as api_urls
-
+from smarter.apps.api import urls
+from smarter.common.conf import smarter_settings
 
 api_info = openapi.Info(
-    title=settings.SMARTER_API_NAME,
+    title=smarter_settings.api_name,
     default_version="v1",
-    description=settings.SMARTER_API_DESCRIPTION,
+    description=smarter_settings.api_description,
     terms_of_service="https:/smarter.sh/tos/",
     contact=openapi.Contact(
-        name="Querium Corporation",
-        email="lawrence@querium.com",
+        name="Smarter Support",
+        email="lpm0073@gmail.com",
         url="https://smarter.sh/contact/",
     ),
     license=openapi.License(
@@ -24,9 +24,28 @@ api_info = openapi.Info(
     ),
 )
 
+
+class ApiKeySchemaGenerator(OpenAPISchemaGenerator):
+    """Custom schema generator to add API key auth while preserving default session auth."""
+
+    def get_security_definitions(self):
+        security_defs = super().get_security_definitions()
+        if not isinstance(security_defs, dict):
+            security_defs = {}
+        security_defs["ApiKeyAuth"] = {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Enter your token as: Token <your_token>",
+        }
+        return security_defs
+
+
 schema_view = get_schema_view(
     info=api_info,
+    url=smarter_settings.environment_api_url,
     public=True,
     permission_classes=(permissions.AllowAny,),
-    patterns=api_urls.urlpatterns,
+    patterns=urls.urlpatterns,
+    generator_class=ApiKeySchemaGenerator,
 )

@@ -1,38 +1,27 @@
 """Test Api v1 CLI commands for User"""
 
-import logging
 from http import HTTPStatus
 from urllib.parse import urlencode
 
 import yaml
-from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django import waffle
+from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
 
-
 KIND = SAMKinds.USER.value
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 class TestApiCliV1User(ApiV1CliTestBase):
@@ -50,7 +39,10 @@ class TestApiCliV1User(ApiV1CliTestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.query_params = urlencode({"username": self.admin_user.username})
+        self.query_params = urlencode({"name": self.non_admin_user.username, "username": self.non_admin_user.username})
+        logger.debug(
+            "TestApiCliV1User.setUp() complete with kwargs %s, query_params: %s", self.kwargs, self.query_params
+        )
 
     def validate_response(self, response: dict) -> None:
         # validate the response and status are both good
@@ -102,9 +94,45 @@ class TestApiCliV1User(ApiV1CliTestBase):
         """Test apply command"""
 
         # retrieve the current manifest by calling "describe"
-        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        logger.info("1.) get the manifest schema from the existing Account that we created in setup()")
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
+        logger.info("base response: %s, Status: %s", response, status)
+
+        expected = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "User",
+                "metadata": {
+                    "name": "test_admin_user_be7caebde13673c8",
+                    "description": "Mortal user profile for testing purposes",
+                    "version": "0.0.1",
+                    "tags": ["mortal", "test"],
+                    "annotations": [{"smarter.sh/role": "mortal"}, {"smarter.sh/environment": "test"}],
+                    "username": "test_admin_user_be7caebde13673c8",
+                },
+                "spec": {
+                    "config": {
+                        "firstName": "TestMortalFirstName_be7caebde13673c8",
+                        "lastName": "TestMortalLastName_be7caebde13673c8",
+                        "email": "test-mortal-be7caebde13673c8@mail.com",
+                        "isStaff": False,
+                        "isActive": True,
+                    }
+                },
+                "status": {
+                    "account_number": "7657-4839-2961",
+                    "username": "test_admin_user_be7caebde13673c8",
+                    "created": "2026-01-07T20:26:42.658Z",
+                    "modified": "2026-01-07T20:26:42.658Z",
+                },
+            },
+            "message": "User test_admin_user_be7caebde13673c8 described successfully",
+            "api": "smarter.sh/v1",
+            "thing": "User",
+            "metadata": {"key": "fbf627f25069aa1084df2683963ab65ad0c00be2a9415d0ac58ae8b87aa4d830"},
+        }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -209,9 +237,15 @@ class TestApiCliV1User(ApiV1CliTestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command"""
-        kwargs = {"kind": KIND}
-        path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=kwargs)
-        response, status = self.get_response(path=path)
+
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
+        logger.info("base response: %s, Status: %s", response, status)
+
+        path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -223,17 +257,24 @@ class TestApiCliV1User(ApiV1CliTestBase):
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
-        kwargs = {"kind": KIND}
-        path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=kwargs)
-        _, status = self.get_response(path=path)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
+        logger.info("base response: %s, Status: %s", response, status)
+
+        path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
 
     def test_logs(self) -> None:
         """Test logs command"""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
+        logger.info("base response: %s, Status: %s", response, status)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)

@@ -1,13 +1,14 @@
-"""Provider Signal receivers"""
+"""Provider Signal receivers."""
 
 # pylint: disable=W0613
 
-import logging
+from typing import Union
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -19,6 +20,9 @@ from .models import (
     ProviderVerification,
 )
 from .signals import (
+    embed_failed,
+    embed_started,
+    embed_success,
     model_verification_failure,
     model_verification_requested,
     model_verification_success,
@@ -38,11 +42,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-        and level >= logging.INFO
-    )
+    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -80,6 +80,8 @@ def handle_model_verification_success(
 ):
     """Handle model verification success signal."""
     prefix = get_prefix("handle_model_verification_success")
+    if provider_model_verification and not provider_model:
+        provider_model = provider_model_verification.provider_model
     if provider_model_verification:
         logger.info(
             "%s Model verification successful for model: %s with verification: %s",
@@ -96,21 +98,25 @@ def handle_model_verification_success(
 @receiver(model_verification_failure, dispatch_uid="model_verification_failure_receiver")
 def handle_model_verification_failure(
     sender,
-    provider_model: ProviderModel = None,
-    provider_model_verification: ProviderModelVerification = None,
+    provider_model: Union[ProviderModel, None] = None,
+    provider_model_verification: Union[ProviderModelVerification, None] = None,
     **kwargs,
 ):
     """Handle model verification failure signal."""
     prefix = get_prefix("handle_model_verification_failure")
+    if provider_model_verification and not provider_model:
+        provider_model = provider_model_verification.provider_model
     if provider_model_verification:
         logger.error(
             "%s Model verification failed for model: %s with verification: %s",
             prefix,
-            provider_model.name,
-            provider_model_verification.verification_type,
+            provider_model.name if provider_model else "Unknown",
+            provider_model_verification.verification_type if provider_model_verification else "Unknown",
         )
     elif provider_model:
-        logger.error("%s Model verification failed for model: %s", prefix, provider_model.name)
+        logger.error(
+            "%s Model verification failed for model: %s", prefix, provider_model.name if provider_model else "Unknown"
+        )
     else:
         logger.error("%s Model verification failed for an unknown model for an unknown reason", prefix)
 
@@ -140,6 +146,8 @@ def handle_provider_verification_success(
 ):
     """Handle test passed signal."""
     prefix = get_prefix("handle_provider_verification_success")
+    if provider_verification and not provider:
+        provider = provider_verification.provider
     if provider_verification:
         logger.info(
             "%s Test passed for provider: %s with verification: %s",
@@ -159,6 +167,8 @@ def handle_provider_verification_failure(
 ):
     """Handle test failed signal."""
     prefix = get_prefix("handle_provider_verification_failure")
+    if provider_verification and not provider:
+        provider = provider_verification.provider
     if provider_verification:
         logger.error(
             "%s Test failed for provider: %s with verification: %s",
@@ -306,3 +316,39 @@ def provider_model_verification_save(sender, instance: ProviderModelVerification
             instance.verification_type,
             instance.provider_model.name,
         )
+
+
+@receiver(embed_started)
+def handle_embed_started(sender, backend, provider, user_profile, **kwargs):
+    """Signal receiver for embed_started signal."""
+    logger.info(
+        "%s embed started for backend: %s, provider: %s, user_profile: %s",
+        formatted_text(f"{module_prefix}.handle_embed_started()"),
+        backend,
+        provider,
+        user_profile,
+    )
+
+
+@receiver(embed_success)
+def handle_embed_success(sender, backend, provider, user_profile, **kwargs):
+    """Signal receiver for embed_success signal."""
+    logger.info(
+        "%s embed succeeded for backend: %s, provider: %s, user_profile: %s",
+        formatted_text(f"{module_prefix}.handle_embed_success()"),
+        backend,
+        provider,
+        user_profile,
+    )
+
+
+@receiver(embed_failed)
+def handle_embed_failed(sender, backend, provider, user_profile, **kwargs):
+    """Signal receiver for embed_failed signal."""
+    logger.error(
+        "%s embed failed for backend: %s, provider: %s, user_profile: %s",
+        formatted_text(f"{module_prefix}.handle_embed_failed()"),
+        backend,
+        provider,
+        user_profile,
+    )

@@ -1,0 +1,232 @@
+"""This module contains passthrough views for interacting directly with the LLM provider backend API."""
+
+import traceback
+from http import HTTPStatus
+from typing import Any, Optional
+
+import openai
+from openai.types.chat.chat_completion import ChatCompletion
+from rest_framework.request import Request
+
+from smarter.apps.account.models.budget import charge_authorization
+from smarter.apps.account.models.user_profile import UserProfile
+from smarter.apps.prompt.signals import (
+    chat_request,
+    chat_response,
+    chat_response_failure,
+    prompt_finished,
+    prompt_started,
+)
+from smarter.apps.provider.models import Provider
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import json, logging
+from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+)
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+
+# pylint: disable=W0613
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+class OpenAIPassthroughClient(SmarterHelperMixin):
+    """
+    A passthrough prompt provider that is fully compatible with OpenAI's API.
+
+    This provider allows authenticated users to send arbitrary OpenAI-compatible
+    prompt dicts directly to the underlying API. It handles authentication,
+    request forwarding, and response handling.
+
+    Smarter-specific features include:
+
+    - Emits signals for prompt lifecycle events
+    - Logs interactions based on a waffle switch
+    - Returns journaled JSON responses for integration with Smarter's journaling system
+    - Manages history and charge records asynchronously via ChatDbMixin
+
+    Example usage::
+
+        provider=PROVIDER_NAME
+        base_url=BASE_URL
+        api_key=API_KEY
+    """
+
+    def __init__(self, *args, provider: str, base_url: str, api_key: str, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.provider = provider.lower()
+        self.base_url = base_url
+        self.api_key = api_key
+
+    @staticmethod
+    def normalize_request_data(provider: str, data: Any) -> Any:
+        """
+        Adapt a passthrough request body to the provider's current API.
+
+        OpenAI deprecated ``max_tokens`` in favor of ``max_completion_tokens``, and
+        its reasoning models (o-series, gpt-5 and later) reject ``max_tokens``
+        outright. Other OpenAI-compatible providers may only accept ``max_tokens``,
+        so the rename is limited to OpenAI. An explicit ``max_completion_tokens``
+        takes precedence.
+        """
+        if provider == "openai" and isinstance(data, dict) and "max_tokens" in data:
+            max_tokens = data.pop("max_tokens")
+            data.setdefault("max_completion_tokens", max_tokens)
+        return data
+
+    @staticmethod
+    def requires_reasoning_effort_none(provider: str, data: Any, e: Exception) -> bool:
+        """
+        Whether OpenAI rejected a request with tools because of the model's default reasoning effort.
+
+        Some OpenAI reasoning models (e.g. gpt-6-luna) only accept function tools in
+        /v1/chat/completions with ``reasoning_effort="none"``, while older models reject the
+        ``reasoning_effort`` parameter altogether. So rather than always adding it, we only do so
+        when OpenAI rejects the request for this reason, and the caller did not set it.
+        """
+        return (
+            provider == "openai"
+            and isinstance(e, openai.BadRequestError)
+            and getattr(e, "param", None) == "reasoning_effort"
+            and isinstance(data, dict)
+            and bool(data.get("tools"))
+            and "reasoning_effort" not in data
+        )
+
+    def create_chat_completion(self, data: dict[str, Any], logger_prefix: str):
+        """Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools."""
+        try:
+            return openai.chat.completions.create(**data)
+        except openai.BadRequestError as e:
+            if not self.requires_reasoning_effort_none(self.provider, data, e):
+                raise
+            logger.warning(
+                "%s %s rejected function tools with model %s at its default reasoning effort: %s. "
+                "Retrying with reasoning_effort='none', which this model requires for function tools "
+                "in /v1/chat/completions. Set reasoning_effort explicitly in the request, or use "
+                "/v1/responses, to avoid this retry.",
+                logger_prefix,
+                self.provider,
+                data.get("model"),
+                e,
+            )
+            data["reasoning_effort"] = "none"
+            return openai.chat.completions.create(**data)
+
+    def handler(
+        self,
+        request: Request,
+        user_profile: UserProfile,
+        data: dict[str, Any],
+        **kwargs,
+    ):
+        charge_authorization(user_profile.record_locator, self.__class__.__name__)
+        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.handler()")
+        response: Optional[ChatCompletion] = None
+        provider: Optional[Provider] = None
+        if not hasattr(request, "user") or not request.user.is_authenticated:
+            return SmarterHttpResponseForbidden(
+                request=request, error_message="Authentication required to use passthrough endpoint"
+            )
+
+        logger.debug(
+            "%s called with request: %s, user_profile: %s, api_key: %s, base_url: %s, provider_name: %s, data: %s",
+            logger_prefix,
+            request,
+            user_profile,
+            self.api_key,
+            self.base_url,
+            self.provider,
+            formatted_json(data),
+        )
+        try:
+            provider = Provider.objects.filter(name=self.provider).with_read_permission_for(request.user).first()  # type: ignore
+            if not provider:
+                raise Provider.DoesNotExist
+            logger.debug("%s found provider: %s", logger_prefix, provider)
+            if provider.api_key:
+                openai.api_key = provider.api_key.get_secret()
+            openai.base_url = provider.base_url
+        except Provider.DoesNotExist:
+            logger.error("%s provider not found: %s", logger_prefix, self.provider)
+            return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
+        if self.api_key:
+            openai.api_key = self.api_key
+        if self.base_url:
+            openai.base_url = self.base_url
+
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            logger.error("%s JSON decode error: %s. Raw request body: %s", logger_prefix, e, request.body)
+            return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s Unexpected error decoding JSON body: %s. Raw request body: %s", logger_prefix, e, request.body
+            )
+            return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
+
+        data = self.normalize_request_data(self.provider, data)
+
+        prompt_started.send(sender=self.handler, request=request, data=data)
+        chat_request.send(sender=self.handler, data=data)
+
+        try:
+            logger.debug("%s sending request to %s with data: %s", logger_prefix, openai.base_url, formatted_json(data))
+            response = self.create_chat_completion(data, logger_prefix)
+        # pylint: disable=broad-except
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            chat_response_failure.send(
+                sender=self.handler,
+                iteration=1,
+                exception=e,
+                first_iteration=data,
+                messages=data.get("messages") if isinstance(data, dict) else None,
+                stack_trace=stack_trace,
+            )
+
+            logger.error("%s error calling %s: %s", logger_prefix, openai.base_url, str(e), exc_info=True)
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                thing=SmarterJournalThings.PROMPT,
+                command=SmarterJournalCliCommands.PROMPT,
+                status=HTTPStatus.BAD_REQUEST,
+                error_message=str(e),
+                description=str(e),
+                stack_trace=stack_trace,
+            )
+
+        chat_response.send(sender=self.handler, request=request, response=response)
+        prompt_finished.send(sender=self.handler, request=request, response=response)
+
+        response_dict: dict = {"message": "Response is not a ChatCompletion object"}
+        if isinstance(response, ChatCompletion):
+            response_dict = response.model_dump()
+
+        logger.debug("%s returning response: %s", logger_prefix, formatted_json(response_dict))
+        return SmarterJournaledJsonResponse(
+            request=request,
+            data=response_dict,
+            thing=SmarterJournalThings.PROMPT,
+            command=SmarterJournalCliCommands.PROMPT,
+        )

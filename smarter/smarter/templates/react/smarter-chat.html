@@ -1,0 +1,52 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_smarter_chat %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for Smarter Chat
+  see: smarter.apps.prompt.templatetags.react_smarter_chat.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% smarter_chat_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter.sh/ui-chat/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <section aria-label="Chat with your AI assistant" class="smarter-chat-section">
+    <div
+      id="{{ smarter_chat.root_id }}"
+      style="height: 88vh;"
+      smarter-llmclient-api-url="{{ smarter_chat.llmclient_api_url }}"
+      smarter-toggle-metadata="{{ smarter_chat.toggle_metadata }}"
+      smarter-csrf-cookie-name="{{ smarter_chat.csrf_cookie_name }}"
+      smarter-session-cookie-name="{{ smarter_chat.smarter_session_cookie_name }}"
+      smarter-django-session-cookie-name="{{ smarter_chat.django_session_cookie_name }}"
+      smarter-cookie-domain="{{ smarter_chat.cookie_domain }}"
+      react-debug-mode="{{ smarter_chat.react_debug_mode }}"
+      smarter-request-id="{{ smarter_chat.smarter_request_id }}"
+    >
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for Smarter Chat
+  see: smarter.apps.prompt.templatetags.react_smarter_chat.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% smarter_chat_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter.sh/ui-chat/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endblock %}

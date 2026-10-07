@@ -1,7 +1,17 @@
 ---
 #------------------------------------------------------------------------------
 # - Build from Dockerfile
-# - Run manage.py unit tests
+# - Push to AWS ECR
+#
+# IMPORTANT: Before running this workflow, ensure that you have first built your
+# AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
+# Additionally, make sure the following secrets are configured in your
+# [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
+#
+# AWS_ACCESS_KEY_ID
+# AWS_REGION
+# AWS_SECRET_ACCESS_KEY
+# PAT
 #------------------------------------------------------------------------------
 name: Build
 
@@ -9,8 +19,17 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: ca-central-1
   ROOT_DOMAIN: "smarter.sh"
+  PLATFORM_SUBDOMAIN: "ubc"
+  ENVIRONMENT: "prod"
+  AWS_ECR_REPO: "no-value"
+  DATESTAMP: "no-value"
+  LATEST_RELEASE: "no-value"
+  MAJOR_RELEASE: "0"
+  MINOR_RELEASE: "0"
+  PATCH_RELEASE: "0"
+  PRERELEASE: ""
 
 jobs:
   build:
@@ -18,9 +37,13 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Ensures all history and tags are fetched
+          fetch-tags: true
 
       - name: Set environment variable
+        shell: bash
         id: setenv
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
@@ -36,10 +59,223 @@ jobs:
             exit 1
           fi
 
-      - name: Build
-        uses: ./.github/actions/build
+      - name: Initialize environment variables
+        shell: bash
+        run: |
+          echo "NAMESPACE=smarter-${{ env.PLATFORM_SUBDOMAIN }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+          echo "AWS_ECR_REPO=smarter-${{ env.PLATFORM_SUBDOMAIN }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+
+      - name: Get latest release version
+        id: get-latest-version-tag
+        shell: bash
+        run: |
+          VERSION_TAG=$(git describe --tags --abbrev=0)
+          echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+      - name: Set version
+        id: set-version
+        shell: bash
+        run: |
+          python scripts/bump_version.py $TAG --cicd
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
         with:
-          environment: ${{ env.ENVIRONMENT }}
+          platforms: arm64
+
+      # Get the latest release tag and append branch name for non-main branches
+      # example: v0.14.0-alpha.27
+      #
+      - name: Get latest release version and parse tag components
+        id: get-latest-release
+        shell: bash
+        run: |
+
+          LATEST_RELEASE=$(git describe --tags --abbrev=0)
+          TAG_NO_PREFIX=${LATEST_RELEASE#v}
+          # Extract prerelease if present
+          if [[ "$TAG_NO_PREFIX" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-.+)?$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            PATCH="${BASH_REMATCH[3]}"
+            PRERELEASE="${BASH_REMATCH[4]}"
+          else
+            MAJOR="0"; MINOR="0"; PATCH="0"; PRERELEASE=""
+          fi
+
+          # Compose tag variants
+          MAJOR_RELEASE="v$MAJOR"
+          MINOR_RELEASE="v$MAJOR.$MINOR"
+          PATCH_RELEASE="v$MAJOR.$MINOR.$PATCH"
+
+          # Remove leading '-' from prerelease if present
+          if [[ -n "$PRERELEASE" ]]; then
+            PRERELEASE_TAG="v$MAJOR.$MINOR.$PATCH$PRERELEASE"
+          else
+            PRERELEASE_TAG=""
+          fi
+
+          # Set FINAL_TAG: only append branch name if not a prerelease
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            FINAL_TAG="$LATEST_RELEASE"
+          elif [[ -z "$PRERELEASE" ]]; then
+            FINAL_TAG="${LATEST_RELEASE}.${GITHUB_REF_NAME}"
+          else
+            FINAL_TAG="$LATEST_RELEASE"
+          fi
+          echo "LATEST_RELEASE=$FINAL_TAG" >> $GITHUB_ENV
+
+          echo "MAJOR_RELEASE=$MAJOR_RELEASE" >> $GITHUB_ENV
+          echo "MINOR_RELEASE=$MINOR_RELEASE" >> $GITHUB_ENV
+          echo "PATCH_RELEASE=$PATCH_RELEASE" >> $GITHUB_ENV
+          echo "PRERELEASE=$PRERELEASE_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check awscli version and identity
+        id: awscli-version
+        shell: bash
+        run: |
+          echo "aws cli version:"
+          echo "----------------"
+          aws --version
+          echo
+          echo "aws IAM user:"
+          echo "-------------"
+          aws sts get-caller-identity
+
+      - name: Upgrade ECR Basic Scanning
+        id: upgrade-ecr-scanning
+        shell: bash
+        run: |
+          echo "Checking current ECR scanning version:"
+          echo "-------------------------------------"
+          current_setting=$(aws ecr get-account-setting --name BASIC_SCAN_TYPE_VERSION --query 'value' --output text 2>/dev/null || echo "CLAIR")
+          echo "Current setting: $current_setting"
+          if [ "$current_setting" != "AWS_NATIVE" ]; then
+            echo "Upgrading to AWS_NATIVE scanning..."
+            aws ecr put-account-setting --name BASIC_SCAN_TYPE_VERSION --value AWS_NATIVE
+            echo "ECR scanning upgraded to AWS_NATIVE"
+          else
+            echo "ECR scanning already using AWS_NATIVE version"
+          fi
+
+      - name: Add to .env
+        shell: bash
+        run: |
+          touch .env
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set Docker image
+        id: set-docker-image
+        shell: bash
+        run: |
+          echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+
+      - name: Create the repository
+        id: create-repo
+        shell: bash
+        run: |
+          aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
+
+      - name: Get the date
+        shell: bash
+        run: |
+          DATESTAMP=$(date +'%Y-%m-%dT%H-%M-%S')
+          if [ "${GITHUB_REF_NAME}" != "main" ]; then
+            DATESTAMP="${DATESTAMP}.${GITHUB_REF_NAME}"
+          fi
+          echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
+
+      #------------------------------------------------------------------------
+      # Build the React components, or restore them from the cache that
+      # test.yml shares. On a cache hit, Node and the build are skipped.
+      #
+      # Vite writes the builds into smarter/smarter/static/react/, which the
+      # Docker build copies into the image with the rest of ./smarter.
+      #------------------------------------------------------------------------
+      - name: Build React components
+        id: react-build
+        uses: ./.github/actions/react-build
+
+      # -----------------------------------------------------------------------
+      # Build and push to AWS ECR
+      # Creates the tags of the following formats:
+      # - latest
+      # - 26594738590
+      # - 2026-05-28T18-39-51.alpha
+      # - v0.14.0-alpha.27.alpha
+      #
+      # -----------------------------------------------------------------------
+      - name: Build and push to AWS ECR
+        id: build-and-push-to-ecr
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_RELEASE }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.MAJOR_RELEASE }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.MINOR_RELEASE }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.PATCH_RELEASE }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+          build-args: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        env:
+          DOCKER_BUILDKIT: 1
+          BUILDKIT_PROGRESS: plain
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+
+      - name: Trigger ECR image scan
+        id: trigger-scan
+        shell: bash
+        run: |
+          echo "Triggering new image scan for latest tag..."
+          aws ecr start-image-scan --repository-name ${{ env.AWS_ECR_REPO }} --image-id imageTag=latest || echo "Scan already in progress or failed"
+          echo "ECR image scan triggered"
+
+      - name: Login to Docker Hub
+        id: login-dockerhub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
+
+      - name: Build and push to Docker Hub
+        id: build-and-push-to-dockerhub
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:latest
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_RELEASE }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.MAJOR_RELEASE }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.MINOR_RELEASE }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.PATCH_RELEASE }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
+          build-args: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}

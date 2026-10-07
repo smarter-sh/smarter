@@ -1,0 +1,16 @@
+{
+    "model": "gpt-6-luna",
+    "temperature": 1.0,
+    "max_completion_tokens": 1024,
+    "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "Hello world"
+        }
+    ]
+
+}

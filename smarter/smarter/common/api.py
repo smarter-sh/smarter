@@ -10,5 +10,6 @@ class SmarterApiVersions:
     V1 = f"{VERSION_PREFIX}/v1"
 
     @classmethod
-    def all_values(cls):
-        return [value for name, value in vars(SmarterApiVersions).items() if not name.startswith("__")]
+    def all(cls):
+        """Return the api versions: the class's upper-case string attributes, not its methods."""
+        return [value for name, value in vars(SmarterApiVersions).items() if name.isupper() and isinstance(value, str)]

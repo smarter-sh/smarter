@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_guardrail_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the guardrail list
+  see: smarter.apps.guardrail.templatetags.react_guardrail_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% guardrail_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/guardrail-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ guardrail_list.root_id }}"
+    django-csrf-cookie-name="{{ guardrail_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ guardrail_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ guardrail_list.cookie_domain }}"
+    smarter-guardrail-list-api-url="{{ guardrail_list.guardrail_list_api_url }}"
+    react-debug-mode="{{ guardrail_list.react_debug_mode }}"
+    smarter-request-id="{{ guardrail_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the guardrail list
+  see: smarter.apps.guardrail_list.templatetags.react_guardrail_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% guardrail_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/guardrail-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

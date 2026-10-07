@@ -1,12 +1,12 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
-import logging
 import os
+import re
 from typing import ClassVar, Optional
 
 from pydantic import EmailStr, Field, field_validator
 
-from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -14,13 +14,14 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
+from .const import MANIFEST_KIND
 
+
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -31,12 +32,12 @@ filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
-class Provider(SmarterBasePydanticModel):
+class SAMProviderSpecProvider(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
     name: str = Field(
         ...,
-        description="The name of the Provider. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. example: 'OpenAI', 'GoogleAI', 'MetaAI'.",
+        description="The name of the Provider. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. examples: 'OpenAI', 'GoogleAI', 'MetaAI'.",
     )
     description: Optional[str] = Field(
         None,
@@ -85,11 +86,17 @@ class Provider(SmarterBasePydanticModel):
 
     @field_validator("name")
     def validate_name(cls, v):
-        if SmarterValidator.is_valid_cleanstring(v):
-            return v
-        raise SAMValidationError(
-            f"Invalid name: {v}. Must be a valid clean string. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. example: 'OpenAI', 'GoogleAI', 'MetaAI'."
-        )
+        v = str(v).strip()
+        if not v:
+            raise SAMValidationError("Provider name must not be empty.")
+        if not re.match(SmarterValidator.VALID_SNAKE_CASE, v):
+            raise SAMValidationError(f"""
+                Provider name {v} must contain only letters, numbers and underscores, with no
+                other special characters or spaces.
+                examples: 'open_ai', 'google_ai', 'meta_ai', 'deep_seek',
+                'anthropic', 'hugging_face'
+                """)
+        return v
 
     @field_validator("base_url")
     def validate_api_url(cls, v):
@@ -99,15 +106,15 @@ class Provider(SmarterBasePydanticModel):
 
     @field_validator("api_key")
     def validate_api_key(cls, v):
-        if v is None or SmarterValidator.is_valid_cleanstring(v):
-            return v
-        raise SAMValidationError(f"Invalid API key: {v}. Must be a valid clean string.")
+        return v
 
     @field_validator("connectivity_test_path")
     def validate_connectivity_test_path(cls, v):
-        if v is None or SmarterValidator.is_valid_cleanstring(v):
+        v = SmarterValidator.leading_slash(v)
+        v = SmarterValidator.trailing_slash(v)  # type: ignore
+        if v is None or SmarterValidator.is_valid_url_path(v):
             return v
-        raise SAMValidationError(f"Invalid connectivity test path: {v}. Must be a valid clean string.")
+        raise SAMValidationError(f"Invalid connectivity test path: {v}. Must be a valid URL path.")
 
     @field_validator("logo")
     def validate_logo(cls, v):
@@ -153,8 +160,10 @@ class Provider(SmarterBasePydanticModel):
 
 
 class SAMProviderSpec(AbstractSAMSpecBase):
-    """Smarter API Api Connection Manifest ApiConnection.spec"""
+    """Smarter API Api Connection Manifest ApiConnection.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    provider: Provider = Field(..., description=f"{class_identifier}.selector[obj]: the spec for the {MANIFEST_KIND}")
+    provider: SAMProviderSpecProvider = Field(
+        ..., description=f"{class_identifier}.selector[obj]: the spec for the {MANIFEST_KIND}"
+    )

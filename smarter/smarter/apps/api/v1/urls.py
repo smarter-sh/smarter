@@ -1,52 +1,115 @@
 """
-URL configuration for smarter api.
+URL configuration for Smarter API v1.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+This module defines the ``urlpatterns`` for the ``/api/v1/`` entry point and
+delegates route handling to app-specific URL modules.
+
+**Routes**
+
+- ``accounts/``: User account management endpoints.
+- ``llmclients/``: LLMClient CRUD and related operations.
+- ``cli/``: Brokered services for CLI workflows.
+- ``connections/``: External connection integration endpoints.
+- ``plugins/``: Plugin management endpoints.
+- ``prompts/``: Prompt and interaction endpoints.
+- ``providers/``: Provider integration endpoints.
+- ``secrets/``: Secret management endpoints.
+- ``tests/``: Test-only endpoints.
+- ``vectorstores/``: Vector store endpoints (enabled only when
+    ``SMARTER_ENABLE_VECTORSTORE=true``).
+
+Each included URL set uses a namespace to avoid naming collisions and to keep
+API components logically separated.
+
+.. seealso::
+
+        `Django URL dispatcher documentation <https://docs.djangoproject.com/en/5.0/topics/http/urls/>`_
 """
 
 from django.urls import include, path
 
+from smarter.apps.account.api.v1 import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
-from smarter.apps.chatbot.const import namespace as chatbot_namespace
+from smarter.apps.api.v1.cli import urls as cli_urls
+from smarter.apps.api.v1.tests import urls as tests_urls
+from smarter.apps.connection.api.v1 import urls as connection_urls
+from smarter.apps.connection.const import namespace as connnection_namespace
+from smarter.apps.guardrail.api.v1 import urls as guardrail_urls
+from smarter.apps.guardrail.const import namespace as guardrail_namespace
+from smarter.apps.llmclient.api.v1 import urls as llmclient_urls
+from smarter.apps.llmclient.const import namespace as llmclient_namespace
+from smarter.apps.llmhost.api.v1 import urls as llmhost_urls
+from smarter.apps.llmhost.const import namespace as llmhost_namespace
+from smarter.apps.mcpclient.api.v1 import urls as mcpclient_urls
+from smarter.apps.mcpclient.const import namespace as mcpclient_namespace
+from smarter.apps.orchestrator.api.v1 import urls as orchestrator_urls
+from smarter.apps.orchestrator.const import namespace as orchestrator_namespace
+from smarter.apps.plugin.api.v1 import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
+from smarter.apps.prompt.api.v1 import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_namespace
+from smarter.apps.provider.api.v1 import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.proxy.api.v1 import urls as proxy_urls
+from smarter.apps.proxy.const import namespace as proxy_namespace
+from smarter.apps.secret.api.v1 import urls as secret_urls
+from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorsearch.api.v1 import urls as vectorsearch_urls
+from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
+from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
+from smarter.common.conf import smarter_settings
+from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.lib import logging
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
 
+logger = logging.getLogger(__name__)
 
 app_name = namespace
 
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
-    # for Chatbots of the form https://example.3141-5926-5359.alpha.api.smarter.sh
-    path("", include("smarter.apps.chatbot.api.v1.urls")),
+    # for LLMClients of the form https://example.3141-5926-5359.alpha.api.example.com
+    # path("", include(llmclient_urls)),
     # -------------------------------------------
-    # for the main API:
-    # /api/v1/account/ is used for user account management CRUD operations
-    # /api/v1/chatbots/ is used for managing chatbot CRUD operations
-    # /api/v1/prompt/ is used for supporting client-side interactions with the chatbots.
-    # /api/v1/plugins/ is used for managing plugins and connections to external services.
-    # /api/v1/cli/ implements Brokered services that support the CLI, and is implemented here, in this module.
-    # /api/v1/tests/ is used for unit tests, and is implemented here, in this module.
+    # the main API
     # -------------------------------------------
-    path("accounts/", include("smarter.apps.account.api.v1.urls", namespace=account_namespace)),
-    path("chatbots/", include("smarter.apps.chatbot.api.v1.urls", namespace=chatbot_namespace)),
-    path("prompts/", include("smarter.apps.prompt.api.v1.urls", namespace=prompt_namespace)),
-    path("plugins/", include("smarter.apps.plugin.api.v1.urls", namespace=plugin_namespace)),
-    path("providers/", include("smarter.apps.provider.api.v1.urls", namespace=provider_namespace)),
-    path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),
-    path("tests/", include("smarter.apps.api.v1.tests.urls", namespace="tests")),
+    path("accounts/", include(account_urls, namespace=account_namespace)),
+    path("llm-clients/", include(llmclient_urls, namespace=llmclient_namespace)),
+    path("llmhosts/", include(llmhost_urls, namespace=llmhost_namespace)),
+    path("mcpclients/", include(mcpclient_urls, namespace=mcpclient_namespace)),
+    path("cli/", include(cli_urls, namespace=cli_namespace)),
+    path("connections/", include(connection_urls, namespace=connnection_namespace)),
+    path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
+    path("orchestrators/", include(orchestrator_urls, namespace=orchestrator_namespace)),
+    path("plugins/", include(plugin_urls, namespace=plugin_namespace)),
+    path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
+    path("providers/", include(provider_urls, namespace=provider_namespace)),
+    path("secrets/", include(secret_urls, namespace=secret_namespace)),
+    path("tests/", include(tests_urls, namespace="tests")),
+    path("vectorsearches/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
 ]
+
+if smarter_settings.enable_proxy:
+    urlpatterns += [
+        path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
+    ]
+    logger.info("%s Proxy API endpoints are %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Proxy API endpoints are %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )
+if smarter_settings.enable_vectorstore:
+    urlpatterns += [
+        path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
+    ]
+    logger.info("%s Vectorstore API endpoints are %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Vectorstore API endpoints are %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )

@@ -1,0 +1,44 @@
+---
+# A WebsearchPlugin that reads the web pages that users link to, e.g. to
+# summarize an article or answer questions about a page. It cannot search, so it
+# needs no web search API key. Pages are returned as Markdown, up to
+# maxCharacters, and websites' robots.txt files are obeyed.
+#
+# Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: url_reader
+  pluginClass: websearch
+  description: Reads web pages that the user links to, in order to summarize them or answer questions about them.
+  version: 0.1.0
+  tags:
+    - websearch
+    - summarization
+  annotations:
+    - smarter.sh/url-reader/use-case: summarization
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - http
+      - summarize this
+      - this article
+      - this page
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant. When the user shares a link, read it before
+      answering. Summarize faithfully, and never invent content that is not on the page.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  websearchData:
+    fetch:
+      maxCharacters: 50000
+      respectRobotsTxt: true
+    blockedDomains:
+      - facebook.com
+      - instagram.com
+    timeout: 20

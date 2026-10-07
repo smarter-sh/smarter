@@ -1,13 +1,44 @@
-"""This module is used to remove an email address from the Account Contact list."""
+"""
+This module provides a Django management command to remove an email address from the Account Contact list associated with a specific Account.
 
-from django.core.management.base import BaseCommand
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py delete_account_contact`` command.
+
+Command-line Arguments
+=======================
+--account_number : str, optional
+    The Smarter account number from which the contact should be removed.
+--company_name : str, optional
+    The company name from which the contact should be removed.
+--email : str, optional
+    The email address of the contact to be removed.
+--username : str, optional
+    The username for identifying the account contact. If supplied, the email is looked up from this username.
+
+Functionality
+=============
+- Resolves the account from account number or company name.
+- Optional user's username can be supplied to look up the email address.
+- Deletes the contact with the specified email from the resolved account.
+- Handles errors for missing accounts or contacts appropriately.
+
+Usage Example
+=============
+    python manage.py delete_account_contact --account_number=<number> --email=<email>
+    python manage.py delete_account_contact --company_name="<name>" --username=<username>
+"""
+
+from typing import Optional
 
 from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Remove an email address from the Account Contact list."""
 
     def add_arguments(self, parser):
@@ -18,32 +49,34 @@ class Command(BaseCommand):
         parser.add_argument("--username", type=str, help="The username for the new superuser")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
+        self.handle_begin()
+
         account_number = options["account_number"]
         company_name = options["company_name"]
         username = options["username"]
         email = options["email"]
 
-        account: Account = None
+        account: Optional[Account] = None
 
         if options["account_number"]:
             try:
                 account = Account.objects.get(account_number=account_number)
             except Account.DoesNotExist:
-                print(f"Account {account_number} not found.")
+                self.handle_completed_failure(msg=f"Account {account_number} not found.")
                 return
         elif options["company_name"]:
             try:
                 account = Account.objects.get(company_name=company_name)
             except Account.DoesNotExist:
-                print(f"Account {company_name} not found.")
+                self.handle_completed_failure(msg=f"Account {company_name} not found.")
                 return
         else:
             raise SmarterValueError("You must provide either an account number or a company name.")
 
         if username:
             user_profile = UserProfile.objects.get(user__username=username)
-            email = user_profile.user.email
+            email = user_profile.cached_user.email
 
         try:
             account_contact = AccountContact.objects.get(
@@ -51,11 +84,12 @@ class Command(BaseCommand):
                 email=email,
             )
         except AccountContact.DoesNotExist:
-            print(f"Account Contact {email} not found for account {account.account_number} {account.company_name}.")
+            self.handle_completed_failure(
+                msg=f"Account Contact {email} not found for account {account.account_number} {account.company_name}."
+            )
             return
 
         account_contact.delete()
-        print(
-            f"Account Contact {email} removed from account {account_contact.account.account_number} {account_contact.account.company_name}."
+        self.handle_completed_success(
+            msg=f"Account Contact {email} removed from account {account_contact.account.account_number} {account_contact.account.company_name}."
         )
-        return

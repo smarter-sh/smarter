@@ -1,18 +1,40 @@
 """
-Smarter API command-line interface URL configuration.
+URL configuration for the Smarter API command-line interface (CLI).
 
-- https://platform.smarter.sh/api/v1/cli/get/            # Return information about the  specified resource
-- https://platform.smarter.sh/api/v1/cli/apply/          # Apply a manifest
-- https://platform.smarter.sh/api/v1/cli/describe/       # print the manifest
-- https://platform.smarter.sh/api/v1/cli/deploy/         # Deploy a resource
-- https://platform.smarter.sh/api/v1/cli/logs/           # Get logs for a resource
-- https://platform.smarter.sh/api/v1/cli/delete/         # Delete a resource
-- https://platform.smarter.sh/api/v1/cli/status/         # Smarter platform status
-- https://platform.smarter.sh/api/v1/cli/version/        # returns detailed version information on the platform
-- https://platform.smarter.sh/api/v1/cli/whoami/         # Return information about the current IAM user
+Endpoints
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Endpoint
+     - Description
+   * - /api/v1/cli/get/
+     - Return information about the specified resource
+   * - /api/v1/cli/apply/
+     - Apply a manifest
+   * - /api/v1/cli/validate/
+     - Validate a manifest, without applying it
+   * - /api/v1/cli/describe/
+     - Print the manifest
+   * - /api/v1/cli/deploy/
+     - Deploy a resource
+   * - /api/v1/cli/logs/
+     - Get logs for a resource
+   * - /api/v1/cli/delete/
+     - Delete a resource
+   * - /api/v1/cli/status/
+     - Smarter platform status
+   * - /api/v1/cli/version/
+     - Returns detailed version information on the platform
+   * - /api/v1/cli/whoami/
+     - Return information about the current IAM user
 """
 
-from django.urls import path
+from django.urls import path, re_path
+from django.views.generic.base import RedirectView
+
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.apply import ApiV1CliApplyApiView
@@ -22,53 +44,96 @@ from .views.describe import ApiV1CliDescribeApiView
 from .views.get import ApiV1CliGetApiView
 from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
-from .views.nonbrokered.chat import ApiV1CliChatApiView
-from .views.nonbrokered.chat_config import ApiV1CliChatConfigApiView
+from .views.nonbrokered.prompt import ApiV1CliPromptApiView
+from .views.nonbrokered.prompt_config import ApiV1CliPromptConfigApiView
+from .views.nonbrokered.resources import ApiV1CliResourcesApiView
 from .views.nonbrokered.status import ApiV1CliStatusApiView
 from .views.nonbrokered.version import ApiV1CliVersionApiView
 from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
 from .views.schema import ApiV1CliSchemaApiView
 from .views.undeploy import ApiV1CliUndeployApiView
-
+from .views.validate import ApiV1CliValidateApiView
 
 app_name = namespace
 
 
 class ApiV1CliReverseViews:
-    """Reverse views for the CLI commands"""
+    """
+    Reverse views for the CLI commands.
 
-    namespace = "api:v1:cli:"
+    Provides named references for reversing CLI-related API endpoints.
 
-    manifest = "ApiV1CliManifestApiView".lower()
-    apply = "ApiV1CliChatApiView".lower()
-    chat = "ApiV1CliChatConfigApiView".lower()
-    chat_config = "chatconfig_view".lower()
-    delete = "ApiV1CliDeleteApiView".lower()
-    deploy = "ApiV1CliDeployApiView".lower()
-    undeploy = "ApiV1CliUndeployApiView".lower()
-    describe = "desApiV1CliDescribeApiViewcribe_view".lower()
-    get = "ApiV1CliGetApiView".lower()
-    logs = "ApiV1CliLogsApiView".lower()
-    example_manifest = "ApiV1CliManifestApiView".lower()
-    status = "ApiV1CliStatusApiView".lower()
-    schema = "ApiV1CliSchemaApiView".lower()
-    version = "ApiV1CliVersionApiView".lower()
-    whoami = "ApiV1CliWhoamiApiView".lower()
+    This class is used for reverse URL resolution in Django, where each attribute
+    corresponds to a CLI command endpoint. The names are derived from the actual
+    API view class names, ensuring consistency and reducing the risk of typos
+    when using Django's URL reversing features.
+
+    All CLI commands available in the Smarter platform are included as attributes
+    of this class. This centralizes the reverse URL names for all CLI endpoints,
+    making it easier to maintain and reference them throughout the codebase.
+
+    Usage
+    -----
+    Use these attributes with Django's ``reverse()`` function or in templates
+    to generate URLs for CLI API endpoints based on the view class names.
+
+    Example
+    -------
+    .. code-block:: python
+
+        from smarter.lib.django.shortcuts import reverse
+        url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'Plugin'})
+
+        str(ApiV1CliReverseViews.deploy)
+        returns 'api_v1_cli_deploy_api_view'
+    """
+
+    namespace = f"api:v1:{namespace}:"
+
+    manifest = to_snake_case(ApiV1CliManifestApiView.__name__)
+    apply = to_snake_case(ApiV1CliApplyApiView.__name__)
+    prompt = to_snake_case(ApiV1CliPromptApiView.__name__)
+    chat_config = to_snake_case(ApiV1CliPromptConfigApiView.__name__)
+    delete = to_snake_case(ApiV1CliDeleteApiView.__name__)
+    deploy = to_snake_case(ApiV1CliDeployApiView.__name__)
+    undeploy = to_snake_case(ApiV1CliUndeployApiView.__name__)
+    describe = to_snake_case(ApiV1CliDescribeApiView.__name__)
+    get = to_snake_case(ApiV1CliGetApiView.__name__)
+    logs = to_snake_case(ApiV1CliLogsApiView.__name__)
+    example_manifest = to_snake_case(ApiV1CliManifestApiView.__name__)
+    status = to_snake_case(ApiV1CliStatusApiView.__name__)
+    json_schema = to_snake_case(ApiV1CliSchemaApiView.__name__)
+    version = to_snake_case(ApiV1CliVersionApiView.__name__)
+    whoami = to_snake_case(ApiV1CliWhoamiApiView.__name__)
+    resources = to_snake_case(ApiV1CliResourcesApiView.__name__)
+    validate = to_snake_case(ApiV1CliValidateApiView.__name__)
 
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name=ApiV1CliReverseViews.apply),
-    path("chat/<str:name>/", ApiV1CliChatApiView.as_view(), name=ApiV1CliReverseViews.chat),
-    path("chat/config/<str:name>/", ApiV1CliChatConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
+    path("validate/", ApiV1CliValidateApiView.as_view(), name=ApiV1CliReverseViews.validate),
+    path("prompt/<str:name>/", ApiV1CliPromptApiView.as_view(), name=ApiV1CliReverseViews.prompt),
+    path("prompt/config/<str:name>/", ApiV1CliPromptConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name=ApiV1CliReverseViews.delete),
     path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name=ApiV1CliReverseViews.deploy),
     path("undeploy/<str:kind>/", ApiV1CliUndeployApiView.as_view(), name=ApiV1CliReverseViews.undeploy),
     path("describe/<str:kind>/", ApiV1CliDescribeApiView.as_view(), name=ApiV1CliReverseViews.describe),
     path("get/<str:kind>/", ApiV1CliGetApiView.as_view(), name=ApiV1CliReverseViews.get),
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name=ApiV1CliReverseViews.logs),
-    path("example_manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name=ApiV1CliReverseViews.example_manifest),
-    path("schema/<str:kind>/", ApiV1CliSchemaApiView.as_view(), name=ApiV1CliReverseViews.schema),
+    path("example-manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name=ApiV1CliReverseViews.example_manifest),
+    path("json-schema/<str:kind>/", ApiV1CliSchemaApiView.as_view(), name=ApiV1CliReverseViews.json_schema),
+    # Legacy path, still requested without a trailing slash by smarter-vscode-yaml.
+    # Redirect rather than route to the view, which derives its command from the url.
+    re_path(
+        r"^schema/(?P<kind>[^/]+)/?$",
+        RedirectView.as_view(
+            pattern_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.json_schema,
+            permanent=True,
+            query_string=True,
+        ),
+    ),
     path("status/", ApiV1CliStatusApiView.as_view(), name=ApiV1CliReverseViews.status),
     path("version/", ApiV1CliVersionApiView.as_view(), name=ApiV1CliReverseViews.version),
     path("whoami/", ApiV1CliWhoamiApiView.as_view(), name=ApiV1CliReverseViews.whoami),
+    path("resources/", ApiV1CliResourcesApiView.as_view(), name=ApiV1CliReverseViews.resources),
 ]

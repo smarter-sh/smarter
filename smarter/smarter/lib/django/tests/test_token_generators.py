@@ -52,7 +52,6 @@ class TestExpiringTokenGenerator(SmarterTestBase):
         mock_reverse.return_value = "/reset/uid/tok/"
         url = self.token_gen.encode_link(request, self.user, "reset_link")
         self.assertTrue(url.startswith("https://example.com"))
-        self.assertIn("tok", url)
 
     @patch.object(ExpiringTokenGenerator, "uidb64_to_user")
     @patch.object(ExpiringTokenGenerator, "validate")

@@ -1,0 +1,595 @@
+# pylint: disable=wrong-import-position
+"""Test SAMSmarterAuthTokenBroker."""
+
+import os
+from unittest.mock import MagicMock, PropertyMock, patch
+
+from django.http import HttpRequest
+from pydantic_core import ValidationError
+
+from smarter.lib import json, logging
+from smarter.lib.drf.manifest.brokers.auth_token import (
+    SAMSmarterAuthTokenBroker,
+    SAMSmarterAuthTokenBrokerError,
+)
+from smarter.lib.drf.manifest.models.auth_token.metadata import (
+    SAMSmarterAuthTokenMetadata,
+)
+from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
+from smarter.lib.drf.manifest.models.auth_token.spec import (
+    SAMSmarterAuthTokenSpec,
+    SAMSmarterAuthTokenSpecConfig,
+)
+from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.manifest.broker import (
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
+from smarter.lib.manifest.enum import SAMMetadataKeys
+from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+
+logger = logging.getLogger(__name__)
+
+
+class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):
+    """
+    Test the Smarter SAMSmarterAuthTokenBroker.
+
+    TestSAMBrokerBaseClass provides common setup for SAM broker tests,
+    including SAMLoader and HttpRequest properties.
+    """
+
+    def setUp(self):
+        """
+        Test-level setup.
+
+        Before we delve into the actual unit tests, we need to
+        ensure that our test environment is properly configured and that we
+        can initialize the precursors for testing the SAMSmarterAuthTokenBroker.
+        """
+        super().setUp()
+        self._broker_class = SAMSmarterAuthTokenBroker
+        self._here = os.path.abspath(os.path.dirname(__file__))
+        self._manifest_filespec = self.get_data_full_filepath("auth-token.yaml")
+
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready."""
+        if not super().ready:
+            return False
+
+        self.assertIsInstance(self.loader, SAMLoader)
+        self.assertIsInstance(self.loader.json_data, dict)
+        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.request, HttpRequest)
+
+        return True
+
+    @property
+    def SAMBrokerClass(self) -> type[SAMSmarterAuthTokenBroker]:
+        """Return the SAMSmarterAuthTokenBroker class definition for this test."""
+        return SAMSmarterAuthTokenBroker
+
+    @property
+    def broker(self) -> SAMSmarterAuthTokenBroker:
+        return super().broker  # type: ignore
+
+    @property
+    def kwargs(self) -> dict:
+        """Return default kwargs for broker methods."""
+        if not self.ready:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
+        if not self.broker.manifest:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before manifest is set")
+        return {
+            SAMMetadataKeys.NAME.value: self.broker.manifest.metadata.name,
+        }
+
+
+class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
+    """
+    Test the Smarter SAMSmarterAuthTokenBroker.
+
+    TestSAMBrokerBaseClass provides common setup for SAM broker tests,
+    including SAMLoader and HttpRequest properties.
+    """
+
+    def test_setup(self):
+        """Verify that setup initialized the broker correctly."""
+        self.assertTrue(self.ready)
+        self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
+        self.assertIsInstance(self.loader, SAMLoader)
+        self.assertIsInstance(self.loader.json_data, dict)
+        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.request, HttpRequest)
+        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(self.broker, SAMSmarterAuthTokenBroker)
+        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(self.broker, SAMSmarterAuthTokenBroker)
+        logger.info(
+            "%s.test_setup() SAMSmarterAuthTokenBroker initialized successfully for testing.", self.formatted_class_name
+        )
+
+    def test_is_valid(self):
+        """Test that the is_valid property returns True."""
+        self.assertTrue(self.broker.is_valid)
+
+    def test_immutability(self):
+        """Test that the broker instance is immutable after initialization."""
+
+        with self.assertRaises(AttributeError):
+            self.broker.kind = "NewKind"  # type: ignore
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.name = "NewManifestName"  # type: ignore
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.annotations = []  # type: ignore
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.tags = []  # type: ignore
+
+        # test any field in spec.config
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.companyName = "New Company Name"  # type: ignore
+
+        # test any field in status
+        if self.broker.manifest.status:  # type: ignore
+            with self.assertRaises(ValidationError):
+                self.broker.manifest.status.adminAccount = None  # type: ignore
+
+    def test_ready(self):
+        """Test that the test setup is ready."""
+        self.assertTrue(self.ready)
+
+    def test_sam_broker_initialization(self):
+        """Test that the SAMSmarterAuthTokenBroker initializes correctly."""
+        # Verify that our SAM manifest is capable of initializing the SAM Model.
+        metadata = {**self.loader.manifest_metadata}
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        spec = {
+            "config": SAMSmarterAuthTokenSpecConfig(**self.loader.manifest_spec["config"]),
+        }
+        SAMSmarterAuthToken(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMSmarterAuthTokenMetadata(**metadata),
+            spec=SAMSmarterAuthTokenSpec(**spec),
+        )
+
+    def test_broker_initialization(self):
+        """Test that the broker initializes with required properties."""
+        broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
+        self.assertEqual(broker.kind, "SmarterAuthToken")
+        self.assertIsNotNone(broker.ORMModelClass)
+        self.assertEqual(broker.ORMModelClass.__name__, "SmarterAuthToken")
+
+    def test_initialization_from_class(self):
+        """Test initialization of SAMSmarterAuthTokenBroker from class."""
+        broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
+        self.assertTrue(broker.ready)
+
+    def test_to_json(self):
+        """Test to_json method returns JSON serializable output."""
+        d = json.loads(json.dumps(self.broker.to_json()))
+        self.assertIsInstance(d, dict)
+
+    def test_manifest_initialization(self):
+        """Test that the manifest property can initialize the broker and model."""
+        broker = self.SAMBrokerClass(self.request, self.broker.manifest)
+        self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
+
+    def test_manifest_model_initialization(self):
+        """Test that the manifest property can initialize a SAMSmarterAuthToken model."""
+        sam_account = SAMSmarterAuthToken(**self.broker.manifest.model_dump())  # type: ignore
+        self.assertIsInstance(sam_account, SAMSmarterAuthToken)
+
+    def test_formatted_class_name(self):
+        """Test formatted_class_name returns a string containing SAMSmarterAuthTokenBroker."""
+        name = self.broker.formatted_class_name
+        self.assertIsInstance(name, str)
+
+    def test_kind_property(self):
+        """Test kind property returns 'SmarterAuthToken'."""
+        self.assertEqual(self.broker.kind, "SmarterAuthToken")
+
+    def test_manifest_property(self):
+        """Test manifest property returns a SAMSmarterAuthToken or None if not ready."""
+        try:
+            _ = self.broker.manifest
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.fail(f"manifest property raised: {e}")
+
+    def test_manifest_to_django_orm(self):
+        """Test manifest_to_django_orm returns a dict."""
+        if self.broker.manifest:
+            orm_dict = self.broker.manifest_to_django_orm()
+            self.assertIsInstance(orm_dict, dict)
+
+    def test_django_orm_to_manifest_dict(self):
+        """Test django_orm_to_manifest_dict returns a dict or raises if manifest is not set."""
+        if self.broker.manifest:
+            manifest_dict = self.broker.django_orm_to_manifest_dict()
+            self.assertIsInstance(manifest_dict, dict)
+
+    def test_example_manifest(self):
+        """
+        Test example_manifest method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.example_manifest(self.request)  # type: ignore
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_example_manifest(response)
+        self.assertTrue(is_valid_response)
+
+    def test_get(self):
+        """
+        Test get method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.get(self.request, **self.kwargs)  # type: ignore
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_get(response)
+        self.assertTrue(is_valid_response)
+
+    def test_apply(self):
+        """
+        Test apply method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        logger.debug("test_apply() request body: %s", self.request.body.decode() if self.request.body else None)
+        response = self.broker.apply(self.request, **self.kwargs)  # type: ignore
+        logger.debug("test_apply() response: %s", response.content.decode())
+
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_apply(response)
+        self.assertTrue(is_valid_response)
+
+        logger.warning("%s.test_apply() skipping tag tests", self.formatted_class_name)
+        # self.broker.manifest.metadata.tags is a list of strings.
+        # verify that smarter_auth_token.tags (TaggableManager) contains the same tags.
+        # manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        # django_orm_tags = None
+        # if isinstance(self.broker.smarter_auth_token.tags, (list, TaggableManager, _TaggableManager)):
+        #     django_orm_tags = (
+        #         set(self.broker.smarter_auth_token.tags_list) if self.broker.smarter_auth_token.tags else set()
+        #     )
+        # elif isinstance(self.broker.smarter_auth_token.tags, set):
+        #     django_orm_tags = self.broker.smarter_auth_token.tags
+        # else:
+        #     self.fail(f"smarter_auth_token.tags is of unexpected type: {type(self.broker.smarter_auth_token.tags)}")
+        # self.assertEqual(manifest_tags, django_orm_tags)
+
+        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
+        # verify that smarter_auth_token.annotations (JSONField) contains the same annotations.
+        def sort_annotations(annotations):
+            return sorted(annotations, key=lambda d: sorted(d.items()))
+
+        if not self.broker.manifest:
+            self.fail("Broker manifest is not set. Cannot compare annotations.")
+        if not self.broker.smarter_auth_token:
+            self.fail("Broker smarter_auth_token is not set. Cannot compare annotations.")
+
+        manifest_annotations = json.dumps(sort_annotations(self.broker.manifest.metadata.annotations or []))
+        account_annotations = json.dumps(sort_annotations(self.broker.smarter_auth_token.annotations or []))
+        self.assertEqual(
+            manifest_annotations,
+            account_annotations,
+            f"SmarterAuthToken annotations do not match manifest annotations. manifest: {manifest_annotations}, smarter_auth_token: {account_annotations}",
+        )
+
+        self.assertEqual(
+            self.broker.manifest.metadata.name,
+            self.broker.smarter_auth_token.name,
+            f"SmarterAuthToken name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, smarter_auth_token: {self.broker.smarter_auth_token.name}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.isActive,
+            self.broker.smarter_auth_token.is_active,
+            f"SmarterAuthToken is_active does not match manifest isActive. manifest: {self.broker.manifest.spec.config.isActive}, smarter_auth_token: {self.broker.smarter_auth_token.is_active}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.username or "",
+            self.broker.smarter_auth_token.user.username or "",
+            f"SmarterAuthToken username does not match manifest username. manifest: {self.broker.manifest.spec.config.username}, smarter_auth_token: {self.broker.smarter_auth_token.user.username}",
+        )
+
+    def test_describe(self):
+        """
+        Stub: test describe method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.apply(self.request, **self.kwargs)  # type: ignore
+        response = self.broker.describe(self.request, **self.kwargs)  # type: ignore
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        logger.info("Describe response: %s", response.content.decode())
+
+    def test_delete(self):
+        """Stub: test delete method."""
+
+    def test_undeploy(self):
+        """
+        Test undeploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.undeploy(self.request, **self.kwargs)  # type: ignore
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        logger.info("Describe response: %s", response.content.decode())
+
+    def test_chat_not_implemented(self):
+        """Test prompt method raises not implemented."""
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.prompt(self.request, **self.kwargs)  # type: ignore
+
+    def test_logs_returns_ok(self):
+        """Stub: test logs method returns ok response."""
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.logs(self.request, **self.kwargs)  # type: ignore
+
+    def test_invalid_timezone(self):
+        """Test that applying a manifest with an invalid timezone raises an error."""
+        # Modify the manifest to have an invalid timezone
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"  # type: ignore
+
+    def test_invalid_currency(self):
+        """Test that applying a manifest with an invalid currency raises an error."""
+        # Modify the manifest to have an invalid currency
+
+        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
+            self.fail(
+                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify currency for test."
+            )
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.currency = "INVALID"  # type: ignore
+
+    def test_invalid_language(self):
+        """Test that applying a manifest with an invalid language raises an error."""
+        # Modify the manifest to have an invalid language
+
+        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
+            self.fail(
+                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify language for test."
+            )
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.language = "xx-XX"  # type: ignore
+
+    def test_invalid_country(self):
+        """Test that applying a manifest with an invalid country raises an error."""
+        # Modify the manifest to have an invalid country
+
+        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
+            self.fail(
+                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify country for test."
+            )
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.country = "XX"  # type: ignore
+
+    def test_deploy(self):
+        """
+        Test deploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.apply(self.request, **self.kwargs)  # type: ignore
+        response = self.broker.deploy(self.request, **self.kwargs)  # type: ignore
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        logger.info("Describe response: %s", response.content.decode())
+
+
+class TestSmarterAuthTokenBroker2(TestSmarterAuthTokenBrokerBase):
+
+    # pylint: disable=W0212
+    def test_delete_smarter_auth_token_not_found(self):
+        """Test delete method raises not found for missing smarter_auth_token."""
+        self.request._body = None  # type: ignore
+        self._broker = self.SAMBrokerClass(self.request)
+
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.delete(self.request, {"name": "nonexistent-smarter_auth_token"})  # type: ignore
+
+
+class TestSmarterAuthTokenBroker3(TestSmarterAuthTokenBrokerBase):
+
+    # pylint: disable=W0212
+    def test_describe_smarter_auth_token_not_found(self):
+        """Test describe method raises not found for missing smarter_auth_token."""
+        request = self.request
+        request._body = None  # type: ignore
+        self._broker = self.SAMBrokerClass(request)
+        with self.assertRaises((SAMBrokerErrorNotFound, SAMBrokerErrorNotReady)):
+            self.broker.describe(request, {"name": "nonexistent-smarter_auth_token"})  # type: ignore
+
+
+class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
+    """Test the SAMSmarterAuthTokenBroker branches that the happy-path tests don't reach."""
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMSmarterAuthTokenBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_error_message(self):
+        error = SAMSmarterAuthTokenBrokerError(message="x", thing="SmarterAuthToken")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API SmarterAuthToken Manifest Broker Error")
+
+    def test_without_a_username(self):
+        """Without a manifest or a user there's no token, nor an ORM meta instance."""
+        broker = self.broker
+        broker._smarter_auth_token = None
+        broker._orm_meta_instance = None
+        broker._orm_instance = None
+        self.patch_property("token_username", None)
+        self.assertIsNone(broker.smarter_auth_token)
+        broker.orm_meta_instance_setter()
+        self.assertIsNone(broker._orm_meta_instance)
+
+    def test_orm_meta_instance_setter(self):
+        """The ORM instance is reused, and a token that's missing or can't be read leaves no ORM meta instance."""
+        broker = self.broker
+        orm_instance = MagicMock(spec=SmarterAuthToken)
+        broker._orm_instance = orm_instance
+        broker.orm_meta_instance_setter()
+        self.assertIs(broker._orm_meta_instance, orm_instance)
+
+        broker._orm_instance = None
+        self.patch_property("token_username", self.admin_user.username)
+        for error in (SmarterAuthToken.DoesNotExist, RuntimeError("database down")):
+            with self.subTest(error=error), patch.object(SmarterAuthToken.objects, "get", side_effect=error):
+                broker.orm_meta_instance_setter()
+                self.assertIsNone(broker._orm_meta_instance)
+
+    def test_conversions_need_a_manifest_and_token(self):
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("smarter_auth_token", None)
+        with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+            broker.django_orm_to_manifest_dict()
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+            broker.manifest_to_django_orm()
+
+    def test_token_key_after_create(self):
+        broker = self.broker
+        broker._created = True
+        broker._token_key = "a-key"
+        self.assertEqual(broker.token_key, "a-key")
+
+    def test_manifest_to_django_orm_needs_a_dict_config(self):
+        broker = self.broker
+        real = broker.to_snake_case
+        calls = []
+
+        def to_snake_case(value):
+            """Convert the metadata, then fail to convert the config."""
+            calls.append(value)
+            return real(value) if len(calls) == 1 else "not a dict"
+
+        with patch.object(SAMSmarterAuthTokenBroker, "to_snake_case", side_effect=to_snake_case):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                broker.manifest_to_django_orm()
+
+    def test_django_orm_to_manifest_dict_needs_a_manifest(self):
+        self.patch_property("smarter_auth_token", MagicMock(spec=SmarterAuthToken))
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker.django_orm_to_manifest_dict()
+
+    def test_invalid_manifest_from_the_loader(self):
+        """A loader manifest that fails Pydantic validation leaves no manifest."""
+        broker = self.broker
+        broker._manifest = None
+        with patch.object(SAMLoader, "manifest_spec", new_callable=PropertyMock, return_value={"config": 42}):
+            try:
+                manifest = broker.manifest
+            except SAMSmarterAuthTokenBrokerError:
+                manifest = None
+        self.assertIsNone(manifest)
+
+    def test_get_with_an_unserializable_token(self):
+        self.broker.apply(self.request, **self.kwargs)
+        for data in ({}, RuntimeError("boom")):
+            with self.subTest(data=data):
+                serializer = MagicMock()
+                type(serializer.return_value).data = PropertyMock(
+                    side_effect=data if isinstance(data, Exception) else None, return_value=data
+                )
+                with (
+                    patch("smarter.lib.drf.manifest.brokers.auth_token.SmarterAuthTokenMiniSerializer", serializer),
+                    patch.object(SmarterAuthToken, "get_cached_objects", return_value=[self.broker.smarter_auth_token]),
+                ):
+                    with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                        self.broker.get(self.request, **self.kwargs)
+
+    def test_apply_and_delete_permissions(self):
+        """Only staff Users may apply or delete auth tokens."""
+        non_staff = MagicMock(spec=self.admin_user.__class__, is_staff=False, is_superuser=False)
+        for user in ("not a user", non_staff):
+            with self.subTest(user=user):
+                with patch.object(SAMSmarterAuthTokenBroker, "user", new_callable=PropertyMock, return_value=user):
+                    with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                        self.broker.apply(self.request, **self.kwargs)
+                    with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                        self.broker.delete(self.request, **self.kwargs)
+
+    def test_apply_needs_a_manifest(self):
+        kwargs = self.kwargs
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.apply(self.request, **kwargs)
+
+    def test_apply_for_an_unknown_user(self):
+        user_model = self.admin_user.__class__
+        with patch("smarter.lib.drf.manifest.brokers.auth_token.User.objects.get", side_effect=user_model.DoesNotExist):
+            with self.assertRaises(SAMBrokerError):
+                self.broker.apply(self.request, **self.kwargs)
+
+    def test_staff_cannot_issue_keys_for_superusers(self):
+        """A staff user who isn't a superuser can't apply a token for a superuser."""
+        staff = MagicMock(spec=self.admin_user.__class__, is_staff=True, is_superuser=False, username="staff")
+        superuser = MagicMock(is_superuser=True)
+        with (
+            patch.object(SAMSmarterAuthTokenBroker, "user", new_callable=PropertyMock, return_value=staff),
+            patch("smarter.lib.drf.manifest.brokers.auth_token.User.objects.get", return_value=superuser),
+        ):
+            with self.assertRaises(SAMBrokerError):
+                self.broker.apply(self.request, **self.kwargs)
+
+    def test_apply_save_error(self):
+        with patch.object(SmarterAuthToken, "save", side_effect=RuntimeError("database down")):
+            with self.assertRaises(Exception):
+                self.broker.apply(self.request, **self.kwargs)
+
+    def test_describe_and_delete_errors(self):
+        self.broker.apply(self.request, **self.kwargs)
+        with patch.object(SAMSmarterAuthTokenBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("x")):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                self.broker.describe(self.request, **self.kwargs)
+        with patch.object(SmarterAuthToken, "delete", side_effect=RuntimeError("x")):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError):
+                self.broker.delete(self.request, **self.kwargs)
+
+    def test_deploy_activates_and_undeploy_needs_a_token(self):
+        self.broker.apply(self.request, **self.kwargs)
+        token = self.broker.smarter_auth_token
+        token.is_active = False
+        token.save()
+        self.broker.deploy(self.request, **self.kwargs)
+        token.refresh_from_db()
+        self.assertTrue(token.is_active)
+        self.patch_property("smarter_auth_token", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.deploy(self.request, **self.kwargs)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            self.broker.undeploy(self.request, **self.kwargs)

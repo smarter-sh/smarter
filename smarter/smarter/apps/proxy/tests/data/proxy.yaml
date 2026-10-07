@@ -1,0 +1,28 @@
+---
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: test_proxy
+  description: A Proxy for unit testing, to a fake OpenAI-compatible provider.
+  version: 1.0.0
+  tags:
+    - test
+    - openai-compatible
+  annotations:
+    - smarter.sh/proxy/purpose: unit-testing
+spec:
+  provider: test_proxy_provider
+  apiKey: test_proxy_api_key
+  baseUrl: https://api.example-llm.com/v1/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  headers:
+    OpenAI-Beta: assistants=v2
+  allowedPaths:
+    - chat/completions
+    - embeddings
+    - models
+    - models/*
+  timeout: 30
+  isActive: true

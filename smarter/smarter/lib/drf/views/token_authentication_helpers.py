@@ -1,24 +1,24 @@
 """Django template and view helper functions for knox token authentication."""
 
-import logging
-from http import HTTPStatus
+from typing import Any, Union
 
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, JsonResponse
-from django.utils.decorators import method_decorator
+from django.http import HttpResponseBase, HttpResponseForbidden
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from smarter.apps.api.signals import api_request_completed, api_request_initiated
+from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
+from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.drf.view_helpers import SmarterAuthenticatedPermissionClass
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.drf.views.helpers import SmarterAuthenticatedPermissionClass
 
-from ..token_authentication import SmarterTokenAuthentication
-
-
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 # ------------------------------------------------------------------------------
@@ -26,128 +26,501 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 
 
-@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
-    """
-    Allows access only to authenticated users.
+    """Smarter base class for DRF API detail views that require authentication.
+
+    Does the following:
+
+    - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
+    - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
+    - Overrides Django's logic for initializing the request object to ensure that SmarterRequestMixin is fully initialized before any other logic runs.
     """
 
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
-    def __init__(self, *args, **kwargs):
-        request = None
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        super().__init__(*args, **kwargs)
+    def get_permissions(self):
+        """OPTIONS requests (CORS preflight, DRF metadata probes) never carry credentials.
 
-    def initial(self, request, *args, **kwargs):
+        Don't require authentication for them.
         """
+        if getattr(self, "request", None) is not None and self.request.method == "OPTIONS":
+            return []
+        return super().get_permissions()
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAuthenticatedAPIView."""
+        logger.debug(
+            "%s.__init__() - called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        super().__init__(*args, **kwargs)
+        self.request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=self.request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+
+    @property
+    def formatted_class_name(self):
+        """Helper method to get the formatted class name for logging."""
+        class_name = f"{__name__}.{SmarterAuthenticatedAPIView.__name__}"
+        return self.formatted_text(class_name)
+
+    def setup(self, request: Request, *args, **kwargs):
+        """Extend setup() DRF view method.
+
+        Setup the view. This is called by Django before dispatch() and is used to
+        set up the view for the request.
+
+        Args:
+            request (HttpRequest): The incoming HTTP request.
+        """
+        # drf setup logic
+        super().setup(request, *args, **kwargs)
+
+        # go through our own request and account mixin setup logic
+        self.smarter_request = request
+
+        # overwrite the request object with our smarter_request object
+        if not self.smarter_request:
+            logger.warning(
+                "%s.setup() - smarter_request is None, overwriting with request: %s",
+                self.formatted_class_name,
+                smarter_build_absolute_uri(request),
+            )
+            self.smarter_request = request
+        self.request = self.smarter_request
+        api_request_initiated.send(sender=self.__class__, instance=self, request=request)
+        logger.debug(
+            "%s.setup() - finished for request: %s, user: %s, self.user: %s is_authenticated: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
+            self.user_profile,
+            is_authenticated_request(request),
+        )
+
+    def initial(self, request: Request, *args, **kwargs):
+        """Extend initial() DRF view method.
+
         Initialize the view with the request and any additional arguments.
 
         This is the earliest point in the DRF view lifecycle where the request object is available.
         Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
         initialized. This method takes care of the rest of the initialization.
+
+        Args:
+            request (HttpRequest): The incoming HTTP request.
         """
-        if not self.is_requestmixin_ready:
-            logger.info(
+        if not self.srm_ready:
+            logger.debug(
                 "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
                 self.formatted_class_name,
                 request.build_absolute_uri(),
             )
             self.smarter_request = request
-        super().initial(request, *args, **kwargs)
-        logger.info(
+        logger.debug(
             "%s.initial() - request: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
-            request,
+            self.request,
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        super().initial(self.request, *args, **kwargs)
 
 
-@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
-    """
-    Allows access only to authenticated users.
+    """Smarter base class for DRF API list views that require authentication.
+
+    Does the following:
+
+    - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
+    - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
+    - Overrides Django's logic for initializing the request object to ensure that SmarterRequestMixin is fully initialized before any other logic runs.
     """
 
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
-    def initial(self, request, *args, **kwargs):
+    def get_permissions(self):
+        """OPTIONS requests (CORS preflight, DRF metadata probes) never carry credentials.
+
+        Don't require authentication for them.
         """
-        Initialize the view with the request and any additional arguments.
+        if getattr(self, "request", None) is not None and self.request.method == "OPTIONS":
+            return []
+        return super().get_permissions()
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAuthenticatedListAPIView.
+
+        Unlike SmarterAuthenticatedAPIView, this class previously had no
+        __init__ override. DRF/Django's View.__init__ does not call
+        super().__init__(), so without this, SmarterRequestMixin.__init__()
+        (and thus self._srm_ready and friends) was never invoked, causing an
+        AttributeError the first time self.srm_ready was accessed.
         """
-        super().initial(request, *args, **kwargs)
-        logger.info(
+        logger.debug(
+            "%s.__init__() - called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        super().__init__(*args, **kwargs)
+        self.request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=self.request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+
+    @property
+    def formatted_class_name(self):
+        """Helper method to get the formatted class name for logging."""
+        class_name = f"{__name__}.{SmarterAuthenticatedListAPIView.__name__}"
+        return self.formatted_text(class_name)
+
+    def initial(self, request: Request, *args, **kwargs):
+        """Extend DRF initial() to add SmarterRequestMixin.
+
+        Args:
+            request (Request): The incoming HTTP request.
+        """
+        logger.debug(
             "%s.initial() - request: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
             request,
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        self.smarter_request = request
+        super().initial(self.request, *args, **kwargs)
 
 
 # ------------------------------------------------------------------------------
 # Admin API Views
 # ------------------------------------------------------------------------------
-@method_decorator(staff_member_required, name="dispatch")
-class SmarterAdminAPIView(APIView, SmarterRequestMixin):
+class SmarterAdminAPIMixin(SmarterRequestMixin):
+    """Mixin for admin API views that require superuser or staff authentication."""
+
+    request: Any
+
+    def is_superuser(self) -> bool:
+        """Check if the authenticated user is a superuser.
+
+        Returns:
+            bool: True if the user is not a superuser, False otherwise.
+        """
+        logger.debug(
+            "%s.is_superuser() - checking if user_profile %s is superuser: %s",
+            self.formatted_class_name,
+            self.user_profile,
+            self.user_profile.user.is_superuser if self.user_profile and self.user_profile.user else False,
+        )
+        if not is_authenticated_request(self.request):
+            logger.warning(
+                "%s.is_superuser() - request user is not authenticated: %s",
+                self.formatted_class_name,
+                self.request.user,
+            )
+            return False
+        if not self.user_profile or not self.user_profile.user.is_superuser:
+            return False
+        return True
+
+    def check_superuser(self) -> None:
+        """Refuse the request unless the authenticated user is a superuser.
+
+        Raises:
+            PermissionDenied: Raised when the authenticated user is not a superuser.
+        """
+        if not self.is_superuser():
+            raise PermissionDenied(f"User {self.user_profile} does not have superuser privileges.")
+
+    def is_staff(self) -> bool:
+        """Check if the authenticated user is a staff member.
+
+        Returns:
+            bool: True if the user is a staff member, False otherwise.
+        """
+        logger.debug(
+            "%s.is_staff() - checking if user_profile %s is staff or superuser: %s",
+            self.formatted_class_name,
+            self.user_profile,
+            (
+                (self.user_profile.user.is_staff or self.user_profile.user.is_superuser)
+                if self.user_profile and self.user_profile.user
+                else False
+            ),
+        )
+        if not is_authenticated_request(self.request):
+            logger.warning(
+                "%s.is_staff() - request user is not authenticated: %s",
+                self.formatted_class_name,
+                self.request.user,
+            )
+            return False
+        if not self.user_profile or (not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser):
+            return False
+        return True
+
+
+class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
+    """Smarter base class for DRF API views that require admin authentication.
+
+    Does the following:
+
+    - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
+    - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
+    - Overrides Django's logic for initializing the request object to ensure that
+      SmarterRequestMixin is fully initialized before any other logic runs.
+    - Limits access to admin users only (staff/superusers).
     """
-    Allows access only to admins.
+
+    permission_classes = [SmarterAuthenticatedPermissionClass]
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
+
+    @property
+    def formatted_class_name(self):
+        """Helper method to get the formatted class name for logging."""
+        class_name = f"{__name__}.{SmarterAdminAPIView.__name__}"
+        return self.formatted_text(class_name)
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAdminAPIView."""
+        super().__init__(*args, **kwargs)
+        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+
+    def setup(self, request: Request, *args, **kwargs) -> None:
+        """Extend DRF setup() the view.
+
+        This is called by Django before dispatch() and is used to
+        set up the view for the request.
+
+        Args:
+            request (Request): The incoming HTTP request.
+        """
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        super().setup(request, *args, **kwargs)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+        logger.debug(
+            "%s.setup() - called for request: %s user: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
+        )
+
+        # note: setup() is the earliest point in the request lifecycle where we can
+        # send signals.
+        api_request_initiated.send(sender=self.__class__, instance=self, request=request)
+        logger.debug(
+            "%s.setup() - request: %s, user_profile: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            self.user_profile,
+        )
+
+    def initial(self, request: Request, *args, **kwargs):
+        """Extend DRF initial() to limit access to superusers.
+
+        The check runs here, after DRF has authenticated the request, so that a
+        request authenticated with an api key, rather than a session, is recognized.
+
+        Args:
+            request (Request): The incoming HTTP request.
+
+        Raises:
+            PermissionDenied: Raised when the authenticated user is not a superuser.
+        """
+        super().initial(request, *args, **kwargs)
+        self.check_superuser()
+
+    def dispatch(self, request: Request, *args, **kwargs) -> Union[HttpResponseBase, HttpResponseForbidden, Response]:
+        """Extend DRF dispatch() to add logging and signals.
+
+        Args:
+            request (Request): The incoming HTTP request.
+
+        Raises:
+            AuthenticationFailed: Raised when authentication fails.
+            SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
+        """
+        logger.debug(
+            "%s.dispatch() - called by user_profile: %s and ready to process request: %s",
+            self.formatted_class_name,
+            self.user_profile,
+            smarter_build_absolute_uri(request),
+        )
+
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+        # pylint: disable=broad-except
+        except AttributeError:
+            # catches an error raised by a decorator elsewhere in the stack that
+            # barfs when the user object is None
+            # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+        logger.debug(
+            "%s.dispatch() - request: %s, user: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(self.request),
+            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
+        )
+        api_request_completed.send(sender=self.__class__, instance=self, request=self.request, response=response)
+        return response
+
+    def finalize_response(self, request: Request, response: Response, *args, **kwargs) -> Response:
+        """Extend DRF finalize_response() to add logging and signals.
+
+        Args:
+            request (Request): The incoming HTTP request.
+            response (HttpResponse): The outgoing HTTP response.
+        """
+        logger.debug(
+            "%s.finalize_response() - request: %s, response status: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            response.status_code,
+        )
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return super().finalize_response(request, response, *args, **kwargs)
+
+
+class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
+    """Smarter base class for DRF list views that require admin access.
+
+    Does the following:
+
+    - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
+    - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
+    - Overrides Django's logic for initializing the request object to ensure that
+      SmarterRequestMixin is fully initialized before any other logic runs.
+    - Limits access to admin users only (staff/superusers).
     """
 
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
     def __init__(self, *args, **kwargs):
-        request = None
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        """Initialize the SmarterAdminListAPIView."""
         super().__init__(*args, **kwargs)
-
-    def dispatch(self, request, *args, **kwargs):
-        """
-        Initialize the view with the request and any additional arguments.
-        """
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        retval = super().dispatch(request, *args, **kwargs)
-        logger.info(
-            "%s.initial() - request: %s, args: %s, kwargs: %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
+        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
-        return retval
 
-    def is_superuser_or_unauthorized(self):
-        """Check if the user is a superuser or unauthorized."""
-        if not self.user_profile or not self.user_profile.user.is_superuser:
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
-        return False
+    @property
+    def formatted_class_name(self):
+        """Helper method to get the formatted class name for logging."""
+        class_name = f"{__name__}.{SmarterAdminListAPIView.__name__}"
+        return self.formatted_text(class_name)
 
+    def setup(self, request: Request, *args, **kwargs):
+        """Extend DRF setup() to add Django signals.
 
-@method_decorator(staff_member_required, name="dispatch")
-class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
-    """
-    Allows access only to admins.
-    """
-
-    permission_classes = [SmarterAuthenticatedPermissionClass]
-    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
-
-    def initial(self, request, *args, **kwargs):
+        Args:
+            request (Request): The incoming HTTP request.
         """
-        Initialize the view with the request and any additional arguments.
+        super().setup(request, *args, **kwargs)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+        # note: setup() is the earliest point in the request lifecycle where we can
+        # send signals.
+        api_request_initiated.send(sender=self.__class__, instance=self, request=request)
+        logger.debug(
+            "%s.setup() - request: %s, user_profile: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            self.user_profile,
+        )
+
+    def initial(self, request: Request, *args, **kwargs):
+        """Extend DRF initial() to limit access to superusers, and to add app logging.
+
+        The check runs here, after DRF has authenticated the request, so that a
+        request authenticated with an api key, rather than a session, is recognized.
+
+        Args:
+            request (Request): The incoming HTTP request.
+
+        Raises:
+            PermissionDenied: Raised when the authenticated user is not a superuser.
         """
         super().initial(request, *args, **kwargs)
-        logger.info(
-            "%s.initial() - request: %s, args: %s, kwargs: %s",
+        self.check_superuser()
+        logger.debug(
+            "%s.initial() - running for request: %s, user: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
             request,
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+
+    def dispatch(self, request: Request, *args, **kwargs):
+        """Extend DRF dispatch() to add authentication checks and logging.
+
+        Args:
+            request (Request): The incoming HTTP request.
+
+        Returns:
+            HttpResponse: The HTTP response generated by the view.
+
+        Raises:
+            AuthenticationFailed: Raised when authentication fails.
+            SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
+        """
+        logger.debug(
+            "%s.dispatch() - called for request: %s user: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
+        )
+
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+        except AttributeError as e:
+            logger.error(
+                "%s.dispatch() - encountered AttributeError: %s.",
+                self.formatted_class_name,
+                str(e),
+                exc_info=True,
+            )
+            # catches an error raised by a decorator elsewhere in the stack that
+            # barfs when the user object is None
+            # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+        return response
+
+    def finalize_response(self, request: Request, response: Response, *args, **kwargs):
+        """Extend DRF finalize_response() to add logging and signals.
+
+        Args:
+            request (Request): The incoming HTTP request.
+            response (HttpResponse): The outgoing HTTP response.
+        """
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return super().finalize_response(request, response, *args, **kwargs)

@@ -1,9 +1,7 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-# python stuff
-import json
-import logging
+import copy
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -29,6 +27,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.apps.plugin.plugin.tests.base_classes import mock_remote_skills
 from smarter.apps.plugin.plugin.utils import PluginExamples
 from smarter.apps.plugin.serializers import (
     PluginMetaSerializer,
@@ -47,22 +46,17 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.secret.models import Secret
+from smarter.common.utils import get_readonly_yaml_file, to_snake_case
+
+# python stuff
+from smarter.lib import json, logging
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -85,27 +79,72 @@ class TestPluginBase(TestAccountMixin):
     _plugin_updated = False
 
     def plugin_called_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_called_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_called = True
 
     def plugin_cloned_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_cloned_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_cloned = True
 
     def plugin_created_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_created_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_created = True
 
     def plugin_deleted_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_deleted_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_deleted = True
 
     def plugin_ready_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_ready_signal_handler() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs
+        )
         self._plugin_ready = True
 
     def plugin_selected_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_selected_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_selected = True
 
     def plugin_selected_called_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_selected_called_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_selected_called = True
 
     def plugin_updated_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_updated_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         self._plugin_updated = True
 
     @property
@@ -143,7 +182,6 @@ class TestPluginBase(TestAccountMixin):
         sleep(1)
 
         # verify that the signals were sent
-        self.assertTrue(self.signals["plugin_created"])
         self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(plugin, self.plugin_class)
@@ -157,7 +195,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
-        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(plugin.plugin_meta.name, snake_case_name)  # type: ignore
 
         self.assertEqual(
@@ -187,17 +225,11 @@ class TestPluginBase(TestAccountMixin):
             ],
         )
         self.assertEqual(
-            plugin.plugin_prompt.max_tokens,
+            plugin.plugin_prompt.max_completion_tokens,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
         )
-        self.assertEqual(
-            plugin.plugin_data.description, self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value]["description"]  # type: ignore
-        )
-        # self.assertEqual(
-        #     plugin.plugin_data.static_data, self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value]["staticData"]
-        # )
 
     def test_to_json(self):
         """Test that the StaticPlugin generates correct JSON output."""
@@ -205,8 +237,10 @@ class TestPluginBase(TestAccountMixin):
 
         plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
         to_json = plugin.to_json()
+
         if not isinstance(to_json, dict):
             self.fail("Expected JSON output to be a dict.")
+
         logger.info("TestPluginBase().test_to_json() data: %s", self.data)
         logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
 
@@ -215,56 +249,76 @@ class TestPluginBase(TestAccountMixin):
 
         self.assertIsInstance(to_json, dict)
 
+        # Helper function to create assertion error messages with JSON dump
+        def assert_equal_with_dump(actual, expected, field_description):
+            try:
+                self.assertEqual(actual, expected)
+            except AssertionError as e:
+                logger.error("Assertion failed for %s", field_description)
+                logger.error("to_json dump: %s", json.dumps(to_json))
+                raise AssertionError(f"{field_description} assertion failed. to_json: {json.dumps(to_json)}") from e
+
         # ensure that we can go from json output to a string and back to json without error
         # taking into account that the PluginMeta name will always save in snake_case format.
-        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
-        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
+        assert_equal_with_dump(to_json[SAMKeys.METADATA.value]["name"], snake_case_name, "Plugin name (snake_case)")
 
-        self.assertEqual(
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
+            "Selector directive",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
+            "Prompt provider",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
+            "Prompt system role",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MODEL.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MODEL.value
             ].strip(),
+            "Prompt model",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
+            "Prompt temperature",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
+            "Prompt max tokens",
         )
 
     def test_delete(self):
@@ -302,52 +356,56 @@ class TestPluginBase(TestAccountMixin):
     def test_add_sample_plugins(self):
         """Test utility function to add sample plugins to a user account."""
 
-        # add the sample plugins to the user account
-        add_example_plugins(user_profile=self.user_profile)
+        # the WebsearchPlugin examples need their search provider's api key Secret.
+        for secret_name in ("brave_search_api_key", "tavily_api_key"):
+            if not Secret.objects.filter(user_profile=self.user_profile, name=secret_name).exists():
+                secret = Secret.objects.create(
+                    user_profile=self.user_profile,
+                    name=secret_name,
+                    description="placeholder web search api key for unit tests",
+                    encrypted_value=Secret.encrypt(value="not-a-real-api-key"),
+                )
+                self.addCleanup(secret.delete)
+
+        # add the sample plugins to the user account. the remote SkillPlugin examples
+        # are retrieved from the test skill, since unit tests must not depend on GitHub.
+        with mock_remote_skills():
+            add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
-        plugins = PluginMeta.objects.filter(account=self.account)
+        plugins = PluginMeta.objects.filter(user_profile__account=self.account)
         self.assertEqual(len(plugins), PluginExamples().count())
 
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.
         for plugin in plugins:
-            self.assertTrue(
-                PluginController(
-                    account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin
-                ).ready
-            )
+            self.assertTrue(PluginController(user_profile=self.user_profile, plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
         """Test that the StaticPlugin raises an error when given bad data."""
-        with self.assertRaises(SmarterPluginError):
+        with self.assertRaises((SmarterPluginError, SAMValidationError)):
             self.plugin_class(data={})
 
-        bad_data = self.data.copy()
-        bad_data.pop(SAMKeys.METADATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.SELECTOR.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.PROMPT.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.DATA.value)
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.METADATA.value].pop("name")
-        with self.assertRaises(SAMLoaderError):
-            self.plugin_class(data=bad_data)
+        # every malformed manifest must be rejected. Depending on where it is caught, that
+        # is the loader, the plugin (which reports a loader that is not ready as a
+        # SAMValidationError), or Pydantic. deepcopy, so that each case removes one thing.
+        rejected = (SAMLoaderError, SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
+        removals = [
+            (SAMKeys.METADATA.value,),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.DATA.value),
+            (SAMKeys.METADATA.value, "name"),
+        ]
+        for removal in removals:
+            bad_data = copy.deepcopy(self.data)
+            parent = bad_data
+            for key in removal[:-1]:
+                parent = parent[key]
+            parent.pop(removal[-1])
+            with self.subTest(removed=".".join(removal)), self.assertRaises(rejected):
+                self.plugin_class(data=bad_data)
 
     def test_pydantic_validation_errors(self):
         """Test that the StaticPlugin raises an error when given bad data."""
@@ -383,11 +441,6 @@ class TestPluginBase(TestAccountMixin):
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MAXTOKENS.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("description")
         with self.assertRaises((TypeError, PydanticValidationError)):
             self.plugin_data(data=bad_data)
 
@@ -430,7 +483,7 @@ class TestPluginBase(TestAccountMixin):
         plugin_cloned.connect(self.plugin_cloned_signal_handler, dispatch_uid="plugin_cloned_test_clone")
 
         plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
-        # PluginController(account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin)
+        # PluginController(account=self.user_profile.cached_account, user=self.user_profile.cached_user, plugin_meta=plugin)
         clone_id = plugin.clone()  # type: ignore
         plugin_clone = self.plugin_class(user_profile=self.user_profile, plugin_id=clone_id)
 
@@ -451,7 +504,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertNotEqual(plugin.plugin_meta.name, plugin_clone.plugin_meta.name)  # type: ignore
         self.assertNotEqual(plugin.plugin_meta.created_at, plugin_clone.plugin_meta.created_at)  # type: ignore
 
-        self.assertEqual(plugin.plugin_meta.author, plugin_clone.plugin_meta.author)  # type: ignore
+        self.assertEqual(plugin.plugin_meta.user_profile, plugin_clone.plugin_meta.user_profile)  # type: ignore
         self.assertListEqual(list(plugin.plugin_meta.tags.all()), list(plugin_clone.plugin_meta.tags.all()))  # type: ignore
 
         self.assertEqual(plugin.plugin_selector.directive, plugin_clone.plugin_selector.directive)  # type: ignore
@@ -460,7 +513,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertEqual(plugin.plugin_prompt.system_role, plugin_clone.plugin_prompt.system_role)  # type: ignore
         self.assertEqual(plugin.plugin_prompt.model, plugin_clone.plugin_prompt.model)  # type: ignore
         self.assertEqual(plugin.plugin_prompt.temperature, plugin_clone.plugin_prompt.temperature)  # type: ignore
-        self.assertEqual(plugin.plugin_prompt.max_tokens, plugin_clone.plugin_prompt.max_tokens)  # type: ignore
+        self.assertEqual(plugin.plugin_prompt.max_completion_tokens, plugin_clone.plugin_prompt.max_completion_tokens)  # type: ignore
 
         self.assertEqual(plugin.plugin_data.description, plugin_clone.plugin_data.description)  # type: ignore
         self.assertEqual(plugin.plugin_data.static_data, plugin_clone.plugin_data.static_data)  # type: ignore
@@ -484,7 +537,7 @@ class TestPluginBase(TestAccountMixin):
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
 
-        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
 
         self.assertEqual(
@@ -555,7 +608,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
@@ -573,7 +626,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

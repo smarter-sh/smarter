@@ -1,0 +1,34 @@
+---
+# Passthrough access to the Cohere API, with the platform's API key.
+# Use the Cohere SDK, with base_url="https://<smarter>/api/v1/proxy/cohere/". The SDK adds the
+# API version, e.g. v2/, to its paths.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: cohere
+  description: Passthrough access to the Cohere API's chat, embed, rerank and models endpoints.
+  version: 1.0.0
+  tags:
+    - cohere
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://docs.cohere.com/reference/about
+spec:
+  provider: cohere
+  apiKey: cohere_api_key
+  baseUrl: https://api.cohere.com/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - v2/chat
+    - v2/embed
+    - v2/rerank
+    - v1/chat
+    - v1/embed
+    - v1/rerank
+    - v1/models
+    - v1/models/*
+  timeout: 120
+  isActive: true

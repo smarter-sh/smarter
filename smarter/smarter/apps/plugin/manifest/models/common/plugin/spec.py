@@ -4,28 +4,29 @@ import os
 import re
 from typing import ClassVar, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecPromptKeys,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
     SAMPluginCommonSpecSelectorKeys,
 )
-from smarter.apps.prompt.providers.const import VALID_CHAT_COMPLETION_MODELS
-from smarter.common.conf import SettingsDefaults
+from smarter.apps.provider.services.text_completion.const import (
+    VALID_CHAT_COMPLETION_MODELS,
+)
+from smarter.common.conf import settings_defaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
 from .const import MANIFEST_KIND
-
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 8192  # this is actually the overall max token count for OpenAI chatGPT-4
 
 
-class SAMPluginCommonSpecSelector(BaseModel):
+class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
     """Smarter API Plugin Manifest - Spec - Selector class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".selector"
@@ -34,7 +35,7 @@ class SAMPluginCommonSpecSelector(BaseModel):
         ...,
         description=(
             f"{class_identifier}.directive[str]: Required. the kind of selector directive to use for the {MANIFEST_KIND}. "
-            f"Must be one of: {SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values()}"
+            f"Must be one of: {SAMPluginCommonSpecSelectorKeyDirectiveValues.all()}"
         ),
     )
     searchTerms: Optional[List[str]] = Field(
@@ -49,10 +50,10 @@ class SAMPluginCommonSpecSelector(BaseModel):
 
     @field_validator("directive")
     def validate_directive(cls, v) -> str:
-        if v not in SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values():
+        if v not in SAMPluginCommonSpecSelectorKeyDirectiveValues.all():
             raise SAMValidationError(
                 f"Invalid value found in {cls.class_identifier}.{SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value}: '{v}'. "
-                f"Must be one of {SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values()}. "
+                f"Must be one of {SAMPluginCommonSpecSelectorKeyDirectiveValues.all()}. "
                 "These values are case-sensitive and camelCase."
             )
         return v
@@ -94,15 +95,15 @@ class SAMPluginCommonSpecSelector(BaseModel):
         return self
 
 
-class SAMPluginCommonSpecPrompt(BaseModel):
+class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
     """Smarter API Plugin Manifest - Spec - Prompt class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
 
-    DEFAULT_PROVIDER: ClassVar[str] = SettingsDefaults.LLM_DEFAULT_PROVIDER
-    DEFAULT_MODEL: ClassVar[str] = SettingsDefaults.LLM_DEFAULT_MODEL
-    DEFAULT_TEMPERATURE: ClassVar[float] = SettingsDefaults.LLM_DEFAULT_TEMPERATURE
-    DEFAULT_MAXTOKENS: ClassVar[int] = SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
+    DEFAULT_PROVIDER: ClassVar[str] = settings_defaults.LLM_DEFAULT_PROVIDER
+    DEFAULT_MODEL: ClassVar[str] = settings_defaults.LLM_DEFAULT_MODEL
+    DEFAULT_TEMPERATURE: ClassVar[float] = settings_defaults.LLM_DEFAULT_TEMPERATURE
+    DEFAULT_MAXTOKENS: ClassVar[int] = settings_defaults.LLM_DEFAULT_MAX_TOKENS
 
     provider: str = Field(
         DEFAULT_PROVIDER,
@@ -151,8 +152,8 @@ class SAMPluginCommonSpecPrompt(BaseModel):
     @field_validator("provider")
     def validate_provider(cls, v) -> str:
 
-        # FIX NOTE: This is a placeholder for the actual valid providers
-        VALID_PROVIDERS = [SettingsDefaults.LLM_DEFAULT_PROVIDER]
+        # TODO: This is a placeholder for the actual valid providers
+        VALID_PROVIDERS = [settings_defaults.LLM_DEFAULT_PROVIDER]
         if v not in VALID_PROVIDERS:
             err_desc_me_name = SAMPluginCommonSpecPromptKeys.PROVIDER.value
 

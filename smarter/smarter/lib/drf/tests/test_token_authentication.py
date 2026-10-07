@@ -22,6 +22,7 @@ class TestSmarterTokenAuthentication(TestAccountMixin):
         super().setUp()
         self.auth = SmarterTokenAuthentication()
         self.smarter_auth_token, self.token_key = SmarterAuthToken.objects.create(
+            user_profile=self.user_profile,
             name=self.name,
             user=self.admin_user,
             description="TestSmarterTokenAuthenticationMiddleware() test description",

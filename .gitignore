@@ -1,28 +1,70 @@
+# -------------------------------------
+# WARNING: everything is in here for a reason. Edit with care.
+# -------------------------------------
+
+smarter/smarter/static/react/
+
+# Smarter Chat, the React app of the LLMClient prompt workbench, is managed
+# in its own repository, https://github.com/smarter-sh/smarter-chat.
+# `make react-install` clones it into the React workspace.
+# -------------------------------------
+smarter/react/packages/smarter-chat/
+
+# -------------------------------------
+# Helm chart artifacts. charts are compressed
+# binary files that do not belong in GitHub.
+#
+# the Chart.lock files are generated during
+# deployment and contain checksums
+# and do not belong in GitHub.
+# -------------------------------------
+helm/charts/smarter/charts/
+helm/charts/smarter/Chart.lock
+
+# Sphinx documentation build artifacts.
+# -------------------------------------
+docs/build/
+
+# Keen Bootstrap theme, raw source files.
+# These are VERY LARGE and absolutely do not
+# belong in GitHub.
+# -------------------------------------
 keen_**
 
-# application data
+# Google service account raw files. These
+# are source files for generating service-account.b64
+# that is used for authenticating to Google APIs.
 # -------------------------------------
+service-account.json
+service-account.b64
+
+# application local dev run-time data
+# -------------------------------------
+.mypy_cache
+.ruff_cache
 celerybeat-schedule
-mysql-data
+mariadb-data
 db.sqlite3
 .cache.sqlite
 staticfiles
 *.swp
 
 # build artifacts
+# But don't ignore '.github/actions/build'
 # -------------------------------------
+!.github/actions/build/
 **/build/
 **/dist/
-lambda_dist_pkg
 *.zip
-# But don't ignore '.github/actions/build'
-!.github/actions/build/
 
 
-# coverage artifacts
+# coverage analysis artifacts
 # -------------------------------------
 **/.coverage
 **/.coverage.*
+# React test coverage reports (make react-test), and Storybook builds
+smarter/react/coverage/
+**/storybook-static/
 htmlcov
 
 # Jupyter Notebook
@@ -57,21 +99,8 @@ config.json
 *.p7b
 *.p7c
 
-# Local .terraform directories
-# -------------------------------------
-.terragrunt-cache/
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-# don't ignore this file
-!tfmodule-template.tf
 
-
-# Python
+# Python run-time artifacts
 # -------------------------------------
 .pypi_cache
 __pycache__
@@ -83,6 +112,7 @@ venv
 *.pyo
 *.pyd
 
-# ReactJS
+# ReactJS run-time artifacts
+# -------------------------------------
 node_modules
-package-lock.json
+/package-lock.json

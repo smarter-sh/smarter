@@ -10,7 +10,6 @@ ensure that:
 from logging import getLogger
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
@@ -18,11 +17,11 @@ from smarter.apps.account.tests.factories import (
     mortal_user_factory,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..const import namespace
 from ..utils import json_schema_name, manifest_name
-
 
 logger = getLogger(__name__)
 
@@ -59,7 +58,7 @@ class TestDocsUrls(SmarterTestBase):
         """Process url."""
         self.client.logout()
         self.client.force_login(self.user)
-        logger.info("%s - Testing URL: %s", self.__class__.__name__, url)
+        logger.debug("%s - Testing URL: %s", self.__class__.__name__, url)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -111,46 +110,6 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:developer-docker-compose")
         self.process_url(url)
 
-    def test_url_developer_12_factor(self) -> None:
-        """Test url for developer 12 factor."""
-        url = reverse(f"{namespace}:developer-12-factor")
-        self.process_url(url)
-
-    def test_url_developer_architecture(self) -> None:
-        """Test url for developer architecture."""
-        url = reverse(f"{namespace}:developer-architecture")
-        self.process_url(url)
-
-    def test_url_developer_chatbot_api(self) -> None:
-        """Test url for developer chatbot api."""
-        url = reverse(f"{namespace}:developer-chatbot-api")
-        self.process_url(url)
-
-    def test_url_developer_cli(self) -> None:
-        """Test url for developer cli."""
-        url = reverse(f"{namespace}:developer-cli")
-        self.process_url(url)
-
-    def test_url_developer_django_react(self) -> None:
-        """Test url for developer django react."""
-        url = reverse(f"{namespace}:developer-django-react")
-        self.process_url(url)
-
-    def test_url_developer_good_coding_practice(self) -> None:
-        """Test url for developer good coding practice."""
-        url = reverse(f"{namespace}:developer-good-coding-practice")
-        self.process_url(url)
-
-    def test_url_developer_openai_getting_started(self) -> None:
-        """Test url for developer openai getting started."""
-        url = reverse(f"{namespace}:developer-openai-getting-started")
-        self.process_url(url)
-
-    def test_url_developer_semantic_versioning(self) -> None:
-        """Test url for developer semantic versioning."""
-        url = reverse(f"{namespace}:developer-semantic-versioning")
-        self.process_url(url)
-
     # -----------------------------------------------------------------------
     # Documentation generators
     # -----------------------------------------------------------------------
@@ -185,28 +144,13 @@ class TestDocsUrls(SmarterTestBase):
         self.process_url(url)
 
     def test_url_json_schema_chat(self) -> None:
-        """Test url for chat JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT.value)}")
+        """Test url for prompt JSON schema."""
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT.value)}")
         self.process_url(url)
 
-    def test_url_json_schema_chat_history(self) -> None:
-        """Test url for chat history JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_HISTORY.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_chat_plugin_usage(self) -> None:
-        """Test url for chat plugin usage JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_chat_tool_call(self) -> None:
-        """Test url for chat tool call JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_TOOL_CALL.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_chatbot(self) -> None:
-        """Test url for chatbot JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHATBOT.value)}")
+    def test_url_json_schema_llmclient(self) -> None:
+        """Test url for llmclient JSON schema."""
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.LLM_CLIENT.value)}")
         self.process_url(url)
 
     def test_url_json_schema_static_plugin(self) -> None:
@@ -258,28 +202,13 @@ class TestDocsUrls(SmarterTestBase):
         self.process_url(url)
 
     def test_url_manifest_chat(self) -> None:
-        """Test url for chat manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT.value)}")
+        """Test url for prompt manifest."""
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT.value)}")
         self.process_url(url)
 
-    def test_url_manifest_chat_history(self) -> None:
-        """Test url for chat history manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_HISTORY.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_chat_plugin_usage(self) -> None:
-        """Test url for chat plugin usage manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_PLUGIN_USAGE.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_chat_tool_call(self) -> None:
-        """Test url for chat tool call manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_TOOL_CALL.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_chatbot(self) -> None:
-        """Test url for chatbot manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHATBOT.value)}")
+    def test_url_manifest_llmclient(self) -> None:
+        """Test url for llmclient manifest."""
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.LLM_CLIENT.value)}")
         self.process_url(url)
 
     def test_url_manifest_static_plugin(self) -> None:

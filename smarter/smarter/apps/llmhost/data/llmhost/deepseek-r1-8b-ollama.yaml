@@ -1,0 +1,37 @@
+---
+# DeepSeek-R1 8B, among the most pulled models in the Ollama library, on a GPU.
+# Ollama does not authenticate requests, so this LLMHost has no Ingress.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: deepseek_r1_8b_ollama
+  description: DeepSeek-R1 8B, from the Ollama library, served by Ollama on one NVIDIA L4, inside the cluster.
+  version: 1.0.0
+  tags:
+  - deepseek
+  - ollama
+  - gpu
+  - reasoning
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://ollama.com/library/deepseek-r1
+spec:
+  model:
+    source: ollama
+    repository: deepseek-r1:8b
+    license: mit
+    quantization: gguf
+    capabilities:
+      reasoning: true
+  engine:
+    name: ollama
+    contextLength: 16384
+  compute: gpu_l4_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 7
+    cpu: '4'
+    memory: 10Gi
+  storage:
+    size: 20Gi

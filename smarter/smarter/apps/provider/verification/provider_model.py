@@ -1,6 +1,7 @@
 # pylint: disable=W0613,C0115,R0913,W0718
 """
 Verification functions for provider models in the Smarter app.
+
 These functions are responsible for verifying various capabilities of provider models,
 such as streaming, tools, text input, image input, audio input, fine-tuning, search, code interpreter,
 text to image, text to audio, text to text, translation, and summarization.
@@ -9,7 +10,6 @@ If not, it performs a test to verify the capability and updates the verification
 """
 
 import io
-import logging
 import wave
 
 import openai
@@ -24,6 +24,7 @@ from smarter.apps.provider.utils import (
     set_model_verification,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -31,10 +32,8 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -45,12 +44,10 @@ module_prefix = "smarter.apps.provider.verification.provider_model."
 
 
 def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify streaming capabilities of the provider model.
-    """
+    """Verify streaming capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_steaming()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.STREAMING
@@ -60,17 +57,18 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
             stream=True,
-            max_tokens=10,
+            max_completion_tokens=10,
         )
         # Try to get the first chunk from the stream
         first_chunk = next(iter(response), None)
         success = first_chunk is not None
     except Exception:
+        logger.error("Error during verify_model_streaming() for provider model %s", provider_model.name, exc_info=True)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -78,12 +76,10 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify tools capabilities of the provider model.
-    """
+    """Verify tools capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_tools()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TOOLS
@@ -93,7 +89,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "What is the weather in Boston?"}],
@@ -111,10 +107,11 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
                     },
                 }
             ],
-            max_tokens=10,
+            max_completion_tokens=10,
         )
         success = True
     except Exception:
+        logger.error("Error during verify_model_tools() for provider model %s", provider_model.name, exc_info=True)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -122,11 +119,9 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify text input capabilities of the provider model.
-    """
+    """Verify text input capabilities of the provider model."""
     prefix = formatted_text(module_prefix + "verify_text_input()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_INPUT
@@ -136,14 +131,15 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
-            max_tokens=5,
+            max_completion_tokens=5,
         )
         success = True
     except Exception:
+        logger.error("Error during verify_model_text_input() for provider model %s", provider_model.name, exc_info=True)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -151,12 +147,10 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify image input capabilities of the provider model.
-    """
+    """Verify image input capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_image_input()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.IMAGE_INPUT
@@ -168,7 +162,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
         # Example: using a small PNG image as base64 (replace with a real image in production)
         dummy_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgQnQn1wAAAAASUVORK5CYII="
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = (provider_model.provider.api_key.get_secret(update_last_accessed=False),)
+        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[
@@ -183,10 +177,13 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
                     ],
                 }
             ],
-            max_tokens=5,
+            max_completion_tokens=5,
         )
         success = True
     except Exception:
+        logger.error(
+            "Error during verify_model_image_input() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -194,12 +191,10 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify audio input capabilities of the provider model.
-    """
+    """Verify audio input capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_audio_input()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.AUDIO_INPUT
@@ -221,11 +216,13 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
         openai.base_url = provider_model.provider.base_url
 
         # Try transcription (you can also try translation if needed)
-        openai.audio.transcriptions.create(
-            model=provider_model.name, file=buffer, filename="test.wav", mime_type="audio/wav"
-        )
+        openai.audio.transcriptions.create(model="gpt-4o-transcribe", file=buffer)
+
         success = True
     except Exception:
+        logger.error(
+            "Error during verify_model_audio_input() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -233,12 +230,10 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify fine-tuning capabilities of the provider model.
-    """
+    """Verify fine-tuning capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_fine_tuning()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.FINE_TUNING
@@ -258,6 +253,9 @@ def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
         )
         success = True
     except Exception:
+        logger.error(
+            "Error during verify_model_fine_tuning() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -267,11 +265,12 @@ def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_search(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify search capabilities of the provider model.
+
     DEPRECATED: OpenAI has deprecated the search endpoint.
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_search()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.SEARCH
@@ -282,12 +281,10 @@ def verify_model_search(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify code interpreter capabilities of the provider model.
-    """
+    """Verify code interpreter capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_code_interpreter()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.CODE_INTERPRETER
@@ -304,16 +301,20 @@ def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bo
     success = provider_model.name in code_interpreter_models
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
+    if not success:
+        logger.error(
+            "Provider model %s does not support code interpreter. Known supported models: %s",
+            provider_model.name,
+            code_interpreter_models,
+        )
     return success
 
 
 def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify text to image capabilities of the provider model.
-    """
+    """Verify text to image capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_text_to_image()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_TO_IMAGE
@@ -329,6 +330,9 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
         openai.images.generate(model=provider_model.name, prompt="A red apple on a table", n=1, size="256x256")
         success = True
     except Exception:
+        logger.error(
+            "Error during verify_model_text_to_image() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -336,12 +340,10 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify text to audio capabilities of the provider model.
-    """
+    """Verify text to audio capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_text_to_audio()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_TO_AUDIO
@@ -359,6 +361,9 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
         )
         success = True
     except Exception:
+        logger.error(
+            "Error during verify_model_text_to_audio() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -366,12 +371,10 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_text_to_text(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify text to text capabilities of the provider model.
-    """
+    """Verify text to text capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_text_to_text()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_TO_TEXT
@@ -382,16 +385,19 @@ def verify_model_text_to_text(provider_model: ProviderModel, **kwargs) -> bool:
     success = verify_model_text_input(provider_model=provider_model)
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
+    if not success:
+        logger.error(
+            "Provider model %s does not support text to text. Ensure it supports text input.",
+            provider_model.name,
+        )
     return success
 
 
 def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify translation capabilities of the provider model.
-    """
+    """Verify translation capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_translation()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TRANSLATION
@@ -406,11 +412,14 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Translate this to Spanish: Hello"}],
-            max_tokens=10,
+            max_completion_tokens=10,
         )
-        content = response.choices[0].message.content.strip().lower()
+        content = response.choices[0].message.content.strip().lower()  # type: ignore
         success = "hola" in content
     except Exception:
+        logger.error(
+            "Error during verify_model_translation() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -418,12 +427,10 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
-    """
-    Verify summarization capabilities of the provider model.
-    """
+    """Verify summarization capabilities of the provider model."""
     success = False
     prefix = formatted_text(module_prefix + "verify_summarization()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.SUMMARIZATION
@@ -444,11 +451,14 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": f"Summarize this into 10 words or less: {long_text}"}],
-            max_tokens=30,
+            max_completion_tokens=30,
         )
-        summary = response.choices[0].message.content.strip()
-        success = len(summary) <= 10
+        summary = response.choices[0].message.content.strip()  # type: ignore
+        success = len(summary.split()) <= 10
     except Exception:
+        logger.error(
+            "Error during verify_model_summarization() for provider model %s", provider_model.name, exc_info=True
+        )
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -456,9 +466,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_provider_model(provider_model_id, **kwargs):
-    """
-    Top-level test bank on provider model.
-    """
+    """Top-level test bank on provider model."""
 
     try:
         provider_model = ProviderModel.objects.get(id=provider_model_id)
@@ -504,9 +512,9 @@ def verify_provider_model(provider_model_id, **kwargs):
         provider_model.is_active = True
         provider_model.save(update_fields=["is_active"])
         model_verification_success.send(sender=ProviderModel, provider_model=provider_model)
-        logger.info("Verification tests succeeded for provider model: %s", provider_model.name)
+        logger.debug("Verification tests succeeded for provider model: %s", provider_model.name)
     else:
         provider_model.is_active = False
         provider_model.save(update_fields=["is_active"])
         model_verification_failure.send(sender=ProviderModel, provider_model=provider_model)
-        logger.error("Some verification failed for provider model: %s", provider_model.name)
+        logger.error("One or more verification tests failed for provider model: %s", provider_model.name)

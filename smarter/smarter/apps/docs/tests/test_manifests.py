@@ -2,20 +2,19 @@
 """Test User."""
 
 from django.test import Client
-from django.urls import reverse
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-
-from ..const import namespace
-
+from smarter.apps.docs.const import namespace
+from smarter.apps.docs.utils import manifest_name
+from smarter.lib.django.shortcuts import reverse
 
 ALL_KINDS = SAMKinds.singular_slugs()
 
 
 class TestApiDocsManifests(TestAccountMixin):
-    """Test Account model"""
+    """Test Account model."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -33,24 +32,23 @@ class TestApiDocsManifests(TestAccountMixin):
 
     def test_get_unauthenticated_manifests(self):
         """
-        Test all docs//manifests/ endpoints with an unauthenticated user
-        to ensure that we get a 200 response
+        Test all docs/manifests/ endpoints with an unauthenticated user to ensure that we are redirected to the login page.
+
+        (docs views require authentication since 2026-01-31.)
         """
 
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:manifest_{kind}".lower()
+            reverse_name = f"{namespace}:{manifest_name(kind)}"
             url = reverse(reverse_name)
             response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/login/", response.url)
 
     def test_get_authenticated_manifests(self):
-        """
-        Test all docs//manifests/ endpoints with an authenticated user
-        to ensure that we get a 200 response
-        """
+        """Test all docs//manifests/ endpoints with an authenticated user to ensure that we get a 200 response."""
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:manifest_{kind}".lower()
+            reverse_name = f"{namespace}:{manifest_name(kind)}"
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)

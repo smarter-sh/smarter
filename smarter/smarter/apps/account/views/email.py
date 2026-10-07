@@ -5,13 +5,13 @@ Email template views.
 # pylint: disable=W0613
 
 from smarter.apps.account.models import welcome_email_context
-from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.django.views import SmarterNeverCachedWebView
 
 
 class EmailWelcomeView(SmarterNeverCachedWebView):
     """
     Dev view for working on the welcome email template.
-    http://localhost:8000/dashboard/account/email/welcome/larry/
+    http://localhost:9357/dashboard/account/email/welcome/larry/
     """
 
     template_path = "account/email/welcome.html"

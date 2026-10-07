@@ -1,0 +1,30 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: self_harm_input
+  description: Escalates messages that express an intent to self-harm to human review, as classified by
+    OpenAI's omni-moderation model. The conversation continues, so the assistant can respond with care.
+    Pair it with a system prompt that points users to crisis resources.
+  version: 1.0.0
+  tags:
+  - self-harm
+  - wellbeing
+  - trust-and-safety
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: self_harm
+    strategy: moderation
+    categories:
+    - self-harm
+    - self-harm/intent
+    - self-harm/instructions
+    threshold: 0.5
+    action: escalate
+    severity: 5
+    priority: 25

@@ -1,0 +1,28 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: {name}
+  description: a test Budget manifest
+  version: 1.0.0
+  tags:
+    - test
+  annotations:
+    - smarter.sh/budget/purpose: test
+spec:
+  config:
+    unit: cost
+    period: month
+    periodicLimit: 10.00
+    absoluteLimit: 100.00
+    duration: 0
+    action: block
+    warningThreshold: 80
+    message: "You have used this month's AI allowance."
+  resources:
+    - kind: Account
+      name: "{account_number}"
+    - kind: User
+      name: {username}
+    - kind: LLMClient
+      name: {llmclient_name}
+      accountNumber: "{account_number}"
