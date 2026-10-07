@@ -12,8 +12,8 @@ Logging Technical References
 
    logging/filters
    logging/logging-style-guide
-   logging/redis-log-handler
-   logging/waffle-switched-logging
    logging/streaming-log-handler
    logging/streaming-file-handler
    logging/middleware
+
+See also :doc:`logging/redis-log-handler`, :doc:`logging/waffle-switched-logging`.

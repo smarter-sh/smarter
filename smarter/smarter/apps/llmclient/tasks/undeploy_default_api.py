@@ -75,6 +75,7 @@ def undeploy_default_api(llmclient_id: int):
     Reverse a LLMClient deployment by destroying the customer API default domain A record for an llmclient.
 
     This Celery task performs the following steps:
+
     1. Sends a pre-undeploy signal for the llmclient API.
     2. Logs the undeployment request.
     3. Retrieves the LLMClient instance by ID, and locks its row until its state is saved, so that a
