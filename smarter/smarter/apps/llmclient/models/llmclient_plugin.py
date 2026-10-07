@@ -164,8 +164,11 @@ class LLMClientPlugin(TimestampedModel):
         :returns: List of Plugin instances.
         :rtype: List[PluginBase]
 
-        :raises SmarterValueError: If admin user for llmclient account is not found
-                                   or if a plugin fails to load.
+        A plugin that fails to load, for example a Sql plugin whose PluginDataSql row was
+        cascade-deleted along with its SqlConnection, is logged and skipped, so that one
+        broken plugin does not take down every prompt sent to the LLMClient.
+
+        :raises SmarterValueError: If admin user for llmclient account is not found.
 
         See Also:
 
@@ -180,15 +183,28 @@ class LLMClientPlugin(TimestampedModel):
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
         retval = []
         for llmclient_plugin in llmclient_plugins:
-            plugin_controller = PluginController(
-                user_profile=user_profile,
-                plugin_meta=llmclient_plugin.plugin_meta,
-            )
-            if not plugin_controller or not plugin_controller.plugin:
-                raise SmarterValueError(
-                    f"LLMClientPlugin.plugins() failed to load plugin for {llmclient_plugin.plugin_meta.name}"
+            try:
+                plugin_controller = PluginController(
+                    user_profile=user_profile,
+                    plugin_meta=llmclient_plugin.plugin_meta,
                 )
-            retval.append(plugin_controller.plugin)
+                plugin = plugin_controller.plugin
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.error(
+                    "LLMClientPlugin.plugins() skipping plugin %s of llmclient %s, which failed to load",
+                    llmclient_plugin.plugin_meta.name,
+                    llmclient.name,
+                    exc_info=True,
+                )
+                continue
+            if not plugin:
+                logger.error(
+                    "LLMClientPlugin.plugins() skipping plugin %s of llmclient %s, which did not load",
+                    llmclient_plugin.plugin_meta.name,
+                    llmclient.name,
+                )
+                continue
+            retval.append(plugin)
         return retval
 
     # pylint: disable=W0221

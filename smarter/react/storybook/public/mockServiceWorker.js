@@ -138,7 +138,7 @@ async function handleRequest(event, requestId, requestInterceptedAt) {
     const serializedRequest = await serializeRequest(requestCloneForEvents)
 
     // Omit the body of server-sent event stream responses.
-    // Cloning such responses would prevent client-side stream cancelations
+    // Cloning such responses would prevent client-side stream cancellations
     // from reaching the original stream (a teed stream only cancels its
     // source once both of its branches cancel) and would buffer the
     // entire stream into the unconsumed clone indefinitely.

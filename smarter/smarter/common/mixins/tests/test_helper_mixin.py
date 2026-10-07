@@ -28,6 +28,22 @@ class TestSmarterHelperMixin(SmarterTestBase):
         self.assertTrue(self.helper.ready)
         self.assertNotEqual(self.helper.formatted_state_ready, self.helper.formatted_state_not_ready)
 
+    def test_formatted_class_name_from_classmethod(self):
+        """Test that formatted_class_name is the class name when read from the class, as classmethods do."""
+
+        class Child(Helper):
+            """A subclass, to check that the name follows the class it is read from."""
+
+            @classmethod
+            def name_from_classmethod(cls) -> str:
+                return cls.formatted_class_name
+
+        self.assertIsInstance(Helper.formatted_class_name, str)
+        self.assertIn("Helper", Helper.formatted_class_name)
+        self.assertIn("Child", Child.name_from_classmethod())
+        self.assertNotIn("cached_property", Child.name_from_classmethod())
+        self.assertEqual(Child.formatted_class_name, Child().formatted_class_name)
+
     def test_amnesty(self):
         self.assertEqual(self.helper.health_check_urls, ["readiness", "healthz"])
         self.assertIn("favicon.ico", self.helper.amnesty_urls)
