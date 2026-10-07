@@ -6,39 +6,45 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.18.7-beta.1](https://github.com/smarter-sh/smarter/compare/v0.18.6...v0.18.7-beta.1) (2026-10-07)
+## [0.18.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.7...v0.18.8-alpha.1) (2026-10-07)
 
 ### Bug Fixes
 
-* **llmclient:** accept hashed ids in smarter api llmclient urls ([c7714da](https://github.com/smarter-sh/smarter/commit/c7714da442d34ec4dd59631d2617bfdc0da91895))
+* asynchronous chat support and server log streams ([e0e2157](https://github.com/smarter-sh/smarter/commit/e0e215790466a166c05fef967f2a8bd7204b08b3))
+
+## [0.18.7](https://github.com/smarter-sh/smarter/compare/v0.18.6...v0.18.7) (2026-10-07)
+
+### Bug Fixes
+
+- **llmclient:** accept hashed ids in smarter api llmclient urls ([c7714da](https://github.com/smarter-sh/smarter/commit/c7714da442d34ec4dd59631d2617bfdc0da91895))
 
 ## [0.18.6](https://github.com/smarter-sh/smarter/compare/v0.18.5...v0.18.6) (2026-10-07)
 
 ### Bug Fixes
 
-* **api:** restore legacy cli schema url and exempt schema calls from 404 throttle ([271a922](https://github.com/smarter-sh/smarter/commit/271a922ded5e58b3dbc2a1bcbcf4b19d02b5989d))
-* **plugin:** stop tests from deleting the stackademy plugins' data ([7bfd5e7](https://github.com/smarter-sh/smarter/commit/7bfd5e78f4ecd0ea7cafb5c320a17cce36c8a0a8))
+- **api:** restore legacy cli schema url and exempt schema calls from 404 throttle ([271a922](https://github.com/smarter-sh/smarter/commit/271a922ded5e58b3dbc2a1bcbcf4b19d02b5989d))
+- **plugin:** stop tests from deleting the stackademy plugins' data ([7bfd5e7](https://github.com/smarter-sh/smarter/commit/7bfd5e78f4ecd0ea7cafb5c320a17cce36c8a0a8))
 
 ### Refactoring
 
-* **react:** host smarter-chat locally, drop the react cdn scheme ([049c444](https://github.com/smarter-sh/smarter/commit/049c444f319ad42abefbf8f845cb0256a635ccd0))
+- **react:** host smarter-chat locally, drop the react cdn scheme ([049c444](https://github.com/smarter-sh/smarter/commit/049c444f319ad42abefbf8f845cb0256a635ccd0))
 
 ## [0.18.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.5...v0.18.6-alpha.1) (2026-10-07)
 
 ### Bug Fixes
 
-* **api:** restore legacy cli schema url and exempt schema calls from 404 throttle ([271a922](https://github.com/smarter-sh/smarter/commit/271a922ded5e58b3dbc2a1bcbcf4b19d02b5989d))
-* **plugin:** stop tests from deleting the stackademy plugins' data ([7bfd5e7](https://github.com/smarter-sh/smarter/commit/7bfd5e78f4ecd0ea7cafb5c320a17cce36c8a0a8))
+- **api:** restore legacy cli schema url and exempt schema calls from 404 throttle ([271a922](https://github.com/smarter-sh/smarter/commit/271a922ded5e58b3dbc2a1bcbcf4b19d02b5989d))
+- **plugin:** stop tests from deleting the stackademy plugins' data ([7bfd5e7](https://github.com/smarter-sh/smarter/commit/7bfd5e78f4ecd0ea7cafb5c320a17cce36c8a0a8))
 
 ### Refactoring
 
-* **react:** host smarter-chat locally, drop the react cdn scheme ([049c444](https://github.com/smarter-sh/smarter/commit/049c444f319ad42abefbf8f845cb0256a635ccd0))
+- **react:** host smarter-chat locally, drop the react cdn scheme ([049c444](https://github.com/smarter-sh/smarter/commit/049c444f319ad42abefbf8f845cb0256a635ccd0))
 
 ## [0.18.5](https://github.com/smarter-sh/smarter/compare/v0.18.4...v0.18.5) (2026-10-07)
 
 ### Bug Fixes
 
-* **llmclient:** stop deploy_builtin_llmclients from undeploying deployed llmclients ([5a1a7dd](https://github.com/smarter-sh/smarter/commit/5a1a7dd80708ce41ae54edf8fab976125943cd6c))
+- **llmclient:** stop deploy_builtin_llmclients from undeploying deployed llmclients ([5a1a7dd](https://github.com/smarter-sh/smarter/commit/5a1a7dd80708ce41ae54edf8fab976125943cd6c))
 
 ## [0.18.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.4...v0.18.5-alpha.1) (2026-10-07)
 

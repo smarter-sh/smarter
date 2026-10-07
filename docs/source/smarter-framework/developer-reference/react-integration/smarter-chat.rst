@@ -4,10 +4,22 @@ Smarter Chat
 Smarter Chat is the React chat component of the LLMClient prompt engineering workbench, the web
 console page where you chat with an :doc:`LLMClient <../../../smarter-resources/smarter-llmclient>`
 before you deploy it. Beside the chat, its Console displays the LLMClient's configuration, and the
-chat session's api calls, tool calls and plugin usage, as JSON. A toggle shows and hides the
-backend's own messages in the chat thread: the system prompt, tool results, and Smarter's notes
-about the plugins it selected. A failed prompt, for example one that the LLM provider rejects, is
-displayed in the chat thread, with the provider's error message.
+chat session's api calls, tool calls and plugin usage, as JSON. When log viewing in the browser is
+enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), the Console's Server Logs tab also streams your
+server logs, the same stream as the web console's log viewer, while you chat. Drag the separator
+between the chat and the Console to resize them, or hide the Console with the arrow button in the
+chat's header. The browser remembers both.
+
+A toggle shows and hides the backend's own messages in the chat thread: the system prompt, tool
+results, and Smarter's notes about the plugins it selected. While a prompt runs, the chat displays
+its progress: each request to the LLM, and each tool, plugin and MCP server that the LLM calls.
+Those steps are replaced by the response when it arrives. A failed prompt, for example one that the
+LLM provider rejects, is displayed in the chat thread, with the provider's error message.
+
+Messages are escaped, and their markdown links and images become html. ``![alt](url)`` is an image,
+scaled to fit its chat bubble, which opens at full size in a new tab, and ``[![alt](url)](href)`` is
+an image that links to ``href``. Urls must be ``http(s)`` or relative to the page. Images may also be
+base64 ``png``, ``jpeg``, ``gif`` or ``webp`` data urls, for example from a tool that generates them.
 
 .. raw:: html
 
@@ -78,6 +90,9 @@ CSS files, and the template renders the app's root element, whose attributes con
      - The ``ENABLE_REACTAPP_DEBUG_MODE`` waffle switch, which turns on logging to the browser console.
    * - ``smarter-request-id``
      - A unique id of the page request, sent as the ``X-Smarter-RequestId`` header.
+   * - ``smarter-log-stream-url``
+     - The url of the user's server log stream, or empty when log viewing in the browser is
+       disabled. Without it, the Console has no Server Logs tab.
 
 Smarter Chat then calls two apis, both with POST requests that the web console's session
 authenticates:
@@ -87,6 +102,36 @@ authenticates:
   It includes the chat session's history, which restores the chat thread when the page reloads.
 - the LLMClient's prompt api, ``chatbot.url_chatbot`` in the configuration, which receives the chat
   thread with each new message, and returns the new messages to add to it.
+
+Streaming a Prompt's Progress
+-----------------------------
+
+The prompt api answers with JSON, unless the request's ``Accept`` header includes
+``text/event-stream``, which Smarter Chat sends. Then the response is Server-Sent Events: a
+``progress`` event for each step of the prompt as it happens, ``: keepalive`` comments while the
+prompt waits, for example on the LLM, and finally a ``result`` event whose data is
+``{"status": <http status>, "response": <the same JSON as a non-streaming response>}``. The http
+status of the stream itself is always 200, and the prompt's own status is in its result.
+
+.. code-block:: text
+
+  event: progress
+  data: {"type": "tool_requested", "message": "Calling tool get_current_weather", "tool": "get_current_weather", "arguments": "{...}"}
+
+  event: progress
+  data: {"type": "mcp_tool_called", "message": "Calling MCP server github: search_code", "mcpclient": "github", "tool": "search_code", "arguments": "{...}"}
+
+  event: result
+  data: {"status": 200, "response": {"data": {"statusCode": 200, "body": "..."}}}
+
+The prompt itself runs synchronously in a worker thread, exactly as it does for a JSON client, so
+its history, charges and journal are the same. Its progress comes from the signals that the prompt
+already sends (``chat_request``, ``llm_tool_requested``, ``llm_tool_responded``,
+``chat_plugin_called``, ``mcpclient_tool_called``, ...), which :py:mod:`smarter.apps.prompt.progress`
+forwards to the stream of the prompt that sent them. A client that disconnects doesn't stop the
+prompt, which finishes, and is saved in the chat session's history. Streaming needs Smarter's ASGI
+server (uvicorn), and any proxy in front of it must not buffer the response; the stream sends
+``X-Accel-Buffering: no`` for nginx.
 
 
 Using Smarter Chat in Your Own Web Page
@@ -122,6 +167,9 @@ appear. React 19 is a peer dependency.
   and browser console logging. ``showConsole`` defaults to ``true``, which only suits wide pages.
 - ``csrfCookieName``, ``csrftoken``, ``sessionCookieName``, ``sessionCookieExpiration`` and
   ``cookieDomain``: the cookies that the chat reads and sets.
+- ``streamProgress``: display the progress of a running prompt. It defaults to ``true``. A Smarter
+  platform that doesn't stream answers with JSON, as before.
+- ``logStreamUrl``: the url of a server log stream, for the Console's Server Logs tab.
 
 Requests from your page to the Smarter api are cross-origin, so your page's origin must be allowed
 by the Smarter platform's CORS configuration. The chat's custom ``X-Smarter-*`` request headers are
@@ -138,6 +186,7 @@ Technical Reference
    smarter-chat/django-view
    smarter-chat/django-template
    smarter-chat/template-tags
+   smarter-chat/progress
 
 
 See Also
