@@ -54,6 +54,22 @@ class TestVerifyDomain(TestAccountMixin):
         with patch(f"{MODULE}.dns.resolver.query", return_value=[record]):
             self.assertEqual(check_domain(DOMAIN, hosted_zone_id="Z1"), DomainCheck.VERIFIED)
 
+    def test_check_domain_signals_carry_the_llmclient(self):
+        """Test that the record type is resolved, and that the signals carry the llmclient, which their receivers log."""
+        llmclient = LLMClient(name="check_domain_signals")
+        self.infrastructure.dns.get_record.return_value = DNSRecord(name=DOMAIN, type="A", values=["1.2.3.4"])
+        record = MagicMock()
+        record.to_text.return_value = "1.2.3.4"
+        for signal, outcome in (("llmclient_dns_verified", [record]), ("llmclient_dns_failed", dns.resolver.NoAnswer)):
+            with (
+                self.subTest(signal=signal),
+                patch(f"{MODULE}.{signal}") as sent,
+                patch(f"{MODULE}.dns.resolver.query", side_effect=[outcome]) as query,
+            ):
+                check_domain(DOMAIN, hosted_zone_id="Z1", llmclient=llmclient)
+                query.assert_called_once_with(DOMAIN, "A")
+                self.assertIs(sent.send.call_args.kwargs["llmclient"], llmclient)
+
     def test_check_domain_in_the_api_domain_zone(self):
         """Test that, without a zone, the record is looked up in the zone of the environment's API domain."""
         dns_service = self.infrastructure.dns

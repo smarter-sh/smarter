@@ -99,6 +99,18 @@ class TestUndeployLLMClient(DeploymentCommandTestBase):
         self.undeploy_default_api.assert_not_called()
         self.assertIn("Celery task", output)
 
+    def test_saved_as_not_deployed_first(self):
+        """
+        Test that the llmclient is saved as not deployed before the task is queued.
+
+        The task does nothing to an llmclient that is deployed, which it takes to have been deployed again.
+        """
+        self.undeploy_default_api.delay.side_effect = lambda llmclient_id: self.assertFalse(
+            LLMClient.objects.get(pk=llmclient_id).deployed
+        )
+        self.run_command("undeploy_llmclient", account_number=self.account.account_number, name=self.llmclient.name)
+        self.undeploy_default_api.delay.assert_called_once()
+
     def test_not_deployed(self):
         LLMClient.objects.filter(pk=self.llmclient.pk).update(
             deployed=False, dns_verification_status=LLMClient.DnsVerificationStatusChoices.NOT_VERIFIED
