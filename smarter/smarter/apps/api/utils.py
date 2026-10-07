@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Api utils"""
+"""Api utils."""
 
 import os
 from typing import Optional
@@ -31,9 +31,10 @@ def apply_manifest(
     verbose: bool = False,
 ) -> bool:
     """
-    Prepare and get a response from the api/v1/cli/apply endpoint. We need to
-    be mindful of the environment we are in, as the
-    endpoint may be hosted over https or http.
+    Prepare and get a response from the api/v1/cli/apply endpoint.
+
+    We need to be mindful of the environment we are in, as the endpoint may be
+    hosted over https or http.
 
     Utility for running ``api/v1/cli/`` endpoints to verify their functionality.
 
@@ -67,7 +68,7 @@ def apply_manifest(
 
     The command provides clear error messages for common failure scenarios,
     such as missing user profiles, invalid manifest input, or unsuccessful
-      responses. All failures are reported with context to aid trouble shooting.
+    responses. All failures are reported with context to aid trouble shooting.
 
     **Intended Audience:**
 
@@ -80,7 +81,6 @@ def apply_manifest(
 
         - :py:class:`smarter.apps.api.v1.cli.urls.ApiV1CliReverseViews`
         - :py:class:`smarter.lib.drf.models.SmarterAuthToken`
-
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
@@ -200,9 +200,10 @@ def apply_manifest_v2(
     verbose: bool = False,
 ) -> bool:
     """
-    Prepare and get a response from the api/v1/cli/apply endpoint by binding
-    directly to the broker class. This avoids the need to make an HTTP request,
-    which can be useful in certain testing or internal scenarios.
+    Apply a manifest by binding directly to the broker class.
+
+    This avoids the need to make an HTTP request to the api/v1/cli/apply
+    endpoint, which can be useful in certain testing or internal scenarios.
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError

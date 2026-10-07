@@ -5,7 +5,6 @@ manage.py Commands
    :maxdepth: 1
 
    commands/add_account_contact
-   commands/add_builtin_budgets
    commands/aggregate_charges
    commands/create_account
    commands/create_api_key
@@ -18,3 +17,5 @@ manage.py Commands
    commands/initialize_platform
    commands/reset_cache
    commands/send_welcome_email
+
+See also :doc:`commands/add_builtin_budgets`.
