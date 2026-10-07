@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.8](https://github.com/smarter-sh/smarter/compare/v0.18.7...v0.18.8) (2026-10-07)
+
+### Bug Fixes
+
+* asynchronous chat support and server log streams ([e0e2157](https://github.com/smarter-sh/smarter/commit/e0e215790466a166c05fef967f2a8bd7204b08b3))
+
 ## [0.18.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.7...v0.18.8-alpha.1) (2026-10-07)
 
 ### Bug Fixes
