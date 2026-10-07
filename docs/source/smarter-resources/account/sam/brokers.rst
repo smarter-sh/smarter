@@ -5,5 +5,6 @@ Brokers
    :maxdepth: 2
 
    brokers/account
-   brokers/budget
    brokers/user
+
+See also :doc:`brokers/budget`.
