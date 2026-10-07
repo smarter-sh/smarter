@@ -6,103 +6,85 @@ These tasks are i/o intensive operations for creating billing records with
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
 """
-# python stuff
-import logging
 
-# django stuff
-from django.conf import settings
-from django.db import DatabaseError, IntegrityError, transaction
-from django.db.models import Sum
+from decimal import Decimal
 
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django import waffle
+from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.workers.celery import app
 
-# Smarter stuff
-from smarter.smarter_celery import app
+from .models.budget import evaluate_budgets
+from .models.charge import Charge, aggregate_charges
+from .models.llm_prices import LLMPrices
 
-# Account stuff
-from .models import Account, Charge, DailyBillingRecord
-from .utils import (
-    get_cached_admin_user_for_account,
-    get_cached_user_for_user_id,
-    get_cached_user_profile,
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
 )
-
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        and level >= logging.INFO
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_level = logger.getEffectiveLevel()
 module_prefix = "smarter.apps.account.tasks."
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_charge(*args, **kwargs):
-    """Create a charge record."""
+    """
+    Create a charge record for a user or account.
 
-    account: Account = None
-    user = None
-    user_profile = None
+    This task is automatically retried on failure, with backoff and maximum retries configured via Celery settings.
 
-    user_id = kwargs.get("user_id")
-    if user_id:
-        user = get_cached_user_for_user_id(user_id)
-        if user:
-            user_profile = get_cached_user_profile(user=user)
-            if user_profile:
-                account = user_profile.account
-    else:
-        account_id = kwargs.get("account_id")
-        if account_id:
-            account = Account.objects.get(id=account_id)
-            if account:
-                user = get_cached_admin_user_for_account(account=account)
+    :param resource_locator: String. The TimestampedModel.resource_locator of the resource that this charge is associated with.
+    :param charge_type: String, optional. The type of charge (e.g., usage, subscription).
+    :param prompt_tokens: Integer, optional. Number of prompt tokens used.
+    :param completion_tokens: Integer, optional. Number of completion tokens used.
+    :param total_tokens: Integer, optional. Total number of tokens used.
+    :param total_cost: Decimal or str, optional. The cost in USD, if the caller knows it, e.g. of compute.
+    :param provider: String, optional. The LLM provider's name, to price the tokens with LLMPrices.
+    :param model: String, optional. The LLM's name, to price the tokens with LLMPrices.
 
-    session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-    provider = kwargs.get("provider")
+    **Example usage**::
+
+        # Create a charge for a user profile
+        create_charge.delay(resource_locator="record_123", charge_type="usage", prompt_tokens=100, completion_tokens=50, total_tokens=150)
+    """
+
+    resource_locator = kwargs.get("resource_locator")
     charge_type = kwargs.get("charge_type")
     prompt_tokens = kwargs.get("prompt_tokens")
     completion_tokens = kwargs.get("completion_tokens")
     total_tokens = kwargs.get("total_tokens")
-    model = kwargs.get("model")
-    reference = kwargs.get("reference")
-    prefix = formatted_text(module_prefix + "create_charge()")
+    total_cost = kwargs.get("total_cost")
+    prefix = logging.formatted_text(module_prefix + "create_charge()")
+    if total_cost is None:
+        total_cost = LLMPrices.cost_of(
+            charge_type=charge_type,
+            provider=kwargs.get("provider"),
+            model=kwargs.get("model"),
+            total_tokens=total_tokens or 0,
+        )
 
-    logger.info(
-        "%s. user_id %s, charge_type %s, reference %s",
+    logger.debug(
+        "%s. resource_locator %s, charge_type %s, prompt_tokens %s, completion_tokens %s, total_tokens %s",
         prefix,
-        user_id,
+        resource_locator,
         charge_type,
-        reference,
+        prompt_tokens,
+        completion_tokens,
+        total_tokens,
     )
 
     try:
         Charge.objects.create(
-            account=account,
-            session_key=session_key,
-            provider=provider,
-            user=user,
+            resource_locator=resource_locator,
             charge_type=charge_type,
             completion_tokens=completion_tokens,
             prompt_tokens=prompt_tokens,
             total_tokens=total_tokens,
-            model=model,
-            reference=reference or "undefined charge reference",
+            total_cost=Decimal(str(total_cost)),
         )
     # pylint: disable=W0703
     except Exception as e:
@@ -111,98 +93,48 @@ def create_charge(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def aggregate_charges():
-    """top-level wrapper for celery aggregation tasks"""
+def aggregate_records():
+    """
+    Top-level Celery task for aggregating charge records.
 
-    prefix = formatted_text(module_prefix + "aggregate_charges()")
+    This task triggers the aggregation of daily billing records by calling
+    :func:`aggregate_charges`. It is typically scheduled via Celery Beat.
+
+    **Example usage**::
+
+        # Trigger aggregation from code
+        aggregate_records.delay()
+
+        # Schedule with Celery Beat for daily aggregation
+        # (see your Celery Beat configuration)
+    """
+
+    prefix = logging.formatted_text(module_prefix + "aggregate_records()")
     logger.info(prefix)
-    aggregate_daily_billing_records()
+
+    aggregate_charges()
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def aggregate_daily_billing_records():
+def evaluate_budget_constraints() -> int:
     """
-    Aggregate daily records and delete individual Charge records.
-    Runs as a Celery task called from Celery Beat. This task is idempotent
-    and can be run multiple times without issue.
+    Top-level Celery task for enforcing budgets.
+
+    Removes expired resource locks and re-evaluates every budget attached to a resource, so that
+    budgets roll over at the end of their billing period. Scheduled hourly via Celery Beat.
+
+    :returns: The number of locked resources.
     """
-    MAX_AGGREGATION_ERROR_THRESHOLD = 10
-    message_prefix = formatted_text(module_prefix + "aggregate_daily_billing_records()")
-
-    def aggregate(user, account, created_at_date, charge_type):
-        """Handle aggregation of one set of charges."""
-        with transaction.atomic():
-            aggregation_queryset = Charge.objects.filter(
-                user=user, account=account, created_at__date=created_at_date, charge_type=charge_type
-            )
-
-            aggregated_data = aggregation_queryset.aggregate(
-                prompt_tokens=Sum("prompt_tokens"),
-                completion_tokens=Sum("completion_tokens"),
-                total_tokens=Sum("total_tokens"),
-            )
-
-            try:
-                record = DailyBillingRecord.objects.get(
-                    user_id=user, account_id=account, date=created_at_date, charge_type=charge_type
-                )
-                record.prompt_tokens += aggregated_data["prompt_tokens"]
-                record.completion_tokens += aggregated_data["completion_tokens"]
-                record.total_tokens += aggregated_data["total_tokens"]
-                record.save()
-            except DailyBillingRecord.DoesNotExist:
-                DailyBillingRecord.objects.create(
-                    user_id=user,
-                    account_id=account,
-                    date=created_at_date,
-                    charge_type=charge_type,
-                    prompt_tokens=aggregated_data["prompt_tokens"],
-                    completion_tokens=aggregated_data["completion_tokens"],
-                    total_tokens=aggregated_data["total_tokens"],
-                )
-
-            aggregation_queryset.delete()
-
-    logger.info("%s - begin.", message_prefix)
-    i = 0
-    i_error_count = 0
-
-    working_queryset = Charge.objects.values("user", "account", "created_at__date", "charge_type").distinct()
-    logger.info("%s found %s pending billing items", working_queryset.count(), message_prefix)
-
-    for charge_identity in working_queryset:
-        user = charge_identity["user"]
-        account = charge_identity["account"]
-        created_at_date = charge_identity["created_at__date"]
-        charge_type = charge_identity["charge_type"]
-
-        try:
-            aggregate(user, account, created_at_date, charge_type)
-        except (DatabaseError, IntegrityError) as e:
-            logger.error("%s - error processing billing item %s: %s", message_prefix, charge_identity, e)
-            i_error_count += 1
-            if i_error_count >= MAX_AGGREGATION_ERROR_THRESHOLD:
-                logger.error("%s - exceeded error threshold, aborting.", message_prefix)
-                break
-        # pylint: disable=W0718
-        except Exception as e:
-            logger.error("%s - unknown error processing billing item %s: %s", message_prefix, charge_identity, e)
-            i_error_count += 1
-            if i_error_count >= MAX_AGGREGATION_ERROR_THRESHOLD:
-                logger.error("%s - exceeded error threshold, aborting.", message_prefix)
-                break
-
-        i += 1
-        if i % 100 == 0:
-            logger.info("%s processed %s billing items", message_prefix, i)
-
-    logger.info("%s - finished.", message_prefix)
+    prefix = logging.formatted_text(module_prefix + "evaluate_budget_constraints()")
+    retval = evaluate_budgets()
+    logger.info("%s %s resources are locked by a budget.", prefix, retval)
+    return retval

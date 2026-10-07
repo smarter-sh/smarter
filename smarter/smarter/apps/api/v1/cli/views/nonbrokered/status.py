@@ -1,52 +1,61 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'apply' view"""
+"""Smarter API command-line interface 'apply' view."""
 
 import platform
+import traceback
 from http import HTTPStatus
 
-import boto3
-from botocore.exceptions import ClientError
 from django.http import JsonResponse
 from django_redis import get_redis_connection
 
-from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.apps.api.v1.cli.views.base import CliBaseApiView
+from smarter.apps.infrastructure.exceptions import SmarterInfrastructureError
+from smarter.apps.infrastructure.services import infrastructure
+from smarter.lib import logging
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from ..base import CliBaseApiView
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliStatusApiView(CliBaseApiView):
-    """Smarter API command-line interface 'apply' view"""
+    """Smarter API command-line interface 'status' view."""
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliStatusApiView()"
+        this_class = f".{ApiV1CliStatusApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
-    def get_service_status(self, region_name):
+    def get_kubernetes_info(self) -> dict:
+        """
+        Return Kubernetes cluster information.
+
+        Without cloud credentials there is no cluster to report on, so the
+        status shows the error instead of the whole status request failing.
+
+        :return: Kubernetes cluster information, or {"error": ...} if the cloud provider is not ready
+        :rtype: dict
+        """
         try:
-            client = boto3.client("health", region_name=region_name)
-            response = client.describe_events(
-                filter={
-                    "regions": [
-                        region_name,
-                    ],
-                    "eventStatusCodes": ["open", "upcoming"],
-                }
-            )
-            return response
-        except ClientError as e:
+            return infrastructure.provider.get_kubernetes_cluster_info()
+        except SmarterInfrastructureError as e:
+            logger.warning("%s.get_kubernetes_info() %s", self.formatted_class_name, e)
             return {"error": str(e)}
 
     def get_redis_info(self):
+        """
+        Return Redis server information.
+
+        :return: Redis server information
+        :rtype: dict
+        """
+        logger.debug("%s.get_redis_info() called", self.formatted_class_name)
+
         client = get_redis_connection("default")
         info = client.info()
         retval = {
@@ -58,12 +67,15 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         return retval
 
     def status(self):
+        """Get status information about the Smarter platform."""
+
+        logger.debug("%s.status() called", self.formatted_class_name)
+
         try:
             data = {
                 SmarterJournalApiResponseKeys.DATA: {
                     "infrastructures": {
-                        "kubernetes": aws_helper.eks.get_kubernetes_info(),
-                        "mysql": aws_helper.rds.get_mysql_info(),
+                        "kubernetes": self.get_kubernetes_info(),
                         "redis": self.get_redis_info(),
                     },
                     "compute": {
@@ -84,9 +96,15 @@ class ApiV1CliStatusApiView(CliBaseApiView):
             )
         # pylint: disable=W0718
         except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
+            return JsonResponse(
+                data={
+                    "error": str(e),
+                    "trace": traceback.format_exc(),
+                },
+                status=HTTPStatus.BAD_REQUEST.value,
+            )
 
     def post(self, request):
-        """Get method for PluginManifestView."""
+        """ApiV1CliStatusApiView post view."""
         response = self.status()
         return response

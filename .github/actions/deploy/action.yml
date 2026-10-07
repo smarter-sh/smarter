@@ -1,11 +1,22 @@
 name: Deploy to Kubernetes
+description: "Deploy the application to the specified Kubernetes environment"
 branding:
   icon: "play-circle"
   color: "green"
 inputs:
-  environment:
-    description: "The environment to deploy"
+  namespace-base:
+    description: "The base name for the Kubernetes namespace (the environment name - alpha, beta, prod - will be appended to this)"
+    required: false
+    default: "smarter-ubc"
+  anthropic-api-key:
+    description: "The Anthropic API key"
     required: true
+  authentication-backends:
+    description: "The authentication backends to enable"
+    required: false
+  cohere-api-key:
+    description: "The Cohere API key"
+    required: false
   aws-access-key-id:
     description: "The AWS access key ID"
     required: true
@@ -15,11 +26,58 @@ inputs:
   aws-region:
     description: "The AWS region to deploy to"
     required: true
+  debug-mode:
+    description: "Whether to enable debug mode (true/false)"
+    required: false
+    default: "false"
+  dockerhub-username:
+    description: "The DockerHub username"
+    required: true
+  dockerhub-pat:
+    description: "The DockerHub personal access token"
+    required: false
+  dockerhub-tag:
+    description: "The DockerHub tag to use for the Docker image"
+    required: false
+    default: "latest"
+  environment:
+    description: "The environment to deploy: alpha, beta, next, prod"
+    required: true
+  eks-cluster-name:
+    description: "The name of the EKS cluster to deploy to"
+    required: true
   fernet-encryption-key:
     description: "The Fernet encryption key"
     required: true
+  fireworks-api-key:
+    description: "The Fireworks API key"
+    required: false
+  gemini-api-key:
+    description: "The Gemini API key"
+    required: true
+  google-service-account-b64:
+    description: "The Google service account in base64 encoding"
+    required: true
+  google-maps-api-key:
+    description: "The Google Maps API key"
+    required: true
+  llama-api-key:
+    description: "The MetaAI Llama API key"
+    required: true
+  mailchimp-api-key:
+    description: "The Mailchimp API key"
+    required: true
+  mailchimp-list-id:
+    description: "The Mailchimp list ID"
+    required: true
+  mistral-api-key:
+    description: "The Mistral API key"
+    required: false
   openai-api-key:
     description: "The OpenAI API key"
+    required: true
+  platform-subdomain:
+    description: "The platform subdomain to use in constructing URLs and email addresses"
     required: true
   pinecone-api-key:
     description: "The Pinecone API key"
@@ -27,18 +85,61 @@ inputs:
   pinecone-environment:
     description: "The Pinecone environment"
     required: true
-  google-maps-api-key:
-    description: "The Google Maps API key"
+  root-domain:
+    description: "The root domain for the deployment: e.g. smarter.sh"
     required: true
-  gemini-api-key:
-    description: "The Gemini API key"
+  smarter-branding-address1:
+    description: "The first line of the address to use in the branding info"
+    required: false
+  smarter-branding-address2:
+    description: "The second line of the address to use in the branding info"
+    required: false
+  smarter-branding-city:
+    description: "The city to use in the branding info"
+    required: false
+  smarter-branding-state:
+    description: "The state to use in the branding info"
+    required: false
+  smarter-branding-postal-code:
+    description: "The postal code to use in the branding info"
+    required: false
+  smarter-branding-country:
+    description: "The country to use in the branding info"
+    required: false
+  smarter-branding-currency:
+    description: "The currency to use in the branding info"
+    required: false
+  smarter-branding-timezone:
+    description: "The timezone to use in the branding info"
+    required: false
+  smarter-branding-contact-url:
+    description: "The contact URL to use in the branding info"
+    required: false
+  smarter-branding-corporate-name:
+    description: "The corporate name to use in the branding info"
+    required: false
+  smarter-branding-support-email:
+    description: "The support email to use in the branding info"
+    required: false
+  smarter-branding-support-hours:
+    description: "The support hours to use in the branding info"
+    required: false
+  smarter-branding-support-phone-number:
+    description: "The support phone number to use in the branding info"
+    required: false
+  smarter-email-admin:
+    description: "The admin email to use in the branding info"
+    required: false
+  smarter-logo:
+    description: "The URL to the Smarter logo image"
     required: true
-  llama-api-key:
-    description: "The MetaAI Llama API key"
+  smarter-mariadb-test_database_password:
+    description: "The MariaDB test database password"
     required: true
-  smarter-mysql-test_database_password:
-    description: "The MySQL test database password"
+  smarter-settings-output:
+    description: "True to enable verbose console output of the settings at startup."
     required: true
+    default: "false"
   social-auth-google-oauth2-key:
     description: "The Google OAuth2 key"
     required: true
@@ -57,12 +158,12 @@ inputs:
   social-auth-linkedin-oauth2-secret:
     description: "The LinkedIn OAuth2 secret"
     required: true
-  mailchimp-api-key:
-    description: "The Mailchimp API key"
-    required: true
-  mailchimp-list-id:
-    description: "The Mailchimp list ID"
-    required: true
+  tavily-api-key:
+    description: "The Tavily web search API key, which the built-in smarter LLMClient's websearch plugin uses"
+    required: false
+  togetherai-api-key:
+    description: "The TogetherAI API key"
+    required: false
 
 runs:
   using:
@@ -76,24 +177,50 @@ runs:
     # worry about cleaning up after ourselves.
     # -------------------------------------------------------------------------
   steps:
+    - name: Cache Helm dependencies
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.cache/helm
+          helm/charts/smarter/charts
+        key: helm-${{ runner.os }}-${{ hashFiles('helm/charts/smarter/Chart.yaml') }}-${{ hashFiles('helm/charts/smarter/requirements.yaml') }}
+        restore-keys: |
+          helm-${{ runner.os }}-
+
     # Initialize environment variables that are derived from the inputs
+    # mcdaniel: we're not accomplishing anything by doing this bc this matches the default in aws_base.py
     - name: Initialize environment variables
       shell: bash
       run: |-
-        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "NAMESPACE=${{ inputs.namespace-base }}-${{ inputs.environment }}" >> $GITHUB_ENV
         echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
         echo "CACHES_LOCATION=${{ env.REDIS_URL }}" >> $GITHUB_ENV
         echo "CELERY_BROKER_URL=${{ env.REDIS_URL }}" >> $GITHUB_ENV
         echo "CELERY_RESULT_BACKEND=${{ env.REDIS_URL }}" >> $GITHUB_ENV
       env:
-        REDIS_URL: redis://:smarter@smarter-redis-master.smarter-platform-${{ inputs.environment }}.svc.cluster.local:6379/1
+        REDIS_URL: redis://:smarter@smarter-redis-master.${{ inputs.namespace-base }}-${{ inputs.environment }}.svc.cluster.local:6379/1
         DJANGO_SETTINGS_BASE: smarter.settings
-        NAMESPACE_BASE: smarter-platform
 
     # Checkout all code referenced by this action
     - name: Checkout code
       id: checkout_code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0 # Ensures all history and tags are fetched
+        fetch-tags: true
+
+    - name: Get latest release version
+      id: get-latest-version-tag
+      shell: bash
+      run: |
+        VERSION_TAG=$(git describe --tags --abbrev=0)
+        echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+    - name: Set version
+      id: set-version
+      shell: bash
+      run: |
+        python scripts/bump_version.py $TAG --cicd
 
     # authenticate AWS CLI
     - name: Configure AWS credentials
@@ -117,34 +244,24 @@ runs:
         echo "-------------"
         aws sts get-caller-identity
 
-    # install kubectl, which Helm will use to deploy the application
-    - name: Install kubectl
-      id: kubectl-install
+    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
+    # and set the environment variables
+    - name: Install jq and kubectl
       shell: bash
-      run: |-
-        sudo snap install kubectl --classic
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq kubectl
 
     # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
     - name: Configure kubectl
       id: kubectl-configure
       shell: bash
       run: |-
-        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
+        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ inputs.eks-cluster-name }} --alias ${{ inputs.eks-cluster-name }}
         echo "kubectl version and diagnostic info:"
         echo "------------------------------------"
         kubectl version
-      env:
-        EKS_CLUSTER_NAME: apps-hosting-service
 
-    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
-    # and set the environment variables
-    - name: Install jq
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y jq
-
-    # connect to Amazon ECR so that we can programmatically
     # figure out the Docker image to add to the Helm values for the
     # Kubernetes deployment manifest.
     - name: Login to Amazon ECR
@@ -152,12 +269,14 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
 
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
+    # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.223" >> $GITHUB_ENV
+    # example:  012345678903.dkr.ecr.us-east-1.amazonaws.com/smarter-platform-alpha:latest
+    # echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
     - name: Set Docker image
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ inputs.dockerhub-tag }}" >> $GITHUB_ENV
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
@@ -170,7 +289,7 @@ runs:
     # MYSQL_DATABASE: smarter_api_dev
     # MYSQL_USER: smarter_api_dev
     # MYSQL_PASSWORD: top-secret-password
-    - name: Configure MySQL from Kubernetes secret
+    - name: Configure MariaDB from Kubernetes secret
       id: get-mysql-secret
       uses: ./.github/actions/k8s-get-secret
       with:
@@ -183,7 +302,7 @@ runs:
     # example:
     # MYMYSQL_ROOT_USERNAMESQL_USER: root
     # MYSQL_ROOT_PASSWORD: top-secret-password
-    - name: Configure MySQL from Kubernetes secret
+    - name: Configure MariaDB from Kubernetes secret
       id: get-mysql-root-secret
       uses: ./.github/actions/k8s-get-secret
       with:
@@ -208,7 +327,7 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    # SMTP_HOST: email-smtp.us-east-1.amazonaws.com
     # SMTP_PORT: "587"
     # SMTP_USE_SSL: "false"
     # SMTP_USE_TLS: "true"
@@ -233,6 +352,123 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
 
+    - name: Create AWS S3 Bucket name
+      id: create-s3-bucket-name
+      shell: bash
+      run: |-
+        # create S3 bucket name based on environment
+        if [ "${{ inputs.environment }}" = "prod" ]; then
+          S3_BUCKET="${{ inputs.platform-subdomain }}.${{ inputs.root-domain }}"
+        else
+          S3_BUCKET="${{ inputs.environment }}.${{ inputs.platform-subdomain }}.${{ inputs.root-domain }}"
+        fi
+        echo "SMARTER_S3_BUCKET=${S3_BUCKET}" >> $GITHUB_ENV
+
+    - name: Delete failed jobs
+      id: delete-failed-jobs
+      shell: bash
+      run: |-
+        kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
+
+    - name: Create secrets values file
+      id: create-json
+      shell: bash
+      run: |
+        cat > /tmp/values.json <<EOF
+        {
+          "deployTimestamp": "$(date +%s)",
+          "env": {
+            "AUTHENTICATION_BACKENDS": ${{ inputs.authentication-backends && format('"{0}"', inputs.authentication-backends) || 'null' }},
+            "AWS_ACCESS_KEY_ID": ${{ inputs.aws-access-key-id && format('"{0}"', inputs.aws-access-key-id) || 'null' }},
+            "AWS_REGION": ${{ inputs.aws-region && format('"{0}"', inputs.aws-region) || 'null' }},
+            "AWS_SECRET_ACCESS_KEY": ${{ inputs.aws-secret-access-key && format('"{0}"', inputs.aws-secret-access-key) || 'null' }},
+            "CACHES_LOCATION": ${{ env.CACHES_LOCATION && format('"{0}"', env.CACHES_LOCATION) || 'null' }},
+            "CELERY_BROKER_URL": ${{ env.CELERY_BROKER_URL && format('"{0}"', env.CELERY_BROKER_URL) || 'null' }},
+            "CELERY_RESULT_BACKEND": ${{ env.CELERY_RESULT_BACKEND && format('"{0}"', env.CELERY_RESULT_BACKEND) || 'null' }},
+            "DEBUG_MODE": ${{ inputs.debug-mode && format('"{0}"', inputs.debug-mode) || 'null' }},
+            "DJANGO_SETTINGS_MODULE": ${{ env.DJANGO_SETTINGS_MODULE && format('"{0}"', env.DJANGO_SETTINGS_MODULE) || 'null' }},
+            "DOCKERHUB_PAT": ${{ inputs.dockerhub-pat && format('"{0}"', inputs.dockerhub-pat) || 'null' }},
+            "DOCKERHUB_USERNAME": ${{ inputs.dockerhub-username && format('"{0}"', inputs.dockerhub-username) || 'null' }},
+            "ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
+            "NAMESPACE": ${{ env.NAMESPACE && format('"{0}"', env.NAMESPACE) || 'null' }},
+            "SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
+            "ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
+            "SMARTER_ADMIN_EMAIL": ${{ env.SMARTER_ADMIN_EMAIL && format('"{0}"', env.SMARTER_ADMIN_EMAIL) || 'null' }},
+            "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
+            "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
+            "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
+            "SMARTER_BRANDING_ADDRESS1": ${{ inputs.smarter-branding-address1 && format('"{0}"', inputs.smarter-branding-address1) || 'null' }},
+            "SMARTER_BRANDING_ADDRESS2": ${{ inputs.smarter-branding-address2 && format('"{0}"', inputs.smarter-branding-address2) || 'null' }},
+            "SMARTER_BRANDING_CITY": ${{ inputs.smarter-branding-city && format('"{0}"', inputs.smarter-branding-city) || 'null' }},
+            "SMARTER_BRANDING_STATE": ${{ inputs.smarter-branding-state && format('"{0}"', inputs.smarter-branding-state) || 'null' }},
+            "SMARTER_BRANDING_POSTAL_CODE": ${{ inputs.smarter-branding-postal-code && format('"{0}"', inputs.smarter-branding-postal-code) || 'null' }},
+            "SMARTER_BRANDING_COUNTRY": ${{ inputs.smarter-branding-country && format('"{0}"', inputs.smarter-branding-country) || 'null' }},
+            "SMARTER_BRANDING_CURRENCY": ${{ inputs.smarter-branding-currency && format('"{0}"', inputs.smarter-branding-currency) || 'null' }},
+            "SMARTER_BRANDING_TIMEZONE": ${{ inputs.smarter-branding-timezone && format('"{0}"', inputs.smarter-branding-timezone) || 'null' }},
+            "SMARTER_BRANDING_CONTACT_URL": ${{ inputs.smarter-branding-contact-url && format('"{0}"', inputs.smarter-branding-contact-url) || 'null' }},
+            "SMARTER_BRANDING_CORPORATE_NAME": ${{ inputs.smarter-branding-corporate-name && format('"{0}"', inputs.smarter-branding-corporate-name) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_EMAIL": ${{ inputs.smarter-branding-support-email && format('"{0}"', inputs.smarter-branding-support-email) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_HOURS": ${{ inputs.smarter-branding-support-hours && format('"{0}"', inputs.smarter-branding-support-hours) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ inputs.smarter-branding-support-phone-number && format('"{0}"', inputs.smarter-branding-support-phone-number) || 'null' }},
+            "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
+            "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
+            "SMARTER_AWS_EKS_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
+            "SMARTER_EMAIL_ADMIN": ${{ inputs.smarter-email-admin && format('"{0}"', inputs.smarter-email-admin) || 'null' }},
+            "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
+            "SMARTER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},
+            "SMARTER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
+            "SMARTER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
+            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }},
+            "SMARTER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
+            "SMARTER_LOGIN_URL": ${{ env.SMARTER_LOGIN_URL && format('"{0}"', env.SMARTER_LOGIN_URL) || 'null' }},
+            "SMARTER_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
+            "SMARTER_MAILCHIMP_API_KEY": ${{ inputs.mailchimp-api-key && format('"{0}"', inputs.mailchimp-api-key) || 'null' }},
+            "SMARTER_MAILCHIMP_LIST_ID": ${{ inputs.mailchimp-list-id && format('"{0}"', inputs.mailchimp-list-id) || 'null' }},
+            "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
+            "SMARTER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
+            "SMARTER_MYSQL_DATABASE": ${{ env.SMARTER_MYSQL_DATABASE && format('"{0}"', env.SMARTER_MYSQL_DATABASE) || 'null' }},
+            "SMARTER_MYSQL_HOST": ${{ env.MYSQL_HOST && format('"{0}"', env.MYSQL_HOST) || 'null' }},
+            "SMARTER_MYSQL_PASSWORD": ${{ env.SMARTER_MYSQL_PASSWORD && format('"{0}"', env.SMARTER_MYSQL_PASSWORD) || 'null' }},
+            "SMARTER_MYSQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
+            "SMARTER_MYSQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
+            "SMARTER_MYSQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
+            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": ${{ inputs.smarter-mariadb-test_database_password && format('"{0}"', inputs.smarter-mariadb-test_database_password) || 'null' }},
+            "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
+            "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
+            "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
+            "SMARTER_PLATFORM_SUBDOMAIN": ${{ inputs.platform-subdomain && format('"{0}"', inputs.platform-subdomain) || 'null' }},
+            "SMARTER_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
+            "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
+            "SMARTER_S3_BUCKET": ${{ env.SMARTER_S3_BUCKET && format('"{0}"', env.SMARTER_S3_BUCKET) || 'null' }},
+            "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
+            "SMARTER_SMTP_FROM_EMAIL": "no-reply@platform.smarter.sh",
+            "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
+            "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
+            "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
+            "SMARTER_SETTINGS_OUTPUT": ${{ inputs.smarter-settings-output && format('"{0}"', inputs.smarter-settings-output) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
+            "SMARTER_TAVILY_API_KEY": ${{ inputs.tavily-api-key && format('"{0}"', inputs.tavily-api-key) || 'null' }},
+            "SMARTER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
+            "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
+            "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
+            "SMTP_USE_SSL": ${{ env.SMTP_USE_SSL && format('"{0}"', env.SMTP_USE_SSL) || 'null' }},
+            "SMTP_USE_TLS": ${{ env.SMTP_USE_TLS && format('"{0}"', env.SMTP_USE_TLS) || 'null' }}
+          }
+        }
+        EOF
+
+    - name: Convert values file from json to yaml
+      id: convert-to-yaml
+      shell: bash
+      run: |-
+        cat /tmp/values.json | jq . > /tmp/values_clean.json && mv /tmp/values_clean.json /tmp/values.json
+        cat /tmp/values.json | yq eval -P --input-format=json > /tmp/values.yaml
+
     # see: https://github.com/helm/helm
     #      we're installing directly from the github repo amd64 binary
     - name: Install Helm
@@ -243,27 +479,20 @@ runs:
         tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
         sudo mv linux-amd64/helm /usr/local/bin/helm
 
-    # Dump all of our environment variables to the run log
-    - name: Dump environment variables
-      id: dump-env
-      shell: bash
-      run: |-
-        echo "env"
-        echo "-------------------------------"
-        env
-
-    - name: Delete failed jobs
-      id: delete-failed-jobs
-      shell: bash
-      run: |-
-        kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
-
     - name: Update Helm charts
       id: helm-update
       shell: bash
       run: |-
         cd helm/charts/smarter
         helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add loki https://grafana.github.io/helm-charts
+        helm repo add mariadb https://charts.bitnami.com/bitnami
+        helm repo add mysql https://charts.bitnami.com/bitnami
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo add redis https://charts.bitnami.com/bitnami
+        helm repo update
+        helm dependency update
         helm dependency build
 
     # Deploy the application to Kubernetes using Helm
@@ -271,53 +500,24 @@ runs:
       id: deploy
       shell: bash
       run: |-
-        helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
-        --timeout 900s \
-        --set deployTimestamp="$(date +%s)" \
-        --set env.DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }} \
-        --set env.ENVIRONMENT=${{ inputs.environment }} \
-        --set env.AWS_REGION=${{ inputs.aws-region }} \
-        --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
-        --set env.AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }} \
-        --set env.FERNET_ENCRYPTION_KEY=${{inputs.fernet-encryption-key}} \
-        --set env.NAMESPACE=${{ env.NAMESPACE }} \
-        --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
-        --set env.ROOT_DOMAIN=smarter.sh \
-        --set env.DEBUG_MODE="false" \
-        --set env.DUMP_DEFAULTS="True" \
-        --set env.MAILCHIMP_API_KEY=${{ inputs.mailchimp-api-key }} \
-        --set env.MAILCHIMP_LIST_ID=${{ inputs.mailchimp-list-id }} \
-        --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \
-        --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
-        --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
-        --set env.GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }} \
-        --set env.GEMINI_API_KEY=${{ inputs.gemini-api-key }} \
-        --set env.LLAMA_API_KEY=${{ inputs.llama-api-key }} \
-        --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=${{ inputs.social-auth-google-oauth2-key }} \
-        --set env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD=${{ inputs.smarter-mysql-test_database_password }} \
-        --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${{ inputs.social-auth-google-oauth2-secret }} \
-        --set env.SOCIAL_AUTH_GITHUB_KEY=${{ inputs.social-auth-github-key }} \
-        --set env.SOCIAL_AUTH_GITHUB_SECRET=${{ inputs.social-auth-github-secret }} \
-        --set env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY=${{ inputs.social-auth-linkedin-oauth2-key }} \
-        --set env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET=${{ inputs.social-auth-linkedin-oauth2-secret }} \
-        --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
-        --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
-        --set env.MYSQL_DATABASE=${{ env.SMARTER_MYSQL_DATABASE }} \
-        --set env.MYSQL_USER=${{ env.SMARTER_MYSQL_USERNAME }} \
-        --set env.MYSQL_PASSWORD=${{ env.SMARTER_MYSQL_PASSWORD }} \
-        --set env.MYSQL_ROOT_USERNAME=${{ env.MYSQL_ROOT_USERNAME }} \
-        --set env.MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }} \
-        --set env.SECRET_KEY=${{ env.SECRET_KEY }} \
-        --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
-        --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
-        --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
-        --set env.SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }} \
-        --set env.SMTP_HOST=${{ env.SMTP_HOST }} \
-        --set env.SMTP_PORT=${{ env.SMTP_PORT }} \
-        --set env.SMTP_USE_SSL=${{ env.SMTP_USE_SSL }} \
-        --set env.SMTP_USE_TLS=${{ env.SMTP_USE_TLS }} \
-        --set env.SMTP_USERNAME=${{ env.SMTP_USERNAME }} \
-        --set env.SMTP_PASSWORD=${{ env.SMTP_PASSWORD }} \
-        --set env.CACHES_LOCATION=${{ env.CACHES_LOCATION }} \
-        --set env.CELERY_BROKER_URL=${{ env.CELERY_BROKER_URL }} \
-        --set env.CELERY_RESULT_BACKEND=${{ env.CELERY_RESULT_BACKEND }} \
+        helm upgrade --install --force smarter ./helm/charts/smarter/ \
+          --namespace ${{ env.NAMESPACE }} \
+          --timeout 900s \
+          --set mysql.auth.rootPassword="${{ env.MYSQL_ROOT_PASSWORD }}" \
+          --set mysql.auth.rootUsername="${{ env.MYSQL_ROOT_USERNAME }}" \
+          --set mysql.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
+          --set mysql.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
+          --set mysql.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
+          --set mariadb.auth.rootPassword="${{ env.MYSQL_ROOT_PASSWORD }}" \
+          --set mariadb.auth.rootUsername="${{ env.MYSQL_ROOT_USERNAME }}" \
+          --set mariadb.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
+          --set mariadb.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
+          --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
+          --set global.image.pullPolicy="IfNotPresent" \
+          --values /tmp/values.yaml
+
+    # Clean up secrets file
+    - name: Clean up secrets
+      if: always()
+      shell: bash
+      run: rm -f /tmp/values.yaml

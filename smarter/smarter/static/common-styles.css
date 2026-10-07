@@ -26,7 +26,9 @@
     right: 10px;
   }
 
-  .code-snippet {
+  .code-snippet code {
+    color: #f1f1f1;
+    background-color: #333333;
     --bs-code-color: #f1f1f1;
     /* Text color */
     --bs-code-border-color: transparent;

@@ -1,0 +1,100 @@
+# pylint: disable=W0613
+"""This module is used to create a new plugin using manage.py."""
+
+import os
+from typing import Type
+
+from django.test import RequestFactory
+
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.docs.views.manifest import (
+    DocsExampleManifestAccountView,
+    DocsExampleManifestApiConnectionView,
+    DocsExampleManifestApiKeyView,
+    DocsExampleManifestApiView,
+    DocsExampleManifestBaseView,
+    DocsExampleManifestGuardrailView,
+    DocsExampleManifestLLMClientView,
+    DocsExampleManifestPluginView,
+    DocsExampleManifestPromptView,
+    DocsExampleManifestSecretView,
+    DocsExampleManifestSqlConnectionView,
+    DocsExampleManifestSqlView,
+    DocsExampleManifestUserView,
+)
+from smarter.common.conf import smarter_settings
+from smarter.lib import logging
+from smarter.lib.django.management.base import SmarterCommand
+
+logging.basicConfig(level=smarter_settings.log_level)
+logger = logging.getLogger(__name__)
+
+
+# pylint: disable=E1101
+class Command(SmarterCommand):
+    """Django manage.py create_plugin command.
+
+    This command is used to create a plugin from a yaml import file.
+    """
+
+    def handle(self, *args, **options):
+        """
+        Create example manifest files for every AI resource type.
+
+        $ pwd
+        /home/smarter_user/smarter
+        $ pwd
+        /home/smarter_user/smarter
+        $ cd ../data/manifests/example_manifests
+        $ ls -lha
+        total 12K
+        drwx------ 1 smarter_user smarter_user 4.0K Dec  5 19:24 .
+        drwx------ 1 smarter_user smarter_user 4.0K Dec  5 19:24 ..
+        $ pwd
+        /home/smarter_user/data/manifests/example_manifests
+        $
+        """
+        self.handle_begin()
+
+        # /home/smarter_user/data/manifests/ is created by Dockerfile
+        # and permissions are set so smarter_user can write here.
+        output_folder = "/home/smarter_user/data/manifests/example_manifests"
+
+        # the docs views broker each manifest request on behalf of request.user,
+        # and refuse an anonymous request, so the request is made as the smarter admin.
+        request = RequestFactory().post("/")
+        request.user = smarter_cached_objects.smarter_admin
+
+        def write_manifest(view_class: Type[DocsExampleManifestBaseView]):
+            """Generate example manifest YAML file."""
+            instance = view_class()
+            try:
+                response = instance.post(request=request)
+            # pylint: disable=broad-except
+            except Exception as exc:
+                logger.error("Failed to generate manifest for %s: %s", view_class.__name__, exc)
+                return
+
+            yaml_content = response.content.decode("utf-8")
+            output_path = os.path.join(output_folder, instance.file_name)
+
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(yaml_content)
+
+        manifests = [
+            DocsExampleManifestAccountView,
+            DocsExampleManifestApiConnectionView,
+            DocsExampleManifestApiView,
+            DocsExampleManifestApiKeyView,
+            DocsExampleManifestPromptView,
+            DocsExampleManifestGuardrailView,
+            DocsExampleManifestLLMClientView,
+            DocsExampleManifestPluginView,
+            DocsExampleManifestSqlConnectionView,
+            DocsExampleManifestSqlView,
+            DocsExampleManifestUserView,
+            DocsExampleManifestSecretView,
+        ]
+        for manifest_view in manifests:
+            write_manifest(manifest_view)

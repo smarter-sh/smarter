@@ -12,7 +12,6 @@ from .metadata import SAMUserMetadata
 from .spec import SAMUserSpec
 from .status import SAMUserStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
@@ -32,5 +31,4 @@ class SAMUser(AbstractSAMBase):
     status: Optional[SAMUserStatus] = Field(
         default=None,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
-        exclude=True,
     )

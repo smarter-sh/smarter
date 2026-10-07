@@ -1,12 +1,15 @@
 # pylint: disable=W0613
 """Django REST framework views for the API admin app."""
-import json
 
+from typing import Optional
+
+from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.schema import ApiV1CliSchemaApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib import json
 
 from .base import DocsBaseView
 
@@ -15,100 +18,166 @@ from .base import DocsBaseView
 # Public Access Views
 # ------------------------------------------------------------------------------
 class DocsJsonSchemaBaseView(DocsBaseView):
-    """JSON Schema base view"""
+    """JSON Schema base view."""
 
     template_path = "docs/json-schema.html"
-    kind: SAMKinds = None
+    kind: Optional[SAMKinds] = None
 
     def get(self, request, *args, **kwargs):
         view = ApiV1CliSchemaApiView.as_view()
         json_response = self.get_brokered_json_response(
-            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.json_schema, view, request, *args, **kwargs
         )
-        json_response = json.dumps(json_response, indent=4)
+        json_response = json.dumps(json_response)
         self.context["json_schema"] = json_response
-        return render(request, self.template_path, context=self.context)
+        return render(request, self.template_path, context=self.context)  # type: ignore
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponseBadRequest("POST method not allowed on this endpoint.")
 
 
 class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
-    """Account JSON Schema view"""
+    """Account JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
 class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
-    """ApiConnection JSON Schema view"""
+    """ApiConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.API_CONNECTION)
 
 
 class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
-    """Plugin Api JSON Schema view"""
+    """Plugin Api JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
-    """ApiKey JSON Schema view"""
+    """ApiKey JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
-class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
-    """Chat JSON Schema view"""
+class DocsJsonSchemaPromptView(DocsJsonSchemaBaseView):
+    """Prompt JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHAT)
-
-
-class DocsJsonSchemaChatHistoryView(DocsJsonSchemaBaseView):
-    """ChatHistory JSON Schema view"""
-
-    kind = SAMKinds(SAMKinds.CHAT_HISTORY)
+    kind = SAMKinds(SAMKinds.PROMPT)
 
 
-class DocsJsonSchemaChatPluginUsageView(DocsJsonSchemaBaseView):
-    """ChatPluginUsage JSON Schema view"""
+class DocsJsonSchemaBudgetView(DocsJsonSchemaBaseView):
+    """Budget JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
-
-
-class DocsJsonSchemaChatToolCallView(DocsJsonSchemaBaseView):
-    """ChatToolCall JSON Schema view"""
-
-    kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
+    kind = SAMKinds(SAMKinds.BUDGET)
 
 
-class DocsJsonSchemaChatBotView(DocsJsonSchemaBaseView):
-    """ChatBot JSON Schema view"""
+class DocsJsonSchemaCustomDomainView(DocsJsonSchemaBaseView):
+    """CustomDomain JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHATBOT)
+    kind = SAMKinds(SAMKinds.CUSTOM_DOMAIN)
+
+
+class DocsJsonSchemaGuardrailView(DocsJsonSchemaBaseView):
+    """Guardrail JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.GUARDRAIL)
+
+
+class DocsJsonSchemaLLMClientView(DocsJsonSchemaBaseView):
+    """LLMClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_CLIENT)
+
+
+class DocsJsonSchemaLLMHostView(DocsJsonSchemaBaseView):
+    """LLMHost JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST)
+
+
+class DocsJsonSchemaLLMHostComputeView(DocsJsonSchemaBaseView):
+    """LLMHostCompute JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST_COMPUTE)
+
+
+class DocsJsonSchemaProxyView(DocsJsonSchemaBaseView):
+    """Proxy JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.PROXY)
+
+
+class DocsJsonSchemaMCPClientView(DocsJsonSchemaBaseView):
+    """MCPClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.MCP_CLIENT)
+
+
+class DocsJsonSchemaOrchestratorView(DocsJsonSchemaBaseView):
+    """Orchestrator JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.ORCHESTRATOR)
 
 
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
-    """Plugin JSON Schema view"""
+    """Plugin JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.STATIC_PLUGIN)
 
 
 class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
-    """SqlConnection JSON Schema view"""
+    """SqlConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
 
 
+class DocsJsonSchemaSkillView(DocsJsonSchemaBaseView):
+    """Plugin Skill JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
+
+
+class DocsJsonSchemaWebsearchView(DocsJsonSchemaBaseView):
+    """Plugin Websearch JSON Schema view.
+
+    Experimental.
+    """
+
+    kind = SAMKinds(SAMKinds.WEBSEARCH_PLUGIN)
+
+
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
-    """Plugin Sql JSON Schema view"""
+    """Plugin Sql JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):
-    """User JSON Schema view"""
+    """User JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SECRET)
 
 
 class DocsJsonSchemaSecretView(DocsJsonSchemaBaseView):
-    """Secret JSON Schema view"""
+    """Secret JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SECRET)
+
+
+class DocsJsonSchemaProviderView(DocsJsonSchemaBaseView):
+    """Provider JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.PROVIDER)
+
+
+class DocsJsonSchemaVectorsearchView(DocsJsonSchemaBaseView):
+    """Vectorsearch JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSEARCH)
+
+
+class DocsJsonSchemaVectorstoreView(DocsJsonSchemaBaseView):
+    """Vectorstore JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSTORE)

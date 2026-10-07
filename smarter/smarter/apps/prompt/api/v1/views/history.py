@@ -1,15 +1,22 @@
 # pylint: disable=W0707,W0718,C0115,W0613
 """Account views for smarter api."""
+
 from django.shortcuts import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.prompt.api.v1.serializers import (
     ChatHistorySerializer,
-    ChatPluginUsageSerializer,
-    ChatSerializer,
-    ChatToolCallSerializer,
+    PromptPluginUsageSerializer,
+    PromptSerializer,
+    PromptToolCallSerializer,
 )
-from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.prompt.models import (
+    Prompt,
+    PromptHistory,
+    PromptPluginUsage,
+    PromptToolCall,
+)
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -17,39 +24,39 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 
 
 class ChatToolCallHistoryListView(SmarterAuthenticatedListAPIView):
-    queryset = ChatToolCall.objects.all()
-    serializer_class = ChatToolCallSerializer
+    queryset = PromptToolCall.objects.all()
+    serializer_class = PromptToolCallSerializer
 
 
 class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
 
-    def get(self, request, *args, **kwargs):
-        instance = get_object_or_404(ChatToolCall, pk=kwargs["pk"])
-        serializer = ChatToolCallSerializer(instance)
+    def get(self, request: Request, *args, **kwargs):
+        instance = get_object_or_404(PromptToolCall, pk=kwargs["pk"])
+        serializer = PromptToolCallSerializer(instance)
         return Response(serializer.data)
 
 
 class PluginUsageHistoryListView(SmarterAuthenticatedListAPIView):
-    queryset = ChatPluginUsage.objects.all()
-    serializer_class = ChatPluginUsageSerializer
+    queryset = PromptPluginUsage.objects.all()
+    serializer_class = PromptPluginUsageSerializer
 
 
 class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
-        serializer = ChatPluginUsageSerializer(instance)
+        serializer = PromptPluginUsageSerializer(instance)
         return Response(serializer.data)
 
 
 class ChatHistoryListView(SmarterAuthenticatedListAPIView):
-    queryset = Chat.objects.all()
-    serializer_class = ChatSerializer
+    queryset = Prompt.objects.all()
+    serializer_class = PromptSerializer
 
 
 class ChatHistoryView(SmarterAuthenticatedAPIView):
 
-    def get(self, request, *args, **kwargs):
-        instance = get_object_or_404(ChatHistory, pk=kwargs["pk"])
+    def get(self, request: Request, *args, **kwargs):
+        instance = get_object_or_404(PromptHistory, pk=kwargs["pk"])
         serializer = ChatHistorySerializer(instance)
         return Response(serializer.data)

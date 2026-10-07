@@ -1,0 +1,38 @@
+/*
+ * The editor window. .code-sample-body (common-styles.css) gives it the charcoal background
+ * and rounded corners of the web console's read-only manifests. Its padding, and hiding its
+ * overflow, keep Monaco inside the rounded corners.
+ */
+.manifest-editor-window {
+  padding: 0 0 0 5px;
+  overflow: hidden;
+}
+
+/* In the editor's card, the window sits flush under the toolbar, and has the card's bottom corners. */
+.card > .card-body > .manifest-editor-window {
+  border-radius: 0 0 var(--bs-card-inner-border-radius, 0.625rem) var(--bs-card-inner-border-radius, 0.625rem);
+}
+
+/* The copy button, on the window's top right, above the editor. */
+.manifest-editor-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  color: #f1f1f1;
+}
+
+.manifest-editor-copy:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.manifest-editor-copy i {
+  color: #f1f1f1;
+}
+
+/* A locked field: apiVersion, kind and metadata.name. See lib/useLockedFields. */
+.manifest-editor-locked {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.45);
+  cursor: not-allowed;
+}

@@ -2,9 +2,12 @@
 """Test SmarterAuthToken."""
 
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.lib import logging
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .mixins import TestAccountMixin
+
+logger = logging.getLogger(__name__)
 
 
 class TestSmarterAuthToken(TestAccountMixin):
@@ -13,11 +16,14 @@ class TestSmarterAuthToken(TestAccountMixin):
     def test_create_auth_token(self):
         """Test create auth token."""
 
-        token_record, token_key = SmarterAuthToken.objects.create(
+        token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            user_profile=self.user_profile,
             user=self.admin_user,
             name="testToken" + self.hash_suffix,
             description="testToken" + self.hash_suffix,
         )
+
+        logger.debug("Created record with pk: %s", token_record.pk)
 
         # validate that token_key is not None
         self.assertIsNotNone(token_key)

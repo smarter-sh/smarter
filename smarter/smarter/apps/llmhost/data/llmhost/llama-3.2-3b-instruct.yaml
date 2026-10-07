@@ -1,0 +1,47 @@
+---
+# Meta Llama 3.2 3B Instruct: a small, fast model for chat and tool calling.
+# Gated: accept the license, and store a Hugging Face token in the Secret huggingface_token.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: llama_3_2_3b_instruct
+  description: Meta Llama 3.2 3B Instruct, served by vLLM on one NVIDIA L4.
+  version: 1.0.0
+  tags:
+  - llama
+  - meta
+  - vllm
+  - chat
+  - small
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct
+spec:
+  model:
+    source: huggingface
+    repository: meta-llama/Llama-3.2-3B-Instruct
+    revision: main
+    servedName: llama-3.2-3b-instruct
+    tokenSecret: huggingface_token
+    license: llama3.2
+    architecture: llama
+    parameterCount: 3212749824
+    contextWindow: 131072
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 32768
+    args:
+    - --enable-auto-tool-choice
+    - --tool-call-parser
+    - llama3_json
+  compute: gpu_l4_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 9
+    cpu: '4'
+    memory: 12Gi

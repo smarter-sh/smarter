@@ -1,0 +1,32 @@
+apiVersion: smarter.sh/v1
+kind: SqlConnection
+metadata:
+  annotations: []
+  description: Example database connection. db_engines: django.db.backends.postgresql,
+    django.db.backends.mysql, django.db.backends.oracle, django.db.backends.sqlite3,
+    django.db.backends.mssql, django.db.backends.sybase. authentication methods: [none,
+    tcpip, tcpip_ssh, ldap_user_pwd]
+  name: example_connection
+  tags: []
+  version: 0.1.0
+spec:
+  connection:
+    authenticationMethod: tcpip
+    database: example_db
+    dbEngine: django.db.backends.mysql
+    hostname: localhost
+    maxOverflow: 10
+    password: example_password
+    poolSize: 5
+    port: 3306
+    proxyHost: proxy.example.com
+    proxyPassword: proxy_password
+    proxyPort: 8080
+    proxyUsername: proxy_user
+    sshKnownHosts: null
+    sslCa: null
+    sslCert: null
+    sslKey: null
+    timeout: 30
+    useSsl: false
+    username: example_user

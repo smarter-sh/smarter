@@ -1,0 +1,29 @@
+---
+# A SkillPlugin that refers to a skill in a GitHub repository, by the URL of
+# the skill's directory. The unit tests serve the fictitious repository
+# example-org/skills from ./skill-remote, in lieu of GitHub.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: test_skill_plugin_remote
+  pluginClass: skill
+  description: A remotely sourced skill plugin for unit testing.
+  version: 0.1.0
+  tags:
+    - skill
+    - test
+  annotations:
+    - smarter.sh/skill-test/purpose: unit testing
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for unit testing the SkillPlugin.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 256
+  skillData:
+    source:
+      url: https://github.com/example-org/skills/tree/main/skills/test-skill

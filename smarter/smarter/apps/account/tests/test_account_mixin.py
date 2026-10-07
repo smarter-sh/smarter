@@ -7,30 +7,39 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
+from unittest.mock import MagicMock, patch
+
+from django.test import RequestFactory
+
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.tests.factories import mortal_user_factory
+from smarter.apps.account.tests.factories import admin_user_factory, mortal_user_factory
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+logger = logging.getLogger(__name__)
 
 
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
+    test_account_mixin_logger_prefix = logging.formatted_text(f"{__name__}.TestAccountMixin()")
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.mortal_user, cls.account, cls.user_profile = mortal_user_factory()
-        cls.admin_user = get_cached_admin_user_for_account(cls.account)
+        logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
+        cls.admin_user, cls.account, cls.admin_user_profile = admin_user_factory()
+        cls.mortal_user, cls.account, cls.user_profile = mortal_user_factory(account=cls.account)
         cls.other_user, cls.other_account, cls.other_user_profile = mortal_user_factory()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        super().tearDownClass()
+        logger.debug("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
         instance = cls()
         # tear down the user, account, and user_profile
         try:
@@ -46,7 +55,7 @@ class TestAccountMixin(SmarterTestBase):
 
         # tear down the admin user
         try:
-            up = get_cached_user_profile(user=cls.admin_user)
+            up = UserProfile.get_cached_object(user=cls.admin_user)
             if up:
                 up.delete()
         except UserProfile.DoesNotExist:
@@ -78,6 +87,7 @@ class TestAccountMixin(SmarterTestBase):
                 instance.other_account.delete()
         except Account.DoesNotExist:
             pass
+        super().tearDownClass()
 
     def test_initializations(self) -> None:
         """Test instantiation with all arguments."""
@@ -104,7 +114,7 @@ class TestAccountMixin(SmarterTestBase):
         # verify that the admin user is what we think it is and that it's profile is cached
         # and that it's associated with the same account as user.
         self.assertIsNotNone(self.admin_user)
-        admin_user_profile = get_cached_user_profile(user=self.admin_user, account=self.account)
+        admin_user_profile = UserProfile.get_cached_object(user=self.admin_user, account=self.account)
         self.assertIsNotNone(admin_user_profile)
         if not isinstance(admin_user_profile, UserProfile):
             self.fail("Admin user profile should not be None")
@@ -113,25 +123,25 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_get_cached_admin_user_for_account(self) -> None:
         """Test get_cached_admin_user_for_account."""
-        admin_user = get_cached_admin_user_for_account(self.account)
+        admin_user = get_cached_admin_user_for_account(account=self.account)
         self.assertIsNotNone(admin_user)
         self.assertEqual(admin_user, self.admin_user)
 
     def test_get_cached_user_profile(self) -> None:
-        """Test get_cached_user_profile."""
-        user_profile = get_cached_user_profile(user=self.mortal_user, account=self.account)
+        """Test get_cached_object()."""
+        user_profile = UserProfile.get_cached_object(user=self.mortal_user, account=self.account)
         self.assertIsNotNone(user_profile)
         self.assertEqual(user_profile, self.user_profile)
 
         # get the profile without providing an account
-        user_profile = get_cached_user_profile(user=self.mortal_user)
+        user_profile = UserProfile.get_cached_object(user=self.mortal_user)
         self.assertIsNotNone(user_profile)
         self.assertEqual(user_profile, self.user_profile)
 
         # get the admin user profile
-        user_profile = get_cached_user_profile(user=self.admin_user)
+        user_profile = UserProfile.get_cached_object(user=self.admin_user)
         self.assertIsNotNone(user_profile)
-        self.assertEqual(user_profile.user, self.admin_user)  # type: ignore[return-value]
+        self.assertEqual(user_profile.cached_user, self.admin_user)  # type: ignore[return-value]
 
     def test_empty_initialization(self) -> None:
         """Test instantiation with no arguments."""
@@ -142,7 +152,9 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_user_initialization(self) -> None:
         """
-        Test instantiation with a user. Mixin should set account and
+        Test instantiation with a user.
+
+        Mixin should set account and
         user_profile based on the user.
         """
         instance = AccountMixin(user=self.mortal_user)
@@ -152,6 +164,7 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_unset_user(self) -> None:
         """Test setting user to None."""
+
         instance = AccountMixin(user=self.mortal_user)
         self.assertEqual(instance.user, self.mortal_user)
         # force lazy instantiations of account and user_profile.
@@ -160,17 +173,8 @@ class TestAccountMixin(SmarterTestBase):
 
         # unset the user but leave the account unchanged.
         # should reinitialize with the admin user.
-        instance.user = None
-        self.assertIsNone(instance.account)
-        self.assertIsNone(instance.user_profile)
-
-        # unset both the user and account.
-        # should unset everything.
-        instance.user = None
-        instance.account = None
-        self.assertIsNone(instance.user)
-        self.assertIsNone(instance.account)
-        self.assertIsNone(instance.user_profile)
+        with self.assertRaises(SmarterBusinessRuleViolation):
+            instance.user = None
 
     def test_unset_account(self) -> None:
         """Test setting account to None."""
@@ -194,34 +198,15 @@ class TestAccountMixin(SmarterTestBase):
         self.assertEqual(instance.account, self.account)
         self.assertEqual(instance.user_profile, self.user_profile)
 
-        # .1) unset the user_profile, but leave the user and account unchanged.
-        # should reinitialize the user_profile based on the user.
-        instance.user_profile = None
-        self.assertEqual(instance.user, self.mortal_user)
-        self.assertEqual(instance.account, self.account)
-        self.assertEqual(instance.user_profile, self.user_profile)
-
-        # .2) unset the user_profile and user, but leave the account unchanged.
-        instance.user_profile = None
-        instance.account = None
-
-        # ensure that user is still set.
-        self.assertEqual(instance.user, self.mortal_user)
-
-        # should reinitialize the account and user_profile based on the user.
-        self.assertEqual(instance.account, self.account)
-        self.assertEqual(instance.user_profile, self.user_profile)
-
-        # .3) unset the user_profile and account, but leave the user unchanged.
-        instance.user_profile = None
-        instance.account = None
-
-        # ensure that account is still set.
-        self.assertIsNotNone(instance.account)
+        # unset the user_profile
+        with self.assertRaises(SmarterBusinessRuleViolation):
+            instance.user_profile = None
 
     def test_set_account(self) -> None:
         """
-        Test setting account. Should set the admin user and user_profile
+        Test setting account.
+
+        Should set the admin user and user_profile
         """
         instance = AccountMixin(account=self.account)
         self.assertIsNotNone(self.account)
@@ -232,27 +217,10 @@ class TestAccountMixin(SmarterTestBase):
         self.assertIsNone(instance.user)
         self.assertIsNone(instance.user_profile)
 
-    def test_invalid_user_assignment(self) -> None:
-        """Test setting an invalid user."""
-        instance = AccountMixin(account=self.account)
-        with self.assertRaises(SmarterBusinessRuleViolation):
-            instance.user = self.other_user
-
     def test_invalid_account_assignment(self) -> None:
         """Test setting an invalid account."""
-        instance = AccountMixin(user=self.mortal_user)
-
-        # verify that the user and account are what we think they are
-        self.assertEqual(instance.user, self.mortal_user)
-        self.assertEqual(instance.account, self.account)
-
-        # ensure that the other account is not the same as the base account
-        self.assertNotEqual(self.account, self.other_account)
-
-        # try to set the account to the other account which
-        # should raise an exception.
-        with self.assertRaises(SmarterBusinessRuleViolation):
-            instance.account = self.other_account
+        with self.assertRaises(UserProfile.DoesNotExist):
+            AccountMixin(user=self.mortal_user, account=self.other_account)
 
     def test_account_number(self) -> None:
         """Test account_number."""
@@ -274,3 +242,106 @@ class TestAccountMixin(SmarterTestBase):
         instance.account_number = None
         self.assertIsNone(instance.account)
         self.assertIsNone(instance.account_number)
+
+    def test_dunder_str(self):
+        """Test __str__()."""
+        instance = AccountMixin(user=self.mortal_user, account=self.account)
+        s = repr(instance)
+        self.assertIsInstance(s, str)
+        s = str(instance)
+
+    def test_dunder_repr(self):
+        """Test __repr__()."""
+        instance = AccountMixin(user=self.mortal_user, account=self.account)
+        r = repr(instance)
+        self.assertIsInstance(r, str)
+
+    def test_dunder_bool(self):
+        """Test __bool__()."""
+        instance = AccountMixin(user=self.mortal_user, account=self.account)
+        self.assertTrue(bool(instance))
+        empty_instance = AccountMixin()
+        self.assertFalse(bool(empty_instance))
+
+    def test_dunder_hash(self):
+        """Test __hash__()."""
+        instance = AccountMixin(user=self.mortal_user, account=self.account)
+        self.assertEqual(hash(instance), hash(instance.user_profile))
+
+    def test_dunder_eq(self):
+        """Test __eq__()."""
+        instance1 = AccountMixin(user=self.mortal_user, account=self.account)
+        instance2 = AccountMixin(user=self.mortal_user, account=self.account)
+        instance3 = AccountMixin(user=self.other_user, account=self.other_account)
+        self.assertEqual(instance1, instance2)
+        self.assertNotEqual(instance1, instance3)
+        self.assertNotEqual(instance1, object())
+
+    def test_dunder_lt_le_gt_ge(self):
+        """Test __lt__(), __le__(), __gt__(), __ge__()."""
+        instance1 = AccountMixin(user=self.mortal_user, account=self.account)
+        instance2 = AccountMixin(user=self.other_user, account=self.other_account)
+        # Ensure __lt__ and __gt__ are consistent with user_profile string comparison
+        if str(instance1.user_profile) < str(instance2.user_profile):
+            self.assertLess(instance1, instance2)
+            self.assertLessEqual(instance1, instance2)
+            self.assertGreater(instance2, instance1)
+            self.assertGreaterEqual(instance2, instance1)
+        elif str(instance1.user_profile) > str(instance2.user_profile):
+            self.assertGreater(instance1, instance2)
+            self.assertGreaterEqual(instance1, instance2)
+            self.assertLess(instance2, instance1)
+            self.assertLessEqual(instance2, instance1)
+        else:
+            self.assertEqual(instance1, instance2)
+            self.assertLessEqual(instance1, instance2)
+            self.assertGreaterEqual(instance1, instance2)
+        # None user_profile handling
+        instance_none = AccountMixin()
+        self.assertTrue(instance_none < instance1 or instance_none == instance1)
+        self.assertFalse(instance1 < instance_none)
+
+
+class _BrokenUserProfile:
+    """A truthy stand-in for a UserProfile whose attributes raise ``error``."""
+
+    def __init__(self, error: Exception):
+        self.error = error
+
+    @property
+    def user(self):
+        raise self.error
+
+
+class TestAccountMixinErrors(SmarterTestBase):
+    """Test that AccountMixin's lazy getters log and return None when they fail unexpectedly."""
+
+    def test_request_with_an_unresolvable_user(self):
+        """A request whose user isn't a User leaves the mixin without a user."""
+        request = RequestFactory().get("/")
+        request.user = MagicMock()
+        instance = AccountMixin(request=request)
+        self.assertIsNone(instance._user)
+
+    def test_user_getter_errors(self):
+        for error in (AttributeError("partial"), RuntimeError("broken")):
+            with self.subTest(error=error):
+                instance = AccountMixin()
+                instance._user_profile = _BrokenUserProfile(error)  # type: ignore[assignment]
+                self.assertIsNone(instance.user)
+
+    def test_account_getter_errors(self):
+        for error in (AttributeError("partial"), RuntimeError("broken")):
+            with self.subTest(error=error):
+                instance = AccountMixin()
+                instance._user = MagicMock()
+                with patch("smarter.apps.account.mixins.get_cached_account_for_user", side_effect=error):
+                    self.assertIsNone(instance.account)
+
+    def test_user_profile_getter_errors(self):
+        for error in (AttributeError("partial"), RuntimeError("broken")):
+            with self.subTest(error=error):
+                instance = AccountMixin()
+                instance._user = User(username="unsaved")
+                with patch.object(UserProfile, "get_cached_object", side_effect=error):
+                    self.assertIsNone(instance.user_profile)

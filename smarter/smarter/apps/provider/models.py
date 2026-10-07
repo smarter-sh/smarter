@@ -2,25 +2,37 @@
 """All models for the Provider app."""
 
 import datetime
-import logging
 import os
 import urllib.parse
+from collections.abc import Sequence
 from typing import Optional, TypedDict
 
 import requests
 from django.conf import settings
 from django.db import models
 
-from smarter.apps.account.models import Account, Secret
-from smarter.common.classes import SmarterHelperMixin
+from smarter.apps.account.models import (
+    MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
+    User,
+    UserProfile,
+)
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    smarter_cached_objects,
+)
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
     SmarterValueError,
 )
+from smarter.common.utils import rfc1034_compliant_str
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.models import TimestampedModel
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -41,10 +53,8 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -62,7 +72,7 @@ class ProviderModelTypedDict(TypedDict):
     provider_id: int
     base_url: str
     model: str
-    max_tokens: int
+    max_completion_tokens: int
     temperature: float
     top_p: float
     supports_streaming: bool
@@ -97,6 +107,7 @@ class ProviderVerificationTypes(models.TextChoices):
     SUPPORT_EMAIL = "support_email", "Support Email"
     WEBSITE_URL = "website_url", "Website URL"
     TOS_URL = "tos_url", "Terms of Service URL"
+    DOCS_URL = "docs_url", "Documentation URL"
     PRIVACY_POLICY_URL = "privacy_policy_url", "Privacy Policy URL"
     TOS_ACCEPTANCE = "tos_acceptance", "Terms of Service Acceptance"
     PRODUCTION_API_KEY = "production_api_key", "Production API Key"
@@ -118,25 +129,15 @@ class ProviderModelVerificationTypes(models.TextChoices):
     SUMMARIZATION = "summarization", "Summarization"
 
 
-class Provider(TimestampedModel, SmarterHelperMixin):
-    """Chat model."""
+class Provider(MetaDataWithOwnershipModel):
+    """Provider model."""
 
     class Meta:
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
 
-    account = models.ForeignKey(
-        Account, on_delete=models.CASCADE, blank=False, null=False, help_text="The account that owns the provider."
-    )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        blank=False,
-        null=False,
-        help_text="The users that owns the provider.",
-    )
-    name = models.CharField(max_length=255, blank=False, null=False, unique=True, help_text="The name of the provider.")
-    description = models.TextField(blank=True, null=True)
+    objects: MetaDataWithOwnershipModelManager["Provider"] = MetaDataWithOwnershipModelManager()
+
     status = models.CharField(
         max_length=32,
         choices=ProviderStatus.choices,
@@ -145,6 +146,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         null=False,
     )
     # good things
+    is_default = models.BooleanField(default=False, blank=False, null=False)
     is_active = models.BooleanField(default=False, blank=False, null=False)
     is_verified = models.BooleanField(default=False, blank=False, null=False)
     is_featured = models.BooleanField(default=False, blank=False, null=False)
@@ -164,6 +166,9 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         related_name="provider_api_key",
         help_text="The API key for the provider.",
     )
+    default_model = models.CharField(
+        max_length=255, blank=True, null=True, help_text="The default model to use for the provider."
+    )
     connectivity_test_path = models.CharField(
         max_length=255,
         default="",
@@ -174,7 +179,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
 
     # Provider metadata
     logo = models.ImageField(
-        upload_to="provider_logos/",
+        upload_to="provider/provider_logos/",
         blank=True,
         null=True,
         help_text="The logo of the provider.",
@@ -226,6 +231,49 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     )
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.provider.urls import ProviderReverseNames
+
+        return reverse(
+            f"{ProviderReverseNames.namespace}:{ProviderReverseNames.detailview}",
+            kwargs={"hashed_id": self.hashed_id},  # type: ignore
+        )
+
+    @property
+    def is_official_provider(self) -> bool:
+        """Check if the provider is an official provider."""
+        return self.user_profile == smarter_cached_objects.smarter_admin_user_profile
+
+    @property
     def tos_accepted(self) -> bool:
         """Check if the terms of service have been accepted."""
         return self.tos_accepted_at is not None and self.tos_accepted_by is not None
@@ -243,8 +291,10 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     @property
     def authorization_header(self) -> dict:
         """Return the authorization header for the provider."""
-        if self.production_api_key(mask=False) is not None:
+        try:
             return {"Authorization": f"Bearer {self.production_api_key(mask=False)}"}
+        except SmarterConfigurationError:
+            pass
         if self.api_key:
             return {"Authorization": f"Bearer {self.api_key.get_secret()}"}
         return {}
@@ -262,9 +312,31 @@ class Provider(TimestampedModel, SmarterHelperMixin):
             and self.tos_accepted_by is not None
         )
 
+    @property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a URL-friendly name for the llmclient.
+
+        This property returns an RFC 1034-compliant name for the llmclient, suitable for use in URLs and DNS labels.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.name = 'Example LLMClient 1'
+            self.rfc1034_compliant_name  # 'example-llmclient-1'
+
+        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
+        :rtype: Optional[str]
+        """
+        if self.name:
+            return rfc1034_compliant_str(self.name)
+        return None
+
     def test_connectivity(self) -> bool:
         """
         Test connectivity to the provider's API.
+
         This method should be overridden by subclasses to implement specific connectivity tests.
         """
         if not self.base_url:
@@ -306,6 +378,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     def verify(self):
         """
         Request a batch of acceptance tests.
+
         Set the status but don't change the is_verified flag.
         This is used to indicate that the provider is being verified but has not yet been activated.
         """
@@ -423,9 +496,109 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         self.is_suspended = False
         self.save()
 
+    @classmethod
+    def get_cached_provider_by_account_id_and_name(
+        cls, invalidate: Optional[bool] = False, account_id: Optional[int] = None, name: Optional[str] = None
+    ) -> Optional["Provider"]:
+        """Get a cached provider by account ID and name."""
+
+        logger_prefix = logging.formatted_text(
+            __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
+        )
+
+        @cache_results()
+        def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
+            try:
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() cache miss for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
+                retval = cls.objects.get(user_profile__account__id=account_id, name=name)
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() fetched and cached provider for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
+                return retval
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
+                return None
+
+        if invalidate:
+            cached_provider_by_account_id_and_name.invalidate(account_id, name)
+
+        provider = cached_provider_by_account_id_and_name(account_id, name)
+        return provider
+
+    @classmethod
+    def get_cached_providers_for_user(
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None
+    ) -> Sequence["Provider"]:
+        """Get cached providers for a user."""
+        logger_prefix = logging.formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
+
+        @cache_results()
+        def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
+            logger.debug("%s cache miss for user_id: %s", logger_prefix, user_id)
+            retval = Provider.objects.with_read_permission_for(user_profile.user)
+            logger.debug(
+                "%s.cached_providers_by_user_id() fetched and cached providers for user_id: %s", logger_prefix, user_id
+            )
+            return list(retval) if retval else []
+
+        try:
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        except UserProfile.DoesNotExist:
+            logger.error(
+                "%s UserProfile does not exist for user: %s. This is a bug.",
+                logger_prefix,
+                user,
+            )
+            return []
+
+        if invalidate and user_profile:
+            cached_providers_by_user_id.invalidate(user_profile.user.id)
+
+        if user_profile:
+            return cached_providers_by_user_id(user_profile.user.id)
+        return []
+
+    @classmethod
+    def get_cached_provider_by_user_and_name(
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None, name: Optional[str] = ""
+    ) -> Optional["Provider"]:
+        """
+        Return a single instance of Provider by name for the given user.
+
+        This method caches the results to improve performance.
+
+        :param user: The user whose provider should be retrieved.
+        :type user: User
+        :param name: The name of the provider to retrieve.
+        :type name: str
+        :return: A Provider instance if found, otherwise None.
+        :rtype: Optional[Provider]
+        """
+
+        account = get_cached_account_for_user(invalidate=invalidate, user=user)
+        if not account:
+            return None
+        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)  # type: ignore
+
+    def validate(self) -> None:
+        """Validate the provider before saving."""
+
     def __str__(self):
         """String representation of the provider."""
-        return f"{self.name} ({self.account.account_number}) - {self.status}"
+        return f"{self.name} ({self.user_profile}) - {self.status}"
 
 
 class ProviderModel(TimestampedModel):
@@ -450,7 +623,7 @@ class ProviderModel(TimestampedModel):
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
 
     # model configuration
-    max_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
+    max_completion_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
     temperature = models.FloatField(default=0.7, blank=False, null=False)
     top_p = models.FloatField(default=1.0, blank=False, null=False)
 
@@ -502,12 +675,14 @@ class ProviderVerification(TimestampedModel):
     @property
     def is_valid(self) -> bool:
         """Check if the verification is valid."""
+        if not self.elapsed_updated:
+            return False
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
     @property
     def next_verification(self) -> datetime.datetime:
         """Get the next verification time."""
-        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+        return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self):
         """String representation of the verification."""
@@ -536,12 +711,14 @@ class ProviderModelVerification(TimestampedModel):
     @property
     def is_valid(self) -> bool:
         """Check if the verification is valid."""
+        if not self.elapsed_updated:
+            return False
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
     @property
     def next_verification(self) -> datetime.datetime:
         """Get the next verification time."""
-        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+        return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self):
         """String representation of the verification."""
@@ -551,7 +728,9 @@ class ProviderModelVerification(TimestampedModel):
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_provider(provider_name: str) -> Provider:
     """
-    Get the provider by name and account number. This is the primary way to
+    Get the provider by name and account number.
+
+    This is the primary way to
     retrieve a provider. Raises a Smarter error if anything goes wrong.
     """
 
@@ -560,35 +739,45 @@ def get_provider(provider_name: str) -> Provider:
     except Provider.DoesNotExist as e:
         raise SmarterValueError(f"Provider {provider_name} does not exist.") from e
 
-    if not provider.account.is_active:
-        raise SmarterBusinessRuleViolation(f"Provider account {provider.account.account_number} is not active.")
+    if not provider.user_profile.account.is_active:
+        raise SmarterBusinessRuleViolation(
+            f"Provider account {provider.user_profile.account.account_number} is not active."
+        )
 
     # the Provider might be inactive for a variety of reasons: suspended, flagged, deprecated, or something else.
     # We don't care why we just want to know if it is active or not.
     if not provider.is_active:
         raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
 
+    logger.debug("Fetched and cached provider %s for provider_name: %s", provider, provider_name)
     return provider
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_providers() -> list[Provider]:
     """
-    Get all active providers. This is the primary way to retrieve all providers.
+    Get all active providers.
+
+    This is the primary way to retrieve all providers.
     Raises a Smarter error if anything goes wrong.
     """
     try:
-        providers = Provider.objects.filter(is_active=True)
+        providers = Provider.objects.filter(is_active=True).select_related(
+            "user_profile", "user_profile__account", "user_profile__user"
+        )
     except Provider.DoesNotExist as e:
         raise SmarterValueError("No active providers found.") from e
 
+    logger.debug("Fetched and cached providers: %s", list(providers))
     return list(providers)
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_model_for_provider(provider_name: str, model_name: Optional[str] = None) -> ProviderModelTypedDict:
     """
-    Get the model for a provider by name and account number. This is the
+    Get the model for a provider by name and account number.
+
+    This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
     anything goes wrong.
     """
@@ -617,13 +806,14 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
     if not model.is_active:
         raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
 
+    logger.debug("Fetched and cached model %s for provider_name: %s, model_name: %s", model, provider_name, model_name)
     return {
         ProviderModelEnum.API_KEY.value: provider.production_api_key(mask=False),
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
         ProviderModelEnum.PROVIDER_ID.value: provider.id,  # type: ignore[union-attr]
         ProviderModelEnum.BASE_URL.value: provider.base_url,
         ProviderModelEnum.MODEL.value: model.name,
-        ProviderModelEnum.MAX_TOKENS.value: model.max_tokens,
+        ProviderModelEnum.MAX_TOKENS.value: model.max_completion_tokens,
         ProviderModelEnum.TEMPERATURE.value: model.temperature,
         ProviderModelEnum.TOP_P.value: model.top_p,
         ProviderModelEnum.SUPPORTS_STREAMING.value: model.supports_streaming,
@@ -646,13 +836,16 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     """
-    Get all models for a provider by name and account number. This is the
+    Get all models for a provider by name and account number.
+
+    This is the
     primary way to retrieve all models for a provider. Raises a Smarter error if
     anything goes wrong.
     """
     provider = get_provider(provider_name=provider_name)
     provider_models = ProviderModel.objects.filter(provider=provider, is_active=True)
 
+    logger.debug("Fetched and cached models for provider_name: %s, models: %s", provider_name, list(provider_models))
     return [
         get_model_for_provider(provider_name=provider_name, model_name=provider_model.name)
         for provider_model in provider_models

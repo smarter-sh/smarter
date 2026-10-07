@@ -1,0 +1,37 @@
+# -----------------------------------------------------------------------------------
+# HorizontalPodAutoscaler Manifest for Smarter Celery Worker
+#
+# This file defines the HPA resource for the Celery Worker deployment in the Smarter app.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Automatically scales the Celery Worker deployment based on CPU utilization.
+# - Usage: Managed via Helm; values are set in values.yaml.
+# - Notes: Adjust minReplicas, maxReplicas, and target utilization as needed.
+# -----------------------------------------------------------------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ .Values.global.appName }}-worker"
+  namespace: {{ .Values.namespace }}
+  annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: "{{ .Values.global.appName }}-worker"
+  minReplicas: 1
+  maxReplicas: {{ .Values.hpa.maxReplicas | default 25 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.targetCPUUtilizationPercentage | default 75 }}

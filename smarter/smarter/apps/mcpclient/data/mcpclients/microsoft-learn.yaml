@@ -1,0 +1,28 @@
+---
+# Search and read Microsoft's official documentation and code samples on Microsoft Learn.
+# Documentation: https://learn.microsoft.com/en-us/training/support/mcp
+#
+# This server requires no authentication.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: microsoft_learn
+  description: Search and read Microsoft's official documentation and code samples on Microsoft Learn.
+  version: 1.0.0
+  tags:
+    - documentation
+    - microsoft
+    - azure
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://learn.microsoft.com/en-us/training/support/mcp
+spec:
+  config:
+    transport: http
+    endpointUrl: https://learn.microsoft.com/api/mcp
+    authType: none
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

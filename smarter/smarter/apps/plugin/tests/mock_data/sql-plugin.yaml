@@ -10,6 +10,17 @@ metadata:
     - db
     - sql
     - database
+    - courses
+    - integrations
+    - education
+  annotations:
+    - stackademy.online/courses: ai
+    - stackademy.online/micro-certificate: "network engineering"
+    - stackademy.online/scholarship: "available"
+    - smarter.sh/sql-test/display-name: SQL Test Plugin
+    - smarter.sh/sql-test/icon: https://example.com/sql-test-icon.png
+    - smarter.sh/sql-test/documentation-url: https://docs.example.com/sql-test
+
 spec:
   selector:
     directive: search_terms
@@ -21,13 +32,11 @@ spec:
     provider: openai
     systemRole: >
       You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
-    model: gpt-4-turbo
-    temperature: 0.0
+    model: gpt-6-luna
+    temperature: 1.0
     maxTokens: 256
   connection: test_sql_connection
   sqlData:
-    description: >
-      This SQL query retrieves the Django user record for the username provided.
     sqlQuery: >
       SELECT * FROM auth_user WHERE username = '{username}';
     parameters:

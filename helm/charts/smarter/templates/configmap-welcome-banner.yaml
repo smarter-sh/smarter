@@ -1,0 +1,72 @@
+# -----------------------------------------------------------------------------------
+# ConfigMap Manifest for Bastion Welcome Banner
+#
+# This file defines a ConfigMap containing the install.sh script to set up a
+# welcome banner for the Smarter Bastion server.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Provides a shell script to display a welcome banner on login.
+# - Usage: Mounted into Bastion Pods; values are set in values.yaml.
+# - Notes: Update the banner message or script as needed for your environment.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+# -----------------------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+  namespace: {{ .Values.namespace }}
+  name: debian-welcome-banner
+data:
+  install.sh: |
+    #!/bin/bash
+    ################################################################################
+    # The Smarter Project - https://smarter.sh
+    # install.sh
+    #
+    # This script configures a welcome banner message to be displayed on login to
+    # the Smarter Bastion Server. The welcome banner provides important information
+    # about the pre-installed tools and environment variables that are available for
+    # use on the Bastion Server, as well as links to documentation and example
+    # usage commands.
+    ################################################################################
+    set -e
+
+    printf "%s\n" \
+      "echo ''" \
+      "echo '********************************************************************************'" \
+      "echo '*                            Smarter Bastion Server                            *'" \
+      "echo '*                                                                              *'" \
+      "echo '*   Please note the following:                                                 *'" \
+      "echo '*   - mariadb mysql client is pre-installed.                                   *'" \
+      "echo '*   - aws cli is pre-installed.                                                *'" \
+      "echo '*   - all smarter pod environment variables are available.                     *'" \
+      "echo '*     see https://artifacthub.io/packages/helm/project-smarter/smarter         *'" \
+      "echo '*   - Admin documentation is available at https://docs.smarter.sh/             *'" \
+      "echo '*   - Additional admin tools: vim, curl, git, openssh-client, iputils-ping,    *'" \
+      "echo '*     dnsutils, htop, lsof, tcpdump, wget, rsync, jq, nano, zip, tar, sudo,    *'" \
+      "echo '*     procps, traceroute, socat, net-tools                                     *'" \
+      "echo '*                                                                              *'" \
+      "echo '*   Example usage (copy-paste these commands into the command prompt):         *'" \
+      "echo '*   \$ mysql -h \"\$SMARTER_MYSQL_HOST\" -u \"\$SMARTER_MYSQL_ROOT_USERNAME\" -p\"\$SMARTER_MYSQL_ROOT_PASSWORD\" \"\$SMARTER_MYSQL_DATABASE\"'" \
+      "echo '*   \$ aws iam get-user                                                         *'" \
+      "echo '*   \$ /home/backup/backup-to-s3.sh                                             *'" \
+      "echo '********************************************************************************'" \
+      "echo ''" \
+      > /etc/profile.d/welcome.sh
+
+    chmod +x /etc/profile.d/welcome.sh
+    grep -qxF 'if [[ $- == *i* ]]; then source /etc/profile.d/welcome.sh; fi' /etc/bash.bashrc || echo 'if [[ $- == *i* ]]; then source /etc/profile.d/welcome.sh; fi' >> /etc/bash.bashrc
+
+    echo "Smarter Bastion Welcome message configured to be displayed on login"

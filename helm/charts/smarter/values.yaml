@@ -1,49 +1,435 @@
-appName: smarter
-workerName: smarter-worker
-beatName: smarter-beat
-appJobName: smarter-job-db-init
-version: 0.8.0
-deployment:
-  containerPort: 8000
+# ==============================================================================
+# Smarter Platform - Helm Chart Values
+# ==============================================================================
+#
+# Default configuration values for the Smarter Platform Helm chart.
+#
+# This file contains all configurable parameters for deploying the Smarter
+# application stack including:
+#   - Django application server
+#   - Celery workers and beat scheduler
+#   - Redis cache
+#   - Database connections
+#   - Third-party API integrations
+#   - OAuth providers
+#
+# IMPORTANT: Replace all "SET-ME-IN-helm/charts/smarter/values.yaml" values
+# with actual credentials before deployment.
+#
+# Usage:
+#   helm install smarter . -f values.yaml
+#   helm upgrade smarter . -f values.yaml
+#
+# Documentation: https://github.com/smarter-sh/smarter
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+# ==============================================================================
+
+# -----------------------------------------------------------------------------
+## @param env Environment variables for the Smarter application. If set, these
+## are consumed and set automatically in the Smarter app deployment templates.
+# -----------------------------------------------------------------------------
+env:
+  AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
+  AWS_ACCESS_KEY_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  AWS_REGION: "ca-central-1"
+  AWS_SECRET_ACCESS_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  CACHES_LOCATION: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  CELERY_RESULT_BACKEND: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  DEBUG_MODE: "false"
+  DJANGO_SETTINGS_MODULE: "smarter.settings.production"
+  DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  DUMP_DEFAULTS: "False"
+  ENVIRONMENT: "prod"
+  NAMESPACE: "smarter-platform-prod"
+  SECRET_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_ADMIN_EMAIL: "admin@example.com"
+  SMARTER_ADMIN_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_ADMIN_USERNAME: "admin"
+  SMARTER_ANTHROPIC_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_AWS_EKS_CLUSTER_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_ADDRESS1: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_ADDRESS2: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_CITY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_STATE: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_POSTAL_CODE: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_COUNTRY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_CURRENCY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_TIMEZONE: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_CONTACT_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_CORPORATE_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_SUPPORT_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_SUPPORT_HOURS: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_SUPPORT_PHONE_NUMBER: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_CACHE_EXPIRATION: "60"
+  SMARTER_CHAT_CACHE_EXPIRATION: "5"
+  SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_ENABLE_DASHBOARD_SERVER_LOGS: true
+  SMARTER_ENABLE_MANIFEST_DROPZONE: true
+  SMARTER_ENABLE_PROXY: true
+  SMARTER_ENABLE_VECTORSTORE: true
+  SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_GOOGLE_MAPS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_INTERNAL_IP_PREFIXES: "192.168."
+  SMARTER_LLAMA_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_LLM_CLIENT_CACHE_EXPIRATION: "300"
+  SMARTER_LLM_CLIENT_MAX_RETURNED_HISTORY: "25"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: "3"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
+  SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: "infrastructure_celery_task_queue"
+  SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
+  SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
+  SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
+  SMARTER_LOGIN_URL: "https://platform.example.com/login/"
+  SMARTER_LOGO: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MAILCHIMP_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MAILCHIMP_LIST_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MARKETING_SITE_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MISTRAL_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MYSQL_DATABASE: "smarter_platform_prod"
+  SMARTER_MYSQL_HOST: "mysql"
+  SMARTER_MYSQL_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MYSQL_PORT: "3306"
+  SMARTER_MYSQL_ROOT_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MYSQL_ROOT_USERNAME: "root"
+  SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: "smarter_test_db"
+  SMARTER_MYSQL_USER: "smarter_platform_prod"
+  SMARTER_NAMESPACE: "smarter-platform-alpha"
+  SMARTER_OPENAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PINECONE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBDOMAIN: "platform"
+  SMARTER_PINECONE_ENVIRONMENT: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLUGIN_MAX_DATA_RESULTS: "50"
+  SMARTER_ROOT_DOMAIN: "example.com"
+  SMARTER_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
+  SMARTER_SETTINGS_OUTPUT: "false"
+  SMARTER_SMTP_FROM_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SMTP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SMTP_SENDER: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SMTP_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SOCIAL_AUTH_GITHUB_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SOCIAL_AUTH_GITHUB_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_TAVILY_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_TOGETHERAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMTP_HOST: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMTP_PORT: "587"
+  SMTP_USE_SSL: "false"
+  SMTP_USE_TLS: "true"
+
+
+# -----------------------------------------------------------------------------
+# Global Configuration
+# -----------------------------------------------------------------------------
+global:
+  appName: smarter
+  image:
+    pullPolicy: Always
+    repository: lpm0073/smarter
+    tag: v9999.9999.9999.dev9999
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-group
+                operator: In
+                values:
+                  - smarter
+  defaultStorageClass: gp3
+  imagePullSecrets:
+    - name: dockerhub-secret
+
+  tolerations:
+    - key: "node-group"
+      operator: "Equal"
+      value: "smarter"
+      effect: "NoSchedule"
+
+
+# -----------------------------------------------------------------------------
+# Smarter Application Configuration
+# -----------------------------------------------------------------------------
+app:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  extraVolumeMounts: []
+
+names:
+  mysqlName: mysql
+  mariadbName: mariadb
+
 service:
   port: 8000
   targetPort: 8000
-redis:
-  fullnameOverride: "smarter-redis"
-  global:
-    redis:
-      password: "smarter"
-  architecture: standalone
-  master:
-    persistence:
-      enabled: true
-      size: 1Gi
+
+worker:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+# The Celery worker of the infrastructure queue, which deploys, verifies and destroys
+# cloud, Kubernetes and DNS resources. See templates/deployment-worker-infrastructure.yaml.
+workerInfrastructure:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      # 2, the minimum that Django settings recommend. Each of its 4 concurrent tasks runs kubectl and
+      # the aws cli, which are CPU bound while they start, and slowed one another down on 1.
+      cpu: "2"
+      memory: "2Gi"
+
+beat:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+
+database:
+  type: mysql   # Options: mysql, mariadb, external
+
+## @param deployTimestamp Deployment timestamp for forcing pod restarts
+deployTimestamp: ""
+
+deployment:
+  containerPort: 8000
+
+# -----------------------------------------------------------------------------
+# Horizontal Pod Autoscaler Configuration
+# ----------------------------------------------------------------------------
+hpa:
+  minReplicas: 3
+  maxReplicas: 25
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      selectPolicy: Min
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+
+# -----------------------------------------------------------------------------
+# Backing Services Configuration
+# -----------------------------------------------------------------------------
+databaseInit:
+  enabled: true   # post-install/post-upgrade Job: create db + user, migrate, initialize platform
+
+databaseScheduledBackup:
+  enabled: true
+  schedule: "0 2 * * *" # Every day at 2am UTC
+
+externalDatabase:
+  host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty
+  port: 3306      # Will use .Values.env.SMARTER_MYSQL_PORT if empty
+  database: ""    # Will use .Values.env.SMARTER_MYSQL_DATABASE if empty
+  username: ""    # Will use .Values.env.SMARTER_MYSQL_USER if empty
+  password: ""    # Will use .Values.env.SMARTER_MYSQL_PASSWORD if empty
+
+mysql:
+  enabled: false
+  nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  image:
+    pullPolicy: Always
+  initdbScripts: {}
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  nodeSelector: {}
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClassName: "gp3"
+    accessModes:
+      - ReadWriteOnce
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+mariadb:
+  enabled: true
+  nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
+  primary:
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     resources:
       requests:
-        memory: "512Mi"
-        cpu: "100m"
+        cpu: 500m
+        memory: 2Gi
       limits:
-        memory: "1Gi"
-        cpu: "512m"
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: node-group
-                  operator: In
-                  values:
-                    - smarter
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-                - key: node-group
-                  operator: In
-                  values:
-                    - smarter
-    tolerations:
-      - key: "node-group"
-        operator: "Equal"
-        value: "smarter"
-        effect: "NoSchedule"
+        cpu: 2
+        memory: 4Gi
+    image:
+      pullPolicy: Always
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+    nodeSelector: {}
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: "gp3"
+      accessModes:
+        - ReadWriteOnce
+
+
+# -----------------------------------------------------------------------------
+# Redis Configuration
+# -----------------------------------------------------------------------------
+redis:
+  enabled: true
+  external:
+    host: ""
+    port: 6379
+    password: ""
+  fullnameOverride: "smarter-redis"
+  auth:
+    enabled: true
+    password: "smarter"
+  architecture: standalone
+  master:
+    disableCommands: []
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    containerSecurityContext:
+      enabled: true
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: gp3
+    podSecurityContext:
+      enabled: true
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "2Gi"
+      limits:
+        cpu: "1"
+        memory: "4Gi"
+    service:
+      headless:
+        sessionAffinity: None
+  replica:
+    disableCommands: []
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+
+
+# ----------------------------------------------------------------------------
+# Monitoring Components
+# Enable/disable and configure Prometheus, Grafana, and Loki
+# ----------------------------------------------------------------------------
+prometheus:
+  enabled: false
+  server:
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    persistentVolume:
+      enabled: false  # For demo/dev. Set to true and configure storage for production.
+
+grafana:
+  enabled: false
+  podLabels:
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+  adminPassword: "admin"  # Change for production!
+  persistence:
+    enabled: false  # For demo/dev. Set to true and configure storage for production.
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus-server
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://loki:3100
+
+loki:
+  enabled: false
+  podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+  persistence:
+    enabled: false  # For demo/dev. Set to true and configure storage for production.

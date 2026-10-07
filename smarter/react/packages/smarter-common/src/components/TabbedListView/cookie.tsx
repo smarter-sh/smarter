@@ -1,0 +1,61 @@
+import { loggerPrefix } from "../../lib/const";
+import { packageName, packageVersion } from "../../lib/const";
+
+const COOKIE_NAME_PREFIX = `${packageName}_v${packageVersion}`;
+
+const getUrlOrigin = (): string => {
+  if (typeof window !== "undefined" && typeof window.location?.origin === "string") {
+    return window.location.origin;
+  }
+  return "http://localhost";
+};
+
+export const getUrlPath = (url: string): string => {
+  console.debug(loggerPrefix, `getUrlPath(): Extracting path from URL: ${url}`);
+  return new URL(url, getUrlOrigin()).pathname;
+};
+
+/**
+ * Sets a cookie to store the llmclient count for a given URL.
+ *
+ * @param url - The unique identifier for the llmclient group.
+ * @param llmclientCount - The number of llmclients to store.
+ * @param days - Number of days until the cookie expires.
+ */
+export const setCookieForUrl = (url: string, llmclientCount: number, days: number) => {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const expires = new Date(Date.now() + days * MS_PER_DAY).toUTCString();
+  const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;
+  const cookieValue = `${cookieName}=${llmclientCount}; path=/; expires=${expires};`;
+  try {
+    document.cookie = cookieValue;
+    console.debug(loggerPrefix, `setCookieForUrl(): ${cookieValue}`);
+  } catch (e) {
+    console.warn(loggerPrefix, "setCookieForUrl(): Unable to set llmclient count cookie", e);
+  }
+};
+
+/**
+ * Retrieves the llmclient count stored in a cookie for a given URL.
+ *
+ * @param url - The unique identifier for the llmclient group.
+ * @returns The number of llmclients stored in the cookie, or undefined if not found or invalid.
+ */
+export const getCookieForUrl = (url: string): number | undefined => {
+  const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;
+  const cookies = document.cookie.split(";").map((c) => c.trim());
+  for (const cookie of cookies) {
+    if (cookie.startsWith(cookieName + "=")) {
+      const strVal = cookie.substring(cookieName.length + 1);
+      const numVal = parseInt(strVal, 10);
+      const retVal = isNaN(numVal) ? undefined : numVal;
+      console.debug(loggerPrefix, `getCookieForUrl(): Retrieved cookie for ${cookieName}:`, retVal);
+      return retVal;
+    }
+  }
+  console.warn(
+    loggerPrefix,
+    `getCookieForUrl(): Cookie for ${cookieName} not found. If you are not under /, it may not be visible due to cookie path restrictions.`,
+  );
+  return undefined;
+};

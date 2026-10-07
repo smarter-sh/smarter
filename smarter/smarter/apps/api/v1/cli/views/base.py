@@ -1,28 +1,31 @@
-"""Smarter API command-line interface Base class API view"""
+"""Smarter API command-line interface Base class API view."""
 
-import json
-import logging
 import re
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from rest_framework.exceptions import NotAuthenticated
+import yaml
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.handlers.asgi import ASGIRequest
+from django.http import HttpRequest
+from pydantic import ValidationError as PydanticValidationError
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from smarter.apps.api.signals import api_request_completed, api_request_initiated
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.api.signals import (
+    api_request_completed,
+    api_request_failed,
+    api_request_initiated,
+)
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.apps.chatbot.exceptions import SmarterChatBotException
-from smarter.apps.docs.views.base import DocsError
-from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.apps.prompt.views import SmarterChatappViewError
 from smarter.common.const import (
-    SMARTER_BUG_REPORT_URL,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
-    SMARTER_IS_INTERNAL_API_REQUEST,
 )
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
@@ -32,46 +35,34 @@ from smarter.common.exceptions import (
     SmarterInvalidApiKeyError,
     SmarterValueError,
 )
-from smarter.common.helpers.aws.exceptions import SmarterAWSError
-from smarter.common.helpers.k8s_helpers import KubernetesHelperException
-from smarter.common.utils import mask_string, smarter_build_absolute_uri
-from smarter.lib.django import waffle
+from smarter.common.utils import (
+    is_authenticated_request,
+    mask_string,
+    smarter_build_absolute_uri,
+)
+from smarter.lib import json, logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
-from smarter.lib.drf.view_helpers import SmarterAuthenticatedPermissionClass
-from smarter.lib.journal.enum import (
-    SmarterJournalCliCommands,
-    SmarterJournalEnumException,
-)
+from smarter.lib.drf.views.helpers import SmarterAuthenticatedPermissionClass
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMBrokerInternalError,
     SAMBrokerReadOnlyError,
 )
-from smarter.lib.manifest.exceptions import SAMBadRequestError
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
+from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
+from .swagger import BUG_REPORT
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-BUG_REPORT = (
-    "Encountered an unexpected error. "
-    f"This is a bug. Please contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} "
-    f"and/or report to {SMARTER_BUG_REPORT_URL}."
-)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class APIV1CLIViewError(SmarterException):
@@ -90,47 +81,175 @@ class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
         return "Smarter api v1 command-line interface error: not authenticated"
 
 
+class APIV1CLIViewBadRequestError(APIV1CLIViewError):
+    """Error class for requests that are the client's error, such as an invalid manifest."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter api v1 command-line interface error: bad request"
+
+
+# errors that are the client's fault, e.g. an invalid manifest, and that are therefore a 400.
+CLIENT_ERRORS: tuple[Type[BaseException], ...] = (
+    PydanticValidationError,
+    DjangoValidationError,
+    yaml.YAMLError,
+    SAMLoaderError,
+    SAMValidationError,
+    SAMBadRequestError,
+    SmarterValueError,
+    SmarterIlligalInvocationError,
+    SmarterBusinessRuleViolation,
+    APIV1CLIViewBadRequestError,
+)
+MAX_INPUT_LENGTH = 80
+
+
+def exception_chain(e: BaseException) -> list[BaseException]:
+    """The exception, followed by its causes, i.e. ``raise ... from ...``, outermost first."""
+    retval: list[BaseException] = []
+    while e is not None and e not in retval:
+        retval.append(e)
+        e = e.__cause__  # type: ignore[assignment]
+    return retval
+
+
+def client_error_in(e: BaseException) -> Optional[BaseException]:
+    """The first client error in the chain of the exception and its causes, or None."""
+    return next((err for err in exception_chain(e) if isinstance(err, CLIENT_ERRORS)), None)
+
+
+def format_validation_error(e: BaseException) -> str:
+    """A readable, one line description of a Pydantic or Django validation error."""
+    if isinstance(e, PydanticValidationError):
+        problems = []
+        for error in e.errors():
+            location = ".".join(str(part) for part in error.get("loc", ())) or e.title
+            problem = f"{location}: {error.get('msg')}"
+            if "input" in error and not isinstance(error["input"], dict):
+                value = repr(error["input"])
+                if len(value) > MAX_INPUT_LENGTH:
+                    value = value[:MAX_INPUT_LENGTH] + "..."
+                problem += f" (got {value})"
+            problems.append(problem)
+        return f"{e.title} is not valid. " + "; ".join(problems)
+    if isinstance(e, DjangoValidationError):
+        if hasattr(e, "error_dict"):
+            return "; ".join(f"{field}: {' '.join(messages)}" for field, messages in e.message_dict.items())
+        return " ".join(e.messages)
+    return str(e)
+
+
+def http_status_for_exception(e: BaseException) -> int:
+    """
+    The HTTP status of the response to a request that raised the exception.
+
+    Exceptions are matched by class, including their subclasses, so that e.g. a broker's own
+    ``SAM<Kind>BrokerError`` is treated as a ``SAMBrokerError``. A broker error that was raised
+    from an exception that is not the client's error, e.g. a database error, is a 500.
+    """
+    if isinstance(e, SAMBrokerInternalError):
+        return HTTPStatus.INTERNAL_SERVER_ERROR.value
+    if isinstance(e, SAMBrokerErrorNotImplemented):
+        return HTTPStatus.NOT_IMPLEMENTED.value
+    if isinstance(e, SAMBrokerErrorNotReady):
+        return HTTPStatus.SERVICE_UNAVAILABLE.value
+    if isinstance(e, SAMBrokerErrorNotFound):
+        return HTTPStatus.NOT_FOUND.value
+    if isinstance(e, SAMBrokerReadOnlyError):
+        return HTTPStatus.METHOD_NOT_ALLOWED.value
+    if (
+        isinstance(
+            e,
+            (
+                SmarterAPIV1CLIViewErrorNotAuthenticated,
+                SmarterInvalidApiKeyError,
+                SmarterTokenError,
+                NotAuthenticated,
+                AuthenticationFailed,
+            ),
+        )
+        or type(e) is AttributeError
+    ):  # can be raised by a django admin decorator if request or request.user is None
+        return HTTPStatus.FORBIDDEN.value
+    if client_error_in(e) is not None:
+        return HTTPStatus.BAD_REQUEST.value
+    if isinstance(e, SAMBrokerError) and e.__cause__ is None:
+        return HTTPStatus.BAD_REQUEST.value
+    return HTTPStatus.INTERNAL_SERVER_ERROR.value
+
+
+def describe_exception(e: BaseException, status: int) -> Optional[str]:
+    """
+    The error description that is returned to the client, or None for the exception's own message.
+
+    A 500 is a bug, so its description asks for a bug report. A client error describes what the
+    client did wrong, including the validation error that caused it, if any.
+    """
+    client_error = client_error_in(e)
+    if isinstance(e, (PydanticValidationError, DjangoValidationError)):
+        description = format_validation_error(e)
+    elif client_error is not None and client_error is not e:
+        description = f"{e}: {format_validation_error(client_error)}"
+    elif client_error is not None or status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
+        description = str(e)
+    else:
+        return None
+    if status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
+        description = f"{type(e)}: {BUG_REPORT} {description}"
+    return description
+
+
 class CliBaseApiView(APIView, SmarterRequestMixin):
     """
-    Smarter API command-line interface Base class API view. Handles
-    common tasks for all /api/v1/cli views:
-    - Authenticates the request using either knox TokenAuthentication
-      or Django SessionAuthentication.
-    - Initializes the SAMLoader and AbstractBroker instances.
-    - Resolves the manifest kind and broker for the yaml manifest document.
-    - Sets the user profile for the request.
+    Base class for all Smarter API v1 command-line interface (CLI) views.
 
-    We want to take care of as
-    much housekeeping as possible in the base class. This includes
-    setting following attributes:
+    This class provides common functionality for all `/api/v1/cli` endpoints, including:
 
-    - manifest_name: the name identifier of the manifest could be passed
-        from insider the raw manifest data, or it could be passed as part of a url.
+    - Authentication using either Knox TokenAuthentication or Django SessionAuthentication.
+    - Initialization of the :class:`SAMLoader` and :class:`AbstractBroker` instances.
+    - Resolution of the manifest kind and broker for the YAML manifest document.
+    - Setting the user profile for the request.
 
-    - manifest: the http request body might contain raw manifest text
-        in yaml or json format. The manifest text is passed to the SAMLoader that will load,
-        and partially validate and parse the manifest. This is then used to
-        fully initialize a Pydantic manifest model. The Pydantic manifest
-        model will be passed to a AbstractBroker for the manifest 'kind', which
-        implements the broker service pattern for the underlying object.
+    The base class is responsible for as much request "housekeeping" as possible, so that
+    child views can focus on business logic. The following attributes are set up and managed:
 
-    - kind: the kind of the manifest is used to identify the broker that will
+    Notes
+    -----
+    - The base class is designed to minimize boilerplate in child views.
+    - Manifest parsing and broker instantiation are implemented lazily.
+    - Authentication is enforced by default, but can be bypassed for internal API requests.
 
-    - user/account: the user, account and user_profile are all derived from the
-        authenticated user in the Django request object.
+    Examples
+    --------
+    Example URL with a manifest name:
+        ``/api/v1/cli/describe/llm-client/<str:name>/``
 
-    - command: the command is derived from the request path. The command is
-        used to determine the type of operation that the view should perform.
-        For example, if the url path is '/api/v1/cli/apply/', then the command
-        will be SmarterJournalCliCommands.APPLY.
-
-    - broker: the broker is a class that implements the broker service pattern.
-        It provides a service interface that 'brokers' the http request for the
-        underlying object that provides the object-specific service (create, update, get, delete, etc).
+    Example command extraction:
+        If the URL path is ``/api/v1/cli/apply/``, then the command will be
+        :attr:`SmarterJournalCliCommands.APPLY`.
     """
 
-    authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (SmarterAuthenticatedPermissionClass,)
+    authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
+
+    def get_permissions(self):
+        """
+        Do not require authentication for OPTIONS requests.
+
+        OPTIONS requests are used both for DRF's own metadata introspection
+        and, more importantly, as CORS preflight probes issued by browsers.
+        Preflight requests never carry credentials (no cookies, no
+        Authorization header), so if CORS middleware doesn't intercept them
+        first (e.g. a misconfigured/disallowed origin, or the middleware
+        being disabled), enforcing authentication here causes the preflight
+        itself to fail with a 401. That, in turn, makes the browser abort
+        the real (authenticated) request before it's ever sent, which looks
+        like "I'm logged in but I still get an authentication error".
+        """
+        if getattr(self, "request", None) is not None and self.request.method == "OPTIONS":
+            return []
+        return super().get_permissions()
 
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
@@ -143,26 +262,63 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
-        request = None
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        logger.debug("%s.__init__() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
+
+        # extract user, account, user_profile, and request from kwargs
+        # in practice it is highly unlikely that these will be passed in
+        # via kwargs, since DRF begins the request lifecycle by calling
+        # setup() and dispatch(), but we include them here for completeness
+        # as well as to document the expected parameters.
+        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (arg for arg in args if isinstance(arg, UserProfile)), None
+        )
+        request = kwargs.pop("request", None) or next(
+            (arg for arg in args if isinstance(arg, (Request, HttpRequest, ASGIRequest))), None
+        )
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+
+    @property
+    def logger_prefix(self) -> str:
+        """
+        Get the logger prefix for this class.
+
+        :return: Logger prefix string
+        :rtype: str
+        """
+        return logging.formatted_text(f"{__name__}.{CliBaseApiView.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
+        Returns the class name in a formatted string along with the name of this mixin.
+
+        :return: Formatted class name string
+        :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.CliBaseApiView()"
+        this_class = f".{CliBaseApiView.__name__}[][{id(self)}]"
+        return f"{parent_class}{self.formatted_text(this_class)}"
 
     @property
     def loader(self) -> Optional[SAMLoader]:
         """
-        Get the SAMLoader instance. a SAMLoader instance is used to load
+        Get the SAMLoader instance.
+
+        a SAMLoader instance is used to load
         raw manifest text into a Pydantic model. It performs cursory validations
         such as validating the file format, and identifying required dict key values
         such as the api version, the manifest kind and its name.
+
+        The loader is instantiated lazily, so it will only be created
+        when it is first accessed.
+
+        :return: SAMLoader instance or None
+        :rtype: Optional[SAMLoader]
         """
         if not self._loader and self.manifest_data and not self._manifest_load_failed:
             try:
@@ -171,6 +327,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     kind=self.manifest_kind,
                     manifest=json.dumps(self.manifest_data),
                 )
+                logger.debug("%s.loader() - loaded manifest kind: %s", self.logger_prefix, self.manifest_kind)
                 if not self._loader or not self._loader.ready:
                     raise APIV1CLIViewError("SAMLoader is not ready.")
             except APIV1CLIViewError:
@@ -183,48 +340,111 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def BrokerClass(self) -> Type[AbstractBroker]:
         """
-        Get the broker class for the manifest kind. This is used to
+        Get the broker class for the manifest kind.
+
+        This is used to
         instantiate a broker for the manifest kind.
+
+        :return: Broker class for the manifest kind
+        :rtype: Type[AbstractBroker]
         """
         if not self._BrokerClass:
             if self.manifest_kind:
                 self._BrokerClass = Brokers.get_broker(self.manifest_kind)
+                logger.debug(
+                    "%s.BrokerClass() - set to: %s",
+                    self.logger_prefix,
+                    self._BrokerClass.__name__ if self._BrokerClass else "<None>",
+                )
             if not self._BrokerClass:
-                raise APIV1CLIViewError(
-                    f"Could not find broker for {self.manifest_kind or "<-- Missing -->"} manifest."
+                raise APIV1CLIViewBadRequestError(
+                    f"Could not find broker for {self.manifest_kind or '<-- Missing -->'} manifest."
                 )
         return self._BrokerClass
 
     @property
-    def broker(self) -> AbstractBroker:
+    def broker(self) -> Optional[AbstractBroker]:
         """
-        Use a loader to try to instantiate a broker. A broker is a class that
+        Use a loader to try to instantiate a broker.
+
+        A broker is a class that
         implements the broker service pattern. It provides a service interface
         that 'brokers' the http request for the underlying object that provides
         the object-specific service (create, update, get, delete, etc).
+
+        :return: Broker instance for the manifest kind
+        :rtype: Optional[AbstractBroker]
         """
         if not self._broker:
             BrokerClass = self.BrokerClass
-            self._broker = BrokerClass(
-                request=self.smarter_request,
-                api_version=SMARTER_API_VERSION,
-                name=self.manifest_name,
-                kind=self.manifest_kind,
-                account=self.user_profile.account if self.user_profile else None,
-                loader=self.loader,
-                manifest=self.loader.yaml_data if self.loader else None,
-            )
-            if not self._broker:
-                raise APIV1CLIViewError("Could not load manifest.")
+
+            try:
+                self._broker = BrokerClass(
+                    request=self.smarter_request,
+                    user=self.user,
+                    account=self.user_profile.cached_account if self.user_profile else None,
+                    user_profile=self.user_profile,
+                    api_version=SMARTER_API_VERSION,
+                    name=self.manifest_name,
+                    kind=self.manifest_kind,
+                    loader=self.loader,
+                    manifest=self.loader.json_data if self.loader else None,
+                )
+                if self._broker:
+                    logger.debug(
+                        "%s.broker() - broker %s %s is instantiated and ready.",
+                        self.logger_prefix,
+                        self._broker.kind,
+                        self._broker.name,
+                    )
+                else:
+                    logger.warning(
+                        "%s.broker() - broker %s %s is instantiated but is not in a ready state.",
+                        self.logger_prefix,
+                        self._broker.kind,
+                        self._broker.name,
+                    )
+                return self._broker
+            except APIV1CLIViewError as e:
+                logger.error(
+                    "%s.broker() - failed to instantiate broker: %s",
+                    self.logger_prefix,
+                    e,
+                    exc_info=True,
+                )
+            except CLIENT_ERRORS as e:
+                # the manifest is not valid, e.g. a Pydantic validation error. This is the
+                # client's error, which must be returned to the client rather than swallowed.
+                logger.warning(
+                    "%s.broker() - the %s manifest is not valid: %s",
+                    self.logger_prefix,
+                    self.manifest_kind,
+                    e,
+                )
+                raise
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error(
+                    "%s.broker() - unexpected error instantiating broker: %s: %s",
+                    self.logger_prefix,
+                    type(e),
+                    e,
+                    exc_info=True,
+                )
 
         return self._broker
 
     @property
     def manifest_data(self) -> Optional[dict]:
         """
-        The raw manifest data from the request body. The manifest data is a json object
+        The raw manifest data from the request body.
+
+        The manifest data is a json object
         which needs to be rendered into a Pydantic model. The Pydantic model is then
         used to instantiate a broker for the manifest kind.
+
+        :return: Raw manifest data as a json object
+        :rtype: Optional[dict]
         """
         if self._manifest_data:
             # belt & suspenders: ensure that the manifest data is a json object.
@@ -235,13 +455,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def manifest_name(self) -> Optional[str]:
         """
-        The name of the manifest. The manifest name is used to identify the resource
-        within a Kind. For example, the manifest name for a ChatBot resource is the
-        name of the chatbot. The manifest name is used to identify the resource
+        The name of the manifest.
+
+        The manifest name is used to identify the resource
+        within a Kind. For example, the manifest name for a LLMClient resource is the
+        name of the llmclient. The manifest name is used to identify the resource
         within a Kind. The name can be passed from inside the raw manifest data, or
         it can be passed as part of a url path.
 
-        Example url path with a name: /api/v1/cli/describe/chatbot/<str:name>/
+        Example url path with a name: /api/v1/cli/describe/llm-client/<str:name>/
+
+        :return: The name of the manifest
+        :rtype: Optional[str]
         """
         if not self._manifest_name and self.manifest_data:
             self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
@@ -250,11 +475,16 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return self._manifest_name
 
     @property
-    def manifest_kind(self) -> str:
+    def manifest_kind(self) -> Optional[str]:
         """
-        The kind of the manifest. The manifest kind is used to identify the type
+        The kind of the manifest.
+
+        The manifest kind is used to identify the type
         of resource that the manifest is describing. The kind is used to identify
         the broker that will be used to broker the http request for the resource.
+
+        :return: The kind of the manifest
+        :rtype: Optional[str]
         """
         if not self._manifest_kind and self.manifest_data:
             self._manifest_kind = str(self.manifest_data.get("kind", None))
@@ -264,12 +494,17 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # if we still don't have a manifest kind, then we should
         # analyze the url path to determine the manifest kind.
         # urls:
-        # - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
-        # - http://testserver/api/v1/cli/chat/config/TestChatBot/
+        # - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
+        # - http://testserver/api/v1/cli/prompt/config/TestLLMClient/
         if not self._manifest_kind:
             self._manifest_kind = SAMKinds.from_url(self.url)
             if self._manifest_kind:
-                logger.warning("setting manifest kind to %s from analysis of url %s", self._manifest_kind, self.url)
+                logger.warning(
+                    "%s.manifest_kind() setting manifest kind to %s from analysis of url %s",
+                    self.logger_prefix,
+                    self._manifest_kind,
+                    self.smarter_request,
+                )
 
         # may or may not have a manifest kind at this point.
         # anti examples:
@@ -280,68 +515,177 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def command(self) -> SmarterJournalCliCommands:
         """
-        Translate the request route into a SmarterJournalCliCommands enum
-        instance. For example, if the route is '/api/v1/cli/apply/', then
-        the corresponding command will be SmarterJournalCliCommands.APPLY.
+        Translate the request route into a SmarterJournalCliCommands enum instance.
+
+        For example, if the route is '/api/v1/cli/apply/', then the corresponding command will be
+        SmarterJournalCliCommands.APPLY.
 
         url:
-         - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+         - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
          - http://testserver/api/v1/cli/apply
+
+        :return: SmarterJournalCliCommands enum instance
+        :rtype: SmarterJournalCliCommands
         """
         match = re.search(r"/cli/([^/]+)/", self.url or "")
         if match:
             _command = match.group(1)
+            _command = self.to_snake_case(_command)
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
+    @property
+    def cba_ready(self) -> bool:
+        """
+        Check if the CliBaseApiView is ready.
+
+        :return: True if the view is ready, False otherwise
+        :rtype: bool
+        """
+        return True
+
+    @property
+    def is_cli_base_api_view_ready_state(self) -> str:
+        """
+        Get a string representation of the readiness state of the CliBaseApiView.
+
+        :return: Readiness state as a string
+        :rtype: str
+        """
+        if self.cba_ready:
+            return self.formatted_state_ready
+        return self.formatted_state_not_ready
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the CliBaseApiView and SmarterRequestMixin are ready.
+
+        :return: True if both the view and mixin are ready, False otherwise
+        :rtype: bool
+        """
+        if not self.srm_ready:
+            logger.debug("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
+            return False
+        return self.cba_ready
+
     def setup(self, request: Request, *args, **kwargs):
         """
-        Setup the view. This is called by Django before dispatch() and is used to
-        set up the view for the request.
+        Setup the view.
+
+        This is called by Django before dispatch() and is used to
+        set up the view for the request. the request is not yet authenticated.
+
+        :param request: The HTTP request object
+        :type request: Request
         """
-        logger.info(
-            "%s.setup() - called for request: %s", self.formatted_class_name, smarter_build_absolute_uri(request)
-        )
         super().setup(request, *args, **kwargs)
-        logger.info(
-            "%s.setup() - view for request: %s, user: %s is_authenticated: %s",
-            self.formatted_class_name,
+        SmarterRequestMixin.setup(self, request=request, *args, **kwargs)
+        logger.debug(
+            "%s.setup() called for request: %s with args %s and kwargs %s auth header: %s, is_internal_api_request: %s",
+            self.logger_prefix,
             smarter_build_absolute_uri(request),
-            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-            request.user.is_authenticated,
+            args,
+            kwargs,
+            request.headers.get("Authorization"),
+            self.is_internal_api_request(request),
         )
-        # experiment: we want to ensure that the request object is
-        # initialized before we call the SmarterRequestMixin.
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
-        logger.info(
-            "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s is_authenticated: %s",
-            smarter_build_absolute_uri(request),
-            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-            self.user_profile,
-            request.user.is_authenticated,
-        )
 
     def initial(self, request: Request, *args, **kwargs):
         """
-        Initialize the view. This is called by DRF after setup() but before dispatch().
+        Perform view initialization after setup and before dispatch.
 
-        This is the earliest point in the DRF view lifecycle where the request object is available.
-        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
-        initialized. This method takes care of the rest of the initialization.
+        This method is called by Django REST Framework (DRF) after the `setup()` method
+        but before the `dispatch()` method. It is the earliest point in the DRF view
+        lifecycle where the request object is fully available and can be used to
+        complete any additional initialization required by the view.
+
+        In DRF, the `initial()` method is responsible for performing tasks such as:
+        - Completing any remaining setup that depends on the request object.
+        - Enforcing authentication and permission checks.
+        - Raising appropriate exceptions if the request is not valid or not authenticated.
+
+        In this implementation, `initial()` ensures that the `SmarterRequestMixin` and
+        any related mixins are fully initialized with the request object. It also
+        performs authentication checks, sets up user and account context, and prepares
+        manifest data or prompt text for downstream processing. If authentication fails,
+        it raises a custom error with detailed logging.
+
+        Parameters
+        ----------
+        request : Request
+            The HTTP request object provided by DRF. This object contains all
+            request data, headers, user information, and other context needed
+            for processing the API call.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including
+            URL parameters extracted by the router.
+
+        Raises
+        ------
+        SmarterAPIV1CLIViewErrorNotAuthenticated
+            If the request is not authenticated and is not an internal API request,
+            this exception is raised to indicate authentication failure.
+
+        SmarterConfigurationError
+            If the request object is not properly set up in the view, this error
+            is raised to indicate a misconfiguration.
+
+        Notes
+        -----
+        - This method is a critical part of the DRF request lifecycle, ensuring that
+          all necessary context and validation is in place before the main handler
+          methods (`get`, `post`, etc.) are called.
+        - Manifest parsing and broker instantiation are deferred (lazy) and only
+          performed when needed by child views.
+        - The method also logs key events and warnings for observability.
+
+        See Also
+        --------
+        https://www.django-rest-framework.org/api-guide/views/#view-initialization
+            DRF documentation on the view initialization process.
         """
-        url = smarter_build_absolute_uri(request)
-        logger.info("%s.initial() - called for request: %s", self.formatted_class_name, url)
-        if not self.is_requestmixin_ready:
-            logger.info(
-                "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
-                self.formatted_class_name,
-                url,
+        logger.debug(
+            "%s.initial() - called for request: %s with args %s and kwargs %s authorization %s, is_internal_api_request: %s",
+            self.logger_prefix,
+            request,
+            args,
+            kwargs,
+            request.headers.get("Authorization"),
+            self.is_internal_api_request(request),
+        )
+        # there are cases where the requests lifecycle begins with a ASGIRequest that is
+        # eventually wrapped into a DRF Request object. So we need to ensure that
+        # the smarter_request is always set to the DRF Request object.
+        if isinstance(request, Request) and not isinstance(self.smarter_request, Request):
+            logger.debug(
+                "%s.initial() - re-initializing smarter_request to DRF Request object: %s (was %s - %s)",
+                self.logger_prefix,
+                request,
+                self.smarter_request,
+                self.smarter_request.user if self.smarter_request and hasattr(self.smarter_request, "user") else "N/A",
             )
+        try:
             self.smarter_request = request
+        except Exception as e:
+            logger.error(
+                "%s.initial() - error setting smarter_request: %s: %s",
+                self.logger_prefix,
+                type(e),
+                e,
+                exc_info=True,
+            )
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name} error during initialization: could not set request object."
+            ) from e
 
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details
@@ -349,25 +693,53 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # The token is passed in the Authorization header as a Bearer token
         # of the form: 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY'
         try:
-            super().initial(request, *args, **kwargs)
-            self.user = request.user if request and getattr(request, "user", None) and getattr(request.user, "is_authenticated", False) else None  # type: ignore[assignment]
-
-            logger.info(
-                "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
-                self.formatted_class_name,
-                url,
+            logger.debug(
+                "%s.initial() - authenticating request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
+                self.logger_prefix,
+                request,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
-                request.user.is_authenticated,
+                is_authenticated_request(request),
+                mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
+            )
+            super().initial(request, *args, **kwargs)
+
+            # super().initial() just ran DRF's real authentication pipeline
+            # (SmarterTokenAuthentication and/or SessionAuthentication), which
+            # is the only path that resolves session-based auth. The earlier
+            # `self.smarter_request = request` assignment above ran before
+            # that, when `request.user` was still anonymous, so it could only
+            # pick up token-based auth via self.authenticate() (see its
+            # docstring: it only ever tries self.api_token). Re-assign now so
+            # SmarterRequestMixin/AccountMixin (self.user, self.user_profile,
+            # self.account) reflect the now-authenticated request.user,
+            # rather than staying stuck on the pre-auth Anonymous state for
+            # session-authenticated requests.
+            self.smarter_request = request
+
+            logger.debug(
+                "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
+                self.logger_prefix,
+                request,
+                request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
+                self.user_profile,
+                is_authenticated_request(request),
                 mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
             )
         except NotAuthenticated as e:
-            internal_api_request = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
-            if internal_api_request:
-                logger.info(
+            logger.warning(
+                "%s.initial() - authenticated failed for url: %s, user: %s, self.user: %s is_authenticated: %s",
+                self.logger_prefix,
+                request,
+                request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
+                self.user_profile,
+                is_authenticated_request(request),
+            )
+            if self.is_internal_api_request(request):
+                logger.debug(
                     "%s.initial() - internal api request. Skipping authentication: %s",
-                    self.formatted_class_name,
-                    url,
+                    self.logger_prefix,
+                    request,
                 )
             else:
                 # regardless of the authentication error, we still need to
@@ -376,50 +748,53 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 auth_header = request.headers.get("Authorization")
                 if auth_header:
                     logger.error(
-                        "%s.initial() - Authorization header contains an invalid, inactive or malformed token: %s",
-                        self.formatted_class_name,
+                        "%s.initial() - Authorization header '%s' seems to be invalid. The following exception was raised: %s",
+                        self.logger_prefix,
+                        auth_header,
                         e,
                     )
                 else:
                     logger.error(
-                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
+                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s: %s",
                         self.formatted_class_name,
+                        SMARTER_CUSTOMER_SUPPORT_EMAIL,
                         e,
                     )
                 raise SmarterAPIV1CLIViewErrorNotAuthenticated(
                     "Smarter api v1 command-line interface error: authentication failed"
                 ) from e
-
-        # if we got here, then the request is authenticated, and we need to
-        # restore the user object for the request, which DRF will have set
-        # to an AnonymousUser at the start of its own authentication process.
-        # see: https://www.django-rest-framework.org/api-guide/authentication/#how-authentication-is-determined
-        if not self.user:
-            # this is the expected case, where the request object is missing the user and therefore
-            # the AccountMixin has not set user nor account.
-            self.user = SmarterTokenAuthentication.get_user_from_request(request)
-        request.user = self.user  # type: ignore[assignment]
+        except Exception as e:
+            logger.error(
+                "%s.initial() - unexpected error during authentication: %s: %s",
+                self.formatted_class_name,
+                type(e),
+                e,
+                exc_info=True,
+            )
+            raise SmarterAPIV1CLIViewErrorNotAuthenticated(
+                "Smarter api v1 command-line interface error: authentication failed due to an unexpected error"
+            ) from e
 
         if self.smarter_request is None:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
         if not self.ready:
-            logger.warning(
-                f"{self.formatted_class_name}.initial() is not in a ready state. This might affect some operations."
-            )
+            # Expected for anonymous/unauthenticated requests (e.g. OPTIONS
+            # preflight probes), which never carry account context.
+            logger.debug("%s.initial() is not in a ready state. This might affect some operations.", self.logger_prefix)
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
 
-        # if the command is 'chat', then the raw prompt text
+        # if the command is 'prompt', then the raw prompt text
         # or the encoded file attachment data will be in the request body.
         # otherwise, the request body should contain manifest text.
-        if self.command == SmarterJournalCliCommands.CHAT:
+        if self.command == SmarterJournalCliCommands.PROMPT:
             self._prompt = self.data if isinstance(self.data, str) else None
-            self._manifest_kind = SAMKinds.CHAT.value
+            self._manifest_kind = SAMKinds.PROMPT.value
         else:
             self._manifest_data = self.data if isinstance(self.data, dict) else None
 
@@ -427,113 +802,123 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None) if self.params else kwargs.get("name", None)
 
-        user_agent = request.headers.get("User-Agent", "")
-        if "Go-http-client" not in user_agent:
-            logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
+        user_agent = request.headers.get("User-Agent", "unknown")
+        logger.debug("%s.initial() processing request from %s user-agent.", self.logger_prefix, user_agent)
 
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = Brokers.get_broker_kind(kind)
-            if not self.manifest_kind:
+            if self.manifest_kind:
+                logger.debug(
+                    "%s.initial() - determined manifest kind from url kwargs: %s -> %s",
+                    self.logger_prefix,
+                    kind,
+                    self._manifest_kind,
+                )
+            else:
                 return SmarterJournaledJsonErrorResponse(
                     request=request,
                     thing=self.manifest_kind,
                     command=self.command,
                     e=SAMBadRequestError(
-                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all()}"
                     ),
                     status=HTTPStatus.BAD_REQUEST.value,
                     stack_trace=traceback.format_exc(),
                 )
-        logger.info(
-            "CliBaseApiView().initial() - finished initializing view for request: %s, user: %s",
-            url,
-            request.user.username if request and getattr(request, "user", None) and getattr(request.user, "is_authenticated", False) else "Anonymous",  # type: ignore[assignment]
-        )
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request: Request, *args, **kwargs):
         """
-        Dispatch the request to the appropriate handler method. This is
-        called by the Django REST framework when a request is received.
-        It is responsible for handling the request and returning a
-        response.
+        Dispatch the request to the appropriate handler method.
 
-        Our only objective in the base class is to accurately
-        map exceptions to HTTP status codes, and where possible
-        add context to the error message.
+        This method is a core part of the Django REST Framework (DRF) view lifecycle. It is called automatically by DRF when an HTTP request is received and is responsible for routing the request to the correct handler method (such as ``get()``, ``post()``, ``put()``, etc.) based on the HTTP method of the request.
 
-        Ideally, the child views have handled their own exceptions
-        and returned their own SmarterJournaledJson response. Here
-        we're just trying to catch any unhandled exceptions and
-        return a generic error message with a bug report URL.
+        In DRF, the ``dispatch()`` method performs several critical functions:
+
+        - It determines which handler method should process the request.
+        - It manages the execution of middleware and mixins.
+        - It handles exceptions that may be raised during request processing.
+        - It returns a DRF ``Response`` object to the client.
+
+        In this base class implementation, the primary objective is to provide robust exception handling for all CLI API views. The method attempts to map known exceptions to appropriate HTTP status codes and, where possible, adds additional context to error messages. This ensures that clients receive meaningful and actionable error responses, even if an unexpected error occurs.
+
+        Ideally, child views should handle their own exceptions and return a ``SmarterJournaledJsonErrorResponse`` or similar structured response. However, this base implementation acts as a safety net, catching any unhandled exceptions and returning a generic error message along with a bug report URL for further trouble shooting.
+
+        Signals are emitted to indicate the completion or failure of API requests, which can be used for logging, auditing, or triggering other side effects.
+
+        Parameters
+        ----------
+        request : Request
+            The HTTP request object provided by DRF, containing all request data, headers, and user context.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including URL parameters.
+
+        Returns
+        -------
+        Response
+            A DRF ``Response`` object representing the result of the request, or an error response if an exception was raised.
+
+        Notes
+        -----
+        - This method is a critical integration point with DRF's request/response lifecycle.
+        - Exception mapping is comprehensive, covering both application-specific and DRF exceptions.
+        - Unhandled exceptions are logged and reported with a generic message and bug report instructions.
+        - Signals are used for observability and integration with other parts of the application.
+
+        See Also
+        --------
+        https://www.django-rest-framework.org/api-guide/views/#view-methods
+            DRF documentation on view methods and the dispatch process.
         """
+        if self.is_internal_api_request(request):
+            logger.debug(
+                "%s.dispatch() - internal api request. Disabling CSRF checks: %s",
+                self.logger_prefix,
+                request,
+            )
+            setattr(request, "_dont_enforce_csrf_checks", True)
+
+        self.smarter_request = request
+        response = None
+        # note: `is_cli_base_api_view_ready_state` reflects only `cba_ready`
+        # (currently a hardcoded no-op), not the combined readiness that
+        # `self.ready` checks, so it's not used here to avoid a misleading
+        # "is READY" message on requests that are actually not ready (e.g.
+        # anonymous OPTIONS preflight probes, which are expected to be
+        # "not ready" since they carry no account context).
+        ready_state = self.formatted_state_ready if self.ready else self.formatted_state_not_ready
+        msg = f"{self.logger_prefix}.dispatch() - is {ready_state} - {self.smarter_request} - {self.user_profile if self.user_profile else "Anonymous"}"
+        logger.debug(msg)
         try:
-            url = smarter_build_absolute_uri(request)
-            logger.info("%s.dispatch() - called for request: %s", self.formatted_class_name, url)
+            logger.debug(
+                "%s.dispatch() - called for request: %s and authorization: %s",
+                self.logger_prefix,
+                request,
+                request.headers.get("Authorization"),
+            )
             response = super().dispatch(request, *args, **kwargs)
-            logger.info(
-                "%s.dispatch() - finished processing request: %s, user_profile: %s, account: %s",
-                self.formatted_class_name,
-                url,
-                self.user_profile if self.user_profile else None,
-                self.account if self.account else None,
+            logger.debug(
+                "%s.dispatch() - finished processing request: %s, user_profile: %s",
+                self.logger_prefix,
+                request,
+                self.user_profile,
             )
             api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response
         # pylint: disable=broad-except
         except Exception as e:
-            status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            description_override: Optional[str] = None
-
-            if type(e) in (SAMBrokerErrorNotImplemented,):
-                status = HTTPStatus.NOT_IMPLEMENTED.value
-            elif type(e) in (SAMBrokerErrorNotReady,):
-                status = HTTPStatus.SERVICE_UNAVAILABLE.value
-            elif type(e) in (SAMBrokerErrorNotFound,):
-                status = HTTPStatus.NOT_FOUND.value
-            elif type(e) in (SAMBrokerReadOnlyError,):
-                status = HTTPStatus.METHOD_NOT_ALLOWED.value
-            elif type(e) in (
-                SmarterAPIV1CLIViewErrorNotAuthenticated,
-                SmarterInvalidApiKeyError,
-                SmarterTokenError,
-            ):
-                status = HTTPStatus.FORBIDDEN.value
-            elif type(e) in (
-                SAMBrokerError,
-                SmarterValueError,
-                SmarterIlligalInvocationError,
-                SmarterBusinessRuleViolation,
-            ):
-                status = HTTPStatus.BAD_REQUEST.value
-            elif type(e) in (
-                SmarterChatappViewError,
-                SmarterChatBotException,
-                DocsError,
-                SmarterPluginError,
-                SmarterConfigurationError,
-                SmarterAWSError,
-                KubernetesHelperException,
-                SmarterJournalEnumException,
-                SmarterException,
-            ):
-                status = HTTPStatus.INTERNAL_SERVER_ERROR.value
-
-            if status in (
-                HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                HTTPStatus.BAD_REQUEST.value,
-                HTTPStatus.SERVICE_UNAVAILABLE.value,
-            ):
-                # if the error is not a known error, then we should
-                # log the error and return a generic error message with bug report instructions.
-                logger.error(
-                    "%s.dispatch() - %s: %s",
-                    self.formatted_class_name,
-                    type(e),
-                    str(e),
-                )
-                description_override = f"{type(e)}: " + BUG_REPORT + " " + str(e)
+            api_request_failed.send(sender=self.__class__, instance=self, request=request, response=response)
+            status = http_status_for_exception(e)
+            description = describe_exception(e, status)
+            if status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
+                logger.error("%s.dispatch() - %s: %s", self.formatted_class_name, type(e), str(e), exc_info=True)
+            else:
+                logger.warning("%s.dispatch() - %s %s: %s", self.formatted_class_name, status, type(e), description)
 
             return SmarterJournaledJsonErrorResponse(
                 request=request,
@@ -542,5 +927,5 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 e=e,
                 status=status,
                 stack_trace=traceback.format_exc(),
-                description=description_override,
+                description=description,
             )

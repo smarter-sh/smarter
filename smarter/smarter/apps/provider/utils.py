@@ -1,15 +1,22 @@
 # pylint: disable=W0613
 """Utility functions for Provider app."""
 
-import logging
-
+import google.auth.transport.requests
 import requests
+from google.auth.exceptions import GoogleAuthError
+from google.oauth2 import service_account
 
+from smarter.apps.account.models.user_profile import UserProfile
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.secret.models import Secret
+from smarter.common.conf.env import get_env
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
+from .const import GOOGLE_MAPS_API_KEY_SECRET_NAME, GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
 from .models import (
     Provider,
     ProviderModel,
@@ -28,10 +35,8 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -41,46 +46,67 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 module_prefix = "smarter.apps.provider.utils."
 
 
+def initialize_secret(
+    secret_string: str, secret_name: str, description: str, user_profile: UserProfile
+) -> Secret | None:
+    """
+    Initialize a secret from an environment variable.
+
+    Args:
+        env_var (str): The name of the environment variable containing the secret value.
+        secret_name (str): The name to assign to the created/updated Secret object.
+        description (str): A description for the Secret object.
+    """
+    try:
+        secret, _ = Secret.objects.update_or_create(
+            name=secret_name,
+            user_profile=user_profile,
+            defaults={
+                "description": description,
+                "encrypted_value": Secret.encrypt(secret_string),
+            },
+        )
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("Failed to initialize secret %s. Error: %s", secret_name, e)
+        return None
+    return secret
+
+
 def get_provider_verification_for_type(
     provider: Provider, verification_type: ProviderVerificationTypes
 ) -> ProviderVerification:
-    """
-    Get the provider verification for a specific type.
-    """
+    """Get the provider verification for a specific type."""
     prefix = formatted_text(module_prefix + "get_provider_verification_for_type()")
-    logger.info("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
+    logger.debug("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
 
     instance, _ = ProviderVerification.objects.get_or_create(provider=provider, verification_type=verification_type)
     if instance.is_valid:
-        logger.info("%s Provider verification for %s is still valid %s", prefix, provider, instance.updated_at)
+        logger.debug("%s Provider verification for %s is still valid %s", prefix, provider, instance.updated_at)
     return instance
 
 
 def get_model_verification_for_type(
     provider_model: ProviderModel, verification_type: ProviderModelVerificationTypes
 ) -> ProviderModelVerification:
-    """
-    Get the model verification for a specific type.
-    """
+    """Get the model verification for a specific type."""
     prefix = formatted_text(module_prefix + "get_model_verification_for_type()")
-    logger.info("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
+    logger.debug("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
 
     instance, _ = ProviderModelVerification.objects.get_or_create(
         provider_model=provider_model, verification_type=verification_type
     )
     if instance.is_valid:
-        logger.info("%s Streaming verification for %s is still valid %s", prefix, provider_model, instance.updated_at)
+        logger.debug("%s Streaming verification for %s is still valid %s", prefix, provider_model, instance.updated_at)
     return instance
 
 
 def set_model_verification(
     provider_model_verification: ProviderModelVerification, is_successful: bool, **kwargs
 ) -> None:
-    """
-    Set the model verification status.
-    """
+    """Set the model verification status."""
     prefix = formatted_text(module_prefix + "set_model_verification()")
-    logger.info(
+    logger.debug(
         "%s Setting model verification for %s to %s",
         prefix,
         provider_model_verification.provider_model.name,
@@ -100,11 +126,9 @@ def set_model_verification(
 
 
 def set_provider_verification(provider_verification: ProviderVerification, is_successful: bool, **kwargs) -> None:
-    """
-    Set the provider verification status.
-    """
+    """Set the provider verification status."""
     prefix = formatted_text(module_prefix + "set_provider_verification()")
-    logger.info(
+    logger.debug(
         "%s Setting provider verification for %s to %s",
         prefix,
         provider_verification.provider.name,
@@ -120,11 +144,9 @@ def set_provider_verification(provider_verification: ProviderVerification, is_su
 
 
 def test_web_page(url: str, test_str: str) -> bool:
-    """
-    Test a web page to see if it is valid.
-    """
+    """Test a web page to see if it is valid."""
     prefix = formatted_text(module_prefix + "test_web_page()")
-    logger.info("%s Testing web page %s", prefix, url)
+    logger.debug("%s Testing web page %s", prefix, url)
 
     try:
         response = requests.get(url, timeout=10)
@@ -133,7 +155,7 @@ def test_web_page(url: str, test_str: str) -> bool:
             and ("<html" in response.text.lower() or "<!doctype html" in response.text.lower())
             and test_str.lower() in response.text.lower()
         ):
-            logger.info("%s Web page test succeeded.", prefix)
+            logger.debug("%s Web page test succeeded.", prefix)
             return True
         else:
             logger.error("%s Web page test failed: Non-200 status or missing documentation HTML.", prefix)
@@ -141,3 +163,91 @@ def test_web_page(url: str, test_str: str) -> bool:
     except requests.RequestException as exc:
         logger.error("%s Web page test failed: %s", prefix, exc)
         return False
+
+
+def get_google_service_account_bearer_token() -> str | None:
+    """Get a Google service account bearer token."""
+
+    SCOPES = [
+        "https://www.googleapis.com/auth/cloud-platform",
+        "https://www.googleapis.com/auth/generative-language.retriever",
+        "https://www.googleapis.com/auth/generative-language",
+    ]
+    try:
+        # the platform's Secret, which initialize_providers stores for the smarter admin. A Secret of
+        # the same name in another account must not be found, nor make the name ambiguous.
+        secret = Secret.get_cached_object(
+            name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, user_profile=smarter_cached_objects.smarter_admin_user_profile
+        )
+    except Secret.DoesNotExist:
+        logger.error("initialize_googleai: Google service account secret not found.")
+        return
+
+    try:
+        svc_account = secret.get_secret()
+        if not svc_account:
+            logger.error("initialize_googleai: Google service account secret is empty.")
+            return
+        svc_account_dict = json.loads(svc_account)
+
+        credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
+        auth_req = google.auth.transport.requests.Request()
+    except json.JSONDecodeError as e:
+        logger.error("initialize_googleai: Error decoding Google service account JSON: %s", e)
+        return
+    except GoogleAuthError as e:
+        logger.error("initialize_googleai: Error loading Google credentials: %s", e)
+        return
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("initialize_googleai: Unexpected error: %s", e)
+        return
+    credentials.refresh(auth_req)
+    bearer_token = credentials.token
+    return bearer_token
+
+
+def initialize_google_maps() -> None:
+    """Initialize Google Maps provider."""
+    NAME = "google maps"
+    API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
+    API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
+
+    api_key = get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True)
+    if not api_key:
+        logger.error("Google Maps API key environment variable %s is not set.", API_KEY_ENV_VAR)
+        return
+
+    initialize_secret(
+        secret_string=api_key,
+        secret_name=API_KEY_NAME,
+        description=f"API key for {NAME} services.",
+        user_profile=smarter_cached_objects.smarter_admin_user_profile,
+    )
+
+
+def get_google_maps_api_key(recursed=False) -> str | None:
+    """Get the Google Maps API key from the secret store."""
+    user_profile = smarter_cached_objects.smarter_admin_user_profile
+    try:
+        secret = Secret.get_cached_object(name="google_maps_api_key", user_profile=user_profile)
+        api_key = secret.get_secret()
+        if not api_key:
+            logger.error("Google Maps API key secret is empty.")
+            return None
+        return api_key
+    except Secret.DoesNotExist:
+        if recursed:
+            logger.error(
+                "Google Maps API key secret still not found after having initialized."
+                "Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview."
+                "Add your GOOGLE_MAPS_API_KEY to .env"
+            )
+            return None
+        logger.error("Google Maps API key secret not found.")
+        initialize_google_maps()
+        return get_google_maps_api_key(recursed=True)
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("Unexpected error retrieving Google Maps API key: %s", e)
+        return None

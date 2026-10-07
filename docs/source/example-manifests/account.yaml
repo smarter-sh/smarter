@@ -1,0 +1,25 @@
+apiVersion: smarter.sh/v1
+kind: Account
+metadata:
+  accountNumber: 1853-6300-0000
+  description: AI Workflow Automation 2: Workflow Tools 2025W2 TCAIT_VX 0520 001 (April 14 to 27, 2026 DAP20)
+  name: dap20_185363
+  version: 1.0.0
+  tags:
+    - dap20
+    - ubc
+  annotations:
+    - smarter.sh/contact/creator: Lawrence McDaniel
+spec:
+  config:
+    address1: 1 Main St
+    address2: Suite 100
+    city: Cambridge
+    companyName: DAP20 - 185363
+    country: CAN
+    currency: CAD
+    language: en-US
+    phoneNumber: 617-834-6172
+    postalCode: 02139
+    state: MA
+    timezone: America/New_York

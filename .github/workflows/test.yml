@@ -1,50 +1,499 @@
 ---
 #------------------------------------------------------------------------------
-# - Build from Dockerfile
-# - Run manage.py unit tests
+# - Initialize the full local development environment, as `make init` does
+# - Run the Smarter unit test suite inside the smarter-app container, with
+#   coverage.py, and upload the coverage report to Codecov (flag: python)
+# - Run the React unit tests with Vitest coverage, and upload that report to
+#   Codecov (flag: react)
+#
+# This workflow reproduces the local developer workflow from the Makefile:
+# the sub-targets of `make init` (Python venv, React build, collectstatic,
+# Docker build, MariaDB setup, migrations, platform initialization, example
+# resources) followed by `make docker-test`. The runner is first provisioned
+# with the prerequisites that `make init` assumes are already installed
+# locally.
+#
+# The sub-targets are called one at a time, rather than via `make init`, so
+# that each can be skipped when its output is restored from cache:
+#
+#   python-init    -> venv/                     key: Python version + local.txt
+#                     node_modules/             key: Node version + package-lock.json
+#   react-install  -> smarter/react/**/node_modules
+#   react-build    -> smarter/smarter/static/react/, smarter-common/dist/
+#                                               key: git tree hash of smarter/react
+#   docker-build   -> BuildKit layer cache (type=gha)
+#
+# Caches are restored and saved with actions/cache/restore and
+# actions/cache/save, so that they are saved as soon as they are built.
+# actions/cache only saves when the whole job succeeds, so a failing test
+# would otherwise prevent anything from ever being cached.
+#
+# pre-commit-init is skipped: it installs a git hook and runs
+# `pre-commit autoupdate`, which rewrites .pre-commit-config.yaml. Neither
+# affects the tests.
+#
+# The "Create .env" step passes the repository and organization secrets
+# to the containers under the names that a local .env uses. At a minimum:
+#
+# OPENAI_API_KEY
+# GOOGLE_MAPS_API_KEY
+# SMTP_USERNAME
+# SMTP_PASSWORD
+#
+# The "Upload coverage to Codecov" step uses the CODECOV_TOKEN secret.
+#
+# AWS credentials, ROOT_DOMAIN and EKS_CLUSTER_NAME are deliberately NOT
+# passed. With them, `make docker-init` deploys the example LLMClients to
+# real infrastructure: Route53 A records under api.local.<ROOT_DOMAIN> and
+# ingress manifests in the smarter-local namespace of the EKS cluster.
+# Unit tests that require connectivity to AWS are tagged `infrastructure`
+# and skipped by default.
 #------------------------------------------------------------------------------
-name: Test
+name: Tests
 
 on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-2
-  ROOT_DOMAIN: "smarter.sh"
+  ENVIRONMENT: "local"
+  SMTP_SENDER: "no-reply@smarter.sh"
+  SMTP_FROM_EMAIL: "no-reply@alpha.ubc.smarter.sh"
+  MARKETING_SITE_URL: https://smarter.sh
 
 jobs:
-  test:
+  #----------------------------------------------------------------------------
+  # The React apps in smarter/react: formatting (Prettier), lint (ESLint),
+  # types (TypeScript) and unit tests (Vitest, with every Storybook story
+  # rendered as a test), as `make react-lint && make react-test` do. It needs
+  # only Node, so it runs alongside the test job, in a few minutes.
+  #
+  # @smarter/common's dist/ is not committed, and the apps type-check against
+  # its declarations, so it is built before the type check. The tests use its
+  # TypeScript source, and need no build.
+  #----------------------------------------------------------------------------
+  react:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: smarter/react
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Smarter Chat is managed in its own repository. See the react-smarter-chat target in the Makefile.
+      - name: Clone Smarter Chat
+        working-directory: .
+        run: make react-smarter-chat
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          cache: npm
+          cache-dependency-path: smarter/react/package-lock.json
+
+      - name: npm ci
+        run: npm ci --include=dev
+
+      - name: Formatting (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Types (TypeScript)
+        run: |
+          npm run build --workspace=@smarter/common
+          npm run typecheck
+
+      - name: Unit tests (Vitest), with coverage
+        run: npm run coverage
+
+      #========================================================================
+      # Upload coverage/lcov.info under the react flag. Its paths are relative
+      # to smarter/react, which codecov.yml maps back to the repository's.
+      #========================================================================
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./smarter/react/coverage/lcov.info
+          flags: react
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v4
-
-      - name: Set environment variable
-        id: setenv
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
-            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
-            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
-            echo "ENVIRONMENT=next" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-          else
-            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
-          fi
-
-      - name: Test
-        uses: ./.github/actions/test
+        uses: actions/checkout@v6
         with:
-          environment: ${{ env.ENVIRONMENT }}
-          root-domain: "${{ env.ROOT_DOMAIN }}"
-          google-maps-api-key: "${{ secrets.GOOGLE_MAPS_API_KEY }}"
-          openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
-          pinecone-api-key: "${{ secrets.PINECONE_API_KEY }}"
-          pinecone-environment: "${{ secrets.PINECONE_ENVIRONMENT }}"
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
+          fetch-depth: 0 # Ensures all history and tags are fetched
+          fetch-tags: true
+
+      #------------------------------------------------------------------------
+      # Prerequisites for `make init`: python3.13 (check-python, python-init),
+      # Node/npm (python-init, react-install, react-build) and the
+      # docker-compose v1 command name, which GitHub-hosted runners no longer
+      # ship. The shim forwards to the Docker Compose v2 plugin.
+      #
+      # The exact Python and Node versions are part of the venv and
+      # node_modules cache keys: venv/bin/python is a symlink into the
+      # runner's tool cache, and native npm modules are built for one Node ABI.
+      #------------------------------------------------------------------------
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install Node
+        id: node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+
+      #------------------------------------------------------------------------
+      # The mariadb Python package has no Linux wheels on PyPI, so pip builds it
+      # from source, which requires MariaDB Connector/C (mariadb_config).
+      # Mirrors the mariadb_connector stage of the Dockerfile. This runs even
+      # when the venv is restored from cache, because the compiled package
+      # links against libmariadb at runtime.
+      #------------------------------------------------------------------------
+      - name: Install MariaDB Connector/C
+        shell: bash
+        env:
+          MARIADB_VERSION: "12.2"
+        run: |
+          curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+          chmod +x mariadb_repo_setup
+          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}"
+          rm -f mariadb_repo_setup
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat
+          mariadb_config --cc_version
+
+      - name: Install docker-compose shim
+        shell: bash
+        run: |
+          printf '#!/bin/sh\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose > /dev/null
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
+
+      #------------------------------------------------------------------------
+      # The Makefile includes .env, and docker compose reads build args and
+      # container environment from it. Secrets are appended to the defaults
+      # from .env.example. This must run before the first `make` call, which
+      # would otherwise copy .env.example to .env itself.
+      #
+      # Repository and organization secrets are named as in a local .env. The
+      # SMARTER_ prefix is optional: get_env() reads <NAME>, then SMARTER_<NAME>.
+      # Empty secrets are skipped, so the .env.example value or the default
+      # from smarter/common/conf/defaults.py applies.
+      #
+      # Do not add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ROOT_DOMAIN or
+      # AWS_EKS_CLUSTER_NAME here. See the note at the top of this file.
+      #
+      # FERNET_ENCRYPTION_KEY must be set. Without it, every process
+      # (smarter-app, smarter-worker, the test runner, each manage.py call in
+      # `make docker-init`) generates its own random key, so a Secret encrypted
+      # by one process cannot be decrypted by another:
+      # cryptography.fernet.InvalidToken. If the secret is missing, a fresh
+      # key per run is fine because the database is created per run.
+      #------------------------------------------------------------------------
+      - name: Create .env
+        shell: bash
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+          SMTP_SENDER: ${{ env.SMTP_SENDER }}
+          SMTP_FROM_EMAIL: ${{ env.SMTP_FROM_EMAIL }}
+          FERNET_ENCRYPTION_KEY: ${{ secrets.FERNET_ENCRYPTION_KEY }}
+          AUTHENTICATION_BACKENDS: ${{ secrets.AUTHENTICATION_BACKENDS }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          # LLM, vector store and Google API keys
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_AI_STUDIO_KEY: ${{ secrets.GOOGLE_AI_STUDIO_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
+          LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          TOGETHERAI_API_KEY: ${{ secrets.TOGETHERAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
+          MAILCHIMP_LIST_ID: ${{ secrets.MAILCHIMP_LIST_ID }}
+          # social auth
+          SOCIAL_AUTH_GITHUB_KEY: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
+          SOCIAL_AUTH_GITHUB_SECRET: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
+          SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
+          SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
+          SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
+          SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
+          # Smarter platform
+          SMARTER_EMAIL_ADMIN: ${{ secrets.SMARTER_EMAIL_ADMIN }}
+          SMARTER_LOGO: ${{ secrets.SMARTER_LOGO }}
+          SMARTER_MYSQL_TEST_DATABASE_PASSWORD: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}
+          SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME }}
+          SMARTER_TEST_DB_PASSWORD: ${{ secrets.SMARTER_TEST_DB_PASSWORD }}
+          SMARTER_SETTINGS_OUTPUT: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
+          # branding
+          SMARTER_BRANDING_ADDRESS1: ${{ secrets.SMARTER_BRANDING_ADDRESS1 }}
+          SMARTER_BRANDING_ADDRESS2: ${{ secrets.SMARTER_BRANDING_ADDRESS2 }}
+          SMARTER_BRANDING_CITY: ${{ secrets.SMARTER_BRANDING_CITY }}
+          SMARTER_BRANDING_CONTACT_URL: ${{ secrets.SMARTER_BRANDING_CONTACT_URL }}
+          SMARTER_BRANDING_CORPORATE_NAME: ${{ secrets.SMARTER_BRANDING_CORPORATE_NAME }}
+          SMARTER_BRANDING_COUNTRY: ${{ secrets.SMARTER_BRANDING_COUNTRY }}
+          SMARTER_BRANDING_CURRENCY: ${{ secrets.SMARTER_BRANDING_CURRENCY }}
+          SMARTER_BRANDING_POSTAL_CODE: ${{ secrets.SMARTER_BRANDING_POSTAL_CODE }}
+          SMARTER_BRANDING_STATE: ${{ secrets.SMARTER_BRANDING_STATE }}
+          SMARTER_BRANDING_SUPPORT_EMAIL: ${{ secrets.SMARTER_BRANDING_SUPPORT_EMAIL }}
+          SMARTER_BRANDING_SUPPORT_HOURS: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
+          SMARTER_BRANDING_SUPPORT_PHONE_NUMBER: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
+          SMARTER_BRANDING_TIMEZONE: ${{ secrets.SMARTER_BRANDING_TIMEZONE }}
+          SMARTER_MARKETING_SITE_URL: ${{ env.MARKETING_SITE_URL }}
+
+        run: |
+          if [ -z "${FERNET_ENCRYPTION_KEY}" ]; then
+            FERNET_ENCRYPTION_KEY="$(openssl rand -base64 32 | tr '+/' '-_')"
+            echo "::add-mask::${FERNET_ENCRYPTION_KEY}"
+          fi
+          cp .env.example .env
+          {
+            echo ""
+            echo "# --- added by GitHub Actions test.yml ---"
+            for name in \
+              ENVIRONMENT SMTP_SENDER SMTP_FROM_EMAIL \
+              FERNET_ENCRYPTION_KEY AUTHENTICATION_BACKENDS SMTP_USERNAME SMTP_PASSWORD \
+              ANTHROPIC_API_KEY COHERE_API_KEY FIREWORKS_API_KEY GEMINI_API_KEY \
+              GOOGLE_AI_STUDIO_KEY GOOGLE_MAPS_API_KEY GOOGLE_SERVICE_ACCOUNT_B64 \
+              LLAMA_API_KEY MISTRAL_API_KEY OPENAI_API_KEY TAVILY_API_KEY TOGETHERAI_API_KEY \
+              PINECONE_API_KEY PINECONE_ENVIRONMENT MAILCHIMP_API_KEY MAILCHIMP_LIST_ID \
+              SOCIAL_AUTH_GITHUB_KEY SOCIAL_AUTH_GITHUB_SECRET \
+              SOCIAL_AUTH_GOOGLE_OAUTH2_KEY SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET \
+              SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET \
+              SMARTER_EMAIL_ADMIN SMARTER_LOGO \
+              SMARTER_MYSQL_TEST_DATABASE_PASSWORD SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME \
+              SMARTER_TEST_DB_PASSWORD SMARTER_SETTINGS_OUTPUT \
+              SMARTER_BRANDING_ADDRESS1 SMARTER_BRANDING_ADDRESS2 SMARTER_BRANDING_CITY \
+              SMARTER_BRANDING_CONTACT_URL SMARTER_BRANDING_CORPORATE_NAME \
+              SMARTER_BRANDING_COUNTRY SMARTER_BRANDING_CURRENCY SMARTER_BRANDING_POSTAL_CODE \
+              SMARTER_BRANDING_STATE SMARTER_BRANDING_SUPPORT_EMAIL SMARTER_BRANDING_SUPPORT_HOURS \
+              SMARTER_BRANDING_SUPPORT_PHONE_NUMBER SMARTER_BRANDING_TIMEZONE SMARTER_MARKETING_SITE_URL
+            do
+              if [ -n "${!name}" ]; then
+                echo "${name}=${!name}"
+              fi
+            done
+          } >> .env
+
+      #------------------------------------------------------------------------
+      # Locally, developers run `make init` with the venv activated. Putting
+      # venv/bin on the PATH up front has the same effect for the targets that
+      # call `python` directly (collectstatic) once the venv exists.
+      #------------------------------------------------------------------------
+      - name: Add venv to PATH
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/venv/bin" >> $GITHUB_PATH
+
+      #========================================================================
+      # make python-init
+      #
+      # The venv is only restored on an exact key match: a venv built from
+      # other requirements would keep packages that are no longer pinned.
+      # On a miss, python-init deletes and recreates venv/ and installs with
+      # PIP_CACHE_DIR=.pypi_cache, which is restored from the closest previous
+      # requirements so that only changed packages are downloaded.
+      #
+      # python-init also runs `npm install` in the repository root
+      # (semantic-release, prettier, gulp), so root node_modules is cached too.
+      #========================================================================
+      - name: Restore Python venv
+        id: venv
+        uses: actions/cache/restore@v5
+        with:
+          path: venv
+          key: venv-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}
+
+      - name: Restore pip downloads
+        id: pypi
+        if: steps.venv.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: .pypi_cache
+          key: pypi-${{ runner.os }}-py3.13-${{ hashFiles('smarter/requirements/local.txt') }}
+          restore-keys: |
+            pypi-${{ runner.os }}-py3.13-
+
+      - name: Restore root node_modules
+        id: root-node-modules
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: root-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            root-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-
+
+      - name: make python-init
+        if: steps.venv.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          make python-init
+
+      - name: npm install (python-init, venv restored from cache)
+        if: steps.venv.outputs.cache-hit == 'true' && steps.root-node-modules.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          npm install
+
+      - name: Save Python venv
+        if: steps.venv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: venv
+          key: ${{ steps.venv.outputs.cache-primary-key }}
+
+      - name: Save pip downloads
+        if: steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .pypi_cache
+          key: ${{ steps.pypi.outputs.cache-primary-key }}
+
+      - name: Save root node_modules
+        if: steps.root-node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.root-node-modules.outputs.cache-primary-key }}
+
+      #========================================================================
+      # make react-install, then the npm build step of make react-build
+      #
+      # Shared with build.yml, so that both use the same cache entries. See
+      # .github/actions/react-build/action.yml.
+      #========================================================================
+      - name: Build React components
+        uses: ./.github/actions/react-build
+
+      #========================================================================
+      # make collectstatic
+      #
+      # Fast, and its output depends on both the Python packages and the
+      # React build, so it always runs.
+      #========================================================================
+      - name: make collectstatic
+        shell: bash
+        run: |
+          make collectstatic
+
+      #========================================================================
+      # make docker-build
+      #
+      # - setup-buildx-action makes a BuildKit builder the default, which
+      #   Compose uses for its builds.
+      # - ghaction-github-runtime exposes the ACTIONS_* runtime variables that
+      #   BuildKit needs for the GitHub Actions cache backend. build-push-action
+      #   does this implicitly; Compose does not.
+      # - A generated override file adds cache_from/cache_to to the three
+      #   services that build the smarter image, and COMPOSE_FILE layers it on
+      #   top of docker-compose.yml so the Makefile runs unchanged. All three
+      #   build the identical image, so only smarter-app exports the cache.
+      #
+      # BuildKit exports the cache during the build itself, so it is saved
+      # even if a later step fails.
+      #========================================================================
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Expose GitHub runtime for BuildKit cache
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Enable Docker layer cache for docker-compose
+        shell: bash
+        run: |
+          OVERRIDE="$RUNNER_TEMP/docker-compose.cache.yml"
+          cat > "$OVERRIDE" <<'EOF'
+          services:
+            smarter-app:
+              build:
+                cache_from:
+                  - type=gha,scope=smarter-test
+                cache_to:
+                  - type=gha,scope=smarter-test,mode=max
+            smarter-worker:
+              build:
+                cache_from:
+                  - type=gha,scope=smarter-test
+            smarter-beat:
+              build:
+                cache_from:
+                  - type=gha,scope=smarter-test
+          EOF
+          echo "COMPOSE_FILE=$GITHUB_WORKSPACE/docker-compose.yml:$OVERRIDE" >> $GITHUB_ENV
+
+      - name: make docker-build
+        shell: bash
+        run: |
+          make docker-build
+
+      #========================================================================
+      # make docker-init
+      #
+      # Starts the containers, creates the database, migrates, and initializes
+      # the platform and example resources. Not cacheable: it populates a
+      # fresh database for this run.
+      #========================================================================
+      - name: make docker-init
+        shell: bash
+        run: |
+          make docker-init
+
+      #========================================================================
+      # Run the unit tests with coverage
+      #
+      # Runs the same tests as `make docker-test`, under coverage.py. Coverage
+      # is measured for all of smarter, the same suite that the tests cover,
+      # rather than just smarter.apps as `make coverage` does. Tests and
+      # migrations are omitted. .coveragerc is excluded by .dockerignore, so
+      # the options are passed on the command line. coverage run exits with
+      # the test runner's exit code, so a failing test still fails this step.
+      #
+      # coverage.xml is written inside the container and then copied to the
+      # workspace for the Codecov upload. Its paths are container paths,
+      # /home/smarter_user/smarter/smarter/..., which codecov.yml maps back
+      # to the repository's smarter/smarter/....
+      #========================================================================
+      - name: Run unit tests with coverage
+        shell: bash
+        run: |
+          docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report && coverage xml -o coverage.xml"
+          docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          flags: python
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Dump container logs
+        if: failure()
+        shell: bash
+        run: |
+          docker compose logs --no-color --tail=500
+
+      - name: Tear down
+        if: always()
+        shell: bash
+        run: |
+          docker compose down -v

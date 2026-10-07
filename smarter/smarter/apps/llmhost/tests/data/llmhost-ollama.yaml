@@ -1,0 +1,26 @@
+---
+# An LLMHost for the llmhost app's tests: an Ollama library model, on CPU, inside the cluster.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: test_llmhost_ollama
+  description: An Ollama LLMHost for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+    - ollama
+spec:
+  model:
+    source: ollama
+    repository: llama3.2:1b
+    quantization: gguf
+  engine:
+    name: ollama
+    contextLength: 4096
+  resources:
+    gpuCount: 0
+    cpu: "2"
+    memory: 4Gi
+  storage:
+    size: 5Gi
+    retain: false

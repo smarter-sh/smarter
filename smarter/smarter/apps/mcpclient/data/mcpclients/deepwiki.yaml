@@ -1,0 +1,28 @@
+---
+# AI-generated documentation for public GitHub repositories, from Cognition's DeepWiki.
+# Documentation: https://docs.devin.ai/work-with-devin/deepwiki-mcp
+#
+# This server requires no authentication.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: deepwiki
+  description: AI-generated documentation for public GitHub repositories, from Cognition's DeepWiki.
+  version: 1.0.0
+  tags:
+    - documentation
+    - github
+    - code
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://docs.devin.ai/work-with-devin/deepwiki-mcp
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.deepwiki.com/mcp
+    authType: none
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

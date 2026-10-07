@@ -1,14 +1,14 @@
 """Account admin."""
 
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterStaffOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 from smarter.lib.journal.models import SAMJournal
 
 
 # Register your models here.
-class SAMJournalAdmin(RestrictedModelAdmin):
+class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
     """SAMJournal model admin."""
 
     readonly_fields = ("created_at",)

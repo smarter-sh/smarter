@@ -1,0 +1,125 @@
+###############################################################################
+# Bastion Pod Deployment
+#
+# This deployment creates a single pod that serves as a bastion shell
+# for users to perform administrative tasks and to connect to the MariaDB database
+# which is only accessible from within the cluster. The pod is based on a
+# lightweight Debian image with minimal tools installed, including the
+# MariaDB client.
+#
+# setup:
+# -------------------------------------
+# - installs the MariaDB client
+# - creates a welcome message with usage instructions and environment variable
+#   information
+# - configures the welcome message to be displayed whenever a user connects to
+#   the pod
+# - keeps the pod running indefinitely to allow users to connect and use the shell
+#
+# Important: labels are referenced by other resources, in this repo as well as
+# external repos including https://github.com/smarter-sh/smarter-infrastructure.
+# Do not arbitrarily change labels without updating all references.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+###############################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.global.appName }}-bastion"
+  namespace: "{{ .Values.namespace }}"
+  annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+        meta.helm.sh/application-version: "{{ .Chart.Version }}"
+    spec:
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      volumes:
+        - name: debian-setup-script
+          configMap:
+            name: debian-setup-script
+            defaultMode: 0755
+        - name: debian-welcome-banner
+          configMap:
+            name: debian-welcome-banner
+            defaultMode: 0755
+        - name: mysql-backup-script
+          configMap:
+            name: mysql-backup-script
+            defaultMode: 0755
+      containers:
+        - name: "{{ .Values.global.appName }}-bastion"
+          image: ubuntu:latest
+          workingDir: /home/
+          command:
+            - /bin/bash
+            - -c
+            - |
+                set -e
+
+                echo "Waiting for configMap mounts..."
+                for i in $(seq 1 10); do
+                  if [ -f /home/setup/install.sh ]; then break; fi
+                  echo "Still waiting..."
+                  sleep 1
+                done
+
+                ls -l /home/setup || true
+                ls -l /home/welcome || true
+                ls -l /home/backup || true
+
+                /home/setup/install.sh
+                /home/welcome/install.sh
+
+                echo "The Smarter Bastion Server is ready to use!"
+
+                while true; do sleep 3600; done
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - name: debian-setup-script
+              mountPath: /home/setup/install.sh
+              subPath: install.sh
+            - name: debian-welcome-banner
+              mountPath: /home/welcome/install.sh
+              subPath: install.sh
+            - name: mysql-backup-script
+              mountPath: /home/backup/backup-to-s3.sh
+              subPath: backup-to-s3.sh
+
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $env := .Values.app.env }}
+            - name: {{ $env.name }}
+              value: {{ $env.value | quote }}
+            {{- end }}

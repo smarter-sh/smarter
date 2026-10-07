@@ -1,9 +1,20 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'delete' view"""
+"""Smarter API command-line interface 'delete' view."""
+
+from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
 
+from smarter.lib import logging
+
 from .base import CliBaseApiView
+from .swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    openai_success_response,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliDeleteApiView(CliBaseApiView):
@@ -21,12 +32,10 @@ class ApiV1CliDeleteApiView(CliBaseApiView):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliDeleteApiView()"
+        this_class = f".{ApiV1CliDeleteApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(
         operation_description="""
@@ -37,19 +46,17 @@ This is the API endpoint for the 'delete' command in the Smarter command-line in
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object.
-"""
+
+This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
+""",
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Deleted successfully")},
+        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
-        """
-        Handles the POST HTTP request for the 'delete' command.
-
-        Parameters:
-        request (Request): The request object. The resource name is passed in the url query parameters.
-        *args: Variable length argument list.
-        **kwargs: the kind of resource to delete
-
-        Returns:
-        Response: A JSON object representing the result of the 'delete' operation.
-        """
+        logger.debug(
+            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
+        if self.broker is None:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.delete(request=request, kwargs=kwargs)
         return response

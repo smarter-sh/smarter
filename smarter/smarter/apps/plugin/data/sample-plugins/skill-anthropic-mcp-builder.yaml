@@ -1,0 +1,34 @@
+---
+# A SkillPlugin that refers to Anthropic's mcp-builder skill by the
+# raw.githubusercontent.com URL of its SKILL.md file. To pin a skill to a
+# specific version, use a commit SHA in place of the branch name.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: anthropic_mcp_builder
+  pluginClass: skill
+  description: Anthropic's mcp-builder skill, a guide to building high quality Model Context Protocol (MCP) servers.
+  version: 0.1.0
+  tags:
+    - engineering
+    - mcp
+    - anthropic
+  annotations:
+    - smarter.sh/anthropic-mcp-builder/source: https://github.com/anthropics/skills
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - mcp
+      - mcp server
+      - model context protocol
+  prompt:
+    provider: openai
+    systemRole: >
+      You are an expert software engineer who builds Model Context Protocol servers.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 4096
+  skillData:
+    source:
+      url: https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/SKILL.md

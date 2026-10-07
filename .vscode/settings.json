@@ -1,7 +1,13 @@
 {
-  "cornflakes.linter.executablePath": "/Users/mcdaniel/desktop/gh/smarter-sh/smarter/venv/bin/flake8",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cornflakes.linter.executablePath": "../venv/bin/flake8",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-containers"
   },
   "search.exclude": {
     "**/.git": true,
@@ -12,10 +18,14 @@
     "**/node_modules": true,
     "**/.tox": true,
     "**/.terraform": true,
-    "**/venv": true,
     "**/dist": true,
+    "**/venv": true,
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
   },
-  "python.analysis.exclude": ["**/migrations/**"]
+  "prettier.printWidth": 120,
+  "python.linting.flake8Enabled": true,
+  "python.linting.enabled": true,
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.terminal.useEnvFile": true
 }

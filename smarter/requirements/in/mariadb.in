@@ -1,0 +1,9 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      Mariadb requirements. These are excluded from remote Sphinx builds and
+#             therefore are spec'd independently.
+# -----------------------------------------------------------------------------
+
+mariadb                                 # MySQL-compatible client

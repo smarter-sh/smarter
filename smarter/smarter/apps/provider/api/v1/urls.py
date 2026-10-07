@@ -1,4 +1,4 @@
-"""URL configuration for chat app."""
+"""URL configuration for prompt app."""
 
 from django.urls import path
 
@@ -9,7 +9,6 @@ from .views.provider import (
     ProviderModelsApiViewSet,
     ProvidersApiViewSet,
 )
-
 
 app_name = namespace
 

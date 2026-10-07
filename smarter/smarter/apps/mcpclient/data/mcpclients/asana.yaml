@@ -1,0 +1,30 @@
+---
+# Work with Asana tasks, projects and goals. Uses the legacy HTTP+SSE transport.
+# Documentation: https://developers.asana.com/docs/using-asanas-mcp-server
+#
+# Prerequisite: a Smarter Secret named asana_mcp_access_token, containing an OAuth access
+# token issued by Asana's MCP authorization server. Smarter does not yet perform the OAuth
+# flow itself, and does not refresh the token.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: asana
+  description: Work with Asana tasks, projects and goals. Uses the legacy HTTP+SSE transport.
+  version: 1.0.0
+  tags:
+    - project-management
+    - tasks
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://developers.asana.com/docs/using-asanas-mcp-server
+spec:
+  config:
+    transport: sse
+    endpointUrl: https://mcp.asana.com/sse
+    authType: oauth2
+    credentials: asana_mcp_access_token
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

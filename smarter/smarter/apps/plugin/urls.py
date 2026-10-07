@@ -1,17 +1,59 @@
 """URL configuration for the plugin app."""
 
-from django.urls import path
+from django.urls import path, re_path
+
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
-from .views.connection import ConnectionDetailView, ConnectionListView
-from .views.plugin import PluginDetailView, PluginListView
-
+from .views.detailview import PluginDetailView
+from .views.listview.api import (
+    PluginListApiCloneView,
+    PluginListApiDeleteView,
+    PluginListApiRenameView,
+    PluginListApiView,
+)
+from .views.listview.view import PluginListView
 
 app_name = namespace
 
+
+class PluginReverseNames:
+    """Reverse view names for the plugin app."""
+
+    namespace = namespace
+    listview = to_snake_case(PluginListView.__name__)
+    detailview = to_snake_case(PluginDetailView.__name__)
+
+    listview = to_snake_case(PluginListView.__name__)
+    listview_api = to_snake_case(PluginListApiView.__name__)
+    listview_api_all = to_snake_case(PluginListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(PluginListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(PluginListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(PluginListApiRenameView.__name__)
+
+
 urlpatterns = [
-    path("plugins/", PluginListView.as_view(), name="plugin_listview"),
-    path("plugins/<str:kind>/<str:name>/", PluginDetailView.as_view(), name="plugin_by_name"),
-    path("connections/", ConnectionListView.as_view(), name="connection_listview"),
-    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name="connection_by_name"),
+    path("", PluginListView.as_view(), name=PluginReverseNames.listview),
+    path("react-integration/api/listview/", PluginListApiView.as_view(), name=PluginReverseNames.listview_api_all),
+    re_path(
+        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
+        PluginListApiView.as_view(),
+        name=PluginReverseNames.listview_api,
+    ),
+    path(
+        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
+        PluginListApiCloneView.as_view(),
+        name=PluginReverseNames.listview_api_clone,
+    ),
+    path(
+        "react-integration/api/delete/<int:llmclient_id>/",
+        PluginListApiDeleteView.as_view(),
+        name=PluginReverseNames.listview_api_delete,
+    ),
+    path(
+        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
+        PluginListApiRenameView.as_view(),
+        name=PluginReverseNames.listview_api_rename,
+    ),
+    path("plugins/<str:hashed_id>/", PluginDetailView.as_view(), name=PluginReverseNames.detailview),
 ]
