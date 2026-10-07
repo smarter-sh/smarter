@@ -18,11 +18,6 @@ metadata:
   version: 0.1.0
 spec:
   data:
-    description:
-      Get additional information about the Everlasting Gobstopper product
-      created by Willy Wonka Chocolate Factory. Information includes sales promotions,
-      coupon codes, company contact information and biographical background on the
-      company founder.
     staticData:
       biographical:
         Willy Wonka is a fictional character appearing in British author
@@ -70,13 +65,13 @@ spec:
           price: $1.00
   prompt:
     maxTokens: 2048
-    model: gpt-4o-mini
+    model: gpt-6-luna
     provider: openai
     systemRole:
       You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
       Whenever possible you should defer to the tool calls provided for additional
       information about everlasting gobstoppers.
-    temperature: 0.5
+    temperature: 1.0
   selector:
     directive: search_terms
     searchTerms:

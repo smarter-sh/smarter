@@ -1,14 +1,13 @@
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
 
-import logging
-
 from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

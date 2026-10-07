@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""utility for applying any Smarter manifest using the api/v1/cli endpoint."""
+"""Utility for applying any Smarter manifest using the api/v1/cli endpoint."""
 
 import os
 from typing import Optional
@@ -56,7 +56,6 @@ class Command(SmarterCommand):
 
         - :py:class:`smarter.apps.api.v1.cli.urls.ApiV1CliReverseViews`
         - :py:class:`smarter.lib.drf.models.SmarterAuthToken`
-
     """
 
     help = "Apply a Smarter manifest."
@@ -106,7 +105,8 @@ class Command(SmarterCommand):
         )
         parser.add_argument(
             "--verbose",
-            type=bool,
+            # a flag: with type=bool, any value, even False, turned verbose output on.
+            action="store_true",
             default=False,
             help="Enable verbose output.",
         )
@@ -114,6 +114,7 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         """
         Prepare and get a response from the api/v1/cli/apply endpoint.
+
         We need to be mindful of the environment we are in, as the
         endpoint may be hosted over https or http.
         """
@@ -201,10 +202,13 @@ class Command(SmarterCommand):
             self.handle_completed_success()
             return
         else:
-            self.handle_completed_failure(msg=f"Manifest apply failed with status code: {response.status_code}")
+            # the broker may return no response at all.
+            status_code = response.status_code if response is not None else None
+            content = response.content if response is not None else None
+            self.handle_completed_failure(msg=f"Manifest apply failed with status code: {status_code}")
             logger.error("%s - manifest: %s", logger_prefix, self.data)
-            logger.error("%s - response: %s", logger_prefix, response.content)
-            msg = f"Manifest apply failed with status code: {response.status_code}\nmanifest: {self.data}\nresponse: {response.content}"
+            logger.error("%s - response: %s", logger_prefix, content)
+            msg = f"Manifest apply failed with status code: {status_code}\nmanifest: {self.data}\nresponse: {content}"
             raise CommandError(msg)
 
         # ----------------------------------------------------------------------

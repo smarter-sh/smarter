@@ -2,7 +2,6 @@
 """All models for the Provider app."""
 
 import datetime
-import logging
 import os
 import urllib.parse
 from collections.abc import Sequence
@@ -20,7 +19,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
-    get_cached_smarter_admin_user_profile,
+    smarter_cached_objects,
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import (
@@ -28,11 +27,12 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
-from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.utils import rfc1034_compliant_str
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -107,6 +107,7 @@ class ProviderVerificationTypes(models.TextChoices):
     SUPPORT_EMAIL = "support_email", "Support Email"
     WEBSITE_URL = "website_url", "Website URL"
     TOS_URL = "tos_url", "Terms of Service URL"
+    DOCS_URL = "docs_url", "Documentation URL"
     PRIVACY_POLICY_URL = "privacy_policy_url", "Privacy Policy URL"
     TOS_ACCEPTANCE = "tos_acceptance", "Terms of Service Acceptance"
     PRODUCTION_API_KEY = "production_api_key", "Production API Key"
@@ -230,10 +231,47 @@ class Provider(MetaDataWithOwnershipModel):
     )
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.provider.urls import ProviderReverseNames
+
+        return reverse(
+            f"{ProviderReverseNames.namespace}:{ProviderReverseNames.detailview}",
+            kwargs={"hashed_id": self.hashed_id},  # type: ignore
+        )
+
+    @property
     def is_official_provider(self) -> bool:
         """Check if the provider is an official provider."""
-        smarter_admin = get_cached_smarter_admin_user_profile()
-        return self.user_profile == smarter_admin.user
+        return self.user_profile == smarter_cached_objects.smarter_admin_user_profile
 
     @property
     def tos_accepted(self) -> bool:
@@ -253,8 +291,10 @@ class Provider(MetaDataWithOwnershipModel):
     @property
     def authorization_header(self) -> dict:
         """Return the authorization header for the provider."""
-        if self.production_api_key(mask=False) is not None:
+        try:
             return {"Authorization": f"Bearer {self.production_api_key(mask=False)}"}
+        except SmarterConfigurationError:
+            pass
         if self.api_key:
             return {"Authorization": f"Bearer {self.api_key.get_secret()}"}
         return {}
@@ -275,16 +315,16 @@ class Provider(MetaDataWithOwnershipModel):
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
-        Returns a URL-friendly name for the chatbot.
+        Returns a URL-friendly name for the llmclient.
 
-        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
+        This property returns an RFC 1034-compliant name for the llmclient, suitable for use in URLs and DNS labels.
 
         **Example:**
 
         .. code-block:: python
 
-            self.name = 'Example ChatBot 1'
-            self.rfc1034_compliant_name  # 'example-chatbot-1'
+            self.name = 'Example LLMClient 1'
+            self.rfc1034_compliant_name  # 'example-llmclient-1'
 
         :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
         :rtype: Optional[str]
@@ -296,6 +336,7 @@ class Provider(MetaDataWithOwnershipModel):
     def test_connectivity(self) -> bool:
         """
         Test connectivity to the provider's API.
+
         This method should be overridden by subclasses to implement specific connectivity tests.
         """
         if not self.base_url:
@@ -337,6 +378,7 @@ class Provider(MetaDataWithOwnershipModel):
     def verify(self):
         """
         Request a batch of acceptance tests.
+
         Set the status but don't change the is_verified flag.
         This is used to indicate that the provider is being verified but has not yet been activated.
         """
@@ -460,7 +502,7 @@ class Provider(MetaDataWithOwnershipModel):
     ) -> Optional["Provider"]:
         """Get a cached provider by account ID and name."""
 
-        logger_prefix = formatted_text(
+        logger_prefix = logging.formatted_text(
             __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
         )
 
@@ -501,7 +543,7 @@ class Provider(MetaDataWithOwnershipModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None
     ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
-        logger_prefix = formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
+        logger_prefix = logging.formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
 
         @cache_results()
         def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
@@ -522,8 +564,8 @@ class Provider(MetaDataWithOwnershipModel):
             )
             return []
 
-        if invalidate and user_profile and user_profile.account:
-            cached_providers_by_user_id.invalidate(user_profile.account.id)
+        if invalidate and user_profile:
+            cached_providers_by_user_id.invalidate(user_profile.user.id)
 
         if user_profile:
             return cached_providers_by_user_id(user_profile.user.id)
@@ -535,6 +577,7 @@ class Provider(MetaDataWithOwnershipModel):
     ) -> Optional["Provider"]:
         """
         Return a single instance of Provider by name for the given user.
+
         This method caches the results to improve performance.
 
         :param user: The user whose provider should be retrieved.
@@ -639,7 +682,7 @@ class ProviderVerification(TimestampedModel):
     @property
     def next_verification(self) -> datetime.datetime:
         """Get the next verification time."""
-        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+        return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self):
         """String representation of the verification."""
@@ -675,7 +718,7 @@ class ProviderModelVerification(TimestampedModel):
     @property
     def next_verification(self) -> datetime.datetime:
         """Get the next verification time."""
-        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+        return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self):
         """String representation of the verification."""
@@ -685,7 +728,9 @@ class ProviderModelVerification(TimestampedModel):
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_provider(provider_name: str) -> Provider:
     """
-    Get the provider by name and account number. This is the primary way to
+    Get the provider by name and account number.
+
+    This is the primary way to
     retrieve a provider. Raises a Smarter error if anything goes wrong.
     """
 
@@ -711,7 +756,9 @@ def get_provider(provider_name: str) -> Provider:
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_providers() -> list[Provider]:
     """
-    Get all active providers. This is the primary way to retrieve all providers.
+    Get all active providers.
+
+    This is the primary way to retrieve all providers.
     Raises a Smarter error if anything goes wrong.
     """
     try:
@@ -728,7 +775,9 @@ def get_providers() -> list[Provider]:
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_model_for_provider(provider_name: str, model_name: Optional[str] = None) -> ProviderModelTypedDict:
     """
-    Get the model for a provider by name and account number. This is the
+    Get the model for a provider by name and account number.
+
+    This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
     anything goes wrong.
     """
@@ -787,7 +836,9 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     """
-    Get all models for a provider by name and account number. This is the
+    Get all models for a provider by name and account number.
+
+    This is the
     primary way to retrieve all models for a provider. Raises a Smarter error if
     anything goes wrong.
     """

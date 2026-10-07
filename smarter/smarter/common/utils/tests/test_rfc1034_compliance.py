@@ -11,11 +11,12 @@ class TestConversionUtils(SmarterTestBase):
     """Test conversion utility functions."""
 
     def test_rfc1034_compliant_str(self):
-        self.assertEqual(rfc1034_compliant_str("My_ChatBot_2025"), "my-chatbot-2025")
-        self.assertEqual(rfc1034_compliant_str("My@Bot!_Name"), "my-bot-name")
-        long_name = "ThisIsAReallyLongChatBotNameThatShouldBeTruncatedToSixtyThreeCharacters_Extra"
+        self.assertEqual(rfc1034_compliant_str("My_LLMClient_2025"), "my-llmclient-2025")
+        self.assertEqual(rfc1034_compliant_str("My@Bot!_Name"), "mybot-name")
+        long_name = "ThisIsAReallyLongLLMClientNameThatShouldBeTruncatedToSixtyThreeCharacters_Extra"
         self.assertEqual(
-            rfc1034_compliant_str(long_name), "thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters"
+            rfc1034_compliant_str(long_name),
+            "thisisareallylongllmclientnamethatshouldbetruncatedtosixtythreecharacters"[:63],
         )
 
     def test_rfc1034_compliant_str_invalid(self):
@@ -25,7 +26,7 @@ class TestConversionUtils(SmarterTestBase):
             rfc1034_compliant_str("")
 
     def test_rfc1034_compliant_to_snake(self):
-        self.assertEqual(rfc1034_compliant_to_snake("my-chatbot-2025"), "my_chatbot_2025")
+        self.assertEqual(rfc1034_compliant_to_snake("my-llmclient-2025"), "my_llmclient_2025")
         self.assertEqual(rfc1034_compliant_to_snake("simplelabel"), "simplelabel")
         self.assertEqual(rfc1034_compliant_to_snake("this-is-a-test-label"), "this_is_a_test_label")
         with self.assertRaises(Exception):

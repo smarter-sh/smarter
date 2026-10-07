@@ -1,0 +1,29 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: user_hourly_token_throttle
+  description: |
+    An example Budget manifest: throttling individual users. Each user may use 50,000 tokens an
+    hour, whatever the tokens cost. A budget that measures tokens works without LLMPrices.
+  version: 1.0.0
+  tags:
+    - example
+    - throttle
+    - user
+  annotations:
+    - smarter.sh/budget/purpose: per-user throttle
+spec:
+  config:
+    unit: tokens
+    period: hour
+    periodicLimit: 50000
+    absoluteLimit: 0
+    duration: 0
+    action: block
+    warningThreshold: 0
+    message: You are sending requests faster than your plan allows. Please try again next hour.
+  resources:
+    - kind: User
+      name: student1
+    - kind: User
+      name: student2

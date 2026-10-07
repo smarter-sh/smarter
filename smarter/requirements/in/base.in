@@ -20,7 +20,6 @@ celery-redbeat                          # scheduled asynchronous tasks
 channels                                # web socket support for Django ASGI
 channels-redis                          # Redis ASGI support
 dnspython                               # DNS toolkit for Python
-mariadb                                 # MySQL-compatible client
 pymysql                                 # for Django mysql compatibility
 paramiko                                # SSH2 protocol library
 psutil                                  # a cross-platform library for retrieving information on running processes and system utilization
@@ -67,7 +66,11 @@ langchain_openai                        #
 langchain_pinecone                      #
 langchain-text-splitters                # -----------------------------
 openai~=2.31                            # OpenAI API
+mcp~=2.2                                # Model Context Protocol SDK, for the MCPClient resource
 pinecone                                # Pinecone vector database support
+qdrant-client                           # Qdrant vector database support: self-hosted, and Qdrant Cloud
+langchain-qdrant                        # LangChain QdrantVectorStore
+pypdf                                   # PDF text extraction, for vectorstore documents
 google-genai                            # Google Generative AI API
 llamaai                                 # Llama AI API
 googlemaps                              # Google Maps API for weather function calling feature
@@ -80,6 +83,7 @@ python-Levenshtein                      # Levenshtein distance calculation for L
 nltk~=3.0                               # Natural Language Toolkit
 textblob                                # Text processing library
 inflect                                 # Pluralization and singularization
+inflection                              # String transformation library (pluralize/singularize/camelize)
 
 # CMS and web publishing tools
 # ------------

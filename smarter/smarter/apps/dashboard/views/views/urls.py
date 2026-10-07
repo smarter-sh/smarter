@@ -12,9 +12,9 @@ from smarter.apps.dashboard.views.views import (
     NotificationsView,
 )
 from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
-from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
-from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.plugin import urls as plugin_urls
+from smarter.common.conf import smarter_settings
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
@@ -22,18 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardReverseNames:
-    """
-    A class to hold the names of the dashboard views for easy reference throughout the codebase.
-    """
+    """A class to hold the names of the dashboard views for easy reference throughout the codebase."""
 
     namespace = namespace
 
     dashboard = namespace
-    notifications = to_snake_case(NotificationsView)
-    changelog = to_snake_case(ChangeLogView)
-    email_added = to_snake_case(EmailAdded)
-    api_my_resources = to_snake_case(MyResourcesView)
-    api_service_health = to_snake_case(ServiceHealthView)
+    notifications = to_snake_case(NotificationsView.__name__)
+    changelog = to_snake_case(ChangeLogView.__name__)
+    email_added = to_snake_case(EmailAdded.__name__)
 
 
 urlpatterns = [
@@ -47,3 +43,18 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
+
+if smarter_settings.enable_dropzone_manifest_apply:
+    logger.info(
+        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
+        logging.formatted_text(__name__),
+        namespace,
+        SmarterReadyState.READY,
+    )
+else:
+    logger.info(
+        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
+        logging.formatted_text(__name__),
+        namespace,
+        SmarterReadyState.NOT_READY,
+    )

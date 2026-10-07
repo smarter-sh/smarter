@@ -16,12 +16,5 @@ metadata:
 spec:
   connection:
     baseUrl: http://localhost:9357/api/v1/tests
-    headers: {}
-    method: GET
-    parameters: {}
     timeout: 30
-    useSsl: false
-    authenticationMethod: none
-    maxOverflow: 10
-    poolSize: 5
-    port: 8000
+    authMethod: none

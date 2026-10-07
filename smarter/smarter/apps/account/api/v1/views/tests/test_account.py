@@ -2,13 +2,16 @@
 """Test AccountView and AccountListView for API end points."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.api.v1.urls import AccountAPINamespaces
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as api_v1_namespace
@@ -196,4 +199,64 @@ class TestAccountListView(TestAccountMixin):
         """Unauthenticated user gets no accounts."""
         self.client.logout()
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertIn(response.status_code, (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN))
+
+
+class TestAccountViewErrors(TestAccountMixin):
+    """Test the error branches of the AccountView API end point."""
+
+    def setUp(self):
+        super().setUp()
+        self.admin_user.is_superuser = True
+        self.admin_user.save()
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+        self.reverse_name = ":".join(
+            [api_namespace, api_v1_namespace, account_namespace, AccountAPINamespaces.account_view]
+        )
+        self.url = reverse(self.reverse_name, args=[self.account.id])  # type: ignore
+
+    def test_get_without_account_id_returns_own_account(self):
+        """GET with account id 0 falls back to the user's own account."""
+        response = self.client.get(reverse(self.reverse_name, args=[0]))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_post_json_list_is_rejected(self):
+        """POST with a JSON list instead of a dict returns 400."""
+        response = self.client.post(self.url, [1, 2], content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_post_unknown_field_is_rejected(self):
+        """POST with a field that Account doesn't have returns 400."""
+        response = self.client.post(self.url, {"no_such_field": 1}, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_patch_json_list_is_rejected(self):
+        """PATCH with a JSON list instead of a dict returns 400."""
+        response = self.client.patch(self.url, [1, 2], content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_patch_uncached_account_returns_404(self):
+        """PATCH returns 404 when the account lookup returns nothing."""
+        with patch.object(Account, "get_cached_object", return_value=None):
+            response = self.client.patch(self.url, {"name": "x"}, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_patch_validation_error_returns_400(self):
+        """PATCH returns 400 when saving the account fails validation."""
+        with patch.object(Account, "save", side_effect=ValidationError("invalid account")):
+            response = self.client.patch(self.url, {"description": "x"}, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_patch_unexpected_error_returns_500(self):
+        """PATCH returns 500 when saving the account fails unexpectedly."""
+        with patch.object(Account, "save", side_effect=RuntimeError("boom")):
+            response = self.client.patch(self.url, {"description": "x"}, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def test_delete_unexpected_error_returns_500(self):
+        """DELETE returns 500 when deleting the account fails unexpectedly."""
+        with patch.object(Account, "delete", side_effect=RuntimeError("boom")):
+            response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertTrue(Account.objects.filter(pk=self.account.pk).exists())

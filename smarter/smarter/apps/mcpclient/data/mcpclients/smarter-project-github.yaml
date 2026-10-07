@@ -1,0 +1,40 @@
+---
+# The Smarter Project's main GitHub repository, smarter-sh/smarter, through GitMCP. It contains the
+# platform, and the source of its documentation, https://docs.smarter.sh, in docs/source/.
+# Repository: https://github.com/smarter-sh/smarter
+# Documentation: https://gitmcp.io
+#
+# GitMCP serves one MCP server per repository, so this client can read only smarter-sh/smarter.
+# The smarter LLMClient uses one such client for each of The Smarter Project's repositories that
+# it may read: see the other smarter-project-github*.yaml manifests.
+#
+# This server requires no authentication. allowedTools omits GitMCP's generic tool that fetches
+# any url, so that the LLM reads only this repository.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: smarter_project_github
+  description: Reads and searches the documentation, https://docs.smarter.sh, and the source code of the Smarter platform, in The Smarter Project's GitHub repository smarter-sh/smarter.
+  version: 1.2.0
+  tags:
+    - smarter
+    - documentation
+    - github
+    - code
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://gitmcp.io
+    - smarter.sh/mcpclient/repository: https://github.com/smarter-sh/smarter
+spec:
+  config:
+    transport: http
+    endpointUrl: https://gitmcp.io/smarter-sh/smarter
+    authType: none
+    allowedTools:
+      - fetch_smarter_documentation
+      - search_smarter_documentation
+      - search_smarter_code
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 3600
+    isActive: true
+    priority: 100

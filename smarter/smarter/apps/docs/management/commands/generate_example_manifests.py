@@ -1,28 +1,29 @@
 # pylint: disable=W0613
-"""This module is used to create a new plugin using manage.py"""
+"""This module is used to create a new plugin using manage.py."""
 
-import logging
 import os
 from typing import Type
 
+from django.test import RequestFactory
+
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.docs.views.manifest import (
     DocsExampleManifestAccountView,
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
     DocsExampleManifestBaseView,
-    DocsExampleManifestChatBotView,
-    DocsExampleManifestChatHistoryView,
-    DocsExampleManifestChatPluginUsageView,
-    DocsExampleManifestChatToolCallView,
-    DocsExampleManifestChatView,
+    DocsExampleManifestGuardrailView,
+    DocsExampleManifestLLMClientView,
     DocsExampleManifestPluginView,
+    DocsExampleManifestPromptView,
     DocsExampleManifestSecretView,
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logging.basicConfig(level=smarter_settings.log_level)
@@ -31,11 +32,14 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_plugin command. This command is used to create a plugin from a yaml import file."""
+    """Django manage.py create_plugin command.
+
+    This command is used to create a plugin from a yaml import file.
+    """
 
     def handle(self, *args, **options):
         """
-        create example manifest files for every AI resource type
+        Create example manifest files for every AI resource type.
 
         $ pwd
         /home/smarter_user/smarter
@@ -49,7 +53,6 @@ class Command(SmarterCommand):
         $ pwd
         /home/smarter_user/data/manifests/example_manifests
         $
-
         """
         self.handle_begin()
 
@@ -57,13 +60,16 @@ class Command(SmarterCommand):
         # and permissions are set so smarter_user can write here.
         output_folder = "/home/smarter_user/data/manifests/example_manifests"
 
+        # the docs views broker each manifest request on behalf of request.user,
+        # and refuse an anonymous request, so the request is made as the smarter admin.
+        request = RequestFactory().post("/")
+        request.user = smarter_cached_objects.smarter_admin
+
         def write_manifest(view_class: Type[DocsExampleManifestBaseView]):
-            """
-            Generate example manifest YAML file.
-            """
+            """Generate example manifest YAML file."""
             instance = view_class()
             try:
-                response = instance.post(request=None)
+                response = instance.post(request=request)
             # pylint: disable=broad-except
             except Exception as exc:
                 logger.error("Failed to generate manifest for %s: %s", view_class.__name__, exc)
@@ -81,11 +87,9 @@ class Command(SmarterCommand):
             DocsExampleManifestApiConnectionView,
             DocsExampleManifestApiView,
             DocsExampleManifestApiKeyView,
-            DocsExampleManifestChatView,
-            DocsExampleManifestChatHistoryView,
-            DocsExampleManifestChatPluginUsageView,
-            DocsExampleManifestChatToolCallView,
-            DocsExampleManifestChatBotView,
+            DocsExampleManifestPromptView,
+            DocsExampleManifestGuardrailView,
+            DocsExampleManifestLLMClientView,
             DocsExampleManifestPluginView,
             DocsExampleManifestSqlConnectionView,
             DocsExampleManifestSqlView,

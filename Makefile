@@ -16,11 +16,21 @@ ifeq ("$(wildcard .env)","")
 endif
 include .env
 
-.PHONY: init activate build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+# Smarter Chat, the React app of the LLMClient prompt workbench, is managed in its own
+# repository, and is also published to npm as @smarter.sh/ui-chat. react-smarter-chat
+# clones it into the React workspace, which then builds, tests and lints it with the
+# other apps. Override the branch with: make react-install SMARTER_CHAT_BRANCH=alpha
+SMARTER_CHAT_REPO ?= https://github.com/smarter-sh/smarter-chat.git
+SMARTER_CHAT_BRANCH ?= main
+SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
+
+
+.PHONY: all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
+	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	react-build \
+	react-smarter-chat react-install react-build react-build-ci react-test react-lint react-storybook \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -34,16 +44,17 @@ init:
 	@echo "==============================================================================="
 	@echo "Initializing local development environment. This will verify and set up your"
 	@echo "Python virtual environment, install all 3rd-party package requirements,"
-	@echo "build the Docker containers, initialize the MySQL database, and create example users,"
+	@echo "build the Docker containers, initialize the MariaDB database, and create example users,"
 	@echo "prompts and AI resources. This may take up to 20 minutes..."
 	@echo "==============================================================================="
 	make check-python							# verify Python 3.13 is installed
 	make docker-check							# verify Docker is installed and running
 	make python-init							# create/replace Python virtual environment and install dependencies
+	make react-install							# install npm dependencies for React frontend apps
 	make react-build							# build React frontend apps and collect static files
 	make collectstatic							# collect static files for the Django admin interface and other components
-	make docker-build-for-react			        # build the Smarter containers, including building the React frontend components
-	make docker-init							# initialize MySQL and create the smarter database
+	make docker-build 			                # build the Smarter containers, including building the React frontend components
+	make docker-init							# initialize MariaDB and create the smarter database
 	make pre-commit-init						# install and configure pre-commit
 	@echo ""
 	@echo ""
@@ -117,7 +128,8 @@ coverage:
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
-	docker exec smarter-app bash -c "coverage run --source=smarter.apps.account manage.py test smarter.apps.account && coverage report -m"
+	docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"
+
 
 change-log:
 	@echo "==============================================================================="
@@ -159,48 +171,44 @@ docker-check:
 docker-init:
 	@echo ""
 	@echo "==============================================================================="
-	@echo "Initializing Docker environment, including MySQL database and Smarter application setup. This may take a few minutes..."
+	@echo "Initializing Docker environment, including MariaDB database and Smarter application setup. This may take a few minutes..."
 	@echo "==============================================================================="
 	make docker-check && \
 	docker-compose up -d && \
-	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec smarter-mariadb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MariaDB to be ready...'; sleep 10; done" && \
+	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' && \
+	docker exec -i smarter-mariadb mariadb -u root -psmarter < scripts/smarter_test_db.sql && \
 	docker exec smarter-app bash -c "\
+		python manage.py reset_cache && \
 		python manage.py makemigrations && python manage.py migrate && \
 		python manage.py initialize_platform && \
 		python manage.py add_plugin_examples && \
 		python manage.py create_stackademy && \
-		python manage.py deploy_builtin_chatbots && \
-		python manage.py deploy_example_chatbot" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.chatbot_chatbot SET deployed = 0;'
+		python manage.py deploy_builtin_llmclients && \
+		python manage.py deploy_example_llmclient" && \
+	docker exec smarter-mariadb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
+	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
 	@echo "Docker and Smarter are initialized."
 	docker ps
 
 
 docker-shell:
 	make docker-check && \
-	docker exec -it smarter-app /bin/bash
 
 # An abbreviated build to improve developer workflow efficiency by skipping
 # static asset collection (including by not building the React frontend components)
 docker-build:
 	make docker-check && \
 	docker-compose build \
-	  --build-arg DOCKER_COLLECT_STATIC_FILES=false \
-      --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER= \
-      --build-arg DOCKER_REACT_REMOTE_CDN_URL= && \
+	  --build-arg DOCKER_COLLECT_STATIC_FILES=false && \
 	docker image prune -f
 
-# the DOCKER_REACT_REMOTE_CACHE_BUSTER build argument forces Docker to rebuild the React
-# frontend assets from the CDN distribution.
-#
-# example usage: docker-compose build  --progress=plain --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER=$(shell date +%s) --build-arg DOCKER_REACT_REMOTE_CDN_URL=https://cdn.smarter.sh/react
+# A full build, which collects the static files, including the React apps'.
+# Build the React apps first, with `cd smarter/react && npm run build`.
 docker-build-for-react:
 	make docker-check && \
 	docker-compose build  --progress=plain \
-	  --build-arg DOCKER_COLLECT_STATIC_FILES=true \
-      --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER=$(shell date +%s) \
-      --build-arg DOCKER_REACT_REMOTE_CDN_URL=
+	  --build-arg DOCKER_COLLECT_STATIC_FILES=true
 	docker image prune -f
 
 docker-run:
@@ -209,7 +217,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.common"
+	docker exec smarter-app bash -c "python manage.py test smarter"
 
 docker-prune:
 	@echo ""
@@ -221,7 +229,7 @@ docker-prune:
 	docker-compose down && \
 	docker builder prune -a -f && \
 	docker image prune -a -f
-	rm -rf ./mysql-data && \
+	rm -rf ./mariadb-data && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
 	docker system prune -a --volumes && \
 	docker volume prune -f && \
@@ -283,7 +291,8 @@ python-init:
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
-	$(PIP) install pip==25.3 setuptools wheel pip-tools && \
+	$(PIP) install --upgrade pip && \
+	$(PIP) install setuptools wheel pip-tools && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:
@@ -311,30 +320,61 @@ python-requirements:
 	@echo "==============================================================================="
 	@echo "Compiling and updating Python dependency files using pip-compile ..."
 	@echo "==============================================================================="
-	pip install pip==25.3 setuptools wheel pip-tools
+	pip install --upgrade setuptools wheel "pip-tools>=7.6.1"
 	pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+	pip-compile smarter/requirements/in/docs.in -o smarter/requirements/docs.txt --no-strip-extras
 
 
 # ---------------------------------------------------------
 # React
-# We assume that NODE_ENV=production for all React builds, which ensures that the production
-# versions of React and other dependencies are used and that the resulting static files are
-# optimized for production use.
-#
-# Note: It is necessary to provide the --include=dev flag to npm install
-# because NODE_ENV=production is set, which would otherwise cause npm to skip installing devDependencies.
 # ---------------------------------------------------------
+# Clone Smarter Chat into the React workspace, unless it is already there. An existing
+# clone is never changed, so that work in progress in it is safe. Its pre-commit and
+# commit-msg hooks are installed when pre-commit is available (the venv is active).
+react-smarter-chat:
+	@if [ -d "$(SMARTER_CHAT_DIR)/.git" ]; then \
+		echo "$(SMARTER_CHAT_DIR) exists, on branch $$(git -C $(SMARTER_CHAT_DIR) rev-parse --abbrev-ref HEAD)"; \
+	else \
+		git clone --branch $(SMARTER_CHAT_BRANCH) $(SMARTER_CHAT_REPO) $(SMARTER_CHAT_DIR); \
+	fi
+	@if command -v pre-commit >/dev/null 2>&1 && [ ! -f "$(SMARTER_CHAT_DIR)/.git/hooks/commit-msg" ]; then \
+		cd $(SMARTER_CHAT_DIR) && pre-commit install; \
+	fi
+
+react-install: react-smarter-chat
+	cd smarter/react && npm install --include=dev
+
+react-update:
+	cd smarter/react && ncu --workspaces --root -u && npm install
+
 react-build:
 	@echo "==============================================================================="
-	@echo "Collecting static files on local filesystem ..."
+	@echo "Building and collecting React files on local filesystem ..."
 	@echo "==============================================================================="
-	rm -r -f smarter/staticfiles/react/
-	cd smarter/react/prompt_list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/terminal_emulator && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/prompt_passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/dashboard && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	cd smarter/react && NODE_ENV=production npm run build
+	make collectstatic
+	make build
+
+react-build-ci: react-smarter-chat
+	cd smarter/react && \
+	NODE_ENV=production npm ci --include=dev && \
+	NODE_ENV=production npm run build
+
+# Run the unit tests of every React app, with a coverage report in smarter/react/coverage/.
+# Each story is rendered as a test too. See smarter/react/README.md.
+react-test:
+	cd smarter/react && npm run coverage
+
+# Check the formatting, lint and types of every React app, as CI does.
+react-lint:
+	cd smarter/react && npm run format:check && npm run lint && npm run typecheck
+
+# Browse a React app's components in Storybook, at http://localhost:6006.
+# example: make react-storybook APP=smarter-secret-list
+react-storybook:
+	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
@@ -367,6 +407,11 @@ sphinx-docs:
 
 sphinx-linkcheck:
 	cd docs && make linkcheck
+
+sphinx-publish:
+	cd docs/build/html && \
+	aws s3 sync . s3://docs.smarter.sh/ --delete --acl public-read && \
+	aws cloudfront create-invalidation --distribution-id E3J3PFZATCQOFX --paths "/*"
 
 ######################
 # HELP
@@ -404,7 +449,13 @@ help:
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
 	@echo 'python-requirements    - Compile and update Python dependency files'
 	@echo '<************************** React **************************>'
+	@echo 'react-smarter-chat     - Clone Smarter Chat into the React workspace (SMARTER_CHAT_BRANCH=main)'
+	@echo 'react-install          - Install npm dependencies for React frontend apps'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
+	@echo 'react-build-ci         - Build all React frontend apps using CI settings'
+	@echo 'react-test             - Run the unit tests of all React apps, with a coverage report'
+	@echo 'react-lint             - Check the formatting, lint and types of all React apps'
+	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'
@@ -415,4 +466,5 @@ help:
 	@echo 'sphinx-init            - Initialize Sphinx documentation environment'
 	@echo 'sphinx-docs            - Build Sphinx documentation'
 	@echo 'sphinx-linkcheck       - Check documentation links'
+	@echo 'sphinx-publish         - Publish documentation to AWS S3 and invalidate CloudFront cache'
 	@echo '===================================================================='

@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test api/v1/cli endpoints on the Plugin model."""
 
-import logging
 import os
 from http import HTTPStatus
 from urllib.parse import urlencode
@@ -10,6 +9,7 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
 
@@ -57,7 +57,7 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
     def test_valid_manifest(self):
-        """Test that we get OK response when passing a valid manifest"""
+        """Test that we get OK response when passing a valid manifest."""
 
         # create a Plugin from a valid manifest
         path = reverse(self.namespace + ApiV1CliReverseViews.apply, kwargs=None)
@@ -87,14 +87,14 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
                     "tags": ["down", "up", "all-around"],
                     "annotations": [
                         {"smarter.sh/tests/owner": "test bank"},
-                        {"smarter.sh/tests/host": "sql.lawrencemcdaniel.com"},
+                        {"smarter.sh/tests/host": "localhost"},
                         {
                             "smarter.sh/tests/purpose": "Provide information about Stackademy University courses using SQL queries."
                         },
                         {"smarter.sh/tests/last-updated": "2025-12-31"},
-                        {"smarter.sh/tests/documentation": "https://docs.tests.edu/sql-chatbot"},
+                        {"smarter.sh/tests/documentation": "https://docs.tests.edu/sql-llmclient"},
                         {
-                            "smarter.sh/tests/connection-info": "This chatbot connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com using the Stackademy SQL plugin to retrieve course information.\n"
+                            "smarter.sh/tests/connection-info": "This llmclient connects to the Stackademy SQL database hosted at localhost using the Stackademy SQL plugin to retrieve course information.\n"
                         },
                     ],
                     "pluginClass": "static",
@@ -107,13 +107,13 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
                     "prompt": {
                         "provider": "openai",
                         "systemRole": 'Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:"\n',
-                        "model": "gpt-4o-mini",
+                        "model": "gpt-6-luna",
                         "temperature": 0.5,
                         "maxTokens": 256,
                     },
                     "data": {
                         "staticData": {
-                            "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4o et al) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
+                            "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Prompt Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4o et al) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
                             "links": [
                                 {"documentation": "https://platform.openai.com/docs/guides/function-calling"},
                                 {"website": "https://openai.com/"},

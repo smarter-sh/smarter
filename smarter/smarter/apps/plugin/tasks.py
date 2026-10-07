@@ -1,11 +1,9 @@
-# pylint: disable=unused-argument
-"""
-Celery tasks for the plugin app.
-"""
+# pylint: disable=unused-argument,too-many-locals
+"""Celery tasks for the plugin app."""
 
 from typing import Optional
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
 )
@@ -30,9 +28,9 @@ module_prefix = "smarter.apps.plugin.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_plugin_selector_history(*args, **kwargs):
     """
@@ -52,7 +50,7 @@ def create_plugin_selector_history(*args, **kwargs):
         - input_text (str, optional): The user's input text.
         - messages (list[dict], optional): List of message objects.
         - search_term (str, optional): The search term used by the user.
-        - session_key (str, optional): The chat session key.
+        - session_key (str, optional): The prompt session key.
 
     :return: None
 
@@ -83,7 +81,6 @@ def create_plugin_selector_history(*args, **kwargs):
                 "session_key": "abc123"
             }
         )
-
     """
 
     @cache_results()
@@ -98,10 +95,19 @@ def create_plugin_selector_history(*args, **kwargs):
     user_profile = None
     user_profile_id = kwargs.get("user_profile_id")
     if user_profile_id:
-        user_profile = UserProfile.get_cached_object(user_profile_id=user_profile_id)
+        user_profile = UserProfile.get_cached_object(pk=user_profile_id)
     user_id = kwargs.get("user_id")
     if user_id and not user_profile:
-        user = get_cached_user_for_user_id(user_id=user_id)
+        try:
+            user = get_cached_user_for_user_id(user_id=user_id)
+        except User.DoesNotExist:
+            # the user was deleted after this task was queued, which a retry cannot fix.
+            logger.warning(
+                "%s user_id: %s no longer exists. Plugin selector history is not recorded.",
+                formatted_text(module_prefix + "create_plugin_selector_history()"),
+                user_id,
+            )
+            return
         user_profile = UserProfile.get_cached_object(user=user) if user else None
     if not user_profile:
         raise SmarterPluginError(
@@ -109,6 +115,14 @@ def create_plugin_selector_history(*args, **kwargs):
         )
     plugin_id = kwargs.get("plugin_id")
     plugin_meta = cached_plugin_by_id(plugin_id) if plugin_id else None
+    if plugin_meta is None:
+        logger.error(
+            "%s plugin_id: %s, user_profile: %s, error: plugin not found",
+            formatted_text(module_prefix + "create_plugin_selector_history()"),
+            plugin_id,
+            user_profile,
+        )
+        return
     try:
         # to catch a race situation in unit tests.
         plugin_controller = PluginController(
@@ -147,3 +161,13 @@ def create_plugin_selector_history(*args, **kwargs):
         messages={"input_text": input_text} if input_text else messages,
         session_key=session_key,
     )
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+)
+def create_plugin_charge(*args, **kwargs):
+    pass

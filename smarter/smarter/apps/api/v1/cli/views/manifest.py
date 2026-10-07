@@ -1,13 +1,12 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'example_manifest' view"""
-
-import logging
+"""Smarter API command-line interface 'example_manifest' view."""
 
 from django.http import HttpResponseNotAllowed
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from smarter.common.const import SmarterHttpMethods
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -24,6 +23,7 @@ logger = logging.getLogger(__name__)
 class ApiV1CliManifestApiView(CliBaseApiView):
     """
     This is the API endpoint for the 'example_manifest' command in the Smarter command-line interface (CLI).
+
     It generates an example manifest for a specified Smarter resource.
 
     The 'example_manifest' command is a Smarter Brokered and Journaled operation that is used with some Smarter resources.
@@ -42,12 +42,10 @@ class ApiV1CliManifestApiView(CliBaseApiView):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
-        """
+        """Returns the class name in a formatted string along with the name of this mixin."""
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliManifestApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliManifestApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(
         operation_description="""
@@ -71,6 +69,8 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind, *args, **kwargs):
+        if self.broker is None:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         return self.broker.example_manifest(request=request, kwargs=kwargs)
 
     @swagger_auto_schema(
@@ -103,6 +103,9 @@ The response from this endpoint is a JSON object containing an example manifest 
                 SmarterWaffleSwitches.ALLOW_API_GET,
             )
             return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
+
+        if self.broker is None:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
 
         response = self.broker.example_manifest(request=request, kwargs=kwargs)
         return response

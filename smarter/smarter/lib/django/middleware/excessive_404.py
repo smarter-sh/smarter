@@ -1,5 +1,6 @@
 """
-Middleware for throttling unauthenticated clients generating excessive
+Middleware for throttling unauthenticated clients generating excessive.
+
 HTTP 404 responses.
 
 This middleware detects repeated invalid URL requests from unauthenticated
@@ -146,7 +147,6 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from http import HTTPStatus
 
-from asgiref.sync import sync_to_async
 from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
@@ -190,45 +190,46 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
     LOG_SAMPLE_RATE = 10
 
+    # JSON schema lookups, which editors (e.g. smarter-vscode-yaml) send in
+    # bursts for every manifest kind they encounter, including obsolete ones.
+    IGNORED_PATH_PREFIXES = (
+        "/api/v1/cli/schema/",
+        "/api/v1/cli/json-schema/",
+    )
+
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
         if self.async_mode:
             return self.__acall__(request)
 
-        if self.deserves_amnesty(request.path):
-            return self.get_response(request)
-
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
-        response = self.get_response(request)
-        self.process_response(request, response)
-        return response
+        response = super().__call__(request)
+
+        # process_response() returns a 403 for a client that has exceeded the limit.
+        return self.process_response(request, response)  # type: ignore
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
-            return await sync_to_async(self.get_response)(request)
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await self.get_response(request)
-        await self.async_process_response(request, response)
-        return response
+        response = await super().__acall__(request)
+        return await self.async_process_response(request, response)
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     async def async_process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Async entry point for ASGI deployments.
-        """
+        """Async entry point for ASGI deployments."""
 
         return self._process_response(request, response)
 
     def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Sync response middleware entry point.
-        """
+        """Sync response middleware entry point."""
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
@@ -236,11 +237,12 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return self._process_response(request, response)
 
     def _process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Shared sync/async implementation.
-        """
+        """Shared sync/async implementation."""
 
         if response.status_code != HTTPStatus.NOT_FOUND:
+            return response
+
+        if self.is_ignored_path(request.path):
             return response
 
         # Authenticated users are exempt
@@ -284,14 +286,23 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
         return response
 
+    def is_ignored_path(self, path: str) -> bool:
+        """
+        Determine whether 404s on this path should never count toward the throttle.
+
+        :param path: The request path.
+        :type path: str
+        :returns: True for amnesty urls and JSON schema lookups.
+        :rtype: bool
+        """
+        return self.deserves_amnesty(path) or path.startswith(self.IGNORED_PATH_PREFIXES)
+
     @classmethod
     def get_throttle_key(cls, client_ip: str) -> str:
         return f"excessive_404_throttle:{client_ip}"
 
     def increment_throttle(self, throttle_key: str) -> None:
-        """
-        Increment the client's 404 counter.
-        """
+        """Increment the client's 404 counter."""
 
         try:
             blocked_count = cache.incr(throttle_key)
@@ -316,9 +327,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         client_ip: str,
         blocked_count: int,
     ) -> None:
-        """
-        Sample logs to reduce spam during bot scans.
-        """
+        """Sample logs to reduce spam during bot scans."""
 
         if blocked_count % self.LOG_SAMPLE_RATE != 0:
             return

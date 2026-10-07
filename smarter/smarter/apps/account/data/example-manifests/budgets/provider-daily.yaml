@@ -1,0 +1,26 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: openai_daily
+  description: |
+    An example Budget manifest: a provider budget. Prompts sent to OpenAI, through LLMClients or
+    the openai Proxy, may cost $200 a day. Cost is priced with LLMPrices, in USD per million tokens.
+  version: 1.0.0
+  tags:
+    - example
+    - provider
+  annotations:
+    - smarter.sh/budget/purpose: provider budget
+spec:
+  config:
+    unit: cost
+    period: day
+    periodicLimit: 200.00
+    absoluteLimit: 0
+    duration: 0
+    action: block
+    warningThreshold: 90
+    message: OpenAI has reached today's spending limit. It renews at midnight UTC.
+  resources:
+    - kind: Provider
+      name: openai

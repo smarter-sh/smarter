@@ -72,7 +72,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - ChatBot.sandbox_host should return a domain, not a url ([73e1ba6](https://github.com/smarter-sh/smarter/commit/73e1ba6b7e37309a8db8f40d1bab85e1c6edf76c))
 - ChatBotHelper().api_host ([e3b2f25](https://github.com/smarter-sh/smarter/commit/e3b2f2578b2c89c5ab5bf00001841cc762aae5ba))
 - correct KIND ([a3c5643](https://github.com/smarter-sh/smarter/commit/a3c5643305a68aedfa7133401099b6123e094bca))
-- create a non-camel case serializer for ChatConfigView ([51a6a35](https://github.com/smarter-sh/smarter/commit/51a6a3563f7c5d6bbb21e0060b1dc439f7b6de59))
+- create a non-camel case serializer for PromptConfigView ([51a6a35](https://github.com/smarter-sh/smarter/commit/51a6a3563f7c5d6bbb21e0060b1dc439f7b6de59))
 - index created_at and updated_at ([0beb107](https://github.com/smarter-sh/smarter/commit/0beb107040e6ed76ffcbbe8009d34e18ed11b0e5))
 - initialization logic of AccountMixin ([5aa92c9](https://github.com/smarter-sh/smarter/commit/5aa92c9bf03aa126abd9879674a1ba90c682aac7))
 - is_token_auth() should compare str to str ([1ba2c3a](https://github.com/smarter-sh/smarter/commit/1ba2c3a519cd50c22e563a5ec9e4d2116b48eb81))

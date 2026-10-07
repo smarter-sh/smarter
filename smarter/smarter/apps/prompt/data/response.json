@@ -79,7 +79,7 @@
     }
   },
   "api": "smarter.sh/v1",
-  "thing": "Chatbot",
+  "thing": "LLMClient",
   "metadata": {
     "command": "chat"
   }

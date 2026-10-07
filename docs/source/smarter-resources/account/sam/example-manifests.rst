@@ -7,3 +7,4 @@ Example Manifests
    example-manifests/account
    example-manifests/user
    example-manifests/auth-token
+   example-manifests/budget

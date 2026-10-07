@@ -1,6 +1,5 @@
 """
-Middleware that blocks requests targeting sensitive files, configuration
-artifacts, and common attack-probe endpoints.
+Middleware that blocks requests targeting sensitive files, configuration artifacts, and common attack-probe endpoints.
 
 This middleware detects suspicious path access attempts commonly associated
 with automated scanners, vulnerability enumeration tools, credential
@@ -366,10 +365,10 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
             return self.__acall__(request)
 
         if self.deserves_amnesty(request.path):
-            return self.get_response(request)
+            return super().__call__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
-            return self.get_response(request)
+            return super().__call__(request)
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = self._inspect_request(request)
@@ -377,12 +376,12 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if response is not None:
             return response
 
-        return self.get_response(request)
+        return super().__call__(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponse:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
-            return await sync_to_async(self.get_response)(request)
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await sync_to_async(self._inspect_request)(request)
@@ -395,7 +394,8 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def _inspect_request(
         self,
@@ -451,9 +451,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def normalize_path(path: str) -> str:
-        """
-        Normalize paths to reduce traversal and encoding bypasses.
-        """
+        """Normalize paths to reduce traversal and encoding bypasses."""
 
         for _ in range(2):
             path = urllib.parse.unquote(path)
@@ -528,9 +526,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     @classmethod
     @cache_results(timeout=60 * 60 * 24)
     def is_sensitive_request(cls, path: str) -> bool:
-        """
-        Cached sensitive file detection.
-        """
+        """Cached sensitive file detection."""
 
         path_segments = tuple(cls.iter_path_segments(path))
 

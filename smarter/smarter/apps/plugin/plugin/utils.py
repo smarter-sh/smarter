@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Plugin utils module for core plugin functionality."""
 
-import logging
 import os
 import re
 from typing import Any, Optional, Union
@@ -15,6 +14,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -42,8 +42,10 @@ class Plugins:
     :param account: The account context for plugin retrieval.
     :type account: Account
 
-    :raises PluginDataValueError:
-        If a plugin cannot be loaded or is malformed
+    .. note::
+
+        A plugin that cannot be loaded, for example one whose plugin data
+        is missing, is logged and skipped.
 
     .. seealso::
 
@@ -55,7 +57,6 @@ class Plugins:
         plugins = Plugins(user=my_user, account=my_account)
         plugin_dicts = plugins.data
         plugin_json = plugins.to_json()
-
     """
 
     account: Optional[Account] = None
@@ -68,30 +69,49 @@ class Plugins:
         self.account = account or UserProfile.get_cached_object(user=user).account
         self.user_profile = UserProfile.get_cached_object(user=user, account=account)
 
-        # plugins for this user profile
-        for plugin in PluginMeta.objects.filter(user_profile=self.user_profile):
-            plugin_controller = PluginController(
-                user_profile=self.user_profile,
-                plugin_meta=plugin,
-            )
-            if not plugin_controller or not plugin_controller.plugin:
-                raise PluginDataValueError(
-                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
-                )
-            self.plugins.append(plugin_controller.plugin)
-
-        # plugins for the smarter admin user profile
+        # plugins for this user profile, followed by those of the smarter admin user profile
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
-        for plugin in PluginMeta.objects.filter(user_profile=smarter_admin_user_profile):
+        for user_profile in (self.user_profile, smarter_admin_user_profile):
+            for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):
+                plugin = self.load_plugin(plugin_meta=plugin_meta, user_profile=user_profile)
+                if plugin is not None:
+                    self.plugins.append(plugin)
+
+    @staticmethod
+    def load_plugin(plugin_meta: PluginMeta, user_profile: UserProfile) -> Optional[PluginBase]:
+        """
+        Load a plugin, or log and skip it if it cannot be loaded.
+
+        One malformed plugin, for example one whose plugin data is missing,
+        should not prevent the others from being listed.
+
+        :param plugin_meta: The plugin's PluginMeta.
+        :type plugin_meta: PluginMeta
+        :param user_profile: The plugin's owner.
+        :type user_profile: Optional[UserProfile]
+        :returns: The plugin, or None if it cannot be loaded.
+        :rtype: Optional[PluginBase]
+        """
+        try:
             plugin_controller = PluginController(
-                user_profile=smarter_admin_user_profile,
-                plugin_meta=plugin,
+                user_profile=user_profile,
+                plugin_meta=plugin_meta,
             )
             if not plugin_controller or not plugin_controller.plugin:
                 raise PluginDataValueError(
-                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
+                    f"PluginController could not be created for plugin_id: {plugin_meta.id}, user_profile: {user_profile}"  # type: ignore[arg-type]
                 )
-            self.plugins.append(plugin_controller.plugin)
+            return plugin_controller.plugin
+        # pylint: disable=W0718
+        except Exception as e:
+            base_logger.warning(
+                "Plugins.load_plugin() skipping plugin %s (id: %s) for %s, which cannot be loaded: %s",
+                plugin_meta.name,
+                plugin_meta.id,  # type: ignore[reportAttributeAccessIssue]
+                user_profile,
+                e,
+            )
+            return None
 
     @property
     def data(self) -> list[dict]:
@@ -132,7 +152,6 @@ class PluginExample:
         print(example.name)
         print(example.to_yaml())
         print(example.to_json())
-
     """
 
     _filename: Optional[str]
@@ -140,7 +159,7 @@ class PluginExample:
     _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
-        """Initialize the class from a yaml file"""
+        """Initialize the class from a yaml file."""
         with open(os.path.join(filepath, filename), encoding="utf-8") as file:
             self._yaml = file.read()
             self._json = yaml.safe_load(self._yaml)
@@ -158,7 +177,7 @@ class PluginExample:
         try:
             retval = self._json["metadata"]["name"] if isinstance(self._json, dict) else None
         except KeyError:
-            logger.warning("PluginExample: %d is malformed and has no metadata.name", self.filename)
+            logger.warning("PluginExample: %s is malformed and has no metadata.name", self.filename)
             retval = self.convert_filename()
         return retval
 
@@ -216,7 +235,6 @@ class PluginExamples:
         print(examples.count())
         for example in examples.plugins:
             print(example.filename, example.name)
-
     """
 
     _plugin_examples: list[PluginExample] = []

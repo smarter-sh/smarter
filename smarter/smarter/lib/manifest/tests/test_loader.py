@@ -1,10 +1,10 @@
-"""Test SAMLoader"""
+"""Test SAMLoader."""
 
-import logging
 import os
 
 import yaml
 
+from smarter.lib import logging
 from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestManifestLoader(SmarterTestBase):
-    """Test SAMLoader"""
+    """Test SAMLoader."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -25,7 +25,7 @@ class TestManifestLoader(SmarterTestBase):
         self.url = "https://cdn.smarter.sh/cli/example-manifests/plugin.yaml"
 
     def test_valid_manifest(self):
-        """Test that we can load a valid manifest"""
+        """Test that we can load a valid manifest."""
         loader = SAMLoader(manifest=self.good_manifest_text)
         self.assertTrue(loader.ready, msg="loader is not ready")
         self.assertIsInstance(loader.json_data, dict)
@@ -78,12 +78,12 @@ class TestManifestLoader(SmarterTestBase):
         self.assertIsNone(loader.get_key("bad"))
 
     def test_invalid_api_version(self):
-        """Test that we can load a valid manifest"""
+        """Test that we can load a valid manifest."""
         with self.assertRaises(SAMLoaderError):
             SAMLoader(api_version="bad", manifest=self.good_manifest_text)
 
     def test_missing_metadata(self):
-        """Test that we can load a valid manifest"""
+        """Test that we can load a valid manifest."""
 
         def test_missing(element: str):
             try:

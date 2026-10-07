@@ -6,14 +6,14 @@
   "messages": [
       {
           "role": "system",
-          "content": "You are a helpful chatbot"
+          "content": "You are a helpful llmclient"
       },
       {
           "role": "user",
           "content": "where can i buy an everlasting gobstopper and how much do they cost?"
       }
   ],
-  "chat_history": [
+  "prompt_history": [
       {
           "message": "Hello, How can I help you?",
           "direction": "incoming",

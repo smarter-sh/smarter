@@ -1,9 +1,8 @@
 # pylint: disable=duplicate-code
 # pylint: disable=E1101
-"""Utility functions for the OpenAI Lambda functions"""
+"""Utility functions for the OpenAI Lambda functions."""
 
 import base64
-import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
 from typing import Any, Optional, Union
@@ -13,6 +12,9 @@ from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import (
     json,  # library for interacting with JSON data https://www.json.org/json-en.html
+)
+from smarter.lib import (
+    logging,
 )
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -42,10 +44,12 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
     """
     Generate a standardized JSON return dictionary for all possible response scenarios.
 
-    status: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-    body: a JSON dict of http response for status 200, an error dict otherwise.
+    :param status: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    :param body: a JSON dict of http response for status 200, an error dict otherwise. Both are
+        serialized into the "body", so that an error's message reaches the client.
+    :param debug_mode: if True, log the response to the CloudWatch log for this Lambda.
 
-    see https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
+    See https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     """
     if status < 100 or status > 599:
         raise SmarterValueError(f"Invalid HTTP response code received: {status}")
@@ -58,7 +62,6 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
 
     if status != 200:
         logger.error("Error: %s", body)
-        return retval
 
     if debug_mode:
         retval["body"] = body
@@ -76,8 +79,7 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
 
 def exception_response_factory(exception, request_meta_data: Optional[dict] = None) -> Union[list, dict]:
     """
-    Generate a standardized error response dictionary that includes
-    the Python exception type and stack trace.
+    Generate a standardized error response dictionary that includes the Python exception type and stack trace.
 
     exception: a descendant of Python Exception class
     """
@@ -142,10 +144,10 @@ def get_request_body(data) -> dict:
 
 
 def parse_request(request_body: dict):
-    """Parse the request body and return the endpoint, model, messages, and input_text"""
+    """Parse the request body and return the endpoint, model, messages, and input_text."""
     messages: Optional[list[dict[str, Any]]] = request_body.get("messages")
     input_text: Optional[str] = request_body.get("input_text")
-    chat_history: Optional[list[dict[str, Any]]] = request_body.get("chat_history")
+    prompt_history: Optional[list[dict[str, Any]]] = request_body.get("prompt_history")
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
@@ -163,12 +165,12 @@ def parse_request(request_body: dict):
         if "role" not in message or "content" not in message:
             raise SmarterValueError("Each message must contain 'role' and 'content' keys")
 
-    if chat_history and input_text:
+    if prompt_history and input_text:
         # memory-enabled request assumed to be destined for langchain_passthrough
-        # we'll need to rebuild the messages list from the chat_history
+        # we'll need to rebuild the messages list from the prompt_history
         messages = []
-        for chat in chat_history:
-            messages.append({"role": chat["sender"], "content": chat["message"]})
+        for prompt in prompt_history:
+            messages.append({"role": prompt["sender"], "content": prompt["message"]})
         messages.append({"role": "user", "content": input_text})
 
     if isinstance(messages, list) and not input_text:
@@ -179,7 +181,7 @@ def parse_request(request_body: dict):
 
 
 def get_content_for_role(messages: list, role: str) -> str:
-    """Get the text content from the messages list for a given role"""
+    """Get the text content from the messages list for a given role."""
     retval = [d.get("content") for d in messages if d["role"] == role]
     try:
         return retval[-1]
@@ -188,7 +190,7 @@ def get_content_for_role(messages: list, role: str) -> str:
 
 
 def get_message_history(messages: list) -> list:
-    """Get the text content from the messages list for a given role"""
+    """Get the text content from the messages list for a given role."""
     message_history = [
         {"role": d["role"], "content": d.get("content")}
         for d in messages
@@ -198,7 +200,7 @@ def get_message_history(messages: list) -> list:
 
 
 def get_messages_for_role(messages: list, role: str) -> list:
-    """Get the text content from the messages list for a given role"""
+    """Get the text content from the messages list for a given role."""
     retval = [d.get("content") for d in messages if d["role"] == role]
     return retval
 
@@ -206,9 +208,7 @@ def get_messages_for_role(messages: list, role: str) -> list:
 def ensure_system_role_present(
     messages: list[dict[str, Any]], default_system_role: str = smarter_settings.llm_default_system_role  # type: ignore
 ) -> list:
-    """
-    Ensure that a system role is present in the messages list
-    """
+    """Ensure that a system role is present in the messages list."""
     if not isinstance(messages, list):
         raise SmarterValueError("Messages must be a list")
     if not all(isinstance(d, dict) for d in messages):
@@ -230,3 +230,67 @@ def ensure_system_role_present(
             },
         )
     return messages
+
+
+def pair_tool_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Return the messages with every tool call paired with its tool reply, as OpenAI requires.
+
+    The OpenAI chat completions API refuses, with a 400, a ``tool`` message that does not answer a
+    ``tool_calls`` entry of the assistant message immediately before it, and an assistant ``tool_calls``
+    entry that no ``tool`` message answers. A message thread can break this rule when it comes from a
+    client, such as the chat window, that keeps the tool replies but not the assistant's ``tool_calls``,
+    which happens when the prompt history has not been persisted yet. So:
+
+    - a ``tool`` message is kept only if it answers a tool call of the preceding assistant message.
+    - a tool call that no ``tool`` message answers is removed from its assistant message.
+
+    The messages themselves are not modified: an assistant message that changes is copied.
+
+    :param messages: The message thread.
+    :return: The message thread, in which every tool call is paired with its reply.
+    """
+    role_key, tool_calls_key = OpenAIMessageKeys.MESSAGE_ROLE_KEY, "tool_calls"
+    retval: list[dict[str, Any]] = []
+    i = 0
+    while i < len(messages):
+        message = messages[i]
+        role = message.get(role_key)
+        if role == OpenAIMessageKeys.TOOL_MESSAGE_KEY:
+            # an orphan: it does not follow an assistant message with tool calls.
+            logger.warning(
+                "pair_tool_messages() removed a tool message without a tool call: %s", message.get("tool_call_id")
+            )
+            i += 1
+            continue
+        tool_calls = message.get(tool_calls_key) if role == OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY else None
+        if not tool_calls:
+            retval.append(message)
+            i += 1
+            continue
+
+        # the tool messages that immediately follow the assistant message
+        j = i + 1
+        replies: list[dict[str, Any]] = []
+        while j < len(messages) and messages[j].get(role_key) == OpenAIMessageKeys.TOOL_MESSAGE_KEY:
+            replies.append(messages[j])
+            j += 1
+        call_ids = [call.get("id") for call in tool_calls if isinstance(call, dict)]
+        replies = [reply for reply in replies if reply.get("tool_call_id") in call_ids]
+        answered = {reply.get("tool_call_id") for reply in replies}
+        paired_calls = [call for call in tool_calls if isinstance(call, dict) and call.get("id") in answered]
+        if len(paired_calls) != len(tool_calls):
+            logger.warning(
+                "pair_tool_messages() removed %s tool calls without a tool message", len(tool_calls) - len(paired_calls)
+            )
+            message = dict(message)
+            if paired_calls:
+                message[tool_calls_key] = paired_calls
+            else:
+                del message[tool_calls_key]
+                if message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) is None:
+                    message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = ""
+        retval.append(message)
+        retval.extend(replies)
+        i = j
+    return retval

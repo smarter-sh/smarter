@@ -12,5 +12,5 @@ Technical References
 --------------------
 
 - Django ORM Model: :py:class:`smarter.apps.connection.models.ApiConnection`
-- :doc:`SAM Broker <../sam/brokers/api-connection>`
-- :doc:`SAM Pydantic Class Reference <../sam/models/api-connection>`
+- :doc:`SAM Broker <../manifest/brokers/api-connection>`
+- :doc:`SAM Pydantic Class Reference <../manifest/models/api-connection>`

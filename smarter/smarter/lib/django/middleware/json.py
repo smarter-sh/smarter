@@ -1,6 +1,5 @@
 """
-Middleware that guarantees JSON-formatted error responses for clients
-requesting JSON content.
+Middleware that guarantees JSON-formatted error responses for clients requesting JSON content.
 
 This middleware intercepts non-JSON error responses and converts them
 into standardized ``JsonResponse`` objects when the client explicitly
@@ -182,10 +181,7 @@ else:
 
 
 class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
-    """
-    Middleware that converts non-JSON error responses into JSON responses
-    for clients requesting JSON content.
-    """
+    """Middleware that converts non-JSON error responses into JSON responses for clients requesting JSON content."""
 
     JSON_CONTENT_TYPES = (
         "application/json",
@@ -198,31 +194,32 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
             return self.__acall__(request)
 
         if self.deserves_amnesty(request.path):
-            return self.get_response(request)
+            return super().__call__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
-            return self.get_response(request)
+            return super().__call__(request)
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = self.get_response(request)
-        response = self.process_response(request, response)
+        response = super().__call__(request)
+        response = self.process_response(request, response)  # type: ignore
 
         return response
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
-            return await sync_to_async(self.get_response)(request)
+            return await super().__acall__(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await sync_to_async(self.get_response)(request)
-        response = await self.async_process_response(request, response)
+        response = await super().__acall__(request)
+        response = await self.async_process_response(request, response)  # type: ignore
 
         return response
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
 
@@ -239,9 +236,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return await sync_to_async(self.normalize_json_error_response)(request=request, response=response)
 
     def normalize_json_error_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Convert non-JSON error responses into JsonResponse objects.
-        """
+        """Convert non-JSON error responses into JsonResponse objects."""
 
         if not self.client_accepts_json(request):
             return response
@@ -263,9 +258,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return JsonResponse(payload, status=response.status_code)
 
     def client_accepts_json(self, request: HttpRequest) -> bool:
-        """
-        Determine whether the client accepts JSON responses.
-        """
+        """Determine whether the client accepts JSON responses."""
 
         accept_header = request.headers.get("Accept", "").lower()
 
@@ -276,9 +269,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def response_is_json(response: HttpResponseBase) -> bool:
-        """
-        Detect whether the response is already JSON.
-        """
+        """Detect whether the response is already JSON."""
 
         content_type = response.get(
             "Content-Type",
@@ -288,9 +279,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def build_error_payload(response: HttpResponseBase) -> dict:
-        """
-        Build standardized JSON error payload.
-        """
+        """Build standardized JSON error payload."""
 
         return {
             "error": {

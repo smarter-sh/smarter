@@ -1,0 +1,30 @@
+---
+# Eight NVIDIA H100 (80 GB each), for the largest models. LLMHosts that request fewer GPUs
+# share a node. The price is approximately the AWS us-east-1 on-demand price of one node,
+# after AWS's 2025 price reduction: check it for your region.
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: gpu_h100_8x
+  description: Eight NVIDIA H100 with 80 GB each, 192 vCPUs and 2 TiB.
+  version: 1.0.0
+  tags:
+  - gpu
+  - h100
+  annotations:
+  - smarter.sh/llmhostcompute/builtin: 'true'
+spec:
+  node:
+    instanceType: p5.48xlarge
+    cpu: 192
+    memoryGb: 2048
+    gpu:
+      type: H100-80GB
+      count: 8
+      memoryGb: 80
+    diskSizeGb: 300
+  nodeGroup:
+    maxNodes: 1
+  cost:
+    perHour: 55.04
+    currency: USD

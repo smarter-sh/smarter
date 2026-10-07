@@ -1,14 +1,10 @@
-"""
-Internal keys used in the chat provider.
-"""
+"""Internal keys used in the prompt provider."""
 
 SMARTER_SYSTEM_KEY_PREFIX = "smarter_"
 
 
 class _InternalKeys:
-    """
-    Internal dict keys used in the chat provider.
-    """
+    """Internal dict keys used in the prompt provider."""
 
     REQUEST_KEY = "request"
     RESPONSE_KEY = "response"
@@ -21,8 +17,10 @@ class _InternalKeys:
     TEMPERATURE_KEY = "temperature"
     MAX_COMPLETION_TOKENS_KEY = "max_completion_tokens"
     TOOL_CHOICE = "tool_choice"
+    REASONING_EFFORT_KEY = "reasoning_effort"
 
     SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
+    SMARTER_MCPCLIENT_KEY = SMARTER_SYSTEM_KEY_PREFIX + "mcpclient"
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 

@@ -13,7 +13,7 @@
       "content": "return the integer value 42."
     }
   ],
-  "chat_history": [
+  "prompt_history": [
     {
       "message": "Hello.",
       "direction": "incoming",

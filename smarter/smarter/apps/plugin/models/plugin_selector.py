@@ -1,6 +1,4 @@
-"""
-PluginSelector model for defining plugin selection strategies within the Smarter platform.
-"""
+"""PluginSelector model for defining plugin selection strategies within the Smarter platform."""
 
 from typing import Union
 
@@ -10,7 +8,6 @@ from rest_framework import serializers
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
 )
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import (
@@ -23,7 +20,7 @@ from .plugin_meta import PluginMeta
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
-class PluginSelector(TimestampedModel, SmarterHelperMixin):
+class PluginSelector(TimestampedModel):
     """
     Stores plugin selection strategies for a Smarter plugin.
 
@@ -119,9 +116,7 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
 
 
 class PluginSelectorSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the PluginSelector model.
-    """
+    """Serializer for the PluginSelector model."""
 
     # pylint: disable=C0115
     class Meta:

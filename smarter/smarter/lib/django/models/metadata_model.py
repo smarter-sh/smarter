@@ -1,16 +1,20 @@
-"""Django ORM base model"""
+"""Django ORM base model."""
 
 from functools import cached_property
 from logging import getLogger
 from typing import Optional
 
+from django.apps import apps
 from django.db import models
 from django.db.models.query import QuerySet
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from taggit.managers import TaggableManager
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
@@ -31,9 +35,22 @@ def should_log_verbose(level):
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
+@cache_results(timeout=smarter_settings.cache_expiration)
+def _get_tags_by_model_and_pk(model_label: str, pk: int) -> list[str]:
+    """Return the tag names of a MetaDataModel instance.
+
+    Invalidated by tags_changed() below.
+    """
+    model = apps.get_model(model_label)
+    retval = [tag.name for tag in model.objects.get(pk=pk).tags.all()]
+    verbose_logger.debug("tags_list - fetched and cached tags for %s with pk=%s from database", model_label, pk)
+    return retval
+
+
 class MetaDataModel(TimestampedModel):
     """
-    Abstract base model that adds SAM metadata fields to a
+    Abstract base model that adds SAM metadata fields to a.
+
     TimestampedModel Django ORM model. These are the
     the common fields that makeup the Pydantic SAM metadata model,
     along with timestamp fields for create/modify tracking.
@@ -47,7 +64,6 @@ class MetaDataModel(TimestampedModel):
 
         class MyModel(MetaDataModel):
             name = models.CharField(max_length=100)
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -85,9 +101,7 @@ class MetaDataModel(TimestampedModel):
     )
 
     def validate(self):
-        """
-        Validate the model.
-        """
+        """Validate the model."""
         super().validate()
         # version should be a semantic version: MAJOR.MINOR.PATCH
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
@@ -132,9 +146,42 @@ class MetaDataModel(TimestampedModel):
         return self
 
     @cached_property
+    def ready(self) -> bool:
+        """
+        Check if the model instance is ready for use.
+
+        :returns: True if the instance is ready, False otherwise.
+        :rtype: bool
+        """
+        return super().ready and self.name is not None
+
+    @cached_property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a URL-friendly name for the llmclient.
+
+        This property returns an RFC 1034-compliant name for the llmclient, suitable for use in URLs and DNS labels.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.name = 'Example LLMClient 1'
+            self.rfc1034_compliant_name  # 'example-llmclient-1'
+
+        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
+        :rtype: Optional[str]
+        """
+        if self.name:
+            return rfc1034_compliant_str(self.name)
+        return None
+
+    @cached_property
     def tags_list(self) -> list[str]:
         """
-        Return the tags as a list of strings. We assume that @cached_property
+        Return the tags as a list of strings.
+
+        We assume that @cached_property
         is more efficient at fetch than @cache_results, all things considered
         equal, which provides a marginal boost to instances. Meanwhile, the
         @cache_results is persisted to the Django cache, and thus outlives
@@ -143,32 +190,16 @@ class MetaDataModel(TimestampedModel):
         :returns: List of tag names.
         :rtype: list[str]
         """
-
-        # pylint: disable=W0613
-        @cache_results(timeout=self.cache_expiration)
-        def _get_tags_by_class_and_pk(cls_name: str, pk: int) -> list[str]:
-            """
-            Helper to cache tags retrieval.
-            """
-            retval = [tag.name for tag in self.tags.all()]
-            verbose_logger.debug(
-                "%s.tags_list - fetched and cached tags for %s with pk=%d from database",
-                self.formatted_class_name,
-                cls_name,
-                pk,
-            )
-            return retval
-
-        return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
+        return _get_tags_by_model_and_pk(self._meta.label, self.pk)
 
     @classmethod
     def get_cached_object(
         cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None, **kwargs
     ) -> "MetaDataModel":
         """
-        Retrieve a model instance by primary key or name, using caching to
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        Retrieve a model instance by primary key or name, using caching to optimize performance.
+
+        This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
         Example usage:
@@ -239,7 +270,8 @@ class MetaDataModel(TimestampedModel):
             _get_object_by_name.invalidate(name, cls.__name__)
 
         if name:
-            return _get_object_by_name(name)
+            # same args as invalidate() above, so that both produce the same cache key
+            return _get_object_by_name(name, cls.__name__)
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
@@ -247,6 +279,7 @@ class MetaDataModel(TimestampedModel):
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["MetaDataModel"]:
         """
         Retrieve model instances using caching to optimize performance.
+
         This method is selectively overridden in models that inherit from
         MetaDataModel to provide class-specific function parameters.
 
@@ -324,3 +357,12 @@ class MetaDataModel(TimestampedModel):
 
 
 __all__ = ["MetaDataModel"]
+
+
+# pylint: disable=W0613
+@receiver(m2m_changed)
+def tags_changed(sender, instance, action, **kwargs):
+    """Invalidate tags_list when the tags of a MetaDataModel instance change."""
+    if action in ("post_add", "post_remove", "post_clear") and isinstance(instance, MetaDataModel) and instance.pk:
+        instance.__dict__.pop("tags_list", None)
+        _get_tags_by_model_and_pk.invalidate(instance._meta.label, instance.pk)

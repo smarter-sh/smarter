@@ -24,7 +24,7 @@ interact with Smarter resources. The general format is:
 
   Available Commands:
     apply       Apply a Smarter manifest
-    chat        Chat with a deployed ChatBot
+    chat        Chat with a deployed LLMClient
     completion  Generate the autocompletion script for the specified shell
     configure   Configure the smarter command-line interface
     delete      Permanently delete a Smarter resource
@@ -61,7 +61,7 @@ The cli implements a set of verbs for working with Smarter resources
   permanently, unrecoverably destroys a Smarter resource.
 - `deploy <../smarter/smarter/apps/api/v0/cli/views/delete.py>`__:
   manages the deploy state of a deployable Smarter resource (Plugin and
-  ChatBot).
+  LLMClient).
 - `describe <../smarter/smarter/apps/api/v0/cli/views/describe.py>`__:
   returns a report in yaml or json format that is a superset of a
   manifest describing the present state of a Smarter resource.
@@ -88,7 +88,7 @@ Related API endpoints
 Manifest Spec
 -------------
 
-See :doc:`Smarter Manifest Specification <lib/manifests>`
+See :doc:`Smarter Manifest Specification <developer-reference/lib/drf/manifest>`
 
 
 Kind
@@ -97,10 +97,10 @@ Kind
 - `Account <../smarter/smarter/apps/account/api/v1/manifests/>`__
 - `ApiKey <../smarter/smarter/apps/account/api/v1/manifests/>`__
 - `Chat <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatHistory <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatPluginUsage <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatToolCall <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatBot <../smarter/smarter/apps/chatbot/api/v1/manifests/>`__
+- `PromptHistory <../smarter/smarter/apps/chat/api/v1/manifests/>`__
+- `PromptPluginUsage <../smarter/smarter/apps/chat/api/v1/manifests/>`__
+- `PromptToolCall <../smarter/smarter/apps/chat/api/v1/manifests/>`__
+- `LLMClient <../smarter/smarter/apps/llmclient/api/v1/manifests/>`__
 - `Plugin <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `SqlConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `ApiConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
@@ -139,8 +139,8 @@ A brokered entity consists of the following:
   Transformers map data to/from a Smarter manifest and a Django object
   relational model (ORM).
 - `Docs url endpoints <../smarter/smarter/apps/docs/urls.py>`__.
-  Examples: https://platform.smarter.sh/docs/manifest/secret/ and
-  https://platform.smarter.sh/docs/json-schema/secret/
+  Examples: https://docs.smarter.sh/manifest/secret/ and
+  https://docs.smarter.sh/json-schema/secret/
 - `Kind
   registration <../smarter/smarter/apps/api/v1/manifests/enum.py>`__
 - `Broker

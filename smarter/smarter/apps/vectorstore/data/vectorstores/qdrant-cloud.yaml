@@ -1,0 +1,31 @@
+# A Qdrant Cloud vector database. Its cluster's URL and API key are in the ApiConnection
+# qdrant_cloud, which `manage.py initialize_vectorstore_providers` creates from the environment
+# variables QDRANT_CLOUD_URL and QDRANT_CLOUD_API_KEY. Qdrant Cloud takes snapshots too, and
+# restores them in its own console.
+apiVersion: smarter.sh/v1
+kind: Vectorstore
+metadata:
+  name: example_support_articles
+  description: A Qdrant Cloud vector database of customer support articles.
+  version: 1.0.0
+  tags:
+    - example
+    - rag
+    - qdrant
+    - managed
+  annotations:
+    - smarter.sh/vectorstore/builtin: "true"
+spec:
+  backend: qdrant
+  hosting: managed
+  connection: qdrant_cloud
+  index:
+    dimension: 1536
+    metric: cosine
+  embeddings:
+    provider: openai
+    model: text-embedding-3-small
+  maintenance:
+    snapshots: true
+    snapshotIntervalHours: 24
+    snapshotRetention: 7

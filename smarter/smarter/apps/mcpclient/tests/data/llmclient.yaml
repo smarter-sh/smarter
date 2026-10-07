@@ -1,0 +1,32 @@
+---
+# An LLMClient that offers the LLM the tools of the MCPClient test_mcpclient.
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  name: test_mcpclient_llmclient
+  description: An LLMClient with an MCPClient, for unit testing.
+  version: 1.0.0
+  tags:
+    - test
+spec:
+  config:
+    deployed: false
+    provider: openai
+    defaultModel: gpt-6-luna
+    defaultTemperature: 1.0
+    defaultMaxTokens: 512
+    defaultSystemRole: You are a helpful assistant.
+    appName: Test MCPClient LLMClient
+    appAssistant: Tatiana
+    appWelcomeMessage: Welcome!
+    appExamplePrompts:
+      - "What is the weather in New York?"
+    appPlaceholder: "Ask me anything..."
+    appInfoUrl: https://smarter.sh
+    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
+    appLogoUrl: https://smarter.sh/assets/img/logo.png
+    appFileAttachment: false
+    subdomain: null
+    customDomain: null
+  mcpClients:
+    - test_mcpclient

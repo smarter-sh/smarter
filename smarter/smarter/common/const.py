@@ -2,12 +2,13 @@
 """A module containing constants for the OpenAI API."""
 
 import importlib.util
-import logging
 import os
 from pathlib import Path
 from typing import Dict
 
 import hcl2
+
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ SMARTER_PLATFORM_DEFAULT_SUBDOMAIN = "platform"
 SMARTER_PRODUCT_NAME = "The Smarter Project"
 SMARTER_APP_NAME = "Smarter"
 SMARTER_PRODUCT_DESCRIPTION = "An open source, no-code AI authoring platform designed for instructional use."
-SMARTER_EXAMPLE_CHATBOT_NAME = "example"
+SMARTER_EXAMPLE_LLM_CLIENT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CONTACT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (617) 834-6172"
@@ -30,10 +31,9 @@ SMARTER_ORGANIZATION_NAME = "Lawrence P. McDaniel"  # FIX NOTE: set this to the 
 SMARTER_PROJECT_CDN_URL = f"https://cdn.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_PROJECT_DOCS_URL = f"https://docs.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
-SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-chat/app-loader.js"
 
 # The following are used in the React app
-# to store the chatbot chat session key and debug mode settings
+# to store the llmclient prompt session key and debug mode settings
 # as browser cookies. The React app has constants
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
@@ -45,10 +45,6 @@ SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
 
 # Default maximum lifetime for Smarter API keys in days.
 SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
-
-# Default path to the Smarter Chat Component app-loader.js script
-# used to load the React chat component into a web page.
-SMARTER_DEFAULT_APP_LOADER_PATH = "/ui-chat/app-loader.js"
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
@@ -83,6 +79,7 @@ def load_version() -> Dict[str, str]:
 
 
 VERSION = load_version()
+AUTHOR = "Lawrence P. McDaniel - https://lawrencemcdaniel.com"
 
 
 # pylint: disable=too-few-public-methods

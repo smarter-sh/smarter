@@ -1,13 +1,11 @@
 # pylint: disable=W0613
 """Dashboard app signal receivers."""
 
-import logging
-
 from django.dispatch import receiver
 
 from smarter.apps.account.signals import cache_invalidate
-from smarter.apps.dashboard.context_processors import cache_invalidations
 from smarter.common.helpers.console_helpers import formatted_text_blue
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 module_prefix = "dashboard.receivers"
@@ -16,6 +14,8 @@ module_prefix = "dashboard.receivers"
 @receiver(cache_invalidate)
 def cache_invalidation_receiver(sender, *args, **kwargs):
     """Signal receiver for cache invalidation."""
+    from smarter.apps.dashboard.context_processors import cache_invalidations
+
     user_profile = kwargs.get("user_profile")
     logger.info(
         "%s received cache_invalidate signal for %s with kwargs: %s",

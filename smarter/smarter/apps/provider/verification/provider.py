@@ -1,11 +1,10 @@
 # pylint: disable=W0613,C0115,R0913
 """
 Verification functions for the Provider model.
+
 This module contains functions to verify various aspects of a provider, such as API connectivity,
 logo, contact email, support email, website_url URL, terms of service URL, privacy policy URL, TOS acceptance, and production API key.
 """
-
-import logging
 
 from smarter.apps.provider.models import (
     Provider,
@@ -13,7 +12,6 @@ from smarter.apps.provider.models import (
     ProviderVerificationTypes,
 )
 from smarter.apps.provider.signals import (
-    provider_activated,
     provider_verification_failure,
     provider_verification_success,
 )
@@ -24,6 +22,7 @@ from smarter.apps.provider.utils import (
 )
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -43,9 +42,7 @@ module_prefix = "smarter.apps.provider.verification.provider."
 
 
 def verify_provider_api_connectivity(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the API connectivity of the provider.
-    """
+    """Verify the API connectivity of the provider."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.API_CONNECTIVITY
     )
@@ -59,9 +56,7 @@ def verify_provider_api_connectivity(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_logo(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the logo of the provider.
-    """
+    """Verify the logo of the provider."""
 
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.LOGO
@@ -78,9 +73,7 @@ def verify_provider_logo(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_contact_email(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the contact email of the provider.
-    """
+    """Verify the contact email of the provider."""
 
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.CONTACT_EMAIL
@@ -94,9 +87,7 @@ def verify_provider_contact_email(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_support_email(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the support email of the provider.
-    """
+    """Verify the support email of the provider."""
 
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.SUPPORT_EMAIL
@@ -110,9 +101,7 @@ def verify_provider_support_email(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_website_url(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the website_url URL of the provider.
-    """
+    """Verify the website_url URL of the provider."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.WEBSITE_URL
     )
@@ -125,9 +114,7 @@ def verify_provider_website_url(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_terms_of_service_url(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the terms of service URL of the provider.
-    """
+    """Verify the terms of service URL of the provider."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.TOS_URL
     )
@@ -142,9 +129,7 @@ def verify_provider_terms_of_service_url(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_docs_url(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the documentation URL of the provider.
-    """
+    """Verify the documentation URL of the provider."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.DOCS_URL
     )
@@ -157,9 +142,7 @@ def verify_provider_docs_url(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_privacy_policy_url(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the privacy policy URL of the provider.
-    """
+    """Verify the privacy policy URL of the provider."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.PRIVACY_POLICY_URL
     )
@@ -174,9 +157,7 @@ def verify_provider_privacy_policy_url(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_tos_accepted(provider: Provider, **kwargs) -> bool:
-    """
-    Verify if the provider has accepted the terms of service.
-    """
+    """Verify if the provider has accepted the terms of service."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.TOS_ACCEPTANCE
     )
@@ -189,9 +170,7 @@ def verify_provider_tos_accepted(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider_production_api_key(provider: Provider, **kwargs) -> bool:
-    """
-    Verify the production API key of the provider.
-    """
+    """Verify the production API key of the provider."""
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.PRODUCTION_API_KEY
     )
@@ -204,9 +183,7 @@ def verify_provider_production_api_key(provider: Provider, **kwargs) -> bool:
 
 
 def verify_provider(provider_id, **kwargs):
-    """
-    Run test bank on provider.
-    """
+    """Run test bank on provider."""
     prefix = formatted_text(module_prefix + "verify_provider()")
     try:
         provider = Provider.objects.get(id=provider_id)
@@ -245,21 +222,17 @@ def verify_provider(provider_id, **kwargs):
     success = success and verify_provider_tos_accepted(provider=provider)
     success = success and verify_provider_production_api_key(provider=provider)
 
-    if not provider.can_activate:
-        logger.error("%s Provider %s cannot be activated.", prefix, provider.name)
-        success = False
-
     if success:
-        provider_verification_success.send(sender=Provider, provider=provider)
+        # can_activate requires the status VERIFIED, so it is checked only after it is set.
         provider.status = ProviderStatus.VERIFIED
         provider.is_verified = True
-        if provider.can_activate:
-            try:
-                provider.activate()
-                provider.save(update_fields=["status", "is_verified"])
-                provider_activated.send(sender=Provider, provider=provider)
-            except SmarterValueError as exc:
-                logger.error("%s Activation failed for provider: %s, error: %s", prefix, provider.name, exc)
+        provider.save(update_fields=["status", "is_verified"])
+        provider_verification_success.send(sender=Provider, provider=provider)
+        try:
+            # activate() sends provider_activated.
+            provider.activate()
+        except SmarterValueError as exc:
+            logger.error("%s Activation failed for provider: %s, error: %s", prefix, provider.name, exc)
     else:
         provider.status = ProviderStatus.FAILED
         provider.is_verified = False

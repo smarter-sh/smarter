@@ -8,12 +8,10 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
-from smarter.common.conf import smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
     ApiConnection,
@@ -26,7 +24,6 @@ from .signals import (
     api_connection_query_failed,
     api_connection_query_success,
     api_connection_success,
-    broker_ready,
     sql_connection_attempted,
     sql_connection_failed,
     sql_connection_query_attempted,
@@ -38,7 +35,7 @@ from .signals import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-prefix = formatted_text(__name__)
+prefix = formatted_text(__name__) + "."
 
 
 # ------------------------------------------------------------------------------
@@ -107,9 +104,10 @@ def handle_sql_connection_success(sender, connection: SqlConnection, **kwargs):
     """Handle SQL connection success signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s is %s",
         formatted_text(prefix + "sql_connection_success()"),
         connection.get_connection_string(),
+        SmarterReadyState.READY,
     )
 
 
@@ -126,18 +124,20 @@ def handle_sql_connection_validated(sender, connection: SqlConnection, **kwargs)
 
 @receiver(sql_connection_failed, dispatch_uid="sql_connection_failed")
 def handle_sql_connection_failed(sender, connection: SqlConnection, error: str, **kwargs):
-    """Handle SQL connection failed signal."""
+    """
+    Handle SQL connection failed signal.
+
+    Only logs the failure: the method that sent the signal reports it to its caller, by returning
+    None. The connection string is always masked, so that its password is never logged.
+    """
 
     logger.error(
-        "%s - %s - error: %s",
+        "%s - %s is %s - error: %s",
         formatted_text(prefix + "sql_connection_failed()"),
-        connection.get_connection_string(masked=not smarter_settings.debug_mode),
+        connection.get_connection_string(),
+        SmarterReadyState.NOT_READY,
         error,
     )
-
-    raise SmarterConfigurationError(
-        f"Remote SQL Connection {connection.get_connection_string(masked=not smarter_settings.debug_mode)} failed: {error}"
-    ) from None
 
 
 @receiver(sql_connection_query_attempted, dispatch_uid="sql_connection_query_attempted")
@@ -168,19 +168,20 @@ def handle_sql_connection_query_success(sender, connection: SqlConnection, sql: 
 
 @receiver(sql_connection_query_failed, dispatch_uid="sql_connection_query_failed")
 def handle_sql_connection_query_failed(sender, connection: SqlConnection, sql: str, limit: int, error: str, **kwargs):
-    """Handle SQL connection query failed signal."""
+    """
+    Handle SQL connection query failed signal.
 
-    logger.info(
+    Only logs the failure: execute_query(), which sent the signal, reports it to its caller by
+    returning False.
+    """
+
+    logger.error(
         "%s - %s - sql: %s - limit: %s - error: %s",
         formatted_text(prefix + "sql_connection_query_failed()"),
         connection.get_connection_string(),
         sql,
         limit,
         error,
-    )
-
-    raise SmarterConfigurationError(
-        f"Remote SQL {connection.get_connection_string()} query execution failed {sql}: {error}"
     )
 
 
@@ -200,9 +201,10 @@ def handle_api_connection_success(sender, connection: ApiConnection, **kwargs):
     """Handle API connection success signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s is %s",
         formatted_text(prefix + "api_connection_success()"),
         connection.get_connection_string(),
+        SmarterReadyState.READY,
     )
 
 
@@ -211,9 +213,10 @@ def handle_api_connection_failed(sender, connection: ApiConnection, error: Optio
     """Handle API connection failed signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s is %s",
         formatted_text(prefix + "api_connection_failed()"),
         connection.get_connection_string(),
+        SmarterReadyState.NOT_READY,
     )
 
 
@@ -281,17 +284,4 @@ def handle_sql_connection_pre_delete(sender, instance, **kwargs):
         "%s - %s deleting.",
         formatted_text(prefix + "SqlConnection().pre_delete()"),
         instance,
-    )
-
-
-@receiver(broker_ready, dispatch_uid="broker_ready")
-def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
-    """Handle broker ready signal."""
-
-    logger.info(
-        "%s %s %s for %s is ready.",
-        formatted_text(f"{prefix}broker_ready()"),
-        broker.kind,
-        str(broker),
-        broker.name,
     )

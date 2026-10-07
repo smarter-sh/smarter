@@ -1,6 +1,4 @@
-"""
-Default configuration values for Smarter platform settings.
-"""
+"""Default configuration values for Smarter platform settings."""
 
 import base64  # library for base64 encoding and decoding
 import logging  # library for logging messages
@@ -21,7 +19,6 @@ from pydantic import (
 )
 
 from smarter.common.const import (
-    SMARTER_DEFAULT_APP_LOADER_PATH,
     SMARTER_LOCAL_PORT,
     SMARTER_ORGANIZATION_NAME,
     SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
@@ -36,7 +33,6 @@ from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,
 )
-from smarter.lib import json
 
 from .const import DEFAULT_ROOT_DOMAIN
 from .env import get_env
@@ -47,7 +43,7 @@ logger_prefix = formatted_text(__name__ + ".SettingsDefaults()")
 
 
 class DjangoPermittedStorages:
-    """Django permitted storage backends"""
+    """Django permitted storage backends."""
 
     AWS_S3 = "storages.backends.s3boto3.S3Boto3Storage"
     FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
@@ -56,7 +52,7 @@ class DjangoPermittedStorages:
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
-    .. deprecated:: 2025.12
+    .. deprecated:: 2025.12.
 
         This class is deprecated and will be removed in a future release. Use the Settings class
         built-in default value handling instead.
@@ -84,7 +80,6 @@ class SettingsDefaults:
     # for liveness and readiness probes from kubernetes.
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost", "testserver"])
-    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
     API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
@@ -98,7 +93,10 @@ class SettingsDefaults:
     AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY", default=None, is_secret=True))
     AWS_REGION = get_env("AWS_REGION", default=None)
 
+    CLOUD_PROVIDER: str = get_env("CLOUD_PROVIDER", "aws")
     AWS_EKS_CLUSTER_NAME = get_env("AWS_EKS_CLUSTER_NAME")
+    LLMHOST_NODE_ROLE_ARN = get_env("LLMHOST_NODE_ROLE_ARN", default=None)
+    LLMHOST_NODE_SUBNET_IDS = get_env("LLMHOST_NODE_SUBNET_IDS", default=[])
     AWS_RDS_DB_INSTANCE_IDENTIFIER = get_env("AWS_RDS_DB_INSTANCE_IDENTIFIER")
 
     BRANDING_CORPORATE_NAME: str = get_env("BRANDING_CORPORATE_NAME", SMARTER_ORGANIZATION_NAME)
@@ -123,17 +121,22 @@ class SettingsDefaults:
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
-    CHATBOT_CACHE_EXPIRATION: int = int(get_env("CHATBOT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
-    CHATBOT_MAX_RETURNED_HISTORY: int = int(get_env("CHATBOT_MAX_RETURNED_HISTORY", 25))
-    CHATBOT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("CHATBOT_TASKS_CREATE_DNS_RECORD", True)
-    CHATBOT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
-        "CHATBOT_TASKS_CREATE_INGRESS_MANIFEST", True
+    LLM_CLIENT_CACHE_EXPIRATION: int = int(get_env("LLM_CLIENT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    LLM_CLIENT_MAX_RETURNED_HISTORY: int = int(get_env("LLM_CLIENT_MAX_RETURNED_HISTORY", 25))
+    LLM_CLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("LLM_CLIENT_TASKS_CREATE_DNS_RECORD", True)
+    LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
+        "LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST", True
     )
-    CHATBOT_TASKS_DEFAULT_TTL: int = get_env("CHATBOT_TASKS_DEFAULT_TTL", 600)
+    LLM_CLIENT_TASKS_DEFAULT_TTL: int = get_env("LLM_CLIENT_TASKS_DEFAULT_TTL", 600)
 
-    CHATBOT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("CHATBOT_TASKS_CELERY_MAX_RETRIES", 3))
-    CHATBOT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable("CHATBOT_TASKS_CELERY_RETRY_BACKOFF", True)
-    CHATBOT_TASKS_CELERY_TASK_QUEUE: str = get_env("CHATBOT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
+    LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("LLM_CLIENT_TASKS_CELERY_MAX_RETRIES", 3))
+    LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable(
+        "LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF", True
+    )
+    LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: str = get_env("LLM_CLIENT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
+    INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: str = get_env(
+        "INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE", "infrastructure_celery_task_queue"
+    )
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
@@ -164,9 +167,10 @@ class SettingsDefaults:
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
     ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
-    ENABLE_DASHBOARD_APPLY: bool = bool_environment_variable("ENABLE_DASHBOARD_APPLY", True)
+    ENABLE_MANIFEST_DROPZONE: bool = bool_environment_variable("ENABLE_MANIFEST_DROPZONE", True)
     ENABLE_DASHBOARD_SERVER_LOGS: bool = bool_environment_variable("ENABLE_DASHBOARD_SERVER_LOGS", True)
     ENABLE_DASHBOARD_PASSTHROUGH_PROMPT: bool = bool_environment_variable("ENABLE_DASHBOARD_PASSTHROUGH_PROMPT", True)
+    ENABLE_PROXY: bool = bool_environment_variable("ENABLE_PROXY", True)
 
     fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
     if fernet is None:
@@ -181,44 +185,25 @@ class SettingsDefaults:
 
     FILE_DROP_ZONE_ENABLED = bool_environment_variable("FILE_DROP_ZONE_ENABLED", True)
 
-    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True, is_required=True))
-
-    try:
-        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
-        GOOGLE_SERVICE_ACCOUNT: SecretStr = SecretStr(
-            json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
-        )
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        logger.error("Failed to load Google service account: %s", e)
-        logger.error(
-            "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
-        )
-        GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("Unexpected error loading Google service account: %s", e)
-        GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
-
-    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True, is_required=True))
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
-    LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
+    LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")
 
-    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY", is_secret=True, is_required=True))
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4o-mini"
+    LLM_DEFAULT_MODEL = "gpt-6-luna"
     LLM_DEFAULT_SYSTEM_ROLE = (
-        "You are a helpful chatbot. When given the opportunity to utilize "
+        "You are a helpful llmclient. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
         "provide the best possible responses to the user. If you are unable to "
         "provide a response, you should prompt the user for more information. If "
         "you are still unable to provide a response, you should inform the user "
         "that you are unable to help them at this time."
     )
-    LLM_DEFAULT_TEMPERATURE = 0.5
+    LLM_DEFAULT_TEMPERATURE = 1.0
     LLM_DEFAULT_MAX_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
     LOCAL_HOSTS += [host + f":{SMARTER_LOCAL_PORT}" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("localhost:5173")  # for react dev server
     LOCAL_HOSTS.append("testserver")
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
@@ -239,13 +224,9 @@ class SettingsDefaults:
     )
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
-    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY", is_secret=True, is_required=True))
     OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
     OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
     PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", SMARTER_PLATFORM_DEFAULT_SUBDOMAIN)
-    PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY", is_secret=True))
-
-    REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
     secret = get_env("SECRET_KEY", default=None, is_secret=True)
     if secret is None:
@@ -304,7 +285,7 @@ class SettingsDefaults:
 
     @classmethod
     def to_dict(cls):
-        """Convert SettingsDefaults to dict"""
+        """Convert SettingsDefaults to dict."""
         return {
             key: value
             for key, value in SettingsDefaults.__dict__.items()

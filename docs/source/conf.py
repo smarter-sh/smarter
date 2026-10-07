@@ -6,6 +6,7 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+import logging
 import os
 import subprocess
 import sys
@@ -13,44 +14,73 @@ from datetime import datetime
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
+REPO_ROOT = os.path.abspath(os.path.join(SMARTER_ROOT, "../"))
 sys.path.insert(0, SMARTER_ROOT)
 
-###############################################################################
-# Smarter setup
-###############################################################################
-from smarter.__version__ import __version__  # noqa: F401
+import django
+from dotenv import load_dotenv
+
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
+    AUTHOR,
     SMARTER_ORGANIZATION_WEBSITE_URL,
     SMARTER_PRODUCT_NAME,
     SMARTER_PROJECT_WEBSITE_URL,
 )
+from smarter.common.exceptions import SmarterConfigurationError
 
+# Load environment variables from .env file. This is necessary for the
+# sphinx_contributors extension to access the GitHub token and fetch contributor information.
+env_path = os.path.join(REPO_ROOT, ".env")
+load_dotenv(env_path)
+
+###############################################################################
+# Smarter setup
+###############################################################################
 if not smarter_settings.environment:
-    raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
+    # shouldn't ever happen, but just in case.
+    raise SmarterConfigurationError("The 'smarter_settings.environment' variable is not set.")
 
 ###############################################################################
 # Django setup
 ###############################################################################
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
-
-import django
-from sphinxcontrib_django.docstrings import classes, field_utils
+contributors_github_token = os.environ.get("GITHUB_TOKEN")
 
 django.setup()
 
+# django.setup() applies Smarter's LOGGING, which sets the root logger to the
+# app's log level (often DEBUG locally). Third-party loggers inherit it, so
+# urllib3 would log every GitHub API request that sphinx_contributors makes.
+# Sphinx's own logger does not propagate to root, so build output is unaffected.
+logging.getLogger().setLevel(logging.WARNING)
+for _noisy_logger in ("urllib3", "requests_cache", "github"):
+    logging.getLogger(_noisy_logger).setLevel(logging.WARNING)
 
-_original_get_field_type = field_utils.get_field_type
+###############################################################################
+# Patch the get_field_type function in sphinxcontrib_django to be more robust
+# and return "Unknown" instead of raising an exception when it encounters
+# an issue.
+###############################################################################
+from sphinxcontrib_django.docstrings import classes, field_utils
+
+# Import the guardrail services' Pydantic contracts before sphinx_autodoc_typehints resolves
+# pydantic's type-checking-only imports, after which pydantic cannot build their models.
+import smarter.apps.guardrail.services  # noqa: E402,F401  # pylint: disable=wrong-import-position,unused-import
 
 
 def safe_get_field_type(field, include_role=True):
+    """A safe wrapper around the original get_field_type function that returns.
+
+    "Unknown" if any exception occurs.
+    """
 
     try:
         rel = getattr(field, "remote_field", None)
         to = getattr(rel, "model", None) if rel else None
         if to is None:
             return "Unknown"
-        return _original_get_field_type(field, include_role=include_role)
+        return field_utils.get_field_type(field, include_role=include_role)
     # pylint: disable=broad-except
     except Exception:
         return "Unknown"
@@ -63,9 +93,10 @@ classes.get_field_type = safe_get_field_type
 project = "Smarter Documentation"
 
 # pylint: disable=redefined-builtin
-copyright = f"{datetime.now().year}"
-author = "Lawrence P. McDaniel - https://lawrencemcdaniel.com"
-release = __version__
+copyright = f"2023 - {datetime.now().year}"
+author = AUTHOR
+release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+
 
 try:
     commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("utf-8").strip()
@@ -74,8 +105,8 @@ except Exception:
     commit = None
 
 
-last_updated = datetime.now().strftime("%Y-%m-%d")
-
+last_updated = datetime.now().strftime("%B-%Y")
+html_extra_path = ["robots.txt", "llms.txt"]
 # custom context variables to be used in Sphinx templates, presumably in
 # the ./_templates/footer.html template override.
 html_context = {
@@ -93,6 +124,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinxcontrib_django",
     "sphinx.ext.viewcode",
+    "sphinx_contributors",
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
     "sphinx_design",
@@ -101,13 +133,16 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
+    "sphinx_sitemap",
 ]
 
 templates_path = ["_templates"]
+# sphinx_autodoc_typehints cannot resolve some type hints that third party packages, e.g.
+# asgiref and pydantic, import only for type checking. These are harmless.
+suppress_warnings = ["sphinx_autodoc_typehints.guarded_import"]
 exclude_patterns = []
 django_settings = "smarter.settings.prod"
 todo_include_todos = True
-
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
@@ -141,3 +176,8 @@ autodoc_type_aliases = {
     "pydantic.types.JsonValue": "JsonValue",
     "JsonValue": "JsonValue",
 }
+
+# sitemap settings
+html_baseurl = f"https://docs.{smarter_settings.root_domain}/"
+sitemap_url_scheme = "{link}"
+sitemap_filename = "sitemap.xml"

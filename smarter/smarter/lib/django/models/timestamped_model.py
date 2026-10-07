@@ -1,4 +1,4 @@
-"""Django ORM base model"""
+"""Django ORM base model."""
 
 import base64
 import datetime
@@ -37,8 +37,7 @@ verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)  # type
 
 class TimestampedModel(models.Model, SmarterHelperMixin):
     """
-    Abstract base model for all Django ORM models in the Smarter project, providing automatic
-    timestamp fields and utility methods.
+    Abstract base model for all Django ORM models in the Smarter project, providing automatic timestamp fields and utility methods.
 
     This class should be used as the base class for all models in the project to ensure
     consistent tracking of creation and modification times. It adds ``created_at`` and
@@ -79,7 +78,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         - Passing a non-datetime object to ``elapsed_updated`` will raise a ``TypeError``.
         - The hashed ID methods provide a way to encode and decode object IDs for use in URLs
           in cases where you want to avoid exposing raw database IDs.
-
     """
 
     HASH_PREFIX = "r"
@@ -95,12 +93,14 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
     Timestamp indicating when the model instance was created.
+
     This field is automatically set to the current date and time when the instance is first created.
     It is indexed in the database for efficient querying.
     """
     updated_at = models.DateTimeField(auto_now=True, null=True, editable=False, db_index=True)
     """
     Timestamp indicating when the model instance was last updated.
+
     This field is automatically updated to the current date and time whenever the instance is saved.
     It is indexed in the database for efficient querying.
     """
@@ -125,11 +125,33 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
         return cls._hash_regex
 
+    @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return False
+
+    @cached_property
+    def ready(self) -> bool:
+        """
+        Check if the model instance is ready for use.
+
+        :returns: True if the instance is ready, False otherwise.
+        :rtype: bool
+        """
+        return self.pk is not None
+
     @cached_property
     def hashed_id(self) -> str:
         """
-        Returns a URL-friendly hashed version of the object's ID for use in URLs and other
-        contexts where an obscured, non-identifying, non-sequential identifier is preferred.
+        Returns a URL-friendly hashed version of the object's ID for use in URLs and other contexts where an obscured, non-identifying, non-sequential identifier is preferred.
 
         Encoding scheme:
         1. Take the object's ID and add a large constant (HASH_FLOOR) to ensure it's not easily guessable.
@@ -182,11 +204,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         """
         logger_prefix = logging.formatted_text(f"{cls.__name__}.id_from_hashed_id()")
         try:
-            verbose_logger.debug(
-                "%s - Attempting to decode hashed_id: %s",
-                logger_prefix,
-                hashed_id,
-            )
             if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
                 logger.warning(
                     "%s - Hashed ID '%s' does not start with '%s' or end with '%s'.",
@@ -204,16 +221,18 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             decoded_str = decoded_bytes.decode()
             retval = int(decoded_str) - cls.HASH_FLOOR
             verbose_logger.debug(
-                "%s - Successfully decoded hashed_id: %s to id: %d",
+                "%s - decoded %s.hashed_id: %s to id: %d",
                 logger_prefix,
+                cls.__name__,
                 hashed_id,
                 retval,
             )
             return retval
         except (base64.binascii.Error, ValueError) as e:  # type: ignore[name-defined]
             logger.error(
-                "%s - Failed to decode hashed_id '%s': %s",
+                "%s - Failed to decode %s.hashed_id '%s': %s",
                 logger_prefix,
+                cls.__name__,
                 hashed_id,
                 e,
             )
@@ -221,8 +240,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logging.exception(
-                "%s - Unexpected error while decoding hashed_id '%s': %s",
+                "%s - Unexpected error while decoding %s.hashed_id '%s': %s",
                 logger_prefix,
+                cls.__name__,
                 hashed_id,
                 e,
             )
@@ -231,16 +251,16 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def find_hash(cls, value: str) -> Optional[str]:
         """
-        Finds and returns the first substring in the given value that matches
-        the hashed ID format.
+        Finds and returns the first substring in the given value that matches the hashed ID format.
 
         :param value: The string to search for a hashed ID.
         :returns: The first matching hashed ID if found, otherwise None.
         :rtype: Optional[str]
         """
+        logger_prefix = logging.formatted_text(f"{cls.__name__}.find_hash()")
         verbose_logger.debug(
             "%s.find_hash() - Searching for hashed ID in value: %s",
-            cls.formatted_class_name,
+            logger_prefix,
             value,
         )
         pattern = cls.hash_regex()
@@ -249,13 +269,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         if retval:
             verbose_logger.debug(
                 "%s.find_hash() - Found hashed ID: %s",
-                cls.formatted_class_name,
+                logger_prefix,
                 retval,
             )
         else:
             verbose_logger.debug(
                 "%s.find_hash() - No hashed ID found in value: %s",
-                cls.formatted_class_name,
+                logger_prefix,
                 value,
             )
         return retval
@@ -271,7 +291,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         .. attention::
 
             Intended to be overridden in subclasses to provide custom validation logic.
-
         """
 
     def save(self, *args, **kwargs):
@@ -307,7 +326,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             - If you override this method in a subclass, always call ``super().save(*args, **kwargs)`` to retain validation and timestamp functionality.
             - If validation fails, no data will be saved to the database.
-
         """
         try:
             self.validate()
@@ -332,8 +350,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             obj = MyModel.objects.create(name="Example")
             print(obj.id)  # e.g., 123
-            print(obj.record_locator)  # e.g., "chatbot-rc2x"
-
+            print(obj.record_locator)  # e.g., "llmclient-rc2x"
 
         :returns: Record locator string (URL-safe, no padding)
         :rtype: str
@@ -362,17 +379,18 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[TimestampedModel]
         """
+        logger_prefix = logging.formatted_text(f"{cls.__name__}.get_object_by_locator()")
         verbose_logger.debug(
-            "%s.get_object_by_locator() - Attempting to retrieve object with locator: %s",
-            cls.formatted_class_name,
+            "%s - Attempting to retrieve object with locator: %s",
+            logger_prefix,
             locator,
         )
         try:
             prefix = str(cls.__name__).lower()
             if not locator.startswith(f"{prefix}-"):
                 logger.warning(
-                    "%s.get_object_by_locator() - Locator '%s' does not start with expected prefix '%s-'.",
-                    cls.formatted_class_name,
+                    "%s - Locator '%s' does not start with expected prefix '%s-'.",
+                    logger_prefix,
                     locator,
                     prefix,
                 )
@@ -381,8 +399,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             id_value = cls.id_from_hashed_id(hashed_part)
             if id_value is None:
                 logger.warning(
-                    "%s.get_object_by_locator() - Failed to decode hashed part '%s' from locator '%s'.",
-                    cls.formatted_class_name,
+                    "%s - Failed to decode hashed part '%s' from locator '%s'.",
+                    logger_prefix,
                     hashed_part,
                     locator,
                 )
@@ -390,15 +408,15 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             obj = cls.get_cached_object(pk=id_value)
             if obj is None:
                 logger.warning(
-                    "%s.get_object_by_locator() - No object found with ID %d decoded from locator '%s'.",
-                    cls.formatted_class_name,
+                    "%s - No object found with ID %d decoded from locator '%s'.",
+                    logger_prefix,
                     id_value,
                     locator,
                 )
             else:
                 verbose_logger.debug(
-                    "%s.get_object_by_locator() - Successfully retrieved object with ID %d from locator '%s'.",
-                    cls.formatted_class_name,
+                    "%s - Successfully retrieved object with ID %d from locator '%s'.",
+                    logger_prefix,
                     id_value,
                     locator,
                 )
@@ -406,8 +424,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logging.exception(
-                "%s.get_object_by_locator() - Unexpected error while retrieving object with locator '%s': %s",
-                cls.formatted_class_name,
+                "%s - Unexpected error while retrieving object with locator '%s': %s",
+                logger_prefix,
                 locator,
                 e,
             )
@@ -458,7 +476,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             - If ``dt`` is provided and is not a ``datetime.datetime`` instance, a ``TypeError`` will be raised.
             - Always ensure that ``updated_at`` is set before relying on this property for calculations.
-
         """
         utc = datetime.timezone.utc
         if not self.updated_at:
@@ -508,9 +525,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
     ) -> Optional[models.Model]:
         """
-        Retrieve a model instance by primary key, using caching to
-        optimize performance. This method is selectively overridden in
-        models that inherit from TimestampedModel to provide class-specific
+        Retrieve a model instance by primary key, using caching to optimize performance.
+
+        This method is selectively overridden in models that inherit from TimestampedModel to provide class-specific
         function parameters.
 
         Example usage:
@@ -540,7 +557,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             try:
                 verbose_logger.debug(
-                    "%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate
+                    "%s.get_cached_object() %s called with pk: %s, invalidate=%s",
+                    logger_prefix,
+                    class_name,
+                    pk,
+                    invalidate,
                 )
                 retval = cls.objects.get(pk=pk)
                 verbose_logger.debug(
@@ -566,12 +587,14 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
             raise cls.DoesNotExist(f"Must provide a 'pk' to retrieve a {cls.__name__} object.")
 
-        return _get_model_by_pk(pk, class_name=cls.__name__)
+        # same args as invalidate() above, so that both produce the same cache key
+        return _get_model_by_pk(pk, cls.__name__)
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:
         """
         Retrieve model instances using caching to optimize performance.
+
         This method is selectively overridden in models that inherit from
         TimestampedModel to provide class-specific function parameters.
 

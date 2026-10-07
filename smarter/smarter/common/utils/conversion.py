@@ -1,99 +1,46 @@
 """
-smarter.common.utils.conversion
+Smarter.common.utils.conversion
 ===============================
 
-Conversion utility functions for the Smarter framework.
+Case conversion utility functions for the Smarter framework.
 
 This module provides functions to convert between different naming conventions,
 such as camelCase, PascalCase, and snake_case, for strings, dictionary keys, and lists.
-These utilities help maintain consistency in data representation across the framework
-and are compatible with Python 3, Django, DRF, and Pydantic.
+These utilities assure consistent treatment to/from various case formats.
 
 Functions
 ---------
 - to_snake_case(obj): Converts camelCase or PascalCase strings (or class/type objects) to snake_case.
-- camel_to_snake(data): Converts camelCase strings, dict keys, or lists to snake_case.
-- camel_to_snake_dict(dictionary): Recursively converts dict keys from camelCase to snake_case.
-- pascal_to_snake(name): Converts PascalCase strings, dict keys, or lists to snake_case.
-- snake_to_camel(data, convert_values=False): Converts snake_case strings, dict keys, or lists to camelCase.
+- to_camel_case(data, convert_values=False): Converts snake_case strings, dict keys, or lists to camelCase.
 
 Example
 -------
 .. code-block:: python
 
-    from smarter.common.utils import to_snake_case, camel_to_snake, snake_to_camel
+    from smarter.common.utils import to_snake_case, to_snake_case, to_camel_case
 
     print(to_snake_case("UserProfile"))  # Output: user_profile
-    print(camel_to_snake("userName"))    # Output: user_name
-    print(snake_to_camel("user_name"))   # Output: userName
+    print(to_snake_case("userName"))     # Output: user_name
+    print(to_camel_case("user_name"))    # Output: userName
 """
 
 import re
 from functools import lru_cache
-from typing import Optional, Union
-
-from smarter.common.exceptions import SmarterValueError
-from smarter.lib import logging
-
-logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+from typing import Any, Union
 
 LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
+ACRONYM_PATTERN = re.compile(r"([A-Z]+)([A-Z][a-z])")
+CAMEL_PATTERN = re.compile(r"([a-z0-9])([A-Z])")
 
 
-@lru_cache(maxsize=LRU_MAXSIZE)
-def _convert_to_camel(name: str):
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+ConvertibleCaseType = Union[str, dict[str, Any], list[Any]]
+"""
+A type alias representing data that can be converted between different case.
 
-
-def camel_to_snake_dict(dictionary: dict, is_recursive: bool = False) -> dict:
-    """
-    Converts the keys of a dictionary from camelCase to snake_case recursively.
-
-    :param dictionary: The input dictionary whose keys are in camelCase format. Nested dictionaries are also converted.
-    :type dictionary: dict
-
-    :return: A new dictionary with all keys converted to snake_case. Nested dictionaries are processed recursively.
-    :rtype: dict
-
-    .. note::
-        This function only converts dictionary keys. Values are preserved as-is, except for nested dictionaries, which are also converted.
-
-    .. warning::
-        Keys that are not strings will not be converted. If a key is already in snake_case, it will remain unchanged.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        from smarter.common.utils import camel_to_snake_dict
-
-        data = {
-            "userName": "alice",
-            "userProfile": {
-                "firstName": "Alice",
-                "lastName": "Smith"
-            }
-        }
-
-        result = camel_to_snake_dict(data)
-        print(result)
-        # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
-
-    """
-    logger.debug("%s.camel_to_snake_dict()", logger_prefix)
-
-    retval = {}
-    for key, value in dictionary.items():
-        if isinstance(value, dict) and is_recursive:
-            value = camel_to_snake_dict(value, is_recursive=True)
-        new_key = _convert_to_camel(key)
-        retval[new_key] = value
-    if not is_recursive:
-        logger.debug("%s.camel_to_snake_dict() - converted '%s' to '%s'", logger_prefix, dictionary, retval)
-    return retval
+formats. This includes strings, dictionaries with string keys, lists of such
+elements, or any object.
+"""
 
 
 @lru_cache(maxsize=LRU_MAXSIZE)
@@ -102,264 +49,212 @@ def _convert_snake_to_camel(name: str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-def snake_to_camel(
-    data: Union[str, dict, list], convert_values: bool = False, is_recursive: bool = False
-) -> Optional[Union[str, dict, list]]:
+# pylint: disable=W0613
+def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True) -> Any:
     """
-    Converts snake_case strings, dictionary keys, or lists of such, to camelCase format.
+    Convert snake_case strings, dictionary keys, or lists to camelCase format.
 
-    :param data: The input to convert. Can be a string, a dictionary (with snake_case keys), or a list containing strings or dictionaries.
-    :type data: str, dict, or list
+    Args:
+        data (str | dict | list):
+            The input to convert. Can be a string, a dictionary (with snake_case keys),
+            or a list containing strings or dictionaries.
+        convert_values (bool, optional):
+            If True, string values within dictionaries and lists are also converted to camelCase.
+            Default is False.
 
-    :param convert_values: If ``True``, string values within dictionaries are also converted to camelCase. Default is ``False``.
-    :type convert_values: bool, optional
+    Returns:
+        Any: The converted data in camelCase format. The return type matches the input type (str, dict, or list).
 
-    :return: The converted data in camelCase format. Returns a string, dictionary, or list, matching the input type.
-    :rtype: Optional[Union[str, dict, list]]
-
-    .. note::
-        - For dictionaries, only keys are converted by default. If ``convert_values`` is set, string values are also converted.
+    Notes:
+        - For dictionaries, only keys are converted by default. If ``convert_values`` is True, string values are also converted.
         - Nested dictionaries and lists are processed recursively.
+        - If the input is not a string, dictionary, or list, the original value is returned.
 
-    .. warning::
-        If the input is not a string, dictionary, or list, a ``SmarterValueError`` is raised.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        from smarter.common.utils import snake_to_camel
+    Examples:
+        >>> from smarter.common.utils import to_camel_case
 
         # Convert a string
-        print(snake_to_camel("user_name"))  # Output: userName
+        >>> to_camel_case("user_name")
+        'userName'
 
         # Convert a dictionary
-        data = {
-            "user_name": "alice",
-            "user_profile": {
-                "first_name": "Alice",
-                "last_name": "Smith"
-            }
-        }
-        print(snake_to_camel(data))
-        # Output: {'userName': 'alice', 'userProfile': {'firstName': 'Alice', 'lastName': 'Smith'}}
+        >>> data = {
+        ...     "user_name": "alice",
+        ...     "user_profile": {
+        ...         "first_name": "Alice",
+        ...         "last_name": "Smith"
+        ...     }
+        ... }
+        >>> to_camel_case(data)
+        {'userName': 'alice', 'userProfile': {'firstName': 'Alice', 'lastName': 'Smith'}}
 
         # Convert a list of strings
-        print(snake_to_camel(["first_name", "last_name"]))
-        # Output: ['firstName', 'lastName']
+        >>> to_camel_case(["first_name", "last_name"], convert_values=True)
+        ['firstName', 'lastName']
 
         # Convert values as well
-        data = {"user_name": "first_name"}
-        print(snake_to_camel(data, convert_values=True))
-        # Output: {'userName': 'firstName'}
-
+        >>> data = {"user_name": "first_name"}
+        >>> to_camel_case(data, convert_values=True)
+        {'userName': 'firstName'}
     """
-    if not isinstance(data, (str, dict, list)):
-        raise SmarterValueError(f"Expected data to be a str, dict, or list, got: {type(data)}")
-
     if isinstance(data, str):
         return _convert_snake_to_camel(data)
-
-    if isinstance(data, list):
-        return [snake_to_camel(item, convert_values=convert_values, is_recursive=True) for item in data]
-
-    if not isinstance(data, dict):
-        raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
-
-    dictionary: dict = data if isinstance(data, dict) else {}
-    retval = {}
-    for key, value in dictionary.items():
-        if isinstance(value, dict):
-            value = snake_to_camel(data=value, convert_values=convert_values, is_recursive=True)
-        new_key = _convert_snake_to_camel(key)
-        if convert_values:
-            new_value = _convert_snake_to_camel(value) if isinstance(value, str) else value
-        else:
-            new_value = value
-        retval[new_key] = new_value
-    if not is_recursive:
-        logger.debug("%s.snake_to_camel() - converted '%s' to '%s'", logger_prefix, data, retval)
-    return retval
-
-
-@lru_cache(maxsize=LRU_MAXSIZE)
-def _convert_pascal_to_snake(s: str) -> str:
-    s = s.replace(" ", "_")
-    result = SNAKE_PATTERN.sub("_", s).lower()
-    result = re.sub("_+", "_", result)
-    return result
-
-
-def pascal_to_snake(name: Union[str, dict, list]) -> Union[str, dict, list]:
-    """
-    Converts a PascalCase string to pascal_case snake_case format.
-
-    :param name: The PascalCase string to convert.
-    :type name: str
-
-    :return: The converted string in snake_case format.
-    :rtype: str
-
-    .. note::
-        - Spaces in the input string are replaced with underscores.
-        - Multiple consecutive underscores are collapsed into a single underscore.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        from smarter.common.utils import pascal_to_snake
-
-        print(pascal_to_snake("UserProfile"))  # Output: user_profile
-        print(pascal_to_snake("FirstName LastName"))  # Output: first_name_last_name
-
-    """
-    if isinstance(name, str):
-        retval = _convert_pascal_to_snake(name)
-    elif isinstance(name, list):
-        retval = [pascal_to_snake(item) for item in name]
-    elif isinstance(name, dict):
-        retval = {
-            pascal_to_snake(k): pascal_to_snake(v) if isinstance(v, (dict, list, str)) else v for k, v in name.items()
-        }
+    elif isinstance(data, list):
+        return [
+            (
+                to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive)
+                if isinstance(item, (dict, list)) and is_recursive
+                else _convert_snake_to_camel(item) if isinstance(item, str) and convert_values else item
+            )
+            for item in data
+        ]
+    elif isinstance(data, dict):
+        retval = {}
+        for key, value in data.items():
+            key = _convert_snake_to_camel(key) if isinstance(key, str) else key
+            if isinstance(value, dict) and is_recursive:
+                value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
+            elif isinstance(value, list) and is_recursive:
+                value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
+            elif convert_values and isinstance(value, str):
+                value = _convert_snake_to_camel(value)
+            retval[key] = value
+        return retval
     else:
-        retval = name
-    return retval
+        return data  # Return the original data if it's not a string, dict, or list, without raising an error.
 
 
 @lru_cache(maxsize=LRU_MAXSIZE)
 def _convert_camel_to_snake(name: str):
-    name = name.replace(" ", "_")
-    name = name[0].lower() + name[1:] if name and len(name) > 1 and name[0].isupper() else name
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-    result = re.sub("_+", "_", result)
-    result = re.sub("-+", "_", result)
-    return result
+    name = name.replace(" ", "_").replace("-", "_")
+
+    # Split acronym boundaries such as `LLMClient` -> `LLM_Client` before the general camelCase split.
+    name = re.sub(ACRONYM_PATTERN, r"\1_\2", name)
+    name = re.sub(CAMEL_PATTERN, r"\1_\2", name).lower()
+    return re.sub(r"_+", "_", name)
 
 
-def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True) -> Any:
     """
-    Converts camelCase strings, dictionary keys, or lists of such, to snake_case format.
+    Convert camelCase or PascalCase strings, dictionary keys, or lists to snake_case format.
 
-    :param data: The input to convert. Can be a string, a dictionary (with camelCase keys), or a list containing strings or dictionaries.
-    :type data: str, dict, or list
+    Args:
+        data (str | dict | list):
+            The input to convert. Can be a string, a dictionary (with camelCase or PascalCase keys),
+            or a list containing strings or dictionaries.
+        convert_values (bool, optional):
+            If True, string values within dictionaries and lists are also converted to snake_case.
+            Default is False.
 
-    :return: The converted data in snake_case format. Returns a string, dictionary, or list, matching the input type.
-    :rtype: Optional[Union[str, dict, list]]
+    Returns:
+        Any: The converted data in snake_case format. The return type matches the input type (str, dict, or list).
 
-    .. note::
-        - For dictionaries, only keys are converted. Values are preserved as-is, except for nested dictionaries, which are also converted.
+    Notes:
+        - For dictionaries, only keys are converted by default. If ``convert_values`` is True, string values are also converted.
         - Spaces in keys are replaced with underscores.
         - Multiple consecutive underscores are collapsed into a single underscore.
         - Nested dictionaries and lists are processed recursively.
+        - If the input is not a string, dictionary, or list, the original value is returned.
 
-    .. warning::
-        If the input is not a string, dictionary, or list, a ``SmarterValueError`` is raised.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        from smarter.common.utils import camel_to_snake
+    Examples:
+        >>> from smarter.common.utils import to_snake_case
 
         # Convert a string
-        print(camel_to_snake("userName"))  # Output: user_name
+        >>> to_snake_case("userName")
+        'user_name'
 
         # Convert a dictionary
-        data = {
-            "userName": "alice",
-            "userProfile": {
-                "firstName": "Alice",
-                "lastName": "Smith"
-            }
-        }
-        print(camel_to_snake(data))
-        # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
+        >>> data = {
+        ...     "userName": "alice",
+        ...     "userProfile": {
+        ...         "firstName": "Alice",
+        ...         "lastName": "Smith"
+        ...     }
+        ... }
+        >>> to_snake_case(data)
+        {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
 
         # Convert a list of strings
-        print(camel_to_snake(["firstName", "lastName"]))
-        # Output: ['first_name', 'last_name']
+        >>> to_snake_case(["firstName", "lastName"], convert_values=True)
+        ['first_name', 'last_name']
+
+    .. caution::
+
+        key collisions may occur when converting from camelCase to snake_case.
+        For example, "userName" and "user_name" would both convert to "user_name".
+        In such cases, the last key processed will overwrite previous keys in the
+        resulting dictionary.
     """
 
     if isinstance(data, str):
         return _convert_camel_to_snake(data)
-    if isinstance(data, list):
-        return [camel_to_snake(item) for item in data]
-    if not isinstance(data, dict):
-        raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
-    dictionary: dict = data if isinstance(data, dict) else {}
-    retval = {}
-    for key, value in dictionary.items():
-        if isinstance(value, dict):
-            value = camel_to_snake(value)
-        elif isinstance(value, list):
-            value = [camel_to_snake(item) for item in value]
-        new_key = _convert_camel_to_snake(key)
-        retval[new_key] = value
-    return retval
-
-
-@lru_cache(maxsize=LRU_MAXSIZE)
-def _convert_to_snake_case(val: str) -> str:
-    """
-    handle high-level conversion logic for to_snake_case, which includes
-    both camelCase and PascalCase conversion to snake_case, then
-    cache to a longer-lasting persistent cache to optimize for repeat
-    conversions of the same strings.
-    """
-    retval = str(camel_to_snake(val))
-    retval = str(pascal_to_snake(retval))
-    return retval
-
-
-def to_snake_case(obj) -> str:
-    """
-    Converts a camelCase or PascalCase string (or class/type object) to
-    snake_case format, suitable for URL naming or Python identifiers.
-
-    Handles both camelCase and PascalCase inputs, and can also accept a
-    class or type object (using its `__name__`). The conversion is cached
-    long term.
-
-    :param obj: The string or class/type object to convert. If a string, it is converted directly. If a class/type, its `__name__` is used.
-    :type obj: str or type
-
-    :return: The converted snake_case string.
-    :rtype: str
-
-    .. note::
-        - Spaces and hyphens are replaced with underscores.
-        - Multiple consecutive underscores are collapsed into a single underscore.
-        - The conversion is case-insensitive and works for both camelCase and PascalCase.
-        - Results are cached for performance on repeated conversions of the same strings.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        from smarter.common.utils import to_snake_case
-
-        class MyClass:
-            pass
-
-        print(to_snake_case("UserProfile"))  # Output: user_profile
-        print(to_snake_case("userName"))     # Output: user_name
-        print(to_snake_case(MyClass))        # Output: my_class
-
-    """
-    if isinstance(obj, str):
-        retval = _convert_to_snake_case(obj)
+    elif isinstance(data, list):
+        return [
+            (
+                to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive)
+                if isinstance(item, (dict, list)) and is_recursive
+                else _convert_camel_to_snake(item) if isinstance(item, str) and convert_values else item
+            )
+            for item in data
+        ]
+    elif isinstance(data, dict):
+        retval = {}
+        for key, value in data.items():
+            key = _convert_camel_to_snake(key) if isinstance(key, str) else key
+            if isinstance(value, dict) and is_recursive:
+                value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
+            elif isinstance(value, list) and is_recursive:
+                value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
+            elif convert_values and isinstance(value, str):
+                value = _convert_camel_to_snake(value)
+            retval[key] = value
+        return retval
     else:
-        retval = _convert_to_snake_case(obj.__name__) if hasattr(obj, "__name__") else str(obj)
-    logger.debug("%s.to_snake_case() - converted '%s' to '%s'", logger_prefix, obj, retval)
+        return data  # Return the original data if it's not a string, dict, or list, without raising an error.
+
+
+def search_replace(
+    data: Union[dict[str, Any], list[Any]], replace_str: str, with_str: str
+) -> Union[dict[str, Any], list[Any]]:
+    """
+    Recursively search through a dictionary or list and replace all occurrences of a specified string with another string.
+
+    Args:
+        data (dict or list): The input dictionary or list to search through.
+        replace_str (str): The string to search for in the dictionary keys and values.
+        with_str (str): The string to replace the found string with.
+
+    Returns:
+        Union[dict[str, Any], list[Any]]: A new dictionary or list with the specified replacements made.
+
+    Notes:
+        - This function will recursively search through nested dictionaries and lists within the input dictionary.
+        - Only string keys and string values will be checked for replacements. Non-string types will be left unchanged.
+        - This is particularly useful for handling legacy datauration formats where certain keys or values need to be updated for compatibility reasons, such as replacing 'chatbot' with 'llmclient' in prompt datauration dictionaries to maintain
+    ·     compatibility with older versions of the React app that expect 'chatbot' instead of 'llmclient'.
+    """
+    if isinstance(data, dict):
+        retval = {}
+        for key, value in data.items():
+            if isinstance(value, (dict, list)):
+                value = search_replace(value, replace_str, with_str)
+            if replace_str in key:
+                key = key.replace(replace_str, with_str)
+            if key.lower().replace("_", "") == replace_str.lower().replace("_", ""):
+                key = with_str
+            retval[key] = value
+    elif isinstance(data, list):
+        retval = [
+            search_replace(item, replace_str, with_str) if isinstance(item, (dict, list)) else item for item in data
+        ]
+    else:
+        raise ValueError("Input data must be a dictionary or a list.")
     return retval
 
 
 __all__ = [
     "to_snake_case",
-    "camel_to_snake",
-    "camel_to_snake_dict",
-    "pascal_to_snake",
-    "snake_to_camel",
+    "to_camel_case",
+    "search_replace",
+    "ConvertibleCaseType",
 ]

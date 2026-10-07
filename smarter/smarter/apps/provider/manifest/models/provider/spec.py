@@ -1,12 +1,12 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
-import logging
 import os
 import re
 from typing import ClassVar, Optional
 
 from pydantic import EmailStr, Field, field_validator
 
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -89,12 +89,12 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
         v = str(v).strip()
         if not v:
             raise SAMValidationError("Provider name must not be empty.")
-        if not re.match(SmarterValidator.VALID_ALPHNUMERIC_NO_SPACES_PATTERN, v):
+        if not re.match(SmarterValidator.VALID_SNAKE_CASE, v):
             raise SAMValidationError(f"""
-                Provider name {v} must contain only letters and numbers, with no
-                special characters or spaces.
-                examples: 'OpenAI', 'GoogleAI', 'MetaAI', 'DeepSeek',
-                'Anthropic', 'HuggingFace'
+                Provider name {v} must contain only letters, numbers and underscores, with no
+                other special characters or spaces.
+                examples: 'open_ai', 'google_ai', 'meta_ai', 'deep_seek',
+                'anthropic', 'hugging_face'
                 """)
         return v
 
@@ -160,7 +160,7 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
 
 class SAMProviderSpec(AbstractSAMSpecBase):
-    """Smarter API Api Connection Manifest ApiConnection.spec"""
+    """Smarter API Api Connection Manifest ApiConnection.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

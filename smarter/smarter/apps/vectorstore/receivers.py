@@ -1,100 +1,64 @@
 # pylint: disable=unused-argument
-"""
-Receivers for the vectorstore app.
-"""
-
-import json
-import logging
+"""Receivers of the vectorstore app."""
 
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.forms.models import model_to_dict
 
-from smarter.apps.vectorstore.models import VectorestoreMeta
-from smarter.apps.vectorstore.signals import (
-    load_failed,
-    load_started,
-    load_success,
-)
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+from .models import VectorstoreMeta
+from .signals import (
+    document_load_failed,
+    document_loaded,
+    vectorstore_deployed,
+    vectorstore_destroyed,
+    vectorstore_status_changed,
+)
+
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.VECTORSTORE_LOGGING]
+)
+module_prefix = logging.formatted_text(__name__)
 
 
-# pylint: disable=unused-argument
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.VECTORSTORE_LOGGING)
+@receiver(post_save, sender=VectorstoreMeta)
+@receiver(post_delete, sender=VectorstoreMeta)
+def vectorstore_changed(sender, instance: VectorstoreMeta, **kwargs):
+    """Invalidate the cached vectorstore, and its owner's cached lists."""
+    # pylint: disable=import-outside-toplevel
+    from .caching import invalidate_all_cached_vectorstores_for_user_profile
+
+    try:
+        # invalidating re-reads it, which a deleted vectorstore cannot be.
+        VectorstoreMeta.get_cached_object(invalidate=True, pk=instance.pk)
+    except VectorstoreMeta.DoesNotExist:
+        pass
+    if instance.user_profile_id:  # type: ignore[attr-defined]
+        invalidate_all_cached_vectorstores_for_user_profile(instance.user_profile)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-module_prefix = f"{__name__}"
+@receiver(vectorstore_deployed)
+def vectorstore_deployed_receiver(sender, vectorstore: VectorstoreMeta, **kwargs):
+    logger.info("%s Vectorstore %s deployed.", module_prefix, vectorstore)
 
 
-@receiver(post_save, sender=VectorestoreMeta)
-def account_post_save(sender: VectorestoreMeta, instance: VectorestoreMeta, created, **kwargs):
-    """Signal receiver for created/saved of VectorestoreMeta model."""
-    model_prefix = formatted_text(f"{module_prefix}.account_post_save()")
-    account_json = json.dumps(model_to_dict(instance))
-    if created:
-        logger.info("%s VectorestoreMeta created: %s", model_prefix, account_json)
-    else:
-        logger.info("%s VectorestoreMeta updated: %s", model_prefix, account_json)
-        logger.info(
-            "%s invalidating cache for VectorestoreMeta: %s",
-            formatted_text(f"{module_prefix}.account_post_save()"),
-            instance,
-        )
-        VectorestoreMeta.get_cached_object(invalidate=True, pk=instance.pk)
+@receiver(vectorstore_destroyed)
+def vectorstore_destroyed_receiver(sender, vectorstore: VectorstoreMeta, **kwargs):
+    logger.info("%s Vectorstore %s destroyed.", module_prefix, vectorstore)
 
 
-@receiver(post_delete, sender=VectorestoreMeta)
-def account_post_delete(sender: VectorestoreMeta, instance: VectorestoreMeta, **kwargs):
-    """Signal receiver for deleted of VectorestoreMeta model."""
-    model_prefix = formatted_text(f"{module_prefix}.account_post_delete()")
-    account_json = json.dumps(model_to_dict(instance))
-    logger.info("%s VectorestoreMeta deleted: %s", model_prefix, account_json)
-    logger.info(
-        "%s invalidating cache for deleted VectorestoreMeta: %s",
-        formatted_text(f"{module_prefix}.account_post_delete()"),
-        instance,
-    )
-    VectorestoreMeta.get_cached_object(invalidate=True, pk=instance.pk)
+@receiver(vectorstore_status_changed)
+def vectorstore_status_changed_receiver(sender, vectorstore: VectorstoreMeta, previous, status, message, **kwargs):
+    log = logger.warning if status == "failed" else logger.info
+    log("%s Vectorstore %s: %s -> %s %s", module_prefix, vectorstore, previous, status, message)
 
 
-@receiver(load_started)
-def handle_load_started(sender, backend, provider, user_profile, **kwargs):
-    """Signal receiver for load_started signal."""
-    logger.info(
-        "%s load started for backend: %s, provider: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.handle_load_started()"),
-        backend,
-        provider,
-        user_profile,
-    )
+@receiver(document_loaded)
+def document_loaded_receiver(sender, document, **kwargs):
+    logger.info("%s %s loaded, %s chunks.", module_prefix, document, document.chunk_count)
 
 
-@receiver(load_success)
-def handle_load_success(sender, backend, provider, user_profile, **kwargs):
-    """Signal receiver for load_success signal."""
-    logger.info(
-        "%s load succeeded for backend: %s, provider: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.handle_load_success()"),
-        backend,
-        provider,
-        user_profile,
-    )
-
-
-@receiver(load_failed)
-def handle_load_failed(sender, backend, provider, user_profile, **kwargs):
-    """Signal receiver for load_failed signal."""
-    logger.error(
-        "%s load failed for backend: %s, provider: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.handle_load_failed()"),
-        backend,
-        provider,
-        user_profile,
-    )
+@receiver(document_load_failed)
+def document_load_failed_receiver(sender, document, error, **kwargs):
+    logger.warning("%s %s failed to load: %s", module_prefix, document, error)

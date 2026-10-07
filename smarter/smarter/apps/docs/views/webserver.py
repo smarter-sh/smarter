@@ -1,7 +1,5 @@
 # pylint: disable=W0613
-"""
-Web server views for the docs app
-"""
+"""Web server views for the docs app."""
 
 import os
 from datetime import datetime
@@ -14,13 +12,13 @@ from smarter.lib.django.views import SmarterWebTxtView, SmarterWebXmlView
 
 
 class RobotsTxtView(SmarterWebTxtView):
-    """View to serve the robots.txt file"""
+    """View to serve the robots.txt file."""
 
     template_path = "robots.txt"
 
 
 class SitemapXmlView(SmarterWebXmlView):
-    """View to serve the sitemap.xml file"""
+    """View to serve the sitemap.xml file."""
 
     template_path = "sitemap.xml"
     context = {
@@ -31,7 +29,7 @@ class SitemapXmlView(SmarterWebXmlView):
 
 
 class FaviconView(View):
-    """View to serve the favicon.ico file"""
+    """View to serve the favicon.ico file."""
 
     def get(self, request, *args, **kwargs):
         file_path = os.path.join("smarter", "static", "images", "logo", "favicon.ico")
@@ -39,7 +37,7 @@ class FaviconView(View):
 
 
 class HealthzView(View):
-    """View to serve the healthz endpoint"""
+    """View to serve the healthz endpoint."""
 
     def get(self, request, *args, **kwargs):
         return HttpResponse("OK", content_type="text/plain")
@@ -47,14 +45,16 @@ class HealthzView(View):
 
 class ReadinessView(View):
     """
-    View to serve the readiness endpoint. Instantiate a ChatBotHelper object to
+    View to serve the readiness endpoint.
+
+    Instantiate a LLMClientHelper object to
     force readiness of platform. This is the most likely collection of Python
     objects that will be used in the early stages of the application lifecycle.
 
     mcdaniel (aug-2025): squelching this idea for now as the overhead of instantiating
-    ChatBotHelper is not worth the benefit at this stage.
+    LLMClientHelper is not worth the benefit at this stage.
     """
 
     def get(self, request, *args, **kwargs):
-        # ChatBotHelper(request=request)
+        # LLMClientHelper(request=request)
         return HttpResponse("OK", content_type="text/plain")

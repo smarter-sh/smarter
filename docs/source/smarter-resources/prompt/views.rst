@@ -4,5 +4,5 @@ Prompt Views
 .. toctree::
    :maxdepth: 2
 
-   views/detailview
+   views/detailviews
    views/listview

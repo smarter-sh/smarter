@@ -1,7 +1,7 @@
 API Keys
 ========
 
-Smarter API keys are used to authenticate and authorize access to Smarter AI resources like deployed ChatBot/Agent resources.
+Smarter API keys are used to authenticate and authorize access to Smarter AI resources like deployed LLMClient/Agent resources.
 They are independently managed from the AI resources themselves, allowing for better security and flexibility.
 
 Smarter API key are created on the Django knox TokenAuthentication system, a popular and well-supported authentication system for Django REST Framework.
@@ -16,7 +16,7 @@ Creating API Keys
    python manage.py create_api_key \
     --account_number ####-####-#### \
     --username USERNAME \
-    --description "This key is used for accessing the ChatBot API."
+    --description "This key is used for accessing the LLMClient API."
 
 This will output the generated API key to the console. Be sure to store this key securely as it will not be shown again.
 
@@ -57,7 +57,7 @@ Extensions to the Django Know model include the following fields and methods:
 Using API Keys
 -----------------
 
-To use an API key, associate it with ChatBot/Agent resources when creating them via the Smarter REST API. The Smarter API will validate the API key on each request,
+To use an API key, associate it with LLMClient/Agent resources when creating them via the Smarter REST API. The Smarter API will validate the API key on each request,
 which includes business rule enforcement like rate limiting, access control, and basic declarative referential integrity such as ensuring the API key belongs
 to the same Account as the resource being accessed.
 

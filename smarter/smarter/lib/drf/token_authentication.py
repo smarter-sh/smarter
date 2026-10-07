@@ -1,10 +1,12 @@
-"""knox TokenAuthentication subclass that checks if the token is active."""
+"""Knox TokenAuthentication subclass that checks if the token is active."""
 
-import logging
+from hmac import compare_digest
 
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
+from knox import crypto
 from knox.auth import TokenAuthentication
+from knox.settings import CONSTANTS
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
@@ -13,6 +15,7 @@ from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -28,6 +31,7 @@ from .signals import (
 CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
@@ -47,9 +51,7 @@ class SmarterTokenAuthenticationError(SmarterException):
 
 # pylint: disable=W0223
 class SmarterAnonymousUser(AnonymousUser):
-    """
-    AnonymousUser subclass for SmarterTokenAuthenticationMiddleware logging purposes.
-    """
+    """AnonymousUser subclass for SmarterTokenAuthenticationMiddleware logging purposes."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,7 +59,7 @@ class SmarterAnonymousUser(AnonymousUser):
 
 
 class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
-    """Enhanced Django Rest Framework (DRF) knox TokenAuthentication
+    """Enhanced Django Rest Framework (DRF) knox TokenAuthentication.
 
     This subclass adds:
 
@@ -76,7 +78,8 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterTokenAuthentication.__name__}")
+        class_name = f"{__name__}.{SmarterTokenAuthentication.__name__}"
+        return self.formatted_text(class_name)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -135,10 +138,12 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         # raised by the default token authentication
         smarter_auth_token = SmarterAuthToken.objects.get(token_key=auth_token.token_key)
         if not smarter_auth_token.is_active:
+            error = AuthenticationFailed("Api key is not activated.")
             smarter_token_authentication_failure.send(
                 sender=self.__class__,
                 user=user,
                 token=masked_token,
+                error=error,
             )
             logger.warning(
                 "%s.authenticate_credentials() - token is not active for user %s, token: %s",
@@ -146,7 +151,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 user,
                 masked_token,
             )
-            raise AuthenticationFailed("Api key is not activated.")
+            raise error
 
         # update the last used time for the token
         smarter_auth_token.last_used_at = timezone.now()
@@ -185,22 +190,22 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 logger_prefix,
             )
             return SmarterAnonymousUser()
-        token_key = auth_header.split("Token ")[1]
-        # If your tokens are bytes, decode as needed
-        # token = token.encode()  # if needed
-        try:
-            auth_token = SmarterAuthToken.objects.get(token_key=token_key)
-            logger.debug(
-                "%s.get_user_from_request() retrieved user %s for token_key: %s",
-                logger_prefix,
-                auth_token.user,
-                token_key,
-            )
-            return auth_token.user
-        except SmarterAuthToken.DoesNotExist:
-            logger.warning(
-                "%s.get_user_from_request() failed to retrieve user for token_key: %s. Returning SmarterAnonymousUser.",
-                logger_prefix,
-                token_key,
-            )
-            return SmarterAnonymousUser()
+        token = auth_header.split("Token ")[1].strip()
+        # As knox does: token_key holds only the token's first characters, so the
+        # token is looked up by them, and verified by comparing its hash with the digest.
+        digest = crypto.hash_token(token)
+        for auth_token in SmarterAuthToken.objects.filter(token_key=token[: CONSTANTS.TOKEN_KEY_LENGTH]):
+            if compare_digest(digest, auth_token.digest) and auth_token.is_active:
+                logger.debug(
+                    "%s.get_user_from_request() retrieved user %s for token_key: %s",
+                    logger_prefix,
+                    auth_token.user,
+                    auth_token.token_key,
+                )
+                return auth_token.user
+        logger.warning(
+            "%s.get_user_from_request() failed to retrieve an active token for token_key: %s. Returning SmarterAnonymousUser.",
+            logger_prefix,
+            token[: CONSTANTS.TOKEN_KEY_LENGTH],
+        )
+        return SmarterAnonymousUser()

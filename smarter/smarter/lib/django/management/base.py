@@ -1,11 +1,12 @@
 """Base command class for custom management commands."""
 
-import logging
 import sys
 import traceback
 from typing import Optional
 
 from django.core.management.base import BaseCommand
+
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,6 @@ class SmarterCommand(BaseCommand):
 
     - If ``handle_completed_failure`` is called with an exception, the process will exit with code 1.
     - Do not override ``__init__`` unless necessary; always call ``super().__init__``.
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -101,7 +101,7 @@ class SmarterCommand(BaseCommand):
         logger.error("-" * 80)
         if msg:
             logger.error("%s", msg)
-        msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
+        msg = f"{self.__module__} failed" + (f" with error: {err}" if err else ".")
         logger.error("%s", msg)
         if err:
             tb = traceback.format_exc()
@@ -111,10 +111,7 @@ class SmarterCommand(BaseCommand):
             sys.exit(1)
 
     def create_parser(self, prog_name, subcommand, **kwargs):
-        """
-        Create and return the ``ArgumentParser`` which will be used to
-        parse the arguments to this command.
-        """
+        """Create and return the ``ArgumentParser`` which will be used to parse the arguments to this command."""
         parser = super().create_parser(prog_name, subcommand, **kwargs)
         parser.add_argument(
             "--settings_output",

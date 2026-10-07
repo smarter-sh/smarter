@@ -103,33 +103,12 @@
             </div>
             <!--end:Menu item-->
 
-            <!--begin:Menu item Workbench -->
-            <div class="menu-item">
-              <!--begin:Menu link-->
-              <a
-                class="menu-link"
-                href="{{ sidebar.workbench }}"
-                target="_self"
-              >
-                <span class="menu-icon">
-                  <i class="ki-duotone ki-message-programming fs-2">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                    <span class="path3"></span>
-                  </i>
-                </span>
-                <span class="menu-title">Workbench</span>
-              </a>
-              <!--end:Menu link-->
-            </div>
-            <!--end:Menu item Workbench -->
-
             <!--begin:Menu item Apply -->
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{{ sidebar.apply_manifest }}"
+                href="{{ sidebar.manifest_drop_zone }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -189,26 +168,228 @@
             {% endif %}
             <!--end:Menu item Server Logs -->
 
-            <!--begin:Menu item Providers -->
+            <!--begin:Menu item Resources-->
+            <div class="here menu-item pt-5">
+              <!--begin:Menu content-->
+              <div class="menu-content">
+                <span class="menu-heading here fw-bold text-uppercase fs-7"
+                  >Resources</span
+                >
+              </div>
+              <!--end:Menu content-->
+            </div>
+            <!--end:Menu item Resources-->
+
+            <!--begin:Menu item API Keys -->
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{{ sidebar.providers }}"
+                href="{{ sidebar.api_keys }}"
                 target="_self"
               >
                 <span class="menu-icon">
-                  <i class="ki-duotone ki-shop fs-2">
+                  <i class="ki-duotone ki-key fs-2">
                     <span class="path1"></span>
                     <span class="path2"></span>
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Providers</span>
+                <span class="menu-title">API Keys</span>
               </a>
               <!--end:Menu link-->
             </div>
-            <!--end:Menu item-->
+            <!--end:Menu item API Keys -->
+
+
+            <!--begin:Menu item Connections -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.connections }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-password-check fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Connections</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Connections-->
+
+            <!--begin:Menu item Custom Domains -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.custom_domains }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-arrow-circle-right fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Custom Domains</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Custom Domains -->
+
+            <!--begin:Menu item Budgets -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.budgets }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-dollar fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Budgets</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Budgets-->
+
+            <!--begin:Menu item Guardrails -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.guardrails }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-check fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Guardrails</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Guardrails-->
+
+            <!--begin:Menu item LLMClients -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.workbench }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-message-programming fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">LLM Clients</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item LLMClients -->
+
+            <!--begin:Menu item LLMHost -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.llmhost }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-message-programming fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">LLM Hosts</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item LLMHost -->
+
+            <!--begin:Menu item LLMHostCompute -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.llmhostcompute }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-technology-2 fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                  </i>
+                </span>
+                <span class="menu-title">LLM Host Compute</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item LLMHostCompute -->
+
+            <!--begin:Menu item MCPClients -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.mcpclients }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-message-programming fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">MCP Clients</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item MCPClients -->
+
+            <!--begin:Menu item Orchestrators -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.orchestrators }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-message-programming fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Orchestrators</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Orchestrators -->
+
 
             <!--begin:Menu item Plugins-->
             <div class="menu-item">
@@ -238,26 +419,51 @@
             </div>
             <!--end:Menu item-->
 
-            <!--begin:Menu item Connections -->
+
+            <!--begin:Menu item Providers -->
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{{ sidebar.connections }}"
+                href="{{ sidebar.providers }}"
                 target="_self"
               >
                 <span class="menu-icon">
-                  <i class="ki-duotone ki-password-check fs-2">
+                  <i class="ki-duotone ki-shop fs-2">
                     <span class="path1"></span>
                     <span class="path2"></span>
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Connections</span>
+                <span class="menu-title">Providers</span>
               </a>
               <!--end:Menu link-->
             </div>
-            <!--end:Menu item-->
+            <!--end:Menu item Providers -->
+
+            <!--begin:Menu item Proxies -->
+            {% if dashboard.is_proxy_enabled %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.proxies }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-data fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Proxies</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Proxies -->
+
 
             <!--begin:Menu item Secrets -->
             <div class="menu-item">
@@ -279,6 +485,27 @@
               <!--end:Menu link-->
             </div>
             <!--end:Menu item Secrets -->
+
+            <!--begin:Menu item Vectorsearches -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.vectorsearches }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-data fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Vectorsearches</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Vectorsearches -->
 
             <!--begin:Menu item Vectorstores -->
             {% if dashboard.is_vectorstore_enabled %}
@@ -303,47 +530,6 @@
             {% endif %}
             <!--end:Menu item Vectorstores -->
 
-            <!--begin:Menu item Api Keys -->
-            <div class="menu-item">
-              <!--begin:Menu link-->
-              <a
-                class="menu-link"
-                href="{{ sidebar.api_keys }}"
-                target="_self"
-              >
-                <span class="menu-icon">
-                  <i class="ki-duotone ki-key fs-2">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                    <span class="path3"></span>
-                  </i>
-                </span>
-                <span class="menu-title">Api Keys</span>
-              </a>
-              <!--end:Menu link-->
-            </div>
-            <!--end:Menu item-->
-
-            <!--begin:Menu item Custom Domains -->
-            <div class="menu-item">
-              <!--begin:Menu link-->
-              <a
-                class="menu-link"
-                href="{{ sidebar.custom_domains }}"
-                target="_self"
-              >
-                <span class="menu-icon">
-                  <i class="ki-duotone ki-arrow-circle-right fs-2">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                    <span class="path3"></span>
-                  </i>
-                </span>
-                <span class="menu-title">Custom Domains</span>
-              </a>
-              <!--end:Menu link-->
-            </div>
-            <!--end:Menu item-->
 
             <!--begin:Menu item Documentation-->
             <div class="here menu-item pt-5">
@@ -510,6 +696,25 @@
             </div>
             {% endif %}
             <!--end:Menu item-->
+
+            <!--begin:Menu item Infrastructure Resources -->
+            {% if user.is_superuser %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.infrastructure_resources }}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Infrastructure Resources</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Infrastructure Resources -->
 
             <!--begin:Menu item Django admin-->
             <div class="menu-item">

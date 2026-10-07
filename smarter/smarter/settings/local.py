@@ -10,11 +10,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import glob
-import logging
 import os
 import sys
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 from .base import *
 

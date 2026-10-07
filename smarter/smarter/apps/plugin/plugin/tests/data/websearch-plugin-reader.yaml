@@ -1,0 +1,29 @@
+---
+# A WebsearchPlugin for unit testing, which reads web pages but cannot search,
+# and so has no web search api key.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: test_websearch_plugin_reader
+  pluginClass: websearch
+  description: Reads the web pages that users link to, for unit testing.
+  version: 0.1.0
+  tags:
+    - websearch
+    - test
+  annotations:
+    - smarter.sh/websearch-test/purpose: unit testing
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: You are a reading assistant for unit testing the WebsearchPlugin.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 256
+  websearchData:
+    fetch:
+      maxCharacters: 1000
+      respectRobotsTxt: false
+    cacheTtl: 0

@@ -1,0 +1,62 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "An open source repository explorer that explains how public GitHub projects work, and reviews code."
+  name: repo_explorer
+  version: 1.0.0
+  tags:
+    - developer-tools
+    - github
+    - open-source
+    - code
+  annotations:
+    - smarter.sh/llmclient/use-case: codebase question answering
+    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Octo
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - How does request routing work in the django/django repository?
+    - What is the architecture of facebook/react?
+    - Where is authentication handled in the smarter-sh/smarter repository?
+    - Review my code for this pull request diff.
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Open Source Repo Explorer
+    appPlaceholder: Ask me about any public GitHub repository, as owner/repo...
+    appWelcomeMessage: Welcome! Name a public GitHub repository, and ask me how it works.
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: gpt-6-luna
+    defaultSystemRole:
+      You are a staff software engineer who helps developers understand open source code.
+      Users ask about public GitHub repositories, which they name as owner/repo. Use DeepWiki
+      for architecture and design questions, and GitMCP to search a repository's code and
+      documentation for specifics. When the user links to a web page, such as an issue or a
+      pull request, read it before answering. When the user shares code and asks for a code
+      review, review it.
+
+      Name the files, classes and functions that your answer is based on, and link to them.
+      If the user does not name a repository, ask which one. If the tools do not answer the
+      question, say so. DO NOT INVENT file names or APIs.
+    defaultTemperature: 1.0
+    deployed: false
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+    - url_reader
+    - code_review
+  mcpClients:
+    - deepwiki
+    - gitmcp
+  guardrails:
+    - prompt_injection_keyword_input
+    - secrets_redaction_input
+    - secrets_leak_output
+    - script_injection_output

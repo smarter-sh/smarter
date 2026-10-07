@@ -7,6 +7,10 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
+from unittest.mock import MagicMock, patch
+
+from django.test import RequestFactory
+
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory, mortal_user_factory
@@ -148,7 +152,9 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_user_initialization(self) -> None:
         """
-        Test instantiation with a user. Mixin should set account and
+        Test instantiation with a user.
+
+        Mixin should set account and
         user_profile based on the user.
         """
         instance = AccountMixin(user=self.mortal_user)
@@ -198,7 +204,9 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_set_account(self) -> None:
         """
-        Test setting account. Should set the admin user and user_profile
+        Test setting account.
+
+        Should set the admin user and user_profile
         """
         instance = AccountMixin(account=self.account)
         self.assertIsNotNone(self.account)
@@ -236,9 +244,7 @@ class TestAccountMixin(SmarterTestBase):
         self.assertIsNone(instance.account_number)
 
     def test_dunder_str(self):
-        """
-        Test __str__().
-        """
+        """Test __str__()."""
         instance = AccountMixin(user=self.mortal_user, account=self.account)
         s = repr(instance)
         self.assertIsInstance(s, str)
@@ -294,3 +300,48 @@ class TestAccountMixin(SmarterTestBase):
         instance_none = AccountMixin()
         self.assertTrue(instance_none < instance1 or instance_none == instance1)
         self.assertFalse(instance1 < instance_none)
+
+
+class _BrokenUserProfile:
+    """A truthy stand-in for a UserProfile whose attributes raise ``error``."""
+
+    def __init__(self, error: Exception):
+        self.error = error
+
+    @property
+    def user(self):
+        raise self.error
+
+
+class TestAccountMixinErrors(SmarterTestBase):
+    """Test that AccountMixin's lazy getters log and return None when they fail unexpectedly."""
+
+    def test_request_with_an_unresolvable_user(self):
+        """A request whose user isn't a User leaves the mixin without a user."""
+        request = RequestFactory().get("/")
+        request.user = MagicMock()
+        instance = AccountMixin(request=request)
+        self.assertIsNone(instance._user)
+
+    def test_user_getter_errors(self):
+        for error in (AttributeError("partial"), RuntimeError("broken")):
+            with self.subTest(error=error):
+                instance = AccountMixin()
+                instance._user_profile = _BrokenUserProfile(error)  # type: ignore[assignment]
+                self.assertIsNone(instance.user)
+
+    def test_account_getter_errors(self):
+        for error in (AttributeError("partial"), RuntimeError("broken")):
+            with self.subTest(error=error):
+                instance = AccountMixin()
+                instance._user = MagicMock()
+                with patch("smarter.apps.account.mixins.get_cached_account_for_user", side_effect=error):
+                    self.assertIsNone(instance.account)
+
+    def test_user_profile_getter_errors(self):
+        for error in (AttributeError("partial"), RuntimeError("broken")):
+            with self.subTest(error=error):
+                instance = AccountMixin()
+                instance._user = User(username="unsaved")
+                with patch.object(UserProfile, "get_cached_object", side_effect=error):
+                    self.assertIsNone(instance.user_profile)

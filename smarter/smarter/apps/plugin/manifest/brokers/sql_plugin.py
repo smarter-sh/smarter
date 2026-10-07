@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API SqlPlugin Manifest handler"""
+"""Smarter API SqlPlugin Manifest handler."""
 
 from typing import TYPE_CHECKING, Optional, Type
 
@@ -72,7 +72,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     .. note::
         If the manifest kind does not match the expected plugin kind, or if required fields are missing,
         the broker may raise a `SAMPluginBrokerError` or related exception.
-
     """
 
     # override the base abstract manifest model with the Plugin model
@@ -84,81 +83,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     _sql_plugin_spec: Optional[SAMSqlPluginSpec] = None
     _sql_data: Optional[SqlData] = None
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SAMSqlPluginBroker instance.
-
-        This constructor initializes the broker by calling the parent class's
-        constructor, which will attempt to bootstrap the class instance
-        with any combination of raw manifest data (in JSON or YAML format),
-        a manifest loader, or existing Django ORM models. If a manifest
-        loader is provided and its kind matches the expected kind for this broker,
-        the manifest is initialized using the loader's data.
-
-        This class can bootstrap itself in any of the following ways:
-
-        - request.body (yaml or json string)
-        - name + account (determined via authentication of the request object)
-        - SAMLoader instance
-        - manifest instance
-        - filepath to a manifest file
-
-        If raw manifest data is provided, whether as a string or a dictionary,
-        or a SAMLoader instance, the base class constructor will only goes as
-        far as initializing the loader. The actual manifest model initialization
-        is deferred to this constructor, which checks the loader's kind.
-
-        :param args: Positional arguments passed to the parent constructor.
-        :param kwargs: Keyword arguments passed to the parent constructor.
-
-        **Example:**
-
-        .. code-block:: python
-
-            broker = SAMSqlPluginBroker(loader=loader, plugin_meta=plugin_meta)
-
-        .. seealso::
-            - `SAMPluginBaseBroker.__init__`
-        """
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if not self.ready:
-            if not self.loader and not self.manifest and not self.plugin:
-                logger.error(
-                    "%s.__init__() No loader nor existing Plugin provided for %s broker. Cannot initialize.",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return
-            if self.loader and self.loader.manifest_kind != self.kind:
-                raise SAMBrokerErrorNotReady(
-                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                    thing=self.kind,
-                )
-
-            if self.loader:
-                self._manifest = SAMSqlPlugin(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                    spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
-                    status=(
-                        SAMPluginCommonStatus(**self.loader.manifest_status)
-                        if self.loader and self.loader.manifest_status
-                        else None
-                    ),
-                )
-            if self._manifest:
-                logger.info(
-                    "%s.__init__() initialized manifest from loader for %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self._manifest.metadata.name,
-                )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     def plugin_init(self) -> None:
         """
@@ -210,10 +138,9 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             broker = SAMSqlPluginBroker(manifest=my_manifest)
             print(broker.formatted_class_name)
             # Output: ParentClass.SAMSqlPluginBroker()
-
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMSqlPluginBroker.__name__}[{id(self)}]"
+        class_name = f"{SAMSqlPluginBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def ORMModelClass(self) -> Type[PluginDataSql]:
@@ -258,7 +185,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         .. seealso::
             :data:`MANIFEST_KIND`
             :attr:`SAMSqlPluginBroker.manifest`
-
         """
         return MANIFEST_KIND
 
@@ -293,7 +219,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginCommonMetadata`
             :class:`SAMSqlPluginSpec`
             :class:`SAMPluginCommonStatus`
-
         """
 
         if self._manifest:
@@ -374,7 +299,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SqlPlugin`
             :attr:`SAMSqlPluginBroker.manifest`
             :attr:`SAMSqlPluginBroker.plugin_meta`
-
         """
         if self._plugin:
             return self._plugin
@@ -409,12 +333,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             if data:
                 print(data.connection)
 
-
         .. seealso::
 
             :class:`PluginDataSql`
             :attr:`SAMSqlPluginBroker.plugin_meta`
-
         """
         if self._plugin_data:
             return self._plugin_data
@@ -458,7 +380,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises SAMPluginBrokerError:
             If there is an error retrieving or converting any component of the plugin specification.
 
-
         .. seealso::
 
             - `SAMPluginStaticSpec`
@@ -499,6 +420,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def plugin_data_orm2pydantic(self) -> Optional[SqlData]:
         """
         Overrides the parent method to map SQL plugin data from ORM to Pydantic.
+
         Converts the plugin data from the Django ORM model format to the Pydantic manifest format.
 
         This method constructs a `SqlData` Pydantic model using the data associated with the current
@@ -613,9 +535,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
-        """
-        Invalidate any relevant caches when the manifest or plugin data changes.
-        """
+        """Invalidate any relevant caches when the manifest or plugin data changes."""
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         if self.plugin:
             PluginDataSql.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
@@ -648,7 +568,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
 
             :meth:`SqlPlugin.example_manifest`
             :class:`SmarterJournaledJsonResponse`
-
         """
         logger.debug(
             "%s.example_manifest() called for %s %s args: %s kwargs: %s",
@@ -701,7 +620,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SqlData`
             :class:`SAMPluginSpecKeys`
             :class:`SAMPluginMeta`
-
         """
         logger.debug(
             "%s.describe() called for %s %s args: %s kwargs: %s",
@@ -766,7 +684,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -807,9 +724,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Chat with the SQL plugin (not implemented).
+        Prompt with the SQL plugin (not implemented).
+
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
@@ -822,20 +740,21 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.chat() called for %s %s args: %s kwargs: %s",
+            "%s.prompt() called for %s %s args: %s kwargs: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             args,
             kwargs,
         )
-        command = self.chat.__name__
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="prompt() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the SQL plugin.
+
         This method deletes the SQL plugin associated with this broker. It verifies that the plugin
         is of the correct type and is ready before attempting deletion. If successful, it returns a
         JSON response indicating success; otherwise, it raises appropriate errors.
@@ -857,7 +776,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginBrokerError`
             :class:`SAMBrokerErrorNotReady`
             :class:`SmarterJournalCliCommands`
-
         """
         logger.debug(
             "%s.delete() called for %s %s args: %s kwargs: %s",
@@ -899,6 +817,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             raise SAMBrokerErrorNotReady(
                 f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
             )
+        self.verify_no_dependencies(command)
         try:
             self.plugin.delete()
             return self.json_response_ok(command=command, data={})
@@ -912,6 +831,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Deploy the SQL plugin (not implemented).
+
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
@@ -937,6 +857,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Undeploy the SQL plugin (not implemented).
+
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
@@ -963,6 +884,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve logs for the SQL plugin (not implemented).
+
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.

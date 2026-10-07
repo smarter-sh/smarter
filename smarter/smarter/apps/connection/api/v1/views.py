@@ -1,5 +1,5 @@
 """Connection API views."""
 
-import logging
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,32 @@
-"""Django manage.py initialize_account command."""
+"""
+Management command to initialize the Smarter platform or accounts.
+
+This module defines the Django management command ``initialize_account`` for the Smarter platform.
+It provides functionality to:
+
+* Initialize the entire Smarter platform with minimal required resources.
+* Initialize a single account, including:
+
+  1. Creating an Account object.
+  2. Creating, updating, or validating an admin user for the Account.
+  3. Applying example manifests from GitHub.
+  4. Adding plugin examples.
+  5. Deploying builtin LLM clients.
+  6. Creating StackAcademy (AI resource) examples.
+
+It also supports initializing all existing accounts to update their shared AI resources.
+
+Command-line Arguments
+-----------------------
+* ``--account_number``: The account number that will own the remote API connection.
+* ``--username``: Username for the admin account for this Account.
+* ``--email``: Email address of the account admin user (fallback is ``<username>@<root_domain>``).
+* ``--password``: Password for the account admin user (prompted if not supplied).
+* ``--company_name``: Name of the company for the Account.
+* ``--all``: If provided, initializes resources for all existing accounts.
+
+Typical usage is for system administrators to initialize platform resources or bootstrap new accounts on the Smarter platform.
+"""
 
 from typing import Optional
 
@@ -16,16 +44,19 @@ logger = logging.getLogger(__name__)
 
 class Command(SmarterCommand):
     """
-    Django manage.py initialize_platform command. Initialize the Smarter
-    platform. Creates the minimal resources necessary to start using Smarter.
+    Django manage.py initialize_platform command.
 
+    Initialize the Smarter
+    platform. Creates the minimal resources necessary to start using Smarter.
     """
 
     def initialize_account(
         self, account_number: str, username: str, email: str, password: Optional[str], company_name: Optional[str]
     ) -> bool:
         """
-        Initialize a single account with the provided information. Optionally
+        Initialize a single account with the provided information.
+
+        Optionally
         creates or updates an account admin user with the provided username, email, and password.
         Creates a collection of shared AI resources that are owned by the account admin user.
 
@@ -33,7 +64,7 @@ class Command(SmarterCommand):
         2. Create an admin user for the Account.
         3. Apply example manifests from GitHub.
         4. Add plugin examples.
-        5. Deploy builtin example chatbots.
+        5. Deploy builtin example llmclients.
         6. Create StackAcademy AI resources.
 
         .. note::
@@ -107,11 +138,11 @@ class Command(SmarterCommand):
             repo_version=2,
         )
 
-        # 4. Add builtin plugin examples and deploy chatbots.
+        # 4. Add builtin plugin examples and deploy llmclients.
 
         call_command("add_plugin_examples", username=username)
-        call_command("deploy_example_chatbot", account_number=account_number)
-        call_command("deploy_builtin_chatbots", account_number=account_number)
+        call_command("deploy_example_llmclient", account_number=account_number)
+        call_command("deploy_builtin_llmclients", account_number=account_number)
 
         # 5. Setup Stackademy AI resources, used for training and testing.
 
@@ -122,7 +153,9 @@ class Command(SmarterCommand):
 
     def initialize_all_accounts(self) -> bool:
         """
-        Initialize all EXISTING accounts. This is useful for ensuring that all accounts
+        Initialize all EXISTING accounts.
+
+        This is useful for ensuring that all accounts
         have the the most recent versions of shared AI resources.
         """
         retval = True
@@ -175,13 +208,15 @@ class Command(SmarterCommand):
 
     def handle(self, *args, **options):
         """
-        Initialize the Smarter platform. Creates the minimal resources necessary to start using Smarter.
+        Initialize the Smarter platform.
+
+        Creates the minimal resources necessary to start using Smarter.
 
         1. Create the Account.
         2. Create an admin user for the Account.
         3. Apply example manifests from GitHub.
         4. Add plugin examples.
-        5. Deploy builtin example chatbots.
+        5. Deploy builtin example llmclients.
         6. Create StackAcademy AI resources.
         """
         self.handle_begin()

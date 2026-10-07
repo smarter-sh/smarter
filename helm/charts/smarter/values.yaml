@@ -36,7 +36,7 @@
 env:
   AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
   AWS_ACCESS_KEY_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  AWS_REGION: "us-east-1"
+  AWS_REGION: "ca-central-1"
   AWS_SECRET_ACCESS_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CACHES_LOCATION: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -71,16 +71,12 @@ env:
   SMARTER_CACHE_EXPIRATION: "60"
   SMARTER_CHAT_CACHE_EXPIRATION: "5"
   SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_CHATBOT_CACHE_EXPIRATION: "300"
-  SMARTER_CHATBOT_MAX_RETURNED_HISTORY: "25"
-  SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES: "3"
-  SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF: "True"
-  SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
-  SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD: "True"
-  SMARTER_CHATBOT_TASKS_CREATE_INGRESS_MANIFEST: "True"
-  SMARTER_CHATBOT_TASKS_DEFAULT_TTL: "600"
   SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_ENABLE_DASHBOARD_SERVER_LOGS: true
+  SMARTER_ENABLE_MANIFEST_DROPZONE: true
+  SMARTER_ENABLE_PROXY: true
+  SMARTER_ENABLE_VECTORSTORE: true
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -88,6 +84,15 @@ env:
   SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_INTERNAL_IP_PREFIXES: "192.168."
   SMARTER_LLAMA_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_LLM_CLIENT_CACHE_EXPIRATION: "300"
+  SMARTER_LLM_CLIENT_MAX_RETURNED_HISTORY: "25"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: "3"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
+  SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: "infrastructure_celery_task_queue"
+  SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
+  SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
+  SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
   SMARTER_LOGIN_URL: "https://platform.example.com/login/"
   SMARTER_LOGO: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_MAILCHIMP_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -109,7 +114,6 @@ env:
   SMARTER_SUBDOMAIN: "platform"
   SMARTER_PINECONE_ENVIRONMENT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_PLUGIN_MAX_DATA_RESULTS: "50"
-  SMARTER_REACTJS_APP_LOADER_PATH: "/ui-chat/app-loader.js"
   SMARTER_ROOT_DOMAIN: "example.com"
   SMARTER_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
@@ -124,6 +128,7 @@ env:
   SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_TAVILY_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_TOGETHERAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMTP_HOST: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMTP_PORT: "587"
@@ -139,7 +144,7 @@ global:
   image:
     pullPolicy: Always
     repository: lpm0073/smarter
-    tag: v0.14.0-beta.1-alpha.28-alpha.27-alpha.26-alpha.25-alpha.24-alpha.23-alpha.22-alpha.21-alpha.20-alpha.19-alpha.18-alpha.17-alpha.16-alpha.15-alpha.14-alpha.13-alpha.12-alpha.11-alpha.10-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
+    tag: v9999.9999.9999.dev9999
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -184,13 +189,27 @@ service:
   targetPort: 8000
 
 worker:
-  replicaCount: 1
+  replicaCount: 2
   resources:
     requests:
       cpu: "250m"
       memory: "512Mi"
     limits:
       cpu: "1"
+      memory: "2Gi"
+
+# The Celery worker of the infrastructure queue, which deploys, verifies and destroys
+# cloud, Kubernetes and DNS resources. See templates/deployment-worker-infrastructure.yaml.
+workerInfrastructure:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      # 2, the minimum that Django settings recommend. Each of its 4 concurrent tasks runs kubectl and
+      # the aws cli, which are CPU bound while they start, and slowed one another down on 1.
+      cpu: "2"
       memory: "2Gi"
 
 beat:
@@ -239,6 +258,9 @@ hpa:
 # -----------------------------------------------------------------------------
 # Backing Services Configuration
 # -----------------------------------------------------------------------------
+databaseInit:
+  enabled: true   # post-install/post-upgrade Job: create db + user, migrate, initialize platform
+
 databaseScheduledBackup:
   enabled: true
   schedule: "0 2 * * *" # Every day at 2am UTC
@@ -252,7 +274,7 @@ externalDatabase:
 
 mysql:
   enabled: false
-  fullnameOverride: "smarter-mysql"
+  nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -295,6 +317,7 @@ mysql:
 
 mariadb:
   enabled: true
+  nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
   primary:
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
@@ -345,6 +368,7 @@ redis:
     password: "smarter"
   architecture: standalone
   master:
+    disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     containerSecurityContext:
@@ -366,6 +390,7 @@ redis:
       headless:
         sessionAffinity: None
   replica:
+    disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 

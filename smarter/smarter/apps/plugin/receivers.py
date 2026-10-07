@@ -16,6 +16,7 @@ from .models import (
     PluginDataApi,
     PluginDataSql,
     PluginDataStatic,
+    PluginDataWebsearch,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
@@ -33,6 +34,9 @@ from .signals import (
     plugin_responded,
     plugin_selected,
     plugin_updated,
+    websearch_failed,
+    websearch_fetched,
+    websearch_searched,
 )
 from .tasks import create_plugin_selector_history
 
@@ -105,7 +109,8 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     """Handle plugin responded signal."""
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
-    inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("inquiry_return")
+    # plugins send their response as ``response``.
+    inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("response", kwargs.get("inquiry_return"))
 
     try:
         inquiry_return = json.loads(inquiry_return) if isinstance(inquiry_return, str) else inquiry_return
@@ -147,9 +152,15 @@ def handle_plugin_selected(sender, *args, **kwargs):
         search_term,
         prompt,
     )
+    if plugin is None or plugin.id is None:
+        logger.warning(
+            "%s received without a plugin id. Plugin selector history is not recorded.",
+            formatted_text(prefix + "plugin_selected"),
+        )
+        return
 
     create_plugin_selector_history.delay(
-        plugin_id=plugin.id,  # type: ignore
+        plugin_id=plugin.id,
         user_id=user_id,
         input_text=input_text,
         messages=messages,
@@ -362,4 +373,66 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
         broker.kind,
         str(broker),
         broker.name,
+    )
+
+
+@receiver(websearch_searched, dispatch_uid="websearch_searched")
+def handle_websearch_searched(sender, plugin: PluginBase, query: str, provider: str, result_count: int, **kwargs):
+    """Handle websearch searched signal."""
+    logger.info(
+        "%s - %s query: %s provider: %s results: %s cached: %s",
+        formatted_text(prefix + "websearch_searched"),
+        plugin.name,
+        query,
+        provider,
+        result_count,
+        kwargs.get("cached"),
+    )
+
+
+@receiver(websearch_fetched, dispatch_uid="websearch_fetched")
+def handle_websearch_fetched(sender, plugin: PluginBase, url: str, **kwargs):
+    """Handle websearch fetched signal."""
+    logger.info(
+        "%s - %s url: %s final_url: %s characters: %s truncated: %s cached: %s",
+        formatted_text(prefix + "websearch_fetched"),
+        plugin.name,
+        url,
+        kwargs.get("final_url"),
+        kwargs.get("characters"),
+        kwargs.get("truncated"),
+        kwargs.get("cached"),
+    )
+
+
+@receiver(websearch_failed, dispatch_uid="websearch_failed")
+def handle_websearch_failed(sender, plugin: PluginBase, operation: str, target: str, error: str, **kwargs):
+    """Handle websearch failed signal."""
+    logger.warning(
+        "%s - %s %s %s failed: %s",
+        formatted_text(prefix + "websearch_failed"),
+        plugin.name,
+        operation,
+        target,
+        error,
+    )
+
+
+@receiver(post_save, sender=PluginDataWebsearch)
+def handle_plugin_data_websearch_saved(sender, instance, created, **kwargs):
+    """Handle plugin data websearch saved signal."""
+    logger.info(
+        "%s - %s",
+        formatted_text(prefix + f"post_save() PluginDataWebsearch() {'created' if created else 'updated'}"),
+        formatted_json(instance.data()),
+    )
+
+
+@receiver(pre_delete, sender=PluginDataWebsearch)
+def handle_plugin_data_websearch_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginDataWebsearch."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginDataWebsearch().pre_delete()"),
+        instance,
     )

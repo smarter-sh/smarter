@@ -6,7 +6,6 @@ of Pydantic model tests combined with Django ORM model tests,
 which really should be (or might already be) in the broker test bank.
 """
 
-import logging
 import os
 from typing import Optional
 
@@ -32,7 +31,8 @@ from smarter.apps.connection.tests.base_classes import TestConnectionBase
 from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_to_snake, camel_to_snake_dict
+from smarter.common.utils import to_snake_case
+from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -42,7 +42,8 @@ MANIFEST_PATH_API_CONNECTION = os.path.abspath(
     os.path.join(DATA_PATH, "manifest", "brokers", "tests", "data", "api-connection.yaml")
 )
 """
-Path to the ApiConnection manifest file 'api-connection.yaml' which
+Path to the ApiConnection manifest file 'api-connection.yaml' which.
+
 contains the actual connection parameters for the remote test database.
 
 Note that we're borrowing the api-connection.yaml file from the
@@ -94,9 +95,7 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             )
 
     def test_alternative_initialization(self):
-        """
-        Test that the SAMApiConnection model can be initialized using a single dict.
-        """
+        """Test that the SAMApiConnection model can be initialized using a single dict."""
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
@@ -246,7 +245,7 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
 
 
 class TestApiConnectionLegacy(TestConnectionBase):
-    """Test ApiConnection Django ORM and Manifest Loader"""
+    """Test ApiConnection Django ORM and Manifest Loader."""
 
     _model: Optional[SAMApiConnection] = None
 
@@ -261,16 +260,14 @@ class TestApiConnectionLegacy(TestConnectionBase):
         return self._model
 
     def test_valid_manifest(self):
-        """
-        Test valid file path and that we can instantiate without errors
-        """
+        """Test valid file path and that we can instantiate without errors."""
         self.load_manifest(filename="api-connection.yaml")
         self.assertIsNotNone(self.model)
         self.assertIsNotNone(self.model.metadata)
         self.assertIsNotNone(self.model.spec)
         self.assertIsNotNone(self.model.spec.connection)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(self.model.metadata.name, snake_case_name)
 
         self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
@@ -338,7 +335,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
-        valid_methods = AuthMethods.all_values()
+        valid_methods = AuthMethods.all()
         self.assertIn(
             f"Invalid authentication method: {invalid_auth_method}. Must be one of {valid_methods}.",
             str(context.exception),
@@ -556,14 +553,14 @@ class TestApiConnectionLegacy(TestConnectionBase):
             )
             model_dump["proxyPassword"] = proxy_secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
         django_model = ApiConnection(**model_dump)
         django_model.save()
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.base_url, self.model.spec.connection.baseUrl)

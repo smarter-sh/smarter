@@ -1,6 +1,4 @@
-"""
-Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
-"""
+"""Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
 from functools import cached_property
 from typing import Dict, Optional, Union
@@ -19,35 +17,55 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 # plugin
 from ..models import PluginMeta
 from ..plugin.api import ApiPlugin
+from ..plugin.skill import SkillPlugin
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
+from ..plugin.websearch import WebsearchPlugin
 
 # common plugin
 from .enum import SAMPluginCommonMetadataClassValues
 from .models.api_plugin.model import SAMApiPlugin
 from .models.common.plugin.model import SAMPluginCommon
+from .models.skill_plugin.model import SAMSkillPlugin
 from .models.sql_plugin.model import SAMSqlPlugin
 from .models.static_plugin.model import SAMStaticPlugin
+from .models.websearch_plugin.model import SAMWebsearchPlugin
 
-VALID_MANIFEST_KINDS = [SAMKinds.STATIC_PLUGIN.value, SAMKinds.SQL_PLUGIN.value, SAMKinds.API_PLUGIN.value]
-PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin]
-Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin]]
-SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin]
-SAMPlugins = Optional[Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin]]
+VALID_MANIFEST_KINDS = [
+    SAMKinds.STATIC_PLUGIN.value,
+    SAMKinds.SQL_PLUGIN.value,
+    SAMKinds.API_PLUGIN.value,
+    SAMKinds.SKILL_PLUGIN.value,
+    SAMKinds.WEBSEARCH_PLUGIN.value,
+]
+PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin] | type[SkillPlugin] | type[WebsearchPlugin]
+Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin, WebsearchPlugin]]
+SAMPluginType = (
+    type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin] | type[SAMSkillPlugin] | type[SAMWebsearchPlugin]
+)
+SAMPlugins = Optional[
+    Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin, SAMSkillPlugin, SAMWebsearchPlugin]
+]
 PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
+    SAMKinds.SKILL_PLUGIN.value: SkillPlugin,
+    SAMKinds.WEBSEARCH_PLUGIN.value: WebsearchPlugin,
 }
 PLUGIN_META_CLASS_MAP = {
     SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
     SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
     SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
+    SAMPluginCommonMetadataClassValues.SKILL.value: SkillPlugin,
+    SAMPluginCommonMetadataClassValues.WEBSEARCH.value: WebsearchPlugin,
 }
 SAM_MAP: dict[str, SAMPluginType] = {
     SAMKinds.API_PLUGIN.value: SAMApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SAMSqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: SAMStaticPlugin,
+    SAMKinds.SKILL_PLUGIN.value: SAMSkillPlugin,
+    SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPlugin,
 }
 
 
@@ -60,8 +78,7 @@ class SAMPluginControllerError(SAMExceptionBase):
 
 class PluginController(AbstractController):
     """
-    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations,
-    and Django ORM models within the Smarter platform.
+    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations, and Django ORM models within the Smarter platform.
 
     The PluginController is responsible for orchestrating the instantiation and management of plugin
     objects based on manifest data, plugin metadata, or plugin names. It supports dynamic loading of
@@ -202,11 +219,9 @@ class PluginController(AbstractController):
 
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns the class name in a formatted string
-        along with the name of this mixin.
-        """
-        return f"{__name__}.{PluginController.__name__}[{id(self)}]"
+        """Returns the class name in a formatted string along with the name of this mixin."""
+        class_name = f"{__name__}.{PluginController.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     ###########################################################################
     # Abstract property implementations
@@ -257,6 +272,7 @@ class PluginController(AbstractController):
                 pass
         return self._plugin_meta
 
+    # pylint: disable=too-many-return-statements
     @property
     def plugin_class(self) -> Optional[str]:
         """Returns the plugin class based on the manifest kind."""
@@ -269,6 +285,10 @@ class PluginController(AbstractController):
             return SAMPluginCommonMetadataClassValues.SQL.value
         if self.manifest.kind == SmarterJournalThings.STATIC_PLUGIN.value:
             return SAMPluginCommonMetadataClassValues.STATIC.value
+        if self.manifest.kind == SmarterJournalThings.SKILL_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.SKILL.value
+        if self.manifest.kind == SmarterJournalThings.WEBSEARCH_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.WEBSEARCH.value
         return None
 
     @property

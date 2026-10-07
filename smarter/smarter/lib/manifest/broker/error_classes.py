@@ -1,12 +1,12 @@
 # pylint: disable=W0613,C0302
 """Smarter API Manifest Abstract Broker class."""
 
-import logging
 from typing import Optional, Union
 
 import inflect
 
 from smarter.common.api import SmarterApiVersions
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -102,11 +102,19 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
         return msg
 
 
+class SAMBrokerErrorDependencies(SAMBrokerError):
+    """Error for deleting a resource that other resources depend on."""
+
+    @property
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() dependency error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
+
+
 class SAMBrokerInternalError(SAMBrokerError):
-    """
-    Error for broker operations that result in an internal error,
-    such as trying to create a resource that already exists.
-    """
+    """Error for broker operations that result in an internal error, such as trying to create a resource that already exists."""
 
     @property
     def get_formatted_err_message(self):
@@ -122,5 +130,6 @@ __all__ = [
     "SAMBrokerErrorNotImplemented",
     "SAMBrokerErrorNotReady",
     "SAMBrokerErrorNotFound",
+    "SAMBrokerErrorDependencies",
     "SAMBrokerInternalError",
 ]

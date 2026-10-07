@@ -3,6 +3,7 @@
 
 from typing import Optional
 
+from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import FieldError
 from django.db.models import QuerySet
@@ -22,8 +23,11 @@ from smarter.lib import logging
 from .models import (
     Account,
     AccountContact,
+    AggregatedCharges,
+    Budget,
     Charge,
-    DailyBillingRecord,
+    ResourceConstraint,
+    ResourceLock,
     UserProfile,
 )
 
@@ -37,9 +41,9 @@ def smarter_filter_queryset_for_user_profile(
     user_profile_filter: Optional[str] = "user_profile",
 ) -> QuerySet:
     """
-    Helper method to filter a queryset based on the user's role and ownership
-    of the objects in the queryset. Queryset is assumed to have a user_profile
-    field that is a foreign key to the UserProfile model.
+    Helper method to filter a queryset based on the user's role and ownership of the objects in the queryset.
+
+    Queryset is assumed to have a user_profile field that is a foreign key to the UserProfile model.
 
     FIX NOTE: refactor this to use SmarterQuerySetWithPermissions()
 
@@ -49,6 +53,10 @@ def smarter_filter_queryset_for_user_profile(
         smarter.apps.account.models.MetaDataWithOwnershipModel
     """
     logger_prefix = logging.formatted_text(f"{__file__}.smarter_filter_queryset_for_user_profile()")
+    # 1.) no user_profile, no queryset. This is checked first: the logging below reads user_profile.user.
+    if not user_profile:
+        logger.debug("%s: No user profile, returning empty queryset", logger_prefix)
+        return qs.none()
     logger.debug(
         "%s: Filtering queryset for user %s with role %s",
         logger_prefix,
@@ -56,19 +64,12 @@ def smarter_filter_queryset_for_user_profile(
         "superuser" if user_profile.user.is_superuser else "staff" if user_profile.user.is_staff else "customer",
     )
 
-    # 1.) no user_profile, no queryset.
-    if not user_profile:
-        logger.debug(
-            "%s: No user profile found for user %s, returning empty queryset", logger_prefix, user_profile.user
-        )
-        return qs.none()
-
-    # 2.) if the user is a superuser, return all chatbots.
+    # 2.) if the user is a superuser, return all llmclients.
     if user_profile.user.is_superuser:
         logger.debug("%s: User %s is superuser, returning unfiltered queryset", logger_prefix, user_profile.user)
         return qs
 
-    # 3.) if user is staff then select all chatbots for the account of the user.
+    # 3.) if user is staff then select all llmclients for the account of the user.
     if user_profile.user.is_staff:
         logger.debug(
             "%s: User %s is staff, filtering queryset for account %s",
@@ -86,8 +87,8 @@ def smarter_filter_queryset_for_user_profile(
             logger.error("Error filtering queryset for staff user %s: %s", user_profile.user, e)
             return qs.none()
 
-    # 4.) if the user is a Customer then select all chatbots owned by the
-    # user + all chatbots shared with the user which are chatbots owned
+    # 4.) if the user is a Customer then select all llmclients owned by the
+    # user + all llmclients shared with the user which are llmclients owned
     # by an admin user of the account (could be more than one).
     logger.debug(
         "%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user_profile.user
@@ -187,7 +188,88 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
         )
 
 
-# @admin.register(Charge)
+class ResourceConstraintInline(admin.TabularInline):
+    """The resources that a budget is attached to."""
+
+    model = ResourceConstraint
+    extra = 0
+    fields = ("resource_locator", "is_active", "start_date", "warned_at", "exceeded_at")
+    readonly_fields = ("warned_at", "exceeded_at")
+
+
+class BudgetAdmin(SmarterSuperUserOnlyModelAdmin):
+    """Budget model admin."""
+
+    model = Budget
+    inlines = [ResourceConstraintInline]
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = (
+        "name",
+        "unit",
+        "period",
+        "periodic_limit",
+        "absolute_limit",
+        "duration",
+        "action",
+        "warning_threshold",
+    )
+
+    def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+        )
+
+
+class ResourceConstraintAdmin(SmarterSuperUserOnlyModelAdmin):
+    """ResourceConstraint model admin."""
+
+    model = ResourceConstraint
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ("resource_locator", "budget", "is_active", "start_date", "warned_at", "exceeded_at")
+    list_filter = ("is_active", "budget")
+    search_fields = ("resource_locator",)
+
+    def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+        )
+
+
+class ResourceLockAdmin(SmarterSuperUserOnlyModelAdmin):
+    """ResourceLock model admin."""
+
+    model = ResourceLock
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ("resource_locator", "resource_constraint", "expiration_date", "reason")
+    search_fields = ("resource_locator",)
+
+    def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+        )
+
+
 class ChargeAdmin(SmarterCustomerModelAdmin):
     """Charge model admin."""
 
@@ -197,12 +279,21 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         # pylint: disable=protected-access
         return [field.name for field in self.model._meta.fields]
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     list_display = (
         "created_at",
-        "user_profile",
-        "provider",
-        "model",
+        "resource_locator",
         "charge_type",
+        "prompt_tokens",
+        "completion_tokens",
         "total_tokens",
     )
 
@@ -215,31 +306,46 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         )
 
 
-# @admin.register(DailyBillingRecord)
-class DailyBillingRecordAdmin(SmarterCustomerModelAdmin):
-    """DailyBillingRecord model admin."""
+class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
+    """AggregatedCharges model admin."""
 
-    model = DailyBillingRecord
+    model = AggregatedCharges
 
-    def get_readonly_fields(self, request: HttpRequest, obj=None):
+    def get_readonly_fields(self, request, obj=None):
+        # pylint: disable=protected-access
         return [field.name for field in self.model._meta.fields]
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     list_display = (
-        "created_at",
-        "account",
-        "user",
-        "provider",
-        "model",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "resource_locator",
+        "records",
         "charge_type",
+        "prompt_tokens",
+        "completion_tokens",
         "total_tokens",
+        "total_cost",
     )
 
-    def get_queryset(self, request: HttpRequest):
+    def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
             user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
         )
 
 
@@ -266,16 +372,11 @@ class RestrictedUserAdmin(UserAdmin):
     )
 
     def has_add_permission(self, request) -> bool:
-        """
-        force all adds to the manage.py command, because
-        this adds UserProfile and sends the welcome email.
-        """
+        """Force all adds to the manage.py command, because this adds UserProfile and sends the welcome email."""
         return False
 
     def has_delete_permission(self, request, obj=None) -> bool:
-        """
-        Prevent deletion for non-superusers.
-        """
+        """Prevent deletion for non-superusers."""
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         if not isinstance(request.user, User):
@@ -286,10 +387,7 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_change_permission(self, request, obj=None) -> bool:
-        """
-        Allow change permissions for superusers and to
-        staff users if they are changing a user within their own account.
-        """
+        """Allow change permissions for superusers and to staff users if they are changing a user within their own account."""
         if not hasattr(request, "user"):
             return False
         if not isinstance(request.user, User):
@@ -317,7 +415,7 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_module_permission(self, request: HttpRequest) -> bool:
-        return smarter_is_staff(request)
+        return smarter_is_staff(request)  # type: ignore
 
     def profile_account(self, obj) -> Optional[Account]:
         """Custom method to display the account associated with the user's profile."""
@@ -329,12 +427,10 @@ class RestrictedUserAdmin(UserAdmin):
     profile_account.short_description = "Account"
 
     def get_queryset(self, request):
-        """
-        Customize the queryset based on whether the user is_staff or is_superuser.
-        """
+        """Customize the queryset based on whether the user is_staff or is_superuser."""
         qs = super().get_queryset(request)
         user = get_resolved_user(request.user)
-        if not smarter_is_staff(request):
+        if not smarter_is_staff(request):  # type: ignore
             return qs.none()
         if not user:
             return qs.none()
@@ -391,7 +487,10 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
 
 smarter_restricted_admin_site.register(Account, AccountAdmin)
 smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
+smarter_restricted_admin_site.register(Budget, BudgetAdmin)
+smarter_restricted_admin_site.register(ResourceConstraint, ResourceConstraintAdmin)
+smarter_restricted_admin_site.register(ResourceLock, ResourceLockAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
-smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
+smarter_restricted_admin_site.register(AggregatedCharges, AggregatedChargesAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

@@ -12,11 +12,11 @@ from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
 register = template.Library()
 
 
-templatetag_manager = SmarterReactTemplateTagManager(app_name="prompt_passthrough", templatetag_name=__name__)
+templatetag_manager = SmarterReactTemplateTagManager(app_name="@smarter/prompt-passthrough", templatetag_name=__name__)
 """
 Manages integration of Vite-built React assets into Django templates.
 Expects to find a Vite-generated manifest.json in the file path
-static/react/terminal_emulator/.
+static/react/@smarter/prompt-passthrough/.
 
 Example manifest.json structure:
 
@@ -60,4 +60,4 @@ def prompt_passthrough_react_assets() -> AssetDict:
             }
 
     """
-    return templatetag_manager.reactapp_build_assets()
+    return templatetag_manager.reactapp_build_assets

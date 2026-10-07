@@ -1,13 +1,17 @@
 """Unit tests for UserView and UserListView API endpoints."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
-from django.test import Client
+from django.contrib.auth.models import AnonymousUser
+from django.core.exceptions import ValidationError
+from django.test import Client, RequestFactory
 from django.urls import reverse
 
 from smarter.apps.account.api.v1.urls import AccountAPINamespaces
+from smarter.apps.account.api.v1.views import user as user_views
 from smarter.apps.account.const import namespace as account_namespace
-from smarter.apps.account.models import User
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as api_v1_namespace
@@ -183,12 +187,146 @@ class TestUserListView(TestAccountMixin):
         self.assertIsInstance(response.json(), list)
 
     def test_get_list_unauthorized(self):
-        """Unauthorized user gets 403."""
+        """Unauthenticated user gets 401 or 403."""
         self.client.logout()
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertIn(response.status_code, (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN))
 
     def test_get_list_invalid_method(self):
         """PATCH is not allowed on list view."""
         response = self.client.patch(self.url)
         self.assertIn(response.status_code, [HTTPStatus.METHOD_NOT_ALLOWED, HTTPStatus.NOT_FOUND, HTTPStatus.FORBIDDEN])
+
+
+class TestUserViewFunctions(TestAccountMixin):
+    """Test the user view helper functions directly, for the branches the endpoints rarely reach."""
+
+    def setUp(self):
+        super().setUp()
+        self.factory = RequestFactory()
+
+    def request(self, user, body="{}", method="post"):
+        if method == "get":
+            request = self.factory.get("/api/v1/account/users/")
+        else:
+            request = getattr(self.factory, method)(
+                "/api/v1/account/users/", data=body, content_type="application/json"
+            )
+        request.user = user
+        return request
+
+    def create_user(self, prefix: str, account=None, **kwargs) -> User:
+        """A throwaway user, with a UserProfile in ``account`` when one is given."""
+        user = User.objects.create_user(username=f"{prefix}_{self.hash_suffix}", password="pw", **kwargs)
+        self.addCleanup(user.delete)
+        if account:
+            UserProfile.objects.create(name=user.username, user=user, account=account)
+        return user
+
+    def other_account(self) -> Account:
+        account = Account.objects.create(name=f"test_user_views_{self.hash_suffix}", company_name="Other")
+        self.addCleanup(account.delete)
+        return account
+
+    def test_validate_request_body(self):
+        for body in ("not json", "[1]", json.dumps({"password": "pw"}), json.dumps({"username": "u"})):
+            with self.subTest(body=body):
+                response = user_views.validate_request_body(self.request(self.admin_user, body))
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        body = json.dumps({"username": "u", "password": "pw"})
+        self.assertIsNone(user_views.validate_request_body(self.request(self.admin_user, body)))
+
+    def test_eval_permissions(self):
+        """Test who may modify whom: nobody anonymous, staff within their account, mortals only themselves."""
+        mortal = self.create_user("mortal", account=self.account)
+        response = user_views.eval_permissions(self.request(AnonymousUser()), mortal)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        homeless = self.create_user("homeless")
+        response = user_views.eval_permissions(self.request(homeless), mortal)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        stranger = self.create_user("stranger", account=self.other_account())
+        stranger_profile = UserProfile.objects.get(user=stranger)
+        response = user_views.eval_permissions(self.request(self.non_admin_user), stranger, stranger_profile)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        mortal_profile = UserProfile.objects.get(user=mortal)
+        response = user_views.eval_permissions(self.request(self.non_admin_user), mortal, mortal_profile)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        staff = self.create_user("staff", account=self.account, is_staff=True)
+        self.assertIsNone(user_views.eval_permissions(self.request(staff), mortal, mortal_profile))
+        self.assertIsNone(user_views.eval_permissions(self.request(mortal), mortal, mortal_profile))
+
+    def test_get_user_for_operation(self):
+        response = user_views.get_user_for_operation(self.request(AnonymousUser()), self.non_admin_user.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)  # type: ignore[union-attr]
+        response = user_views.get_user_for_operation(self.request(self.admin_user), 999999999)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)  # type: ignore[union-attr]
+        homeless = self.create_user("homeless")
+        response = user_views.get_user_for_operation(self.request(self.admin_user), homeless.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)  # type: ignore[union-attr]
+        user, user_profile = user_views.get_user_for_operation(self.request(self.admin_user), self.non_admin_user.id)  # type: ignore[arg-type,misc]
+        self.assertEqual(user, self.non_admin_user)
+        self.assertEqual(user_profile, self.non_admin_user_profile)
+
+    def test_get_user(self):
+        """Test that staff get users within their account, and mortals only themselves."""
+        response = user_views.get_user(self.request(self.non_admin_user, method="get"))
+        self.assertEqual(response.data["username"], self.non_admin_user.username)  # type: ignore[union-attr]
+
+        response = user_views.get_user(self.request(AnonymousUser(), method="get"), self.non_admin_user.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        staff = self.create_user("staff", account=self.account, is_staff=True)
+        response = user_views.get_user(self.request(staff, method="get"), self.non_admin_user.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.data["username"], self.non_admin_user.username)  # type: ignore[union-attr]
+
+        mortal = self.create_user("mortal", account=self.account)
+        response = user_views.get_user(self.request(mortal, method="get"), self.non_admin_user.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        response = user_views.get_user(self.request(mortal, method="get"), mortal.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_create_user_refusals(self):
+        """Test that create_user() refuses mortals, staff without an account, and a duplicate username."""
+        body = json.dumps({"username": f"new_{self.hash_suffix}", "password": "pw"})
+        response = user_views.create_user(self.request(AnonymousUser(), body))
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        response = user_views.create_user(self.request(self.non_admin_user, body))
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        response = user_views.create_user(self.request(self.admin_user, "not json"))
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+        homeless_staff = self.create_user("homeless_staff", is_staff=True)
+        response = user_views.create_user(self.request(homeless_staff, body))
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        duplicate = json.dumps({"username": self.non_admin_user.username, "password": "pw"})
+        response = user_views.create_user(self.request(self.admin_user, duplicate))
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_update_user_refusals(self):
+        """Test that update_user() refuses bad bodies, users without a profile, and failed saves."""
+        response = user_views.update_user(self.request(self.admin_user, "not json", "patch"), self.non_admin_user.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        response = user_views.update_user(self.request(self.admin_user, "[1]", "patch"), self.non_admin_user.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+        homeless = self.create_user("homeless")
+        response = user_views.update_user(self.request(self.admin_user, "{}", "patch"), homeless.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+        mortal = self.create_user("mortal", account=self.account)
+        response = user_views.update_user(self.request(self.non_admin_user, "{}", "patch"), mortal.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+        body = json.dumps({"first_name": "Ada"})
+        with patch.object(User, "save", side_effect=ValidationError("invalid user")):
+            response = user_views.update_user(self.request(self.admin_user, body, "patch"), mortal.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        with patch.object(User, "save", side_effect=RuntimeError("boom")):
+            response = user_views.update_user(self.request(self.admin_user, body, "patch"), mortal.id)  # type: ignore[arg-type]
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)

@@ -1,0 +1,66 @@
+---
+# A SkillPlugin whose SKILL.md is contained verbatim in spec.skillData.skill,
+# and whose bundled files are contained in spec.skillData.resources.
+#
+# The SKILL.md exercises every standard frontmatter field. Its instructions
+# refer to FORMS.md, which, like Anthropic's pdf skill, is bundled in lower
+# case as references/forms.md. assets/logo.png is a binary file, so its
+# contents are unavailable (null).
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: test_skill_plugin_broker
+  pluginClass: skill
+  description: A skill plugin for unit testing.
+  version: 0.1.0
+  tags:
+    - skill
+    - test
+  annotations:
+    - smarter.sh/skill-test/purpose: unit testing
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - expense report
+      - reimbursement
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for unit testing the SkillPlugin.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 256
+  skillData:
+    skill: |
+      ---
+      name: expense-reports
+      description: Prepares expense reports that comply with the company travel policy. Use when the user asks to file, fill out, or check an expense report or reimbursement request.
+      license: Apache-2.0
+      compatibility: Requires access to the company expense system.
+      allowed-tools: Read Bash(python scripts/fill_form.py:*)
+      metadata:
+        author: smarter
+        version: "1.0"
+      ---
+
+      # Expense reports
+
+      ## Instructions
+
+      1. Collect the receipts, and confirm each one against the travel policy.
+      2. Fill out the form, following FORMS.md.
+      3. Run `scripts/fill_form.py` to produce the finished form.
+
+      See [the policy](./references/policy.md#meals) for meal limits.
+    resources:
+      references/forms.md: |
+        # Filling out the expense form
+        One line per receipt. Totals are in USD.
+      references/policy.md: |
+        # Travel policy
+        ## Meals
+        At most $75 per day.
+      scripts/fill_form.py: |
+        print("filled")
+      assets/logo.png: null

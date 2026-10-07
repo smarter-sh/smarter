@@ -1,4 +1,31 @@
-"""This module is used to create a new api key."""
+"""
+This module provides a Django management command to create a new API key for a user and account.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py create_api_key`` command.
+
+Command-line Arguments
+=======================
+--account_number : str, optional
+    The Smarter account number to which the user belongs. Format: ####-####-####
+--username : str, optional
+    The username of the API key owner.
+--description : str, optional
+    Optional brief text description for the API key.
+
+Functionality
+=============
+- Finds the specified user and account using the provided arguments.
+- Creates a new API key (auth token) for the given user profile.
+- Outputs the API key value and relevant information. Warns that the key is only shown once.
+- Displays instructions for associating the API key with an LLMClient.
+
+Usage Example
+=============
+    python manage.py create_api_key --account_number=1234-5678-9012 --username=myuser --description="integration key"
+"""
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
@@ -8,7 +35,10 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_user command. This command is used to create a new user for an account."""
+    """Django manage.py create_user command.
+
+    This command is used to create a new user for an account.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -21,7 +51,7 @@ class Command(SmarterCommand):
         parser.add_argument("--description", type=str, help="Optional brief text description for the api key")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         account: Account | None = None
@@ -80,6 +110,6 @@ class Command(SmarterCommand):
         )
         self.stdout.write(
             self.style.NOTICE(
-                f"To associate this key with a Chatbot, run `manage.py add_api_key` and pass this key_id: {auth_token.key_id}"
+                f"To associate this key with a LLMClient, run `manage.py add_api_key` and pass this key_id: {auth_token.key_id}"
             )
         )

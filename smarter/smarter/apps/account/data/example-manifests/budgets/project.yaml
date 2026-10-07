@@ -1,0 +1,29 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: stackademy_project
+  description: |
+    An example Budget manifest: a project budget. The Stackademy LLMClient and its SQL plugin may
+    spend $10,000 over the six months of the project, and no more than $2,500 in any one month.
+    After six months the budget no longer applies.
+  version: 1.0.0
+  tags:
+    - example
+    - project
+  annotations:
+    - smarter.sh/budget/purpose: project budget
+spec:
+  config:
+    unit: cost
+    period: month
+    periodicLimit: 2500.00
+    absoluteLimit: 10000.00
+    duration: 6
+    action: block
+    warningThreshold: 80
+    message: The Stackademy project has used its budget. Please contact the project owner.
+  resources:
+    - kind: LLMClient
+      name: stackademy_sql
+    - kind: SqlPlugin
+      name: stackademy_sql

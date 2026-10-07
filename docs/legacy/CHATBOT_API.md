@@ -13,7 +13,7 @@ curl --location 'https://example.3141-5926-5359.api.smarter.sh/chatbot/' \
             "content": "what is FMLA?"
         }
     ],
-    "chat_history": [
+    "prompt_history": [
         {
             "message": "Hello, How can I help you?",
             "direction": "incoming",

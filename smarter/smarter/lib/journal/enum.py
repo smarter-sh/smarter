@@ -1,11 +1,11 @@
 """Smarter API Manifests Enumerations."""
 
-import logging
 from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterException
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -68,81 +68,187 @@ class SmarterJournalThings(SmarterEnumAbstract):
 
         thing = SmarterJournalThings("Plugin")
         assert thing == SmarterJournalThings.STATIC_PLUGIN
+    """
 
+    ACCOUNT = "Account"
+    """Smarter Account resource.
+
+    A Django ORM model instance.
+    """
+
+    API_PLUGIN = "ApiPlugin"
+    """Smarter API Plugin AI resource.
+
+    A Django ORM model instance.
+    """
+
+    AUTH_TOKEN = "SmarterAuthToken"
+    """Smarter Authentication Token resource.
+
+    A Django DRF Knox subclass ORM model instance.
+    """
+
+    API_CONNECTION = "ApiConnection"
+    """Smarter API Connection resource.
+
+    A Django ORM model instance.
+    """
+
+    BUDGET = "Budget"
+    """Smarter Budget resource: spending limits that are enforced on the resources it is attached to.
+
+    A Django ORM model instance.
+    """
+
+    CUSTOM_DOMAIN = "CustomDomain"
+    """Smarter Custom Domain resource: a domain that serves LLMClients.
+
+    A Django ORM model instance.
+    """
+
+    GUARDRAIL = "Guardrail"
+    """Smarter API Guardrail resource.
+
+    A Django ORM model instance.
+    """
+
+    LLM_CLIENT = "LLMClient"
+    """Smarter LLMClient resource.
+
+    A Django ORM model instance.
+    """
+
+    LLMHOST = "LLMHost"
+    """Smarter LLMHost resource.
+
+    A Django ORM model instance.
+    """
+
+    LLMHOST_COMPUTE = "LLMHostCompute"
+    """Smarter LLMHostCompute resource: a kind of node, and node group, that LLMHosts run on.
+
+    A Django ORM model instance.
+    """
+
+    MCPCLIENT = "MCPClient"
+    """Smarter MCPClient resource.
+
+    A Django ORM model instance.
+    """
+
+    ORCHESTRATOR = "Orchestrator"
+    """Smarter Orchestrator resource.
+
+    A Django ORM model instance.
+    """
+
+    PROMPT = "Prompt"
+    """Smarter Prompt resource.
+
+    A Django ORM model instance.
+    """
+
+    PROMPT_CONFIG = "ChatConfig"
+    """Smarter ChatConfig resource.
+
+    A JSON dictionary generated real-time
+    """
+
+    PROVIDER = "Provider"
+    """Smarter Provider resource.
+
+    A Django ORM model instance.
+    """
+
+    PROXY = "Proxy"
+    """Smarter Proxy resource.
+
+    A Django ORM model instance.
+    """
+
+    SECRET = "Secret"
+    """Smarter Secret resource.
+
+    A Django ORM model instance.
+    """
+
+    SQL_CONNECTION = "SqlConnection"
+    """Smarter SQL Connection resource.
+
+    A Django ORM model instance.
+    """
+
+    SKILL_PLUGIN = "SkillPlugin"
+    """Smarter Skill Plugin AI resource.
+
+    A Django ORM model instance.
+    """
+
+    SQL_PLUGIN = "SqlPlugin"
+    """Smarter SQL Plugin AI resource.
+
+    A Django ORM model instance.
     """
 
     STATIC_PLUGIN = "Plugin"
-    """Smarter Static Plugin AI resource. A collection of Django ORM model instances."""
+    """Smarter Static Plugin AI resource.
 
-    API_PLUGIN = "ApiPlugin"
-    """Smarter API Plugin AI resource. A Django ORM model instance."""
-
-    SQL_PLUGIN = "SqlPlugin"
-    """Smarter SQL Plugin AI resource. A Django ORM model instance."""
-
-    API_CONNECTION = "ApiConnection"
-    """Smarter API Connection resource. A Django ORM model instance."""
-
-    SQL_CONNECTION = "SqlConnection"
-    """Smarter SQL Connection resource. A Django ORM model instance."""
-
-    ACCOUNT = "Account"
-    """Smarter Account resource. A Django ORM model instance."""
-
-    AUTH_TOKEN = "SmarterAuthToken"
-    """Smarter Authentication Token resource. A Django DRF Knox subclass ORM model instance."""
+    A collection of Django ORM model instances.
+    """
 
     USER = "User"
-    """Smarter User resource. A Django Auth User model instance."""
+    """Smarter User resource.
 
-    CHAT = "Chat"
-    """Smarter Chat resource. A Django ORM model instance."""
+    A Django Auth User model instance.
+    """
 
-    CHAT_CONFIG = "ChatConfig"
-    """Smarter ChatConfig resource. A JSON dictionary generated real-time"""
+    VECTORSEARCH = "Vectorsearch"
+    """Smarter Vectorsearch resource.
 
-    CHAT_HISTORY = "ChatHistory"
-    """Smarter ChatHistory resource. A list of Django ORM model instances."""
-
-    CHAT_PLUGIN_USAGE = "ChatPluginUsage"
-    """Smarter ChatPluginUsage resource. A list of Django ORM model instances."""
-
-    CHAT_TOOL_CALL = "ChatToolCall"
-    """Smarter ChatToolCall resource. A list of Django ORM model instances."""
-
-    CHATBOT = "Chatbot"
-    """Smarter Chatbot resource. A Django ORM model instance."""
-
-    PROVIDER = "Provider"
-    """Smarter Provider resource. A Django ORM model instance."""
-
-    SECRET = "Secret"
-    """Smarter Secret resource. A Django ORM model instance."""
+    A Django ORM model instance.
+    """
 
     VECTORSTORE = "Vectorstore"
-    """Smarter Vectorstore resource. A Django ORM model instance."""
+    """Smarter Vectorstore resource.
+
+    A Django ORM model instance.
+    """
+
+    WEBSEARCH_PLUGIN = "WebsearchPlugin"
+    """Smarter Websearch Plugin AI resource.
+
+    Experimental.
+
+    A Django ORM model instance.
+    """
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalThings."""
         return [
-            (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
-            (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
-            (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
-            (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
-            (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
             (cls.ACCOUNT.value, cls.ACCOUNT.value),
+            (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
+            (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
             (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
-            (cls.USER.value, cls.USER.value),
-            (cls.CHAT.value, cls.CHAT.value),
-            (cls.CHAT_CONFIG.value, cls.CHAT_CONFIG.value),
-            (cls.CHAT_HISTORY.value, cls.CHAT_HISTORY.value),
-            (cls.CHAT_PLUGIN_USAGE.value, cls.CHAT_PLUGIN_USAGE.value),
-            (cls.CHAT_TOOL_CALL.value, cls.CHAT_TOOL_CALL.value),
-            (cls.CHATBOT.value, cls.CHATBOT.value),
+            (cls.BUDGET.value, cls.BUDGET.value),
+            (cls.CUSTOM_DOMAIN.value, cls.CUSTOM_DOMAIN.value),
+            (cls.GUARDRAIL.value, cls.GUARDRAIL.value),
+            (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
+            (cls.MCPCLIENT.value, cls.MCPCLIENT.value),
+            (cls.ORCHESTRATOR.value, cls.ORCHESTRATOR.value),
+            (cls.PROMPT.value, cls.PROMPT.value),
+            (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
+            (cls.PROXY.value, cls.PROXY.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
+            (cls.SKILL_PLUGIN.value, cls.SKILL_PLUGIN.value),
+            (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
+            (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
+            (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
+            (cls.USER.value, cls.USER.value),
+            (cls.VECTORSEARCH.value, cls.VECTORSEARCH.value),
             (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
+            (cls.WEBSEARCH_PLUGIN.value, cls.WEBSEARCH_PLUGIN.value),
         ]
 
 
@@ -154,38 +260,39 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     For flexibility, it also allows instantiation with a string value, enabling a ``SmarterJournalCliCommands`` value
     to be passed as a strongly typed object.
 
-    Each member represents a supported CLI command in the Smarter API, such as ``apply``, ``chat``, ``delete``, ``deploy``, etc.
+    Each member represents a supported CLI command in the Smarter API, such as ``apply``, ``prompt``, ``delete``, ``deploy``, etc.
 
     Example usage::
 
         command = SmarterJournalCliCommands("apply")
         assert command == SmarterJournalCliCommands.APPLY
-
     """
 
     APPLY = "apply"
-    CHAT = "chat"
-    CHAT_CONFIG = "chat_config"
     DELETE = "delete"
     DEPLOY = "deploy"
     DESCRIBE = "describe"
-    GET = "get"
     ENABLE_JOURNAL = "journal"  # FIXNOTE: THIS IS AMBIGUOUS
+    GET = "get"
+    JSON_SCHEMA = "json_schema"
     LOGS = "logs"  # FIXNOTE: THIS IS AMBIGUOUS
     MANIFEST_EXAMPLE = "example_manifest"
+    PROMPT = "prompt"
+    PROMPT_CONFIG = "chat_config"
     STATUS = "status"
-    SCHEMA = "schema"
-    VERSION = "version"
     UNDEPLOY = "undeploy"
+    VALIDATE = "validate"
+    VERSION = "version"
     WHOAMI = "whoami"
+    RESOURCES = "resources"
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalCliCommands."""
         return [
             (cls.APPLY.value, cls.APPLY.value),
-            (cls.CHAT.value, cls.CHAT.value),
-            (cls.CHAT_CONFIG.value, cls.CHAT_CONFIG.value),
+            (cls.PROMPT.value, cls.PROMPT.value),
+            (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
             (cls.DELETE.value, cls.DELETE.value),
             (cls.DEPLOY.value, cls.DEPLOY.value),
             (cls.DESCRIBE.value, cls.DESCRIBE.value),
@@ -194,10 +301,12 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             (cls.LOGS.value, cls.LOGS.value),
             (cls.MANIFEST_EXAMPLE.value, cls.MANIFEST_EXAMPLE.value),
             (cls.STATUS.value, cls.STATUS.value),
-            (cls.SCHEMA.value, cls.SCHEMA.value),
+            (cls.JSON_SCHEMA.value, cls.JSON_SCHEMA.value),
             (cls.VERSION.value, cls.VERSION.value),
             (cls.UNDEPLOY.value, cls.UNDEPLOY.value),
+            (cls.VALIDATE.value, cls.VALIDATE.value),
             (cls.WHOAMI.value, cls.WHOAMI.value),
+            (cls.RESOURCES.value, cls.RESOURCES.value),
         ]
 
     @classmethod
@@ -205,8 +314,8 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         """Return the past tense of the command."""
         return {
             cls.APPLY.value: "applied",
-            cls.CHAT.value: "prompted",
-            cls.CHAT_CONFIG.value: "fetched chat_config",
+            cls.PROMPT.value: "prompted",
+            cls.PROMPT_CONFIG.value: "fetched chat_config",
             cls.DELETE.value: "deleted",
             cls.DEPLOY.value: "deployed",
             cls.DESCRIBE.value: "described",
@@ -215,18 +324,20 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.LOGS.value: "logged",
             cls.MANIFEST_EXAMPLE.value: "fetched example manifest",
             cls.STATUS.value: "fetched status",
-            cls.SCHEMA.value: "fetched schema",
+            cls.JSON_SCHEMA.value: "fetched json schema",
             cls.VERSION.value: "fetched version",
             cls.UNDEPLOY.value: "undeployed",
+            cls.VALIDATE.value: "validated",
             cls.WHOAMI.value: "fetched identity",
+            cls.RESOURCES.value: "fetched resources",
         }
 
     @classmethod
     def from_url(cls, url) -> Optional[str]:
         """
-        Parse a url and return the SmarterJournalCliCommands enum value
-        if it exists in the url path.
-        example: http://localhost:9357/api/v1/cli/example_manifest/Account/
+        Parse a url and return the SmarterJournalCliCommands enum value if it exists in the url path.
+
+        Example: ``http://localhost:9357/api/v1/cli/example_manifest/Account/``.
         """
         parsed_url = urlparse(url)
         if parsed_url:

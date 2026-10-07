@@ -14,7 +14,7 @@ Goal
 We will use Claude Code with Smarter to create a virtual CoPilot coding pair
 for day-to-day development work at Northern Aurora Power & Light (NAPL). By the
 end of this tutorial, you will have configured Anthropic as an LLM provider in
-Smarter, created a Chatbot resource backed by Claude, connected Claude Code to
+Smarter, created a LLMClient resource backed by Claude, connected Claude Code to
 route through Smarter, and verified the full pipeline with a working
 proof-of-concept prompt.
 
@@ -26,7 +26,7 @@ This tutorial assumes you already have the following:
 - A Smarter account (provided by your team lead) and the ability to log in to
   the Smarter web console
 - The **Smarter CLI** (``smarter``) installed and authenticated on your
-  workstation — see `Smarter CLI documentation <https://platform.smarter.sh/docs/>`_
+  workstation — see `Smarter CLI documentation <https://docs.smarter.sh/>`_
 - **Claude Code** installed (``npm install -g @anthropic-ai/claude-code``)
 - A terminal emulator (PowerShell, bash, or zsh)
 - ``git`` installed and configured with your GitHub credentials
@@ -75,7 +75,7 @@ easier to follow.
 Smarter Manifests
 -----------------
 
-Smarter manages all AI resources — chatbots, plugins, models, users — through
+Smarter manages all AI resources — llmclients, plugins, models, users — through
 **YAML manifests**. A manifest is a declarative document, inspired by
 Kubernetes, with four main sections:
 
@@ -83,7 +83,7 @@ Kubernetes, with four main sections:
    Identifies the manifest schema version (e.g., ``smarter.sh/v1``).
 
 ``kind``
-   The type of resource (e.g., ``Chatbot``, ``Plugin``, ``User``).
+   The type of resource (e.g., ``LLMClient``, ``Plugin``, ``User``).
 
 ``metadata``
    Human-readable identifiers: ``name``, ``description``, ``version``.
@@ -106,7 +106,7 @@ Smarter is **LLM-provider-agnostic**. Out of the box it integrates with
 OpenAI, Google, and HuggingFace, among others. Adding a new provider — such as
 Anthropic — means telling Smarter how to reach the provider's API, which model
 to use, and what credentials to present. All of this is expressed in the
-``spec`` section of a Chatbot manifest.
+``spec`` section of a LLMClient manifest.
 
 Key data points Smarter needs for any LLM provider:
 
@@ -131,12 +131,12 @@ authentication, cost tracking, audit logging, and prompt moderation.
 Step-by-Step
 ============
 
-Step 1 — Scaffold a Chatbot Manifest
--------------------------------------
+Step 1 — Scaffold a LLMClient Manifest
+---------------------------------------
 
-Use the Smarter CLI to generate a blank Chatbot manifest::
+Use the Smarter CLI to generate a blank LLMClient manifest::
 
-   smarter manifest chatbot -o yaml > napl-claude-copilot.yaml
+   smarter manifest llmclient -o yaml > napl-claude-copilot.yaml
 
 This produces a YAML file pre-populated with every available field and
 sensible defaults. Open it in your editor.
@@ -151,7 +151,7 @@ working example — adjust values to match your NAPL environment:
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
-   kind: Chatbot
+   kind: LLMClient
    metadata:
      name: NAPLClaudeCopilot
      description: >-
@@ -197,14 +197,14 @@ Replace the placeholder with your actual key from
 Step 4 — Apply the Manifest
 ----------------------------
 
-Deploy your new Chatbot resource::
+Deploy your new LLMClient resource::
 
    smarter apply -f napl-claude-copilot.yaml
 
-Smarter will validate the manifest, create the Chatbot, and set its state to
+Smarter will validate the manifest, create the LLMClient, and set its state to
 ``deployed``. Confirm with::
 
-   smarter get chatbots
+   smarter get llmclients
 
 You should see ``NAPLClaudeCopilot`` listed with a ``deployed`` status.
 
@@ -231,7 +231,7 @@ content moderation), and forwards the call to the Anthropic API.
 Step 6 — Verify in the Smarter Web Console
 -------------------------------------------
 
-Open the Smarter web console, navigate to your ``NAPLClaudeCopilot`` Chatbot,
+Open the Smarter web console, navigate to your ``NAPLClaudeCopilot`` LLMClient,
 and enter the Sandbox. Type a test prompt such as::
 
    Explain what a Smarter manifest is in two sentences.
@@ -283,8 +283,8 @@ Troubleshooting
 
 **Manifest validation fails on apply**
    Double-check YAML indentation — YAML is whitespace-sensitive. Use the
-   ``smarter manifest chatbot -o yaml`` output as a reference. Ensure
-   ``apiVersion`` is ``smarter.sh/v1`` and ``kind`` is ``Chatbot``.
+   ``smarter manifest llmclient -o yaml`` output as a reference. Ensure
+   ``apiVersion`` is ``smarter.sh/v1`` and ``kind`` is ``LLMClient``.
 
 **Claude Code responds but Smarter shows no logs**
    Claude Code may be bypassing Smarter and calling Anthropic directly.
@@ -318,7 +318,7 @@ Your work is now synchronized with your remote repository on GitHub.
 
 .. seealso::
 
-   - `Smarter Platform Documentation <https://platform.smarter.sh/docs/>`_
+   - `Smarter Platform Documentation <https://docs.smarter.sh/>`_
    - `Smarter Technical Documentation <https://docs.smarter.sh/>`_
    - `Anthropic Claude Code Documentation <https://docs.anthropic.com/en/docs/claude-code>`_
    - `Smarter CLI Repository <https://github.com/smarter-sh/smarter-cli>`_

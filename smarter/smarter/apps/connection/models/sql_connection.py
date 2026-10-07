@@ -1,4 +1,4 @@
-"""SqlConnection model"""
+"""SqlConnection model."""
 
 import io
 import tempfile
@@ -33,7 +33,7 @@ from smarter.apps.connection.signals import (
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -92,6 +92,7 @@ class SqlConnection(ConnectionBase):
     class ParamikoUpdateKnownHostsPolicy(paramiko.MissingHostKeyPolicy):
         """
         Custom Paramiko policy to automatically add missing SSH host keys to the known_hosts field.
+
         This policy extends Paramiko's MissingHostKeyPolicy to handle unknown host keys by appending
         them to the ``ssh_known_hosts`` field of the associated :class:`SqlConnection`
         model instance. When an unknown host key is encountered during an SSH connection attempt,
@@ -119,6 +120,7 @@ class SqlConnection(ConnectionBase):
     DBMS_DEFAULT_TIMEOUT = 30
     """
     The default timeout for database connections in seconds.
+
     30 seconds is a reasonable default that balances responsiveness with network latency.
     """
     DBMS_CHOICES = [
@@ -129,20 +131,16 @@ class SqlConnection(ConnectionBase):
         (DbEngines.MSSQL.value, DbEngines.MSSQL.value),
         (DbEngines.SYBASE.value, DbEngines.SYBASE.value),
     ]
-    """
-    The supported database management systems (DBMS) for SQL connections.
-    """
+    """The supported database management systems (DBMS) for SQL connections."""
     DBMS_AUTHENITCATION_METHODS = [
         (DBMSAuthenticationMethods.NONE.value, "None"),
         (DBMSAuthenticationMethods.TCPIP.value, "Standard TCP/IP"),
         (DBMSAuthenticationMethods.TCPIP_SSH.value, "Standard TCP/IP over SSH"),
         (DBMSAuthenticationMethods.LDAP_USER_PWD.value, "LDAP User/Password"),
     ]
-    """
-    The supported authentication methods for SQL connections.
-    """
+    """The supported authentication methods for SQL connections."""
     db_engine = models.CharField(
-        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+        help_text="The type of database management system. Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         default=DbEngines.MYSQL.value,
         max_length=255,
         choices=DBMS_CHOICES,
@@ -150,7 +148,9 @@ class SqlConnection(ConnectionBase):
         null=True,
     )
     """
-    The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
+    The type of database management system.
+
+    Example: 'MariaDB', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
     """
     authentication_method = models.CharField(
         help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
@@ -159,7 +159,9 @@ class SqlConnection(ConnectionBase):
         default=DBMSAuthenticationMethods.TCPIP.value,
     )
     """
-    The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.
+    The authentication method to use for the connection.
+
+    Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.
     """
     timeout = models.IntegerField(
         help_text="The timeout for the database connection in seconds. Default is 30 seconds.",
@@ -168,16 +170,16 @@ class SqlConnection(ConnectionBase):
         blank=True,
     )
     """
-    The timeout for the database connection in seconds. Default is 30 seconds.
+    The timeout for the database connection in seconds.
+
+    Default is 30 seconds.
     """
 
     # SSL/TLS fields
     use_ssl = models.BooleanField(
         default=False, help_text="Whether to use SSL/TLS for the connection.", blank=True, null=True
     )
-    """
-    Whether to use SSL/TLS for the connection.
-    """
+    """Whether to use SSL/TLS for the connection."""
     ssl_cert = models.TextField(blank=True, null=True, help_text="The SSL certificate for the connection, if required.")
     ssl_key = models.TextField(blank=True, null=True, help_text="The SSL key for the connection, if required.")
     ssl_ca = models.TextField(
@@ -185,6 +187,7 @@ class SqlConnection(ConnectionBase):
     )
     """
     The SSL certificate for the connection, if required.
+
     The SSL key for the connection, if required.
     The Certificate Authority (CA) certificate for verifying the server.
     """
@@ -194,27 +197,27 @@ class SqlConnection(ConnectionBase):
         max_length=255, help_text="The remote host of the SQL connection. Should be a valid internet domain name."
     )
     """
-    The remote host of the SQL connection. Should be a valid internet domain name.
+    The remote host of the SQL connection.
+
+    Should be a valid internet domain name.
     """
     port = models.IntegerField(
-        default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.", blank=True, null=True
+        default=3306, help_text="The port of the SQL connection. example: 3306 for MariaDB.", blank=True, null=True
     )
     """
-    The port of the SQL connection. example: 3306 for MySQL.
+    The port of the SQL connection.
+
+    example: 3306 for MariaDB.
     5432 for PostgreSQL, 1521 for Oracle, 1433 for MS SQL Server.
     5000 for Sybase.
     1234 for SQLite (not commonly used).
-    3306 is a reasonable default as MySQL is widely used.
+    3306 is a reasonable default as MariaDB is widely used.
     5432 could also be a reasonable default as PostgreSQL is also widely used.
     """
     database = models.CharField(max_length=255, help_text="The name of the database to connect to.")
-    """
-    The name of the database to connect to.
-    """
+    """The name of the database to connect to."""
     username = models.CharField(max_length=255, blank=True, null=True, help_text="The database username.")
-    """
-    The database username.
-    """
+    """The database username."""
     password = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
@@ -229,9 +232,7 @@ class SqlConnection(ConnectionBase):
     See: :class:`smarter.apps.account.models.Secret`
     """
     pool_size = models.IntegerField(default=5, help_text="The size of the connection pool.", blank=True, null=True)
-    """
-    The size of the connection pool.
-    """
+    """The size of the connection pool."""
     max_overflow = models.IntegerField(
         default=10,
         help_text="The maximum number of connections to allow beyond the pool size.",
@@ -239,9 +240,7 @@ class SqlConnection(ConnectionBase):
         blank=True,
         null=True,
     )
-    """
-    The maximum number of connections to allow beyond the pool size.
-    """
+    """The maximum number of connections to allow beyond the pool size."""
 
     # Proxy fields
     proxy_protocol = models.CharField(
@@ -252,9 +251,7 @@ class SqlConnection(ConnectionBase):
         blank=True,
         null=True,
     )
-    """
-    The protocol to use for the proxy connection.
-    """
+    """The protocol to use for the proxy connection."""
     proxy_host = models.CharField(
         max_length=255,
         blank=True,
@@ -262,11 +259,14 @@ class SqlConnection(ConnectionBase):
         help_text="The remote host of the SQL proxy connection. Should be a valid internet domain name.",
     )
     """
-    The remote host of the SQL proxy connection. Should be a valid internet domain name.
+    The remote host of the SQL proxy connection.
+
+    Should be a valid internet domain name.
     """
     proxy_port = models.IntegerField(blank=True, null=True, help_text="The port of the SQL proxy connection.")
     """
     The port of the SQL proxy connection.
+
     8080 is a common default for HTTP proxies.
     3128 is another common default for HTTP proxies.
     1080 is a common default for SOCKS proxies.
@@ -275,9 +275,7 @@ class SqlConnection(ConnectionBase):
     proxy_username = models.CharField(
         max_length=255, blank=True, null=True, help_text="The username for the proxy connection."
     )
-    """
-    The username for the proxy connection.
-    """
+    """The username for the proxy connection."""
     proxy_password = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
@@ -297,7 +295,9 @@ class SqlConnection(ConnectionBase):
         help_text="The known_hosts file content for verifying SSH connections. Usually comes from ~/.ssh/known_hosts.",
     )
     """
-    The known_hosts file content for verifying SSH connections. Usually comes from ~/.ssh/known_hosts.
+    The known_hosts file content for verifying SSH connections.
+
+    Usually comes from ~/.ssh/known_hosts.
     """
 
     @property
@@ -414,6 +414,7 @@ class SqlConnection(ConnectionBase):
     def connection_string(self) -> str:
         """
         Return the database connection string.
+
         This property constructs and returns a database connection string based on the current
         SQL connection instance's configuration.
 
@@ -524,13 +525,12 @@ class SqlConnection(ConnectionBase):
             if isinstance(transport, paramiko.Transport):
                 transport.request_port_forward(address="127.0.0.1", port=local_port, handler=self.transport_handler)
 
-            connection_handler = ConnectionHandler(self.django_db_connection)
-            tcpip_ssh_connection: BaseDatabaseWrapper = connection_handler["default"].connection
+            connection_handler = ConnectionHandler({"default": self.django_db_connection})
+            tcpip_ssh_connection: BaseDatabaseWrapper = connection_handler["default"]
             tcpip_ssh_connection.ensure_connection()
 
-            # Close the SSH connection after ensuring the database connection
             sql_connection_success.send(sender=self.__class__, connection=self)
-            return connection_handler  # type: ignore[return-value]
+            return tcpip_ssh_connection
 
         except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
             logger.error("%s.connect_tcpip_ssh() SSH connection failed: %s", self.formatted_class_name, e)
@@ -556,9 +556,8 @@ class SqlConnection(ConnectionBase):
         try:
             # Example: Customize the connection string for LDAP authentication
             sql_connection_attempted.send(sender=self.__class__, connection=self)
-            databases = self.django_db_connection
-            connection_handler = ConnectionHandler(databases)
-            ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"].connection
+            connection_handler = ConnectionHandler({"default": self.django_db_connection})
+            ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"]
             ldap_user_pwd_connection.ensure_connection()
             sql_connection_success.send(sender=self.__class__, connection=self)
             return ldap_user_pwd_connection
@@ -702,13 +701,16 @@ class SqlConnection(ConnectionBase):
         :return: True if the proxy connection is successful, otherwise False.
         :rtype: bool
         """
-        proxy_dict: Optional[dict] = (
-            {
-                self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+        proxy_dict: Optional[dict] = None
+        if self.proxy_protocol is not None and self.proxy_host is not None:
+            # proxy_password is a Secret, whose value is the password.
+            password = self.proxy_password.get_secret(update_last_accessed=False) if self.proxy_password else None
+            userinfo = ""
+            if self.proxy_username:
+                userinfo = f"{self.proxy_username}:{password}@" if password else f"{self.proxy_username}@"
+            proxy_dict = {
+                self.proxy_protocol: f"{self.proxy_protocol}://{userinfo}{self.proxy_host}:{self.proxy_port}",
             }
-            if self.proxy_protocol is not None and self.proxy_host is not None
-            else None
-        )
         try:
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
@@ -779,7 +781,7 @@ class SqlConnection(ConnectionBase):
             raise SmarterValueError(f"Connection name must be a string but got: {type(self.name)}")
 
         if not SmarterValidator.is_valid_snake_case(self.name):
-            snake_case_name = camel_to_snake(self.name)
+            snake_case_name = to_snake_case(self.name)
             logger.warning(
                 "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
                 self.formatted_class_name,

@@ -1,0 +1,21 @@
+---
+apiVersion: smarter.sh/v1
+kind: Vectorsearch
+metadata:
+  name: test_vectorsearch
+  description: vectorsearch for running unit test
+  version: 1.0.0
+  tags:
+    - red
+    - green
+    - blue
+  annotations:
+    - smarter.sh/tests/owner: test bank
+    - smarter.sh/tests/purpose: Provide a Vectorsearch for the VectorsearchApiBaseViewSet unit tests.
+spec:
+  config:
+    # created by the test's setUpClass()
+    vectorstore_name: test_vectorsearch_vectorstore
+    search_type: similarity
+    k: 4
+    is_enabled: true

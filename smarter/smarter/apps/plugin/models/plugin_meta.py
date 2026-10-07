@@ -1,7 +1,5 @@
 # pylint: disable=W0613
-"""
-PluginMeta model for defining the selection strategy and search terms for Smarter plugins.
-"""
+"""PluginMeta model for defining the selection strategy and search terms for Smarter plugins."""
 
 from typing import Optional
 
@@ -26,9 +24,10 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
+from smarter.common.utils import rfc1034_compliant_str, to_snake_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -67,34 +66,13 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     objects: MetaDataWithOwnershipModelManager["PluginMeta"] = MetaDataWithOwnershipModelManager()
 
     PLUGIN_CLASSES = [
-        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
-        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
         (SAMPluginCommonMetadataClassValues.API.value, SAMPluginCommonMetadataClassValues.API.value),
+        (SAMPluginCommonMetadataClassValues.SKILL.value, SAMPluginCommonMetadataClassValues.SKILL.value),
+        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
+        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
+        (SAMPluginCommonMetadataClassValues.WEBSEARCH.value, SAMPluginCommonMetadataClassValues.WEBSEARCH.value),
     ]
-    """
-    The classes of plugins supported by Smarter.
-    """
-
-    @property
-    def rfc1034_compliant_name(self) -> Optional[str]:
-        """
-        Returns a URL-friendly name for the chatbot.
-
-        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
-
-        **Example:**
-
-        .. code-block:: python
-
-            self.name = 'Example ChatBot 1'
-            self.rfc1034_compliant_name  # 'example-chatbot-1'
-
-        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
-        :rtype: Optional[str]
-        """
-        if self.name:
-            return rfc1034_compliant_str(self.name)
-        return None
+    """The classes of plugins supported by Smarter."""
 
     plugin_class = models.CharField(
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
@@ -118,7 +96,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :return: None
         """
         if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
-            snake_case_name = camel_to_snake(self.name)
+            snake_case_name = to_snake_case(self.name)
             logger.warning(
                 "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
                 self.formatted_class_name,
@@ -130,6 +108,19 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         super().save(*args, **kwargs)
         if not isinstance(self.name, str) or not self.name:
             raise SmarterValueError("PluginMeta.save(): name is required after save.")
+
+    @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
 
     @property
     def kind(self) -> SAMKinds:
@@ -155,15 +146,19 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return SAMKinds.SQL_PLUGIN
         elif self.plugin_class == SAMPluginCommonMetadataClassValues.API.value:
             return SAMKinds.API_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.SKILL.value:
+            return SAMKinds.SKILL_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.WEBSEARCH.value:
+            return SAMKinds.WEBSEARCH_PLUGIN
         else:
             raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
 
     @property
     def rfc1034_compliant_kind(self) -> Optional[str]:
         """
-        Returns a URL-friendly kind for the chatbot.
+        Returns a URL-friendly kind for the llmclient.
 
-        This is a convenience property that returns an RFC 1034-compliant kind for the chatbot,
+        This is a convenience property that returns an RFC 1034-compliant kind for the llmclient,
         suitable for use in URLs and DNS labels.
 
         **Example:**
@@ -179,6 +174,45 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if self.kind:
             return rfc1034_compliant_str(self.kind.value)
         return None
+
+    @property
+    def manifest_url(self) -> str:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.plugin.urls import PluginReverseNames
+
+        return reverse(
+            f"{PluginReverseNames.namespace}:{PluginReverseNames.detailview}",
+            kwargs={"hashed_id": self.hashed_id},
+        )
+
+    @property
+    def ready(self) -> bool:
+        """
+        Returns True if the plugin is ready to be used.
+
+        This property checks if the plugin has all the necessary data and configuration to be considered ready for use.
+        The specific criteria for readiness may depend on the plugin class and other factors, and can be implemented as needed.
+
+        :return: True if the plugin is ready, False otherwise.
+        :rtype: bool
+        """
+        retval = super().ready  # type: ignore[return-value]
+        return retval
 
     # pylint: disable=W0221
     @classmethod
@@ -266,7 +300,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if username and not user:
             try:
                 user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username, account=account)  # type: ignore[arg-type]
-            except UserProfile.DoesNotExist:
+            # the lookup by username raises User.DoesNotExist for an unknown username.
+            except (UserProfile.DoesNotExist, User.DoesNotExist):
                 logger.debug(
                     "%s.get_cached_object() - No UserProfile found for username: %s, account: %s",
                     logger_prefix,
@@ -274,12 +309,15 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     account.id if account else None,  # type: ignore[attr-defined]
                 )
                 user_profile = None
-            user = user_profile.user if user_profile else None
-            account = account or (user_profile.account if user_profile else None)
+            if not user_profile:
+                # without a user, the lookup below would find the account's admin.
+                raise SmarterValueError(f"No user named {username} was found for account {account}.")
+            user = user_profile.user
+            account = account or user_profile.account
 
         try:
             user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
-        except UserProfile.DoesNotExist:
+        except (UserProfile.DoesNotExist, User.DoesNotExist):
             logger.debug(
                 "%s.get_cached_object() - No UserProfile found for user: %s, account: %s",
                 logger_prefix,
@@ -324,6 +362,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     ) -> QuerySet["PluginMeta"]:
         """
         Return a QuerySet of all PluginMeta instances for the given user profile.
+
         This method caches the results to improve performance.
 
         :param invalidate: If True, invalidate the cache for this query.
@@ -422,6 +461,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 def _combined_plugins_list(use_profile_id: int, class_name: str = PluginMeta.__name__) -> QuerySet:
                     """
                     Short-lived cache for combined plugins list.
+
                     Combines user, admin, and smarter plugins into a single queryset
                     and caches the result for 15 seconds to improve performance.
                     """

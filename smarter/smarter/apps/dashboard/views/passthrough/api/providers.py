@@ -29,17 +29,18 @@ from django.utils.decorators import method_decorator
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
-    SmarterView,
+    SmarterAuthenticatedNeverCachedWebView,
 )
 
 logger = logging.getLogger(__name__)
 
 
 @method_decorator(login_required, name="dispatch")
-class ProviderApiView(SmarterView):
+class ProviderApiView(SmarterAuthenticatedNeverCachedWebView):
     """
     Authenticated JSON API view that returns LLM providers accessible to the requesting user.
 
@@ -68,6 +69,12 @@ class ProviderApiView(SmarterView):
     Additional provider objects may appear in the ``providers`` array.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to retrieve LLM providers accessible to the authenticated user.
@@ -82,7 +89,8 @@ class ProviderApiView(SmarterView):
         user = get_resolved_user(request.user)
 
         @cache_results()
-        def _get_cached_providers_for_user(user_id):
+        @camel_case()
+        def _get_cached_providers_for_user(user_id) -> dict:
 
             providers = Provider.objects.with_read_permission_for(user=user).prefetch_related("tags")  # type: ignore
             serialized_providers = ProviderSerializer(providers, many=True).data

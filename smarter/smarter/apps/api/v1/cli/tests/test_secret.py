@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for secret"""
+"""Test Api v1 CLI commands for secret."""
 
 import os
 from datetime import datetime
@@ -15,6 +15,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.secret.manifest.brokers.secret import SAMSecret
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
+from smarter.common.utils import mask_string
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -40,7 +41,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 class TestApiCliV1Secret(ApiV1CliTestBase):
     """
-    Test Api v1 CLI commands for secret
+    Test Api v1 CLI commands for secret.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -71,9 +72,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         return super().tearDown()
 
     def secret_factory(self) -> Secret:
-        """
-        Create a secret object for testing purposes.
-        """
+        """Create a secret object for testing purposes."""
         secret = Secret.objects.create(
             user_profile=self.user_profile,
             name=self.name,
@@ -112,7 +111,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
             assert field in config.keys(), f"{field} not found in config keys"
 
     def test_01_example_manifest(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         logger.info("response=%s", response)
@@ -132,10 +131,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_02_apply(self):
-        """
-        Test that we get OK response when passing a valid manifest
-        to apply()
-        """
+        """Test that we get OK response when passing a valid manifest to apply()."""
         # load the manifest from the yaml file
         loader = SAMLoader(file_path=os.path.join(HERE, "data", "good-secret.yaml"))
         self.assertTrue(loader.ready, msg="loader is not ready")
@@ -215,7 +211,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Secret test_secret applied successfully")
         self.assertEqual(response["api"], SmarterApiVersions.V1)
-        self.assertEqual(response["thing"], SAMKinds.SECRET.value)
+        self.assertEqual(response["metadata"]["thing"], SAMKinds.SECRET.value)
         self.assertIsInstance(response["metadata"], dict)
 
         data: dict = response["data"]
@@ -259,9 +255,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         )
 
     def test_03_describe(self):
-        """
-        invoke the describe endpoint to verify that the Secret was created
-        """
+        """Invoke the describe endpoint to verify that the Secret was created."""
         secret = self.secret_factory()
         self.assertIsInstance(secret, Secret)
 
@@ -393,7 +387,8 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertIsInstance(config, dict)
         self.assertIn("value", config.keys())
         self.assertIn("expiration_date", config.keys())
-        self.assertEqual(config["value"], self.secret_value)
+        # the manifest serializer masks the secret value
+        self.assertEqual(config["value"], mask_string(self.secret_value))
 
         actual_exp: Optional[Union[datetime, str]] = config.get("expiration_date")
         if not actual_exp:
@@ -410,7 +405,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         secret.delete()
 
     def test_04_delete(self) -> None:
-        """Test delete command"""
+        """Test delete command."""
         called = {}
 
         def secret_post_delete(sender, instance, **kwargs):
@@ -436,7 +431,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
             self.fail("post_delete signal receiver was not called")
 
     def test_05_deploy(self) -> None:
-        """Test deploy command"""
+        """Test deploy command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
@@ -453,7 +448,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertIn("not implemented", error["description"])
 
     def test_06_undeploy(self) -> None:
-        """Test undeploy command"""
+        """Test undeploy command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
@@ -470,7 +465,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertIn("not implemented", error["description"])
 
     def test_07_logs(self) -> None:
-        """Test logs command"""
+        """Test logs command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 

@@ -1,11 +1,10 @@
 """Smarter Secret app serializers tests."""
 
-import logging
-
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from .factories import (
     factory_secret_teardown,

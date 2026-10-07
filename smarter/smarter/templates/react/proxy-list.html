@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_proxy_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the proxy list
+  see: smarter.apps.proxy.templatetags.react_proxy_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% proxy_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/proxy-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ proxy_list.root_id }}"
+    django-csrf-cookie-name="{{ proxy_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ proxy_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ proxy_list.cookie_domain }}"
+    smarter-proxy-list-api-url="{{ proxy_list.proxy_list_api_url }}"
+    react-debug-mode="{{ proxy_list.react_debug_mode }}"
+    smarter-request-id="{{ proxy_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the proxy list
+  see: smarter.apps.proxy_list.templatetags.react_proxy_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% proxy_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/proxy-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

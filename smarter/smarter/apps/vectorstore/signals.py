@@ -1,64 +1,51 @@
 """
-Signals for the vectorstore app.
+Signals of the vectorstore app.
+
+Their receivers log them. Use them, e.g., to notify the owner of a failed document.
 """
 
 from django.dispatch import Signal
 
-load_started = Signal()
+vectorstore_deployed = Signal()
 """
-Signal sent when vectorstore loading starts.
+Sent when a vectorstore is deployed.
 
 Arguments:
-    sender (type): The sender of the signal, typically the class initiating the load.
-    backend (SmarterVectorstoreBackend): The backend being used for loading.
-    provider (Provider): The provider associated with the vectorstore.
-    user_profile (UserProfile): The profile of the user associated with the load.
-
-Example::
-
-    load_started.send(sender=self.__class__, backend=backend, provider=provider, user_profile=user_profile)
+    vectorstore (VectorstoreMeta): the vectorstore.
 """
 
-load_success = Signal()
+vectorstore_destroyed = Signal()
 """
-Signal sent when vectorstore loading completes.
+Sent when a vectorstore's database, and its data, is destroyed.
 
 Arguments:
-    sender (type): The sender of the signal, typically the class initiating the load.
-    backend (SmarterVectorstoreBackend): The backend being used for loading.
-    provider (Provider): The provider associated with the vectorstore.
-    user_profile (UserProfile): The profile of the user associated with the load.
-
-Example::
-
-    load_success.send(sender=self.__class__, backend=backend, provider=provider, user_profile=user_profile)
+    vectorstore (VectorstoreMeta): the vectorstore.
 """
 
-load_failed = Signal()
+vectorstore_status_changed = Signal()
 """
-Signal sent when vectorstore loading fails.
+Sent when a vectorstore's status changes.
 
 Arguments:
-    sender (type): The sender of the signal, typically the class initiating the load.
-    backend (SmarterVectorstoreBackend): The backend being used for loading.
-    provider (Provider): The provider associated with the vectorstore.
-    user_profile (UserProfile): The profile of the user associated with the load.
-
-Example::
-
-    load_failed.send(sender=self.__class__, backend=backend, provider=provider, user_profile=user_profile)
+    vectorstore (VectorstoreMeta): the vectorstore.
+    previous (str): its previous status.
+    status (str): its status, e.g. ready or failed.
+    message (str): why, e.g. the error.
 """
 
-connected = Signal()
+document_loaded = Signal()
 """
-Signal sent when a connection to the vector store backend is established.
+Sent when a document's chunks are loaded into its vectorstore.
 
 Arguments:
-    sender (type): The sender of the signal, typically the class initiating the load.
-    instance (VectorStoreBackendConnection): The instance of the connection that was established.
-    connection (object): The underlying connection object   .
+    document (VectorstoreDocument): the document.
+"""
 
-Example::
+document_load_failed = Signal()
+"""
+Sent when a document cannot be loaded.
 
-    connected.send(sender=self.__class__, backend=backend, provider=provider, user_profile=user_profile)
+Arguments:
+    document (VectorstoreDocument): the document.
+    error (str): why.
 """

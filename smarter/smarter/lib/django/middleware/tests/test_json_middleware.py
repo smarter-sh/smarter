@@ -1,6 +1,6 @@
-"""test SmarterJsonErrorMiddleware class"""
+"""Test SmarterJsonErrorMiddleware class."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.http import HttpResponse, JsonResponse
 
@@ -15,6 +15,10 @@ class TestSmarterJsonErrorMiddleware(SmarterTestBase):
     def setUp(self):
         super().setUp()
         self.middleware = SmarterJsonErrorMiddleware(get_response=MagicMock())
+        # the middleware is a no-op unless its waffle switch is on, so don't depend on the database's switch state
+        waffle_patcher = patch("smarter.lib.django.middleware.json.waffle.switch_is_active", return_value=True)
+        waffle_patcher.start()
+        self.addCleanup(waffle_patcher.stop)
 
     def test_process_response_non_json_accept(self):
         request = MagicMock()

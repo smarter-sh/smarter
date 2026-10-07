@@ -1,8 +1,5 @@
 # pylint: disable=W0613
-"""
-Django REST framework base views for /docs/ brokered viewsets,
-manifest and schema.
-"""
+"""Django REST framework base views for /docs/ brokered viewsets, manifest and schema."""
 
 import os
 from typing import TYPE_CHECKING, Any, Optional
@@ -51,7 +48,7 @@ class DocsError(SmarterException):
 # Public Access Views
 # ------------------------------------------------------------------------------
 class DocsBaseView(SmarterAuthenticatedWebView):
-    """JSON Schema base view"""
+    """JSON Schema base view."""
 
     template_path: Optional[str] = None
     name: Optional[str] = None
@@ -61,29 +58,30 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     @property
     def formatted_class_name(self):
-        return logging.formatted_text(f"{__name__}.{DocsBaseView.__name__}")
+        class_name = f"{__name__}.{DocsBaseView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get_brokered_json_response(
         self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs
     ) -> dict[str, Any]:
         """
         Get the JSON response from the brokered smarter.sh/api endpoint.
+
         This method constructs a brokered request to the specified API view, using
         Django's RequestFactory to create a new request object.
         The brokered request is made on behalf of the original request user to
         resolve possible permission issues related to object ownership in the
         API views, in cases where the authenticated user is not the owner of
-        the object being accessed in the API view (e.g. a chatbot manifest).
+        the object being accessed in the API view (e.g. an llmclient manifest).
         The response from the API view is expected to be a JSON response, which is then decoded
         and returned as a Python dictionary.
 
         Why we do this:
         Any authenticated user can access the /docs/ views, which contain links to all
-        SAM resource kinds (e.g. chatbots, plugins, connections, etc.) regardless
+        SAM resource kinds (e.g. llmclients, plugins, connections, etc.) regardless
         of ownership. Therefore, as a matter of standardized procedure, we spoof the
         resource owner when we make the brokered request to the API view
         to ensure that the user has sufficient access.
-
 
         Args:
             reverse_name (str): The name of the URL pattern to reverse for the API endpoint.
@@ -159,7 +157,9 @@ class DocsBaseView(SmarterAuthenticatedWebView):
                 request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
                 response.status_code if hasattr(response, "status_code") else "N/A",
             )
-            raise DocsError(f"Received non-200 response from brokered view: {response.status_code}")
+            raise DocsError(
+                f"Received non-200 response from brokered view: {response.status_code}: {response.content if hasattr(response, 'content') else 'N/A'}"
+            )
 
         try:
             json_response = json.loads(response.content.decode("utf-8"))
@@ -194,7 +194,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     def dispatch(self, request: "HttpRequest", *args, **kwargs) -> HttpResponse:
         """
-        Override dispatch to set up context and handle authentication for brokered
+        Override dispatch to set up context and handle authentication for brokered.
+
         API requests. Since the /docs/ views are publicly accessible to any
         authenticated user, and the brokered API requests made within these
         views need to be made on behalf of the original request user, we
@@ -246,7 +247,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 # Public Access Base Views
 # ------------------------------------------------------------------------------
 class TxtBaseView(SmarterWebTxtView):
-    """Text base view"""
+    """Text base view."""
 
     template_path = "docs/txt_file.html"
     text_file: Optional[str] = None
@@ -270,7 +271,7 @@ class TxtBaseView(SmarterWebTxtView):
 
 
 class MarkdownBaseView(SmarterWebHtmlView):
-    """Markdown base view"""
+    """Markdown base view."""
 
     template_path = "docs/markdown.html"
     markdown_file: Optional[str] = None

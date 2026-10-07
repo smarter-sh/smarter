@@ -1,5 +1,5 @@
 """
-Account Utilities
+Account Utilities.
 
 This module provides foundational utilities for accessing, managing, and caching account and user data in the Smarter platform. It is the base model for all Django ORM operations in the project, and is designed for both performance and reliability.
 
@@ -15,9 +15,10 @@ Two caching strategies are used:
 - **Redis-Based ORM Caching**:
   Persistent, cross-process caching for Django ORM objects.
   *Scope*: Shared across all processes; cache lifetime is controlled by expiration settings.
-
 """
 
+import glob
+import os
 import re
 from typing import Optional
 
@@ -26,6 +27,7 @@ from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
     Account,
+    Budget,
     User,
     UserProfile,
 )
@@ -53,7 +55,9 @@ SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUM
 # pylint: disable=W0613
 class SmarterCachedObjects:
     """
-    Lazy instantiations of cached objects for the smarter account. This is a
+    Lazy instantiations of cached objects for the smarter account.
+
+    This is a
     much-simplified means of caching commonly used objects without having to
     actually decorate every function that fetches them.
 
@@ -67,6 +71,9 @@ class SmarterCachedObjects:
 
     _smarter_admin_user_profile: Optional[UserProfile] = None
     _admin_user: Optional[User] = None
+
+    def __init__(self):
+        self.base_cache_key = f"{__name__}.{SmarterCachedObjects.__name__}[{id(self)}]"
 
     @property
     def smarter_account(self) -> Account:
@@ -97,6 +104,7 @@ class SmarterCachedObjects:
     def smarter_admin_user_profile(self) -> UserProfile:
         """
         Retrieve the UserProfile instance for the smarter admin user.
+
         Lazy loads and caches the UserProfile on first access.
         Subsequent accesses will return the cached UserProfile, with a
         periodic refresh from the database to ensure data consistency.
@@ -105,7 +113,7 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the UserProfile cannot be found.
         """
 
-        @cache_results()
+        @cache_results(cache_key=self.base_cache_key + ".smarter_admin_user_profile")
         def _requery_smarter_admin_user_profile(class_name=SmarterCachedObjects.__name__) -> None:
             if isinstance(self._smarter_admin_user_profile, UserProfile):
                 logger.debug(
@@ -140,7 +148,9 @@ class SmarterCachedObjects:
     @property
     def admin_user(self) -> User:
         """
-        Retrieve the admin user instance for the smarter account. Lazy
+        Retrieve the admin user instance for the smarter account.
+
+        Lazy
         loads and caches the user on first access. Subsequent accesses
         will return the cached user, with a periodic refresh from the
         database to ensure data consistency.
@@ -149,7 +159,7 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the admin user cannot be found.
         """
 
-        @cache_results()
+        @cache_results(cache_key=self.base_cache_key + ".admin_user")
         def _requery_admin_user(class_name=SmarterCachedObjects.__name__) -> None:
             if self._admin_user:
                 self._admin_user.refresh_from_db()
@@ -177,7 +187,8 @@ class SmarterCachedObjects:
 
 smarter_cached_objects = SmarterCachedObjects()
 """
-smarter_cached_objects = SmarterCachedObjects()
+Smarter_cached_objects = SmarterCachedObjects().
+
 An instance of `SmarterCachedObjects` for accessing commonly used cached objects.
 Functions as a singleton for the project.
 """
@@ -207,7 +218,7 @@ def get_cached_default_account(invalidate: bool = False) -> Account:
         default_account = get_cached_default_account(invalidate=True)
     """
 
-    @cache_results()
+    @cache_results(cache_key="smarter.apps.account.utils.get_cached_default_account")
     def _get_default_account() -> Account:
         try:
             return Account.objects.get(is_default_account=True)
@@ -247,7 +258,6 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
         account = get_cached_account_for_user(user)
         # Invalidate cache before fetching
         account = get_cached_account_for_user(user, invalidate=True)
-
     """
     if not isinstance(user, User):
         logger.warning("%s.get_cached_account_for_user() invalid user type: %s", HERE, type(user))
@@ -264,9 +274,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
 
     @cache_results()
     def get_cached_account_for_user_by_id(user_id, class_name=UserProfile.__name__):
-        """
-        In-memory cache for user accounts.
-        """
+        """In-memory cache for user accounts."""
         user_profiles = UserProfile.objects.filter(user_id=user_id)
         for user_profile in user_profiles:
             if not isinstance(user_profile, UserProfile):
@@ -326,9 +334,7 @@ def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Opt
 
     @cache_results()
     def _get_user(user_id, class_name=User.__name__) -> Optional[User]:
-        """
-        In-memory cache for user objects.
-        """
+        """In-memory cache for user objects."""
         try:
             user = User.objects.get(id=user_id)
             logger.debug("%s.get_cached_user_for_user_id() retrieving and caching user %s", HERE, user)
@@ -370,9 +376,7 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
 
     @cache_results()
     def _in_memory_user_by_username(username, class_name=User.__name__) -> Optional[User]:
-        """
-        In-memory cache for user objects by username.
-        """
+        """In-memory cache for user objects by username."""
         try:
             user = User.objects.get(username=username)
             logger.debug("%s.get_cached_user_for_username() retrieving and caching user %s", HERE, user)
@@ -512,12 +516,12 @@ def account_number_from_url(invalidate: Optional[bool] = False, url: Optional[st
     **Example usage**::
 
         # Extract account number from a URL
-        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/")
+        account_number = account_number_from_url(url="https://hr.3141-5926-5359.alpha.api.example.com/")
 
         # Result: '3141-5926-5359'
 
         # Invalidate cache before fetching
-        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
+        account_number = account_number_from_url(url="https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
     """
     if not url:
         return None
@@ -622,7 +626,6 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
         user_profile = UserProfile.objects.get(user__username="exampleuser")
         owners = valid_plugin_owners_for_user(user_profile)
         print("Valid plugin owners:", [owner.user.username for owner in owners])
-
     """
     logger.debug("%s.valid_resource_owners_for_user() called with user_profile: %s", HERE, user_profile)
 
@@ -636,7 +639,61 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     return [user_profile, account_admin, smarter_cached_objects.smarter_admin_user_profile]
 
 
+BUILTIN_BUDGETS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "example-manifests", "budgets")
+"""The Budget example manifests that :func:`add_builtin_budgets` creates."""
+
+BUILTIN_BUDGET_ANNOTATION = "smarter.sh/budget/builtin"
+
+
+def add_builtin_budgets(verbose: bool = False) -> list[Budget]:
+    """
+    Create a Budget for each Budget example manifest, in ``data/example-manifests/budgets/``.
+
+    ``manage.py initialize_platform`` calls it, so that the platform starts with a catalogue of
+    budgets that superusers can attach to resources.
+
+    - A built-in budget is created detached: the manifest's ``spec.resources`` is ignored, so it
+      enforces nothing until a superuser attaches it, with ``Budget.attach()``, the admin console,
+      or a Budget manifest that lists its resources.
+    - A budget that already exists, by name, is left as it is, so that running it again does not
+      undo a superuser's changes to it, nor its attachments.
+
+    :param verbose: Log each budget that is created or skipped.
+    :returns: The budgets that were created.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.account.manifest.brokers.budget import CONFIG_FIELDS
+    from smarter.apps.account.manifest.models.budget.model import SAMBudget
+    from smarter.common.utils import get_readonly_yaml_file
+
+    retval = []
+    for filespec in sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml"))):
+        manifest = SAMBudget(**get_readonly_yaml_file(filespec))
+        name = manifest.metadata.name
+        if Budget.objects.filter(name=name).exists():
+            if verbose:
+                logger.info("%s.add_builtin_budgets() Budget %s already exists. Skipped.", HERE, name)
+            continue
+        config = manifest.spec.config
+        fields = {orm_field: getattr(config, manifest_field) for manifest_field, orm_field in CONFIG_FIELDS.items()}
+        fields["message"] = fields["message"] or ""
+        annotations = [*(manifest.metadata.annotations or []), {BUILTIN_BUDGET_ANNOTATION: "true"}]
+        budget = Budget.objects.create(
+            name=name,
+            description=manifest.metadata.description,
+            version=manifest.metadata.version,
+            annotations=annotations,
+            **fields,
+        )
+        budget.tags.set(manifest.metadata.tags or [])
+        retval.append(budget)
+        if verbose:
+            logger.info("%s.add_builtin_budgets() Created Budget %s from %s.", HERE, name, os.path.basename(filespec))
+    return retval
+
+
 __all__ = [
+    "add_builtin_budgets",
     "get_cached_default_account",
     "get_cached_account_for_user",
     "get_cached_user_for_user_id",

@@ -1,6 +1,4 @@
-"""
-PluginDataSql model for storing SQL-based plugin data configuration.
-"""
+"""PluginDataSql model for storing SQL-based plugin data configuration."""
 
 import re
 from typing import Optional, Union
@@ -61,7 +59,7 @@ class PluginDataSql(PluginDataBase):
         STR = "string"
         NUMBER = "number"
         INT = "integer"
-        BOOL = "bool"
+        BOOL = "boolean"
         OBJECT = "object"
         ARRAY = "array"
         NULL = "null"
@@ -150,11 +148,10 @@ class PluginDataSql(PluginDataBase):
                     },
                     'test_values': 'admin',
                     'limit': 1,
-                    'connection': <SqlConnection: test_sql_connection - django.db.backends.mysql://smarter:******@smarter-mysql:3306/smarter>
+                    'connection': <SqlConnection: test_sql_connection - django.db.backends.mysql://smarter:******@smarter-mariadb:3306/smarter>
                 }
 
         :raises SmarterValueError: If a placeholder in the SQL query is not defined in the parameters.
-
         """
         placeholders = re.findall(r"{(.*?)}", self.sql_query) or []
         parameters = self.parameters or {}
@@ -230,9 +227,9 @@ class PluginDataSql(PluginDataBase):
         **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
-        Retrieve a model instance by primary key, using caching to
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        Retrieve a model instance by primary key, using caching to optimize performance.
+
+        This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
         Example usage:
@@ -287,11 +284,14 @@ class PluginDataSql(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
+        retval: "PluginDataSql"
         if pk:
-            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
         if plugin:
-            return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+            retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+
+        return retval
 
     @classmethod
     def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataSql", None]:

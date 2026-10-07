@@ -1,4 +1,7 @@
 """
+smarter.lib.logging.get_smarter_logger
+======================================
+
 getSmarterLogger() - A utility function to retrieve a logger instance with
 optional Waffle switch control. This function allows for dynamic control over
 logging output based on the state of specified Waffle switches or a custom

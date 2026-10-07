@@ -1,7 +1,6 @@
 """A class for working with Secret manifests and the Secret Django ORM."""
 
 # python stuff
-import logging
 from datetime import datetime
 from typing import Any, Optional, Union
 
@@ -34,7 +33,7 @@ from smarter.apps.secret.signals import (
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -95,11 +94,12 @@ class SecretTransformer(SmarterHelperMixin):
     ):
         """
         Options for initialization are:
+
         - name: name of the secret, for initializing the Django ORM model.
         - Pydantic model created by a manifest broker (preferred method).
         - django model secret id.
-        - yaml manifest or json representation of a yaml manifest
-        see ./tests/data/secret-good.yaml for an example.
+        - yaml manifest or json representation of a yaml manifest,
+          see ./tests/data/secret-good.yaml for an example.
         """
         logger.debug(
             "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs=%s",
@@ -369,7 +369,7 @@ class SecretTransformer(SmarterHelperMixin):
 
     @property
     def expires_at(self) -> Optional[datetime]:
-        """Return the expiration date in the format, YYYY-MM-DD"""
+        """Return the expiration date in the format, YYYY-MM-DD."""
         if (
             self._manifest
             and self._manifest.spec
@@ -415,7 +415,10 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        self._secret = Secret.objects.filter(name=self.name).with_read_permission_for(self.user_profile.user).first()
+        # Only the user_profile's own Secret. A read-permission lookup would also
+        # return another account's or the platform's Secret of the same name, which
+        # create() would then overwrite and describe() would reveal.
+        self._secret = Secret.objects.filter(name=self.name, user_profile=self.user_profile).first()
         if self._secret:
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
@@ -470,6 +473,7 @@ class SecretTransformer(SmarterHelperMixin):
     def name(self) -> Optional[str]:
         """
         Return the name of the secret.
+
         The manifest takes precedence over the secret ORM
         """
         if self._name:
@@ -571,7 +575,9 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.create() Secret manifest is not set. Cannot create secret.", self.formatted_class_name)
             return False
 
-        if self._secret and self._secret.id:  # type: ignore[union-attr]
+        # self.secret, rather than self._secret, so that a Secret that exists, but
+        # has not been loaded yet, is found by its name and updated rather than created again.
+        if self.secret and self.secret.id:  # type: ignore[union-attr]
             self.id = self.secret.id  # type: ignore[assignment]
             logger.debug(
                 "%s.create() Secret %s already exists. Updating secret %s instead.",
@@ -650,9 +656,7 @@ class SecretTransformer(SmarterHelperMixin):
         return True
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
-        """
-        Serialize a secret in JSON format that is importable by Pydantic.
-        """
+        """Serialize a secret in JSON format that is importable by Pydantic."""
         if not self.ready:
             return None
         if not self.manifest:

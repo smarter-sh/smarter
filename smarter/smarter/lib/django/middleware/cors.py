@@ -5,7 +5,7 @@ This module extends :class:`corsheaders.middleware.CorsMiddleware`
 to support dynamically generated, request-scoped CORS origins while
 remaining fully compatible with concurrent ASGI execution.
 
-The middleware is specifically designed to safely support chatbot-origin
+The middleware is specifically designed to safely support llmclient-origin
 resolution without introducing cross-request state leakage or unsafe
 async behavior.
 
@@ -14,7 +14,7 @@ Key Features
 
 - Fully compatible with ASGI concurrency
 - Stateless request processing
-- Dynamic chatbot-specific origin allowlisting
+- Dynamic llmclient-specific origin allowlisting
 - Local development origin support
 - Compatibility with ``django-cors-headers``
 - Optional feature-flag enablement via Django Waffle
@@ -43,7 +43,7 @@ Behavior
 For each request, the middleware:
 
 #. Starts with the configured static CORS allowlist
-#. Dynamically resolves chatbot-specific origins
+#. Dynamically resolves llmclient-specific origins
 #. Adds localhost development origins when appropriate
 #. Applies regex-based origin matching
 #. Defers to ``django-cors-headers`` for core CORS behavior
@@ -85,8 +85,8 @@ framework.
 Notes
 =====
 
-This middleware relies on request-scoped chatbot resolution using
-:func:`smarter.apps.chatbot.models.get_cached_chatbot_by_request`.
+This middleware relies on request-scoped llmclient resolution using
+:func:`smarter.apps.llmclient.models.get_cached_llmclient_by_request`.
 
 Because ``django-cors-headers`` internally expects synchronous
 middleware semantics, this implementation preserves compatibility
@@ -133,8 +133,8 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     Middleware for handling Cross-Origin Resource Sharing (CORS) headers in the application.
 
-    This middleware extends the default CORS handling to dynamically add chatbot URLs to the
-    allowed origins at runtime. It ensures that requests from valid chatbot origins are permitted
+    This middleware extends the default CORS handling to dynamically add llmclient URLs to the
+    allowed origins at runtime. It ensures that requests from valid llmclient origins are permitted
     by updating the CORS allowed origins list based on the current request context.
 
     The middleware also provides additional logic to handle internal IP addresses, health check
@@ -142,20 +142,20 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
     :vartype _url: Optional[SplitResult]
-    :cvar _chatbot: The chatbot instance associated with the current request, or None.
-    :vartype _chatbot: Optional[ChatBot]
+    :cvar _llmclient: The llmclient instance associated with the current request, or None.
+    :vartype _llmclient: Optional[LLMClient]
     :cvar request: The current Django HTTP request object, or None.
     :vartype request: Optional[HttpRequest]
 
     **Key Features**
 
-    - Dynamically adds chatbot URLs to the CORS allowed origins list.
+    - Dynamically adds llmclient URLs to the CORS allowed origins list.
     - Handles requests from internal IP addresses and health check endpoints.
     - Provides detailed logging for CORS-related events and decisions.
     - Integrates with Django and the `django-cors-headers` package.
 
     .. note::
-        - The chatbot URL is only added to the allowed origins if a chatbot is associated with the request.
+        - The llmclient URL is only added to the allowed origins if an llmclient is associated with the request.
         - Internal requests and health checks are short-circuited for efficiency.
         - Logging is controlled via a waffle switch and the application's log level.
 
@@ -191,7 +191,8 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return logging.formatted_text(f"{__name__}.{SmarterCorsMiddleware.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{SmarterCorsMiddleware.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         if self.async_mode:

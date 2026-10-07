@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter Api ApiConnection Manifest handler"""
+"""Smarter Api ApiConnection Manifest handler."""
 
 from typing import Optional, Type
 
@@ -13,7 +13,6 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
 from smarter.apps.connection.models import ConnectionBase
-from smarter.apps.connection.signals import broker_ready
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib import logging
@@ -67,7 +66,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         broker = MyConnectionBroker(...)
         broker.apply(request, manifest_data=manifest_dict)
-
     """
 
     _connection: Optional[ConnectionBase] = None
@@ -88,35 +86,8 @@ class SAMConnectionBaseBroker(AbstractBroker):
         :return: The formatted class name.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
-
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
-
-        :returns: ``True`` if the broker is ready, ``False`` otherwise.
-        :rtype: bool
-        """
-        retval = super().ready
-        if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
-            return False
-        retval = self.manifest is not None or self.connection is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
-        return retval
+        class_name = formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
+        return self.formatted_text(class_name)
 
     @property
     def ORMModelClass(self) -> Type[ConnectionBase]:
@@ -151,7 +122,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
         **Example usage**::
 
             metadata = broker.sam_connection_metadata()
-
         """
         if self.connection:
             self._sam_connection_metadata = SAMConnectionCommonMetadata(
@@ -164,9 +134,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         return self._sam_connection_metadata
 
     def sam_connection_status(self) -> Optional[SAMConnectionCommonStatus]:
-        """
-        Return the common connection status from the manifest.
-        """
+        """Return the common connection status from the manifest."""
         if self.connection:
             admin = get_cached_admin_user_for_account(account=self.connection.user_profile.cached_account)
             if not admin:
@@ -239,7 +207,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
         **Example usage**::
 
             broker.apply(request, manifest_data=manifest_dict)
-
         """
         logger.info(
             "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
@@ -256,7 +223,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        super().apply(request, kwargs)
 
         if not self.user.is_staff:
             raise SAMBrokerError(
@@ -267,7 +233,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         # update the common meta fields
         data = self.manifest.metadata.model_dump() if self.manifest else None
-        data = self.camel_to_snake(data) if data else None
+        data = self.to_snake_case(data) if data else None
         if not isinstance(data, dict):
             raise SAMBrokerErrorNotReady(
                 f"Manifest is not ready for {self.kind} broker. Cannot apply because data is not a dict. Got {type(data)}. manifest: {self.manifest.model_dump() if self.manifest else None}",

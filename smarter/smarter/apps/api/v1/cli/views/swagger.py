@@ -1,6 +1,4 @@
-"""
-Common Swagger definitions for CLI API views.
-"""
+"""Common Swagger definitions for CLI API views."""
 
 import os
 from http import HTTPStatus
@@ -29,15 +27,17 @@ with open(
     EXAMPLE_MANIFEST_PLUGIN = json.load(f)
 
 with open(
-    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "apply", "chatbot.yaml"), encoding="utf-8"
+    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "apply", "llmclient.yaml"), encoding="utf-8"
 ) as f:
-    EXAMPLE_MANIFEST_CHATBOT = f.read()
+    EXAMPLE_MANIFEST_LLM_CLIENT = f.read()
 
-with open(os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "chat", "prompt.json"), encoding="utf-8") as f:
+with open(
+    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "prompt", "prompt.json"), encoding="utf-8"
+) as f:
     EXAMPLE_CHAT_PROMPT = json.load(f)
 
 with open(
-    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "chat", "chat_config.json"), encoding="utf-8"
+    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "prompt", "chat_config.json"), encoding="utf-8"
 ) as f:
     EXAMPLE_CHAT_CONFIG = json.load(f)
 
@@ -48,12 +48,12 @@ class ManifestSerializer(serializers.Serializer):
 
     manifest = serializers.CharField(
         help_text="YAML manifest in smarter.sh/v1 format",
-        default=EXAMPLE_MANIFEST_CHATBOT,
+        default=EXAMPLE_MANIFEST_LLM_CLIENT,
     )
 
 
 class ChatConfigSerializer(serializers.Serializer):
-    """Serializer for the chat configuration in smarter.sh/v1 format."""
+    """Serializer for the prompt configuration in smarter.sh/v1 format."""
 
     uid = serializers.RegexField(
         help_text="Client UID",
@@ -79,10 +79,10 @@ class MessageSerializer(serializers.Serializer):
 
 
 class CliChatSerializer(serializers.Serializer):
-    """Serializer for the chat in smarter.sh/v1 format."""
+    """Serializer for the prompt in smarter.sh/v1 format."""
 
-    session_key = serializers.CharField(help_text="Session key for the chat session")
-    messages = serializers.ListSerializer(child=MessageSerializer(), help_text="List of chat messages")
+    session_key = serializers.CharField(help_text="Session key for the prompt session")
+    messages = serializers.ListSerializer(child=MessageSerializer(), help_text="List of prompt messages")
 
 
 BUG_REPORT = (

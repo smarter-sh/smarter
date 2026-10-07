@@ -21,14 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class TestUserProfile(TestAccountMixin):
-    """Test UserProfile model"""
+    """Test UserProfile model."""
 
     logger_prefix = logging.formatted_text(f"{__name__}.TestUserProfile()")
 
     def test_dunders(self):
-        """
-        test all the dunder methods.
-        """
+        """Test all the dunder methods."""
 
         print(self.admin_user)
         print(self.account)
@@ -220,9 +218,7 @@ class TestUserProfile(TestAccountMixin):
 
 
 class TestUserProfileCoverageGaps(TestAccountMixin):
-    """
-    This class contains tests that specifically target code paths in the UserProfile model that were not covered by the main test class.
-    """
+    """This class contains tests that specifically target code paths in the UserProfile model that were not covered by the main test class."""
 
     def test_userprofile_save_change_user_or_account(self):
 
@@ -244,9 +240,7 @@ class TestUserProfileCoverageGaps(TestAccountMixin):
 
 
 class TestUserProfileCoverageGaps2(TestAccountMixin):
-    """
-    This class contains tests that specifically target code paths in the UserProfile model that were not covered by the main test class.
-    """
+    """This class contains tests that specifically target code paths in the UserProfile model that were not covered by the main test class."""
 
     def test_add_to_account_contacts_primary_flag(self):
         # Should update is_primary if needed
@@ -255,17 +249,23 @@ class TestUserProfileCoverageGaps2(TestAccountMixin):
         assert contact.is_primary is True
 
     def test_admin_for_account_creates_admin(self):
-        # Remove all users from an account to force admin creation
-        account = smarter_cached_objects.smarter_account
-        UserProfile.objects.filter(account=account).delete()
+        # an account without users forces the creation of its admin. A new account is used,
+        # rather than removing the users of an existing one.
+        account = Account.objects.create(
+            name=f"test_account_no_users_{self.hash_suffix}",
+            company_name=f"TestAccount_NoUsers_{self.hash_suffix}",
+            is_default_account=False,
+        )
+        self.addCleanup(account.delete)
+        self.addCleanup(UserProfile.objects.filter(account=account).delete)
+        self.assertFalse(UserProfile.objects.filter(account=account).exists())
         user = UserProfile.admin_for_account(account)
         assert isinstance(user, User)
+        self.assertTrue(UserProfile.objects.filter(account=account, user=user).exists())
 
 
 class TestUserProfileCoverageGaps3(TestAccountMixin):
-    """
-    This class contains tests that specifically target code paths in the UserProfile model that were not covered by the main test class.
-    """
+    """This class contains tests that specifically target code paths in the UserProfile model that were not covered by the main test class."""
 
     def test_get_cached_object_multiple_objects(self):
         # Create a duplicate UserProfile for same user (should trigger MultipleObjectsReturned)
@@ -276,16 +276,20 @@ class TestUserProfileCoverageGaps3(TestAccountMixin):
         # should work
         user_profile = UserProfile.objects.create(user=self.admin_user, account=smarter_cached_objects.smarter_account)
 
-        # invalidate cache and ensure it does not raise an error
+        # invalidate cache and ensure it does not raise an error. With several, the newest is returned.
         result = UserProfile.get_cached_object(user=self.admin_user, invalidate=True)
         self.assertIsInstance(result, UserProfile)
         self.assertEqual(result.user, self.admin_user)
-        self.assertEqual(result.account, self.account)
+        self.assertEqual(result.account, user_profile.account)
 
         # subsequent call should hit cache and not raise error
         result = UserProfile.get_cached_object(user=self.admin_user)
         self.assertIsInstance(result, UserProfile)
         self.assertEqual(result.user, self.admin_user)
+        self.assertEqual(result.account, user_profile.account)
+
+        # with the account, it is the user's profile in that account.
+        result = UserProfile.get_cached_object(user=self.admin_user, account=self.account, invalidate=True)
         self.assertEqual(result.account, self.account)
 
         try:
@@ -293,3 +297,5 @@ class TestUserProfileCoverageGaps3(TestAccountMixin):
         # pylint: disable=broad-except
         except Exception:
             self.fail("could not delete new user_profile")
+        # the cache would otherwise return the deleted profile to later tests.
+        UserProfile.get_cached_object(user=self.admin_user, invalidate=True)

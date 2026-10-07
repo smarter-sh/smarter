@@ -1,4 +1,4 @@
-"""Account urls for smarter api"""
+"""Account urls for smarter api."""
 
 from django.urls import path
 
@@ -17,15 +17,15 @@ app_name = namespace
 class AccountAPINamespaces:
     """Namespace for account api urls."""
 
-    account_view = to_snake_case(AccountView)
-    account_list_view = to_snake_case(AccountListView)
-    user_list_view = to_snake_case(UserListView)
-    user_view = to_snake_case(UserView)
-    account_contact_list_view = to_snake_case(AccountContactListView)
-    account_contact_view = to_snake_case(AccountContactView)
-    batch_create_users = to_snake_case(BatchCreateUsersView)
-    user_profile_list_view = to_snake_case(UserProfileListView)
-    user_profile_view = to_snake_case(UserProfileView)
+    account_view = to_snake_case(AccountView.__name__)
+    account_list_view = to_snake_case(AccountListView.__name__)
+    user_list_view = to_snake_case(UserListView.__name__)
+    user_view = to_snake_case(UserView.__name__)
+    account_contact_list_view = to_snake_case(AccountContactListView.__name__)
+    account_contact_view = to_snake_case(AccountContactView.__name__)
+    batch_create_users = to_snake_case(BatchCreateUsersView.__name__)
+    user_profile_list_view = to_snake_case(UserProfileListView.__name__)
+    user_profile_view = to_snake_case(UserProfileView.__name__)
 
 
 urlpatterns = [

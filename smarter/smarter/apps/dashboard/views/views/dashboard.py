@@ -32,10 +32,13 @@ from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect, render
 
+from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
 DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
@@ -60,6 +63,12 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
     # template_path = "dashboard/authenticated.html"
     template_path = "react/dashboard.html"
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{DashboardView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the dashboard page for authenticated users.
@@ -75,35 +84,73 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
         if not is_authenticated_request(request):
             return redirect(reverse("login_view"))
 
-        # pylint: disable=C0415
-        from smarter.apps.dashboard.views.views.api.urls import (
-            DashboardApiReverseNames,
-        )
-        from smarter.apps.dashboard.views.views.urls import (
-            DashboardReverseNames,  # avoid circular import
-        )
+        @cache_results()
+        def _get_context() -> dict[str, dict[str, str]]:
+            # pylint: disable=C0415
+            from smarter.apps.dashboard.views.views.api.charges import (
+                AggregatedChargesPeriod,
+            )
+            from smarter.apps.dashboard.views.views.api.urls import (
+                DashboardApiReverseNames,
+            )
+            from smarter.apps.dashboard.views.views.urls import (
+                DashboardReverseNames,  # avoid circular import
+            )
 
-        context = {
-            "react_dashboard": {
-                "root_id": "smarter-dashboard-root",
-                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "my_resources_api_url": reverse(
-                    DashboardReverseNames.namespace,
-                    DashboardApiReverseNames.namespace,
-                    DashboardApiReverseNames.my_resources,
-                ),
-                "service_health_api_url": reverse(
-                    DashboardReverseNames.namespace,
-                    DashboardApiReverseNames.namespace,
-                    DashboardApiReverseNames.service_health,
-                ),
+            retval = {
+                "react_dashboard": {
+                    "root_id": "smarter-dashboard-root",
+                    "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
+                    "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+                    "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                    "my_resources_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.my_resources,
+                    ),
+                    "service_health_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.service_health,
+                    ),
+                    "budgets_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.budgets,
+                    ),
+                    "activity_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.activity,
+                    ),
+                    "getting_started_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.getting_started,
+                    ),
+                    "quick_actions_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.quick_actions,
+                    ),
+                    "charges_api_url": reverse(
+                        ":".join(
+                            (
+                                DashboardReverseNames.namespace,
+                                DashboardApiReverseNames.namespace,
+                                DashboardApiReverseNames.token_charges,
+                            )
+                        ),
+                        kwargs={"periodicity": AggregatedChargesPeriod.DAY},
+                    ),
+                    "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                    "smarter_request_id": self.generate_smarter_request_id(),
+                }
             }
-        }
-        self.template_path = "react/dashboard.html"
+            logger.debug("%s.get() cached context: %s", self.formatted_class_name, logging.formatted_json(retval))
+            return retval
 
-        logger.debug(
-            "%s.get() Rendering dashboard with context: %s", self.formatted_class_name, logging.formatted_json(context)
-        )
+        self.template_path = "react/dashboard.html"
+        context = _get_context()
+        logger.debug("%s.get()", self.formatted_class_name)
         return render(request, self.template_path, context=context)

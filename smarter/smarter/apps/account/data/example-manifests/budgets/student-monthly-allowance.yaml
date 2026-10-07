@@ -1,0 +1,30 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: student_monthly_allowance
+  description: |
+    An example Budget manifest: a per-user allowance. Each student may spend $10 a month on AI,
+    and $100 in total. When a student reaches a limit, their chat is answered with the message
+    below until the limit renews, or the budget is raised.
+  version: 1.0.0
+  tags:
+    - example
+    - education
+    - user
+  annotations:
+    - smarter.sh/budget/purpose: per-user allowance
+spec:
+  config:
+    unit: cost
+    period: month
+    periodicLimit: 10.00
+    absoluteLimit: 100.00
+    duration: 0
+    action: block
+    warningThreshold: 80
+    message: You have used this month's AI allowance. It renews on the 1st of next month.
+  resources:
+    - kind: User
+      name: student1
+    - kind: User
+      name: student2
