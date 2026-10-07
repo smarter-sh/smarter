@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'version' view"""
+"""Smarter API command-line interface 'version' view."""
 
 import platform
 from http import HTTPStatus
@@ -8,7 +8,7 @@ import requests
 from celery import __version__ as celery_version
 from django import get_version as get_django_version
 from django.http import JsonResponse
-from google.generativeai import __version__ as google_genai_version
+from google.genai import __version__ as google_genai_version
 from Levenshtein import __version__ as levenshtein_version
 from openai.version import VERSION as openai_version
 from pandas.util._print_versions import show_versions as pandas_version
@@ -16,8 +16,8 @@ from pydantic import VERSION as pydantic_version
 from rest_framework import __version__ as rest_framework_version
 
 from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError, CliBaseApiView
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.apps.infrastructure.services import infrastructure
+from smarter.common.conf import smarter_settings
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -26,11 +26,12 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 
 class ApiV1CliVersionApiView(CliBaseApiView):
-    """Smarter API command-line interface 'version' view"""
+    """Smarter API command-line interface 'version' view."""
 
     def cli_version(self):
         """
-        retrieve the version of the smarter-cli by reading the version file
+        Retrieve the version of the smarter-cli by reading the version file.
+
         from the smarter-cli package
         """
         url = "https://raw.githubusercontent.com/smarter-sh/smarter-cli/main/VERSION"
@@ -48,7 +49,7 @@ class ApiV1CliVersionApiView(CliBaseApiView):
                     "api": {
                         "version": smarter_settings.version,
                         "python": {
-                            "botocore": aws_helper.aws.version,
+                            "botocore": infrastructure.provider.sdk_version,
                             "celery": celery_version,
                             "django": get_django_version(),
                             "levenshtein": levenshtein_version,

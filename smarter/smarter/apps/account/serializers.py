@@ -1,18 +1,48 @@
-"""Account serializers for smarter api"""
+"""Account serializers for Smarter API."""
+
+from typing import List
+
+from rest_framework import serializers
 
 from smarter.apps.account.models import (
     Account,
     AccountContact,
-    PaymentMethod,
-    Secret,
+    Budget,
     User,
     UserProfile,
 )
+from smarter.lib import logging
+from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
+logger = logging.getLogger(__name__)
 
-class UserSerializer(SmarterCamelCaseSerializer):
-    """User serializer for smarter api."""
+
+class UserSerializer(MetaDataModelSerializer):
+    """
+    Serializer for the `User` model in the Smarter API.
+
+    This serializer converts Django `User` model instances to and from JSON using camelCase field names,
+    making it suitable for API responses and requests.
+
+    :param id: Integer. The unique identifier for the user.
+    :param username: String. The user's username.
+    :param first_name: String. The user's first name.
+    :param last_name: String. The user's last name.
+    :param email: String. The user's email address.
+    :param is_staff: Boolean. Indicates if the user has staff privileges.
+    :param is_superuser: Boolean. Indicates if the user has superuser privileges.
+
+    .. note::
+
+           All fields listed in ``fields`` are included in serialization. Add more fields to the list if needed.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import UserSerializer
+        serializer = UserSerializer(user_instance)
+        data = serializer.data
+    """
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -29,7 +59,32 @@ class UserSerializer(SmarterCamelCaseSerializer):
 
 
 class UserMiniSerializer(SmarterCamelCaseSerializer):
-    """User serializer for smarter api."""
+    """
+    Serializer for a minimal representation of the `User` model in the Smarter API.
+
+    This serializer is designed for use cases where only essential user information is required,
+    such as listing users or embedding user data in related resources.
+
+    :param username: String. The user's username.
+    :param email: String. The user's email address.
+
+    .. note::
+
+            All fields are read-only and included in the serialized output.
+
+    .. tip::
+
+            Use this serializer for lightweight API responses to reduce payload size.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import UserMiniSerializer
+        serializer = UserMiniSerializer(user_instance)
+        data = serializer.data
+
+    .. seealso::
+        For full user details, use :class:`UserSerializer`.
+    """
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -42,8 +97,30 @@ class UserMiniSerializer(SmarterCamelCaseSerializer):
         read_only_fields = fields
 
 
-class AccountSerializer(SmarterCamelCaseSerializer):
-    """Account serializer for smarter api."""
+class AccountSerializer(MetaDataModelSerializer):
+    """
+    Serializer for the `Account` model in the Smarter API.
+
+    This serializer provides full access to all fields of the `Account` model, making it suitable for
+    detailed account data retrieval and updates via API endpoints.
+
+    :param account_number: String. The unique identifier for the account.
+    :param name: String. The account name.
+    :param ...: Other fields as defined in the `Account` model.
+
+    .. important::
+
+            All fields in the `Account` model are included in serialization and deserialization.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import AccountSerializer
+        serializer = AccountSerializer(account_instance)
+        data = serializer.data
+
+    .. seealso::
+        For lightweight account representations, use :class:`AccountMiniSerializer`.
+    """
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -51,8 +128,69 @@ class AccountSerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
 
+class BudgetSerializer(MetaDataModelSerializer):
+    """
+    Serializer for the :class:`Budget` model, with the number of resources it is attached to, and of those it locks.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import BudgetSerializer
+        data = BudgetSerializer(budget).data
+    """
+
+    resources = serializers.SerializerMethodField()
+    locked = serializers.SerializerMethodField()
+    manifest_url = serializers.SerializerMethodField()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = Budget
+        fields = "__all__"
+
+    def get_resources(self, obj: Budget) -> int:
+        return obj.constraints.filter(is_active=True).count()  # type: ignore[attr-defined]
+
+    def get_manifest_url(self, obj: Budget) -> str:
+        """The URL of the Budget's detail view, which renders its manifest."""
+        # pylint: disable=C0415
+        from django.urls import reverse
+
+        from smarter.apps.account.views.budget.urls import BudgetReverseNames
+
+        return reverse(
+            f"{BudgetReverseNames.namespace}:{BudgetReverseNames.detailview}", kwargs={"hashed_id": obj.hashed_id}
+        )
+
+    def get_locked(self, obj: Budget) -> int:
+        return obj.constraints.filter(is_active=True, locks__isnull=False).distinct().count()  # type: ignore[attr-defined]
+
+
 class AccountMiniSerializer(SmarterCamelCaseSerializer):
-    """Account serializer for smarter api."""
+    """
+    Serializer for a minimal representation of the `Account` model in the Smarter API.
+
+    This serializer is intended for scenarios where only the account number is required, such as embedding
+    account references in related resources or optimizing API payload size.
+
+    :param account_number: String. The unique identifier for the account.
+
+    .. note::
+
+            Only the ``account_number`` field is included in serialization.
+
+    .. tip::
+
+            Use this serializer for nested relationships or summary views.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import AccountMiniSerializer
+        serializer = AccountMiniSerializer(account_instance)
+        data = serializer.data
+
+    .. seealso::
+        For full account details, use :class:`AccountSerializer`.
+    """
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -60,8 +198,55 @@ class AccountMiniSerializer(SmarterCamelCaseSerializer):
         fields = ("account_number",)
 
 
+class ChargeSerializer(SmarterCamelCaseSerializer):
+    """
+    Read-only serializer for the ``Charge`` model.
+
+    This serializer converts :class:`Charge` model instances to and from the
+    JSON representation used by the Smarter API. Field names are automatically
+    converted between Django's ``snake_case`` convention and the API's
+
+    ``camelCase`` convention by the
+
+    :class:`SmarterCamelCaseSerializer` base class.
+
+    This serializer is intended for read operations only. All model fields are
+    exposed, and every field is marked as read-only, preventing creation or
+    modification through this serializer.
+
+    :inherits: SmarterCamelCaseSerializer
+    """
+
+    # pylint: disable=C0115
+    class Meta:
+        model = User
+        fields = ["__all__"]
+        read_only_fields = fields
+
+
 class UserProfileSerializer(SmarterCamelCaseSerializer):
-    """User profile serializer for smarter api."""
+    """
+    Serializer for the `UserProfile` model in the Smarter API.
+
+    This serializer provides a minimal representation of a user profile, including nested user and account data.
+    Use it for endpoints where a summary of user and account relationships is required.
+
+    :param user: Instance of :class:`UserMiniSerializer`. Minimal user information.
+    :param account: Instance of :class:`AccountMiniSerializer`. Minimal account information.
+
+    .. note::
+
+            Only the ``user`` and ``account`` fields are included in serialization.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import UserProfileSerializer
+        serializer = UserProfileSerializer(profile_instance)
+        data = serializer.data
+
+    .. seealso::
+        For more detailed user or account data, use :class:`UserSerializer` or :class:`AccountSerializer`.
+    """
 
     user = UserMiniSerializer()
     account = AccountMiniSerializer()
@@ -75,36 +260,30 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
         )
 
 
-class PaymentMethodSerializer(SmarterCamelCaseSerializer):
-    """Payment method serializer for smarter api."""
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = PaymentMethod
-        fields = "__all__"
-
-
-class SecretSerializer(SmarterCamelCaseSerializer):
-    """Serializer for the Secret model."""
-
-    user_profile = UserProfileSerializer()
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = Secret
-        fields = (
-            "id",
-            "name",
-            "description",
-            "last_accessed",
-            "expires_at",
-            "user_profile",
-        )
-        read_only_fields = fields
-
-
 class AccountContactSerializer(SmarterCamelCaseSerializer):
-    """Serializer for the AccountContact model."""
+    """
+    Serializer for the `AccountContact` model in the Smarter API.
+
+    This serializer exposes all fields of the `AccountContact` model, including a minimal account reference.
+    Use it for endpoints that manage or display account contact information.
+
+    :param account: Instance of :class:`AccountMiniSerializer`. Minimal account information.
+    :param ...: All other fields as defined in the `AccountContact` model.
+
+    .. note::
+
+            All fields are read-only in this serializer.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import AccountContactSerializer
+        serializer = AccountContactSerializer(contact_instance)
+        data = serializer.data
+
+    .. seealso::
+
+            For full account details, use :class:`AccountSerializer`.
+    """
 
     account = AccountMiniSerializer()
 
@@ -112,4 +291,95 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
     class Meta:
         model = AccountContact
         fields = "__all__"
-        read_only_fields = fields
+
+    def get_fields(self):
+        fields = super().get_fields()
+        for field in fields.values():
+            field.read_only = True
+        return fields
+
+
+class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
+    """Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+
+    It also adds ``can_delete``, which is True if the authenticated user may delete the resource
+    now: they have ownership permission for it, and no other resource depends on it. Subclasses
+    set ``Meta.kind`` to the resource's SAM kind, which ``can_delete`` needs to find its broker.
+    Every subclass includes it, whatever its ``Meta.fields``.
+    """
+
+    user_profile = UserProfileSerializer(read_only=True)
+    can_delete = serializers.SerializerMethodField()
+
+    # pylint: disable=missing-class-docstring
+    class Meta(MetaDataModelSerializer.Meta):
+        fields = "__all__"
+        read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
+
+        # mcdaniel apr-2026: this is an abstract base serializer. if i understand this
+        # correctly, the child serializers will override the Meta class and thus this will not be used.
+        # and at any rate, setting the model there it seems to break Sphinx.
+        # ----------------------------------------------------------------------------------------
+        # model = MetaDataModel
+        # abstract = True
+
+    def get_field_names(self, declared_fields, info) -> List[str]:
+        """
+        Return the field names to serialize, always including ``can_delete``.
+
+        DRF omits an inherited declared field from a subclass whose ``Meta.fields`` is a list
+        that does not name it, so ``can_delete`` is added here for every subclass.
+        """
+        field_names = list(super().get_field_names(declared_fields, info))
+        if "can_delete" not in field_names:
+            field_names.append("can_delete")
+        return field_names
+
+    def get_can_delete(self, obj) -> bool:
+        """
+        Return True if the authenticated user may delete the resource now.
+
+        The user can delete the object if a.) they have permission and b.)
+        no dependencies existing on the object based on the SAMBroker
+        enforcement rules.
+
+        The user must have ownership permission for the resource, as in
+        :meth:`MetaDataWithOwnershipModelManager.with_ownership_permission_for`, and no other
+        resource may depend on it, as in :meth:`AbstractBroker.dependencies`.
+
+        .. note::
+
+            This builds a broker, and queries its dependencies, for each resource that the user
+            may delete. Serializing a long list of resources is correspondingly slower.
+
+        :param obj: The resource.
+        :type obj: MetaDataWithOwnershipModel
+        :return: Whether the user may delete the resource, or None if the serializer has no request
+            in its context, or does not know the resource's kind.
+        :rtype: Optional[bool]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        # the serializer's Meta.kind, or the resource's own kind, e.g. a PluginMeta's enum or a ConnectionBase's str.
+        obj_kind = getattr(obj, "kind", None)
+        kind = getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
+        broker_class = Brokers.get_broker(kind) if kind else None
+        if request is None or broker_class is None:
+            return False
+        if not isinstance(user, User):
+            return False
+        if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
+            return False
+        try:
+            broker = broker_class(None, name=obj.name, kind=kind, user_profile=obj.user_profile)
+            return not broker.dependencies()
+        # an incomplete resource, e.g. a plugin without its plugin data, can fail to initialize its broker.
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning(
+                "%s.get_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
+            )
+            return False

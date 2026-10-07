@@ -16,7 +16,6 @@ from smarter.lib.manifest.models import AbstractSAMBase
 
 from .const import MANIFEST_KIND
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
@@ -38,5 +37,4 @@ class SAMPluginCommon(AbstractSAMBase):
     status: Optional[SAMPluginCommonStatus] = Field(
         default=None,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
-        exclude=True,
     )

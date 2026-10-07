@@ -1,0 +1,32 @@
+---
+# Passthrough access to the Mistral AI API, with the platform's API key.
+# Use the Mistral SDK, with server_url="https://<smarter>/api/v1/proxy/mistral/", or the OpenAI
+# SDK, with this Proxy's URL plus v1/ as its base_url.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: mistral
+  description: Passthrough access to the Mistral AI API's chat completions, code completions, embeddings and models.
+  version: 1.0.0
+  tags:
+    - mistral
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://docs.mistral.ai/api/
+spec:
+  provider: mistral
+  apiKey: mistral_api_key
+  baseUrl: https://api.mistral.ai/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - v1/chat/completions
+    - v1/fim/completions
+    - v1/embeddings
+    - v1/moderations
+    - v1/models
+    - v1/models/*
+  timeout: 120
+  isActive: true

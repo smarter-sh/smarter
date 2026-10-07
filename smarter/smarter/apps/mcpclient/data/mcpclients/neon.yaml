@@ -1,0 +1,30 @@
+---
+# Manage Neon serverless Postgres projects, branches and databases.
+# Documentation: https://neon.com/docs/ai/neon-mcp-server
+#
+# Prerequisite: a Smarter Secret named neon_api_key, containing a Neon API key from
+# https://console.neon.tech/app/settings/api-keys.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: neon
+  description: Manage Neon serverless Postgres projects, branches and databases.
+  version: 1.0.0
+  tags:
+    - database
+    - postgres
+    - developer-tools
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://neon.com/docs/ai/neon-mcp-server
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.neon.tech/mcp
+    authType: bearer_token
+    credentials: neon_api_key
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

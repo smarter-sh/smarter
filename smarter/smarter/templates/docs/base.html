@@ -1,12 +1,12 @@
 {% extends 'cms/base.html' %}
-{% load static html_filters %}
+{% load static %}
 
 {% block head %}
   {{ block.super }}
-  <meta property="og:url" content="{{ og_url }}" />
+  <meta property="og:url" content="{{ branding.og_url }}" />
 {% endblock %}
 {% block canonical %}
-  <link rel="canonical" href="{{ canonical }}" />
+  <link rel="canonical" href="{{ branding.canonical }}" />
 {% endblock %}
 
 
@@ -18,7 +18,5 @@
   {% include 'docs/base/sidebar/widget-vscode.html' %}
   {% include 'docs/base/sidebar/widget-npm.html' %}
   {% include 'docs/base/sidebar/widget-pypi.html' %}
-  {% include 'docs/base/sidebar/waitlist.html' %}
-  {% include 'docs/base/sidebar/careers.html' %}
   {% include 'docs/base/sidebar/stay-connected.html' %}
 {% endblock %}

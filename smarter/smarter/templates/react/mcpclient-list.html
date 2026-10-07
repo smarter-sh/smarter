@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_mcpclient_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the mcpclient list
+  see: smarter.apps.mcpclient.templatetags.react_mcpclient_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% mcpclient_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/mcpclient-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ mcpclient_list.root_id }}"
+    django-csrf-cookie-name="{{ mcpclient_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ mcpclient_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ mcpclient_list.cookie_domain }}"
+    smarter-mcpclient-list-api-url="{{ mcpclient_list.mcpclient_list_api_url }}"
+    react-debug-mode="{{ mcpclient_list.react_debug_mode }}"
+    smarter-request-id="{{ mcpclient_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the mcpclient list
+  see: smarter.apps.mcpclient_list.templatetags.react_mcpclient_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% mcpclient_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/mcpclient-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

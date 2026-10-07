@@ -1,0 +1,35 @@
+---
+# Read and manage GitHub repositories, issues and pull requests, with GitHub's official MCP server.
+# Documentation: https://github.com/github/github-mcp-server
+#
+# Prerequisite: a Smarter Secret named github_personal_access_token, containing a GitHub
+# personal access token from https://github.com/settings/personal-access-tokens. A
+# fine-grained, read-only token is recommended. allowedTools limits the LLM to the get,
+# list and search tools, which are read-only.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: github
+  description: Read and manage GitHub repositories, issues and pull requests, with GitHub's official MCP server.
+  version: 1.0.0
+  tags:
+    - github
+    - code
+    - developer-tools
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://github.com/github/github-mcp-server
+spec:
+  config:
+    transport: http
+    endpointUrl: https://api.githubcopilot.com/mcp/
+    authType: bearer_token
+    credentials: github_personal_access_token
+    allowedTools:                # glob patterns
+      - "get_*"
+      - "list_*"
+      - "search_*"
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

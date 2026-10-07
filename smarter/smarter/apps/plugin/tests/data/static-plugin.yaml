@@ -1,0 +1,36 @@
+---
+# A StaticPlugin for the plugin app's high level tests: management
+# commands, views, admin, caching, receivers, signals and tasks.
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  name: test_plugin_app_static_plugin
+  pluginClass: static
+  description: A static plugin for unit testing the plugin app.
+  version: 0.1.0
+  tags:
+    - candy
+    - test
+  annotations:
+    - smarter.sh/plugin-app-test/purpose: unit testing
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - Gobstopper
+      - Wonka Bar
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for unit testing the plugin app.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 256
+  data:
+    staticData:
+      contact:
+        name: Willy Wonka
+        email: ww@wwcf.com
+      couponCodes:
+        - name: 10% off
+          code: 10OFF

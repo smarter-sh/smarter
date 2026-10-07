@@ -3,38 +3,62 @@
 
 from typing import Optional
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_user_for_username,
+    smarter_cached_objects,
+)
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py create_plugin command. This command is used to add plugin examples to a user account.
     """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--username", type=str, required=True, help="The user that will own the new plugin.")
+        parser.add_argument(
+            "--username",
+            type=str,
+            help="The user that will own the new plugin.",
+            default=smarter_cached_objects.smarter_admin.username,
+        )
+        parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
 
     def handle(self, *args, **options):
         """create the plugin."""
+        self.handle_begin()
+
         user_profile: Optional[UserProfile] = None
         username = options["username"]
+        verbose = options["verbose"]
 
         try:
-            user: User = User.objects.get(username=username)
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User {username} does not exist."))
-            return
+            user: Optional[User] = get_cached_user_for_username(username=username)
+            if user is None:
+                raise User.DoesNotExist(f"User with username {username} does not exist.")
+        except User.DoesNotExist as e:
+            self.handle_completed_failure(e, f"User {username} does not exist.")
+            raise ValueError(f"User {username} does not exist.") from e
 
         try:
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
-        except UserProfile.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))  # type: ignore
-            return
+            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+        except UserProfile.DoesNotExist as e:
+            self.handle_completed_failure(e, f"UserProfile for {user} does not exist.")
+            raise ValueError(f"UserProfile for {user} does not exist.") from e
 
-        add_example_plugins(user_profile=user_profile)
+        try:
+            add_example_plugins(user_profile=user_profile, verbose=verbose)
+        # pylint: disable=broad-except
+        except Exception as exc:
+            # pylint: disable=import-outside-toplevel
+            import traceback
+
+            tb = traceback.format_exc()
+            self.handle_completed_failure(exc, f"Stack trace:\n{tb}")
+            raise
+
+        self.handle_completed_success()

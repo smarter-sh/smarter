@@ -1,0 +1,30 @@
+apiVersion: smarter.sh/v1
+kind: Vectorstore
+metadata:
+  name: {name}
+  description: a test Vectorstore manifest
+  version: 1.0.0
+  tags:
+    - test
+  annotations:
+    - smarter.sh/vectorstore/purpose: test
+spec:
+  backend: qdrant
+  hosting: self_hosted
+  index:
+    dimension: 32
+    metric: cosine
+    deletionProtection: false
+  embeddings:
+    provider: {provider}
+    model: {model}
+    chunkSize: 200
+    chunkOverlap: 20
+  selfHosted:
+    storage: {storage}
+    cpu: 100m
+    memory: 256Mi
+  maintenance:
+    snapshots: true
+    snapshotIntervalHours: 24
+    snapshotRetention: 2

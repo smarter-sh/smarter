@@ -1,0 +1,31 @@
+/* Custom CSS for Sphinx Documentation */
+div[class^="literal-block-wrapper"],
+.rst-content .literal-block-wrapper {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Hides the signature for Settings class in Smarter Settings documentation */
+section#smarter-settings dl.class > dt#smarter\.common\.conf\.Settings.sig.sig-object.py {
+  display: none;
+}
+
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.img-bottom-margin {
+  margin-bottom: 2em;
+}
+
+.sphinx-contributors img {
+  border-radius: 50%;
+}
+.sphinx-contributors--avatars .sphinx-contributors_list {
+  gap: 10px;
+}

@@ -11,45 +11,33 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import glob
 import os
+import sys
+
+from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 from .base import *
 
+logger = logging.getLogger(__name__)
 
-logger.info("Loading smarter.settings.local")
+if smarter_settings.developer_mode:
+    # dev only:
+    # Bootstrap theme source files and static assets.
+    django_apps_dir = BASE_DIR / "apps"
+    keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
+    STATICFILES_DIRS.extend(keen_source)
+    STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
+
+    INSTALLED_APPS += ["django_extensions"]
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 
-SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
+cors_ports = ["3000", "5173", "9357"]
+for port in cors_ports:
+    CORS_ALLOWED_ORIGINS.append(f"http://127.0.0.1:{port}")
+    CORS_ALLOWED_ORIGINS.append(f"http://localhost:{port}")
 
-# dev only:
-# Bootstrap theme source files and static assets.
-keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))
-STATICFILES_DIRS.extend(keen_source)
-STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
-
-INSTALLED_APPS += ["django_extensions"]
-
-# if DEBUG and not "test" in sys.argv:
-#     INSTALLED_APPS += [
-#         "debug_toolbar",
-#     ]
-
-#     MIDDLEWARE += [
-#         "debug_toolbar.middleware.DebugToolbarMiddleware",
-#     ]
-
-MIDDLEWARE += [
-    "corsheaders.middleware.CorsMiddleware",
-]
-CORS_ALLOWED_ORIGINS += [
-    "http://127.0.0.1:5173",  # Django
-    "http://127.0.0.1:3000",  # React
-    "http://127.0.0.1:8000",  # Django
-    "http://localhost:5173",
-    "http://localhost:8000",
-    "http://localhost:3000",
-]
 CORS_ALLOWED_ORIGINS.append(f"http://{smarter_settings.environment_cdn_domain}")
 CORS_ALLOWED_ORIGINS.append(f"https://{smarter_settings.environment_cdn_domain}")
 
@@ -63,8 +51,12 @@ for template in TEMPLATES:
         template["OPTIONS"]["context_processors"].append("smarter.apps.dashboard.context_processors.cache_buster")
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
-STRIPE_LIVE_SECRET_KEY = smarter_settings.stripe_live_secret_key
-STRIPE_TEST_SECRET_KEY = smarter_settings.stripe_test_secret_key
+STRIPE_LIVE_SECRET_KEY = (
+    smarter_settings.stripe_live_secret_key.get_secret_value() if smarter_settings.stripe_live_secret_key else ""
+)
+STRIPE_TEST_SECRET_KEY = (
+    smarter_settings.stripe_test_secret_key.get_secret_value() if smarter_settings.stripe_test_secret_key else ""
+)
 STRIPE_LIVE_MODE = False  # Change to True in production
 DJSTRIPE_WEBHOOK_SECRET = (
     "whsec_xxx"  # Get it from the section in the Stripe dashboard where you added the webhook endpoint
@@ -81,26 +73,40 @@ SESSION_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "lax"
 
-logger.info("*" * 80)
-logger.info("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
-logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
-logger.info("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
-logger.info("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
-logger.info("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
-logger.info("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
-logger.info("SMARTER_API_SCHEMA: %s", SMARTER_API_SCHEMA)
-logger.info("SMARTER_ALLOWED_HOSTS: %s", SMARTER_ALLOWED_HOSTS)
-logger.info("SMTP_SENDER: %s", SMTP_SENDER)
-logger.info("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
-logger.info("-" * 80)
-logger.info("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
-logger.info("CSRF_COOKIE_SAMESITE: %s", CSRF_COOKIE_SAMESITE)
-logger.info("CSRF_COOKIE_SECURE: %s", CSRF_COOKIE_SECURE)
-logger.info("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
-logger.info("-" * 80)
-logger.info("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
-logger.info("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
-logger.info("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
-logger.info("SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI)
-logger.info("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
-logger.info("*" * 80)
+environment_name = os.path.basename(__file__).replace(".py", "")
+logger.debug("Loading smarter.settings.%s", environment_name)
+if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
+
+    logger.debug("*" * 80)
+    logger.debug("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
+    logger.debug("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
+    logger.debug("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
+    logger.debug("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
+    logger.debug("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
+    logger.debug("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
+    logger.debug("API_SCHEMA: %s", smarter_settings.api_schema)
+    logger.debug("ALLOWED_HOSTS: %s", smarter_settings.local_hosts)
+    logger.debug("SMTP_SENDER: %s", SMTP_SENDER)
+    logger.debug("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
+    logger.debug("-" * 80)
+    logger.debug("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
+    logger.debug("CSRF_COOKIE_SAMESITE: %s", CSRF_COOKIE_SAMESITE)
+    logger.debug("CSRF_COOKIE_SECURE: %s", CSRF_COOKIE_SECURE)
+    logger.debug("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
+    logger.debug("-" * 80)
+    logger.debug("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
+    logger.debug("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
+    logger.debug("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
+    logger.debug("SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI)
+    logger.debug("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
+    logger.debug("*" * 80)
+
+__all__ = [
+    name
+    for name, value in globals().items()
+    if name.isupper()
+    and not name.startswith("_")
+    and not hasattr(value, "__file__")
+    and not callable(value)
+    and value is not sys.modules[__name__]
+]  # type: ignore[reportUnsupportedDunderAll]

@@ -1,0 +1,29 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: json_code_fence_output
+  description: Removes the Markdown code fence that LLMs often wrap JSON in, for integrations that parse
+    the reply as JSON. The replacement keeps the fenced content, by referring to the pattern's group.
+    It only removes json and untagged fences around the whole reply, so that code in other languages
+    keeps its fence.
+  version: 1.0.0
+  tags:
+  - formatting
+  - json
+  - structured-output
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: output
+    category: formatting
+    strategy: regex
+    pattern: \A\s*```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n?```\s*\Z
+    flags: []
+    action: transform
+    replacement: \1
+    severity: 1
+    priority: 100

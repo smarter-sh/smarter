@@ -1,0 +1,28 @@
+---
+# Search Cloudflare's developer documentation.
+# Documentation: https://github.com/cloudflare/mcp-server-cloudflare
+#
+# This server requires no authentication.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: cloudflare_docs
+  description: Search Cloudflare's developer documentation.
+  version: 1.0.0
+  tags:
+    - documentation
+    - cloudflare
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://github.com/cloudflare/mcp-server-cloudflare
+spec:
+  config:
+    transport: http
+    endpointUrl: https://docs.mcp.cloudflare.com/mcp
+    authType: none
+    allowedTools:
+      - search_cloudflare_documentation
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

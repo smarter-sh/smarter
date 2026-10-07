@@ -1,12 +1,10 @@
-"""Mailchimp API helper functions"""
-
-import logging
+"""Mailchimp API helper functions."""
 
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 
-from smarter.common.conf import settings as smarter_settings
-
+from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +12,7 @@ MAILCHIMP_SERVER = "us3"
 
 
 class MailchimpHelper:
-    """Mailchimp API helper functions"""
+    """Mailchimp API helper functions."""
 
     client = MailchimpMarketing.Client()
     client.set_config({"api_key": smarter_settings.mailchimp_api_key.get_secret_value(), "server": MAILCHIMP_SERVER})
@@ -22,7 +20,7 @@ class MailchimpHelper:
     def ping(self) -> bool:
         try:
             mailchimp_api_response = self.client.ping.get()
-            logger.info("Connected to MailChimp API: %s", mailchimp_api_response)
+            logger.debug("Connected to MailChimp API: %s", mailchimp_api_response)
             return True
         except ApiClientError as error:
             logger.error(
@@ -46,7 +44,7 @@ class MailchimpHelper:
                 smarter_settings.mailchimp_list_id, {"email_address": email_address, "status": "subscribed"}
             )
             if mailchimp_api_response.get("status") == "subscribed":
-                logger.info(
+                logger.debug(
                     "Added %s to list %s, response: %s",
                     email_address,
                     smarter_settings.mailchimp_list_id,

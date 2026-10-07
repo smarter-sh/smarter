@@ -1,0 +1,34 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: profanity_output
+  description: Masks profanity in the LLM's reply, for assistants with a professional or family-friendly
+    audience. Extend keywords to suit your audience.
+  version: 1.0.0
+  tags:
+  - toxicity
+  - profanity
+  - brand-safety
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: output
+    category: toxicity
+    strategy: keyword
+    keywords:
+    - damn
+    - hell
+    - crap
+    - bastard
+    - bullshit
+    - shit
+    - fuck
+    - asshole
+    action: redact
+    replacement: '****'
+    severity: 1
+    priority: 70

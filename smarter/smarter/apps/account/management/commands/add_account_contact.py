@@ -1,14 +1,48 @@
-"""This module is used to add an email address to the Account Contact list."""
+"""
+This module provides a custom Django management command to add an email address to the Account Contact list associated with an Account in the system.
 
-from django.core.management.base import BaseCommand
+Classes
+=======
+Command
+    Handles the logic for adding an account contact via command-line arguments.
+
+Command-line Arguments
+=======================
+--account_number : str, optional
+    The Smarter account number to which the user belongs.
+
+--company_name : str, optional
+    The company name to which the user belongs.
+
+--email : str, optional
+    The email address for the new superuser/account contact.
+
+--username : str, optional
+    The username for the new superuser. If provided, the email will be derived
+    from the associated user profile.
+
+Exceptions
+==========
+SmarterValueError
+    Raised if neither account_number nor company_name is provided, or for
+    invalid operation/state.
+
+Usage Example
+=============
+    python manage.py add_account_contact --account_number=<number> --email=<email>
+    python manage.py add_account_contact --company_name="<name>" --username=<username>
+"""
+
+from typing import Optional
 
 from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
-    """add an email address to the Account Contact list."""
+class Command(SmarterCommand):
+    """Add an email address to the Account Contact list."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -18,25 +52,33 @@ class Command(BaseCommand):
         parser.add_argument("--username", type=str, help="The username for the new superuser")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
+        self.handle_begin()
+
         account_number = options["account_number"]
         company_name = options["company_name"]
         username = options["username"]
         email = options["email"]
 
-        account: Account = None
+        account: Optional[Account] = None
 
         if options["account_number"]:
             try:
                 account = Account.objects.get(account_number=account_number)
-            except Account.DoesNotExist:
-                print(f"Account {account_number} not found.")
+            except Account.DoesNotExist as e:
+                self.handle_completed_failure(
+                    e,
+                    f"Account {account_number} not found.",
+                )
                 return
         elif options["company_name"]:
             try:
                 account = Account.objects.get(company_name=company_name)
-            except Account.DoesNotExist:
-                print(f"Account {company_name} not found.")
+            except Account.DoesNotExist as e:
+                self.handle_completed_failure(
+                    e,
+                    f"Account {company_name} not found.",
+                )
                 return
         else:
             raise SmarterValueError("You must provide either an account number or a company name.")
@@ -51,11 +93,12 @@ class Command(BaseCommand):
         )
 
         if created:
-            print(
-                f"Account Contact {email} added to account {account_contact.account.account_number} {account_contact.account.company_name}."
+            self.handle_completed_success(
+                msg=f"Account Contact {email} added to account {account.account_number} {account.company_name}."
             )
+
         else:
-            print(
-                f"Account Contact {email} already exists for account {account_contact.account.account_number} {account_contact.account.company_name}."
+            self.handle_completed_success(
+                msg=f"Account Contact {email} already exists for account {account_contact.account.account_number} {account_contact.account.company_name}."
             )
         return

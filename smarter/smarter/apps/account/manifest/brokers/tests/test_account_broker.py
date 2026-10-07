@@ -1,0 +1,541 @@
+# pylint: disable=wrong-import-position
+"""Test SAMAccountBroker."""
+
+import os
+from unittest.mock import MagicMock, PropertyMock, patch
+
+from django.http import HttpRequest
+from pydantic_core import ValidationError
+from taggit.managers import TaggableManager, _TaggableManager
+
+from smarter.apps.account.manifest.brokers.account import (
+    SAMAccountBroker,
+    SAMAccountBrokerError,
+)
+from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
+from smarter.apps.account.manifest.models.account.model import SAMAccount
+from smarter.apps.account.manifest.models.account.spec import (
+    SAMAccountSpec,
+    SAMAccountSpecConfig,
+)
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.lib import json, logging
+from smarter.lib.manifest.broker import (
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
+from smarter.lib.manifest.enum import SAMMetadataKeys
+from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+
+logger = logging.getLogger(__name__)
+
+
+class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
+    """
+    Test the Smarter SAMAccountBroker.
+
+    TestSAMBrokerBaseClass provides common setup for SAM broker tests,
+    including SAMLoader and HttpRequest properties.
+    """
+
+    def setUp(self):
+        """
+        Test-level setup.
+
+        Before we delve into the actual unit tests, we need to
+        ensure that our test environment is properly configured and that we
+        can initialize the precursors for testing the SAMAccountBroker.
+        """
+        super().setUp()
+        self._broker_class = SAMAccountBroker
+        self._here = os.path.abspath(os.path.dirname(__file__))
+        self._manifest_filespec = self.get_data_full_filepath("account.yaml")
+
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready."""
+        if not super().ready:
+            return False
+
+        self.assertIsInstance(self.loader, SAMLoader)
+        self.assertIsInstance(self.loader.json_data, dict)
+        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.request, HttpRequest)
+
+        return True
+
+    @property
+    def SAMBrokerClass(self) -> type[SAMAccountBroker]:
+        """Return the SAMAccountBroker class definition for this test."""
+        return SAMAccountBroker
+
+    @property
+    def broker(self) -> SAMAccountBroker:
+        return super().broker  # type: ignore
+
+    @property
+    def kwargs(self) -> dict:
+        """Return default kwargs for broker methods."""
+        if not self.ready:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
+        return {
+            SAMMetadataKeys.NAME.value: self.broker.manifest.metadata.name,
+        }
+
+    def test_setup(self):
+        """Verify that setup initialized the broker correctly."""
+        self.assertTrue(self.ready)
+        self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
+        self.assertIsInstance(self.loader, SAMLoader)
+        self.assertIsInstance(self.loader.json_data, dict)
+        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.request, HttpRequest)
+        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(self.broker, SAMAccountBroker)
+        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(self.broker, SAMAccountBroker)
+        logger.info("%s.test_setup() SAMAccountBroker initialized successfully for testing.", self.formatted_class_name)
+
+    def test_is_valid(self):
+        """Test that the is_valid property returns True."""
+        self.assertTrue(self.broker.is_valid)
+
+    def test_immutability(self):
+        """Test that the broker instance is immutable after initialization."""
+
+        with self.assertRaises(AttributeError):
+            self.broker.kind = "NewKind"
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.name = "NewManifestName"
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.annotations = []
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.tags = []
+
+        # test any field in spec.config
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.companyName = "New Company Name"
+
+        # test any field in status
+        if self.broker.manifest.status:
+            with self.assertRaises(ValidationError):
+                self.broker.manifest.status.adminAccount = None
+
+    def test_ready(self):
+        """Test that the test setup is ready."""
+        self.assertTrue(self.ready)
+
+    def test_sam_broker_initialization(self):
+        """Test that the SAMAccountBroker initializes correctly."""
+        # Verify that our SAM manifest is capable of initializing the SAM Model.
+        metadata = {**self.loader.manifest_metadata}
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        spec = {
+            "config": SAMAccountSpecConfig(**self.loader.manifest_spec["config"]),
+        }
+        SAMAccount(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMAccountMetadata(**metadata),
+            spec=SAMAccountSpec(**spec),
+        )
+
+    def test_broker_initialization(self):
+        """Test that the broker initializes with required properties."""
+        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(broker, SAMAccountBroker)
+        self.assertEqual(broker.kind, "Account")
+        self.assertIsNotNone(broker.ORMModelClass)
+        self.assertEqual(broker.ORMModelClass.__name__, "Account")
+
+    def test_initialization_from_class(self):
+        """Test initialization of SAMAccountBroker from class."""
+        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(broker, SAMAccountBroker)
+        self.assertTrue(broker.ready)
+
+    def test_to_json(self):
+        """Test to_json method returns JSON serializable output."""
+        d = json.loads(json.dumps(self.broker.to_json()))
+        self.assertIsInstance(d, dict)
+
+    def test_manifest_initialization(self):
+        """Test that the manifest property can initialize the broker and model."""
+        broker = self.SAMBrokerClass(self.request, self.broker.manifest)
+        self.assertIsInstance(broker, SAMAccountBroker)
+
+    def test_manifest_model_initialization(self):
+        """Test that the manifest property can initialize a SAMAccount model."""
+        sam_account = SAMAccount(**self.broker.manifest.model_dump())
+        self.assertIsInstance(sam_account, SAMAccount)
+
+    def test_formatted_class_name(self):
+        """Test formatted_class_name returns a string containing SAMAccountBroker."""
+        name = self.broker.formatted_class_name
+        self.assertIsInstance(name, str)
+        self.assertIn("SAMAccountBroker", name)
+
+    def test_kind_property(self):
+        """Test kind property returns 'Account'."""
+        self.assertEqual(self.broker.kind, "Account")
+
+    def test_manifest_property(self):
+        """Test manifest property returns a SAMAccount or None if not ready."""
+        try:
+            _ = self.broker.manifest
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.fail(f"manifest property raised: {e}")
+
+    def test_manifest_to_django_orm(self):
+        """Test manifest_to_django_orm returns a dict."""
+        if self.broker.manifest:
+            orm_dict = self.broker.manifest_to_django_orm()
+            self.assertIsInstance(orm_dict, dict)
+
+    def test_django_orm_to_manifest_dict(self):
+        """Test django_orm_to_manifest_dict returns a dict or raises if manifest is not set."""
+        if self.broker.manifest:
+            manifest_dict = self.broker.django_orm_to_manifest_dict()
+            self.assertIsInstance(manifest_dict, dict)
+
+    def test_example_manifest(self):
+        """
+        Test example_manifest method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.example_manifest(self.request)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_example_manifest(response)
+        self.assertTrue(is_valid_response)
+
+    def test_get(self):
+        """
+        Test get method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.get(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_get(response)
+        self.assertTrue(is_valid_response)
+
+    def test_apply(self):
+        """
+        Test apply method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        # apply() creates the manifest's Account, and UserProfile.admin_for_account() then adds
+        # the platform admin to it. Delete both, or the admin user is left with a second account.
+        account_name = self.broker.manifest.metadata.name
+        if not Account.objects.filter(name=account_name).exists():
+
+            def delete_applied_account():
+                for account in Account.objects.filter(name=account_name):
+                    UserProfile.objects.filter(account=account).delete()
+                    account.delete()
+
+            self.addCleanup(delete_applied_account)
+
+        response = self.broker.apply(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_apply(response)
+        self.assertTrue(is_valid_response)
+
+        # self.broker.manifest.metadata.tags is a list of strings.
+        # verify that account.tags (TaggableManager) contains the same tags.
+        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        django_orm_tags = None
+        if isinstance(self.broker.brokered_account.tags, (TaggableManager, _TaggableManager)):
+            django_orm_tags = (
+                set(self.broker.brokered_account.tags_list) if self.broker.brokered_account.tags else set()
+            )
+        elif isinstance(self.broker.brokered_account.tags, set):
+            django_orm_tags = self.broker.brokered_account.tags
+        else:
+            self.fail(f"account.tags is of unexpected type: {type(self.broker.brokered_account.tags)}")
+        self.assertEqual(manifest_tags, django_orm_tags)
+
+        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
+        # verify that account.annotations (JSONField) contains the same annotations.
+        def sort_annotations(annotations):
+            return sorted(annotations, key=lambda d: sorted(d.items()))
+
+        manifest_annotations = json.dumps(sort_annotations(self.broker.manifest.metadata.annotations or []))
+        account_annotations = json.dumps(sort_annotations(self.broker.brokered_account.annotations or []))
+        self.assertEqual(
+            manifest_annotations,
+            account_annotations,
+            f"Account annotations do not match manifest annotations. manifest: {manifest_annotations}, account: {account_annotations}",
+        )
+
+        self.assertEqual(
+            self.broker.manifest.metadata.name,
+            self.broker.brokered_account.name,
+            f"Account name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, account: {self.broker.brokered_account.name}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.companyName,
+            self.broker.brokered_account.company_name,
+            f"Account company_name does not match manifest companyName. manifest: {self.broker.manifest.spec.config.companyName}, account: {self.broker.brokered_account.company_name}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.address1 or "",
+            self.broker.brokered_account.address1 or "",
+            f"Account address1 does not match manifest address1. manifest: {self.broker.manifest.spec.config.address1}, account: {self.broker.brokered_account.address1}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.address2 or "",
+            self.broker.brokered_account.address2 or "",
+            f"Account address2 does not match manifest address2. manifest: {self.broker.manifest.spec.config.address2}, account: {self.broker.brokered_account.address2}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.city or "",
+            self.broker.brokered_account.city or "",
+            f"Account city does not match manifest city. manifest: {self.broker.manifest.spec.config.city}, account: {self.broker.brokered_account.city}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.state or "",
+            self.broker.brokered_account.state or "",
+            f"Account state does not match manifest state. manifest: {self.broker.manifest.spec.config.state}, account: {self.broker.brokered_account.state}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.postalCode or "",
+            self.broker.brokered_account.postal_code or "",
+            f"Account postal_code does not match manifest postalCode. manifest: {self.broker.manifest.spec.config.postalCode}, account: {self.broker.brokered_account.postal_code}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.country or "",
+            self.broker.brokered_account.country or "",
+            f"Account country does not match manifest country. manifest: {self.broker.manifest.spec.config.country}, account: {self.broker.brokered_account.country}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.phoneNumber or "",
+            self.broker.brokered_account.phone_number or "",
+            f"Account phone_number does not match manifest phoneNumber. manifest: {self.broker.manifest.spec.config.phoneNumber}, account: {self.broker.brokered_account.phone_number}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.timezone or "",
+            self.broker.brokered_account.timezone or "",
+            f"Account timezone does not match manifest timezone. manifest: {self.broker.manifest.spec.config.timezone}, account: {self.broker.brokered_account.timezone}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.currency or "",
+            self.broker.brokered_account.currency or "",
+            f"Account currency does not match manifest currency. manifest: {self.broker.manifest.spec.config.currency}, account: {self.broker.brokered_account.currency}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.language or "",
+            self.broker.brokered_account.language or "",
+            f"Account language does not match manifest language. manifest: {self.broker.manifest.spec.config.language}, account: {self.broker.brokered_account.language}",
+        )
+
+    def test_describe(self):
+        """
+        Stub: test describe method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        response = self.broker.describe(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        logger.info("Describe response: %s", response.content.decode())
+
+    def test_delete(self):
+        """Stub: test delete method."""
+        pass
+
+    def test_deploy(self):
+        """
+        Test deploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.deploy(self.request, **self.kwargs)
+
+    def test_undeploy(self):
+        """
+        Test undeploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        (see user broker test for details)
+        """
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.undeploy(self.request, **self.kwargs)
+
+    def test_chat_not_implemented(self):
+        """Test prompt method raises not implemented."""
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.prompt(self.request, **self.kwargs)
+
+    def test_delete_account_not_found(self):
+        """Test delete method raises not found for missing account."""
+        self.request._body = None  # pylint: disable=protected-access
+        self._broker = self.SAMBrokerClass(self.request)
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.delete(self.request, {"name": "nonexistent-account"})
+
+    def test_describe_account_not_found(self):
+        """Test describe method raises not found for missing account."""
+        request = self.request
+        request._body = None  # type: ignore
+        self._broker = self.SAMBrokerClass(request)
+        # with self.assertRaises(SAMBrokerErrorNotFound):
+        #     self.broker.describe(request, {"name": "nonexistent-account"})
+        self.skipTest(
+            "Skipping test_describe_account_not_found bc of challenges with setupClass and setUp, that always find a way to get the manifest loaded."
+        )
+
+    def test_logs_returns_ok(self):
+        """Stub: test logs method returns ok response."""
+        response = self.broker.logs(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+    def test_invalid_timezone(self):
+        """Test that applying a manifest with an invalid timezone raises an error."""
+        # Modify the manifest to have an invalid timezone
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"
+
+    def test_invalid_currency(self):
+        """Test that applying a manifest with an invalid currency raises an error."""
+        # Modify the manifest to have an invalid currency
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.currency = "INVALID"
+
+    def test_invalid_language(self):
+        """Test that applying a manifest with an invalid language raises an error."""
+        # Modify the manifest to have an invalid language
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.language = "xx-XX"
+
+    def test_invalid_country(self):
+        """Test that applying a manifest with an invalid country raises an error."""
+        # Modify the manifest to have an invalid country
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.country = "XX"
+
+
+class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):
+    """Test the SAMAccountBroker branches that the happy-path tests don't reach."""
+
+    def setUp(self):
+        super().setUp()
+        self._broker_class = SAMAccountBroker
+        self._here = os.path.abspath(os.path.dirname(__file__))
+        self._manifest_filespec = self.get_data_full_filepath("account.yaml")
+
+    @property
+    def broker(self) -> SAMAccountBroker:
+        return super().broker  # type: ignore[return-value]
+
+    def patch_property(self, name: str, value) -> None:
+        patcher = patch.object(SAMAccountBroker, name, new_callable=PropertyMock, return_value=value)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_error_message(self):
+        error = SAMAccountBrokerError(message="x", thing="Account")
+        self.assertEqual(error.get_formatted_err_message, "Smarter API Account Manifest Broker Error")
+
+    def test_without_a_name(self):
+        """Without a name there's no brokered account, nor ORM meta instance."""
+        broker = self.broker
+        broker._brokered_account = None
+        broker._orm_instance = None
+        self.patch_property("name", None)
+        self.assertIsNone(broker.brokered_account)
+        broker.orm_meta_instance_setter()
+
+    def test_orm_meta_instance_setter(self):
+        """The ORM instance is reused, and an account that's missing or can't be read leaves no ORM meta instance."""
+        broker = self.broker
+        orm_instance = MagicMock(spec=Account)
+        broker._orm_instance = orm_instance
+        broker.orm_meta_instance_setter()
+        self.assertIs(broker._orm_meta_instance, orm_instance)
+
+        broker._orm_instance = None
+        self.patch_property("name", "no_such_account")
+        for error in (Account.DoesNotExist, RuntimeError("database down")):
+            with self.subTest(error=error), patch.object(Account, "get_cached_object", side_effect=error):
+                broker.orm_meta_instance_setter()
+                self.assertIsNone(broker._orm_meta_instance)
+
+    def test_conversions_need_a_manifest_and_account(self):
+        broker = self.broker
+        broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
+        with self.assertRaises(SAMAccountBrokerError):
+            _ = broker.manifest
+        broker._manifest = None
+        self.patch_property("brokered_account", None)
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.manifest_to_django_orm()
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            broker.django_orm_to_manifest_dict()
+        self.patch_property("manifest", None)
+        with self.assertRaises(SAMAccountBrokerError):
+            broker.manifest_to_django_orm()
+
+    def test_commands_need_a_superuser(self):
+        """Get, apply and describe need a User, who is a superuser."""
+        broker = self.broker
+        not_superuser = MagicMock(spec=User)
+        not_superuser.is_superuser = False
+        for user in (None, not_superuser):
+            for command in (broker.get, broker.apply, broker.describe):
+                with self.subTest(user=user, command=command.__name__):
+                    with patch.object(SAMAccountBroker, "user", new_callable=PropertyMock, return_value=user):
+                        with self.assertRaises(SAMAccountBrokerError):
+                            command(self.request)
+
+    def test_commands_need_an_account_or_manifest(self):
+        broker = self.broker
+        with patch.object(SAMAccountBroker, "brokered_account", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.get(self.request)
+            with self.assertRaises(SAMBrokerErrorNotFound):
+                broker.describe(self.request)
+            self.assertEqual(broker.dependencies(), [])
+        with patch.object(SAMAccountBroker, "manifest", new_callable=PropertyMock, return_value=None):
+            with self.assertRaises(SAMBrokerErrorNotReady):
+                broker.apply(self.request)
+
+    def test_get_and_describe_failures(self):
+        broker = self.broker
+        with (
+            patch(
+                "smarter.apps.account.manifest.brokers.account.AccountSerializer",
+                side_effect=[MagicMock(), RuntimeError("bad")],
+            ),
+            patch.object(SAMAccountBroker, "get_model_titles", return_value=[]),
+            patch.object(SAMAccountBroker, "brokered_account", new_callable=PropertyMock, return_value=self.account),
+        ):
+            response = broker.get(self.request)
+        self.assertNotEqual(response.status_code, 200)
+        with patch.object(SAMAccountBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("bad")):
+            with self.assertRaises(SAMBrokerError):
+                broker.describe(self.request)

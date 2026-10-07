@@ -1,0 +1,14 @@
+---
+# Keyword arguments for the create_plugin_selector_history task. The
+# receivers and the tasks add user_id / user_profile_id and plugin_id.
+input_text:
+  input_text: Tell me about the Everlasting Gobstopper.
+  search_term: Gobstopper
+  session_key: test-plugin-app-session-key
+messages:
+  search_term: Wonka Bar
+  messages:
+    - role: system
+      content: You are a helpful assistant.
+    - role: user
+      content: How much does a Wonka Bar cost?

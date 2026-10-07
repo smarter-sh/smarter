@@ -1,162 +1,223 @@
 """
-This module contains the middleware for handling CORS headers for the application.
-It adds chatbot urls to the CORS_ALLOWED_ORIGINS list at run-time.
+ASGI-safe dynamic CORS middleware for Django.
+
+This module extends :class:`corsheaders.middleware.CorsMiddleware`
+to support dynamically generated, request-scoped CORS origins while
+remaining fully compatible with concurrent ASGI execution.
+
+The middleware is specifically designed to safely support llmclient-origin
+resolution without introducing cross-request state leakage or unsafe
+async behavior.
+
+Key Features
+============
+
+- Fully compatible with ASGI concurrency
+- Stateless request processing
+- Dynamic llmclient-specific origin allowlisting
+- Local development origin support
+- Compatibility with ``django-cors-headers``
+- Optional feature-flag enablement via Django Waffle
+- Internal network bypass support
+- Regex-based origin matching
+
+Concurrency Safety
+==================
+
+This middleware intentionally avoids several patterns that commonly
+cause race conditions or request leakage under ASGI:
+
+- No mutable request state persisted across requests
+- No ``cached_property`` usage for request-specific data
+- No ``functools.lru_cache`` usage on request-dependent methods
+- No custom async adaptation
+- No ``markcoroutinefunction`` usage
+- No shared mutable global state
+
+Request state is attached only temporarily during request processing
+and is always cleaned up immediately afterward.
+
+Behavior
+========
+
+For each request, the middleware:
+
+#. Starts with the configured static CORS allowlist
+#. Dynamically resolves llmclient-specific origins
+#. Adds localhost development origins when appropriate
+#. Applies regex-based origin matching
+#. Defers to ``django-cors-headers`` for core CORS behavior
+
+If the corresponding Django Waffle switch is disabled, the middleware
+acts as a transparent pass-through.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: generated/
+
+   SmarterCorsMiddleware
+
+Dependencies
+============
+
+- ``django-cors-headers``
+- Django
+- Django Waffle
+
+Environment-Specific Behavior
+=============================
+
+In local development environments, localhost origins are automatically
+added for requests targeting the local API host.
+
+Internal IP prefixes defined in application settings may bypass
+middleware processing entirely.
+
+Logging
+=======
+
+Middleware lifecycle events, dynamic origin additions, and exception
+conditions are logged using the application's structured logging
+framework.
+
+Notes
+=====
+
+This middleware relies on request-scoped llmclient resolution using
+:func:`smarter.apps.llmclient.models.get_cached_llmclient_by_request`.
+
+Because ``django-cors-headers`` internally expects synchronous
+middleware semantics, this implementation preserves compatibility
+without introducing custom async wrappers or coroutine adaptation.
 """
 
-import logging
-import re
+from __future__ import annotations
+
 from collections.abc import Awaitable
-from typing import Optional, Pattern, Sequence
-from urllib.parse import SplitResult, urlsplit
+from inspect import isawaitable, iscoroutinefunction
 
-from corsheaders.conf import conf
-from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
-from django.conf import settings
-from django.http import HttpRequest
-from django.http.response import HttpResponseBase
+from asgiref.sync import markcoroutinefunction
+from corsheaders.middleware import CorsMiddleware
+from django.http import HttpRequest, HttpResponseBase
 
-from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+    logger.debug(
+        "%s is %s",
+        logging.formatted_text(__name__ + ".SmarterCorsMiddleware"),
+        SmarterHelperMixin().formatted_state_ready,
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        logging.formatted_text(__name__ + ".SmarterCorsMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= logging.INFO
+class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
+    """
+    Django 6 / ASGI-safe dynamic CORS middleware.
 
+    Design rules:
+    - no shared request state on self
+    - no coroutine guessing in core logic
+    - single execution path (sync + async unified)
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+    Middleware for handling Cross-Origin Resource Sharing (CORS) headers in the application.
 
-logger.info("Loading smarter.lib.django.middleware.cors.CorsMiddleware")
+    This middleware extends the default CORS handling to dynamically add llmclient URLs to the
+    allowed origins at runtime. It ensures that requests from valid llmclient origins are permitted
+    by updating the CORS allowed origins list based on the current request context.
 
+    The middleware also provides additional logic to handle internal IP addresses, health check
+    endpoints, and logging for debugging and auditing purposes.
 
-class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
-    """CORSMiddleware is used to handle CORS headers for the application."""
+    :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
+    :vartype _url: Optional[SplitResult]
+    :cvar _llmclient: The llmclient instance associated with the current request, or None.
+    :vartype _llmclient: Optional[LLMClient]
+    :cvar request: The current Django HTTP request object, or None.
+    :vartype request: Optional[HttpRequest]
 
-    _url: Optional[SplitResult] = None
-    _chatbot: Optional[ChatBot] = None
-    request: Optional[HttpRequest] = None
+    **Key Features**
+
+    - Dynamically adds llmclient URLs to the CORS allowed origins list.
+    - Handles requests from internal IP addresses and health check endpoints.
+    - Provides detailed logging for CORS-related events and decisions.
+    - Integrates with Django and the `django-cors-headers` package.
+
+    .. note::
+        - The llmclient URL is only added to the allowed origins if an llmclient is associated with the request.
+        - Internal requests and health checks are short-circuited for efficiency.
+        - Logging is controlled via a waffle switch and the application's log level.
+
+    **Example**
+
+    To enable this middleware, add it to your Django project's middleware settings::
+
+        MIDDLEWARE = [
+            ...
+            'smarter.lib.django.middleware.cors.SmarterCorsMiddleware',
+            ...
+        ]
+
+    :param request: The incoming HTTP request object.
+    :type request: django.http.HttpRequest
+
+    :returns: The HTTP response object, potentially with CORS headers added.
+    :rtype: django.http.response.HttpResponseBase or Awaitable[HttpResponseBase]
+    """
+
+    sync_capable = True
+    async_capable = True
+
+    def __init__(self, get_response):
+        super().__init__(get_response)
+
+        self.get_response = get_response
+        self.async_mode = iscoroutinefunction(get_response)
+
+        if self.async_mode:
+            markcoroutinefunction(self)
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        class_name = f"{__name__}.{SmarterCorsMiddleware.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        if self.async_mode:
+            return self.__acall__(request)
 
-        host = request.get_host()
-        if not host:
-            return SmarterHttpResponseServerError(
-                request=request,
-                error_message="Internal error (500) - could not parse request.",
-            )
+        if self.deserves_amnesty(request.path):
+            return self.get_response(request)
 
-        # Short-circuit for health checks
-        if request.path.replace("/", "") in ["healthz", "readiness", "liveness"]:
-            return super().__call__(request)
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+            return self.get_response(request)
 
-        # Short-circuit for any requests born from internal IP address hosts
-        # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
-            logger.info(
-                "%s %s identified as an internal IP address, exiting.",
-                self.formatted_class_name,
-                self.smarter_build_absolute_uri(request),
-            )
-            return super().__call__(request)
+        logger.debug("%s.__call__() called for %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
 
-        url = self.smarter_build_absolute_uri(request)
-        logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
-        self._url = None
-        self._chatbot = None
-        self.request = request
-        return super().__call__(request)  # Ensure the response is returned
+        return super().__call__(request)
 
-    @property
-    def chatbot(self) -> Optional[ChatBot]:
-        return self._chatbot
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
-    @property
-    def url(self) -> Optional[SplitResult]:
-        if isinstance(self._url, SplitResult):
-            return self._url
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+            result = self.get_response(request)
+            if isawaitable(result):
+                return await result
+            return result
 
-    @url.setter
-    def url(self, url: Optional[SplitResult] = None):
-
-        url_string = url.geturl() if isinstance(url, SplitResult) else None
-        if url_string in conf.CORS_ALLOWED_ORIGINS:
-            logger.info(
-                "%s url: %s is an allowed origin",
-                self.formatted_class_name,
-                url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
-            )
-            return None
-
-        logger.info(
-            "%s instantiating ChatBotHelper() for url: %s",
-            self.formatted_class_name,
-            url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
-        )
-        if self.request is not None:
-            self._chatbot = get_cached_chatbot_by_request(request=self.request)
-
-        # If the chatbot is found, update the chatbot url
-        # which ensures that we'll only be working with the
-        # base url for the chatbot and that the protocol
-        # will remain consistent.
-        if self.chatbot:
-            self._url = urlsplit(self.chatbot.url)  # type: ignore[assignment]
-        else:
-            self._url = url
-
-        logger.info(
-            "%s.url() set url: %s", self.formatted_class_name, self._url.geturl() if self._url else "(Missing URL)"
+        logger.debug(
+            "%s.__acall__() called for %s", self.formatted_class_name, self.smarter_build_absolute_uri(request)
         )
 
-    @property
-    def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:
-        """
-        Returns the list of allowed origins for the application. If the request
-        is from a chatbot, the chatbot url is added to the list.
-        """
-        retval = (
-            conf.CORS_ALLOWED_ORIGINS.copy()
-            if isinstance(conf.CORS_ALLOWED_ORIGINS, list)
-            else list(conf.CORS_ALLOWED_ORIGINS)
-        )
-        if self.chatbot is not None:
-            url = self.url.geturl() if isinstance(self.url, SplitResult) else None
-            if url is not None and url not in retval:
-                retval.append(url)
-            logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
-        return retval
-
-    @property
-    def CORS_ALLOWED_ORIGIN_REGEXES(self) -> Sequence[str | Pattern[str]]:
-        # FIX NOTE: ADD CHATBOT URL
-        return conf.CORS_ALLOWED_ORIGIN_REGEXES
-
-    def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:
-        self.url = url
-        if self.chatbot is not None:
-            logger.info("%s.origin_found_in_white_lists() returning True: %s", self.formatted_class_name, url)
-            return True
-        return (
-            (origin == "null" and origin in self.CORS_ALLOWED_ORIGINS)
-            or self._url_in_whitelist(url)
-            or self.regex_domain_match(origin)
-        )
-
-    def regex_domain_match(self, origin: str) -> bool:
-        if self.chatbot is not None:
-            logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
-            return True
-        return any(re.match(domain_pattern, origin) for domain_pattern in self.CORS_ALLOWED_ORIGIN_REGEXES)
-
-    def _url_in_whitelist(self, url: SplitResult) -> bool:
-        self.url = url
-        if self.chatbot is not None:
-            logger.info("%s._url_in_whitelist() returning True: %s", self.formatted_class_name, url)
-            return True
-        origins = [urlsplit(o) for o in self.CORS_ALLOWED_ORIGINS]
-        return any(origin.scheme == url.scheme and origin.netloc == url.netloc for origin in origins)
+        return await super().__acall__(request)

@@ -10,7 +10,6 @@ from smarter.lib.manifest.enum import SAMKeys
 
 from .spec import SAMSqlPluginSpec
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

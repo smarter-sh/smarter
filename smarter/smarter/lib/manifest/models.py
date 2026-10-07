@@ -1,30 +1,96 @@
 """Pydantic models for Smarter API Manifests."""
 
 import abc
+import datetime
+import decimal
 import re
+import uuid
 from logging import getLogger
-from typing import List, Optional
+from typing import List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from django.utils.text import slugify
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    field_validator,
+    model_validator,
+)
 
+from smarter.apps.account.models import (
+    User,
+    UserProfile,
+    get_resolved_user,
+    is_authenticated_user,
+)
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
-from smarter.common.utils import camel_to_snake
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.utils import to_snake_case
+from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
-
 logger = getLogger(__name__)
+logger_prefix = formatted_text(__name__)
+
+VALID_ANNOTATION_VALUE_TYPES_SET = (
+    str,
+    int,
+    float,
+    bool,
+    datetime.date,
+    datetime.datetime,
+    decimal.Decimal,
+    uuid.UUID,
+    bytes,
+    list,
+    dict,
+)
+"""Types allowed for annotation values in manifest metadata."""
+AnnotationValueType = Union[
+    str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict
+]
 
 
 class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     """Smarter API Base Pydantic Model."""
+
+    _user: Optional[User] = PrivateAttr(default=None)
+    _user_profile: Optional[UserProfile] = PrivateAttr(default=None)
 
     model_config = ConfigDict(
         from_attributes=True,  # allow model to be initialized from class attributes
         arbitrary_types_allowed=True,  # allow Field attributed to be created from custom class types
         frozen=True,  # models are read-only
     )
+
+    def __init__(self, **data):
+        """Add support for passing a 'user' argument when initializing the model, which will be stored in a private attribute."""
+        user_profile = data.pop("user_profile", None)
+        user = data.pop("user", None)
+        super().__init__(**data)
+        if isinstance(user_profile, UserProfile):
+            self._user_profile = user_profile
+            logger.debug(
+                "%s initialized with user_profile: %s", logger_prefix + f".{self.__class__.__name__}", user_profile
+            )
+            self._user = user_profile.user
+            logger.debug("%s user set from user_profile: %s", logger_prefix + f".{self.__class__.__name__}", self._user)
+        elif user is not None:
+            user = get_resolved_user(user)
+            if is_authenticated_user(user):  # type: ignore
+                self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+                if isinstance(self._user_profile, UserProfile):
+                    logger.debug(
+                        "%s initialized with user: %s, resolved user_profile: %s",
+                        logger_prefix + f".{self.__class__.__name__}",
+                        user,
+                        self._user_profile,
+                    )
+                    self._user = self._user_profile.user
+                    logger.debug("%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user)
 
     @model_validator(mode="before")
     def coerce_none_strings(cls, data):
@@ -34,27 +100,70 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
                     data[k] = None
         return data
 
+    @property
+    def user(self) -> Optional[User]:
+        """Get the user associated with this manifest, if any."""
+        return self._user
+
+    @property
+    def user_profile(self) -> Optional[UserProfile]:
+        """Get the user profile associated with this manifest, if any."""
+        return self._user_profile
+
 
 class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
-    """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
+    """
+    Abstract base class for manifest metadata in the Smarter API.
+
+    This class defines the required structure and validation logic for metadata associated with
+    Smarter API manifests. It is designed to be subclassed by concrete manifest metadata classes,
+    which may extend or customize the metadata fields as needed for specific resource types.
+
+    The ``AbstractSAMMetadataBase`` enforces strong typing and validation for core metadata fields,
+    such as resource name, description, version, tags, and annotations. It ensures that all metadata
+    adheres to expected formats and constraints, promoting consistency and reliability across all
+    manifest definitions.
+
+    Subclasses should inherit from this class to implement metadata for their specific manifest
+    types. This approach encourages code reuse, enforces validation, and provides a unified
+    interface for working with manifest metadata throughout the Smarter API ecosystem.
+
+    .. note::
+
+        This class is abstract and should not be instantiated directly. Instead, create subclasses
+        that define any additional fields or validation required for your manifest's metadata.
+    """
 
     name: str = Field(..., description="The camelCase name of the manifest resource")
-    description: str = Field(
+    description: Optional[str] = Field(
         ..., description="The description for this resource. Be brief. Keep it under 255 characters."
     )
-    version: str = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
+    version: Optional[str] = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
     tags: Optional[List[str]] = Field(
         default_factory=list,
-        description="The tags of the manifest. These are fully functional but are not currently used. Example: ['tag1', 'tag2']",
+        description="The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
     )
-    annotations: Optional[List[str]] = Field(
+    annotations: Optional[List[dict[str, AnnotationValueType]]] = Field(
         default_factory=list,
-        description="The manifest annotations. These are fully functional but are not currently used.",
+        description="""The manifest annotations. Used for storing arbitrary metadata as
+            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The
+            key should be a valid url-friendly string. The value accepts
+            multi-line string values (YAML block scalars) and various scalar types including
+            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.
+            """,
     )
 
     @field_validator("name")
     def validate_name(cls, v) -> str:
-        if v in [None, ""]:
+        """
+        Validates the ``name`` field for a manifest.
+
+        Ensures the value is a string, present, and meets all constraints. Raises if not a string.
+        """
+        if not isinstance(v, str):
+            raise SAMValidationError(f"Manifest 'name' must be a string, got {type(v)}.")
+        v = v.strip()
+        if v == "":
             raise SAMValidationError("Missing required key name")
         if len(v) > 50:
             raise SAMValidationError("Name must be less than 50 characters")
@@ -62,27 +171,61 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
             raise SAMValidationError(
                 f"Invalid name: {v}. Ensure that you do not include characters that are not URL friendly."
             )
+        slugified = str(slugify(v, allow_unicode=False)).replace("-", "_")
+        if slugified != v:
+            logger.warning(
+                "%s.name '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
+                logger_prefix + f".{cls.__name__}",
+                v,
+                slugified,
+            )
+            v = slugified
         if not SmarterValidator.is_valid_snake_case(v):
-            snake_case_name = camel_to_snake(v)
+            snake_case_name = to_snake_case(v)
             logger.warning(
                 "%s.name '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
-                cls.__name__,
+                logger_prefix + f".{cls.__name__}",
                 v,
                 snake_case_name,
             )
             v = snake_case_name
+        # Final guarantee: always return a string
+        if not isinstance(v, str):
+            raise SAMValidationError(f"Manifest 'name' must be a string after processing, got {type(v)}.")
         return v
 
     @field_validator("description")
-    def validate_description(cls, v) -> str:
-        if v in [None, ""]:
-            raise SAMValidationError("Missing required key description")
-        return v
+    def validate_description(cls, v) -> Optional[str]:
+        """
+        Validates the ``description`` field for a manifest.
+
+        This method ensures that the ``description`` attribute is present. If the value is missing,
+        a ``SAMValidationError`` is raised.
+
+        :param v: The value of the ``description`` field to validate.
+        :type v: str
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing.
+        :return: The validated ``description`` string.
+        :rtype: str
+        """
+        return v.strip() if isinstance(v, str) and v.strip() != "" else None
 
     @field_validator("version")
-    def validate_version(cls, v) -> str:
+    def validate_version(cls, v) -> Optional[str]:
+        """
+        Validates the ``version`` field for a manifest.
+
+        This method ensures that the ``version`` attribute is present and follows semantic versioning
+        rules. If the value is missing or invalid, a ``SAMValidationError`` is raised
+
+        :param v: The value of the ``version`` field to validate.
+        :type v: str
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing or invalid.
+        :return: The validated ``version`` string.
+        :rtype: str
+        """
         if v in [None, ""]:
-            raise SAMValidationError("Missing required key version")
+            return None
         if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, v):
             raise SAMValidationError(
                 f"Invalid semantic version. Expected semantic version (ie '1.0.0-alpha') but got {v}"
@@ -91,9 +234,22 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
 
     @field_validator("tags")
     def validate_tags(cls, v) -> Optional[List[str]]:
+        """
+        Validates the ``tags`` field for a manifest.
+
+        This method ensures that each tag in the ``tags`` list adheres to URL-friendly character
+        rules. If any tag is invalid, a ``SAMValidationError`` is raised.
+
+        :param v: The value of the ``tags`` field to validate.
+        :type v: Optional[List[str]]
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If any tag is invalid.
+        :return: The validated list of tags.
+        :rtype: Optional[List[str]]
+        """
         if v is None:
             return v
         if isinstance(v, list):
+            v = [str(tag).strip() for tag in v]
             for tag in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, tag):
                     raise SAMValidationError(
@@ -101,35 +257,150 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
                     )
         return v
 
-    @field_validator("annotations")
-    def validate_annotations(cls, v) -> Optional[List[str]]:
+    @field_validator("annotations", mode="before")
+    def coerce_annotations_to_list(cls, v):
+        """
+        Pre-validator to coerce stringified JSON lists to Python lists for annotations.
+
+        This ensures that if the input is a string (e.g., '[{"key": "value"}]'),
+        it is parsed as a list before type validation.
+        """
         if v is None:
             return v
-        if isinstance(v, list):
-            for annotation in v:
-                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, annotation):
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except Exception as e:
+                raise SAMValidationError(f"Annotations field could not be parsed as JSON: {e}") from e
+        return v
+
+    @field_validator("annotations")
+    def validate_annotations(cls, v) -> Optional[List[dict[str, AnnotationValueType]]]:
+        """
+        Validates the ``annotations`` field for a manifest.
+
+        Accepts a list of dicts, where each dict can be a single key-value pair or a flat dict with multiple key-value pairs.
+        Supports multi-line string values (YAML block scalars).
+        Ensures each annotation key is URL-friendly and each value is a string or scalar (including multi-line strings).
+        Raises SAMValidationError if invalid.
+
+        :param v: The value of the ``annotations`` field to validate.
+        :type v: Optional[List[dict[str, Any]]]
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If any annotation is invalid.
+        :return: The validated list of annotations.
+        :rtype: Optional[List[dict[str, Any]]]
+        """
+        if v is None:
+            return v
+
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except Exception as e:
+                raise SAMValidationError(f"Annotations {v} could not be parsed as JSON: {e}") from e
+        if not isinstance(v, list):
+            raise SAMValidationError(f"Annotations {v} must be a list of dictionaries.")
+        for annotation in v:
+            if not isinstance(annotation, dict):
+                raise SAMValidationError(
+                    f"Each annotation must be a dictionary, got {type(annotation)}: {annotation} in {v}"
+                )
+            for key, value in annotation.items():
+                # Key must be URL-friendly
+                if not re.match(SmarterValidator.VALID_URL_FRIENDLY_STRING, str(key)):
                     raise SAMValidationError(
-                        f"Invalid annotation: {annotation}. Ensure that you do not include characters that are not URL friendly."
+                        f"Invalid annotation key: {key} found in {v}. Ensure that you do not include characters that are not URL friendly."
                     )
+                # Accept string, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict, or None as value
+                allowed_types = VALID_ANNOTATION_VALUE_TYPES_SET
+                if not isinstance(value, allowed_types) and value is not None:
+                    raise SAMValidationError(
+                        f"Invalid annotation value type for key '{key}': {type(value)} found in {v}. Must be a string, int, float, bool, date, datetime, Decimal, UUID, bytes, list, dict, or None."
+                    )
+                # If string, allow multi-line (YAML block scalar) and comma-separated values
+                if isinstance(value, str):
+                    # Allow any string, but optionally check for length or forbidden characters
+                    if len(value) > 2048:
+                        raise SAMValidationError(
+                            f"Annotation value for key '{key}' is too long (max 2048 chars) found in {v}."
+                        )
         return v
 
 
 class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
-    """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
+    """Pydantic Spec base class.
+
+    Expected to be subclassed by specific manifest classes.
+    """
+
+
+class SAMDependency(SmarterBasePydanticModel):
+    """A resource that depends on the resource that a manifest describes."""
+
+    kind: str = Field(
+        ...,
+        description="kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+    )
+
+    name: str = Field(
+        ...,
+        description="name[String]: The name of the resource that depends on this resource. Read only.",
+    )
 
 
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
-    """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
+    """Pydantic Status base class.
+
+    Expected to be subclassed by specific manifest classes.
+    """
+
+    recordLocator: str = Field(
+        ...,
+        description="recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+    )
+
+    created: datetime.datetime = Field(
+        ...,
+        description="The date in which this resource was created. Read only.",
+    )
+
+    modified: datetime.datetime = Field(
+        ...,
+        description="The date in which this resource was most recently changed. Read only.",
+    )
+
+    dependencies: Optional[List[SAMDependency]] = Field(
+        default=None,
+        description=(
+            "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop "
+            "referring to it, before it can be deleted. Lists only the resources that you can read. Read only."
+        ),
+    )
 
 
 class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
     """
-    Pydantic Smarter API Manifest ("SAM") base class. This is a base class
-    for all Smarter API manifests. It provides methods for validating the
-    manifest data against a strongly-typed specification, and for accessing
-    the manifest data in a structured way. It is designed to be subclassed by
-    specific manifest classes that implement the specific manifest data and
-    methods for that manifest.
+    Abstract base class for all Smarter API Manifest (SAM) models.
+
+    This class serves as the foundational Pydantic model for representing Smarter API manifests.
+    It is intended to be subclassed by concrete manifest classes that define specific resource types
+    within the Smarter API ecosystem.
+
+    The ``AbstractSAMBase`` class provides a strongly-typed structure for manifest data, ensuring
+    that all manifests adhere to a consistent schema and validation logic. It includes built-in
+    validation for core manifest fields and supports structured access to manifest data.
+
+    Subclasses should implement or extend this class to define the specific data and behaviors
+    required for their respective manifest types. This design promotes code reuse, type safety,
+    and robust validation across all Smarter API manifests.
+
+    The class also provides methods for validating manifest data and for representing the manifest
+    as a string for debugging or logging purposes.
+
+    .. note::
+
+        Do not instantiate this class directly. Instead, create subclasses that define the
+        required fields and any additional validation or methods specific to your manifest type.
     """
 
     apiVersion: str = Field(
@@ -145,21 +416,44 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
     status: Optional[AbstractSAMStatusBase] = Field(
         default=None,
         description="status[obj]: Optional. Read-only. The run-time state of the resource described by the manifest.",
-        exclude=True,
     )
 
     @field_validator("apiVersion")
     def validate_apiVersion(cls, v) -> str:
-        """Validate apiVersion"""
+        """
+        Validates the ``apiVersion`` field for a manifest.
+
+        This method ensures that the ``apiVersion`` attribute is present and matches one of the
+        supported API versions defined in ``SmarterApiVersions``. If the value is missing or invalid,
+        a ``SAMValidationError`` is raised.
+
+        :param v: The value of the ``apiVersion`` field to validate.
+        :type v: str
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing or not a supported version.
+        :return: The validated ``apiVersion`` string.
+        :rtype: str
+        """
         if v in [None, ""]:
             raise SAMValidationError("Missing required manifest key: apiVersion")
-        if v not in SmarterApiVersions.all_values():
-            raise SAMValidationError(f"Invalid version. Must be one of {SmarterApiVersions.all_values()} but got {v}")
+        if v not in SmarterApiVersions.all():
+            raise SAMValidationError(f"Invalid version. Must be one of {SmarterApiVersions.all()} but got {v}")
         return v
 
     @field_validator("metadata")
     def validate_metadata(cls, v) -> AbstractSAMMetadataBase:
-        """Validate metadata"""
+        """
+        Validates the ``metadata`` field for a manifest.
+
+        This method ensures that the ``metadata`` attribute is an instance of
+        :class:`AbstractSAMMetadataBase`. If a dictionary is provided, it will be coerced
+        into an ``AbstractSAMMetadataBase`` object. This guarantees that the manifest metadata
+        is always properly structured and validated.
+
+        :param v: The value of the ``metadata`` field to validate.
+        :type v: dict or AbstractSAMMetadataBase
+        :return: The validated ``metadata`` object.
+        :rtype: AbstractSAMMetadataBase
+        """
         if isinstance(v, dict):
             return AbstractSAMMetadataBase(**v)
         return v

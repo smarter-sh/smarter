@@ -2,11 +2,13 @@
 """Django REST framework views for the API admin app."""
 
 import yaml
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.manifest import ApiV1CliManifestApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.utils import to_snake_case
 
 from .base import DocsBaseView
 
@@ -15,12 +17,14 @@ from .base import DocsBaseView
 # Public Access Views
 # ------------------------------------------------------------------------------
 class DocsExampleManifestBaseView(DocsBaseView):
-    """JSON Schema base view"""
+    """JSON Schema base view."""
 
     template_path = "docs/manifest.html"
-    kind: SAMKinds = None
+    kind: SAMKinds
+    file_name: str
 
     def get(self, request, *args, **kwargs):
+        """For Waggtail docs generation, we want the HTML page with the YAML output embedded."""
         view = ApiV1CliManifestApiView.as_view()
         json_response = self.get_brokered_json_response(
             ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.manifest, view, request, *args, **kwargs
@@ -28,88 +32,166 @@ class DocsExampleManifestBaseView(DocsBaseView):
 
         yaml_response = yaml.dump(json_response, default_flow_style=False)
         self.context["manifest"] = yaml_response
+        if not isinstance(self.template_path, str):
+            raise ValueError("Template path must be a string")
         return render(request, self.template_path, context=self.context)
+
+    def post(self, request, *args, **kwargs):
+        """For Sphinx docs generation, we just want the raw YAML output rather than the HTML page."""
+        self.file_name = str(self.kind)
+        self.file_name = str(to_snake_case(self.file_name)) + ".yaml"
+
+        view = ApiV1CliManifestApiView.as_view()
+        json_response = self.get_brokered_json_response(
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.manifest, view, request, *args, **kwargs
+        )
+
+        yaml_response = yaml.dump(json_response, default_flow_style=False)
+        return HttpResponse(yaml_response, content_type="text/plain")
 
 
 class DocsExampleManifestAccountView(DocsExampleManifestBaseView):
-    """Account JSON Schema view"""
+    """Account JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
 class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
-    """ApiConnection JSON Schema view"""
+    """ApiConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.API_CONNECTION)
 
 
 class DocsExampleManifestApiView(DocsExampleManifestBaseView):
-    """Plugin Api JSON Schema view"""
+    """Plugin Api JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
-    """ApiKey JSON Schema view"""
+    """ApiKey JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
-class DocsExampleManifestChatView(DocsExampleManifestBaseView):
-    """Chat JSON Schema view"""
+class DocsExampleManifestPromptView(DocsExampleManifestBaseView):
+    """Prompt JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHAT)
-
-
-class DocsExampleManifestChatHistoryView(DocsExampleManifestBaseView):
-    """ChatHistory JSON Schema view"""
-
-    kind = SAMKinds(SAMKinds.CHAT_HISTORY)
+    kind = SAMKinds(SAMKinds.PROMPT)
 
 
-class DocsExampleManifestChatPluginUsageView(DocsExampleManifestBaseView):
-    """ChatPluginUsage JSON Schema view"""
+class DocsExampleManifestBudgetView(DocsExampleManifestBaseView):
+    """Budget example manifest view."""
 
-    kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
-
-
-class DocsExampleManifestChatToolCallView(DocsExampleManifestBaseView):
-    """ChatToolCall JSON Schema view"""
-
-    kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
+    kind = SAMKinds(SAMKinds.BUDGET)
 
 
-class DocsExampleManifestChatBotView(DocsExampleManifestBaseView):
-    """ChatBot JSON Schema view"""
+class DocsExampleManifestCustomDomainView(DocsExampleManifestBaseView):
+    """CustomDomain example manifest view."""
 
-    kind = SAMKinds(SAMKinds.CHATBOT)
+    kind = SAMKinds(SAMKinds.CUSTOM_DOMAIN)
+
+
+class DocsExampleManifestGuardrailView(DocsExampleManifestBaseView):
+    """Guardrail JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.GUARDRAIL)
+
+
+class DocsExampleManifestLLMClientView(DocsExampleManifestBaseView):
+    """LLMClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_CLIENT)
+
+
+class DocsExampleManifestLLMHostView(DocsExampleManifestBaseView):
+    """LLMHost JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST)
+
+
+class DocsExampleManifestLLMHostComputeView(DocsExampleManifestBaseView):
+    """LLMHostCompute example manifest view."""
+
+    kind = SAMKinds(SAMKinds.LLM_HOST_COMPUTE)
+
+
+class DocsExampleManifestProxyView(DocsExampleManifestBaseView):
+    """Proxy example manifest view."""
+
+    kind = SAMKinds(SAMKinds.PROXY)
+
+
+class DocsExampleManifestMCPClientView(DocsExampleManifestBaseView):
+    """MCPClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.MCP_CLIENT)
+
+
+class DocsExampleManifestOrchestratorView(DocsExampleManifestBaseView):
+    """Orchestrator JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.ORCHESTRATOR)
 
 
 class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
-    """Plugin JSON Schema view"""
+    """Plugin JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.STATIC_PLUGIN)
 
 
 class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):
-    """SqlConnection JSON Schema view"""
+    """SqlConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
 
 
+class DocsExampleManifestSkillView(DocsExampleManifestBaseView):
+    """Plugin Skill JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
+
+
+class DocsExampleManifestWebsearchView(DocsExampleManifestBaseView):
+    """Plugin Websearch example manifest view.
+
+    Experimental.
+    """
+
+    kind = SAMKinds(SAMKinds.WEBSEARCH_PLUGIN)
+
+
 class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
-    """Plugin Sql JSON Schema view"""
+    """Plugin Sql JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsExampleManifestUserView(DocsExampleManifestBaseView):
-    """User JSON Schema view"""
+    """User JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.USER)
 
 
 class DocsExampleManifestSecretView(DocsExampleManifestBaseView):
-    """Secret JSON Schema view"""
+    """Secret JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SECRET)
+
+
+class DocsExampleManifestProviderView(DocsExampleManifestBaseView):
+    """Provider JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.PROVIDER)
+
+
+class DocsExampleManifestVectorsearchView(DocsExampleManifestBaseView):
+    """Vectorsearch JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSEARCH)
+
+
+class DocsExampleManifestVectorstoreView(DocsExampleManifestBaseView):
+    """Vectorstore JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSTORE)

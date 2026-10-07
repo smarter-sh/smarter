@@ -1,25 +1,124 @@
 apiVersion: v2
-appVersion: 0.10.20
+appVersion: 9999.9999.9999.dev9999
 name: smarter
-description: A Helm chart for deploying Querium Smarter API and web console
+description: >
+  Smarter is a declarative, cloud-native platform for authoring and
+  securely managing and orchestrating AI resources at scale.
+  Empower domain experts to build AI workflows using intuitive YAML manifests,
+  with no coding required. Smarter standardizes database and API integrations
+  for RAG and advanced function calling, with built-in resource limits,
+  logging, and moderation controls. Deploy to the cloud, on premise or to
+  Docker Desktop. Extensible via REST API, web console, CLI, and SDKs for
+  Python, NPM, and more. Provider-agnostic, supporting LLMs from DeepSeek,
+  Google AI, Meta AI, OpenAI, and others. Includes enterprise features like
+  credentials management, team workgroups, RBAC, cost codes, and audit logging.
+  Open source with public documentation and rapid self-onboarding.
 type: application
-version: 0.7.3
+version: 9999.9999.9999.dev9999
+kubeVersion: ">=1.30.0-0"
 home: https://smarter.sh
 sources:
-  - https://github.com/QueriumCorp/smarter
+  - https://github.com/smarter-sh/smarter
 maintainers:
   - name: Lawrence McDaniel
-    email: lawrence@querium.com
-  - name: Kent Fuka
-    email: kent@querium.com
+    email: lpm0073@gmail.com
+    website: https://lawrencemcdaniel.com
 dependencies:
-  - name: redis
-    version: 20.6.1
+  - name: grafana
+    version: 12.1.8
     repository: https://charts.bitnami.com/bitnami
-icon: https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png
+    condition: grafana.enabled
+  - name: loki
+    version: 7.3.0
+    repository: https://grafana.github.io/helm-charts
+    condition: loki.enabled
+  - name: mysql
+    version: 14.0.3
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+  - name: mariadb
+    version: 28.1.1
+    repository: https://charts.bitnami.com/bitnami
+    condition: mariadb.enabled
+  - name: prometheus
+    version: 2.1.23
+    repository: https://charts.bitnami.com/bitnami
+    condition: prometheus.enabled
+  - name: redis
+    version: 28.3.1
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+icon: https://cdn.smarter.sh/images/logo/smarter-crop.png
 keywords:
-  - Querium
+  - ai
+  - llm
+  - prompt-engineering
+  - classroom
+  - education
+  - rag
+  - function-calling
+  - sql
+  - orchestration
+  - resource-management
+  - kubernetes
+  - web-console
+  - api
+  - mlops
+  - workflow
+  - automation
+  - integration
+  - remote-data
   - smarter
-  - plugins
 annotations:
-  "helm.sh/chart": "smarter-0.7.3"
+  helm.sh/chart: smarter-9999.9999.9999.dev9999
+  artifacthub.io/changes: |
+    - kind: changed
+      description: bump to app version 9999.9999.9999.dev9999
+  artifacthub.io/license: AGPL-3.0
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: smarter
+      image: mcdaniel0073/smarter:v9999.9999.9999.dev9999
+      platforms:
+        - linux/amd64
+        - linux/arm64
+  artifacthub.io/links: |
+    - name: Website
+      url: https://smarter.sh
+    - name: GitHub
+      url: https://github.com/smarter-sh/smarter
+    - name: Chart Source
+      url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
+    - name: Documentation
+      url: https://docs.smarter.sh/
+    - name: Support
+      url: https://github.com/smarter-sh/smarter/issues
+  artifacthub.io/maintainers: |
+    - name: Lawrence McDaniel
+      email: lpm0073@gmail.com
+  artifacthub.io/operator: "false"
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/bitnami/redis
+    - url: https://artifacthub.io/packages/helm/bitnami/grafana
+    - url: https://artifacthub.io/packages/helm/grafana/loki
+    - url: https://artifacthub.io/packages/helm/bitnami/mysql
+    - url: https://artifacthub.io/packages/helm/bitnami/mariadb
+    - url: https://artifacthub.io/packages/helm/bitnami/prometheus
+  artifacthub.io/screenshots: |
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-1.png
+      caption: Smarter's YAML-first configuration simplifies AI Workflow orchestration
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-2.png
+      caption: Smarter’s Prompt Engineer Workbench gives you a live, transparent view into every part of a conversation
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-3.png
+      caption: Smarter is LLM Provider agnostic
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-4.png
+      caption: Smarter Plugins let any model call SQL, APIs, static data, or secure Python
+  artifacthub.io.signKey: |
+      fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D
+      url: https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
+      key: |
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEd36XqSY/+wHzvq5sPFCNQk08oMxD
+        3uAi/F4SjX9fbu2zjBuBTwSqd64D8Oi3LrHqNsO0J0RHiWI/qvZoU8poaA==
+        -----END PUBLIC KEY-----

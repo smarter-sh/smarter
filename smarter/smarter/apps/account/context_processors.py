@@ -1,12 +1,13 @@
 """Django context processors for account/base.html"""
 
-import logging
-
 from django.conf import settings
 
-from .models import UserProfile
-from .utils import get_cached_user_profile
+from smarter.apps.account.urls import AccountReverseNames
+from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 
+from .models import UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -24,19 +25,20 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "forgot_password_url": "/dashboard/account/password-reset-request/",
+            "forgot_password_url": reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST),
         }
     }
-    if request.user.is_authenticated:
+    if is_authenticated_request(request):
         try:
-            user_profile = get_cached_user_profile(user=request.user)
+            user_profile = UserProfile.get_cached_object(user=request.user)
         except UserProfile.DoesNotExist:
+            user_profile = None
             logger.warning("UserProfile.DoesNotExist: user_profile not found for user %s", request.user)
 
         account_authenticated_context = {
             "account_authenticated": {
                 "user": request.user if request and hasattr(request, "user") else None,
-                "account": user_profile.account if user_profile else None,
+                "account": user_profile.cached_account if user_profile else None,
             }
         }
         return {**account_context, **account_authentication_context, **account_authenticated_context}

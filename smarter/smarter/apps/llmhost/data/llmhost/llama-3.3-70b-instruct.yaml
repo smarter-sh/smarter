@@ -1,0 +1,56 @@
+---
+# Meta Llama 3.3 70B Instruct: GPT-4 class quality, sharded across 4 GPUs with tensor parallelism.
+# The weights are about 140 GB, so the model volume is 200Gi, and the server has 90 minutes to start.
+# Gated: accept the license, and store a Hugging Face token in the Secret huggingface_token.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: llama_3_3_70b_instruct
+  description: Meta Llama 3.3 70B Instruct, served by vLLM across four NVIDIA L40S GPUs.
+  version: 1.0.0
+  tags:
+  - llama
+  - meta
+  - vllm
+  - chat
+  - large
+  - tool-calling
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct
+spec:
+  model:
+    source: huggingface
+    repository: meta-llama/Llama-3.3-70B-Instruct
+    revision: main
+    servedName: llama-3.3-70b-instruct
+    tokenSecret: huggingface_token
+    license: llama3.3
+    architecture: llama
+    parameterCount: 70553706496
+    contextWindow: 131072
+    quantization: bf16
+    capabilities:
+      functionCalling: true
+  engine:
+    name: vllm
+    contextLength: 32768
+    tensorParallelSize: 4
+    gpuMemoryUtilization: 0.92
+    args:
+    - --enable-auto-tool-choice
+    - --tool-call-parser
+    - llama3_json
+  compute: gpu_l40s_4x
+  resources:
+    gpuCount: 4
+    vramRequiredGb: 177
+    cpu: '10'
+    memory: 174Gi
+    shmSize: 32Gi
+  storage:
+    size: 200Gi
+  healthCheck:
+    startupTimeoutSeconds: 5400

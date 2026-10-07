@@ -12,10 +12,21 @@ metadata:
     - chocolate
     - Gobstoppers
     - Willy Wonka
+  annotations:
+    - smarter.sh/everlasting-gobstopper/plugin-display-name: Everlasting Gobstopper Plugin
+    - smarter.sh/everlasting-gobstopper/plugin-category: Candy Plugins
+    - smarter.sh/everlasting-gobstopper/usefulness: provides information about a fictional candy
+    - smarter.sh/everlasting-gobstopper/plugin-purpose: |
+        This plugin provides additional information about the Everlasting Gobstopper
+        candy created by Willy Wonka Chocolate Factory. It includes details on
+        sales promotions, coupon codes, company contact information, and
+        biographical background on the company founder, Willy Wonka.
+    - smarter.sh/everlasting-gobstopper/release-date: 2024-06-15
+    - smarter.sh/everlasting-gobstopper/environments: production, staging, development
 spec:
   selector:
     directive: search_terms
-    # Complete search terms that will trigger the chatbot to use your customized system prompt.
+    # Complete search terms that will trigger the llmclient to use your customized system prompt.
     searchTerms:
       - Gobstopper
       - Gobstoppers
@@ -25,11 +36,10 @@ spec:
     provider: openai
     systemRole: >
       You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.
-    model: gpt-4-turbo
+    model: gpt-6-luna
     temperature: 1.0
     maxTokens: 256
   data:
-    description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
     # ---------------------------------------------------------------------------
     # Information provided to the OpenAI "Function Calling" algorithm to help it generate custom responses.
     # ---------------------------------------------------------------------------

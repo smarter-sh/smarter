@@ -170,13 +170,13 @@
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-2024-07-18",
+            "id": "gpt-4-turbo-2024-07-18",
             "object": "model",
             "created": 1721172717,
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini",
+            "id": "gpt-4-turbo",
             "object": "model",
             "created": 1721172741,
             "owned_by": "system"
@@ -266,13 +266,13 @@
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-realtime-preview-2024-12-17",
+            "id": "gpt-4-turbo-realtime-preview-2024-12-17",
             "object": "model",
             "created": 1734112601,
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-audio-preview-2024-12-17",
+            "id": "gpt-4-turbo-audio-preview-2024-12-17",
             "object": "model",
             "created": 1734115920,
             "owned_by": "system"
@@ -290,13 +290,13 @@
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-realtime-preview",
+            "id": "gpt-4-turbo-realtime-preview",
             "object": "model",
             "created": 1734387380,
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-audio-preview",
+            "id": "gpt-4-turbo-audio-preview",
             "object": "model",
             "created": 1734387424,
             "owned_by": "system"
@@ -344,13 +344,13 @@
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-search-preview-2025-03-11",
+            "id": "gpt-4-turbo-search-preview-2025-03-11",
             "object": "model",
             "created": 1741390858,
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-search-preview",
+            "id": "gpt-4-turbo-search-preview",
             "object": "model",
             "created": 1741391161,
             "owned_by": "system"
@@ -362,7 +362,7 @@
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-transcribe",
+            "id": "gpt-4-turbo-transcribe",
             "object": "model",
             "created": 1742068596,
             "owned_by": "system"
@@ -380,7 +380,7 @@
             "owned_by": "system"
         },
         {
-            "id": "gpt-4o-mini-tts",
+            "id": "gpt-4-turbo-tts",
             "object": "model",
             "created": 1742403959,
             "owned_by": "system"

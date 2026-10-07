@@ -1,0 +1,853 @@
+# pylint: disable=W0718
+"""Smarter API Provider Manifest handler."""
+
+import datetime
+from typing import List, Optional, Type
+
+from django.http import HttpRequest
+
+from smarter.apps.account.utils import valid_resource_owners_for_user
+from smarter.apps.provider.manifest.enum import SAMProviderSpecKeys
+from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
+from smarter.apps.provider.manifest.models.provider.metadata import SAMProviderMetadata
+from smarter.apps.provider.manifest.models.provider.model import SAMProvider
+from smarter.apps.provider.manifest.models.provider.spec import (
+    SAMProviderSpec,
+    SAMProviderSpecProvider,
+)
+from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
+from smarter.apps.provider.models import Provider
+from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.apps.secret.models import Secret
+from smarter.common.utils.decorators import camel_case
+from smarter.lib import logging
+from smarter.lib.django import waffle
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+    memoized_dependencies,
+)
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
+
+
+# pylint: disable=W0613
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+MAX_RESULTS = 1000
+"""
+Maximum number of results to return for list operations.
+
+This limit helps prevent performance issues and excessive data retrieval.
+
+TODO: Make this configurable via smarter_settings.
+"""
+
+
+class SAMProviderBrokerError(SAMBrokerError):
+    """Base exception for Smarter API Provider Broker handling."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter API Provider Manifest Broker Error"
+
+
+class SAMProviderBroker(AbstractBroker):
+    """
+    Smarter API Provider Manifest Broker.
+
+    This class manages the lifecycle of Smarter API Provider manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
+    **Responsibilities:**
+      - Load and validate Smarter API YAML Provider manifests.
+      - Parse manifests and initialize the corresponding Pydantic model (`SAMProvider`).
+      - Interact with Django ORM models representing provider manifests.
+      - Create, update, delete, and query Django ORM models.
+      - Transform Django ORM models into Pydantic models for serialization/deserialization.
+
+    **Example Usage:**
+
+      .. code-block:: python
+
+         broker = SAMProviderBroker()
+         manifest = broker.manifest
+         if manifest:
+             print(manifest.apiVersion, manifest.kind)
+
+    .. warning::
+
+       If the manifest loader or manifest metadata is missing, the manifest may not be initialized and `None` may be returned.
+
+    .. seealso::
+
+       - `SAMProvider` (Pydantic model)
+       - Django ORM models: `smarter.apps.provider.models.Provider`
+
+    .. todo::
+
+       Make the maximum results for list operations configurable via `smarter_settings`.
+    """
+
+    # override the base abstract manifest model with the Provider model
+    _manifest: Optional[SAMProvider] = None
+    _pydantic_model: Type[SAMProvider] = SAMProvider
+    _provider: Optional[Provider] = None
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        logger.info(msg)
+
+    @property
+    def provider(self) -> Optional[Provider]:
+        """
+        Return the Provider associated with this broker, if available.
+
+        :returns: The `Provider` instance, or `None` if not set.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           provider = broker.provider
+           if provider:
+               print(f"Provider name: {provider.name}")
+
+        See Also:
+
+           - :class:`smarter.apps.provider.models.Provider`
+        """
+        if self._provider is None and self.name and self.account:
+            self._provider = Provider.objects.filter(user_profile__account=self.account, name=self.name).first()
+        return self._provider
+
+    @property
+    def logo_url(self) -> Optional[str]:
+        """
+        Return the Provider's logo as a URL, if it has one.
+
+        A manifest may set the logo to an absolute URL, which the ImageField
+        stores as its file name. Return that as-is: ``logo.url`` would
+        prefix it with the storage backend's base URL, which yields a bogus
+        CDN URL under S3 and an invalid relative path under FileSystemStorage.
+
+        :returns: The logo URL, or `None` if the Provider has no logo.
+        """
+        if not self.provider or not self.provider.logo:
+            return None
+        if SmarterValidator.is_valid_url(self.provider.logo.name):
+            return self.provider.logo.name
+        return self.provider.logo.url
+
+    def manifest_to_django_orm(self) -> dict:
+        """
+        Convert the Smarter API Provider manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
+
+        :returns: A dictionary with keys and values formatted for Django ORM model assignment.
+
+        .. note::
+
+           Field names are automatically converted from camelCase to snake_case to match Django conventions.
+
+        .. attention::
+
+           The returned dictionary may include fields that are not editable in the Django ORM model. Ensure you filter out read-only fields before saving.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           orm_data = broker.manifest_to_django_orm()
+           for key, value in orm_data.items():
+               setattr(user, key, value)
+           user.save()
+
+        See Also:
+
+           - :meth:`django_orm_to_manifest_dict`
+           - :class:`smarter.apps.account.models.Provider`
+        """
+        metadata = super().manifest_to_django_orm()
+        dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
+        dump = self.to_snake_case(dump)
+        if not isinstance(self.manifest, SAMProvider):
+            raise SAMProviderBrokerError(
+                f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}", thing=self.kind
+            )
+        if not isinstance(dump, dict):
+            raise SAMProviderBrokerError(
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
+            )
+        # the metadata name, rather than the spec's, identifies the Provider, as with every other kind.
+        return {**dump, **metadata}
+
+    @camel_case()
+    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+        """
+        Convert a Django ORM `Provider` model instance into a dictionary formatted for Pydantic manifest consumption.
+
+        :returns: A dictionary representing the Smarter API Provider manifest, or `None` if the user is not set.
+
+        .. note::
+
+           Field names are automatically converted from snake_case to camelCase for compatibility with Pydantic models.
+
+        :raises: :class:`SAMProviderBrokerError` if `self.user` is not set.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           manifest_dict = broker.django_orm_to_manifest_dict()
+           if manifest_dict:
+               print(manifest_dict["spec"]["config"]["email"])
+
+        See Also:
+
+           - :meth:`manifest_to_django_orm`
+           - :class:`SAMProvider`
+           - :class:`smarter.apps.account.models.Provider`
+           - :class:`smarter.lib.manifest.enum.SamKeys`
+           - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
+           - :class:`smarter.lib.manifest.enumSAMProviderSpecKeys`
+        """
+        if not isinstance(self.provider, Provider):
+            raise SAMProviderBrokerError(f"Expected type Provider but got {type(self.provider)}", thing=self.kind)
+
+        metadata = SAMProviderMetadata(
+            name=self.provider.name,
+            description=self.provider.description,
+            version="1.0.0",
+            tags=["example", "provider", "smarter-api"],
+            annotations=[
+                {"smarter.sh/provider": self.provider.name},
+                {"smarter.sh/created_by": "smarter_provider_broker"},
+            ],
+        )
+        spec_provider = SAMProviderSpecProvider(
+            name=self.provider.name,
+            description=self.provider.description,
+            base_url=self.provider.base_url,
+            api_key="*****" if self.provider.api_key else None,
+            connectivity_test_path=self.provider.connectivity_test_path,
+            logo=self.logo_url,
+            website_url=self.provider.website_url,
+            contact_email=self.provider.contact_email,
+            support_email=self.provider.support_email,
+            terms_of_service_url=self.provider.terms_of_service_url,
+            docs_url=self.provider.docs_url,
+            privacy_policy_url=self.provider.privacy_policy_url,
+        )
+        spec = SAMProviderSpec(provider=spec_provider)
+        status = SAMProviderStatus(
+            recordLocator=self.provider.record_locator,
+            created=self.provider.created_at,
+            modified=self.provider.updated_at,
+            is_active=self.provider.is_active,
+            is_flagged=self.provider.is_flagged,
+            is_deprecated=self.provider.is_deprecated,
+            is_suspended=self.provider.is_suspended,
+            is_verified=self.provider.is_verified,
+            ownership_requested=self.provider.ownership_requested if self.provider.ownership_requested else None,
+            contact_email_verified=self.provider.contact_email_verified,
+            support_email_verified=self.provider.support_email_verified,
+            tos_accepted_at=self.provider.tos_accepted_at,
+            tos_accepted_by=self.provider.tos_accepted_by.email if self.provider.tos_accepted_by else None,
+            can_activate=True,
+        )
+
+        provider_model = SAMProvider(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+
+        return provider_model.model_dump()
+
+    ###########################################################################
+    # Smarter abstract property implementations
+    ###########################################################################
+    @property
+    def SerializerClass(self) -> Type[ProviderSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API Provider.
+
+        :returns: The `ProviderSerializer` class.
+        :rtype: Type[ModelSerializer]
+        """
+        return ProviderSerializer
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Return a formatted class name string for logging and diagnostics.
+
+        :returns: A string representing the fully qualified class name, including the parent class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           logger.debug(broker.formatted_class_name)
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.{SAMProviderBroker.__name__}[{id(self)}]"
+
+    @property
+    def kind(self) -> str:
+        """
+        Return the manifest kind string for the Smarter API Provider.
+
+        :returns: The manifest kind as a string (e.g., ``"Provider"``).
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           if broker.kind == "Provider":
+               print("This broker handles Provider manifests.")
+        """
+        return MANIFEST_KIND
+
+    @property
+    def manifest(self) -> Optional[SAMProvider]:
+        """
+        Get the manifest for the Smarter API Provider as a Pydantic model.
+
+        :returns: A `SAMProvider` Pydantic model instance representing the Smarter API Provider manifest, or None if not initialized.
+
+        .. note::
+
+           The top-level manifest model (`SAMProvider`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+
+        .. warning::
+
+           If the manifest loader or manifest metadata is missing, the manifest will not be initialized and None may be returned.
+
+        **Example usage**::
+
+            # Access the manifest property
+            manifest = broker.manifest
+            if manifest:
+                print(manifest.apiVersion, manifest.kind)
+        """
+        if self._manifest:
+            if not isinstance(self._manifest, SAMProvider):
+                raise SAMProviderBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
+            return self._manifest
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMProvider(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMProviderMetadata(**self.loader.manifest_metadata),
+                spec=SAMProviderSpec(**self.loader.manifest_spec),
+            )
+        return self._manifest
+
+    ###########################################################################
+    # Smarter manifest abstract method implementations
+    ###########################################################################
+    @property
+    def ORMMetaModelClass(self) -> Type[Provider]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[Provider]
+        """
+        return Provider
+
+    @property
+    def ORMModelClass(self) -> Type[Provider]:
+        """
+        Return the model class associated with the Smarter API Provider.
+
+        :returns: The `Provider` model class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           model_cls = broker.ORMModelClass
+           provider_instance = model_cls.objects.get(name="example_provider")
+
+        .. seealso::
+
+           - :class:`smarter.apps.provider.models.Provider`
+        """
+        return Provider
+
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Django model class associated with the Smarter API Provider manifest.
+
+        :returns: The Django `Provider` model class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           user_cls = broker.ORMModelClass
+           user = user_cls.objects.get(username="example_user")
+
+        .. seealso::
+
+           - :class:`smarter.apps.account.models.Provider`
+           - :meth:`manifest_to_django_orm`
+           - :meth:`django_orm_to_manifest_dict`
+           - :class:`smarter.apps.SamKeys`
+           - :class:`SAMMetadataKeys`
+           - :class:`SAMProviderSpecKeys`
+        """
+        command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
+
+        metadata = SAMProviderMetadata(
+            name="acme_llm_company",
+            description="an example provider manifest for the Smarter API Provider",
+            version="1.0.0",
+            tags=["example", "provider", "smarter-api"],
+            annotations=[
+                {"smarter.sh/provider": "example_provider"},
+                {"smarter.sh/created_by": "smarter_provider_broker"},
+            ],
+        )
+        spec_provider = SAMProviderSpecProvider(
+            name="acme_llm_company",
+            description="Leading provider of innovative LLM solutions.",
+            base_url="https://api.acme-llm.com",
+            api_key="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            connectivity_test_path="https://api.acme-llm.com/api/v1/ping",
+            logo="https://www.acme-llm.com/assets/logo.png",
+            website_url="https://www.acme-llm.com",
+            contact_email="contact@acme-llm.com",
+            support_email="support@acme-llm.com",
+            terms_of_service_url="https://www.acme-llm.com/terms",
+            docs_url="https://docs.acme-llm.com",
+            privacy_policy_url="https://www.acme-llm.com/privacy",
+        )
+        spec = SAMProviderSpec(provider=spec_provider)
+        status = SAMProviderStatus(
+            recordLocator="example_record_locator",
+            created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+            modified=datetime.datetime(2024, 1, 15, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            is_active=True,
+            is_flagged=False,
+            is_deprecated=False,
+            is_suspended=False,
+            is_verified=True,
+            ownership_requested="ceo@acme-llm.com",
+            contact_email_verified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
+            support_email_verified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
+            tos_accepted_at=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+            tos_accepted_by="ceo@acme-llm.com",
+            can_activate=True,
+        )
+
+        provider_model = SAMProvider(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+
+        return self.json_response_ok(command=command, data=provider_model.model_dump())
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve Smarter API Provider manifests as a list of serialized Pydantic models.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments, including optional filter parameters.
+
+        :returns: A `SmarterJournaledJsonResponse` containing a list of user manifests and metadata.
+
+        .. note::
+
+           If a provider name is provided in `kwargs`, only manifests for that provider are returned; otherwise, all manifests for the account are listed.
+
+        :raises: :class:`SAMProviderBrokerError`
+           If serialization fails for any provider
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           response = broker.get(request, name="openai")
+           print(response.data["spec"]["items"])
+
+        See Also:
+
+           - :class:`smarter.apps.provider.serializers.ProviderSerializer`
+           - :meth:`django_orm_to_manifest_dict`
+           - :class:`smarter.lib.manifest.response.SmarterJournaledJsonResponse`
+           - :class:`smarter.lib.manifest.enum.SamKeys`
+           - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
+           - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
+           - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
+        """
+        command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
+        name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
+        data = []
+        if name:
+            providers = Provider.objects.filter(user_profile__account=self.account, name=name)
+        else:
+            providers = Provider.objects.filter(user_profile__account=self.account)
+        providers = [provider for provider in providers]
+
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
+        for provider in providers:
+            if provider.user_profile in valid_resource_owners_for_user(self.user_profile):
+                try:
+                    self._provider = provider
+                    model_dump = self.django_orm_to_manifest_dict()
+                    if not model_dump:
+                        raise SAMProviderBrokerError(
+                            f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
+                        )
+                    data.append(model_dump)
+                except Exception as e:
+                    raise SAMProviderBrokerError(
+                        f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
+                    ) from e
+        data = {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            SCLIResponseGet.KWARGS.value: self.params,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ProviderSerializer()),
+                SCLIResponseGetData.ITEMS.value: data,
+            },
+        }
+        return self.json_response_ok(command=command, data=data)
+
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Apply the manifest data to the Django ORM `Provider` model and persist changes to the database.
+
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :returns: A `SmarterJournaledJsonResponse` containing the updated user manifest.
+
+        .. note::
+
+           This method copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
+
+        .. attention::
+
+           Fields in the manifest that are not editable (e.g., ``id``, ``date_joined``, ``last_login``, ``username``, ``is_superuser``) are removed before saving to the ORM model.
+
+        :raises: :class:`SAMProviderBrokerError`
+           If the user instance is not set or is invalid
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           response = broker.apply(request)
+           print(response.data)
+
+        See Also:
+
+           - :meth:`manifest_to_django_orm`
+           - :class:`smarter.apps.provider.models.Provider`
+           - :class:`SAMProviderBrokerError`
+        """
+        command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
+        if not self.user:
+            raise SAMProviderBrokerError(
+                message="User must be set to apply provider manifest.",
+                thing=self.kind,
+                command=command,
+            )
+        if not self.user.is_staff:
+            raise SAMProviderBrokerError(
+                message="Only account admins can apply provider manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
+        readonly_fields = [
+            "id",
+            "account",
+            "owner",
+            SAMProviderSpecKeys.STATUS.value,
+            SAMProviderSpecKeys.IS_ACTIVE.value,
+            SAMProviderSpecKeys.IS_VERIFIED.value,
+            SAMProviderSpecKeys.IS_FEATURED.value,
+            SAMProviderSpecKeys.IS_DEPRECATED.value,
+            SAMProviderSpecKeys.IS_FLAGGED.value,
+            SAMProviderSpecKeys.IS_SUSPENDED.value,
+            SAMProviderSpecKeys.TOS_ACCEPTED_AT.value,
+            SAMProviderSpecKeys.TOS_ACCEPTED_BY.value,
+            "tags",
+        ]
+        data = self.manifest_to_django_orm()
+        # the manifest's api key is the name of a Secret, rather than the Secret itself.
+        api_key_name = data.pop(SAMProviderSpecKeys.API_KEY.value, None)
+        api_key: Optional[Secret] = None
+        if api_key_name:
+            try:
+                api_key = Secret.get_cached_object(invalidate=True, name=api_key_name, user_profile=self.user_profile)
+            except Secret.DoesNotExist as e:
+                raise SAMBrokerErrorNotFound(
+                    f"Failed to apply {self.kind} {self.name}. Secret {api_key_name} not found",
+                    thing=self.kind,
+                    command=command,
+                ) from e
+        try:
+            tags = data.get("tags", [])
+            for field in readonly_fields:
+                data.pop(field, None)
+            if self.provider is None:
+                self._provider = Provider(user_profile=self.user_profile)
+            for key, value in data.items():
+                setattr(self.provider, key, value)
+            if not isinstance(self.provider, Provider):
+                raise SAMProviderBrokerError("Provider is not set", thing=self.kind, command=command)
+            if api_key:
+                self.provider.api_key = api_key
+            self.provider.save()
+            self.provider.tags.set(tags)
+        except Exception as e:
+            raise SAMProviderBrokerError(
+                f"Failed to apply {self.kind} {self.provider if isinstance(self.provider, Provider) else None}",
+                thing=self.kind,
+                command=command,
+            ) from e
+        self.cache_invalidations()
+        return self.json_response_ok(command=command, data=self.to_json())
+
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        .. attention::
+
+            this is not implemented for the Smarter API Provider manifest.
+
+        :raises: :class:`SAMBrokerErrorNotImplemented`
+            Always raised to indicate that the prompt operation is not implemented for this manifest type.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :returns: Never returns; always raises an exception.
+        """
+        command = self.prompt.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
+
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Describe the Smarter API Provider manifest by retrieving the corresponding Django ORM `Provider` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments, including the username to describe.
+
+        :returns: A `SmarterJournaledJsonResponse` containing the user manifest data.
+
+        :raises: :class:`SAMBrokerErrorNotFound`
+           If the provider with the specified name does not exist or is not associated with the account.
+        :raises: :class:`SAMProviderBrokerError`
+           If serialization fails for the provider.
+        """
+        command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
+
+        name = self.name or kwargs.get("name")
+        try:
+            self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
+        except Provider.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
+            ) from e
+
+        if self.provider:
+            try:
+                data = self.django_orm_to_manifest_dict()
+                return self.json_response_ok(command=command, data=data)
+            except Exception as e:
+                raise SAMProviderBrokerError(
+                    f"Failed to describe {self.kind} {self.provider.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
+
+    @memoized_dependencies
+    def dependencies(self) -> List[AbstractBroker]:
+        """Return brokers for the resources that use this Provider.
+
+        Proxies and Vectorstores refer to the Provider itself. LLMClients, plugins and Guardrails
+        refer to a Provider by name, so they only depend on this Provider when no other active
+        Provider has the same name.
+
+        :return: A broker for each Proxy, Vectorstore, LLMClient, plugin and Guardrail that uses this Provider.
+        :rtype: List[AbstractBroker]
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.guardrail.models import Guardrail
+        from smarter.apps.llmclient.models import LLMClient
+        from smarter.apps.plugin.models import PluginMeta, PluginPrompt
+        from smarter.apps.proxy.models import Proxy
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+
+        provider = self.provider
+        if not provider and self.name and self.user_profile:
+            provider = Provider.objects.filter(user_profile=self.user_profile, name=self.name).first()
+        if not provider:
+            return []
+        retval = self.dependency_brokers(SAMKinds.PROXY.value, Proxy.objects.filter(provider=provider))
+        retval += self.dependency_brokers(
+            SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(embeddings_provider=provider)
+        )
+        name = provider.name
+        if Provider.objects.filter(name__iexact=name, is_active=True).exclude(pk=provider.pk).exists():
+            return retval
+        retval += self.dependency_brokers(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(provider__iexact=name))
+        plugins = PluginMeta.objects.filter(
+            id__in=PluginPrompt.objects.filter(provider__iexact=name).values("plugin_id")
+        )
+        for plugin_meta in plugins:
+            retval.append(self.dependency_broker(plugin_meta.kind.value, plugin_meta))
+        guardrails = [
+            guardrail
+            for guardrail in Guardrail.objects.all()
+            if str((guardrail.config or {}).get("provider") or "").lower() == name.lower()
+        ]
+        retval += self.dependency_brokers(SAMKinds.GUARDRAIL.value, guardrails)
+        return retval
+
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the Smarter API Provider manifest by removing the corresponding Django ORM `Provider` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments, including the username to delete.
+
+        :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
+
+        :raises: :class:`SAMBrokerErrorNotFound`
+           If the provider with the specified name does not exist.
+        :raises: :class:`SAMProviderBrokerError`
+           If deletion fails for the provider.
+        """
+        command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
+
+        if not self.user:
+            raise SAMProviderBrokerError(
+                message="User must be set to delete provider.",
+                thing=self.kind,
+                command=command,
+            )
+        if not self.user.is_staff:
+            raise SAMProviderBrokerError(
+                message="Only account admins can delete providers.",
+                thing=self.kind,
+                command=command,
+            )
+
+        if not isinstance(self.params, dict):
+            raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
+        name = self.params.get("name")
+        try:
+            provider = Provider.objects.get(user_profile=self.user_profile, name=name)
+        except Provider.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command
+            ) from e
+
+        self._provider = provider
+        self.verify_no_dependencies(command)
+        if provider:
+            try:
+                provider.delete()
+                return self.json_response_ok(command=command, data={})
+            except Exception as e:
+                raise SAMProviderBrokerError(
+                    f"Failed to delete {self.kind} {provider.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
+
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Deploy the Smarter API Provider manifest by activating the corresponding Django ORM `Provider` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :raises: :class:`SAMProviderBrokerError`
+           If deployment fails for the user.
+
+        :returns: A `SmarterJournaledJsonResponse` indicating the result of the deploy operation.
+        """
+        command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
+
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Undeploy the Smarter API Provider manifest by deactivating the corresponding Django ORM `Provider` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :raises: :class:`SAMProviderBrokerError`
+           If undeployment fails for the user.
+        """
+        command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
+
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve logs related to the Smarter API Provider manifest.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :returns: A `SmarterJournaledJsonResponse` containing log data.
+        """
+        command = self.logs.__name__
+        command = SmarterJournalCliCommands(command)
+        data = {}
+        return self.json_response_ok(command=command, data=data)

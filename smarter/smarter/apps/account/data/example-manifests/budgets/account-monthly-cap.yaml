@@ -1,0 +1,27 @@
+apiVersion: smarter.sh/v1
+kind: Budget
+metadata:
+  name: account_monthly_cap
+  description: |
+    An example Budget manifest: an organization's monthly cost constraint. Everything that is
+    charged to the account, LLM prompts, Proxy requests and LLMHost compute alike, counts
+    towards $1,000 a month.
+  version: 1.0.0
+  tags:
+    - example
+    - account
+  annotations:
+    - smarter.sh/budget/purpose: organizational monthly cost constraint
+spec:
+  config:
+    unit: cost
+    period: month
+    periodicLimit: 1000.00
+    absoluteLimit: 0
+    duration: 0
+    action: block
+    warningThreshold: 75
+    message: Your organization has reached its monthly AI budget. Please contact your account administrator.
+  resources:
+    - kind: Account
+      name: "3141-5926-5359"

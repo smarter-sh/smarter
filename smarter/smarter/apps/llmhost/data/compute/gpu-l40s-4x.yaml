@@ -1,0 +1,30 @@
+---
+# Four NVIDIA L40S (192 GB), for 27B to 70B models sharded across GPUs with tensor parallelism.
+# LLMHosts that request fewer GPUs share a node.
+# The price is the AWS us-east-1 on-demand price of one node.
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: gpu_l40s_4x
+  description: Four NVIDIA L40S with 48 GB each, 48 vCPUs and 384 GiB.
+  version: 1.0.0
+  tags:
+  - gpu
+  - l40s
+  annotations:
+  - smarter.sh/llmhostcompute/builtin: 'true'
+spec:
+  node:
+    instanceType: g6e.12xlarge
+    cpu: 48
+    memoryGb: 384
+    gpu:
+      type: L40S
+      count: 4
+      memoryGb: 48
+    diskSizeGb: 200
+  nodeGroup:
+    maxNodes: 1
+  cost:
+    perHour: 10.49264
+    currency: USD

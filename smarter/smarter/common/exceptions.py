@@ -1,9 +1,8 @@
-"""Module exceptions.py"""
+"""Module exceptions.py."""
 
-import logging
 import re
-from typing import Optional
 
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 

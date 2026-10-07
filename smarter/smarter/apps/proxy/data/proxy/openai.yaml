@@ -1,0 +1,37 @@
+---
+# Passthrough access to the OpenAI API, with the platform's API key.
+# Use the OpenAI SDK, with this Proxy's URL as its base_url and a Smarter API key as its api_key:
+#
+#   client = OpenAI(base_url="https://<smarter>/api/v1/proxy/openai/", api_key="<Smarter API key>")
+#
+# Only the inference endpoints are allowed, so that the platform's OpenAI organization's
+# files, fine-tuning jobs, batches and settings cannot be reached through it.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: openai
+  description: Passthrough access to the OpenAI API's chat completions, responses, embeddings and models.
+  version: 1.0.0
+  tags:
+    - openai
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://platform.openai.com/docs/api-reference
+spec:
+  provider: openai
+  apiKey: openai_api_key
+  baseUrl: https://api.openai.com/v1/
+  auth:
+    header: Authorization
+    scheme: Bearer
+  allowedPaths:
+    - chat/completions
+    - completions
+    - responses
+    - embeddings
+    - moderations
+    - models
+    - models/*
+  timeout: 120
+  isActive: true

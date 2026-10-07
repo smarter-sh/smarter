@@ -1,0 +1,84 @@
+---
+# A SkillPlugin for an engineering use case, whose SKILL.md uses the optional
+# license, compatibility, metadata and allowed-tools frontmatter fields, and
+# which bundles a reference checklist.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: code_review
+  pluginClass: skill
+  description: Reviews code changes for correctness, security and maintainability.
+  version: 0.1.0
+  tags:
+    - engineering
+    - code-review
+  annotations:
+    - smarter.sh/code-review/use-case: software engineering
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - code review
+      - review my code
+      - pull request
+      - diff
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a senior software engineer who gives precise, actionable code reviews.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 4096
+  skillData:
+    skill: |
+      ---
+      name: code-review
+      description: Reviews a code change or pull request for correctness bugs, security issues and maintainability, and reports findings ranked by severity. Use when the user shares a diff, a pull request or a code snippet and asks for a review, feedback or a second opinion.
+      license: MIT
+      compatibility: Works with any programming language. Reviews only the code that the user provides.
+      allowed-tools: Read Grep Glob Bash(git diff:*)
+      metadata:
+        author: smarter
+        version: "1.0"
+      ---
+
+      # Code review
+
+      ## Process
+
+      1. Establish what the change is supposed to do. If the user did not say, infer it
+         from the code, and state your inference.
+      2. Review the change against the [review checklist](references/checklist.md), in order.
+      3. For every finding, confirm it by tracing the actual code path. Do not report a
+         finding that you cannot point to in the code.
+
+      ## Reporting
+
+      Report findings most severe first, using these severities:
+
+      - **Blocker:** incorrect behavior, data loss, or a security vulnerability.
+      - **Major:** a likely bug, or a significant maintainability problem.
+      - **Minor:** style, naming, or a small simplification.
+
+      For each finding, give the file and line, a one sentence summary, and a concrete
+      failure scenario or suggested fix. End with a one line overall verdict.
+
+      If you find nothing wrong, say so plainly. Do not invent findings.
+    resources:
+      references/checklist.md: |
+        # Review checklist
+
+        ## Correctness
+        - Off-by-one errors, and empty, null and boundary inputs.
+        - Error handling: are failures surfaced, or silently swallowed?
+        - Concurrency: shared state, ordering, and transactions.
+
+        ## Security
+        - Injection: SQL, shell, template and path traversal.
+        - Secrets in code, logs or error messages.
+        - Authorization checks on every entry point.
+
+        ## Maintainability
+        - Names that say what things are.
+        - Duplicated logic that should be shared.
+        - Tests for the new behavior, including a failure case.

@@ -1,0 +1,367 @@
+# pylint: disable=W0613,C0302
+"""
+PromptWorkbenchView is a Django class-based view responsible for serving the main prompt application page within the Smarter dashboard web app.
+
+It hosts Smarter Chat, the React app of the LLMClient prompt workbench, as the web console hosts all of its
+React apps: the template includes the app's Vite build assets from Django's static files, and renders the app's
+root element, whose attributes configure it. The React app then takes over the UI from there.
+"""
+
+import traceback
+from http import HTTPStatus
+from typing import Optional
+
+from django.conf import settings
+from django.http import (
+    HttpRequest,
+)
+from django.shortcuts import render
+
+from smarter.apps.llmclient.models import (
+    LLMClient,
+    LLMClientHelper,
+    get_cached_llmclient_by_request,
+)
+from smarter.apps.prompt.models import Prompt, PromptHelper
+from smarter.apps.prompt.signals import prompt_session_invoked
+from smarter.common.conf import smarter_settings
+from smarter.common.const import (
+    SMARTER_CHAT_SESSION_KEY_NAME,
+)
+from smarter.common.exceptions import (
+    SmarterException,
+)
+from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.helpers.url_helpers import clean_url
+from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
+from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
+from smarter.lib.django.views import (
+    SmarterAuthenticatedNeverCachedWebView,
+)
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+MAX_RETURNED_PLUGINS = 10
+PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.cache_expiration
+WORKBENCH_CACHE_TIMEOUT = 10  # 10 seconds. keeps the workbench snappy while avoiding appearing stale.
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+
+
+class SmarterChatappViewError(SmarterException):
+    """Base class for all SmarterChatapp errors."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter Chatapp error"
+
+
+class SmarterPromptSession(SmarterHelperMixin):
+    """Helper class that provides methods for creating a session key and client key."""
+
+    _chat: Optional[Prompt] = None
+    _chat_helper: Optional[PromptHelper] = None
+    _llmclient: Optional[LLMClient] = None
+    request: Optional[HttpRequest] = None
+    _session_key: str
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{SmarterPromptSession.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    def __init__(self, request: HttpRequest, session_key: str, *args, llmclient: Optional[LLMClient] = None, **kwargs):
+        super().__init__()
+        verbose_logger.debug(
+            "SmarterPromptSession().__init__() called with session_key=%s, llmclient=%s", session_key, llmclient
+        )
+        self.request = request
+        if not isinstance(session_key, str):
+            logger.error("%s - session_key is not a string: %s", self.formatted_class_name, type(session_key))
+        self._session_key = session_key
+
+        if llmclient:
+            self._llmclient = llmclient
+            self.user_profile = llmclient.user_profile
+
+        # leaving this in place as a reminder that we need one or the other
+        if not self.session_key and not self.llmclient:
+            logger.error("%s - either session_key or llmclient must be provided", self.formatted_class_name)
+
+        self._chat_helper = PromptHelper(
+            request, *args, session_key=self.session_key, llmclient=self.llmclient, **kwargs
+        )
+        self._chat = self._chat_helper.prompt
+
+        verbose_logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
+
+        prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
+
+    def __str__(self):
+        return (
+            f"{SmarterPromptSession.__name__}[{id(self)}](llmclient={self.llmclient}, session_key={self.session_key})"
+        )
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, SmarterPromptSession) and self.session_key == value.session_key
+
+    @property
+    def session_key(self) -> str:
+        """
+        The session key for this prompt session.
+
+        This is used to identify the prompt session
+        and is generated by the /config/ endpoint.
+        """
+        if self._session_key is None:
+            logger.error(
+                "%s - session_key is None. This should not happen. Please report this issue to the Smarter team.",
+                self.formatted_class_name,
+            )
+        return self._session_key
+
+    @property
+    def llmclient(self):
+        return self._llmclient
+
+    @property
+    def prompt(self):
+        return self._chat
+
+    @property
+    def chat_helper(self):
+        return self._chat_helper
+
+    def clean_url(self, url: str) -> str:
+        """Clean the url of any query strings and trailing '/config/' strings."""
+        retval = clean_url(url)
+        if retval.endswith("/config/"):
+            retval = retval[:-8]
+        return retval
+
+
+class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
+    """
+    Prompt app view for the Smarter web application.
+
+    This view is responsible for serving the main prompt application page within the Smarter dashboard web app.
+    It hosts Smarter Chat, a React app that is built with Vite into Django's static files, like every other React
+    app of the web console. The React app then takes over the UI from there.
+
+    **Key Features:**
+
+    - **Django Template Integration:**
+      The view renders ``react/smarter-chat.html``, whose ``react_smarter_chat`` template tag includes the React
+      app's hashed JavaScript and CSS files, from its Vite manifest.json, and whose root div passes the app its
+      configuration as attributes.
+
+    - **ReactJS UI Bootstrapping:**
+      The React app (https://github.com/smarter-sh/smarter-chat, cloned into smarter/react/packages/smarter-chat)
+      renders the interactive prompt UI after the initial page load.
+
+    - **Flexible URL Patterns:**
+      The view supports both sandbox and production URL formats, allowing it to work with deployed and not-yet-deployed LLMClients.
+
+    - **Authentication Protected:**
+      This view requires the user to be authenticated. If the user is not authenticated, access is denied.
+
+    - **Cache Control:**
+      The view uses Django's `never_cache` decorator to ensure that the browser does not cache the prompt page itself.
+      This prevents issues where a user logs out and then logs back in without a full page refresh.
+
+    **Example Usage:**
+
+        Sandbox mode:
+            - http://smarter.sh/workbench/hr/
+            - http://127.0.0.1:9357/workbench/<str:name>/
+
+        Production mode:
+            - https://hr.3141-5926-5359.alpha.api.example.com/workbench/
+
+    **Returns:**
+        Renders the Django template for the prompt app, with the React app's assets and configuration context.
+
+    **See Also:**
+        - `PromptConfigView` — for the endpoint that provides configuration data to the React app.
+    """
+
+    template_path = "react/smarter-chat.html"
+    root_id = "smarter-chat-root"
+
+    llmclient: Optional[LLMClient] = None
+    llmclient_helper: Optional[LLMClientHelper] = None
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Dispatch method to handle the request for the main prompt application page.
+
+        This method is responsible for preparing and serving the Django template that bootstraps the ReactJS prompt UI
+        within the Smarter dashboard web app. It passes the React app's configuration to the template, which renders
+        it as the attributes of the app's root element.
+
+        **Key Features:**
+
+        - **Django Template Integration:**
+          Uses Django's template system to render the main prompt page, with the React app's build assets and root div.
+
+        - **ReactJS UI Bootstrapping:**
+          The template includes the React build (JavaScript and CSS) from Django's static files. The React app then
+          takes over rendering the interactive prompt UI after the initial page load.
+
+        - **Flexible URL Patterns:**
+          Supports both sandbox and production URL formats, allowing the view to work with both deployed and not-yet-deployed LLMClients.
+
+        - **Authentication Protected:**
+          Requires the user to be authenticated. If the user is not authenticated, access is denied.
+
+        - **Cache Control:**
+          Uses Django's `never_cache` decorator to prevent the browser from caching the prompt page, ensuring session security.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request object.
+        *args
+            Additional positional arguments.
+        **kwargs
+            Additional keyword arguments.
+
+        Returns
+        -------
+        HttpResponse
+            Renders the Django template for the prompt app, with the React app's assets and configuration context.
+
+        See Also
+        --------
+        PromptConfigView : The endpoint that provides configuration data to the React app.
+        """
+        if not self.user_profile:
+            logger.error(
+                "%s.dispatch() - user_profile is None. This should not happen. Returning 403.",
+                self.formatted_class_name,
+            )
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
+        retval = super().dispatch(request, *args, **kwargs)
+        if retval.status_code >= HTTPStatus.BAD_REQUEST:
+            return retval
+
+        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        if session_key is not None:
+            self._session_key = session_key
+            verbose_logger.debug(
+                "%s.dispatch() - setting session_key=%s from kwargs",
+                self.formatted_class_name,
+                self.session_key,
+            )
+
+        try:
+            verbose_logger.debug(
+                "%s.dispatch() - url=%s, account=%s, user=%s",
+                self.formatted_class_name,
+                self.url,
+                self.account,
+                self.user_profile.user,
+            )
+            # first try to avoid some quite-expensive steps by looking for the llmclient
+            # in the cache based on the request.
+            self.llmclient = get_cached_llmclient_by_request(request=self.smarter_request)
+            if not self.llmclient:
+                self.llmclient_helper = LLMClientHelper(
+                    request=self.smarter_request,
+                    session_key=self.session_key,
+                    account=self.account,
+                    user=self.user,
+                    user_profile=self.user_profile,
+                )
+                self.llmclient = self.llmclient_helper.llmclient if self.llmclient_helper.llmclient else None
+            if self.llmclient:
+                verbose_logger.debug(
+                    "%s.dispatch() - set llmclient=%s from self.llmclient_helper",
+                    self.formatted_class_name,
+                    self.llmclient,
+                )
+            else:
+                logger.debug(
+                    "%s.dispatch() - no llmclient found for request. Returning 404. Request URL: %s, Session Key: %s",
+                    self.formatted_class_name,
+                    request.build_absolute_uri(),
+                    self.session_key,
+                )
+                return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
+        except LLMClient.DoesNotExist:
+            logger.debug(
+                "%s.dispatch() - LLMClient.DoesNotExist. No llmclient found for request. Returning 404. Request URL: %s, Session Key: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+                self.session_key,
+            )
+            return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.dispatch() - Exception occurred while getting llmclient: %s. "
+                "Request URL: %s, Session Key: %s\nStack trace: %s",
+                self.formatted_class_name,
+                str(e),
+                request.build_absolute_uri(),
+                self.session_key,
+                traceback.format_exc(),
+            )
+            return SmarterHttpResponseServerError(request=request, error_message=str(e))
+
+        if not self.llmclient:
+            logger.debug(
+                "%s.dispatch() - no llmclient found for request after exception handling. Returning 404. Request URL: %s, Session Key: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+                self.session_key,
+            )
+            return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
+
+        # the basic idea is to pass the names of the necessary cookies to the React app, and then
+        # it is supposed to find and read the cookies to get the prompt session key, csrf token, etc.
+        context = {
+            "smarter_chat": {
+                "root_id": self.root_id,
+                "llmclient_api_url": self.llmclient.sandbox_url,
+                "toggle_metadata": True,
+                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
+                "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter prompt session, not the Django session.
+                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+                "cookie_domain": settings.SESSION_COOKIE_DOMAIN or "",
+                "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.generate_smarter_request_id(),
+            }
+        }
+        verbose_logger.debug(
+            "%s.dispatch() - rendering template %s with context: %s",
+            self.formatted_class_name,
+            self.template_path,
+            formatted_json(context),
+        )
+        return render(request=request, template_name=self.template_path, context=context)
