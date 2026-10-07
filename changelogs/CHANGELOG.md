@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.6-beta.1](https://github.com/smarter-sh/smarter/compare/v0.18.5...v0.18.6-beta.1) (2026-10-07)
+
+### Bug Fixes
+
+* **api:** restore legacy cli schema url and exempt schema calls from 404 throttle ([271a922](https://github.com/smarter-sh/smarter/commit/271a922ded5e58b3dbc2a1bcbcf4b19d02b5989d))
+* **plugin:** stop tests from deleting the stackademy plugins' data ([7bfd5e7](https://github.com/smarter-sh/smarter/commit/7bfd5e78f4ecd0ea7cafb5c320a17cce36c8a0a8))
+
+### Refactoring
+
+* **react:** host smarter-chat locally, drop the react cdn scheme ([049c444](https://github.com/smarter-sh/smarter/commit/049c444f319ad42abefbf8f845cb0256a635ccd0))
+
 ## [0.18.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.5...v0.18.6-alpha.1) (2026-10-07)
 
 ### Bug Fixes
