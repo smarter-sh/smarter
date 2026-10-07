@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.18.5-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.18.5-alpha.2...v0.18.5-alpha.3) (2026-10-07)
+
+### Bug Fixes
+
+* **plugin:** stop tests from deleting the stackademy plugins' data ([7bfd5e7](https://github.com/smarter-sh/smarter/commit/7bfd5e78f4ecd0ea7cafb5c320a17cce36c8a0a8))
+
+### Refactoring
+
+* **react:** host smarter-chat locally, drop the react cdn scheme ([049c444](https://github.com/smarter-sh/smarter/commit/049c444f319ad42abefbf8f845cb0256a635ccd0))
+
 ## [0.18.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.18.5-alpha.1...v0.18.5-alpha.2) (2026-10-07)
 
 ### Bug Fixes
