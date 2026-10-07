@@ -1677,10 +1677,10 @@ class SmarterRequestMixin(AccountMixin):
                 self.url_path_parts,
             )
             return False
-        if not self.url_path_parts[3].isnumeric():
-            # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
+        if not (self.url_path_parts[3].isnumeric() or TimestampedModel.hash_regex().fullmatch(self.url_path_parts[3])):
+            # expecting <int:pk> or <str:hashed_id>: ['api', 'v1', 'llm-clients', '<int:pk>', 'prompt']
             verbose_logger.debug(
-                "%s.is_llmclient_smarter_api_url() - fourth part is not numeric: %s",
+                "%s.is_llmclient_smarter_api_url() - fourth part is neither numeric nor a hashed id: %s",
                 self.srm_formatted_class_name,
                 self.url_path_parts,
             )
