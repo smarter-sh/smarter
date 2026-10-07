@@ -7,10 +7,13 @@ check that AWS is configured, which calls STS, is patched. boto3.Session is patc
 test that forgot a fake fails rather than use the container's live AWS credentials.
 """
 
+import base64
 import os
 import subprocess
+import time
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
+from urllib.parse import parse_qs, urlparse
 
 import boto3
 import botocore.exceptions
@@ -25,7 +28,10 @@ from smarter.apps.infrastructure.providers.aws.certificates import to_certificat
 from smarter.apps.infrastructure.providers.aws.dns import to_record, to_record_set
 from smarter.apps.infrastructure.providers.aws.helpers.acm import AWSCertificateManager
 from smarter.apps.infrastructure.providers.aws.helpers.base import AWSBase
-from smarter.apps.infrastructure.providers.aws.helpers.eks import AWSEks
+from smarter.apps.infrastructure.providers.aws.helpers.eks import (
+    EKS_TOKEN_LIFETIME_SECONDS,
+    AWSEks,
+)
 from smarter.apps.infrastructure.providers.aws.helpers.exceptions import (
     AWSNotReadyError,
     SmarterAWSError,
@@ -409,6 +415,48 @@ class TestAWSHelpers(AWSTestBase):
             self.assertFalse(eks.update_kubeconfig())
             settings.aws_eks_cluster_name = None
             self.assertFalse(eks.update_kubeconfig())
+
+    def test_get_token(self):
+        """The EKS token is an STS GetCallerIdentity url, presigned for the cluster, as aws eks get-token creates."""
+        eks = connect(AWSEks(), MagicMock())
+        # boto3.Session is patched; boto3.session.Session is not. Presigning makes no request.
+        eks._aws_session = boto3.session.Session(  # pylint: disable=protected-access
+            aws_access_key_id="AKIAIOSFODNN7EXAMPLE",
+            aws_secret_access_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",  # nosec B106
+            region_name="ca-central-1",
+        )
+        eks._aws_region = "ca-central-1"  # pylint: disable=protected-access
+        with patch(f"{HELPERS}.eks.smarter_settings") as settings:
+            settings.aws_eks_cluster_name = "cluster"
+            before = time.time()
+            token, expires = eks.get_token()
+        self.assertTrue(token.startswith("k8s-aws-v1."))
+        encoded = token.removeprefix("k8s-aws-v1.")
+        url = urlparse(base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).decode("utf-8"))
+        query = parse_qs(url.query)
+        self.assertEqual(url.netloc, "sts.ca-central-1.amazonaws.com")
+        self.assertEqual(query["Action"], ["GetCallerIdentity"])
+        self.assertEqual(query["X-Amz-Expires"], ["60"])
+        self.assertIn("x-k8s-aws-id", query["X-Amz-SignedHeaders"][0])
+        self.assertTrue(query["X-Amz-Credential"][0].startswith("AKIAIOSFODNN7EXAMPLE/"))
+        self.assertAlmostEqual(expires, before + EKS_TOKEN_LIFETIME_SECONDS, delta=5)
+
+    def test_get_token_not_ready(self):
+        eks = AWSEks()
+        with patch(f"{HELPERS}.eks.smarter_settings") as settings:
+            settings.aws_eks_cluster_name = None
+            with self.assertRaises(AWSNotReadyError):
+                eks.get_token()
+
+    def test_provider_kubernetes_token(self):
+        """The provider returns the EKS token, or None, for kubectl to fall back to its kubeconfig."""
+        self.assertIsNone(AWSProvider().get_kubernetes_token())
+        provider = self.aws_provider()
+        provider._eks = connect(AWSEks(), MagicMock())  # pylint: disable=protected-access
+        with patch.object(AWSEks, "get_token", return_value=("token", 1.0)):
+            self.assertEqual(provider.get_kubernetes_token(), ("token", 1.0))
+        with patch.object(AWSEks, "get_token", side_effect=AWSNotReadyError("no cluster")):
+            self.assertIsNone(provider.get_kubernetes_token())
 
     def test_exceptions(self):
         self.assertTrue(issubclass(AWSNotReadyError, InfrastructureNotReadyError))

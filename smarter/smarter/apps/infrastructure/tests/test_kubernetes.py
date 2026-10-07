@@ -98,6 +98,15 @@ class FakeKubectl:
         if verb == "apply":
             self.applied.append(input)
             return completed(stdout="applied")
+        if verb == "get" and "/" in args[1]:
+            # several resources, as kind/name, which kubectl returns as a List.
+            items = []
+            for ref in (arg for arg in args[1:] if "/" in arg and not arg.startswith("-")):
+                kind, name = ref.split("/", 1)
+                resource = self.resources.get((kind, name))
+                if resource is not None:
+                    items.append({**resource, "metadata": {"name": name}})
+            return completed(stdout=json.dumps({"kind": "List", "items": items}))
         if verb == "get":
             kind, rest = args[1], args[2:]
             if rest and not rest[0].startswith("-"):
@@ -275,6 +284,41 @@ class TestKubernetesResources(KubernetesTestBase):
         self.assertIn("5", command)
 
 
+class TestBearerToken(KubernetesTestBase):
+    """Test that kubectl uses the provider's bearer token, which is reused until it expires."""
+
+    def test_without_a_token(self):
+        """A provider without a token leaves kubectl to authenticate with its kubeconfig."""
+        self.kubernetes.get_resource("ingress", "app", NAMESPACE)
+        self.assertNotIn("--token", self.kubectl.commands[-1])
+
+    def test_token_is_reused_until_it_expires(self):
+        with patch.object(
+            self.provider, "get_kubernetes_token", side_effect=[("one", 1000.0), ("two", 2000.0)]
+        ) as get_token:
+            with patch(f"{MODULE}.time.time", return_value=500.0):
+                self.kubernetes.get_resource("ingress", "app", NAMESPACE)
+                self.kubernetes.get_resource("secret", "app-tls", NAMESPACE)
+            self.assertEqual(get_token.call_count, 1)
+            self.assertEqual(self.kubectl.commands[-1][-2:], ["--token", "one"])
+            with patch(f"{MODULE}.time.time", return_value=1000.0):
+                self.kubernetes.get_resource("ingress", "app", NAMESPACE)
+            self.assertEqual(get_token.call_count, 2)
+            self.assertEqual(self.kubectl.commands[-1][-2:], ["--token", "two"])
+
+    def test_token_is_not_logged(self):
+        """A failed kubectl call logs its arguments, but never the token."""
+        with (
+            patch.object(self.provider, "get_kubernetes_token", return_value=("secret-token", float("inf"))),
+            self.assertLogs(level="WARNING") as logs,
+        ):
+            self.assertTrue(self.kubernetes.ready)
+            self.kubectl.fail = "forbidden"
+            self.kubernetes.get_resources([("ingress", "app")], NAMESPACE)
+        self.assertIn("--token", self.kubectl.commands[-1])
+        self.assertNotIn("secret-token", "\n".join(logs.output))
+
+
 class TestIngressResources(KubernetesTestBase):
     """Test the ingress operations that LLMClient deployments use."""
 
@@ -293,6 +337,48 @@ class TestIngressResources(KubernetesTestBase):
         self.assertEqual(
             self.kubernetes.verify_ingress_resources(hostname, NAMESPACE, max_attempts=1), (True, True, True)
         )
+
+    def test_verify_ingress_resources_in_one_call(self):
+        """The Ingress, Certificate and Secret are fetched with one kubectl call, which fetches one cluster token."""
+        hostname = self.add_ingress()
+        self.assertTrue(self.kubernetes.ready)
+        self.kubectl.commands.clear()
+        self.kubernetes.verify_ingress_resources(hostname, NAMESPACE, max_attempts=1)
+        self.assertEqual(len(self.kubectl.commands), 1)
+        self.assertEqual(
+            self.kubectl.commands[0][2:5],
+            [f"ingress/{hostname}", f"certificate/{hostname}-tls", f"secret/{hostname}-tls"],
+        )
+
+    def test_get_resources_falls_back(self):
+        """If the one kubectl call fails, each resource is fetched in turn."""
+        hostname = self.add_ingress()
+        self.assertTrue(self.kubernetes.ready)
+        kubectl = self.kubectl
+
+        def fail_multiple(command, input=None, **kwargs):  # pylint: disable=redefined-builtin
+            if command[1] == "get" and "/" in command[2]:
+                return completed(1, stderr="the server doesn't have a resource type")
+            return kubectl(command, input=input, **kwargs)
+
+        with patch(f"{MODULE}.subprocess.run", side_effect=fail_multiple):
+            result = self.kubernetes.verify_ingress_resources(hostname, NAMESPACE, max_attempts=1)
+        self.assertEqual(result, (True, True, True))
+
+    def test_get_resources_output(self):
+        """An empty answer finds nothing, invalid json finds nothing, and a single resource is accepted."""
+        self.assertEqual(self.kubernetes.get_resources([], NAMESPACE), {})
+        resources = [("ingress", "app.example.com")]
+        for stdout, expected in (
+            ("", {}),
+            ("{not json", {}),
+            (
+                json.dumps({"kind": "Ingress", "metadata": {"name": "app.example.com"}}),
+                {("ingress", "app.example.com"): {"kind": "Ingress", "metadata": {"name": "app.example.com"}}},
+            ),
+        ):
+            with patch(f"{MODULE}.subprocess.run", return_value=completed(stdout=stdout)):
+                self.assertEqual(self.kubernetes.get_resources(resources, NAMESPACE), expected)
 
     def test_certificate_not_ready(self):
         """A certificate that is not issued is checked again, up to max_attempts times."""

@@ -111,6 +111,23 @@ class KubernetesService(InfrastructureService):
     def get_resource(self, kind: str, name: str, namespace: str) -> Optional[dict]:
         """Return a resource, or None if it does not exist or the cluster is unavailable."""
 
+    def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], dict]:
+        """
+        Return several resources at once.
+
+        Implementations may override it to fetch them in one request. This one gets each in turn.
+
+        :param resources: The (kind, name) of each resource, with a lowercase kind, e.g. ``("ingress", "app")``.
+        :param namespace: The namespace.
+        :returns: The resources that exist, keyed by their (kind, name).
+        """
+        retval: dict[tuple[str, str], dict] = {}
+        for kind, name in resources:
+            resource = self.get_resource(kind, name, namespace)
+            if resource is not None:
+                retval[(kind, name)] = resource
+        return retval
+
     @abstractmethod
     def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
         """Return the resources of a kind, optionally those that match a label selector."""
@@ -157,7 +174,10 @@ class KubernetesService(InfrastructureService):
         :param name: The Certificate's name.
         :param namespace: The Certificate's namespace.
         """
-        certificate = self.get_resource("certificate", name, namespace)
+        return self._certificate_ready(self.get_resource("certificate", name, namespace), name, namespace)
+
+    def _certificate_ready(self, certificate: Optional[dict], name: str, namespace: str) -> bool:
+        """Whether a cert-manager Certificate exists, and its Ready condition is True."""
         if certificate is None:
             return False
         conditions = (certificate.get("status") or {}).get("conditions") or []
@@ -182,16 +202,19 @@ class KubernetesService(InfrastructureService):
             task passes 1, and checks again later, so that it does not block its worker.
         :returns: Whether the Ingress, the Certificate, and the Secret are verified.
         """
-        ingress_verified = self.verify_ingress(hostname, namespace)
         secret_name = f"{hostname}-tls"
-        secret_verified = self.verify_secret(secret_name, namespace)
-        certificate_verified = False
-        attempts = max(1, max_attempts)
-        for attempt in range(1, attempts + 1):
-            certificate_verified = self.verify_certificate(secret_name, namespace)
-            if certificate_verified or attempt >= attempts:
+        # one request for all three: each kubectl call also fetches a cluster token, which is slow.
+        found = self.get_resources(
+            [("ingress", hostname), ("certificate", secret_name), ("secret", secret_name)], namespace
+        )
+        ingress_verified = ("ingress", hostname) in found
+        secret_verified = ("secret", secret_name) in found
+        certificate_verified = self._certificate_ready(found.get(("certificate", secret_name)), secret_name, namespace)
+        for _ in range(1, max(1, max_attempts)):
+            if certificate_verified:
                 break
             self._sleep(self.certificate_wait_seconds)
+            certificate_verified = self.verify_certificate(secret_name, namespace)
         return ingress_verified, certificate_verified, secret_verified
 
     def delete_ingress(self, name: str, namespace: str) -> bool:
@@ -240,6 +263,8 @@ class KubectlKubernetesService(KubernetesService):
         self._configured = False
         self._namespace_verified = False
         self._kubeconfig: Optional[dict] = None
+        self._token: Optional[str] = None
+        self._token_expires: float = 0.0
 
     # --------------------------------------------------------------------------
     # readiness
@@ -290,16 +315,33 @@ class KubectlKubernetesService(KubernetesService):
     # --------------------------------------------------------------------------
     # kubectl
     # --------------------------------------------------------------------------
+    def _bearer_token(self) -> Optional[str]:
+        """
+        Return the provider's bearer token for the cluster, which is reused until it expires.
+
+        Without one, kubectl authenticates with its kubeconfig, which for EKS runs ``aws eks
+        get-token`` on every call: a Python process that takes seconds to start on a busy worker.
+        """
+        if self.provider is None:
+            return None
+        if self._token is None or time.time() >= self._token_expires:
+            result = self.provider.get_kubernetes_token()
+            self._token, self._token_expires = result if result else (None, 0.0)
+        return self._token
+
     def _kubectl(self, *args: str, stdin: Optional[str] = None) -> subprocess.CompletedProcess:
         """
-        Run kubectl.
+        Run kubectl, with the provider's bearer token, if it has one.
 
         :raises InfrastructureConfigurationError: In the unit tests, unless allowed.
         """
         refuse_in_unit_tests("the Kubernetes cluster", self.allow_in_tests)
-        return subprocess.run(  # nosec B603 B607
-            ["kubectl", *args], input=stdin, capture_output=True, text=True, check=False
-        )
+        command = ["kubectl", *args]
+        token = self._bearer_token()
+        if token:
+            # a request that has a token does not run the kubeconfig's exec command.
+            command += ["--token", token]
+        return subprocess.run(command, input=stdin, capture_output=True, text=True, check=False)  # nosec B603 B607
 
     def _kubectl_json(self, *args: str) -> Optional[Any]:
         """Run kubectl with ``-o json``, and return its output, or None if it fails or is empty."""
@@ -357,6 +399,37 @@ class KubectlKubernetesService(KubernetesService):
         if not self.ready:
             return None
         return self._kubectl_json("get", kind, name, "-n", namespace, "--ignore-not-found")
+
+    def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], dict]:
+        """
+        Return several resources with one ``kubectl get``.
+
+        Each kubectl call fetches a cluster token, e.g. with ``aws eks get-token``, which takes
+        seconds, so one call rather than several frees a Celery worker sooner. If the call fails,
+        e.g. because a kind's CustomResourceDefinition is not installed, each resource is fetched
+        in turn.
+        """
+        if not resources or not self.ready:
+            return {}
+        refs = [f"{kind}/{name}" for kind, name in resources]
+        result = self._kubectl("get", *refs, "-n", namespace, "--ignore-not-found", "-o", "json")
+        if result.returncode != 0:
+            logger.warning("%s kubectl get %s failed: %s", self.formatted_class_name, " ".join(refs), result.stderr)
+            return super().get_resources(resources, namespace)
+        if not result.stdout.strip():
+            return {}
+        try:
+            output = json.loads(result.stdout)
+        except json.JSONDecodeError as e:
+            logger.error("%s kubectl get %s returned invalid json: %s", self.formatted_class_name, " ".join(refs), e)
+            return {}
+        # kubectl returns a List of several resources, or the resource itself when only one exists.
+        items = output.get("items", []) if output.get("kind") == "List" else [output]
+        found = {
+            (str(item.get("kind", "")).lower(), str((item.get("metadata") or {}).get("name", ""))): item
+            for item in items
+        }
+        return {resource: found[resource] for resource in resources if resource in found}
 
     def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
         if not self.ready:

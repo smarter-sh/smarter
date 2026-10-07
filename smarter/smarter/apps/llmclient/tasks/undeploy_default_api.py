@@ -43,6 +43,8 @@ Exception
 
 from urllib.parse import urlparse
 
+from django.db import transaction
+
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.signals import (
     post_undeploy_default_api,
@@ -75,10 +77,13 @@ def undeploy_default_api(llmclient_id: int):
     This Celery task performs the following steps:
     1. Sends a pre-undeploy signal for the llmclient API.
     2. Logs the undeployment request.
-    3. Retrieves the LLMClient instance by ID.
-    4. Destroys the Route53 A record of the llmclient's default api domain.
-    5. Marks the llmclient as not deployed and resets DNS verification status.
-    6. Saves the llmclient state and sends a post-undeploy signal.
+    3. Retrieves the LLMClient instance by ID, and locks its row until its state is saved, so that a
+       deploy_default_api task of the same llmclient waits.
+    4. Does nothing if the llmclient is deployed. The task is queued when an llmclient is saved as not
+       deployed, e.g. by ``LLMClient.save()`` or the undeploy_llmclient command, so an llmclient that
+       is deployed was deployed again since, and a deploy_default_api task is queued.
+    5. Destroys the Route53 A record of the llmclient's default api domain.
+    6. Resets the DNS verification status, saves the llmclient and sends a post-undeploy signal.
 
     Parameters
     ----------
@@ -108,17 +113,34 @@ def undeploy_default_api(llmclient_id: int):
     pre_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
 
     llmclient: LLMClient
-    try:
-        llmclient = LLMClient.objects.get(id=llmclient_id)
-    except LLMClient.DoesNotExist:
-        logger.error("%s LLMClient %s not found. task_id: %s", prefix, llmclient_id, task_id)
-        post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id)
-        return None
+    # lock the llmclient's row, so that a deploy_default_api task that runs at the same time waits
+    # until the A record is destroyed and the llmclient's state is saved. See deploy_default_api.
+    with transaction.atomic():
+        try:
+            llmclient = LLMClient.objects.select_for_update().get(id=llmclient_id)
+        except LLMClient.DoesNotExist:
+            logger.error("%s LLMClient %s not found. task_id: %s", prefix, llmclient_id, task_id)
+            post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id)
+            return None
 
-    hostname = urlparse(llmclient.default_url).netloc
-    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
+        # this task is queued when an llmclient is saved as not deployed. If it is deployed now, then it
+        # was deployed again since, and a deploy_default_api task is queued, so undeploying it would
+        # destroy the A record of an llmclient that is meant to be deployed.
+        if llmclient.deployed:
+            logger.info(
+                "%s LLMClient %s was deployed again since this task was queued. Nothing to do. task_id: %s",
+                prefix,
+                llmclient.name,
+                task_id,
+            )
+            post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
+            return None
 
-    llmclient.deployed = False
-    llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.NOT_VERIFIED
-    llmclient.save(asynchronous=True)
+        hostname = urlparse(llmclient.default_url).netloc
+        destroy_domain_A_record(
+            hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id
+        )
+
+        llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.NOT_VERIFIED
+        llmclient.save(asynchronous=True)
     post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)

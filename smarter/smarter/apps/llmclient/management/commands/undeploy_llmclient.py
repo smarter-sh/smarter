@@ -27,7 +27,8 @@ class Command(SmarterCommand):
       - Retrieve the account by account number or company name.
       - Locate the llmclient by name within the account.
       - Verify that the llmclient is currently deployed and DNS is verified.
-      - Initiate undeployment, either synchronously or as a background Celery task.
+      - Mark the llmclient as not deployed, then initiate undeployment, either synchronously or as
+        a background Celery task.
       - Output progress and completion messages.
 
     This command is useful for decommissioning llmclients, managing DNS records, and ensuring that
@@ -85,11 +86,15 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=f"{llmclient.hostname} is not currently deployed.")
             return
 
+        # undeploy_default_api does nothing to an llmclient that is deployed, which it takes to have
+        # been deployed again since it was queued. asynchronous: no signal, which would queue it twice.
+        llmclient.deployed = False
+        llmclient.save(asynchronous=True)
         if foreground:
-            self.stdout.write(self.style.NOTICE(f"Deploying {llmclient.hostname}"))
+            self.stdout.write(self.style.NOTICE(f"Undeploying {llmclient.hostname}"))
             undeploy_default_api(llmclient_id=llmclient.id)
         else:
-            self.stdout.write(self.style.NOTICE(f"Deploying {llmclient.hostname} as a Celery task."))
+            self.stdout.write(self.style.NOTICE(f"Undeploying {llmclient.hostname} as a Celery task."))
             undeploy_default_api.delay(llmclient_id=llmclient.id)
 
         self.handle_completed_success()

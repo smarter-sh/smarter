@@ -132,6 +132,17 @@ class AWSProvider(CloudProvider):
             return False
         return self.eks.update_kubeconfig()
 
+    def get_kubernetes_token(self) -> Optional[tuple[str, float]]:
+        if not self.ready:
+            return None
+        try:
+            return self.eks.get_token()
+        # pylint: disable=broad-except
+        except Exception as e:
+            # kubectl falls back to the kubeconfig's aws eks get-token, which is slower but works.
+            logger.warning("%s could not create an EKS token: %s", self.formatted_class_name, e)
+            return None
+
     def get_kubernetes_cluster_info(self) -> dict[str, Any]:
         self.require_ready()
         with self.operation("get_kubernetes_cluster_info"):
