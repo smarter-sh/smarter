@@ -234,7 +234,7 @@ Django uses for runtime asset discovery. Because the manifest is derived
 entirely from the build process, its structure and contents are determined by
 the Vite configuration. Within Smarter, Vite serves as the bridge between React development and
 Django deployment. Rather than requiring React applications to understand
-deployment environments, static asset locations, CDN hosting, or runtime
+deployment environments, static asset locations, or runtime
 integration details, these concerns are centralized within the build
 configuration itself.
 
@@ -255,9 +255,6 @@ requirements:
 - **Security Compatibility**
     Preserves compatibility with Django authentication, CSRF protection,
     session cookies, and same-origin security policies.
-- **CDN Deployment**
-    Optionally synchronizes production assets to AWS S3 and invalidates
-    associated CloudFront caches.
 - **Production Hardening**
     Removes console.debug() statements from production bundles to reduce
     unnecessary console output and prevent accidental disclosure of debugging
@@ -275,27 +272,10 @@ Application component.
 
 .. code-block:: javascript
 
-  const postBuildPlugin: PluginOption = {
-    name: "post-build",
-
-    closeBundle() {
-      if (packageJson.config.cdnDeploy === true) {
-        execSync(
-          `aws s3 sync ../../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
-          { stdio: "inherit" },
-        );
-        execSync(
-          `aws --no-cli-pager cloudfront create-invalidation --distribution-id ${packageJson.config.cloudfrontDistributionId} --paths '/react/${packageName}/*'`,
-          { stdio: "inherit" },
-        );
-      }
-    },
-  };
-
   export default defineConfig(({ command }: ConfigEnv) => ({
     plugins: [
       react(),
-      postBuildPlugin,
+      addCustomManifestData,
     ],
     // We use esbuild to remove console.debug statements in production builds
     // in order to avoid leaking potentially sensitive information in
@@ -555,7 +535,7 @@ throughout this guide:
   From Django’s perspective, compiled React bundles are no different from any
   other static resource such as CSS, images, or JavaScript files. Once generated,
   they participate in the standard Django static asset workflow, including
-  collectstatic, static file serving, cache management, and CDN distribution.
+  collectstatic, static file serving, and cache management.
 
   Because React assets are generated before Django is deployed, the frontend
   build process remains cleanly separated from the Django runtime. React
@@ -623,6 +603,12 @@ Operational Considerations
     Django pages must be built only after the frontend asset pipeline has completed.
     This ensures that all compiled React bundles and ``manifest.json`` metadata are available
     inside the container image at runtime.
+* Externally Managed Packages
+    :doc:`Smarter Chat <react-integration/smarter-chat>`, the React app of the LLMClient
+    prompt engineering workbench, is managed in its own repository and published to npm.
+    ``make react-install`` clones it into ``smarter/react/packages/smarter-chat``, and
+    the GitHub Actions workflows do the same before they build or test, after which it is
+    built, tested and served like every other package in the workspace.
 * Convenience Tooling
     Smarter provides helper commands such as `make react-build` and `make react-build-ci`
     to simplify common frontend integration workflows and to keep Django’s

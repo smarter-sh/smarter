@@ -90,7 +90,7 @@ Copy the closest existing list package, then rename it everywhere.
 
 1. `cp -R smarter/react/packages/smarter-guardrail-list smarter/react/packages/smarter-<kind>-list`
    (without `node_modules`, `dist`, `CHANGELOG.md`, or `.DS_Store`).
-2. Rename it in `package.json` (`name`, `description`, and `config.s3BucketPath`),
+2. Rename it in `package.json` (`name` and `description`),
    `index.html`, `main.tsx` (the root id, the API URL attribute, and its error
    messages), `lib/const.tsx`, and `README.md`.
 3. Replace the `Types.tsx` object type, and the table columns and card fields,

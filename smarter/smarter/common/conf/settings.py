@@ -37,10 +37,9 @@ import re  # library for regular expressions
 import warnings  # library for issuing warning messages
 from functools import cached_property, lru_cache
 from typing import Any, List, Optional, Pattern, Union  # type hint utilities
-from urllib.parse import urljoin, urlparse  # library for URL manipulation
+from urllib.parse import urlparse  # library for URL manipulation
 
 # 3rd party stuff
-import requests
 from pydantic import (
     AnyUrl,
     EmailStr,
@@ -54,12 +53,10 @@ from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # smarter stuff
-from smarter.common.api import SmarterApiVersions
 from smarter.common.conf.const import DEFAULT_ROOT_DOMAIN, DOT_ENV_LOADED, THE_EMPTY_SET
 from smarter.common.const import (
     SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
-    SMARTER_DEFAULT_REACTJS_APP_LOADER_URL,
     SMARTER_LOCAL_PORT,
     SMARTER_PROJECT_CDN_URL,
     SMARTER_PROJECT_DOCS_URL,
@@ -2944,49 +2941,6 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    smarter_reactjs_app_loader_path: str = Field(
-        settings_defaults.REACTJS_APP_LOADER_PATH,
-        description="The path to the ReactJS app loader script.",
-        examples=["/ui-prompt/app-loader.js"],
-        title="Smarter ReactJS App Loader Path",
-    )
-    """
-    The path to the ReactJS app loader script.
-
-    This setting specifies the URL path where the ReactJS application loader script is located.
-    It is used to load the ReactJS frontend for the platform.
-
-    :type: str
-    :default: Value from ``settings_defaults.REACTJS_APP_LOADER_PATH``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    @before_field_validator("smarter_reactjs_app_loader_path")
-    def validate_smarter_reactjs_app_loader_path(cls, v: Optional[str]) -> str:
-        """Validates the `smarter_reactjs_app_loader_path` field.
-
-        Needs
-        to start with a slash (/) and end with '.js'. The final string value
-        should be url friendly. example: /ui-prompt/app-loader.js
-
-        Args:
-            v (Optional[str]): The Smarter ReactJS app loader path value to validate.
-
-        Returns:
-            str: The validated Smarter ReactJS app loader path.
-        """
-        if v in THE_EMPTY_SET:
-            return settings_defaults.REACTJS_APP_LOADER_PATH
-
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"smarter_reactjs_app_loader_path of type {type(v)} is not a str: {v}")
-
-        if not v.startswith("/"):
-            raise SmarterConfigurationError(f"smarter_reactjs_app_loader_path must start with '/': {v}")
-        if not v.endswith(".js"):
-            raise SmarterConfigurationError(f"smarter_reactjs_app_loader_path must end with '.js': {v}")
-        return v
-
     social_auth_google_oauth2_key: SecretStr = Field(
         settings_defaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
         description="The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.",
@@ -4240,89 +4194,6 @@ class Settings(BaseSettings):
             - SMARTER_API_KEY_MAX_LIFETIME_DAYS
         """
         return SMARTER_API_KEY_MAX_LIFETIME_DAYS
-
-    @cached_property
-    def smarter_reactjs_app_loader_url(self) -> str:
-        """
-        Return the full URL to the ReactJS app loader script.
-
-        This is used for loading the ReactJS Prompt frontend component into html
-        web pages. Attempts to validate the URL by checking for HTTP 200 status.
-        Provides a fallback URL if the primary URL is not reachable.
-
-        Example:
-            >>> print(smarter_settings.smarter_reactjs_app_loader_url)
-            'https://alpha.platform.example.com/ui-prompt/app-loader.js'
-
-        See Also:
-            - smarter_settings.environment_cdn_url
-            - smarter_settings.smarter_reactjs_app_loader_path
-        """
-
-        def check_smarter_reactjs_app_loader_url(url, timeout: float = 1.50) -> bool:
-            """
-            Checks if the smarter_reactjs_app_loader_url returns HTTP 200 status.
-
-            Returns True if status code is 200, False otherwise.
-            Uses requests if available, else falls back to urllib.
-            """
-            try:
-                resp = requests.get(url, timeout=timeout)
-                return resp.status_code == 200
-            # pylint: disable=broad-except
-            except Exception:
-                return False
-
-        intended_url = urljoin(self.environment_cdn_url, self.smarter_reactjs_app_loader_path)
-        fallback_url = SMARTER_DEFAULT_REACTJS_APP_LOADER_URL
-        if check_smarter_reactjs_app_loader_url(intended_url):
-            logger.debug(
-                "%s.smarter_reactjs_app_loader_url() is %s.",
-                logger_prefix,
-                formatted_text_green("READY"),
-            )
-            return intended_url
-        elif check_smarter_reactjs_app_loader_url(fallback_url):
-            logger.debug(
-                "%s.smarter_reactjs_app_loader_url() is %s. ",
-                logger_prefix,
-                formatted_text_green("READY"),
-            )
-            return fallback_url
-        else:
-            logger.error(
-                "%s.smarter_reactjs_app_loader_url() is %s. Could not retrieve the ReactJS app loader from either %s or %s. Please check your CDN configuration and internet connectivity. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Prompt.",
-                logger_prefix,
-                formatted_text_red("NOT_READY"),
-                intended_url,
-                fallback_url,
-            )
-            return intended_url  # return intended URL even if unreachable
-
-    @cached_property
-    def smarter_reactjs_root_div_id(self) -> str:
-        """
-        Return the HTML div ID used as the root for the ReactJS Prompt app.
-
-        Start with a string like: "example.com/v1/ui-prompt/root", then
-        convert it into an html safe id like: "example-com-v1-ui-prompt-root"
-
-        Example:
-            >>> print(smarter_settings.smarter_reactjs_root_div_id)
-            'example-com-v1-ui-prompt-root'
-        """
-        APP_LOADER_FILENAME = "app-loader.js"
-
-        loader_path = self.smarter_reactjs_app_loader_path
-        if APP_LOADER_FILENAME not in loader_path:
-            raise SmarterConfigurationError(
-                f"Expected 'app-loader.js' in smarter_reactjs_app_loader_path, got: {loader_path}"
-            )
-
-        div_root_id = SmarterApiVersions.V1 + self.smarter_reactjs_app_loader_path.replace(APP_LOADER_FILENAME, "root")
-        div_root_id = div_root_id.replace(".", "-").replace("/", "-")
-
-        return div_root_id
 
     @cached_property
     def version(self) -> str:
