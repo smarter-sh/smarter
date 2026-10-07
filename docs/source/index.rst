@@ -313,12 +313,6 @@ MCPClient, and four guardrails, and it contains no code.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
-
-   Quick Start Guide <smarter-platform/installation/quick-start>
-
-.. toctree::
-   :maxdepth: 1
    :caption: Table of Contents
 
    smarter-platform

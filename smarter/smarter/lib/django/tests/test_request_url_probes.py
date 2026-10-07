@@ -108,11 +108,12 @@ class TestSmarterRequestUrlProbes(TestAccountMixin):
         self.assertFalse(self.srm("http://example.com/contact/").is_llmclient)
 
     def test_llmclient_smarter_api_url(self):
-        """/api/v1/workbench/<int:pk>/prompt/ and .../config/ are LLMClient smarter api urls, which carry the LLMClient's id."""
+        """/api/v1/workbench/<int:pk>/prompt/ and .../config/ are LLMClient smarter api urls, which carry the LLMClient's id or hashed id."""
         for url in (
             "http://localhost:9357/api/v1/workbench/1/prompt/",
             "http://localhost:9357/api/v1/workbench/1/config/",
             "http://localhost:9357/api/v1/llm-clients/42/prompt/",
+            "http://localhost:9357/api/v1/llm-clients/rMTAwMDAxNgx/prompt/",
         ):
             with self.subTest(url=url):
                 srm = self.srm(url)
@@ -122,8 +123,12 @@ class TestSmarterRequestUrlProbes(TestAccountMixin):
         self.assertEqual(
             self.srm("http://localhost:9357/api/v1/llm-clients/42/prompt/").smarter_request_llmclient_id, 42
         )
+        self.assertEqual(
+            self.srm("http://localhost:9357/api/v1/llm-clients/rMTAwMDAxNgx/prompt/").smarter_request_llmclient_id, 16
+        )
         for url in (
             "http://localhost:9357/api/v1/workbench/not-a-number/prompt/",
+            "http://localhost:9357/api/v1/llm-clients/xrMTAwMDAxNgx/prompt/",
             "http://localhost:9357/api/v1/workbench/1/other/",
             "http://localhost:9357/api/v2/workbench/1/prompt/",
             "http://localhost:9357/apis/v1/workbench/1/prompt/",
