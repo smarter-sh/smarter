@@ -95,10 +95,9 @@ class TestSettings(SmarterTestBase):
         self.assertIsNotNone(smarter_settings.aws_region)
 
     def test_aws_eks_cluster_name(self):
-        self.assertIsNotNone(smarter_settings.aws_eks_cluster_name)
-
-    def test_aws_db_instance_identifier(self):
-        self.assertIsNotNone(smarter_settings.aws_db_instance_identifier)
+        """The cluster is optional: its name is None when it is not set, and never a placeholder."""
+        cluster_name = smarter_settings.aws_eks_cluster_name
+        self.assertTrue(cluster_name is None or (cluster_name and not cluster_name.startswith("SET-ME")))
 
     def test_branding_corporate_name(self):
         self.assertIsNotNone(smarter_settings.branding_corporate_name)
@@ -287,10 +286,11 @@ class TestSettings(SmarterTestBase):
         self.assertIsNotNone(smarter_settings.smtp_from_email)
 
     def test_smtp_host(self):
-        self.assertIsNotNone(smarter_settings.smtp_host)
+        """SMTP is optional: the host is None when neither SMTP_HOST nor AWS_REGION is set."""
+        self.assertTrue(smarter_settings.smtp_host is None or isinstance(smarter_settings.smtp_host, str))
 
     def test_smtp_password(self):
-        self.assertIsNotNone(smarter_settings.smtp_password)
+        self.assertTrue(smarter_settings.smtp_password is None or isinstance(smarter_settings.smtp_password, SecretStr))
 
     def test_smtp_port(self):
         self.assertIsNotNone(smarter_settings.smtp_port)
@@ -302,7 +302,7 @@ class TestSettings(SmarterTestBase):
         self.assertIsNotNone(smarter_settings.smtp_use_tls)
 
     def test_smtp_username(self):
-        self.assertIsNotNone(smarter_settings.smtp_username)
+        self.assertTrue(smarter_settings.smtp_username is None or isinstance(smarter_settings.smtp_username, SecretStr))
 
     def test_stripe_live_secret_key(self):
         self.assertIsNotNone(smarter_settings.stripe_live_secret_key)

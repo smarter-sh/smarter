@@ -35,11 +35,22 @@ from smarter.common.utils.utils import (
 )
 
 from .const import DEFAULT_ROOT_DOMAIN
-from .env import get_env
+from .env import get_env, is_missing_value
 from .services import Services
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__ + ".SettingsDefaults()")
+
+
+def optional_secret_env(var_name: str) -> Optional[SecretStr]:
+    """
+    Return an optional secret from the environment, or None if it is missing or a placeholder.
+
+    :param var_name: The environment variable, without the optional ``SMARTER_`` prefix.
+    :returns: The secret, or None.
+    """
+    value = get_env(var_name, default=None, is_secret=True)
+    return None if is_missing_value(value) else SecretStr(value)
 
 
 class DjangoPermittedStorages:
@@ -75,7 +86,7 @@ class SettingsDefaults:
         Do not add application logic or side effects to this class. It should only define static default values and simple logic for fallback selection.
     """
 
-    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN, is_required=True)
+    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN)
 
     # for liveness and readiness probes from kubernetes.
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
@@ -94,10 +105,9 @@ class SettingsDefaults:
     AWS_REGION = get_env("AWS_REGION", default=None)
 
     CLOUD_PROVIDER: str = get_env("CLOUD_PROVIDER", "aws")
-    AWS_EKS_CLUSTER_NAME = get_env("AWS_EKS_CLUSTER_NAME")
+    AWS_EKS_CLUSTER_NAME: Optional[str] = get_env("AWS_EKS_CLUSTER_NAME", default=None)
     LLMHOST_NODE_ROLE_ARN = get_env("LLMHOST_NODE_ROLE_ARN", default=None)
     LLMHOST_NODE_SUBNET_IDS = get_env("LLMHOST_NODE_SUBNET_IDS", default=[])
-    AWS_RDS_DB_INSTANCE_IDENTIFIER = get_env("AWS_RDS_DB_INSTANCE_IDENTIFIER")
 
     BRANDING_CORPORATE_NAME: str = get_env("BRANDING_CORPORATE_NAME", SMARTER_ORGANIZATION_NAME)
     BRANDING_SUPPORT_PHONE_NUMBER: str = get_env("BRANDING_SUPPORT_PHONE_NUMBER", "(###) 555-1212")
@@ -163,7 +173,7 @@ class SettingsDefaults:
         )
 
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
-    EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com", is_required=True)
+    EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
     ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
@@ -212,15 +222,12 @@ class SettingsDefaults:
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}", is_required=True)
+    MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
 
-    MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
-        "MYSQL_TEST_DATABASE_SECRET_NAME",
-        "smarter_test_db",
-        is_required=True,
-    )
+    # the user and password that scripts/smarter_test_db.sql creates in the local MariaDB.
+    MYSQL_TEST_DATABASE_SECRET_NAME = get_env("MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db")
     MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
-        get_env("MYSQL_TEST_DATABASE_PASSWORD", is_secret=True, is_required=True)
+        get_env("MYSQL_TEST_DATABASE_PASSWORD", "smarter_test_user", is_secret=True)
     )
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
@@ -242,21 +249,17 @@ class SettingsDefaults:
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
-    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
-        "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db", is_required=True
-    )
-    SMARTER_MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
-        get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD", is_secret=True, is_required=True)
-    )
-
-    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}", is_required=True)
-    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{PLATFORM_SUBDOMAIN}.{ROOT_DOMAIN}", is_required=True)
-    SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
+    # SMTP is optional: without credentials, email is not sent, and each email that is not sent is logged.
+    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
+    # None unless set: smarter_settings derives the from address from the platform domain.
+    SMTP_FROM_EMAIL: Optional[str] = get_env("SMTP_FROM_EMAIL", default=None)
+    # None unless set: smarter_settings derives the AWS SES endpoint of AWS_REGION.
+    SMTP_HOST: Optional[str] = get_env("SMTP_HOST", default=None)
     SMTP_PORT = int(get_env("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
     SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
-    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD", is_secret=True, is_required=True))
-    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME", is_secret=True))
+    SMTP_PASSWORD: Optional[SecretStr] = optional_secret_env("SMTP_PASSWORD")
+    SMTP_USERNAME: Optional[SecretStr] = optional_secret_env("SMTP_USERNAME")
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
