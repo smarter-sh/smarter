@@ -124,15 +124,77 @@ class TestSettingsMethods(SmarterTestBase):
     """Test the Settings' methods and properties that the test_conf tests don't reach."""
 
     def test_ready_reports_each_missing_service(self):
-        """Test that ready() is False, and warns, for the default root domain, missing AWS and missing SMTP."""
-        settings = smarter_settings.model_copy(update={"root_domain": "example.com"})
+        """Test that ready() is False, and warns, for the default root domain outside of local, and missing AWS."""
+        settings = smarter_settings.model_copy(update={"root_domain": "example.com", "environment": "prod"})
         with (
             patch.object(Settings, "aws_is_configured", new_callable=PropertyMock, return_value=False),
-            patch.object(Settings, "smtp_is_configured", new_callable=PropertyMock, return_value=False),
             patch("builtins.print") as mock_print,
         ):
             self.assertFalse(settings.ready())
-        self.assertGreaterEqual(mock_print.call_count, 3)
+        self.assertEqual(mock_print.call_count, 2)
+
+    def test_ready_needs_neither_smtp_nor_a_root_domain_locally(self):
+        """Test that SMTP is never needed, and the default root domain is fine in the local environment."""
+        settings = smarter_settings.model_copy(update={"root_domain": "example.com", "environment": "local"})
+        with (
+            patch.object(Settings, "aws_is_configured", new_callable=PropertyMock, return_value=True),
+            patch.object(Settings, "smtp_is_configured", new_callable=PropertyMock, return_value=False),
+            patch("builtins.print") as mock_print,
+        ):
+            self.assertTrue(settings.ready())
+        mock_print.assert_not_called()
+
+    def test_smtp_is_configured(self):
+        """Test that SMTP is configured only when every credential is set, and none is a placeholder."""
+        configured = {"smtp_username": SecretStr("user"), "smtp_password": SecretStr("password")}
+
+        def smtp_is_configured(**update) -> bool:
+            settings = smarter_settings.model_copy(update={**configured, **update})
+            # a copy keeps the cached_property of the original, which is computed again here.
+            settings.__dict__.pop("smtp_is_configured", None)
+            return settings.smtp_is_configured
+
+        with patch.object(Settings, "smtp_host", new_callable=PropertyMock, return_value="smtp.example.com"):
+            self.assertTrue(smtp_is_configured())
+            for name, value in (
+                ("smtp_username", None),
+                ("smtp_password", None),
+                ("smtp_password", SecretStr(DEFAULT_MISSING_VALUE)),
+                ("smtp_username", SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")),
+            ):
+                with self.subTest(name=name, value=value):
+                    self.assertFalse(smtp_is_configured(**{name: value}))
+        with patch.object(Settings, "smtp_host", new_callable=PropertyMock, return_value=None):
+            self.assertFalse(smtp_is_configured())
+
+    def test_smtp_host_and_from_email(self):
+        """Test that SMTP_HOST and SMTP_FROM_EMAIL are used when set, and derived otherwise."""
+        module = "smarter.common.conf.settings"
+        settings = smarter_settings.model_copy(update={"aws_region": "us-west-2"})
+        with patch(f"{module}.settings_defaults") as defaults:
+            defaults.SMTP_HOST = "smtp.example.com"
+            defaults.SMTP_FROM_EMAIL = "hello@example.com"
+            self.assertEqual(settings.smtp_host, "smtp.example.com")
+            self.assertEqual(settings.smtp_from_email, "hello@example.com")
+            defaults.SMTP_HOST = None
+            defaults.SMTP_FROM_EMAIL = DEFAULT_MISSING_VALUE
+            self.assertEqual(settings.smtp_host, "email-smtp.us-west-2.amazonaws.com")
+            self.assertEqual(settings.smtp_from_email, f"no-reply@{settings.platform_subdomain}.{settings.root_domain}")
+            self.assertIsNone(smarter_settings.model_copy(update={"aws_region": None}).smtp_host)
+
+    def test_optional_values_are_none_when_missing(self):
+        """Test that the optional cluster name and SMTP credentials are None when missing, or a placeholder."""
+        module = "smarter.common.conf.settings"
+        for value in (None, "", DEFAULT_MISSING_VALUE):
+            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
+                defaults.AWS_EKS_CLUSTER_NAME = DEFAULT_MISSING_VALUE
+                defaults.SMTP_PASSWORD = None
+                defaults.SMTP_USERNAME = None
+                self.assertIsNone(call(Settings.validate_aws_eks_cluster_name, value, {}))
+                self.assertIsNone(call(Settings.validate_smtp_password, value, {}))
+                self.assertIsNone(call(Settings.validate_smtp_username, value, {}))
+        self.assertEqual(call(Settings.validate_aws_eks_cluster_name, "my-cluster", {}), "my-cluster")
+        self.assertIsNone(call(Settings.validate_smtp_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
 
     def test_versions(self):
         for name in ("version", "python_version", "pydantic_version", "drf_version", "linux_distribution"):

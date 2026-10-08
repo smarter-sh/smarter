@@ -5,5 +5,5 @@
 **/node_modules/
 package-lock.json
 **/CHANGELOG.md
-storybook/public/mockServiceWorker.js
+**/mockServiceWorker.js
 **/*.tgz

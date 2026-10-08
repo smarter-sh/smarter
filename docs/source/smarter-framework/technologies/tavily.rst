@@ -103,10 +103,10 @@ Setup
 
        python manage.py initialize_providers
 
-   If ``TAVILY_API_KEY`` is not set, or is still a placeholder, such as ``.env.example``'s
-   ``SET-ME-PLEASE`` or ``values.yaml``'s ``SET-ME-IN-helm/charts/smarter/values.yaml``, the
-   command logs a warning and does not create the Secret. It never stores a placeholder as the
-   key.
+   If ``TAVILY_API_KEY`` is not set, or is still a placeholder, such as ``SET-ME-PLEASE`` or
+   ``values.yaml``'s ``SET-ME-IN-helm/charts/smarter/values.yaml``, the command does not create
+   the Secret, and lists the key in the ``[API KEYS NOT SET]`` console error that it logs at the
+   end, with the other missing API keys. It never stores a placeholder as the key.
 
 4. **Deploy the built-in LLMClients.**
 
@@ -178,6 +178,6 @@ Troubleshooting
     the missing Secret above. Fix the Secret, and run ``manage.py deploy_builtin_llmclients``,
     which reports each manifest that it fails to apply as ``Failed to apply manifest ...``.
 
-``initialize_tavily: TAVILY_API_KEY is not set``
+``TAVILY_API_KEY is not set``, and ``SMARTER_TAVILY_API_KEY`` in the ``[API KEYS NOT SET]`` console error
     The init command found no key, or only a placeholder. Set the environment variable, or, in a
     deployment, the GitHub secret ``TAVILY_API_KEY``.

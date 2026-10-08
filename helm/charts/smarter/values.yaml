@@ -54,7 +54,6 @@ env:
   SMARTER_ADMIN_USERNAME: "admin"
   SMARTER_ANTHROPIC_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_AWS_EKS_CLUSTER_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_ADDRESS1: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_ADDRESS2: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_CITY: "SET-ME-IN-helm/charts/smarter/values.yaml"

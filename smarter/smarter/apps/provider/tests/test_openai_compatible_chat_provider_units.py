@@ -11,6 +11,9 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from smarter.apps.account.models.budget import SmarterBudgetExceeded
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.services.text_completion.lib import (
+    chat_provider_base as base_module,
+)
+from smarter.apps.provider.services.text_completion.lib import (
     openai_compatible_chat_provider as module,
 )
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
@@ -413,10 +416,43 @@ class TestChatProviderBaseUnits(SmarterTestBase):
             OpenAISmarterClient,
             valid_chat_completion_models=PropertyMock(return_value=["another-model"]),
             provider_name=PropertyMock(return_value="test-provider"),
+            api_key=PropertyMock(return_value="sk-test"),
             **{name: PropertyMock(return_value=value) for name, value in required.items()},
         ):
             with self.assertRaises(SmarterValueError):
                 self.client.validate()
+
+    def test_validate_requires_an_api_key(self):
+        """A Provider without an API key, e.g. a built-in one whose key is not set, fails with how to set it."""
+        required = {
+            "prompt": MagicMock(),
+            "data": {"messages": []},
+            "user": MagicMock(),
+            "default_model": "gpt-test",
+            "default_system_role": "You are a test.",
+            "default_temperature": 0.5,
+            "default_max_tokens": 100,
+        }
+        for provider_name, env_var, api_key in (
+            ("openai", "OPENAI_API_KEY", None),
+            ("googleai", "GEMINI_API_KEY", ""),
+            ("custom", "CUSTOM_API_KEY", "SET-ME-PLEASE"),
+        ):
+            with (
+                self.subTest(provider=provider_name),
+                patch.multiple(
+                    OpenAISmarterClient,
+                    provider_name=PropertyMock(return_value=provider_name),
+                    api_key=PropertyMock(return_value=api_key),
+                    **{name: PropertyMock(return_value=value) for name, value in required.items()},
+                ),
+                patch.object(base_module, "base_logger") as logger,
+            ):
+                with self.assertRaises(SmarterConfigurationError) as context:
+                    self.client.validate()
+                self.assertIn(f"SMARTER_{env_var}", str(context.exception))
+                self.assertIn("initialize_providers", str(context.exception))
+                self.assertIn(f"SMARTER_{env_var}=<your key>", logger.error.call_args.args[0])
 
     def test_default_model_from_the_provider(self):
         self.patch_properties(provider=MagicMock(default_model="provider-model"))
