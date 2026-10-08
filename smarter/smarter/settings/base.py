@@ -1446,13 +1446,13 @@ LOGGING = {
             "formatter": "verbose",
         },
         "uvicorn": {
-            "level": logging.INFO,
+            "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
             "formatter": "truncated",
             "filters": ["health_check"],
         },
         "redis": {
-            "level": logging.INFO,
+            "level": smarter_settings.log_level_name,
             "class": "smarter.lib.logging.RedisLogHandler",
             "formatter": "truncated",
         },
@@ -1464,7 +1464,7 @@ LOGGING = {
     "loggers": {
         "uvicorn.access": {
             "handlers": ["uvicorn"],
-            "level": logging.INFO,
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery": {
