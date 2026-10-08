@@ -1,5 +1,5 @@
 """
-smarter.lib.django.waffle
+Smarter.lib.django.waffle
 ------------------------------
 
 Enhanced, managed Django-waffle wrapper with short-lived Redis-based caching
@@ -16,8 +16,8 @@ Features:
 .. important::
 
     These are managed feature flags; add any new switches to the SmarterWaffleSwitches class. These switches
-    are verified duing deployments to ensure that they exist in the database. Missing switches are
-    automatically created with a default inactive state.
+    are verified duing deployments to ensure that they exist in the database. A switch that is
+    checked before it exists is created with its default from SmarterWaffleSwitches.
 
 .. important::
 
@@ -56,9 +56,7 @@ if TYPE_CHECKING:
 
 # pylint: disable=C0415
 def __getattr__(name):
-    """
-    Lazy import of attributes to avoid circular imports and unnecessary imports at the module level.
-    """
+    """Lazy import of attributes to avoid circular imports and unnecessary imports at the module level."""
     if name == "SmarterSwitchAdmin":
         from .admin import SmarterSwitchAdmin
 

@@ -68,7 +68,7 @@ init:
 	@echo "Run 'make run' to start the application."
 	@echo "    'make help' to see all available commands."
 	@echo ""
-	@echo "The application is served at http://localhost:9357/ with the following credentials:"
+	@echo "The web console is served at http://localhost:9357/ with the following credentials:"
 	@echo "    Username: admin"
 	@echo "    Email: admin@$(or $(SMARTER_ROOT_DOMAIN),example.com)"
 	@echo "    Password: smarter"
@@ -76,6 +76,10 @@ init:
 	@echo "The database is accessible at localhost:3306 with the following credentials:"
 	@echo "    Username: root"
 	@echo "    Password: smarter"
+	@echo ""
+	@echo "Feature switches (django-waffle) are at http://localhost:9357/admin/waffle/switch/"
+	@echo "They turn features, middleware and per-app logging on and off at runtime, without"
+	@echo "a restart.
 	@echo "==============================================================================="
 
 activate:
