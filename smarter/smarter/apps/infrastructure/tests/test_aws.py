@@ -242,10 +242,14 @@ class TestAWSProvider(AWSTestBase):
             "cluster": {"health": {}, "platformVersion": "eks.1", "status": "ACTIVE", "version": "1.33", "other": 1}
         }
         provider._eks = eks  # pylint: disable=protected-access
-        self.assertEqual(
-            provider.get_kubernetes_cluster_info(),
-            {"health": {}, "platformVersion": "eks.1", "status": "ACTIVE", "version": "1.33"},
-        )
+        # set the cluster name here, so the test does not depend on the environment's .env.
+        with patch(f"{HELPERS}.eks.smarter_settings") as settings:
+            settings.aws_eks_cluster_name = "cluster"
+            self.assertEqual(
+                provider.get_kubernetes_cluster_info(),
+                {"health": {}, "platformVersion": "eks.1", "status": "ACTIVE", "version": "1.33"},
+            )
+        eks.client.describe_cluster.assert_called_once_with(name="cluster")
         with patch.object(AWSEks, "update_kubeconfig", return_value=True):
             self.assertTrue(provider.update_kubeconfig())
 
