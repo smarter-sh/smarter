@@ -2,11 +2,12 @@
 
 from importlib import import_module
 
-import waffle as waffle_orig
 from asgiref.sync import sync_to_async
 from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 from django.db.utils import OperationalError, ProgrammingError
+from waffle import get_waffle_switch_model
+from waffle.utils import get_cache
 
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
@@ -31,6 +32,29 @@ except ImportError:
     MariaDBProgrammingError = None
 
 prefix = f"{formatted_text(__name__)}.switch_is_active()"
+
+
+def create_missing_switch(switch_name: str):
+    """
+    Create a switch that is missing from the database, with its Smarter default and comment.
+
+    django-waffle creates missing switches with its global ``WAFFLE_SWITCH_DEFAULT``, which is
+    inactive. A switch that is checked before ``manage.py initialize_waffle`` runs, e.g. by
+    middleware while ``make init`` migrates the database, would then stay inactive even when its
+    default is active, because ``initialize_waffle`` only creates switches that do not exist.
+
+    :param switch_name: The name of a switch in :class:`SmarterWaffleSwitches`.
+    :returns: The switch.
+    :rtype: waffle.models.Switch
+    """
+    defaults = smarter_waffle_switches.switches[switch_name]  # type: ignore[index]
+    switch, created = get_waffle_switch_model().objects.get_or_create(
+        name=switch_name, defaults={"active": defaults.default, "note": defaults.comment}
+    )
+    get_cache().set(switch._cache_key(switch_name), switch)  # pylint: disable=protected-access
+    if created:
+        logger.info("%s created missing switch %s, active=%s", prefix, switch_name, switch.active)
+    return switch
 
 
 def switch_is_active(switch_name: str) -> bool:
@@ -85,7 +109,10 @@ def switch_is_active(switch_name: str) -> bool:
         if t is not None
     ) or (Exception,)
     try:
-        return waffle_orig.switch_is_active(switch_name)
+        switch = get_waffle_switch_model().get(switch_name)
+        if not switch.pk:
+            switch = create_missing_switch(switch_name)
+        return switch.is_active()
     except (*db_exceptions, AppRegistryNotReady) as e:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True

@@ -27,7 +27,7 @@ spec:
     appPlaceholder: Give me something to calculate...
     appWelcomeMessage: Welcome to the Calculator Bot! How can I help you today?
     customDomain: null
-    defaultMaxTokens: 256
+    defaultMaxTokens: 4096
     defaultModel: gpt-6-luna
     defaultSystemRole: You are a helpful calculator. You perform all of your
        operations using the calculator tool call function that is provided to you
@@ -35,6 +35,11 @@ spec:
       calculations. You NEVER perform  calculations yourself. If you are
       unable to provide the necessary calculator parameters, then ask
       the user for clarification.
+
+      Your replies are displayed in a chat window that renders markdown. Show the
+      expression in inline code and the result in bold, such as `(3 + 5) * 2` = **16**.
+      For a calculation with several steps, show each step in a numbered list. Do not use
+      LaTeX or HTML, which the chat window does not render. Keep replies short.
     defaultTemperature: 1.0
     deployed: false
     provider: openai

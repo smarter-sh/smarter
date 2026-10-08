@@ -22,6 +22,7 @@ class Command(SmarterCommand):
     - Verifies the existence of each switch, providing feedback for each verification or creation.
     - Identifies and deletes orphaned switches that are present in the database but not defined in the current application configuration.
     - In local development environments, enables the ``ENABLE_REACTAPP_DEBUG_MODE`` switch for enhanced debugging capabilities.
+    - With ``--reset``, sets every existing switch to its default, discarding changes made in Django admin.
 
     **Usage:**
 
@@ -41,12 +42,23 @@ class Command(SmarterCommand):
         :py:class:`waffle.models.Switch` - The Django Waffle model representing feature switches.
         :py:class:`smarter.lib.django.waffle.SmarterWaffleSwitches` - The class defining all Smarter-specific Waffle switches.
         :py:data:`smarter.common.conf.settings.smarter_settings` - The Smarter settings module for environment detection.
-
     """
 
+    def add_arguments(self, parser):
+        """Add arguments to the command."""
+        parser.add_argument(
+            "--reset",
+            action="store_true",
+            help="Set every switch to its default, discarding changes made in Django admin.",
+        )
+
     def handle(self, *args, **options):
-        """ensure that switches exist. If not, then create them"""
+        """Ensure that switches exist.
+
+        If not, then create them
+        """
         waffle_switches = SmarterWaffleSwitches()
+        reset = options.get("reset", False)
 
         def verify_switch(switch_name):
             """Initialize a switch."""
@@ -66,6 +78,10 @@ class Command(SmarterCommand):
                     switch.note = waffle_switches.switches[switch_name].comment  # type: ignore
                     switch.save()
                     print(f"Updated comment for switch {switch_name}")
+                if reset and switch.active != waffle_switches.switches[switch_name].default:  # type: ignore
+                    state = "on" if waffle_switches.switches[switch_name].default else "off"  # type: ignore
+                    call_command("waffle_switch", switch_name, state)
+                    print(f"Reset switch {switch_name} to {state}")
                 print(f"Verified switch {switch_name}")
 
         self.handle_begin()
