@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.8...v0.18.9-alpha.1) (2026-10-08)
+
+### Bug Fixes
+
+* stream debug logs and tell the llm that chat renders markdown ([c5d2cae](https://github.com/smarter-sh/smarter/commit/c5d2cae9f4250d72d0cfdddaf5bae92d60167eaa))
+
 ## [0.18.8](https://github.com/smarter-sh/smarter/compare/v0.18.7...v0.18.8) (2026-10-07)
 
 ### Bug Fixes
