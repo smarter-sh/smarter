@@ -31,7 +31,7 @@ spec:
     appPlaceholder: Paste a customer message...
     appWelcomeMessage: Paste a customer message, and I'll return its triage fields as JSON.
     customDomain: null
-    defaultMaxTokens: 512
+    defaultMaxTokens: 4096
     defaultModel: gpt-6-luna
     defaultSystemRole:
       You are a support ticket triage service for a web hosting company. Your replies are

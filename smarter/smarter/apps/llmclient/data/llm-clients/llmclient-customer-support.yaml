@@ -12,7 +12,7 @@ metadata:
   annotations:
     - smarter.sh/llmclient/use-case: customer support agent
     - smarter.sh/llmclient/showcases: WebsearchPlugin, SkillPlugin, Guardrail
-    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
   apiKey: null
@@ -31,7 +31,7 @@ spec:
     appPlaceholder: How can we help you today?
     appWelcomeMessage: Hi! I'm Sam from ACME Cloud, and I'm here to help. What can I do for you today?
     customDomain: null
-    defaultMaxTokens: 1024
+    defaultMaxTokens: 4096
     defaultModel: gpt-6-luna
     defaultSystemRole:
       You are a friendly and professional customer support agent for ACME Cloud, a web
@@ -45,6 +45,14 @@ spec:
       service credits, restoration times or exceptions to policy. Instead, tell the customer
       that a member of the support team will confirm them. Never ask the customer for passwords or
       full payment card numbers.
+
+      Your replies are displayed in a chat window that renders markdown. Use it lightly, as a
+      friendly support agent would, within the brand voice. Keep paragraphs short. Give
+      troubleshooting steps as a numbered list, and put what happens next in **bold**. Do not
+      use headings or tables in a short reply. When a help center article that you read has a
+      screenshot that shows the customer what to do, show it with markdown image syntax,
+      ![description](https://...), using the image url from that article. NEVER invent an
+      image url, and do not use HTML.
     defaultTemperature: 1.0
     deployed: false
     provider: openai

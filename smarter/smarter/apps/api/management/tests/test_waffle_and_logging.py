@@ -36,6 +36,38 @@ class TestInitializeWaffle(CommandTestBase):
         orphan.delete.assert_called_once()
         existing.delete.assert_not_called()
 
+    def check_reset(self, *args) -> list:
+        """Run initialize_waffle against existing switches that are all inactive, and return the switches it set."""
+        switches = {
+            name: MagicMock(note=SmarterWaffleSwitches().switches[name].comment, active=False)
+            for name in SmarterWaffleSwitches().all
+        }
+        switch = MagicMock()
+        switch.objects.filter.return_value.exists.return_value = True
+        switch.objects.get.side_effect = lambda name: switches[name]
+        switch.objects.all.return_value = []
+        with patch(f"{WAFFLE}.Switch", switch), patch(f"{WAFFLE}.call_command") as call, patch("builtins.print"):
+            self.run_command("initialize_waffle", *args)
+        return [
+            c.args[1:] for c in call.call_args_list if c.args[1] != SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE
+        ]
+
+    def test_reset_sets_switches_to_their_defaults(self):
+        """Test that --reset turns on the inactive switches whose default is active, and leaves the others."""
+        defaults = SmarterWaffleSwitches().switches
+        expected = [
+            (name, "on")
+            for name in SmarterWaffleSwitches().all
+            if defaults[name].default and name != SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE
+        ]
+        changed = self.check_reset("--reset")
+        self.assertIn((SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS, "on"), changed)
+        self.assertCountEqual(changed, expected)
+
+    def test_existing_switches_are_kept_without_reset(self):
+        """Test that existing switches keep their state, which may have been changed in Django admin."""
+        self.assertEqual(self.check_reset(), [])
+
 
 class TestSetDebugLogging(CommandTestBase):
     def setUp(self):

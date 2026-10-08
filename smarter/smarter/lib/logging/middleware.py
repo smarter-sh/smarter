@@ -19,7 +19,7 @@ Features
 - Integrates with Django's middleware stack.
 - Uses context variables for safe, per-request logging context.
 - Supports both sync and async Django request handling.
-- Controlled by a Waffle switch (``SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT``).
+- Controlled by a Waffle switch (``SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS``).
 
 Usage
 -----
@@ -68,7 +68,7 @@ from .redis_log_handler import (
 
 logger = logging.getSmarterLogger(__name__)
 
-if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
     logger.debug(
         "%s is %s",
         formatted_text(__name__ + ".SmarterRequestLogContextMiddleware"),
@@ -104,7 +104,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         if self.deserves_amnesty(request.path):
             return super().__call__(request)
 
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
             return super().__call__(request)
 
         context = self.get_sync_context(request)
@@ -122,7 +122,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
         async_get_response = cast(Callable[[HttpRequest], Awaitable[HttpResponseBase]], super().__acall__)
 
-        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
             return await async_get_response(request)
 
         context = await self.get_async_context(request)
