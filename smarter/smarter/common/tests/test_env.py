@@ -4,8 +4,10 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 
+from pydantic import SecretStr
+
 from smarter.common.conf import env
-from smarter.common.conf.env import DEFAULT_MISSING_VALUE, get_env
+from smarter.common.conf.env import DEFAULT_MISSING_VALUE, get_env, is_missing_value
 
 VAR = "TEST_SMARTER_GET_ENV"
 
@@ -64,3 +66,26 @@ class TestGetEnv(TestCase):
             self.assertEqual(self.get("secret-value", "", is_secret=True), "secret-value")
         self.assertIn("****", mock_print.call_args.args[0])
         self.assertNotIn("secret-value", mock_print.call_args.args[0])
+
+
+class TestIsMissingValue(TestCase):
+    """Test that is_missing_value() recognizes unset values and placeholders."""
+
+    def test_missing(self):
+        for value in (
+            None,
+            "",
+            "  ",
+            DEFAULT_MISSING_VALUE,
+            "set-me-please",
+            "SET-ME-IN-helm/charts/smarter/values.yaml",
+        ):
+            with self.subTest(value=value):
+                self.assertTrue(is_missing_value(value))
+                self.assertTrue(is_missing_value(SecretStr(value) if value is not None else None))
+
+    def test_set(self):
+        for value in ("sk-key", "example.com", 0, 587, False):
+            with self.subTest(value=value):
+                self.assertFalse(is_missing_value(value))
+        self.assertFalse(is_missing_value(SecretStr("sk-key")))

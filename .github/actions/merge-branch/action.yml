@@ -44,9 +44,16 @@ runs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git checkout ${{ inputs.source-branch }}
+        # Merge origin/<source>, not the local branch. actions/checkout
+        # creates the local branch at github.sha, the commit that triggered
+        # the workflow, which predates the release commit and tag that
+        # semantic-release has since pushed. Merging that stale commit left
+        # the release tag unreachable from the target branch, so its own
+        # semantic-release run computed the same version again and failed
+        # with "tag already exists".
+        git fetch origin ${{ inputs.source-branch }} ${{ inputs.target-branch }}
         git checkout ${{ inputs.target-branch }}
-        git merge -Xtheirs ${{ inputs.source-branch }}
+        git merge -Xtheirs origin/${{ inputs.source-branch }}
         # github.repository is owner/name, e.g. smarter-sh/smarter.
         git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ github.repository }}.git
         git push origin ${{ inputs.target-branch }}

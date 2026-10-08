@@ -10,6 +10,11 @@ server, so email does not depend on the cloud provider.
 Configuration
 --------------
 
+SMTP is optional, locally and in production. Without SMTP credentials the platform runs, but no
+email is sent: each email that is not sent logs a console error that names it, its recipients, and
+the settings below. ``smarter_settings.smtp_is_configured`` is True once the username, password,
+host and port are all set, and none is a placeholder such as ``SET-ME-PLEASE``.
+
 Set the following environment variables to configure SMTP email sending. These will
 be consumed by :doc:`../developer-reference/smarter-settings`.
 
@@ -21,6 +26,11 @@ be consumed by :doc:`../developer-reference/smarter-settings`.
   SMTP_HOST=email-smtp.us-east-1.amazonaws.com
   SMTP_PORT=587
   SMTP_USE_TLS=True
+  SMTP_FROM_EMAIL=no-reply@platform.example.com
+
+``SMTP_HOST`` defaults to the AWS Simple Email Service endpoint of ``AWS_REGION``,
+``email-smtp.<AWS_REGION>.amazonaws.com``, and ``SMTP_FROM_EMAIL`` defaults to ``no-reply@`` the
+platform's domain.
 
 Also see :doc:`Cloud infrastructure <../../smarter-platform/cloud-infrastructure>` for configuring
 AWS Simple Email Service (SES) as your SMTP provider.

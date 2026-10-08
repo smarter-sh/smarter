@@ -116,7 +116,7 @@ BLOCKED_MESSAGE_PLACEHOLDER = "[This message was blocked by a guardrail.]"
 MARKDOWN_SYSTEM_PROMPT = (
     "Your responses are displayed in a chat window that renders Markdown: headings, bold, italics, "
     "strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and images. "
-    "Use Markdown when it makes a response clearer."
+    "Use Markdown when it makes a response clearer. Include image urls in results when these are relevant to the user's request."
 )
 """
 Added to the system prompt of every request, so that the LLM knows that its responses may use Markdown.

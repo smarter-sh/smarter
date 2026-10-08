@@ -416,6 +416,34 @@ class TestAWSHelpers(AWSTestBase):
             settings.aws_eks_cluster_name = None
             self.assertFalse(eks.update_kubeconfig())
 
+    def test_missing_cluster_name_is_logged_once(self):
+        """Without a cluster name, nothing reaches EKS, and how to set it is logged once per process."""
+        eks = connect(AWSEks(), MagicMock())
+        with (
+            patch(f"{HELPERS}.eks.smarter_settings") as settings,
+            patch(f"{HELPERS}.eks.subprocess.check_call") as call,
+            patch(f"{HELPERS}.eks.logger") as logger,
+            patch.object(AWSEks, "_cluster_name_warned", False),
+        ):
+            settings.aws_eks_cluster_name = None
+            self.assertFalse(eks.update_kubeconfig())
+            self.assertFalse(eks.update_kubeconfig())
+            with self.assertRaises(AWSNotReadyError):
+                eks.get_kubernetes_info()
+        call.assert_not_called()
+        eks.client.describe_cluster.assert_not_called()
+        logger.error.assert_called_once()
+        self.assertIn("SMARTER_AWS_EKS_CLUSTER_NAME", logger.error.call_args.args[0])
+
+    def test_get_kubernetes_info(self):
+        eks = connect(AWSEks(), MagicMock())
+        eks.client.describe_cluster.return_value = {"cluster": {"status": "ACTIVE", "version": "1.33"}}
+        with patch(f"{HELPERS}.eks.smarter_settings") as settings:
+            settings.aws_eks_cluster_name = "cluster"
+            info = eks.get_kubernetes_info()
+        eks.client.describe_cluster.assert_called_once_with(name="cluster")
+        self.assertEqual(info["status"], "ACTIVE")
+
     def test_get_token(self):
         """The EKS token is an STS GetCallerIdentity url, presigned for the cluster, as aws eks get-token creates."""
         eks = connect(AWSEks(), MagicMock())

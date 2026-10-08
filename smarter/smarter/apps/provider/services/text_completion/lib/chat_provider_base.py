@@ -26,6 +26,7 @@ from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.signals import (
     llm_provider_initialized,
 )
+from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.utils import (
@@ -34,10 +35,12 @@ from smarter.apps.provider.services.text_completion.utils import (
     parse_request,
 )
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.env import is_missing_value
 from smarter.common.exceptions import (
+    SmarterConfigurationError,
     SmarterValueError,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_banner, formatted_text
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -323,6 +326,8 @@ class SmarterChatProviderBase(ChatDbMixin):
             raise SmarterValueError(f"{self.formatted_class_name}: default_temperature is required")
         if not self.default_max_tokens:
             raise SmarterValueError(f"{self.formatted_class_name}: default_max_tokens is required")
+        if is_missing_value(self.api_key):
+            self.raise_missing_api_key()
 
         if self.valid_chat_completion_models and self.default_model not in self.valid_chat_completion_models:
             raise SmarterValueError(
@@ -331,6 +336,37 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         if not self.account:
             self.account = self.prompt.user_profile.account
+
+    def raise_missing_api_key(self):
+        """
+        Log, with instructions, that the provider has no API key, and raise.
+
+        A built-in Provider is created without a key when its environment variable is not set, so
+        that the platform runs without it. Its prompts fail here, with an error that the prompt's
+        response reports, rather than in the provider's SDK.
+
+        :raises SmarterConfigurationError: Always.
+        """
+        env_var = BUILTIN_PROVIDER_API_KEY_ENV_VARS.get(
+            str(self.provider_name), f"{str(self.provider_name).upper()}_API_KEY"
+        )
+        message = (
+            f"The {self.provider_name} Provider has no API key. Add SMARTER_{env_var} to .env, restart the "
+            "platform, and run: docker exec smarter-app python manage.py initialize_providers. "
+            "Or set the Provider's API key Secret in the web console."
+        )
+        base_logger.error(
+            formatted_banner(
+                f"[PROVIDER WITHOUT API KEY] Prompts to the {self.provider_name} Provider fail: it has no API key.",
+                "To set it, add the key to .env, restart the platform, and run:",
+                "",
+                f"    SMARTER_{env_var}=<your key>",
+                "    docker exec smarter-app python manage.py initialize_providers",
+                "",
+                "Or set the Provider's API key Secret in the web console.",
+            )
+        )
+        raise SmarterConfigurationError(message)
 
     @cached_property
     def ready(self) -> bool:

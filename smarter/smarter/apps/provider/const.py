@@ -12,3 +12,19 @@ GOOGLE_SERVICE_ACCOUNT_SECRET_NAME = "google_service_account"
 GOOGLE_MAPS_API_KEY_SECRET_NAME = "google_maps_api_key"
 # the Tavily web search api key, which WebsearchPlugins such as smarter_project_websearch use.
 TAVILY_API_KEY_SECRET_NAME = "tavily_api_key"
+
+BUILTIN_PROVIDER_API_KEY_ENV_VARS = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "cohere": "COHERE_API_KEY",
+    "fireworks": "FIREWORKS_API_KEY",
+    "googleai": "GEMINI_API_KEY",
+    "metaai": "LLAMA_API_KEY",
+    "mistral": "MISTRAL_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "togetherai": "TOGETHERAI_API_KEY",
+}
+"""
+The environment variable of each built-in Provider's API key, which manage.py initialize_providers.
+
+reads. Each may also be written with the ``SMARTER_`` prefix.
+"""
