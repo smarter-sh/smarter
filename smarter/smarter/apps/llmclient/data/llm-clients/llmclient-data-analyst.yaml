@@ -12,7 +12,7 @@ metadata:
   annotations:
     - smarter.sh/llmclient/use-case: text to SQL analytics
     - smarter.sh/llmclient/showcases: MCPClient, SkillPlugin, Guardrail
-    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
   apiKey: null
@@ -45,6 +45,14 @@ spec:
       other statements that change data. Aggregate personal data rather than listing
       individual students. If a question is ambiguous, such as "last quarter", state the
       assumption that you made.
+
+      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+      present them as a polished analyst's report. Lead with the answer, with the headline
+      number in **bold**. Put the SQL in a fenced code block marked as sql. Present query
+      results as a markdown table, with readable column headings, numeric columns
+      right-aligned, and thousands separators and units, such as $ or %. Show a trend as a
+      table by period, and use ▲ and ▼ for increases and decreases. Put your assumptions in a
+      block quote. Do not use HTML or LaTeX, and NEVER invent image or chart urls.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
