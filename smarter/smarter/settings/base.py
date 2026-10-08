@@ -1935,7 +1935,9 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
         mem_max_path = "/sys/fs/cgroup/memory.max"
         if os.path.exists(mem_max_path):
             with open(mem_max_path, encoding="utf-8") as f:
-                mem_bytes = int(f.read().strip())
+                mem_max = f.read().strip()
+                # "max" when the container has no memory limit.
+                mem_bytes = 1 << 60 if mem_max == "max" else int(mem_max)
                 if mem_bytes < 1 << 60:  # If not unlimited
                     mem_gib = mem_bytes / 1024 / 1024 / 1024
                     mem_limit = mem_gib

@@ -11,8 +11,11 @@ else
 endif
 PIP := $(PYTHON) -m pip
 
+# scaffold .env from .env.example, with a new Fernet key, which encrypts Secrets. Every process
+# (smarter-app, the workers, each manage.py call) must share it to decrypt the others' Secrets.
 ifeq ("$(wildcard .env)","")
     $(shell cp .env.example .env)
+    $(shell echo "SMARTER_FERNET_ENCRYPTION_KEY=$$(openssl rand -base64 32 | tr '+/' '-_')" >> .env)
 endif
 include .env
 
@@ -215,6 +218,14 @@ docker-run:
 	make docker-check && \
 	docker compose up
 
+# Note: Tests tagged `infrastructure` use the real Kubernetes cluster and AWS (Route53, ACM),
+# and are skipped by default. They are slow: a deploy can wait up to 40 minutes for a
+# TLS certificate. To include them, pass the environment variable into the container
+# (exporting it on the host has no effect):
+#   docker exec -e SMARTER_TEST_INFRASTRUCTURE=true smarter-app bash -c "python manage.py test smarter"
+# To run only the infrastructure tests:
+#   docker exec smarter-app bash -c "python manage.py test smarter --tag infrastructure"
+# See smarter/smarter/lib/unittest/runner.py.
 docker-test:
 	make docker-check && \
 	docker exec smarter-app bash -c "python manage.py test smarter"
