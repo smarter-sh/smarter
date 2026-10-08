@@ -132,7 +132,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
           deployment-domain: ${{ env.DEPLOYMENT_DOMAIN }}
-          subject: "GHA - Deployed ${{ env.DEPLOYMENT_DOMAIN }} v${{ env.VERSION }}"
+          subject: "GHA - Deployed ${{ env.DEPLOYMENT_DOMAIN }} ${{ env.VERSION }}"
           body: "${{ env.DEPLOYMENT_DOMAIN }} version ${{ env.VERSION }} was deployed successfully."
         env:
           VERSION: ${{ env.VERSION }}

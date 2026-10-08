@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.18.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.10...v0.18.11-alpha.1) (2026-10-08)
+
+### Bug Fixes
+
+* **dashboard:** gate server logs on a waffle switch ([5d86e52](https://github.com/smarter-sh/smarter/commit/5d86e52b099e6f69769087b539a00bbfd1c24db1))
+
 ## [0.18.10](https://github.com/smarter-sh/smarter/compare/v0.18.9...v0.18.10) (2026-10-08)
 
 ### Bug Fixes
