@@ -92,19 +92,33 @@ def _iter_sse_data_frames(data: str) -> Iterator[str]:
     yield "\n"
 
 
+STREAM_TRANSPORT_LOGGERS = ("asyncio", "redis", "uvicorn", "daphne")
+"""
+Loggers of the libraries that carry the stream itself.
+
+Their DEBUG records describe the stream's own reads and writes, so forwarding them would echo each
+streamed record back into the stream.
+"""
+
+
 def _should_skip_stream_internal_log(payload_text: str) -> bool:
     """
     Return True when a payload is the stream endpoint logging about itself.
 
     These records are implementation noise for dashboard users and should not
-    be forwarded back into the same terminal stream.
+    be forwarded back into the same terminal stream: the stream's own records,
+    and the DEBUG records of the libraries that carry it
+    (:data:`STREAM_TRANSPORT_LOGGERS`). Every other record is forwarded,
+    whatever its level, DEBUG included.
+
+    :param payload_text: The log record, as JSON, or as plain text.
+    :type payload_text: str
+    :return: True if the record should not be streamed.
+    :rtype: bool
     """
     stream_marker = f"{__name__}.stream_user_logs()"
 
     if stream_marker in payload_text:
-        return True
-
-    if " DEBUG " in payload_text:
         return True
 
     try:
@@ -118,7 +132,12 @@ def _should_skip_stream_internal_log(payload_text: str) -> bool:
     logger_name = str(payload_json.get("logger", ""))
     level = str(payload_json.get("level", payload_json.get("levelname", ""))).upper()
     message = str(payload_json.get("message", ""))
-    return logger_name == __name__ or stream_marker in message or level == "DEBUG"
+    if logger_name == __name__ or stream_marker in message:
+        return True
+    is_transport_logger = any(
+        logger_name == name or logger_name.startswith(f"{name}.") for name in STREAM_TRANSPORT_LOGGERS
+    )
+    return level == "DEBUG" and is_transport_logger
 
 
 async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterator[str]:
