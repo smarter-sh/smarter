@@ -6,20 +6,29 @@ console page where you chat with an :doc:`LLMClient <../../../smarter-resources/
 before you deploy it. Beside the chat, its Console displays the LLMClient's configuration, and the
 chat session's api calls, tool calls and plugin usage, as JSON. When log viewing in the browser is
 enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), the Console's Server Logs tab also streams your
-server logs, the same stream as the web console's log viewer, while you chat. Drag the separator
-between the chat and the Console to resize them, or hide the Console with the arrow button in the
-chat's header. The browser remembers both.
+server logs, the same stream as the web console's log viewer, in its colors, while you chat. Long
+log lines scroll horizontally, or wrap, with the tab's Wrap lines button. Drag the separator
+between the chat and the Console to resize them, or hide the Console with the panel button in the
+chat's header, which slides it out to the right, and back. The browser remembers all three. The
+new chat button, a blank page, starts a new chat session, and clears the Server Logs tab.
 
-A toggle shows and hides the backend's own messages in the chat thread: the system prompt, tool
-results, and Smarter's notes about the plugins it selected. While a prompt runs, the chat displays
+The Sandbox mode / Production mode button shows and hides the backend's own messages in the chat
+thread: the system prompt, tool results, and Smarter's notes about the plugins it selected. In
+production mode, the thread is the conversation as the LLMClient's users see it. While a prompt runs, the chat displays
 its progress: each request to the LLM, and each tool, plugin and MCP server that the LLM calls.
 Those steps are replaced by the response when it arrives. A failed prompt, for example one that the
 LLM provider rejects, is displayed in the chat thread, with the provider's error message.
 
-Messages are escaped, and their markdown links and images become html. ``![alt](url)`` is an image,
-scaled to fit its chat bubble, which opens at full size in a new tab, and ``[![alt](url)](href)`` is
-an image that links to ``href``. Urls must be ``http(s)`` or relative to the page. Images may also be
-base64 ``png``, ``jpeg``, ``gif`` or ``webp`` data urls, for example from a tool that generates them.
+The LLM's responses, and the backend's messages, are GitHub flavored markdown: headings, bold,
+italics, strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and
+images. The LLM is told so: Smarter adds a note to the system prompt of each request it sends to an
+OpenAI-compatible provider, which is not saved in the chat session's history. Your own messages are
+displayed as you typed them, except for their links and images. Raw html is displayed as text.
+
+``![alt](url)`` is an image, scaled to fit its chat bubble, which opens at full size in a new tab,
+and ``[![alt](url)](href)`` is an image that links to ``href``. Links open in a new tab. Urls must be
+``http(s)`` or relative to the page. Images may also be base64 ``png``, ``jpeg``, ``gif`` or ``webp``
+data urls, for example from a tool that generates them.
 
 .. raw:: html
 
@@ -163,8 +172,8 @@ appear. React 19 is a peer dependency.
 - ``apiKey``: a Smarter api key, sent as ``Authorization: Token <apiKey>``, for LLMClients that
   require authentication. Anyone who can view the page can read it, so use a key whose permissions
   you are comfortable sharing.
-- ``toggleMetadata``, ``showConsole`` and ``debugMode``: the workbench's metadata toggle, Console,
-  and browser console logging. ``showConsole`` defaults to ``true``, which only suits wide pages.
+- ``toggleMetadata``, ``showConsole`` and ``debugMode``: the workbench's Sandbox mode / Production
+  mode button, Console, and browser console logging. ``showConsole`` defaults to ``true``, which only suits wide pages.
 - ``csrfCookieName``, ``csrftoken``, ``sessionCookieName``, ``sessionCookieExpiration`` and
   ``cookieDomain``: the cookies that the chat reads and sets.
 - ``streamProgress``: display the progress of a running prompt. It defaults to ``true``. A Smarter
