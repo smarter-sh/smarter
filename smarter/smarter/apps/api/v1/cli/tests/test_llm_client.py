@@ -44,6 +44,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         super().tearDown()
 
     def llmclient_factory(self):
+        LLMClient.objects.filter(user_profile=self.user_profile, name=self.name).delete()
         llmclient = LLMClient.objects.create(
             name=self.name,
             user_profile=self.user_profile,
