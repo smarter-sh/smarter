@@ -21,7 +21,9 @@ from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.const import get_env
+from smarter.common.conf.env import is_missing_value
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.helpers.console_helpers import formatted_banner
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -54,6 +56,8 @@ class Command(SmarterCommand):
     """
 
     user_profile: UserProfile
+    missing_api_keys: list[tuple[str, str, str]]
+    """The API keys that are not set: their environment variable, what they are used for, and where to get one."""
 
     def initialize_google_service_account(self):
         """
@@ -85,8 +89,16 @@ class Command(SmarterCommand):
             service_account_b64 = base64.b64encode(json.dumps(service_account_json).encode("utf-8")).decode("ascii")
             print(service_account_b64)
         """
+        svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True)
+        if is_missing_value(svc_acct_b64):
+            self.missing_api_key(
+                "GOOGLE_SERVICE_ACCOUNT_B64",
+                "Google service account credentials, for Google Cloud bearer tokens. Encode them with "
+                "./scripts/google-service-account.sh",
+                "https://console.cloud.google.com/iam-admin/serviceaccounts",
+            )
+            return
         try:
-            svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
             svc_acct_json = base64.b64decode(svc_acct_b64).decode("utf-8")
             # parsed only to validate it: the Secret stores the json string, which
             # get_google_service_account_bearer_token() parses.
@@ -235,25 +247,24 @@ class Command(SmarterCommand):
             "tos_accepted_at": timezone.now(),
             "tos_accepted_by": self.user_profile.user,
         }
-        secret_string = SecretStr(get_env(api_key_env_var, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_{name}: {api_key_env_var} is not set. Cannot initialize {name} provider."
-                    f"Get your API key from {provider_api_url} and add it to your .env file as {api_key_env_var}."
-                )
+        # a missing key does not stop the provider from being created: the built-in LLMClients
+        # and Proxies that use it must be applied. Its prompts fail, with instructions, until a key is set.
+        api_key = get_env(api_key_env_var, "", is_secret=True)
+        secret = None
+        if is_missing_value(api_key):
+            self.missing_api_key(api_key_env_var, f"the {name} Provider", provider_api_url)
+        else:
+            secret = initialize_secret(
+                secret_string=api_key,
+                secret_name=api_key_env_var.lower(),
+                description=f"API key for {name} services.",
+                user_profile=self.user_profile,
             )
-            return
-
-        secret = initialize_secret(
-            secret_string=secret_string.get_secret_value(),
-            secret_name=api_key_env_var.lower(),
-            description=f"API key for {name} services.",
-            user_profile=self.user_profile,
-        )
-        if not secret:
-            self.stdout.write(self.style.ERROR(f"initialize_{name}: Failed to initialize secret for {name} provider."))
-            return
+            if not secret:
+                self.stdout.write(
+                    self.style.ERROR(f"initialize_{name}: Failed to initialize secret for {name} provider.")
+                )
+                return
 
         try:
             provider, _ = Provider.objects.update_or_create(
@@ -261,7 +272,8 @@ class Command(SmarterCommand):
                 defaults={
                     **COMMON_DEFAULTS,
                     **provider_configuration,
-                    "api_key": secret,
+                    # without a key, an API key Secret that was set otherwise, e.g. in the web console, is kept.
+                    **({"api_key": secret} if secret else {}),
                     # the platform-wide default provider, e.g. for prompts that do not name one
                     "is_default": name == smarter_settings.llm_default_provider,
                 },
@@ -275,9 +287,22 @@ class Command(SmarterCommand):
         with open(logo_path, "rb") as logo_file:
             provider.logo.save(logo_filename, ContentFile(logo_file.read()), save=True)
 
+        if secret is None:
+            # the models cannot be listed without a key, so only the default model is created.
+            ProviderModel.objects.update_or_create(
+                provider=provider,
+                name=provider_configuration["default_model"],
+                defaults={
+                    "description": f"{provider_configuration['default_model']} model for {provider.name}.",
+                    "is_active": True,
+                    "is_default": True,
+                },
+            )
+            return
+
         _initialize_provider_models(
             provider=provider,
-            bearer_token=secret_string.get_secret_value(),
+            bearer_token=api_key,
             default_model=provider_configuration["default_model"],
         )
 
@@ -379,10 +404,17 @@ class Command(SmarterCommand):
         API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
         API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
 
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
+        api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
+        if is_missing_value(api_key):
+            self.missing_api_key(
+                API_KEY_ENV_VAR,
+                "the get_current_weather() example function",
+                "https://developers.google.com/maps/documentation/geocoding/get-api-key",
+            )
+            return
 
         initialize_secret(
-            secret_string=secret_string.get_secret_value(),
+            secret_string=api_key,
             secret_name=API_KEY_NAME,
             description=f"API key for {NAME} services.",
             user_profile=self.user_profile,
@@ -402,12 +434,12 @@ class Command(SmarterCommand):
         # placeholders, such as .env.example's SET-ME-PLEASE, and helm/charts/smarter/values.yaml's
         # SET-ME-IN-helm/charts/smarter/values.yaml, which a deployment without the key falls back to.
         api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
-        if not api_key or str(api_key).startswith("SET-ME"):
-            logger.warning(
-                "initialize_tavily: %s is not set. The %s Secret is not created, so WebsearchPlugins that use it, "
-                "such as smarter_project_websearch, cannot be applied.",
+        if is_missing_value(api_key):
+            self.missing_api_key(
                 API_KEY_ENV_VAR,
-                TAVILY_API_KEY_SECRET_NAME,
+                f"web search: the {TAVILY_API_KEY_SECRET_NAME} Secret of WebsearchPlugins such as "
+                "smarter_project_websearch",
+                "https://app.tavily.com/home",
             )
             return
 
@@ -511,6 +543,35 @@ class Command(SmarterCommand):
             provider_api_url="https://platform.together.ai/api-keys",
         )
 
+    def missing_api_key(self, env_var: str, used_for: str, url: str):
+        """
+        Record an API key that is not set, for the summary that :meth:`handle` logs.
+
+        :param env_var: The environment variable, without the optional ``SMARTER_`` prefix.
+        :param used_for: What the key is used for.
+        :param url: Where to get the key.
+        """
+        self.missing_api_keys.append((env_var, used_for, url))
+        self.stdout.write(self.style.WARNING(f"{env_var} is not set. It is used for {used_for}."))
+
+    def log_missing_api_keys(self):
+        """Log one banner that lists the API keys that are not set, and how to set them."""
+        if not self.missing_api_keys:
+            return
+        lines = [
+            "The platform runs without them, but the features that use them fail, with an error, until they are set.",
+            "",
+        ]
+        for env_var, used_for, url in self.missing_api_keys:
+            lines += [f"  SMARTER_{env_var}", f"      for {used_for}", f"      get one at {url}"]
+        lines += [
+            "",
+            "To set them, add them to .env, restart the platform, and run:",
+            "",
+            "    docker exec smarter-app python manage.py initialize_providers",
+        ]
+        logger.error(formatted_banner(f"[API KEYS NOT SET] {len(self.missing_api_keys)} API keys are not set:", *lines))
+
     def echo_banner(self, name: str):
         """Echo a banner to the console."""
         self.stdout.write(self.style.SUCCESS("-" * 40))
@@ -521,6 +582,7 @@ class Command(SmarterCommand):
         """Initialize all built-in providers."""
         self.handle_begin()
 
+        self.missing_api_keys = []
         try:
             self.user_profile = smarter_cached_objects.smarter_admin_user_profile
             self.initialize_anthropic()
@@ -538,5 +600,6 @@ class Command(SmarterCommand):
         except Exception as exc:
             self.handle_completed_failure(msg=f"initialize_providers: Error initializing providers: {exc}")
             return
+        self.log_missing_api_keys()
 
         self.handle_completed_success()

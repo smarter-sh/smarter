@@ -24,6 +24,7 @@ from email.mime.text import MIMEText
 from typing import Callable, List, Optional, Union
 
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.console_helpers import formatted_banner
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -105,6 +106,17 @@ class EmailService(InfrastructureService):
         message.attach(MIMEText(body, "html") if html else MIMEText(body))
         return message
 
+    def log_not_sent(self, subject: str, to: Union[str, List[str]]) -> None:
+        """
+        Log an email that was not sent because the service is not ready.
+
+        :param subject: The email's subject.
+        :param to: The email's recipients.
+        """
+        logger.warning(
+            "%s %s is not configured. Would have sent '%s' to: %s", self.formatted_class_name, self, subject, to
+        )
+
     @staticmethod
     def admin_bcc(recipients: list[str]) -> list[str]:
         """
@@ -151,9 +163,7 @@ class EmailService(InfrastructureService):
         """
         if not self.ready:
             if not quiet:
-                logger.warning(
-                    "%s %s is not configured. Would have sent '%s' to: %s", self.formatted_class_name, self, subject, to
-                )
+                self.log_not_sent(subject, to)
             return False
 
         recipients = self.validate_mail_list(emails=to, quiet=quiet)
@@ -207,6 +217,31 @@ class SMTPEmailService(EmailService):
         if running_unit_tests() and not self.allow_in_tests:
             return False
         return bool(smarter_settings.smtp_is_configured)
+
+    def log_not_sent(self, subject: str, to: Union[str, List[str]]) -> None:
+        """
+        Log an email that was not sent, with instructions for configuring SMTP.
+
+        SMTP is optional, so this is logged for each email that is not sent, rather than raised.
+        In the unit tests, where email is never sent, a one-line warning is logged instead.
+        """
+        if running_unit_tests() and not self.allow_in_tests:
+            super().log_not_sent(subject, to)
+            return
+        logger.error(
+            formatted_banner(
+                f"[EMAIL NOT SENT] SMTP is not configured, so '{subject}' was not sent to: {to}",
+                "To send email, add your SMTP server's credentials to .env, and restart the platform:",
+                "",
+                "    SMARTER_SMTP_USERNAME=<your SMTP username>",
+                "    SMARTER_SMTP_PASSWORD=<your SMTP password>",
+                "    SMARTER_SMTP_HOST=<your SMTP server>  # not needed for AWS SES when AWS_REGION is set",
+                "    SMARTER_SMTP_PORT=587                 # optional",
+                "",
+                "With AWS Simple Email Service, create SMTP credentials in the SES console:",
+                "https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html",
+            )
+        )
 
     def _deliver(self, message: MIMEMultipart, recipients: list[str], bcc: list[str]) -> None:
         if not smarter_settings.smtp_from_email:

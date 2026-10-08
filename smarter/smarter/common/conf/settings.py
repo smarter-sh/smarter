@@ -78,7 +78,7 @@ from smarter.lib.django.validators import SmarterValidator
 
 # smarter.common.conf stuff
 from .defaults import settings_defaults
-from .env import DEFAULT_MISSING_VALUE
+from .env import DEFAULT_MISSING_VALUE, is_missing_value
 from .services import AWS_REGIONS, services
 from .util import before_field_validator
 
@@ -506,21 +506,23 @@ class Settings(BaseSettings):
 
     def ready(self) -> bool:
         """
-        Returns True if the settings instance has been fully initialized and is ready for use.
+        Returns True if the settings are complete enough for a deployment that real users can reach.
 
-        This method can be used to check if the settings instance is fully configured
-        and ready to be used by the application.
+        Nothing here is needed to run the platform locally: a missing value is reported with a
+        console warning, and the features that depend on it degrade gracefully.
 
-        - is the root domain set?
-        - is AWS configured?
-        - is SMTP configured?
-        - is OpenAI API key configured?
-        - is Google Maps API key configured? (used for get_current_weather() function)
+        - is the root domain set? Only checked outside of the local environment, which serves
+          the platform from localhost.
+        - is AWS configured? Needed for DNS, TLS certificates, and deploying LLMClients to
+          Kubernetes when ``cloud_provider`` is ``aws``.
+
+        SMTP is not checked: without it, email is not sent, and each email that is not sent is
+        logged with instructions. See :attr:`smtp_is_configured`.
 
         :type: bool
         """
         retval = True
-        if self.root_domain == DEFAULT_ROOT_DOMAIN:
+        if self.root_domain == DEFAULT_ROOT_DOMAIN and not self.environment_is_local:
             print(
                 formatted_text_red(
                     "\n"
@@ -548,20 +550,6 @@ class Settings(BaseSettings):
                 )
             )
             logger.warning("AWS is not configured properly. Some features may not work as expected.")
-            retval = False
-
-        if not self.smtp_is_configured:
-            print(
-                formatted_text_red(
-                    "\n"
-                    + "=" * 80
-                    + "\n[WARNING] SMTP is not configured properly. Email features may not work as expected.\n"
-                    + "Ensure that SMTP settings are set in environment variables or .env file.\n"
-                    + "=" * 80
-                    + "\n"
-                )
-            )
-            logger.warning("SMTP is not configured properly. Email features may not work as expected.")
             retval = False
 
         self._ready = retval
@@ -617,7 +605,7 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"cloud_provider of type {type(v)} is not a str.")
         return v.strip().lower()
 
-    aws_eks_cluster_name: str = Field(
+    aws_eks_cluster_name: Optional[str] = Field(
         settings_defaults.AWS_EKS_CLUSTER_NAME,
         description="The name of the AWS EKS cluster used for hosting applications.",
         examples=["apps-hosting-service"],
@@ -630,23 +618,28 @@ class Settings(BaseSettings):
     for deploying and managing containerized applications. The cluster name
     should correspond to an existing EKS cluster in the configured AWS account.
 
-    :type: str
-    :default: Value from ``settings_defaults.AWS_EKS_CLUSTER_NAME``
+    It is optional. Without it, the platform runs, but LLMClients and LLMHosts are not
+    deployed to Kubernetes, and the first attempt to reach the cluster logs how to set it.
+
+    :type: Optional[str]
+    :default: Value from ``settings_defaults.AWS_EKS_CLUSTER_NAME``, None if it is not set.
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
     @before_field_validator("aws_eks_cluster_name")
-    def validate_aws_eks_cluster_name(cls, v: Optional[str]) -> str:
+    def validate_aws_eks_cluster_name(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `aws_eks_cluster_name` field.
 
         Args:
             v (Optional[str]): The AWS EKS cluster name value to validate.
 
         Returns:
-            str: The validated AWS EKS cluster name.
+            Optional[str]: The validated AWS EKS cluster name, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.AWS_EKS_CLUSTER_NAME
+            v = settings_defaults.AWS_EKS_CLUSTER_NAME
+        if is_missing_value(v):
+            return None
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"aws_eks_cluster_name of type {type(v)} is not a str.")
@@ -699,42 +692,6 @@ class Settings(BaseSettings):
         if not isinstance(v, list):
             raise SmarterConfigurationError(f"llmhost_node_subnet_ids of type {type(v)} is not a list.")
         return [str(subnet) for subnet in v]
-
-    aws_db_instance_identifier: str = Field(
-        settings_defaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
-        description="The RDS database instance identifier used for the platform's primary database.",
-        examples=["apps-hosting-service"],
-        title="AWS RDS DB Instance Identifier",
-    )
-    """
-    The RDS database instance identifier used for the platform's primary database.
-
-    This setting specifies the Amazon RDS database instance that the platform
-    will connect to for data storage and retrieval. The instance identifier should
-    correspond to an existing RDS instance in the configured AWS account.
-
-    :type: str
-    :default: Value from ``settings_defaults.AWS_RDS_DB_INSTANCE_IDENTIFIER``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    @before_field_validator("aws_db_instance_identifier")
-    def validate_aws_db_instance_identifier(cls, v: Optional[str]) -> str:
-        """Validates the `aws_db_instance_identifier` field.
-
-        Args:
-            v (Optional[str]): The AWS RDS DB instance identifier value to validate.
-
-        Returns:
-            str: The validated AWS RDS DB instance identifier.
-        """
-        if v in THE_EMPTY_SET:
-            return settings_defaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
-
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"aws_db_instance_identifier of type {type(v)} is not a str.")
-
-        return v
 
     branding_corporate_name: str = Field(
         settings_defaults.BRANDING_CORPORATE_NAME,
@@ -3167,41 +3124,6 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid email address.
     """
 
-    smarter_mysql_test_database_secret_name: Optional[str] = Field(
-        settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
-        description="The secret name for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
-        examples=["smarter_test_db"],
-        title="Smarter MariaDB Test Database Secret Name",
-    )
-    """
-    The secret name for the Smarter MariaDB test database.
-
-    Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting specifies the name of the secret in AWS Secrets Manager
-    that contains the credentials for the Smarter MariaDB test database.
-    It is used by example Smarter Plugins that require access to a test database.
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME``
-    :raises SmarterConfigurationError: If the value is not a string. SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-    """
-
-    smarter_mysql_test_database_password: Optional[SecretStr] = Field(
-        settings_defaults.MYSQL_TEST_DATABASE_PASSWORD,
-        description="The password for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
-        examples=["smarter_test_user"],
-        title="Smarter MariaDB Test Database Password",
-    )
-    """
-    The password for the Smarter MariaDB test database.
-
-    Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting provides the password used to connect to the Smarter MariaDB test database.
-    It is used by example Smarter Plugins that require access to a test database.
-    :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_PASSWORD``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
     @before_field_validator("smtp_sender")
     def validate_smtp_sender(cls, v: Optional[str]) -> str:
         """Validates the `smtp_sender` field.
@@ -3230,10 +3152,10 @@ class Settings(BaseSettings):
     The SMTP password for authentication.
 
     This setting provides the password used to authenticate with the SMTP server.
-    It is required for sending emails through the SMTP server.
+    It is required for sending emails through the SMTP server, which is optional.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.SMTP_PASSWORD``
+    :default: Value from ``settings_defaults.SMTP_PASSWORD``, None if it is not set.
     :raises SmarterConfigurationError: If the value is not a valid password.
     """
 
@@ -3244,10 +3166,12 @@ class Settings(BaseSettings):
         Args:
             v (Optional[SecretStr]): The SMTP password to validate.
         Returns:
-            Optional[SecretStr]: The validated SMTP password.
+            Optional[SecretStr]: The validated SMTP password, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.SMTP_PASSWORD
+            v = settings_defaults.SMTP_PASSWORD
+        if is_missing_value(v):
+            return None
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"smtp_password of type {type(v)} is not a SecretStr")
@@ -3367,25 +3291,27 @@ class Settings(BaseSettings):
     The SMTP username for authentication.
 
     This setting provides the username used to authenticate with the SMTP server.
-    It is required for sending emails through the SMTP server.
+    It is required for sending emails through the SMTP server, which is optional.
 
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.SMTP_USERNAME``
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.SMTP_USERNAME``, None if it is not set.
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
     @before_field_validator("smtp_username")
-    def validate_smtp_username(cls, v: Optional[SecretStr]) -> SecretStr:
+    def validate_smtp_username(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `smtp_username` field.
 
         Args:
             v (Optional[str]): The SMTP username to validate.
 
         Returns:
-            Optional[str]: The validated SMTP username.
+            Optional[SecretStr]: The validated SMTP username, or None if it is missing or a placeholder.
         """
-        if v is None:
-            return settings_defaults.SMTP_USERNAME
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.SMTP_USERNAME
+        if is_missing_value(v):
+            return None
         return v
 
     stripe_live_secret_key: Optional[SecretStr] = Field(
@@ -3547,7 +3473,7 @@ class Settings(BaseSettings):
             self.smtp_password,
             self.smtp_from_email,
         ]
-        return all(field not in [None, "", DEFAULT_MISSING_VALUE] for field in required_fields)
+        return not any(is_missing_value(field) for field in required_fields)
 
     @cached_property
     def protocol(self) -> str:
@@ -4077,21 +4003,32 @@ class Settings(BaseSettings):
         """
         Return the email address that will appear in the "From" field of outgoing SMTP emails.
 
+        ``SMTP_FROM_EMAIL`` if it is set, and otherwise ``no-reply@`` the platform's domain.
+
         Example:
             >>> print(smarter_settings.smtp_from_email)
             'no-reply@platform.example.com'
         """
+        if not is_missing_value(settings_defaults.SMTP_FROM_EMAIL):
+            return str(settings_defaults.SMTP_FROM_EMAIL)
         return f"no-reply@{self.platform_subdomain}.{self.root_domain}"
 
     @property
-    def smtp_host(self) -> str:
+    def smtp_host(self) -> Optional[str]:
         """
         Return the SMTP host address for sending emails.
+
+        ``SMTP_HOST`` if it is set, and otherwise the AWS Simple Email Service endpoint of
+        ``aws_region``. None if neither is set.
 
         Example:
             >>> print(smarter_settings.smtp_host)
             'email-smtp.us-east-1.amazonaws.com'
         """
+        if not is_missing_value(settings_defaults.SMTP_HOST):
+            return str(settings_defaults.SMTP_HOST)
+        if is_missing_value(self.aws_region):
+            return None
         return f"email-smtp.{self.aws_region}.amazonaws.com"
 
     @property
