@@ -322,6 +322,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
             sender=self.__class__,
             user=SmarterAnonymousUser(),
             token=token,
+            error=exc,
         )
 
         logger.warning("%s authentication failed token=%s", self.formatted_class_name, token)
