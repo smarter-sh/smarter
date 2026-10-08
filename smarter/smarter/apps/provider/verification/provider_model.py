@@ -478,6 +478,17 @@ def verify_provider_model(provider_model_id, **kwargs):
         )
         return
 
+    if provider_model.provider.api_key is None:
+        # a built-in Provider is created without a key when its environment variable is not set. Its
+        # models cannot be verified, and must not be deactivated, until it has one: see initialize_providers.
+        logger.warning(
+            "%s skipped provider model %s: its provider %s has no API key.",
+            formatted_text(module_prefix + "verify_provider_model()"),
+            provider_model.name,
+            provider_model.provider.name,
+        )
+        return
+
     # blackball method
     success: bool = True
 
