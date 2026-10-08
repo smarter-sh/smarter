@@ -150,6 +150,21 @@ class TestSMTPEmailService(InfrastructureTestBase):
             self.assertFalse(self.email.send_email("Hello", "Hi", "a@example.com"))
         self.smtp_class.assert_not_called()
 
+    def test_not_configured_logs_instructions(self):
+        """Each email that is not sent, because SMTP is not configured, logs how to configure it."""
+        with (
+            patch(f"{MODULE}.smarter_settings", smtp_settings(smtp_is_configured=False)),
+            patch(f"{MODULE}.logger") as logger,
+        ):
+            self.email.send_email("Welcome", "Hi", "a@example.com")
+            self.email.send_email("Welcome", "Hi", "a@example.com")
+            self.email.send_email("Quiet", "Hi", "a@example.com", quiet=True)
+        self.assertEqual(logger.error.call_count, 2)
+        banner = logger.error.call_args.args[0]
+        self.assertIn("'Welcome' was not sent to: a@example.com", banner)
+        self.assertIn("SMARTER_SMTP_USERNAME", banner)
+        self.assertIn("SMARTER_SMTP_PASSWORD", banner)
+
     def test_nothing_is_sent_from_unit_tests(self):
         """By default, SMTP is not ready in the unit tests, so that tests never email real people."""
         email = SMTPEmailService(smtp_class=self.smtp_class)
@@ -157,6 +172,14 @@ class TestSMTPEmailService(InfrastructureTestBase):
             self.assertFalse(email.ready)
             self.assertFalse(email.send_email("Hello", "Hi", "a@example.com"))
         self.smtp_class.assert_not_called()
+
+    def test_unit_tests_log_one_line(self):
+        """In the unit tests, where email is never sent, an email that is not sent logs a one-line warning."""
+        email = SMTPEmailService(smtp_class=self.smtp_class)
+        with patch(f"{MODULE}.smarter_settings", smtp_settings()), patch(f"{MODULE}.logger") as logger:
+            email.send_email("Hello", "Hi", "a@example.com")
+        logger.error.assert_not_called()
+        logger.warning.assert_called_once()
 
 
 class TestAdminBcc(InfrastructureTestBase):

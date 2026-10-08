@@ -18,6 +18,7 @@ from unittest.mock import MagicMock, patch
 import requests
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
 from smarter.apps.provider.management.commands import initialize_providers
 from smarter.apps.provider.management.commands.initialize_providers import Command
 from smarter.apps.provider.models import Provider, ProviderModel
@@ -44,6 +45,7 @@ class TestInitializeProviders(TestAccountMixin):
         self.addCleanup(Secret.objects.filter(user_profile=self.user_profile, name=ENV_VAR.lower()).delete)
         self.command = Command(stdout=StringIO(), stderr=StringIO())
         self.command.user_profile = self.user_profile
+        self.command.missing_api_keys = []
 
         # the provider's logo, which the command reads from its data/logos/<name>/ folder.
         tmp = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
@@ -83,6 +85,46 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertEqual(sorted(models.values_list("name", flat=True)), ["model-a", "model-b"])
         self.assertTrue(models.get(name="model-b").is_default)
         self.addCleanup(provider.logo.delete, save=False)
+
+    def test_initialize_generic_provider_without_api_key(self):
+        """
+        Test that a provider whose api key is not set, or is a placeholder, is created without a key.
+
+        The built-in LLMClients that use it must be applied, so it is created, with its default
+        model, and the missing key is recorded for the summary that handle() logs.
+        """
+        for value in (None, "SET-ME-PLEASE", "SET-ME-IN-helm/charts/smarter/values.yaml"):
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {}),
+                patch.object(initialize_providers.requests, "get") as get,
+            ):
+                os.environ.pop(ENV_VAR, None)
+                if value:
+                    os.environ[ENV_VAR] = value
+                self.command.missing_api_keys = []
+                self.initialize()
+                get.assert_not_called()
+                provider = Provider.objects.get(name=self.name)
+                self.addCleanup(provider.logo.delete, save=False)
+                self.assertTrue(provider.is_active)
+                self.assertIsNone(provider.api_key)
+                models = ProviderModel.objects.filter(provider=provider)
+                self.assertEqual(list(models.values_list("name", flat=True)), ["model-b"])
+                self.assertTrue(models.get().is_default)
+                self.assertEqual(self.command.missing_api_keys[0][0], ENV_VAR)
+                self.assertFalse(Secret.objects.filter(user_profile=self.user_profile, name=ENV_VAR.lower()).exists())
+
+    def test_initialize_generic_provider_without_api_key_keeps_the_existing_key(self):
+        """Test that an api key Secret that was set before, e.g. in the web console, is not removed."""
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        with patch.dict(os.environ, {}):
+            os.environ.pop(ENV_VAR, None)
+            self.initialize()
+        provider = Provider.objects.get(name=self.name)
+        self.addCleanup(provider.logo.delete, save=False)
+        self.assertEqual(provider.api_key.get_secret(), "sk-test-initialize")
 
     def test_models_api_errors(self):
         """Test that the provider is created, without models, when its models api fails or has none."""
@@ -130,7 +172,8 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertEqual(generic.call_count, len(methods))
         for call in generic.call_args_list:
             with self.subTest(provider=call.kwargs["name"]):
-                self.assertTrue(call.kwargs["api_key_env_var"].endswith("_API_KEY"))
+                # the env var that a prompt's missing api key error names.
+                self.assertEqual(BUILTIN_PROVIDER_API_KEY_ENV_VARS[call.kwargs["name"]], call.kwargs["api_key_env_var"])
                 self.assertTrue(call.kwargs["provider_configuration"]["base_url"].startswith("https://"))
                 self.assertTrue((logos / call.kwargs["name"] / call.kwargs["logo_filename"]).exists())
 
@@ -141,6 +184,16 @@ class TestInitializeProviders(TestAccountMixin):
         ):
             self.command.initialize_google_maps()
         self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "maps-key")
+
+    def test_google_maps_missing(self):
+        """Test that no Secret is stored, and the missing key is recorded, when the Google Maps api key is not set."""
+        with (
+            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
+            patch.dict(os.environ, {"GOOGLE_MAPS_API_KEY": "SET-ME-PLEASE"}),
+        ):
+            self.command.initialize_google_maps()
+        initialize_secret.assert_not_called()
+        self.assertEqual(self.command.missing_api_keys[0][0], "GOOGLE_MAPS_API_KEY")
 
     def test_tavily(self):
         """Test that the Tavily api key is stored as the tavily_api_key Secret."""
@@ -166,6 +219,29 @@ class TestInitializeProviders(TestAccountMixin):
                     os.environ["TAVILY_API_KEY"] = value
                 self.command.initialize_tavily()
             initialize_secret.assert_not_called()
+
+    def test_google_service_account_missing(self):
+        """Test that no Secret is stored, and the missing credential is recorded, when it is not set."""
+        with (
+            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
+            patch.dict(os.environ, {"GOOGLE_SERVICE_ACCOUNT_B64": "SET-ME-PLEASE"}),
+        ):
+            self.command.initialize_google_service_account()
+        initialize_secret.assert_not_called()
+        self.assertEqual(self.command.missing_api_keys[0][0], "GOOGLE_SERVICE_ACCOUNT_B64")
+
+    def test_log_missing_api_keys(self):
+        """Test that the missing api keys are logged in one banner, with how to set them, and nothing when none are."""
+        with patch.object(initialize_providers.logger, "error") as error:
+            self.command.log_missing_api_keys()
+            error.assert_not_called()
+            self.command.missing_api_key("OPENAI_API_KEY", "the openai Provider", "https://example.com/keys")
+            self.command.log_missing_api_keys()
+        banner = error.call_args.args[0]
+        self.assertIn("1 API keys are not set", banner)
+        self.assertIn("SMARTER_OPENAI_API_KEY", banner)
+        self.assertIn("https://example.com/keys", banner)
+        self.assertIn("manage.py initialize_providers", banner)
 
     def test_google_service_account_invalid(self):
         """Test that a service account that is not base64 encoded json is not stored."""

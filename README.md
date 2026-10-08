@@ -134,21 +134,18 @@ This setup uses Docker and takes around 20 minutes for first time installations.
    - [Docker](https://www.docker.com/products/docker-desktop/),
    - [Docker Compose](https://docs.docker.com/compose/install/).
 
-2. Add your credentials to [.env](./.env.example) in the root of this repo.
-   See the inline documentation for details on the minimum environment variables
-   that you will need to set.
+2. Optionally, add your credentials to [.env](./.env.example) in the root of
+   this repo. None are needed to run the platform locally: `make` creates `.env`
+   with the one required value, an encryption key. Add an LLM provider's API key,
+   such as `SMARTER_OPENAI_API_KEY`, so that the built-in LLMClients can answer
+   prompts. A feature whose setting is missing logs what to set when it is used.
 
 3. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/smarter-sh/smarter
 make help           # scaffolds a .env file in the root of the repo
-                    #
-                    # ****************************
-                    # STOP HERE!
-                    # ****************************
-                    # Add your credentials to .env located in the project root folder.
-                    #
+                    # Optionally, add your API keys to .env.
 make init           # pulls Docker containers, creates a Python virtual environment,
                     # installs all packages, creates and initializes a
                     # local MySql database, preloads example AI resources
@@ -156,7 +153,7 @@ make run            # runs all docker containers and starts a
                     # local web server http://localhost:9357/
 ```
 
-4. Login at http://localhost:9357/login/ with user `admin@smarter.sh` and
+4. Login at http://localhost:9357/login/ with user `admin@example.com` and
    password `smarter`.
 
 See these onboarding videos:

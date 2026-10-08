@@ -13,6 +13,7 @@ from typing import Any
 from botocore.signers import RequestSigner
 
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.console_helpers import formatted_banner
 from smarter.lib import logging
 
 from .base import AWSBase
@@ -32,10 +33,44 @@ EKS accepts one for 15 minutes, and ``aws eks get-token`` reports
 
 
 class AWSEks(AWSBase):
-    """The AWS EKS helper: the platform's cluster, ``smarter_settings.aws_eks_cluster_name``."""
+    """
+    The AWS EKS helper: the platform's cluster, ``smarter_settings.aws_eks_cluster_name``.
+
+    The cluster is optional. Without its name, the platform runs, but nothing is deployed to
+    Kubernetes, and the first attempt to reach the cluster logs how to set it.
+    """
 
     _client = None
     _client_type: str = "eks"
+    _cluster_name_warned: bool = False
+    """Whether the missing cluster name was logged.
+
+    Shared by every instance, so that it is logged once.
+    """
+
+    def cluster_name_is_set(self) -> bool:
+        """
+        Return True if ``smarter_settings.aws_eks_cluster_name`` is set.
+
+        If it is not, log how to set it, once per process.
+        """
+        if smarter_settings.aws_eks_cluster_name:
+            return True
+        if not AWSEks._cluster_name_warned:
+            AWSEks._cluster_name_warned = True
+            logger.error(
+                formatted_banner(
+                    "[KUBERNETES DISABLED] SMARTER_AWS_EKS_CLUSTER_NAME is not set.",
+                    "The platform runs without it, but LLMClients and LLMHosts are not deployed to Kubernetes.",
+                    "To deploy them, add the name of your AWS EKS cluster to .env, and restart the platform:",
+                    "",
+                    "    SMARTER_AWS_EKS_CLUSTER_NAME=<your EKS cluster>",
+                    "",
+                    "The AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION) must be able to",
+                    "describe the cluster. See https://github.com/smarter-sh/smarter-infrastructure",
+                )
+            )
+        return False
 
     def get_kubernetes_info(self) -> dict[str, Any]:
         """
@@ -46,6 +81,8 @@ class AWSEks(AWSBase):
         logger.debug("%s.get_kubernetes_info() called", self.formatted_class_name)
         if not self.ready or not self.client:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
+        if not self.cluster_name_is_set():
+            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
         response = self.client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)["cluster"]
         return {
             "health": response.get("health"),
@@ -60,6 +97,8 @@ class AWSEks(AWSBase):
 
         :returns: True if it was written.
         """
+        if not self.cluster_name_is_set():
+            return False
         cluster_name = smarter_settings.aws_eks_cluster_name
         region = smarter_settings.aws_region
         if not cluster_name or not region:
