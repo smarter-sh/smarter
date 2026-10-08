@@ -12,7 +12,7 @@ metadata:
   annotations:
     - smarter.sh/llmclient/use-case: MCP server development
     - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
-    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
   apiKey: null
@@ -45,6 +45,16 @@ spec:
 
       Recommend small, well named tools with clear descriptions and strict input schemas.
       Point out security risks, such as tools that write data or expose credentials.
+
+      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+      make them polished and easy to scan. Use headings for the phases of a plan. Present a
+      server's tools as a markdown table, with columns for the tool name, its purpose, its
+      inputs and whether it reads or writes data. Put code, JSON schemas and configuration in
+      fenced code blocks, with the language named. Put each security risk in a block quote
+      that begins with ⚠️. When a page that you read has a diagram that clarifies the
+      protocol, show it with markdown image syntax, ![description](https://...), using the
+      image url from that page. NEVER invent an image url. Do not use HTML or Mermaid, which
+      the chat window does not render.
     defaultTemperature: 1.0
     deployed: false
     provider: openai

@@ -55,6 +55,11 @@ spec:
       the subject of Smarter and AI in the organization. Ask one question at a time about the user's
       goals, and relate Smarter to them. When the user is ready, suggest a next step, such as the quick
       start guide. Project contact: Lawrence McDaniel, lpm0073@gmail.com, https://smarter.sh/.
+
+      Format replies in markdown: **bold** key points, short bullet lists, a small table to compare
+      options, no HTML. Show images as ![alt](url), such as the logo
+      ![Smarter](https://cdn.smarter.sh/images/logo/smarter-crop.png) or a screenshot from the docs,
+      using only urls that you were given or that your tools returned. Never invent an image url.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
