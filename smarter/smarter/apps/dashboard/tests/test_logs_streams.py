@@ -101,11 +101,16 @@ class TestLogStreams(TestAccountMixin):
 
         skip = streams._should_skip_stream_internal_log
         self.assertTrue(skip(f"{streams.__name__}.stream_user_logs() called"))
-        self.assertTrue(skip("2026-01-01 DEBUG something"))
+        self.assertFalse(skip("2026-01-01 DEBUG something"))
         self.assertFalse(skip("plain text"))
         self.assertFalse(skip("[1, 2]"))
         self.assertTrue(skip('{"logger": "%s", "message": "x"}' % streams.__name__))
-        self.assertTrue(skip('{"levelname": "debug", "message": "x"}'))
+        self.assertFalse(skip('{"levelname": "debug", "message": "x"}'))
+        self.assertFalse(skip('{"level": "DEBUG", "logger": "smarter.apps.prompt", "message": "x"}'))
+        self.assertTrue(skip('{"level": "DEBUG", "logger": "redis.connection", "message": "x"}'))
+        self.assertTrue(skip('{"level": "DEBUG", "logger": "asyncio", "message": "x"}'))
+        self.assertFalse(skip('{"level": "INFO", "logger": "asyncio", "message": "x"}'))
+        self.assertFalse(skip('{"level": "DEBUG", "logger": "redistribution", "message": "x"}'))
         self.assertFalse(skip('{"level": "INFO", "message": "hello"}'))
 
     def test_disabled(self):
@@ -145,7 +150,7 @@ class TestLogStreams(TestAccountMixin):
         fake_cache.xrevrange.side_effect = [
             [
                 (b"3-0", {b"data": b"plain text"}),
-                (b"2-0", {b"data": b"2026-01-01 DEBUG noise"}),
+                (b"2-0", {b"data": ('{"logger": "%s", "message": "noise"}' % streams.__name__).encode()}),
                 (b"1-0", {"data": '{"message": "json"}'}),
             ],
             [],
@@ -161,7 +166,7 @@ class TestLogStreams(TestAccountMixin):
         fake_pubsub = fake_cache.pubsub.return_value
         fake_pubsub.close.side_effect = RedisError("close failed")
         fake_pubsub.get_message.side_effect = [
-            {"type": "message", "data": b"2026-01-01 DEBUG noise"},
+            {"type": "message", "data": f"{streams.__name__}.stream_user_logs() noise".encode()},
             {"type": "message", "data": b"hello"},
             None,
         ]

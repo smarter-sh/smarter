@@ -186,6 +186,29 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             self.client.handle_response()
 
+    def test_markdown_instructions_are_added_to_the_system_prompt(self):
+        """The request's system prompt says that responses may use Markdown, without changing the history."""
+        self.client.iteration = 1
+        self.client._messages = [
+            {"role": "system", "content": "You are a test.", "smarter_is_new": False},
+            {"role": "user", "content": "hello", "smarter_is_new": True},
+        ]
+        messages = self.client.openai_messages
+        self.assertEqual(messages[0]["content"], f"You are a test.\n\n{module.MARKDOWN_SYSTEM_PROMPT}")
+        self.assertEqual(messages[1], {"role": "user", "content": "hello"})
+        self.assertEqual(self.client._messages[0]["content"], "You are a test.")
+
+    def test_markdown_instructions_without_a_system_prompt(self):
+        """A thread without a system prompt gets one, with the Markdown instructions."""
+        messages = OpenAISmarterClient.add_markdown_system_prompt([{"role": "user", "content": "hello"}])
+        self.assertEqual(messages[0], {"role": "system", "content": module.MARKDOWN_SYSTEM_PROMPT})
+        self.assertEqual(len(messages), 2)
+
+    def test_markdown_instructions_are_added_once(self):
+        """A system prompt that already has the Markdown instructions is unchanged."""
+        messages = [{"role": "system", "content": module.MARKDOWN_SYSTEM_PROMPT}]
+        self.assertEqual(OpenAISmarterClient.add_markdown_system_prompt(messages), messages)
+
     def test_messages_must_be_a_list(self):
         """The request messages need a message list."""
         self.client._messages = None

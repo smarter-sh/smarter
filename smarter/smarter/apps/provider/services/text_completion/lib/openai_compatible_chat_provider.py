@@ -113,6 +113,18 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 BLOCKED_MESSAGE_PLACEHOLDER = "[This message was blocked by a guardrail.]"
 """What replaces a user message that an input guardrail blocked, in the conversation's history."""
 
+MARKDOWN_SYSTEM_PROMPT = (
+    "Your responses are displayed in a chat window that renders Markdown: headings, bold, italics, "
+    "strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and images. "
+    "Use Markdown when it makes a response clearer."
+)
+"""
+Added to the system prompt of every request, so that the LLM knows that its responses may use Markdown.
+
+It is added to the request's messages only (see :attr:`OpenAISmarterClient.openai_messages`), and is
+never saved in the conversation's history, nor displayed in the chat.
+"""
+
 
 class OpenAISmarterClient(SmarterChatProviderBase):
     """
@@ -238,9 +250,42 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if _InternalKeys.SMARTER_IS_NEW in message_copy:
                 del message_copy[_InternalKeys.SMARTER_IS_NEW]
             retval.append(message_copy)
+        retval = self.add_markdown_system_prompt(retval)
         # the thread may come from the client, which keeps the tool replies but not the
         # assistant's tool_calls, and OpenAI refuses a tool reply without its tool call.
         return pair_tool_messages(retval)
+
+    @staticmethod
+    def add_markdown_system_prompt(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Tell the LLM that its responses may use Markdown.
+
+        :data:`MARKDOWN_SYSTEM_PROMPT` is appended to the first system message, or is the system
+        message of a thread that has none. The messages are copies, so the conversation's history
+        is unchanged.
+
+        :param messages: The request's messages.
+        :type messages: list[dict[str, Any]]
+
+        :returns: The request's messages, with the Markdown instructions.
+        :rtype: list[dict[str, Any]]
+        """
+        for i, message in enumerate(messages):
+            if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+                content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
+                if MARKDOWN_SYSTEM_PROMPT not in content:
+                    messages[i] = {
+                        **message,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{MARKDOWN_SYSTEM_PROMPT}".strip(),
+                    }
+                return messages
+        return [
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: MARKDOWN_SYSTEM_PROMPT,
+            },
+            *messages,
+        ]
 
     @property
     def new_messages(self) -> list[dict[str, Any]]:
