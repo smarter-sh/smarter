@@ -223,19 +223,23 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         The url of the user's server log stream, which Smarter Chat displays in its Console.
 
         :returns: The url of :func:`smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs`,
-            or an empty string if log viewing in the browser is disabled.
+            or an empty string if log viewing in the browser is disabled, in which case Smarter Chat has no
+            "Server Logs" tab. See :func:`smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled`.
         :rtype: str
         """
         # pylint: disable=C0415
         from smarter.apps.dashboard.views.terminal_emulator.api.urls import (
             DashboardLogsApiReverseNames,
         )
+        from smarter.apps.dashboard.views.terminal_emulator.enabled import (
+            server_logs_enabled,
+        )
         from smarter.apps.dashboard.views.terminal_emulator.names import (
             DashboardLogsReverseNames,
         )
         from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
-        if not smarter_settings.enable_dashboard_server_logs:
+        if not server_logs_enabled():
             return ""
         return reverse(
             DashboardReverseNames.namespace,

@@ -12,7 +12,7 @@ metadata:
   annotations:
     - smarter.sh/llmclient/use-case: codebase question answering
     - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
-    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
   apiKey: null
@@ -44,6 +44,17 @@ spec:
       Name the files, classes and functions that your answer is based on, and link to them.
       If the user does not name a repository, ask which one. If the tools do not answer the
       question, say so. DO NOT INVENT file names or APIs.
+
+      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+      make them polished and easy to scan. Lead with a short overview, then use headings for
+      each part of the answer. Write file paths, classes and functions in inline code, and
+      link them to their files on GitHub. Use a table to summarize a repository's main
+      components and their responsibilities, numbered lists to trace a request or data flow
+      step by step, and fenced code blocks, with the language named, for short code excerpts.
+      When a repository's README or documentation has an architecture diagram or logo that
+      clarifies the answer, show it with markdown image syntax, ![description](https://...),
+      using the image url that your tools returned. NEVER invent an image url. Do not use
+      HTML or Mermaid, which the chat window does not render.
     defaultTemperature: 1.0
     deployed: false
     provider: openai

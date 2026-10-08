@@ -89,16 +89,16 @@ class SmarterWaffleSwitches:
     INFRASTRUCTURE_LOGGING = "log_infrastructure"
     """Enables logging throughout the smarter.app.infrastructure namespace."""
 
-    MCPCLIENT_LOGGING = "mcpclient_logging"
+    MCPCLIENT_LOGGING = "log_mcpclient"
     """Enables logging within the smarter.apps.mcpclient namespace."""
 
-    ORCHESTRATOR = "orchestrator"
+    ORCHESTRATOR = "log_orchestrator"
     """Enables logging within the smarter.apps.orchestror namespace."""
 
     SECRET_LOGGING = "log_secret"
     """Enables logging throughout the smarter.app.secret namespace."""
 
-    VECTORSEARCH_LOGGING = "leg_vectorsearch"
+    VECTORSEARCH_LOGGING = "log_vectorsearch"
     """Enables logging throughout the smarter.app.vectorsearch namespace."""
 
     VECTORSTORE_LOGGING = "log_vectorstore"
@@ -140,7 +140,7 @@ class SmarterWaffleSwitches:
     ENABLE_MIDDLEWARE_HTML_MINIFY = "enable_middleware_html_minify"
     """Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses."""
 
-    ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT = "enable_middleware_request_log_context"
+    ENABLE_WEB_CONSOLE_SERVER_LOGS = "enable_web_console_server_logs"
     """Enables SmarterRequestLogContextMiddleware, which adds request-specific context to log records for enhanced logging capabilities."""
 
     ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR = "enable_middleware_smarter_json_error"
@@ -203,7 +203,7 @@ class SmarterWaffleSwitches:
         ACCOUNT_LOGGING: SmarterWaffleSwitch(
             name=ACCOUNT_LOGGING,
             comment="Enables logging throughout the smarter.app.account namespace.",
-            default=True,
+            default=False,
         ),
         ACCOUNT_MIXIN_LOGGING: SmarterWaffleSwitch(
             name=ACCOUNT_MIXIN_LOGGING,
@@ -360,8 +360,8 @@ class SmarterWaffleSwitches:
             comment="Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses.",
             default=True,
         ),
-        ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT: SmarterWaffleSwitch(
-            name=ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT,
+        ENABLE_WEB_CONSOLE_SERVER_LOGS: SmarterWaffleSwitch(
+            name=ENABLE_WEB_CONSOLE_SERVER_LOGS,
             comment="Enables SmarterRequestLogContextMiddleware, which adds request-specific context to log records for enhanced logging capabilities.",
             default=True,
         ),
