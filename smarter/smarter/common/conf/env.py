@@ -3,6 +3,8 @@
 import os
 from typing import Any, Optional
 
+from pydantic import SecretStr
+
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils.utils import bool_environment_variable
 from smarter.lib import json, logging
@@ -10,6 +12,25 @@ from smarter.lib import json, logging
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
+
+
+def is_missing_value(value: Any) -> bool:
+    """
+    Return True if a configuration value is missing.
+
+    A value is missing if it is None, empty, or a placeholder, such as ``.env.example``'s
+    ``SET-ME-PLEASE`` or ``helm/charts/smarter/values.yaml``'s ``SET-ME-IN-helm/...``. A
+    :class:`pydantic.SecretStr` is unwrapped first.
+
+    :param value: The value, e.g. from :func:`get_env`.
+    :returns: True if the value is missing.
+    """
+    if isinstance(value, SecretStr):
+        value = value.get_secret_value()
+    if value is None:
+        return True
+    text = str(value).strip()
+    return not text or text.upper().startswith("SET-ME")
 
 
 def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False) -> Any:
@@ -141,4 +162,4 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         return cast_val
 
 
-__all__ = ["get_env"]
+__all__ = ["get_env", "is_missing_value"]
