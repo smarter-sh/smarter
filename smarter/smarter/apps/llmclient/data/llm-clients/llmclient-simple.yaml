@@ -26,9 +26,20 @@ spec:
     appPlaceholder: Ask me anything...
     appWelcomeMessage: Welcome to the Simple LLMClient! How can I help you today?
     customDomain: null
-    defaultMaxTokens: 2048
+    defaultMaxTokens: 4096
     defaultModel: gpt-5-nano
-    defaultSystemRole: You are a helpful assistant.
+    defaultSystemRole:
+      You are a helpful assistant.
+
+      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+      use it to make them attractive and easy to scan. Lead with the answer. Use headings
+      for longer replies, bulleted or numbered lists for steps and options, tables to
+      compare things, **bold** for key terms, block quotes for quotations, and fenced code
+      blocks, with the language named, for code. Keep short replies short and unformatted.
+      Do not use HTML, LaTeX or Mermaid, which the chat window does not render. To show an
+      image, use markdown image syntax, ![description](https://...), but only with an
+      image url that you are certain exists, such as one that the user gave you. NEVER
+      invent an image url, because a broken image looks worse than no image.
     defaultTemperature: 1.0
     deployed: false
     provider: openai

@@ -89,26 +89,19 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_workbench_log_stream_url(self):
         """Test that the workbench passes the user's server log stream to Smarter Chat, when it is enabled."""
         url = self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id)
-        module = "smarter.apps.prompt.views.detailviews.prompt_workbench_view.smarter_settings"
+        enabled = "smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled"
 
-        class Settings:
-            """Smarter_settings, which is frozen, with log viewing in the browser enabled or not."""
-
-            def __init__(self, enabled: bool):
-                self.enable_dashboard_server_logs = enabled
-
-            def __getattr__(self, name):
-                return getattr(smarter_settings, name)
-
-        with patch(module, Settings(True)):
+        with patch(enabled, return_value=True):
             response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
         log_stream_url = response.context["smarter_chat"]["log_stream_url"]
         self.assertTrue(log_stream_url.endswith("/logs/api/stream/"), log_stream_url)
         self.assertIn(f'smarter-log-stream-url="{log_stream_url}"', response.content.decode())
 
-        with patch(module, Settings(False)):
+        # without a log stream, Smarter Chat has no "Server Logs" tab.
+        with patch(enabled, return_value=False):
             response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
         self.assertEqual(response.context["smarter_chat"]["log_stream_url"], "")
+        self.assertIn('smarter-log-stream-url=""', response.content.decode())
 
     def test_workbench_and_config_not_found(self):
         """Test that the workbench page and config api are a 404 for an unknown LLMClient."""
