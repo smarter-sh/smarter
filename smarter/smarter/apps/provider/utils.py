@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
-from smarter.common.conf.env import get_env
+from smarter.common.conf.env import get_env, is_missing_value
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -213,9 +213,9 @@ def initialize_google_maps() -> None:
     API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
     API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
 
-    api_key = get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True)
-    if not api_key:
-        logger.error("Google Maps API key environment variable %s is not set.", API_KEY_ENV_VAR)
+    api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
+    if is_missing_value(api_key):
+        logger.warning("Google Maps API key environment variable %s is not set.", API_KEY_ENV_VAR)
         return
 
     initialize_secret(
@@ -232,7 +232,7 @@ def get_google_maps_api_key(recursed=False) -> str | None:
     try:
         secret = Secret.get_cached_object(name="google_maps_api_key", user_profile=user_profile)
         api_key = secret.get_secret()
-        if not api_key:
+        if is_missing_value(api_key):
             logger.error("Google Maps API key secret is empty.")
             return None
         return api_key

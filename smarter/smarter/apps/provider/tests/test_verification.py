@@ -251,6 +251,15 @@ class TestProviderModelVerification(ProviderTestBase):
         self.assertFalse(ProviderModel.objects.get(pk=self.model.pk).is_active)
         self.assertIsNone(model_checks.verify_provider_model(999999999))
 
+    def test_verify_provider_model_without_an_api_key(self):
+        """Test that the model of a provider without an API key is neither verified nor deactivated."""
+        self.provider.api_key = None
+        self.provider.save()
+        ProviderModel.objects.filter(pk=self.model.pk).update(is_active=True, supports_text_input=True)
+        self.assertIsNone(model_checks.verify_provider_model(self.model.id))
+        self.openai.chat.completions.create.assert_not_called()
+        self.assertTrue(ProviderModel.objects.get(pk=self.model.pk).is_active)
+
 
 class TestVerificationSignals(ProviderTestBase):
     """Test that recording a verification's result, which sends a signal, works."""

@@ -69,3 +69,21 @@ def formatted_text_blue(text: str) -> str:
 def formatted_text_gray(text: str) -> str:
 
     return formatted_text(text, SmarterFormattedTextColorCodes.LIGHT_GRAY)
+
+
+def formatted_banner(title: str, *lines: str, color_code: str = SmarterFormattedTextColorCodes.DEFAULT) -> str:
+    """
+    Format an attention-grabbing, multi-line console banner, e.g. for a missing configuration.
+
+    Example::
+
+        logger.error(formatted_banner("SMTP is not configured.", "Set SMARTER_SMTP_USERNAME in .env."))
+
+    .. param title: The first line of the banner.
+    .. param lines: Further lines, e.g. instructions.
+    .. param color_code: The ANSI color code to apply.
+    .. return: The banner, framed by rules and preceded by a newline, with ANSI color codes.
+    """
+    rule = "=" * 80
+    body = "\n".join([title, *lines])
+    return formatted_text(f"\n{rule}\n{body}\n{rule}", color_code)

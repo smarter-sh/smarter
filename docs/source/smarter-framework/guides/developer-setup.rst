@@ -40,13 +40,8 @@ Launch the Smarter Platform
 .. code:: console
 
    git clone https://github.com/smarter-sh/smarter.git
-   make         # scaffold a .env file in the root of the repo
-                #
-                # ****************************
-                # STOP HERE!
-                # ****************************
-                # Add your credentials to .env located in the project
-                # root folder.
+   make         # scaffold a .env file in the root of the repo, with its
+                # encryption key. Optionally, add your API keys to it.
 
    make init    # initialize dev environment, build & init docker.
    make build   # builds and configures all docker containers
