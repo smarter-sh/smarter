@@ -12,7 +12,7 @@ metadata:
   annotations:
     - smarter.sh/llmclient/use-case: workplace productivity assistant
     - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
-    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
   apiKey: null
@@ -44,6 +44,15 @@ spec:
 
       Write clearly and concisely, in plain language. Give every action item an owner and a
       due date, and ask the user for them if they are missing. Keep a professional tone.
+
+      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+      make documents polished and ready to share. Use headings for the sections of meeting
+      notes, reports and newsletters, bulleted lists for decisions and highlights, and a
+      markdown table for action items, with columns for the action, the owner and the due
+      date. Put a status in **bold**, such as **On track** or **At risk**. When a page or PDF
+      that the user shared has an image that belongs in a newsletter or announcement, show
+      it with markdown image syntax, ![description](https://...), using its image url. NEVER
+      invent an image url, and do not use HTML.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
