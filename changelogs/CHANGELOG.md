@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.18.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.8...v0.18.9-alpha.1) (2026-10-08)
+## [0.18.10](https://github.com/smarter-sh/smarter/compare/v0.18.9...v0.18.10) (2026-10-08)
+
+### Bug Fixes
+
+* let the platform run locally without cloud, smtp or api keys ([990cab9](https://github.com/smarter-sh/smarter/commit/990cab95bd8c7286dd7f71a7edd371e374cdc422))
+
+## [0.18.9](https://github.com/smarter-sh/smarter/compare/v0.18.8...v0.18.9) (2026-10-08)
 
 ### Bug Fixes
 
