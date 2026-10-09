@@ -7,7 +7,7 @@ import { budgets, listResponse, makeBudget, makeResourceStatus, sessionContext }
 import { listErrorHandlers, listHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import BudgetList from "./Component";
+import BudgetList from "@/components/BudgetList/Component";
 
 describe("BudgetList", () => {
   it("lists the budgets, with their limits and blocked resources", async () => {

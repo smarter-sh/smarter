@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { makeObject } from "@/mocks/fixtures";
 
-import { StatusBar } from "./Component";
+import { StatusBar } from "@/components/StatusBar/Component";
 
 describe("StatusBar", () => {
   it("shows an LLMClient that isn't ready, deployed, verified or certified", () => {

@@ -37,7 +37,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/lib/const";
 import { databaseLabel, formatCount } from "@/lib/format";
 
-import "./styles.css";
+import "@/components/ListView/styles.css";
 
 /**
  * LoadingText

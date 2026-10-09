@@ -1,3 +1,3 @@
-import QuickActions from "./Component";
+import QuickActions from "@/components/QuickActions/Component";
 
 export default QuickActions;

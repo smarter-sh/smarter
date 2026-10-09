@@ -6,7 +6,7 @@ import { ownedObjects, sessionContext, sharedObjects } from "@/mocks/fixtures";
 import { listErrorHandlers, listHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import App from "./App";
+import App from "@/App";
 
 describe("App", () => {
   it("lists your own, and those shared with you", async () => {

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { makeObject } from "@/mocks/fixtures";
 import type { LLMHostCompute } from "@/lib/Types";
 
-import { StatusBar } from "./Component";
+import { StatusBar } from "@/components/StatusBar/Component";
 
 const compute = (overrides: Partial<LLMHostCompute>) => makeObject(1, { nodegroupName: "ng", ...overrides });
 

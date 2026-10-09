@@ -4,7 +4,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { listResponse, sessionContext } from "@/mocks/fixtures";
 import { deleteHandlers, listErrorHandlers, listHandlers } from "@/mocks/handlers";
 
-import BudgetList from "./Component";
+import BudgetList from "@/components/BudgetList/Component";
 
 const meta = {
   title: "Budget List/BudgetList",

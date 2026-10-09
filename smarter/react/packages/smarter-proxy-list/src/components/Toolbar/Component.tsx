@@ -32,7 +32,7 @@ import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 import { loggerPrefix } from "@/lib/const";
 import { proxyUrl } from "@/lib/format";
 import type { Proxy } from "@/lib/Types";
-import "./styles.css";
+import "@/components/Toolbar/styles.css";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 

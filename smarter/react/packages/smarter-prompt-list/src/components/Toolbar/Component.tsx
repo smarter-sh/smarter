@@ -30,7 +30,7 @@ import { fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 import type { LLMClient } from "@/lib/Types";
-import "./styles.css";
+import "@/components/Toolbar/styles.css";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 

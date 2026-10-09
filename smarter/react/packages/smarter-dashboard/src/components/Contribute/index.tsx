@@ -1,3 +1,3 @@
-import Contribute from "./Component";
+import Contribute from "@/components/Contribute/Component";
 
 export default Contribute;

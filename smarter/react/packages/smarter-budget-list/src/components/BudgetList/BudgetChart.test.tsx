@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { series } from "@/mocks/fixtures";
 
-import BudgetChart from "./BudgetChart";
+import BudgetChart from "@/components/BudgetList/BudgetChart";
 
 vi.mock("recharts", async (importOriginal) => (await import("@test/recharts")).withFixedSize(await importOriginal()));
 

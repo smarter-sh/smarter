@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import WhatsNew from "./Component";
+import WhatsNew from "@/components/WhatsNew/Component";
 
 /** Notable features of recent Smarter releases. */
 const meta = {

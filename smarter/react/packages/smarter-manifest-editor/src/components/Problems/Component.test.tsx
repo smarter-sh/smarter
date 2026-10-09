@@ -6,7 +6,7 @@ import { fakeEditor } from "@/mocks/fakeEditor";
 import { SECRET_YAML } from "@/mocks/fixtures";
 import type { ManifestError } from "@/lib/validation";
 
-import Problems from "./Component";
+import Problems from "@/components/Problems/Component";
 
 const valueOffset = SECRET_YAML.indexOf("value:");
 

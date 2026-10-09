@@ -7,8 +7,8 @@ import { manyResources, resources, sessionContext } from "@/mocks/fixtures";
 import { listErrorHandlers, listForbiddenHandlers, listHandlers, listResponseFor } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import InfrastructureResourceList from "./Component";
-import { defaultFilters, listRequest } from "./filters";
+import InfrastructureResourceList from "@/components/InfrastructureResourceList/Component";
+import { defaultFilters, listRequest } from "@/components/InfrastructureResourceList/filters";
 
 describe("InfrastructureResourceList", () => {
   it("summarizes the ledger, and lists the active resources", async () => {

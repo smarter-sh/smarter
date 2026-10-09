@@ -6,7 +6,7 @@ import { appContext, makeBudgetStatus, sessionContext } from "@/mocks/fixtures";
 import type { BudgetStatus } from "@/components/BudgetVsActual/types";
 import { server } from "@test/server";
 
-import BudgetAlerts from "./Component";
+import BudgetAlerts from "@/components/BudgetAlerts/Component";
 
 function renderWith(statuses: BudgetStatus[]) {
   server.use(http.post(appContext.budgetsApiUrl, () => HttpResponse.json(statuses)));

@@ -18,10 +18,16 @@ import type {
 } from "@/lib/Types";
 import { loggerPrefix } from "@/lib/const";
 
-import { defaultFilters, defaultPageSize, listRequest, pageSizes, searchDelay } from "./filters";
-import type { Filters, StatusFilter } from "./filters";
+import {
+  defaultFilters,
+  defaultPageSize,
+  listRequest,
+  pageSizes,
+  searchDelay,
+} from "@/components/InfrastructureResourceList/filters";
+import type { Filters, StatusFilter } from "@/components/InfrastructureResourceList/filters";
 
-import "./styles.css";
+import "@/components/InfrastructureResourceList/styles.css";
 
 function SummaryTile({ label, value, className }: { label: string; value: number; className?: string }) {
   return (

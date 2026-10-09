@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import Cli from "./Component";
+import Cli from "@/components/Cli/Component";
 
 /** The smarter command line interface. */
 const meta = {

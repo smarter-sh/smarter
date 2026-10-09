@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeEventSource, installFakes, written } from "@/mocks/fakes";
 import { STREAM_URL, bulkLogs, liveLog } from "@/mocks/fixtures";
 
-import TerminalEmulator from "./Component";
+import TerminalEmulator from "@/components/Terminal/Component";
 
 vi.mock("@xterm/xterm", async () => ({ Terminal: (await import("@/mocks/fakes")).FakeTerminal }));
 vi.mock("@xterm/addon-fit", async () => ({ FitAddon: (await import("@/mocks/fakes")).FakeFitAddon }));

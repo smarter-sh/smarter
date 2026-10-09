@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { makeObject, ownedObjects, sessionContext } from "@/mocks/fixtures";
 
-import ListView from "./Component";
+import ListView from "@/components/ListView/Component";
 
 describe("ListView", () => {
   it("shows a row for each object", async () => {

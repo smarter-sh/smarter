@@ -6,7 +6,7 @@ import { fakeEditor } from "@/mocks/fakeEditor";
 import { SECRET_YAML } from "@/mocks/fixtures";
 import type { ManifestError } from "@/lib/validation";
 
-import ManifestEditor from "./Component";
+import ManifestEditor from "@/components/ManifestEditor/Component";
 
 // a fake of @monaco-editor/react's Editor, which mounts the fake editor of each test.
 const mount = vi.hoisted(() => ({ editor: null as unknown, monaco: null as unknown }));

@@ -1,7 +1,7 @@
-import type { LLMProvider } from "../LLMProviders";
-import ProviderDetails from "./ProviderDetails";
-import ProviderFlags from "./ProviderFlags";
-import ProviderLinks from "./ProviderLinks";
+import type { LLMProvider } from "@/components/LLMProviders";
+import ProviderDetails from "@/components/LLMProviderMetaData/ProviderDetails";
+import ProviderFlags from "@/components/LLMProviderMetaData/ProviderFlags";
+import ProviderLinks from "@/components/LLMProviderMetaData/ProviderLinks";
 
 interface ProviderMetaDataProps {
   provider: LLMProvider | null;

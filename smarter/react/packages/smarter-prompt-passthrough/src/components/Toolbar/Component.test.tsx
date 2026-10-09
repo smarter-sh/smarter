@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type * as monaco from "monaco-editor";
 import { describe, expect, it, vi } from "vitest";
 
-import Toolbar from "./Component";
+import Toolbar from "@/components/Toolbar/Component";
 
 const REQUEST = '{"model": "gpt-4o-mini"}';
 

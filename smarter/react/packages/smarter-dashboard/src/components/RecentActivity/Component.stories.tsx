@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, activityHandler } from "@/mocks/handlers";
 
-import RecentActivity from "./Component";
+import RecentActivity from "@/components/RecentActivity/Component";
 
 /** The user's latest manifest commands. */
 const meta = {
