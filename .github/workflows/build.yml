@@ -78,10 +78,15 @@ jobs:
         run: |
           python scripts/bump_version.py $TAG --cicd
 
+      # QEMU and Buildx pull their helper images (tonistiigi/binfmt,
+      # moby/buildkit) from Docker Hub by default. Pull them from the ECR
+      # Public Gallery's mirrors instead, so that Docker Hub's token service
+      # (auth.docker.io) timing out can't fail the build.
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
+          image: public.ecr.aws/vend/tonistiigi/binfmt:latest
 
       # Get the latest release tag and append branch name for non-main branches
       # example: v0.14.0-alpha.27
@@ -132,6 +137,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
 
       # Log in to Docker Hub for the final step, which copies the image there.
       # The build itself pulls its python base image from the ECR Public
