@@ -79,7 +79,7 @@ init:
 	@echo ""
 	@echo "Feature switches (django-waffle) are at http://localhost:9357/admin/waffle/switch/"
 	@echo "They turn features, middleware and per-app logging on and off at runtime, without"
-	@echo "a restart.
+	@echo "a restart."
 	@echo "==============================================================================="
 
 activate:
