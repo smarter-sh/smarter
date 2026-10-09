@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.19.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.19.0...v0.19.1-alpha.1) (2026-10-09)
+
+### Bug Fixes
+
+* **account:** sync infrastructure inventory in initialize_platform ([2350312](https://github.com/smarter-sh/smarter/commit/235031256a9d75631dbfdd2cb568d4c18743b95f))
+
 ## [0.19.0](https://github.com/smarter-sh/smarter/compare/v0.18.11...v0.19.0) (2026-10-09)
 
 ### Features
