@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
@@ -9,6 +9,11 @@ import { makeCacheKey, writeCache } from "../../lib/cache";
 import { API_URL, exampleContext, sessionContext } from "../../mocks/example";
 import { examplePage, listErrorHandlers, listHandlers, manyExamples } from "../../mocks/handlers";
 import TabbedListView from "./Component";
+
+/** The rows of the example list view. */
+function rows() {
+  return within(screen.getByRole("list", { name: "Examples" })).getAllByRole("listitem");
+}
 
 function setup() {
   render(<TabbedListView sessionContext={sessionContext} tabbedListViewContext={exampleContext} />);
@@ -129,6 +134,74 @@ describe("TabbedListView", () => {
     await user.click(screen.getByRole("button", { name: "Shared Examples" }));
     expect(screen.queryByText("shared_example")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
+  });
+
+  it("sorts all of each tab's objects with the list api, from the first page", async () => {
+    const requests: string[] = [];
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request, params }) => {
+        const url = new URL(request.url);
+        requests.push(`${params.tab}:${url.searchParams.get("page")}:${url.searchParams.get("ordering") ?? ""}`);
+        return HttpResponse.json(examplePage(params.tab === "owned" ? manyExamples(30) : [], request.url, 10));
+      }),
+    );
+    const user = setup();
+    await screen.findByText("example_1");
+    // the list api can sort by name, but not by id.
+    expect(screen.queryByRole("button", { name: "Id" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    await screen.findByText("example_11");
+
+    // ascending, by name: example_1, example_10, ..., example_18 on the first page.
+    await user.click(screen.getByRole("button", { name: "Name" }));
+    expect(await screen.findByText("example_1")).toBeInTheDocument();
+    expect(rows()[1]).toHaveTextContent("example_10");
+    expect(screen.getByText("Showing 1–10 of 30")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Name" })).toHaveAttribute("aria-sort", "ascending");
+    expect(requests).toContain("owned:1:name");
+    expect(requests).toContain("shared:1:name");
+
+    // the sort holds while paging: the second page continues it.
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(await screen.findByText("example_25")).toBeInTheDocument();
+    expect(requests).toContain("owned:2:name");
+
+    // descending, by name: example_9, example_8, ..., example_3, example_30, example_29, ...
+    await user.click(screen.getByRole("button", { name: "Name" }));
+    expect(await screen.findByText("example_30")).toBeInTheDocument();
+    expect(rows()[0]).toHaveTextContent("example_9");
+    expect(screen.getByRole("columnheader", { name: "Name" })).toHaveAttribute("aria-sort", "descending");
+    expect(requests).toContain("owned:1:-name");
+
+    // and then the list api's default order.
+    await user.click(screen.getByRole("button", { name: "Name" }));
+    expect(await screen.findByText("example_2")).toBeInTheDocument();
+    expect(rows()[0]).toHaveTextContent("example_1");
+    expect(screen.getByRole("columnheader", { name: "Name" })).toHaveAttribute("aria-sort", "none");
+    expect(requests.at(-1)).toMatch(/:1:$/);
+  });
+
+  it("does not cache a sorted page, and queries again in the same order", async () => {
+    const orderings: string[] = [];
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request }) => {
+        orderings.push(new URL(request.url).searchParams.get("ordering") ?? "");
+        return HttpResponse.json(examplePage(manyExamples(12), request.url, 10));
+      }),
+    );
+    const user = setup();
+    await screen.findByText("example_1");
+    await user.click(screen.getByRole("button", { name: "Name" }));
+    await user.click(await screen.findByRole("button", { name: "Name" }));
+    expect(await screen.findByText("example_9")).toBeInTheDocument();
+    expect(rows()[0]).toHaveTextContent("example_9");
+    const cached = JSON.parse(sessionStorage.getItem(makeCacheKey(API_URL, "owned")) ?? "{}");
+    expect(cached.objects[0].name).toBe("example_1");
+
+    await vi.waitFor(() => expect(orderings.filter((ordering) => ordering === "-name")).toHaveLength(2));
+    orderings.length = 0;
+    await user.click(screen.getByRole("button", { name: "Requery" }));
+    await vi.waitFor(() => expect(orderings).toEqual(["-name", "-name"]));
   });
 
   it("does not cache a page of a search", async () => {

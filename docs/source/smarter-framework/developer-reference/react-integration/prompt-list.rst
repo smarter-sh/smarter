@@ -6,8 +6,9 @@ browse, view, and manage available llmclients or prompts. By fetching data
 directly from a live API, it ensures that the list is always up-to-date, and
 provides intuitive controls for toggling between list and thumbnail views. The
 API pages and searches the llmclients, so the list shows one page at a time,
-with previous and next page buttons and a page number box, and its search finds
-matching llmclients on every page, not only the page shown (see
+with previous and next page buttons and a page number box. Its search finds
+matching llmclients on every page, not only the page shown, and clicking a column
+header, such as Name or Provider, sorts all of them by that column (see
 :doc:`../lib/django/pagination`). With
 built-in error handling and responsive design, this component delivers a seamless
 experience for exploring both personal and shared llmclients made possible via

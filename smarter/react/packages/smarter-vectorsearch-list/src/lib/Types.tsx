@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Vectorsearch Definition
@@ -64,4 +64,5 @@ export interface VectorsearchListViewProps {
   sessionContext: SessionContext;
   objects: Vectorsearch[];
   onRequery: () => void;
+  sorting?: Sorting;
 }

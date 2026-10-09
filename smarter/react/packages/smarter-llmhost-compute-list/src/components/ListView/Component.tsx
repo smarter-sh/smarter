@@ -26,8 +26,8 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { Loading } from "@smarter/common";
-import type { SessionContext } from "@smarter/common";
+import { Loading, SortableHeader } from "@smarter/common";
+import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { LLMHostCompute, LLMHostComputeListViewProps } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
@@ -50,16 +50,27 @@ const LoadingText = () => {
  * TableHeader
  *
  * Renders the table header row, with a column title for each displayed field.
+ * Its sortable columns sort the list, with the list api (see SortableHeader).
  */
-const TableHeader = () => {
+const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
   return (
     <thead className="table-light border-bottom-2">
       <tr className="">
-        <th className=" p-1">Name</th>
-        <th className="d-none d-lg-table-cell">Instance Type</th>
-        <th className="">GPUs</th>
-        <th className="d-none d-lg-table-cell">CPU and Memory</th>
-        <th className="d-none d-md-table-cell">Price per Node</th>
+        <SortableHeader column="name" sorting={sorting} className=" p-1">
+          Name
+        </SortableHeader>
+        <SortableHeader column="instanceType" sorting={sorting} className="d-none d-lg-table-cell">
+          Instance Type
+        </SortableHeader>
+        <SortableHeader column="gpuCount" sorting={sorting} className="">
+          GPUs
+        </SortableHeader>
+        <SortableHeader column="cpu" sorting={sorting} className="d-none d-lg-table-cell">
+          CPU and Memory
+        </SortableHeader>
+        <SortableHeader column="pricePerHour" sorting={sorting} className="d-none d-md-table-cell">
+          Price per Node
+        </SortableHeader>
         <th className="d-none d-md-table-cell">Node Group</th>
         <th className="">Operations</th>
       </tr>
@@ -211,7 +222,14 @@ function ChunkedRows({
  * Main component for displaying a responsive, table-based list of LLMHostCompute resources.
  * Handles loading state with skeleton rows and incremental rendering for large lists.
  */
-export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: LLMHostComputeListViewProps) {
+export function ListView({
+  isLoading,
+  ghostRows,
+  sessionContext,
+  objects,
+  onRequery,
+  sorting,
+}: LLMHostComputeListViewProps) {
   console.debug(
     `${loggerPrefix} ListView() Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
@@ -220,7 +238,7 @@ export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequ
   return (
     <div className="table-responsive llmhost-compute-list-table-wrap ps-3 pe-3">
       <table className="table table-striped table-hover align-middle border">
-        <TableHeader />
+        <TableHeader sorting={sorting} />
         <tbody>
           {isLoading ? (
             <LLMHostComputeRowGhosts count={ghostRows} />
