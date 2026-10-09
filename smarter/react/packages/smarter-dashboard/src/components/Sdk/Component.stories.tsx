@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import Sdk from "./Component";
+import Sdk from "@/components/Sdk/Component";
 
 /** The Smarter SDKs. */
 const meta = {

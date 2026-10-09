@@ -24,7 +24,7 @@ import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
-import "./styles.css";
+import "@/components/CardView/styles.css";
 
 function CardView({ sessionContext, objects, onRequery }: LLMHostComputeCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);

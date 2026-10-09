@@ -1,4 +1,4 @@
-import { StatusBar } from "./Component";
-import { VerificationBadge } from "./VerificationBadge";
+import { StatusBar } from "@/components/StatusBar/Component";
+import { VerificationBadge } from "@/components/StatusBar/VerificationBadge";
 
 export { StatusBar, VerificationBadge };

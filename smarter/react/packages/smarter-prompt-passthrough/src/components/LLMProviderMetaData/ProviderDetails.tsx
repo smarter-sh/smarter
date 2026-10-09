@@ -1,4 +1,4 @@
-import type { LLMProvider } from "../LLMProviders";
+import type { LLMProvider } from "@/components/LLMProviders";
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric",

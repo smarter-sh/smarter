@@ -29,7 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 import { databaseLabel, formatCount } from "@/lib/format";
 
-import "./styles.css";
+import "@/components/CardView/styles.css";
 
 function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);

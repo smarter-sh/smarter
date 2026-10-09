@@ -15,7 +15,11 @@ the tool should be presented to the LLM.
   - **Selector**: CSS-like logic that defines when the tool should be made available to the LLM. That is, when it
     should be included in the prompt as an available tool. Remember that LLM APIs charge by token, and including
     tools in a prompt request increases the token count. Therefore, it behooves one to be judicious about which tools
-    are made available to the LLM for any given prompt.
+    are made available to the LLM for any given prompt. A ``search_terms`` selector matches a prompt that contains every
+    word of one of its search terms, in any order, ignoring case and plurals. Two waffle switches widen this:
+    ``enable_plugin_fuzzy_matching``, on by default, tolerates a typo or two, and ``enable_plugin_thesaurus_matching``,
+    on by default, also matches synonyms from the WordNet thesaurus, e.g. ``automobile`` for the search term ``car``.
+    Each match sends the ``search_term_matched`` signal, with how it matched. See :doc:`nlp`.
   - **Prompt**: The prompt specification that defines which LLM provider, the model, temperature, and other
     parameters to use when invoking the tool. You can even modify, or completely redefine the system prompt used
     when invoking the tool.

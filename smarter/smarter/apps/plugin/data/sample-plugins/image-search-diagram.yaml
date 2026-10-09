@@ -1,0 +1,57 @@
+---
+# An ImageSearchPlugin for technical diagrams, not photographs: the term
+# "diagram" is appended to the LLM's query, only png, svg and gif images, which
+# diagrams usually are and photographs rarely are, are returned, and stock photo
+# websites are blocked. The tool returns a JSON list of https image urls, each of
+# which has been checked to respond with HTTP 200.
+#
+# Requires a Brave Search API key, in the Smarter Secret brave_search_api_key.
+# Without it the plugin returns an empty list, and logs how to create it.
+#
+# Experimental: the ImageSearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: ImageSearchPlugin
+metadata:
+  name: diagram_image_search
+  pluginClass: imagesearch
+  description: Finds technical diagrams, such as architecture, network, flow and sequence diagrams. Never photographs.
+  version: 0.1.0
+  tags:
+    - imagesearch
+    - diagrams
+    - technical
+  annotations:
+    - smarter.sh/diagram-image-search/use-case: technical-documentation
+spec:
+  selector:
+    directive: search_terms
+    # Complete search terms that will trigger the llmclient to use your customized system prompt.
+    searchTerms:
+      - diagram
+      - flowchart
+      - sequence diagram
+      - architecture diagram
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a technical writer. When a diagram would make an explanation
+      clearer, search for one, and include it in your answer as a Markdown image.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  imageSearchData:
+    queryTerms: diagram
+    searchParams:
+      count: 5
+      safesearch: strict
+    filters:
+      fileType: png|svg|gif
+      blockedDomains:
+        - shutterstock.com
+        - istockphoto.com
+        - gettyimages.com
+        - alamy.com
+        - dreamstime.com
+        - pinterest.com
+    validateUrls: true

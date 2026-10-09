@@ -108,6 +108,30 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         authorize.assert_called_once()
 
     # -------------------------------------------------------------------------
+    # tool_display_name
+    # -------------------------------------------------------------------------
+    def test_tool_display_name_of_a_plugin(self):
+        """A plugin's symbolic function name is displayed as its PluginMeta's name."""
+        plugin_meta = MagicMock()
+        plugin_meta.name = "stackademy_sql"
+        with patch.object(module.PluginMeta, "get_cached_object", return_value=plugin_meta) as get:
+            self.assertEqual(self.client.tool_display_name(f"{PLUGIN_PREFIX}_0000000016"), "stackademy_sql")
+        get.assert_called_once_with(pk=16)
+
+    def test_tool_display_name_of_unknown_plugins_and_builtin_functions(self):
+        """Built-in functions, and plugins that can't be found, keep their function names."""
+        for name in ("calculator", f"{PLUGIN_PREFIX}_not_a_number", f"{PLUGIN_PREFIX}_2147483646"):
+            with self.subTest(name=name):
+                self.assertEqual(self.client.tool_display_name(name), name)
+
+    def test_tool_display_name_of_an_mcp_tool(self):
+        """An MCP function is displayed as its MCP tool's name."""
+        self.client.mcp_toolkit = MagicMock()
+        self.client.mcp_toolkit.is_mcp_function.return_value = True
+        self.client.mcp_toolkit.functions = {"mcp1_search_code": MagicMock(tool_name="search_code")}
+        self.assertEqual(self.client.tool_display_name("mcp1_search_code"), "search_code")
+
+    # -------------------------------------------------------------------------
     # handle_mcp_clients
     # -------------------------------------------------------------------------
     def mcp_toolkit(self) -> MagicMock:
@@ -178,6 +202,20 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.client.second_iteration = None
         with self.assertRaises(SmarterValueError):
             self.client.prep_second_request()
+
+    def test_second_request_offers_no_tools(self):
+        """
+        Test that only the first request offers tools, so the LLM can't chain one tool call on another's result.
+
+        LLMClients that need several tools must ask for them together, in the first response, as
+        llmclient-weather.yaml does. Update that prompt if this changes.
+        """
+        self.prep_first_request([{"type": "function", "function": {"name": "get_weather", "description": "Weather."}}])
+        self.assertIn("tools", self.client.first_iteration["request"])
+        self.client.second_iteration = {}
+        self.client.prep_second_request()
+        self.assertNotIn("tools", self.client.second_iteration["request"])
+        self.assertNotIn("tool_choice", self.client.second_iteration["request"])
 
     def test_handle_response_needs_a_response_with_usage(self):
         """Handle_response needs a response, and the response needs usage."""
@@ -350,6 +388,18 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.process("calculator", function=function, refusal="over budget")
         function.assert_not_called()
         self.assertEqual(self.append_message.call_args.kwargs["content"], "over budget")
+
+    def test_tool_signals_carry_the_tool_display_name(self):
+        """The tool signals of a tool call carry its display name, for progress messages."""
+        with (
+            patch.object(OpenAISmarterClient, "tool_display_name", return_value="Calculator") as display_name,
+            patch.object(module.llm_tool_requested, "send") as requested,
+            patch.object(module.llm_tool_responded, "send") as responded,
+        ):
+            self.process("calculator", function=MagicMock(return_value="2"))
+        display_name.assert_called_once_with("calculator")
+        self.assertEqual(requested.call_args.kwargs["tool_name"], "Calculator")
+        self.assertEqual(responded.call_args.kwargs["tool_name"], "Calculator")
 
     def test_unrecognized_function(self):
         with self.assertRaises(SmarterConfigurationError):

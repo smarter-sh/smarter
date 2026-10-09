@@ -91,6 +91,7 @@ RESOURCE_MODELS = {
     "SqlPlugin": "plugin.PluginMeta",
     "StaticPlugin": "plugin.PluginMeta",
     "WebsearchPlugin": "plugin.PluginMeta",
+    "ImageSearchPlugin": "plugin.PluginMeta",
 }
 """The Django models of the kinds of resource, other than Account and User, that are owned by a user."""
 

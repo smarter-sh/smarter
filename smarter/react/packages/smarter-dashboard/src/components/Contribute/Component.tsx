@@ -12,7 +12,7 @@
  *
  *     <Contribute />
  */
-import "./styles.css";
+import "@/components/Contribute/styles.css";
 
 function Contribute() {
   return (

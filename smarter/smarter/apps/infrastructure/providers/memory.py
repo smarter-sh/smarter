@@ -19,6 +19,7 @@ import copy
 from typing import Any, Optional
 
 from ..const import CertificateStatus, CloudProviders
+from ..services.base import DiscoveredResource
 from ..services.certificates import Certificate, CertificateService
 from ..services.dns import DNSRecord, DNSService, DNSZone, normalize_name
 from .base import CloudProvider
@@ -159,6 +160,8 @@ class InMemoryProvider(CloudProvider):
             "status": "ACTIVE",
             "version": "1.33",
         }
+        self.cluster_resources: dict[str, list[DiscoveredResource]] = {}
+        """The cloud resources of the cluster, by resource type, for the inventory."""
 
     @property
     def ready(self) -> bool:
@@ -195,6 +198,11 @@ class InMemoryProvider(CloudProvider):
     def get_kubernetes_cluster_info(self) -> dict[str, Any]:
         self.require_ready()
         return dict(self.cluster_info)
+
+    def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
+        if not self.ready:
+            return {}
+        return copy.deepcopy(self.cluster_resources)
 
 
 __all__ = ["InMemoryCertificateService", "InMemoryDNSService", "InMemoryProvider"]

@@ -220,6 +220,26 @@ class TestInitializeProviders(TestAccountMixin):
                 self.command.initialize_tavily()
             initialize_secret.assert_not_called()
 
+    def test_brave_search(self):
+        """Test that the Brave Search api key is stored as the brave_search_api_key Secret."""
+        with (
+            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
+            patch.dict(os.environ, {"BRAVE_SEARCH_API_KEY": "brave-key"}),
+        ):
+            self.command.initialize_brave_search()
+        self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "brave-key")
+        self.assertEqual(initialize_secret.call_args.kwargs["secret_name"], "brave_search_api_key")
+
+    def test_brave_search_missing(self):
+        """Test that no Secret is stored, and the missing api key is recorded, when it is a placeholder."""
+        with (
+            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
+            patch.dict(os.environ, {"BRAVE_SEARCH_API_KEY": "SET-ME-PLEASE"}),
+        ):
+            self.command.initialize_brave_search()
+        initialize_secret.assert_not_called()
+        self.assertEqual(self.command.missing_api_keys[0][0], "BRAVE_SEARCH_API_KEY")
+
     def test_google_service_account_missing(self):
         """Test that no Secret is stored, and the missing credential is recorded, when it is not set."""
         with (

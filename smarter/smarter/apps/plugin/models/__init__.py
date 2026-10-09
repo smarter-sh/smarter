@@ -5,6 +5,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from .exceptions import PluginDataValueError
 from .plugin_data_api import PluginDataApi
 from .plugin_data_base import PluginDataBase
+from .plugin_data_image_search import PluginDataImageSearch
 from .plugin_data_skill import PluginDataSkill
 from .plugin_data_sql import PluginDataSql
 from .plugin_data_static import PluginDataStatic
@@ -24,6 +25,7 @@ PluginDataType = (
     | type[PluginDataSql]
     | type[PluginDataSkill]
     | type[PluginDataWebsearch]
+    | type[PluginDataImageSearch]
 )
 PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
     SAMKinds.API_PLUGIN.value: PluginDataApi,
@@ -31,6 +33,7 @@ PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
     SAMKinds.STATIC_PLUGIN.value: PluginDataStatic,
     SAMKinds.SKILL_PLUGIN.value: PluginDataSkill,
     SAMKinds.WEBSEARCH_PLUGIN.value: PluginDataWebsearch,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value: PluginDataImageSearch,
 }
 
 
@@ -41,6 +44,7 @@ __all__ = [
     "PluginDataSkill",
     "PluginDataSql",
     "PluginDataWebsearch",
+    "PluginDataImageSearch",
     "PluginMeta",
     "PluginPrompt",
     "PluginSelector",
