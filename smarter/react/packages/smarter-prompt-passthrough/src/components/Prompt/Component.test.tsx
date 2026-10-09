@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
@@ -77,5 +77,59 @@ describe("Prompt", () => {
 
     expect(await screen.findByRole("heading", { name: /\(401\)/ })).toBeInTheDocument();
     expect(screen.getByText(/Invalid API key/)).toBeInTheDocument();
+  });
+
+  it("sends the request as the user edits it, and returns to the request", async () => {
+    let sent: unknown;
+    server.use(
+      ...providerHandlers,
+      http.post(`${API_URL}:provider/`, async ({ request }) => {
+        sent = await request.text();
+        return HttpResponse.json(completion);
+      }),
+    );
+    const user = setup();
+    await screen.findByRole("option", { name: "anthropic" });
+
+    fireEvent.change(screen.getByLabelText("Request JSON"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Request JSON"), { target: { value: '{"edited": true}' } });
+    await user.click(screen.getByRole("button", { name: "SEND" }));
+    await screen.findByRole("tab", { name: "Response", selected: true });
+    expect(sent).toBe('{"edited": true}');
+
+    await user.click(screen.getByRole("tab", { name: "Request" }));
+    expect(screen.getByRole("tab", { name: "Request", selected: true })).toBeInTheDocument();
+    expect(screen.getByLabelText("Request JSON")).toHaveValue('{"edited": true}');
+  });
+
+  it("leaves the request empty when there are no providers", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    server.use(http.post(PROVIDER_API_URL, () => HttpResponse.json({ providers: [] })));
+    setup();
+    await vi.waitFor(() => expect(warn).toHaveBeenCalledWith(expect.anything(), "No LLM providers found from API"));
+    expect(screen.getByLabelText("Request JSON")).toHaveValue("");
+  });
+
+  it("logs a failure to load the providers", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    server.use(http.post(PROVIDER_API_URL, () => HttpResponse.error()));
+    setup();
+    await vi.waitFor(() =>
+      expect(error).toHaveBeenCalledWith(expect.anything(), "Error fetching LLM providers:", expect.any(Error)),
+    );
+  });
+
+  it("uses the first template and provider without defaults", async () => {
+    server.use(...providerHandlers);
+    render(
+      <Prompt
+        sessionContext={sessionContext}
+        defaultLLMProviderId={undefined as never}
+        defaultTemplateId={undefined as never}
+        providerApiUrl={PROVIDER_API_URL}
+      />,
+    );
+    await screen.findByRole("option", { name: "anthropic" });
+    expect(requestJson()).toMatchObject({ model: "gpt-4o-mini" });
   });
 });
