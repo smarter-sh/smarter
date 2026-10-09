@@ -179,6 +179,20 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             self.client.prep_second_request()
 
+    def test_second_request_offers_no_tools(self):
+        """
+        Test that only the first request offers tools, so the LLM can't chain one tool call on another's result.
+
+        LLMClients that need several tools must ask for them together, in the first response, as
+        llmclient-weather.yaml does. Update that prompt if this changes.
+        """
+        self.prep_first_request([{"type": "function", "function": {"name": "get_weather", "description": "Weather."}}])
+        self.assertIn("tools", self.client.first_iteration["request"])
+        self.client.second_iteration = {}
+        self.client.prep_second_request()
+        self.assertNotIn("tools", self.client.second_iteration["request"])
+        self.assertNotIn("tool_choice", self.client.second_iteration["request"])
+
     def test_handle_response_needs_a_response_with_usage(self):
         """Handle_response needs a response, and the response needs usage."""
         self.client.iteration = 1

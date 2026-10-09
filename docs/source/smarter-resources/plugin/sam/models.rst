@@ -9,4 +9,5 @@ Pydantic Models
    models/sql-plugin
    models/skill-plugin
    models/websearch-plugin
+   models/image-search-plugin
    models/static-plugin

@@ -1,0 +1,51 @@
+---
+# An ImageSearchPlugin for SVG images only, such as icons, logos and vector
+# illustrations, which scale to any size. The term "svg" is appended to the
+# LLM's query, and only images that are svg files are returned. The tool returns a
+# JSON list of https image urls, each of which has been checked to respond with
+# HTTP 200.
+#
+# Requires a Brave Search API key, in the Smarter Secret brave_search_api_key.
+# Without it the plugin returns an empty list, and logs how to create it.
+#
+# Experimental: the ImageSearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: ImageSearchPlugin
+metadata:
+  name: svg_image_search
+  pluginClass: imagesearch
+  description: Finds SVG vector images, such as icons, logos and illustrations.
+  version: 0.1.0
+  tags:
+    - imagesearch
+    - svg
+    - design
+  annotations:
+    - smarter.sh/svg-image-search/use-case: web-design
+spec:
+  selector:
+    directive: search_terms
+    # Complete search terms that will trigger the llmclient to use your customized system prompt.
+    searchTerms:
+      - svg
+      - vector
+      - icon
+      - logo
+      - illustration
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a web design assistant. Search for SVG images that match the user's
+      request, and list each one's url, so that it can be used in a web page.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  imageSearchData:
+    queryTerms: svg
+    searchParams:
+      count: 10
+      safesearch: strict
+    filters:
+      fileType: svg
+    validateUrls: true

@@ -62,10 +62,10 @@ export type LLMClient = {
   sandboxUrl: string;
   hostname: string;
   url: string;
-  urlLLMClient: string;
+  urlLlmclient: string;
   urlChatConfig: string;
   urlChatapp: string;
-  urlManifest: string; // ADD ME PLEASE
+  manifestUrl: string; // the web console page that renders the llmclient's manifest
   ready: boolean;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   deployed: boolean;

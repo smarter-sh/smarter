@@ -114,12 +114,19 @@ BLOCKED_MESSAGE_PLACEHOLDER = "[This message was blocked by a guardrail.]"
 """What replaces a user message that an input guardrail blocked, in the conversation's history."""
 
 MARKDOWN_SYSTEM_PROMPT = (
-    "Your responses are displayed in a chat window that renders Markdown: headings, bold, italics, "
-    "strikethrough, lists, tables, block quotes, inline code, language-aware fenced code blocks, links and images. "
-    "Use Markdown when it makes a response clearer. Include image urls in results when these are relevant to the user's request."
+    "Your responses are displayed in a chat window that renders GitHub flavored Markdown: headings, bold, "
+    "italics, strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and images. "
+    "Use Markdown when it makes a response clearer, and name the language of each fenced code block. "
+    "The chat window does not render HTML, LaTeX or Mermaid, so do not use them. "
+    "To show an image, use Markdown image syntax, ![description](https://...), but only with an image url "
+    "that the user gave you or that a tool returned. NEVER invent an image url, because a broken image "
+    "looks worse than no image."
 )
 """
-Added to the system prompt of every request, so that the LLM knows that its responses may use Markdown.
+Added to the system prompt of every request, so that the LLM knows what the chat window renders.
+
+It is the single source of the chat window's rendering rules, so an LLMClient's ``defaultSystemRole``
+need not repeat them, and should only describe the formatting that suits its own persona.
 
 It is added to the request's messages only (see :attr:`OpenAISmarterClient.openai_messages`), and is
 never saved in the conversation's history, nor displayed in the chat.

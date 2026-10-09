@@ -1241,7 +1241,7 @@ class PluginBase(ABC, AccountMixin):
         # check the input text
         if input_text:
             for search_term in search_terms:
-                if does_refer_to(prompt=input_text, search_term=search_term):
+                if does_refer_to(prompt=input_text, search_term=search_term, use_thesaurus=False):
                     self._selected = True
                     plugin_selected.send(
                         sender=self.selected,
@@ -1258,7 +1258,7 @@ class PluginBase(ABC, AccountMixin):
                 if "role" in message and str(message["role"]).lower() == "user":
                     content = message["content"]
                     for search_term in search_terms:
-                        if does_refer_to(prompt=content, search_term=search_term):
+                        if does_refer_to(prompt=content, search_term=search_term, use_thesaurus=False):
                             self._selected = True
                             plugin_selected.send(
                                 sender=self.selected,
@@ -1268,6 +1268,21 @@ class PluginBase(ABC, AccountMixin):
                                 search_term=search_term,
                             )
                             return True
+
+        # Now then, try a thesaurus-based search if no matches were found in the input text or messages.
+        # It runs only if the enable_plugin_thesaurus_matching waffle switch is on.
+        if input_text and waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_PLUGIN_THESAURUS_MATCHING):
+            for search_term in search_terms:
+                if does_refer_to(prompt=input_text, search_term=search_term, use_thesaurus=True):
+                    self._selected = True
+                    plugin_selected.send(
+                        sender=self.selected,
+                        plugin=self,
+                        user=self.user_profile.cached_user if self.user_profile else None,
+                        input_text=input_text,
+                        search_term=search_term,
+                    )
+                    return True
 
         return False
 

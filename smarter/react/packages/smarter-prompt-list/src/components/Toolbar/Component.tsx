@@ -208,7 +208,7 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
           <i className="bi bi-chat-dots md-teal" />
         </a>
         <a
-          href={llmclient.urlManifest}
+          href={llmclient.manifestUrl}
           className="btn btn-icon btn-sm border"
           title="Edit: Open the YAML manifest that defines this llmclient resource"
           tabIndex={0}
