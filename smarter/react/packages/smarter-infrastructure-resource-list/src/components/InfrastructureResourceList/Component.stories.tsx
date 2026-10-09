@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { listResponse, sessionContext } from "@/mocks/fixtures";
+import { manyResources, sessionContext } from "@/mocks/fixtures";
 import { listErrorHandlers, listForbiddenHandlers, listHandlers } from "@/mocks/handlers";
 
 import InfrastructureResourceList from "./Component";
@@ -25,22 +25,33 @@ export const BillableOnly: Story = {
     const canvas = within(canvasElement);
     await userEvent.selectOptions(await canvas.findByRole("combobox", { name: "Status" }), "all");
     await userEvent.click(canvas.getByRole("checkbox", { name: "Billable only" }));
-    await expect(canvas.getByText("smarter.sh/vectorstore=qdrant-1", { selector: "span" })).toBeInTheDocument();
+    await expect(await canvas.findByText("smarter.sh/vectorstore=qdrant-1", { selector: "span" })).toBeInTheDocument();
     await expect(canvas.queryByText("example.3141-5926-5359.api.example.com A")).not.toBeInTheDocument();
   },
 };
 
-/** The platform has not created any cloud resources. */
-export const Empty: Story = {
-  parameters: {
-    msw: { handlers: listHandlers({ summary: { total: 0, active: 0, activeBillable: 0, destroyed: 0 }, objects: [] }) },
+/** Only the resources of one type. */
+export const ByType: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.selectOptions(await canvas.findByRole("combobox", { name: "Type" }), "kubernetes.node");
+    await expect(await canvas.findByText("ip-192-168-1-1.ec2.internal")).toBeInTheDocument();
+    await expect(canvas.queryByText("customer.example.com", { selector: "span" })).not.toBeInTheDocument();
   },
 };
 
-/** Only the most recent resources are listed. */
-export const Truncated: Story = {
-  parameters: {
-    msw: { handlers: listHandlers({ ...listResponse, summary: { ...listResponse.summary, total: 5000 } }) },
+/** The platform has not recorded any cloud resources. */
+export const Empty: Story = {
+  parameters: { msw: { handlers: listHandlers([]) } },
+};
+
+/** More resources than a page, with the pagination controls. */
+export const Paginated: Story = {
+  parameters: { msw: { handlers: listHandlers(manyResources) } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Next" }));
+    await expect(await canvas.findByText("Showing 51–100 of 120 resources")).toBeInTheDocument();
   },
 };
 
