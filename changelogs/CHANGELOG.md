@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.19.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.1...v0.19.0-alpha.2) (2026-10-09)
+
+### Features
+
+* support chat math, diagrams, and log streaming by chat mode ([a3acfe3](https://github.com/smarter-sh/smarter/commit/a3acfe3c8af42bfa21fb693b4b918086b2120ac3))
+
 ## [0.19.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.11...v0.19.0-alpha.1) (2026-10-09)
 
 ### Features
