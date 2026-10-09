@@ -414,6 +414,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # The build pulls the python base image, and docker-init pulls mariadb
+      # and redis, all from Docker Hub. Anonymous pulls share the runner's
+      # IP-based rate limit and fail with 429 Too Many Requests.
+      - name: Login to Docker Hub
+        id: login-dockerhub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
+
       - name: Expose GitHub runtime for BuildKit cache
         uses: crazy-max/ghaction-github-runtime@v3
 
