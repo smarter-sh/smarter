@@ -30,7 +30,7 @@ Features
 
 - Requires user authentication for all endpoints.
 - Supports filtering LLMClients by ownership (owned, shared, or all).
-- Provides pagination and cache invalidation options.
+- Provides pagination, search and cache invalidation options.
 - Returns results as JSON responses.
 - Uses Django's class-based views and serializers.
 
@@ -45,7 +45,6 @@ Example Endpoints
 
 from http import HTTPStatus
 
-from django.core.paginator import Paginator
 from django.db import models
 from django.http import HttpRequest
 from django.http.response import JsonResponse
@@ -63,11 +62,9 @@ from smarter.apps.llmclient.serializers import LLMClientSerializer
 from smarter.common.conf import smarter_settings
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
+from smarter.lib.django.pagination import paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-
-DEFAULT_PAGE_SIZE = 25  # default number of llmclients to return per page in the API response
-
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
 
@@ -107,9 +104,6 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         - Allows cache invalidation via request.
         - Requires user authentication.
 
-    Attributes:
-        DEFAULT_PAGE_SIZE (int): Default number of LLMClients per page.
-
     Methods:
         post(request, *args, **kwargs):
             Handles POST requests to retrieve LLMClients based on filters and
@@ -122,7 +116,9 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
                 invalidate_cache (bool, optional): If true, invalidates cache
                     before fetching results. Defaults to False.
                 page_size (int, optional): Number of LLMClients per page. Defaults
-                    to DEFAULT_PAGE_SIZE.
+                    to smarter.lib.django.pagination.DEFAULT_PAGE_SIZE.
+                search (str, optional): Text that the LLMClient's name or
+                    description contains.
     """
 
     @property
@@ -145,25 +141,25 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
 
             - ownership_filter (str, optional): Filter for LLMClients based on ownership. Can be 'owned', 'shared', or 'all'. Defaults to 'all'.
             - page (int, optional): Page number for pagination. Defaults to 1.
-            - page_size (int, optional): Number of LLMClients to return per page. Defaults to DEFAULT_PAGE_SIZE.
+            - page_size (int, optional): Number of LLMClients to return per page. Defaults to :data:`~smarter.lib.django.pagination.DEFAULT_PAGE_SIZE`.
+            - search (str, optional): Text that the LLMClient's name or description contains, ignoring case.
             - invalidate_cache (bool, optional): If true, invalidates the cache for the user's LLMClients before fetching results. Defaults to False.
 
-        :returns: A JsonResponse containing the user's profile, an admin profile, and a list of LLMClients based on the specified filters and pagination.
+        :returns: A JsonResponse containing the user's profile, an admin profile, a list of LLMClients based on the specified filters and pagination, and a description of the page (see :func:`~smarter.lib.django.pagination.paginate_listview`).
         :rtype: JsonResponse
         """
 
         qs: models.QuerySet[LLMClient]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
 
         logger.debug(
-            "%s.post() Received request with ownership_filter=%s, page=%s, page_size=%s, invalidate_cache=%s",
+            "%s.post() Received request with ownership_filter=%s, page=%s, page_size=%s, search=%s, invalidate_cache=%s",
             self.formatted_class_name,
             ownership_filter,
-            page,
-            page_size,
+            request.GET.get("page"),
+            request.GET.get("page_size"),
+            request.GET.get("search"),
             invalidate_cache,
         )
 
@@ -189,14 +185,14 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        paginator = Paginator(qs.order_by("-updated_at"), page_size)
-        llmclients = paginator.get_page(page)
+        llmclients, pagination = paginate_listview(request, qs.order_by("-updated_at"))
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
             "objects": LLMClientSerializer(llmclients, many=True, context={"request": request}).data,
+            "pagination": pagination,
         }
         return JsonResponse(retval)
 

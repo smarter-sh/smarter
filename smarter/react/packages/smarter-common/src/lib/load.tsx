@@ -1,10 +1,11 @@
 import { loggerPrefix } from "./const";
-import type { SessionContext } from "./Types";
+import type { ListPage, ListQuery, Pagination, SessionContext } from "./Types";
 import fetchDjangoUrl from "./django";
 import { setCookieForUrl } from "../components/TabbedListView/cookie";
 
 type LoadApiResponse<TObject> = {
   objects: TObject[];
+  pagination?: Pagination;
   error?: string;
 };
 
@@ -15,13 +16,17 @@ const getUrlOrigin = (): string => {
   return "http://localhost";
 };
 
-const buildLoadUrl = (apiUrl: string, urlSlug: string, invalidateCacheFlag: boolean): string => {
+const buildLoadUrl = (apiUrl: string, urlSlug: string, invalidateCacheFlag: boolean, query: ListQuery = {}): string => {
   const origin = getUrlOrigin();
   const isAbsoluteApiUrl = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(apiUrl);
   const normalizedBase = apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`;
   const normalizedSlug = urlSlug.replace(/^\/+|\/+$/g, "");
   const url = new URL(`${normalizedSlug}/`, new URL(normalizedBase, origin));
   url.searchParams.set("invalidate_cache", String(invalidateCacheFlag));
+  if (query.page !== undefined) url.searchParams.set("page", String(query.page));
+  if (query.pageSize !== undefined) url.searchParams.set("page_size", String(query.pageSize));
+  const search = query.search?.trim();
+  if (search) url.searchParams.set("search", search);
 
   if (isAbsoluteApiUrl) {
     return url.toString();
@@ -53,23 +58,26 @@ const getErrorMessage = (status: number, responseBody: unknown): string => {
 };
 
 /**
- * Loads API list data from the backend API and updates state.
+ * Loads a page of a list api's objects from the backend.
  *
- * @param setterCallback - State setter for updating the API list.
- * @param setLoading - State setter for loading state.
+ * @param sessionContext - Authentication and API context used for the request.
+ * @param invalidateCacheFlag - If true, forces the backend to invalidate its cache.
  * @param urlSlug - The API slug for the API group (e.g., "owned" or "shared").
- * @param invalidateCache - If true, forces the backend to invalidate its cache (default: false).
+ * @param onError - Called with null before the request, and with the error message if it fails.
+ * @param query - The page, page size and search to request. The api's defaults apply to those omitted.
+ * @returns The page's objects and its pagination, or no objects if the request fails.
  */
 export const load = async <TObject,>(
   sessionContext: SessionContext,
   invalidateCacheFlag: boolean,
   urlSlug: string,
   onError: (error: string | null) => void,
-): Promise<TObject[]> => {
+  query: ListQuery = {},
+): Promise<ListPage<TObject>> => {
   onError(null);
 
   try {
-    const url = buildLoadUrl(sessionContext.ApiUrl, urlSlug, invalidateCacheFlag);
+    const url = buildLoadUrl(sessionContext.ApiUrl, urlSlug, invalidateCacheFlag, query);
     const response = await fetchDjangoUrl(sessionContext, url, JSON.stringify({}));
 
     const responseBody = await readJsonSafely(response);
@@ -89,10 +97,10 @@ export const load = async <TObject,>(
 
     const payload = responseBody as LoadApiResponse<TObject>;
     setCookieForUrl(sessionContext.ApiUrl + urlSlug + "/", payload.objects.length, 7);
-    return payload.objects;
+    return { objects: payload.objects, pagination: payload.pagination ?? null };
   } catch (error) {
     console.error(loggerPrefix, "load(): Error loading objects:", error);
     onError(error instanceof Error ? error.message : "Unable to load objects.");
-    return [];
+    return { objects: [], pagination: null };
   }
 };

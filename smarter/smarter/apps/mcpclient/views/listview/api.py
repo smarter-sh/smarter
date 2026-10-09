@@ -9,7 +9,6 @@ from http import HTTPStatus
 from typing import Union
 
 from django.core.handlers.asgi import ASGIRequest
-from django.core.paginator import Paginator
 from django.db import models
 from django.http import HttpRequest, JsonResponse
 
@@ -28,10 +27,9 @@ from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.pagination import paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-
-DEFAULT_PAGE_SIZE = 25
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING])
 
@@ -62,8 +60,6 @@ class MCPClientListApiView(SmarterAuthenticatedNeverCachedWebView):
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[MCPClient]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
 
         logger.debug(
@@ -95,14 +91,14 @@ class MCPClientListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        paginator = Paginator(qs.order_by("-updated_at"), page_size)
-        mcpclients = paginator.get_page(page)
+        mcpclients, pagination = paginate_listview(request, qs.order_by("-updated_at"))
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
             "objects": MCPClientSerializer(mcpclients, many=True, context={"request": request}).data,
+            "pagination": pagination,
         }
         return JsonResponse(retval)
 

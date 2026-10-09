@@ -29,16 +29,48 @@ describe("load", () => {
     );
     const onError = vi.fn();
 
-    expect(await load(sessionContext, true, "owned", onError)).toEqual([{ id: 1 }, { id: 2 }]);
-    expect(new URL(url).searchParams.get("invalidate_cache")).toBe("true");
+    expect(await load(sessionContext, true, "owned", onError)).toEqual({
+      objects: [{ id: 1 }, { id: 2 }],
+      pagination: null,
+    });
+    const params = new URL(url).searchParams;
+    expect(params.get("invalidate_cache")).toBe("true");
+    expect([params.get("page"), params.get("page_size"), params.get("search")]).toEqual([null, null, null]);
     expect(onError).toHaveBeenCalledWith(null);
     expect(getCookieForUrl("/api/listview/owned/")).toBe(2);
+  });
+
+  it("requests a page of the objects that match a search, and returns its pagination", async () => {
+    let url = "";
+    const pagination = { page: 2, pageSize: 10, numPages: 3, count: 21, search: "bot" };
+    server.use(
+      http.post("/api/listview/shared/", ({ request }) => {
+        url = request.url;
+        return HttpResponse.json({ objects: [{ id: 11 }], pagination });
+      }),
+    );
+    const result = await load(sessionContext, false, "shared", vi.fn(), { page: 2, pageSize: 10, search: "  bot " });
+    expect(result).toEqual({ objects: [{ id: 11 }], pagination });
+    const params = new URL(url).searchParams;
+    expect([params.get("page"), params.get("page_size"), params.get("search")]).toEqual(["2", "10", "bot"]);
+  });
+
+  it("does not request an empty search", async () => {
+    let url = "";
+    server.use(
+      http.post("/api/listview/owned/", ({ request }) => {
+        url = request.url;
+        return HttpResponse.json({ objects: [] });
+      }),
+    );
+    await load(sessionContext, false, "owned", vi.fn(), { search: "   " });
+    expect(new URL(url).searchParams.has("search")).toBe(false);
   });
 
   it("reports the api's error message", async () => {
     server.use(http.post("/api/listview/owned/", () => HttpResponse.json({ error: "Not allowed" }, { status: 403 })));
     const onError = vi.fn();
-    expect(await load(sessionContext, false, "owned", onError)).toEqual([]);
+    expect(await load(sessionContext, false, "owned", onError)).toEqual({ objects: [], pagination: null });
     expect(onError).toHaveBeenLastCalledWith("Not allowed");
   });
 

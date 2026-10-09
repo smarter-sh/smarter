@@ -7,6 +7,7 @@
  *
  * Exports:
  *   - TabKey: Type for tab keys ("owned" | "shared").
+ *   - Pagination, ListQuery, ListPage: Types for a page of a list api, and the request for it.
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
  *   - LLMClient: Type for llmclient configuration and metadata.
@@ -22,6 +23,28 @@ export type Tabs = {
   key: TabKey;
   label: string;
 }[];
+
+/** The description of a page of a list api's objects, as smarter.lib.django.pagination returns it. */
+export type Pagination = {
+  page: number;
+  pageSize: number;
+  numPages: number;
+  count: number;
+  search: string;
+};
+
+/** The page of a list api's objects to request, and the search that they match. All are optional. */
+export type ListQuery = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+};
+
+/** A page of a list api's objects. pagination is null when the api does not describe its pages. */
+export type ListPage<TObject> = {
+  objects: TObject[];
+  pagination: Pagination | null;
+};
 
 type AnnotationValue = string | number | boolean | null;
 export type Annotations = Array<Record<string, AnnotationValue>> | null;

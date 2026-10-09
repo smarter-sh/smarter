@@ -4,7 +4,6 @@
 from http import HTTPStatus
 
 from django.core.handlers.asgi import ASGIRequest
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 
@@ -21,10 +20,10 @@ from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
+from smarter.lib.django.pagination import paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-DEFAULT_PAGE_SIZE = 25
 STATE_FIELDS = {
     # what a clone does not copy: it is a new, undeployed vectorstore.
     "status": VectorstoreStatus.PENDING,
@@ -48,8 +47,6 @@ class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
         ownership_filter = kwargs.get("ownership_filter") or SmarterResourceOwnershipFilterEnum.ALL
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         if request.GET.get("invalidate_cache", "false").lower() == "true":
             invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
         if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
@@ -63,12 +60,13 @@ class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
                 {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
                 status=HTTPStatus.BAD_REQUEST,
             )
-        vectorstores = Paginator(qs.order_by("-updated_at"), page_size).get_page(page)
+        vectorstores, pagination = paginate_listview(request, qs.order_by("-updated_at"))
         return JsonResponse(
             {
                 "user": UserProfileSerializer(self.user_profile).data,
                 "admin": UserProfileSerializer(smarter_cached_objects.smarter_admin_user_profile).data,
                 "objects": VectorstoreSerializer(vectorstores, many=True, context={"request": request}).data,
+                "pagination": pagination,
             }
         )
 
