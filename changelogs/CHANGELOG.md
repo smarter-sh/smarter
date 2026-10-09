@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.19.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.3...v0.19.0-alpha.4) (2026-10-09)
+
+### Features
+
+* **react:** add server-side pagination and search to list views ([2b66a9d](https://github.com/smarter-sh/smarter/commit/2b66a9ddfb19d69d10f6ccd61c3aa0bfeebf6dd7))
+
 ## [0.19.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.2...v0.19.0-alpha.3) (2026-10-09)
 
 ### Bug Fixes
