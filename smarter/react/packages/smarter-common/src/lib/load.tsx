@@ -27,6 +27,7 @@ const buildLoadUrl = (apiUrl: string, urlSlug: string, invalidateCacheFlag: bool
   if (query.pageSize !== undefined) url.searchParams.set("page_size", String(query.pageSize));
   const search = query.search?.trim();
   if (search) url.searchParams.set("search", search);
+  if (query.ordering) url.searchParams.set("ordering", query.ordering);
 
   if (isAbsoluteApiUrl) {
     return url.toString();
@@ -64,7 +65,7 @@ const getErrorMessage = (status: number, responseBody: unknown): string => {
  * @param invalidateCacheFlag - If true, forces the backend to invalidate its cache.
  * @param urlSlug - The API slug for the API group (e.g., "owned" or "shared").
  * @param onError - Called with null before the request, and with the error message if it fails.
- * @param query - The page, page size and search to request. The api's defaults apply to those omitted.
+ * @param query - The page, page size, search and ordering to request. The api's defaults apply to those omitted.
  * @returns The page's objects and its pagination, or no objects if the request fails.
  */
 export const load = async <TObject,>(

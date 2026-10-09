@@ -28,8 +28,8 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, Loading } from "@smarter/common";
-import type { SessionContext } from "@smarter/common";
+import { formatDateTime, Loading, SortableHeader } from "@smarter/common";
+import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { Vectorstore, VectorstoreListViewProps } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
@@ -52,17 +52,26 @@ const LoadingText = () => {
  * TableHeader
  *
  * Renders the table header row for the vectorstore list, including column titles for all displayed fields.
+ * Its sortable columns sort the list, with the list api (see SortableHeader).
  */
-const TableHeader = () => {
+const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
   return (
     <thead className="table-light border-bottom-2">
       <tr className="">
-        <th className=" p-1">Name</th>
-        <th className="d-none d-md-table-cell">Database</th>
+        <SortableHeader column="name" sorting={sorting} className=" p-1">
+          Name
+        </SortableHeader>
+        <SortableHeader column="database" sorting={sorting} className="d-none d-md-table-cell">
+          Database
+        </SortableHeader>
         <th className="">Status</th>
-        <th className="d-none d-lg-table-cell text-end">Vectors</th>
+        <SortableHeader column="vectorCount" sorting={sorting} className="d-none d-lg-table-cell text-end">
+          Vectors
+        </SortableHeader>
         <th className="d-none d-lg-table-cell text-end">Documents</th>
-        <th className="d-none d-lg-table-cell width-100">Updated</th>
+        <SortableHeader column="updatedAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
+          Updated
+        </SortableHeader>
         <th className="">Operations</th>
       </tr>
     </thead>
@@ -227,15 +236,23 @@ function ChunkedRows({
  * @param sessionContext - Authentication and API context for actions.
  * @param vectorstores - Array of vectorstore objects to display.
  * @param onRequery - Callback to refresh vectorstore data.
+ * @param sorting - The sort of the list, which its sortable column headers change.
  */
-export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: VectorstoreListViewProps) {
+export function ListView({
+  isLoading,
+  ghostRows,
+  sessionContext,
+  objects,
+  onRequery,
+  sorting,
+}: VectorstoreListViewProps) {
   console.debug(
     `${loggerPrefix} ListView() Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
   return (
     <div className="table-responsive vectorstore-list-table-wrap ps-3 pe-3">
       <table className="table table-striped table-hover align-middle border">
-        <TableHeader />
+        <TableHeader sorting={sorting} />
         <tbody>
           {isLoading ? (
             <VectorstoreRowGhosts count={ghostRows} />

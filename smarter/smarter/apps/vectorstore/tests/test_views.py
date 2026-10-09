@@ -51,6 +51,22 @@ class TestVectorstoreConsole(VectorstoreTestBase):
             self.assertIn(key, item)
         self.assertEqual(item["embeddingsProvider"], self.provider.name)
 
+    def test_list_api_sorts(self):
+        """Test that the list api sorts by the database and the number of vectors, in either direction."""
+        first = self.new_vectorstore("test_views_sort_a")
+        second = self.new_vectorstore("test_views_sort_b")
+        VectorstoreMeta.objects.filter(pk=first.pk).update(vector_count=5)
+        VectorstoreMeta.objects.filter(pk=second.pk).update(vector_count=10)
+        expected = [first.name, second.name]
+        list_url = url(Names.listview_api, ownership_filter="owned") + "?invalidate_cache=true&page_size=100"
+        for ordering, names in (("vectorCount", expected), ("-vectorCount", list(reversed(expected)))):
+            data = self.client.post(f"{list_url}&ordering={ordering}").json()
+            self.assertEqual(data["pagination"]["ordering"], ordering)
+            self.assertEqual([o["name"] for o in data["objects"] if o["name"] in expected], names)
+        data = self.client.post(f"{list_url}&ordering=-database").json()
+        self.assertEqual(data["pagination"]["ordering"], "-database")
+        self.assertIn("database", data["pagination"]["sortFields"])
+
     def test_clone(self):
         """Test that a clone is a new, undeployed vectorstore with the same spec, and none of the original's state."""
         service = self.ready_service("test_views_clone")

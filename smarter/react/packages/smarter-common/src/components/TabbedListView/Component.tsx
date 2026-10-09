@@ -19,6 +19,10 @@
  * - Searches both tabs: the backend searches all of the objects, not only the page shown, so
  *   the search is a request to the list api, for ?search=..., once typing pauses. A new search
  *   returns each tab to its first page.
+ * - Sorts both tabs by a column, when the list view's header of the column is clicked (see
+ *   SortableHeader): the backend sorts all of the objects, not only the page shown, so a new sort
+ *   is a request to the list api, for ?ordering=name or ?ordering=-name, and it returns each tab
+ *   to its first page. The list api says which columns it can sort by.
  * - Hydrates the UI from cached results before the initial fetch resolves.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
@@ -33,6 +37,7 @@
  * - lists: Each tab's objects, loading state, and pagination, as the list api last described it.
  * - pages: Each tab's requested page.
  * - searchInput: The search as typed; search: the search requested, once typing pauses.
+ * - ordering: The column that sorts both tabs, e.g. "name", or "-name" in descending order. Empty for the default order.
  * - errorMessage: Error text for failed requests.
  * - viewMode: Current display mode ("list" or "thumbnail").
  * - activeTab: Current tab ("owned" or "shared").
@@ -48,7 +53,7 @@
  *   a UX perspective.
  * - Reads the most recent owned/shared llmclient results from sessionStorage on mount,
  *   keyed by API URL and tab.
- * - Writes successful fetch results of each tab's first page, without a search, back to the
+ * - Writes successful fetch results of each tab's first page, without a search or a sort, back to the
  *   cache so the next initial page load can show recent data without waiting on the network.
  *
  * Usage:
@@ -56,7 +61,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Pagination, SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
+import type { Pagination, SessionContext, Sorting, TabbedViewContext, TabKey } from "../../lib/Types";
 import { load } from "../../lib/load";
 import { loggerPrefix } from "../../lib/const";
 import { makeCacheKey, readCache, writeCache } from "../../lib/cache";
@@ -103,7 +108,7 @@ export default function TabbedListView<TObject>({
   sessionContext,
   tabbedListViewContext,
 }: TabbedListViewProps<TObject>) {
-  // cache keys for session-based local caching of each tab's first page, without a search,
+  // cache keys for session-based local caching of each tab's first page, without a search or a sort,
   // to improve perceived load times on repeat visits
   const cacheKeys: TabRecord<string> = {
     owned: makeCacheKey(sessionContext.ApiUrl, "owned"),
@@ -134,6 +139,8 @@ export default function TabbedListView<TObject>({
   const [pages, setPages] = useState<TabRecord<number>>({ owned: 1, shared: 1 });
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  // the column that sorts both tabs, as the list api names it, e.g. "-name". Empty for its default order.
+  const [ordering, setOrdering] = useState("");
 
   // only the latest request of a tab is shown, when several are in flight, e.g. when the user
   // pages quickly, or a requery and a page change overlap.
@@ -158,7 +165,7 @@ export default function TabbedListView<TObject>({
 
   const requeryRef = useRef<number | null>(null);
 
-  // load a page of a tab's objects that match the search.
+  // load a page of a tab's objects that match the search, in the ordering.
   // invalidateCache: whether the backend (Django-Redis) cache should be invalidated, e.g. after a
   // clone, rename or delete. It is a parameter, rather than state, so that a requery's load sees it.
   // isActive: whether the results are still wanted; a load that a newer one replaced, or that
@@ -168,23 +175,26 @@ export default function TabbedListView<TObject>({
       tab: TabKey,
       page: number,
       tabSearch: string,
+      tabOrdering: string,
       invalidateCache: boolean,
       isActive: () => boolean = () => true,
     ): Promise<void> => {
       const request = ++latestRequest.current[tab];
       console.debug(
-        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", invalidateCache=${invalidateCache}`,
+        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", ordering="${tabOrdering}", invalidateCache=${invalidateCache}`,
       );
-      return load<TObject>(sessionContext, invalidateCache, tab, setErrorMessage, { page, search: tabSearch }).then(
-        ({ objects, pagination }) => {
-          if (!isActive() || request !== latestRequest.current[tab]) return;
-          console.debug(`${loggerPrefix} loadTab() received ${tab} objects:`, objects, pagination);
-          setLists((prev) => ({ ...prev, [tab]: { objects, isLoading: false, pagination } }));
-          if (page === 1 && !tabSearch) {
-            writeCache(makeCacheKey(sessionContext.ApiUrl, tab), objects);
-          }
-        },
-      );
+      return load<TObject>(sessionContext, invalidateCache, tab, setErrorMessage, {
+        page,
+        search: tabSearch,
+        ordering: tabOrdering,
+      }).then(({ objects, pagination }) => {
+        if (!isActive() || request !== latestRequest.current[tab]) return;
+        console.debug(`${loggerPrefix} loadTab() received ${tab} objects:`, objects, pagination);
+        setLists((prev) => ({ ...prev, [tab]: { objects, isLoading: false, pagination } }));
+        if (page === 1 && !tabSearch && !tabOrdering) {
+          writeCache(makeCacheKey(sessionContext.ApiUrl, tab), objects);
+        }
+      });
     },
     [sessionContext],
   );
@@ -193,6 +203,14 @@ export default function TabbedListView<TObject>({
     console.debug(`${loggerPrefix} onPage() going to page ${page} of the ${activeTab} objects`);
     setLists((prev) => withLoading(prev, [activeTab]));
     setPages((prev) => ({ ...prev, [activeTab]: page }));
+  };
+
+  // sort both tabs by a column, from their first pages.
+  const onSort = (requested: string) => {
+    console.debug(`${loggerPrefix} onSort() sorting by "${requested}", reloading the first page of each tab`);
+    setLists((prev) => withLoading(prev, TAB_KEYS));
+    setPages({ owned: 1, shared: 1 });
+    setOrdering(requested);
   };
 
   // request the search once typing pauses, from the first page of each tab.
@@ -219,27 +237,27 @@ export default function TabbedListView<TObject>({
       return;
     }
     requeryRef.current = now;
-    TAB_KEYS.forEach((tab) => void loadTab(tab, pages[tab], search, true));
+    TAB_KEYS.forEach((tab) => void loadTab(tab, pages[tab], search, ordering, true));
   };
 
-  // load each tab on mount, whenever the session context changes, and whenever its page or the
-  // search changes. The cached objects, if any, are shown at once (see the state initializers
+  // load each tab on mount, whenever the session context changes, and whenever its page, the
+  // search or the ordering changes. The cached objects, if any, are shown at once (see the state initializers
   // above), and replaced by the freshly loaded ones.
   useEffect(() => {
     let active = true;
-    void loadTab("owned", pages.owned, search, false, () => active);
+    void loadTab("owned", pages.owned, search, ordering, false, () => active);
     return () => {
       active = false;
     };
-  }, [loadTab, pages.owned, search]);
+  }, [loadTab, pages.owned, search, ordering]);
 
   useEffect(() => {
     let active = true;
-    void loadTab("shared", pages.shared, search, false, () => active);
+    void loadTab("shared", pages.shared, search, ordering, false, () => active);
     return () => {
       active = false;
     };
-  }, [loadTab, pages.shared, search]);
+  }, [loadTab, pages.shared, search, ordering]);
 
   if (errorMessage) {
     return (
@@ -251,6 +269,10 @@ export default function TabbedListView<TObject>({
 
   const list = lists[activeTab];
   const ghostRows = activeTab === "owned" ? userGhostCount : sharedGhostCount;
+  // the columns that the list api can sort by. Either tab's response says, so that the headers of a
+  // tab are sortable even before its own first response.
+  const sortFields = (list.pagination ?? lists.owned.pagination ?? lists.shared.pagination)?.sortFields ?? [];
+  const sorting: Sorting = { ordering, sortFields, onSort };
 
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
@@ -275,6 +297,7 @@ export default function TabbedListView<TObject>({
             sessionContext={sessionContext}
             objects={list.objects}
             onRequery={onRequery}
+            sorting={sorting}
           />
         ) : (
           <tabbedListViewContext.CardView

@@ -27,11 +27,17 @@ from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
 )
-from smarter.lib.django.pagination import paginate_listview
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING])
+
+SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "apiKey": "api_key__name",
+}
+"""The columns of the Provider list that it may be sorted by, and the fields that sort them."""
 
 
 class ProviderListApiView(SmarterAuthenticatedNeverCachedWebView):
@@ -91,7 +97,7 @@ class ProviderListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        providers, pagination = paginate_listview(request, qs.order_by("-updated_at"))
+        providers, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {

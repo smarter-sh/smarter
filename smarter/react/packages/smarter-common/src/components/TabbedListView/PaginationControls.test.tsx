@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { PaginationControls } from "./PaginationControls";
 
-const pagination = { page: 2, pageSize: 25, numPages: 3, count: 61, search: "" };
+const pagination = { page: 2, pageSize: 25, numPages: 3, count: 61, search: "", ordering: "", sortFields: ["name"] };
 
 function setup(props: Partial<Parameters<typeof PaginationControls>[0]> = {}) {
   const onPage = vi.fn();

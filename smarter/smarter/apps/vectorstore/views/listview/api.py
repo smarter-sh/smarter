@@ -20,7 +20,7 @@ from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.pagination import paginate_listview
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -41,6 +41,13 @@ STATE_FIELDS = {
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
 
+SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "database": "backend",
+    "vectorCount": "vector_count",
+}
+"""The columns of the Vectorstore list that it may be sorted by, and the fields that sort them."""
+
 
 class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
     """The vectorstores that the user owns, those shared with them, or both."""
@@ -60,7 +67,7 @@ class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
                 {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
                 status=HTTPStatus.BAD_REQUEST,
             )
-        vectorstores, pagination = paginate_listview(request, qs.order_by("-updated_at"))
+        vectorstores, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
         return JsonResponse(
             {
                 "user": UserProfileSerializer(self.user_profile).data,

@@ -23,11 +23,17 @@ from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
 )
-from smarter.lib.django.pagination import paginate_listview
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING])
+
+SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "providerName": "provider__name",
+}
+"""The columns of the Proxy list that it may be sorted by, and the fields that sort them."""
 
 
 class ProxyListApiView(SmarterAuthenticatedNeverCachedWebView):
@@ -37,7 +43,8 @@ class ProxyListApiView(SmarterAuthenticatedNeverCachedWebView):
     Returns a page of the Proxies that the user owns, that are shared with them, or both,
     according to ``ownership_filter``: ``owned``, ``shared`` or ``all``.
 
-    Query parameters: ``page``, ``page_size``, ``search`` and ``invalidate_cache``.
+    Query parameters: ``page``, ``page_size``, ``search``, ``ordering`` (a column of
+    :data:`SORT_FIELDS`) and ``invalidate_cache``.
 
     :returns: ``{"user": ..., "admin": ..., "objects": [...], "pagination": {...}}``, where objects are
         serialized by :class:`~smarter.apps.proxy.serializers.ProxySerializer`, and pagination is
@@ -79,7 +86,7 @@ class ProxyListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        proxies, pagination = paginate_listview(request, qs.order_by("-updated_at"))
+        proxies, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
