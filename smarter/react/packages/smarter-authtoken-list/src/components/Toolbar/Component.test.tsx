@@ -83,4 +83,19 @@ describe("Toolbar", () => {
     renderToolbar(makeObject(3, { canDelete: false }));
     expect(screen.getByRole("button", { name: /You can't delete this authtoken/ })).toBeDisabled();
   });
+
+  it("starts renaming one without a name from an empty name", async () => {
+    const { user } = renderToolbar(makeObject(1, { name: "" }));
+    await user.click(screen.getByRole("button", { name: /^Rename:/ }));
+    expect(screen.getByPlaceholderText("Enter new authtoken name")).toHaveValue("");
+  });
+
+  it("shows the status of a failed action without an error message", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    server.use(http.post(`${BASE}delete/:id/`, () => new HttpResponse("oops", { status: 500, statusText: "Oops" })));
+    const { user } = renderToolbar();
+    await user.click(screen.getByRole("button", { name: /^Delete:/ }));
+    await user.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByRole("dialog", { name: /Error/ })).toHaveTextContent(/\(500\): Oops/);
+  });
 });
