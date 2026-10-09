@@ -1,4 +1,4 @@
-import type { LLMProvider } from "../LLMProviders";
+import type { LLMProvider } from "@/components/LLMProviders";
 
 interface ProviderLinksProps {
   provider: LLMProvider;

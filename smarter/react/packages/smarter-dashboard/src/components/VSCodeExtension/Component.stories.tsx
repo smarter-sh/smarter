@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import VSCodeExtension from "./Component";
+import VSCodeExtension from "@/components/VSCodeExtension/Component";
 
 /** The Smarter VS Code extension. */
 const meta = {

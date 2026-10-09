@@ -13,7 +13,7 @@
  *
  *     <Sdk />
  */
-import "./styles.css";
+import "@/components/Sdk/styles.css";
 
 function Sdk() {
   return (

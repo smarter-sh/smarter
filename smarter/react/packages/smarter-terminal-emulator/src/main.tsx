@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { loggerPrefix, projectName, projectVersion } from "@/const";
-import App from "./App.tsx";
+import App from "@/App.tsx";
 
 const rootEl = document.getElementById("smarter-terminal-emulator-root");
 if (!rootEl) throw new Error("Root element not found");

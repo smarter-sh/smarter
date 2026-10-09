@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { makeObject } from "@/mocks/fixtures";
 
-import { StatusBar } from "./Component";
+import { StatusBar } from "@/components/StatusBar/Component";
 
 const meta = {
   title: "MCPClient List/StatusBar",

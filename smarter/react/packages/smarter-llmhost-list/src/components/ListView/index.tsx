@@ -1,2 +1,2 @@
-import ListView from "./Component";
+import ListView from "@/components/ListView/Component";
 export default ListView;

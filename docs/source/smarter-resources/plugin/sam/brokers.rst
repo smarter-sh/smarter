@@ -9,4 +9,5 @@ Brokers
     brokers/sql-plugin
     brokers/skill-plugin
     brokers/websearch-plugin
+    brokers/image-search-plugin
     brokers/static-plugin

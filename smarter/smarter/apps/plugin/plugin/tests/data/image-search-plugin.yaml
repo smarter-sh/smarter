@@ -1,0 +1,42 @@
+---
+# An ImageSearchPlugin for unit testing. The Brave Image Search API and the image
+# urls are served by a FakeWebHost, and the api key is a test Secret that the unit
+# tests create.
+apiVersion: smarter.sh/v1
+kind: ImageSearchPlugin
+metadata:
+  name: test_image_search_plugin
+  pluginClass: imagesearch
+  description: Finds kid-friendly images, for unit testing.
+  version: 0.1.0
+  tags:
+    - imagesearch
+    - test
+  annotations:
+    - smarter.sh/image-search-test/purpose: unit testing
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: You are an assistant for unit testing the ImageSearchPlugin.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 256
+  imageSearchData:
+    apiKey: test_brave_image_search_api_key
+    queryTerms: cartoon
+    searchParams:
+      count: 3
+      country: us
+      searchLang: en
+      safesearch: strict
+      spellcheck: false
+    filters:
+      fileType: jpg|png
+      minWidth: 100
+      blockedDomains:
+        - blocked.example
+    validateUrls: true
+    timeout: 5
+    cacheTtl: 900

@@ -120,12 +120,15 @@ from any package, for example `packages/smarter-guardrail-list/`:
 
 ## Coverage
 
-**Target:** at least 90% for each Django app or subsystem module, but higher
-is better. Use judgment about when enough is enough. Large blocks
-of coverage misses in a module are frowned upon. Individual module with coverage ratios far
-below the 90% target are also frowned upon. (see
-`smarter-development`).
+`make react-test` and CI run `npm run coverage` (`vitest run --coverage`).
+Plain `npm test` doesn't collect coverage. A text summary prints to the
+terminal, and the full report is written to `smarter/react/coverage/`. Open
+`index.html` there for overall and per-file coverage. CI uploads `lcov.info` to
+Codecov under the `react` flag. `lcov-report/` is just a duplicate of the HTML
+report. No coverage thresholds are enforced, so a drop in coverage won't fail
+the run.
 
-```console
-npm run coverage
-```
+**Target:** at least 95% for each react app, but higher is better. Use judgment
+about when enough is enough. Large blocks of coverage misses in a module are
+frowned upon. Individual tsx files with coverage ratios far below the 95% target
+are also frowned upon. (see `smarter-development`).

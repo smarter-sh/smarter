@@ -1,11 +1,13 @@
 """
 Models of the infrastructure app.
 
-:class:`InfrastructureResource` is the ledger of the cloud resources that the platform creates:
-DNS zones and records, TLS certificates, and billable Kubernetes resources, whichever cloud
-provider created them. The receivers of the infrastructure signals keep it, see
-:mod:`smarter.apps.infrastructure.receivers`, so that what the platform has provisioned, and
-what it costs, can be audited without asking each cloud.
+:class:`InfrastructureResource` is the ledger of the platform's cloud resources: DNS zones and
+records, TLS certificates, and billable Kubernetes resources that the platform creates, and the
+Kubernetes cluster that it runs on, i.e. the cluster, its add-ons, node groups, nodes, volumes,
+load balancers, ingresses and cert-manager certificates, which the inventory discovers, see
+:mod:`smarter.apps.infrastructure.services.inventory`. The receivers of the infrastructure
+signals keep it, see :mod:`smarter.apps.infrastructure.receivers`, so that what the platform has
+provisioned, and what it costs, can be audited without asking each cloud.
 """
 
 from typing import Optional
@@ -17,7 +19,7 @@ from smarter.lib.django.models import TimestampedModel
 
 
 class InfrastructureResource(TimestampedModel):
-    """A cloud resource that the platform created, and whether it still exists."""
+    """A cloud resource that the platform created or discovered, and whether it still exists."""
 
     class Status(models.TextChoices):
         """Whether the resource exists."""

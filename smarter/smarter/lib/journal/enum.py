@@ -112,6 +112,14 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    IMAGE_SEARCH_PLUGIN = "ImageSearchPlugin"
+    """Smarter Image Search Plugin AI resource.
+
+    Experimental.
+
+    A Django ORM model instance.
+    """
+
     LLM_CLIENT = "LLMClient"
     """Smarter LLMClient resource.
 
@@ -233,6 +241,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.BUDGET.value, cls.BUDGET.value),
             (cls.CUSTOM_DOMAIN.value, cls.CUSTOM_DOMAIN.value),
             (cls.GUARDRAIL.value, cls.GUARDRAIL.value),
+            (cls.IMAGE_SEARCH_PLUGIN.value, cls.IMAGE_SEARCH_PLUGIN.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
             (cls.MCPCLIENT.value, cls.MCPCLIENT.value),
             (cls.ORCHESTRATOR.value, cls.ORCHESTRATOR.value),

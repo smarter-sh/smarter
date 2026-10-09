@@ -143,10 +143,43 @@ type, name, the provider's id for it, whether it is billable, and whether it sti
 ledger answers "what has Smarter provisioned in our cloud account, and what is it costing us?"
 without asking each cloud.
 
+Much of the infrastructure that Smarter runs on isn't created by the platform: the Kubernetes
+cluster, its add-ons and its node groups are provisioned with Terraform, nodes come and go with
+the cluster's autoscaler, and cert-manager issues the TLS certificates of the ingresses. The
+inventory, :mod:`smarter.apps.infrastructure.services.inventory`, discovers them, and reconciles
+the ledger with what exists. The cluster is shared by every environment, so besides the cluster
+itself, that is, the cluster, its add-ons, node groups and nodes, it discovers only the
+resources of the environment's namespace, ``smarter_settings.environment_namespace``. It records these resource types:
+
+- ``kubernetes.cluster``: the managed cluster, for example AWS EKS, which is billed by the hour.
+- ``kubernetes.addon``: the cluster's managed add-ons, for example the VPC CNI, CoreDNS and the
+  EBS CSI driver.
+- ``kubernetes.nodegroup``: the managed node groups. Their nodes are billed, not the groups.
+- ``kubernetes.node``: the compute nodes, for example EC2 instances. Billable.
+- ``kubernetes.persistentvolume``: the block storage volumes, for example EBS volumes, that are
+  bound to claims in the environment's namespace. Billable.
+- ``kubernetes.loadbalancer``: the environment's Services of type LoadBalancer, which provision
+  cloud load balancers. Billable.
+- ``kubernetes.ingress`` and ``kubernetes.certificate``: the environment's Ingresses and
+  cert-manager Certificates.
+
+A resource that the ledger doesn't know is recorded as created, and an active one that no
+longer exists as destroyed, with the same signals as the services send, so the ledger is still
+written only by its receivers. A resource type that can't be listed, for example because the
+cluster is unavailable, is left as it is. The inventory only reads the cloud: it never creates
+or destroys anything. Celery Beat runs it every 15 minutes, with the task
+``smarter.apps.infrastructure.tasks.sync_infrastructure_inventory``, on the infrastructure queue.
+To run it on demand:
+
+.. code-block:: bash
+
+    python manage.py sync_infrastructure_inventory
+
 Superusers see the ledger in the web console, under **Settings, Infrastructure Resources**: a
 summary of the active, billable and destroyed resources, and a list that can be filtered by
 status, by provider, by whether a resource is billable, and by text. The list is read-only: the
-platform writes the ledger as it creates and destroys resources. It is also in the Django admin.
+platform writes the ledger as it creates, destroys and discovers resources. It is also in the
+Django admin.
 
 Testing Safely
 --------------
@@ -185,6 +218,7 @@ Technical Reference
    infrastructure/certificates
    infrastructure/kubernetes
    infrastructure/email
+   infrastructure/inventory
    infrastructure/providers
    infrastructure/aws
    infrastructure/memory

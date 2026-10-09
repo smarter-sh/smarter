@@ -4,7 +4,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { makeObject, sessionContext } from "@/mocks/fixtures";
 import { actionHandlers } from "@/mocks/handlers";
 
-import { Toolbar } from "./Component";
+import { Toolbar } from "@/components/Toolbar/Component";
 
 const meta = {
   title: "Guardrail List/Toolbar",

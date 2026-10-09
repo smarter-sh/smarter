@@ -1,4 +1,4 @@
-import Toolbar, { CopiedMessage } from "./Component";
+import Toolbar, { CopiedMessage } from "@/components/Toolbar/Component";
 
 export { CopiedMessage };
 export default Toolbar;

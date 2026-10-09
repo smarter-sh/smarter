@@ -5,7 +5,7 @@ import { appContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, dashboardHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import Dashboard from "./Component";
+import Dashboard from "@/components/Dashboard/Component";
 
 describe("Dashboard", () => {
   it("shows the user's resources, the platform's health, and their activity", async () => {

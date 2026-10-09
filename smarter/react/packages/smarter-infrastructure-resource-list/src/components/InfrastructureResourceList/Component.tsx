@@ -1,25 +1,33 @@
 /**
  * InfrastructureResourceList
  *
- * Lists the ledger of the cloud resources that the platform has created: a summary of all of
- * them, and the most recent, which can be filtered by status, by whether they are billable, by
- * provider, and by text. The ledger is written by the platform, so the list is read-only.
+ * Lists the ledger of the cloud resources that the platform has created or discovered: a summary
+ * of all of them, and a page of those that match the filters, by status, by whether they are
+ * billable, by provider, by type, and by text. The Django api filters and paginates. The ledger
+ * is written by the platform, so the list is read-only.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loading, fetchDjangoUrl, formatDateTime } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import type {
   InfrastructureResource,
   InfrastructureResourceListResponse,
+  InfrastructureResourcePagination,
   InfrastructureResourceSummary,
 } from "@/lib/Types";
 import { loggerPrefix } from "@/lib/const";
 
-import { defaultFilters, filterResources } from "./filters";
-import type { Filters, StatusFilter } from "./filters";
+import {
+  defaultFilters,
+  defaultPageSize,
+  listRequest,
+  pageSizes,
+  searchDelay,
+} from "@/components/InfrastructureResourceList/filters";
+import type { Filters, StatusFilter } from "@/components/InfrastructureResourceList/filters";
 
-import "./styles.css";
+import "@/components/InfrastructureResourceList/styles.css";
 
 function SummaryTile({ label, value, className }: { label: string; value: number; className?: string }) {
   return (
@@ -86,37 +94,118 @@ function ResourceRow({ resource }: { resource: InfrastructureResource }) {
   );
 }
 
+function Pagination({
+  pagination,
+  onPage,
+  onPageSize,
+}: {
+  pagination: InfrastructureResourcePagination;
+  onPage: (page: number) => void;
+  onPageSize: (pageSize: number) => void;
+}) {
+  const { page, pageSize, numPages, count } = pagination;
+  const first = count === 0 ? 0 : (page - 1) * pageSize + 1;
+  const last = Math.min(page * pageSize, count);
+  return (
+    <div className="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+      <div className="text-muted fs-7">
+        Showing {first.toLocaleString()}–{last.toLocaleString()} of {count.toLocaleString()} resources
+      </div>
+      <div className="d-flex flex-wrap gap-3 align-items-center">
+        <select
+          className="form-select form-select-sm w-auto"
+          aria-label="Rows per page"
+          value={pageSize}
+          onChange={(event) => onPageSize(Number(event.target.value))}
+        >
+          {pageSizes.map((size) => (
+            <option key={size} value={size}>
+              {size} per page
+            </option>
+          ))}
+        </select>
+        <nav aria-label="Pagination">
+          <ul className="pagination pagination-sm mb-0">
+            <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
+              <button type="button" className="page-link" disabled={page <= 1} onClick={() => onPage(1)}>
+                First
+              </button>
+            </li>
+            <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
+              <button type="button" className="page-link" disabled={page <= 1} onClick={() => onPage(page - 1)}>
+                Previous
+              </button>
+            </li>
+            <li className="page-item active" aria-current="page">
+              <span className="page-link">
+                Page {page} of {numPages}
+              </span>
+            </li>
+            <li className={`page-item ${page >= numPages ? "disabled" : ""}`}>
+              <button type="button" className="page-link" disabled={page >= numPages} onClick={() => onPage(page + 1)}>
+                Next
+              </button>
+            </li>
+            <li className={`page-item ${page >= numPages ? "disabled" : ""}`}>
+              <button type="button" className="page-link" disabled={page >= numPages} onClick={() => onPage(numPages)}>
+                Last
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
 export default function InfrastructureResourceList({ sessionContext }: { sessionContext: SessionContext }) {
   const [data, setData] = useState<InfrastructureResourceListResponse | null>(null);
   const [errMessage, setErrMessage] = useState("");
   const [filters, setFilters] = useState<Filters>(defaultFilters);
+  // the search that is requested, which follows filters.text once typing pauses.
+  const [text, setText] = useState(defaultFilters.text);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  // only the latest request's response is shown, when several are in flight.
+  const latestRequest = useRef(0);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setText(filters.text), searchDelay);
+    return () => clearTimeout(timer);
+  }, [filters.text]);
+
+  // the requested search replaces filters.text, so that typing does not change the request until it pauses.
+  const body = listRequest({ ...filters, text }, page, pageSize);
   const load = useCallback(() => {
-    fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, JSON.stringify({}))
+    const request = ++latestRequest.current;
+    fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, body)
       .then(async (response) => {
         if (!response.ok) {
           const body = await response.json().catch(() => null);
           throw new Error(body?.error || `Failed to load the infrastructure resources (${response.status}).`);
         }
-        setData((await response.json()) as InfrastructureResourceListResponse);
+        const result = (await response.json()) as InfrastructureResourceListResponse;
+        if (request !== latestRequest.current) return;
+        setData(result);
         setErrMessage("");
       })
       .catch((error: Error) => {
+        if (request !== latestRequest.current) return;
         console.error(loggerPrefix, "Error loading infrastructure resources:", error);
         setErrMessage(error.message);
       });
-  }, [sessionContext]);
+  }, [sessionContext, body]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const providers = useMemo(
-    () => Array.from(new Set((data?.objects ?? []).map((resource) => resource.provider))).sort(),
-    [data],
-  );
-  const resources = useMemo(() => filterResources(data?.objects ?? [], filters), [data, filters]);
-  const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => setFilters({ ...filters, [key]: value });
+  const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
+    setFilters({ ...filters, [key]: value });
+    setPage(1);
+  };
+  const choices = data?.choices ?? { providers: [], resourceTypes: [] };
+  const resources: InfrastructureResource[] = data?.objects ?? [];
 
   return (
     <div className="card mt-5">
@@ -143,12 +232,25 @@ export default function InfrastructureResourceList({ sessionContext }: { session
               </select>
               <select
                 className="form-select form-select-sm w-auto"
+                aria-label="Type"
+                value={filters.resourceType}
+                onChange={(event) => setFilter("resourceType", event.target.value)}
+              >
+                <option value="">All types</option>
+                {choices.resourceTypes.map((resourceType) => (
+                  <option key={resourceType} value={resourceType}>
+                    {resourceType}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="form-select form-select-sm w-auto"
                 aria-label="Provider"
                 value={filters.provider}
                 onChange={(event) => setFilter("provider", event.target.value)}
               >
                 <option value="">All providers</option>
-                {providers.map((provider) => (
+                {choices.providers.map((provider) => (
                   <option key={provider} value={provider}>
                     {provider}
                   </option>
@@ -180,36 +282,40 @@ export default function InfrastructureResourceList({ sessionContext }: { session
             </div>
             {resources.length === 0 ? (
               <div className="text-muted p-4">
-                {data.objects.length === 0
-                  ? "The platform has not created any cloud resources yet."
+                {data.summary.total === 0
+                  ? "The platform has not recorded any cloud resources yet."
                   : "No resources match the filters."}
               </div>
             ) : (
-              <div className="table-responsive">
-                <table className="table table-striped table-hover align-middle border">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Resource</th>
-                      <th>Type</th>
-                      <th>Provider / service</th>
-                      <th>Billable</th>
-                      <th>Status</th>
-                      <th className="d-none d-lg-table-cell">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resources.map((resource) => (
-                      <ResourceRow key={resource.id} resource={resource} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {data.objects.length < data.summary.total && (
-              <div className="text-muted fs-8">
-                Showing the {data.objects.length.toLocaleString()} most recent of {data.summary.total.toLocaleString()}{" "}
-                resources.
-              </div>
+              <>
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover align-middle border">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Resource</th>
+                        <th>Type</th>
+                        <th>Provider / service</th>
+                        <th>Billable</th>
+                        <th>Status</th>
+                        <th className="d-none d-lg-table-cell">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resources.map((resource) => (
+                        <ResourceRow key={resource.id} resource={resource} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  pagination={data.pagination}
+                  onPage={setPage}
+                  onPageSize={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </>
             )}
           </>
         )}

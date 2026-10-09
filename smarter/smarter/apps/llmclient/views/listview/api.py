@@ -17,7 +17,6 @@ from http import HTTPStatus
 from typing import Union
 
 from django.core.handlers.asgi import ASGIRequest
-from django.core.paginator import Paginator
 from django.db import models
 from django.http import HttpRequest, JsonResponse
 
@@ -30,12 +29,20 @@ from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-DEFAULT_PAGE_SIZE = 25
-
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
+
+SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "domainName": "domain_name",
+    "llmclient": "llmclient__name",
+    "awsHostedZoneId": "aws_hosted_zone_id",
+    "verificationStatus": "verification_status",
+}
+"""The columns of the Custom Domain list that it may be sorted by, and the fields that sort them."""
 
 
 class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
@@ -64,8 +71,6 @@ class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[LLMClientCustomDomain]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         user = self.user_profile.user  # type: ignore[union-attr]
 
         logger.debug(
@@ -93,10 +98,11 @@ class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        paginator = Paginator(
-            qs.select_related("user_profile__user", "llmclient__user_profile__user").order_by("-updated_at"), page_size
+        custom_domains, pagination = paginate_listview(
+            request,
+            qs.select_related("user_profile__user", "llmclient__user_profile__user").order_by("-updated_at"),
+            sort_fields=SORT_FIELDS,
         )
-        custom_domains = paginator.get_page(page)
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
@@ -105,6 +111,7 @@ class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
             "objects": LLMClientCustomDomainListSerializer(
                 custom_domains, many=True, context={"request": request}
             ).data,
+            "pagination": pagination,
         }
         return JsonResponse(retval)
 

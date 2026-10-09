@@ -8,7 +8,7 @@
  * there. The function throws an error if templateId or defaultModel are
  * not provided.
  *****************************************************************************/
-import templates from "./templates.json";
+import templates from "@/components/Prompt/templates.json";
 
 export interface PromptTemplate {
   id: number;

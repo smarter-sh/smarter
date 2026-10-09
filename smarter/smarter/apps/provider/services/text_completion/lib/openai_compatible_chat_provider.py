@@ -114,12 +114,25 @@ BLOCKED_MESSAGE_PLACEHOLDER = "[This message was blocked by a guardrail.]"
 """What replaces a user message that an input guardrail blocked, in the conversation's history."""
 
 MARKDOWN_SYSTEM_PROMPT = (
-    "Your responses are displayed in a chat window that renders Markdown: headings, bold, italics, "
-    "strikethrough, lists, tables, block quotes, inline code, language-aware fenced code blocks, links and images. "
-    "Use Markdown when it makes a response clearer. Include image urls in results when these are relevant to the user's request."
+    "Your responses are displayed in a chat window that renders GitHub flavored Markdown: headings, bold, "
+    "italics, strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and images. "
+    "Use Markdown when it makes a response clearer, and name the language of each fenced code block. "
+    "It also typesets math written in LaTeX: \\( ... \\) for inline math, and \\[ ... \\] or $$ ... $$ for a "
+    "displayed equation. A single dollar sign is not math, so never use $ ... $ for math. "
+    "It draws a fenced code block whose language is mermaid as a Mermaid diagram, such as a flowchart, "
+    "sequence diagram, class diagram, state diagram or entity relationship diagram. Draw one when a "
+    "process, architecture or set of relationships is easier to understand as a picture, and keep its "
+    "syntax simple: quote labels that contain punctuation. "
+    "The chat window does not render HTML, so do not use it. "
+    "To show an image, use Markdown image syntax, ![description](https://...), but only with an image url "
+    "that the user gave you or that a tool returned. NEVER invent an image url, because a broken image "
+    "looks worse than no image."
 )
 """
-Added to the system prompt of every request, so that the LLM knows that its responses may use Markdown.
+Added to the system prompt of every request, so that the LLM knows what the chat window renders.
+
+It is the single source of the chat window's rendering rules, so an LLMClient's ``defaultSystemRole``
+need not repeat them, and should only describe the formatting that suits its own persona.
 
 It is added to the request's messages only (see :attr:`OpenAISmarterClient.openai_messages`), and is
 never saved in the conversation's history, nor displayed in the chat.
@@ -673,7 +686,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: tool_call must be a ChatCompletionMessageToolCall, got {type(tool_call)}. This is a bug."
             )
-        llm_tool_requested.send(sender=self.process_tool_call, tool_call=tool_call.model_dump())
+        tool_name = self.tool_display_name(tool_call.function.name)
+        llm_tool_requested.send(sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_name=tool_name)
         if not tool_call:
             raise SmarterValueError(f"{self.formatted_class_name}: tool_call is required")
         serialized_tool_call = {}
@@ -773,8 +787,35 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             extra_resource_locators=extra_resource_locators,
         )
         llm_tool_responded.send(
-            sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
+            sender=self.process_tool_call,
+            tool_call=tool_call.model_dump(),
+            tool_response=function_response,
+            tool_name=tool_name,
         )
+
+    def tool_display_name(self, function_name: str) -> str:
+        """
+        Return the human-readable name of a tool call's function, for progress messages.
+
+        A plugin's function name is symbolic, e.g. ``smarter_plugin_0000000016``, so its
+        PluginMeta's name is returned instead. An MCP function's name is prefixed with its
+        server's number, so the MCP tool's own name is returned instead. Anything else, e.g.
+        a built-in function, or a plugin that can't be found, is returned as is.
+
+        :param function_name: The function name that the LLM called.
+        :type function_name: str
+        :returns: The tool's name, as users know it.
+        :rtype: str
+        """
+        if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            function = self.mcp_toolkit.functions.get(function_name)
+            return getattr(function, "tool_name", None) or function_name
+        if function_name.startswith(smarter_settings.function_calling_identifier_prefix):
+            try:
+                return PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1])).name or function_name
+            except (PluginMeta.DoesNotExist, ValueError):
+                return function_name
+        return function_name
 
     def authorize_budgets(self) -> None:
         """

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { chargesHandler, dashboardErrorHandlers } from "@/mocks/handlers";
 
-import UserCharges from "./UserCharges";
+import UserCharges from "@/components/TokenUsage/UserCharges";
 
 /** The user's token usage over time. */
 const meta = {

@@ -38,8 +38,8 @@ spec:
 
       Your replies are displayed in a chat window that renders markdown. Show the
       expression in inline code and the result in bold, such as `(3 + 5) * 2` = **16**.
-      For a calculation with several steps, show each step in a numbered list. Do not use
-      LaTeX or HTML, which the chat window does not render. Keep replies short.
+      For a calculation with several steps, show each step in a numbered list. Write math
+      as plain text and inline code, rather than LaTeX. Keep replies short.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
