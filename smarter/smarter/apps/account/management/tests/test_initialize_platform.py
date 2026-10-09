@@ -17,6 +17,9 @@ class TestInitializePlatform(CommandTestBase):
         self.assertEqual(names[:3], ["create_smarter_admin", "create_user", "create_user"])
         self.assertIn("initialize_waffle", names)
         self.assertIn("add_builtin_custom_domains", names)
+        self.assertIn("add_plugin_examples", names)
+        self.assertIn("create_stackademy", names)
+        self.assertLess(names.index("initialize_providers"), names.index("create_stackademy"))
         self.assertIn("verify_dns_configuration", names)
 
     def test_failures_are_logged(self):

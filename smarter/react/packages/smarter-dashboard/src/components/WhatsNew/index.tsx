@@ -1,3 +1,3 @@
-import WhatsNew from "./Component";
+import WhatsNew from "@/components/WhatsNew/Component";
 
 export default WhatsNew;

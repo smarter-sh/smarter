@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, budgetsHandlers } from "@/mocks/handlers";
 
-import BudgetAlerts from "./Component";
+import BudgetAlerts from "@/components/BudgetAlerts/Component";
 
 /** Alerts for the budgets that are locked, or nearly spent. */
 const meta = {

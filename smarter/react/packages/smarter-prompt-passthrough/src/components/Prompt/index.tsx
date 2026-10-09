@@ -1,3 +1,3 @@
-import Prompt from "./Component";
+import Prompt from "@/components/Prompt/Component";
 
 export default Prompt;

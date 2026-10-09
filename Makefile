@@ -79,7 +79,7 @@ init:
 	@echo ""
 	@echo "Feature switches (django-waffle) are at http://localhost:9357/admin/waffle/switch/"
 	@echo "They turn features, middleware and per-app logging on and off at runtime, without"
-	@echo "a restart.
+	@echo "a restart."
 	@echo "==============================================================================="
 
 activate:
@@ -189,8 +189,6 @@ docker-init:
 		python manage.py reset_cache && \
 		python manage.py makemigrations && python manage.py migrate && \
 		python manage.py initialize_platform && \
-		python manage.py add_plugin_examples && \
-		python manage.py create_stackademy && \
 		python manage.py deploy_builtin_llmclients && \
 		python manage.py deploy_example_llmclient" && \
 	docker exec smarter-mariadb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \

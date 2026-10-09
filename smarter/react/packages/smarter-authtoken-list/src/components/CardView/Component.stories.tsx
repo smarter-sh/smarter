@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ownedObjects, sessionContext } from "@/mocks/fixtures";
 import { actionHandlers } from "@/mocks/handlers";
 
-import CardView from "./Component";
+import CardView from "@/components/CardView/Component";
 
 const meta = {
   title: "AuthToken List/CardView",

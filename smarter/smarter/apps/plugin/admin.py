@@ -18,6 +18,7 @@ from .manifest.enum import (
 )
 from .models import (
     PluginDataApi,
+    PluginDataImageSearch,
     PluginDataSkill,
     PluginDataSql,
     PluginDataStatic,
@@ -123,6 +124,21 @@ class PluginDataWebsearchInline(admin.StackedInline):
     class Meta:
         verbose_name = "WebsearchPlugin Data"
         verbose_name_plural = "WebsearchPlugin Data"
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+
+class PluginDataImageSearchInline(admin.StackedInline):
+    """Inline form for Plugin."""
+
+    model = PluginDataImageSearch
+    extra = 0  # This will not show extra empty forms
+
+    class Meta:
+        verbose_name = "ImageSearchPlugin Data"
+        verbose_name_plural = "ImageSearchPlugin Data"
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
@@ -315,6 +331,43 @@ class PluginWebsearchAdmin(SmarterCustomerModelAdmin):
         )
 
 
+class PluginImageSearchAdmin(SmarterCustomerModelAdmin):
+    """
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
+
+    model = PluginMeta
+
+    def plugin_name(self, obj):
+        name = obj.name
+        formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+        return formatted_name
+
+    inlines = [PluginSelectorInline, PluginPromptInline, PluginDataImageSearchInline]
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
+
+    def get_queryset(self, request):
+        """Visibility is determined by ownership and role."""
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(id__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.IMAGE_SEARCH.value)
+        )
+
+
 class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     """
     Plugin Selection History model admin.
@@ -385,9 +438,17 @@ class PluginMetaWebsearch(PluginMeta):
         verbose_name_plural = "Plugin Meta (Websearch)"
 
 
+class PluginMetaImageSearch(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Image Search)"
+        verbose_name_plural = "Plugin Meta (Image Search)"
+
+
 smarter_restricted_admin_site.register(PluginMetaStatic, PluginStaticAdmin)
 smarter_restricted_admin_site.register(PluginMetaApi, PluginApiAdmin)
 smarter_restricted_admin_site.register(PluginMetaSql, PluginSqlAdmin)
 smarter_restricted_admin_site.register(PluginMetaSkill, PluginSkillAdmin)
 smarter_restricted_admin_site.register(PluginMetaWebsearch, PluginWebsearchAdmin)
+smarter_restricted_admin_site.register(PluginMetaImageSearch, PluginImageSearchAdmin)
 smarter_restricted_admin_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)

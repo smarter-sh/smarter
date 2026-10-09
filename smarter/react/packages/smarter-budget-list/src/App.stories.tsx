@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { sessionContext } from "@/mocks/fixtures";
 import { deleteHandlers, listHandlers } from "@/mocks/handlers";
 
-import App from "./App";
+import App from "@/App";
 
 /** The whole app, as the web console renders it, with its api mocked. */
 const meta = {

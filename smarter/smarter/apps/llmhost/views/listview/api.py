@@ -9,7 +9,6 @@ from http import HTTPStatus
 from typing import Union
 
 from django.core.handlers.asgi import ASGIRequest
-from django.core.paginator import Paginator
 from django.db import models
 from django.http import HttpRequest, JsonResponse
 
@@ -32,12 +31,26 @@ from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-DEFAULT_PAGE_SIZE = 25
-
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
+
+SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "isActive": "is_active",
+}
+"""The columns of the LLMHost list that it may be sorted by, and the fields that sort them."""
+
+COMPUTE_SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "instanceType": "instance_type",
+    "gpuCount": "gpu_count",
+    "cpu": "cpu",
+    "pricePerHour": "price_per_hour",
+}
+"""The columns of the LLMHostCompute list that it may be sorted by, and the fields that sort them."""
 
 
 class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
@@ -66,8 +79,6 @@ class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[LLMHost]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
 
         logger.debug(
@@ -99,14 +110,14 @@ class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        paginator = Paginator(qs.order_by("-updated_at"), page_size)
-        llmhosts = paginator.get_page(page)
+        llmhosts, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
             "objects": LLMHostSerializer(llmhosts, many=True, context={"request": request}).data,
+            "pagination": pagination,
         }
         return JsonResponse(retval)
 
@@ -325,8 +336,6 @@ class LLMHostComputeListApiView(SmarterAuthenticatedNeverCachedWebView):
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[LLMHostCompute]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
 
         logger.debug(
@@ -356,14 +365,14 @@ class LLMHostComputeListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        paginator = Paginator(qs.order_by("-updated_at"), page_size)
-        computes = paginator.get_page(page)
+        computes, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=COMPUTE_SORT_FIELDS)
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
             "objects": LLMHostComputeSerializer(computes, many=True, context={"request": request}).data,
+            "pagination": pagination,
         }
         return JsonResponse(retval)
 

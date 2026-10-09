@@ -19,8 +19,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { formatAmount, formatPeriod } from "./format";
-import type { BudgetChartProps } from "./format";
+import { formatAmount, formatPeriod } from "@/components/BudgetList/format";
+import type { BudgetChartProps } from "@/components/BudgetList/format";
 
 const ACTUAL_COLOR = "#17C653";
 const OVER_COLOR = "#F8285A";

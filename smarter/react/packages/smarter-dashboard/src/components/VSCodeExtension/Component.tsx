@@ -13,7 +13,7 @@
  *
  *     <VSCodeExtension />
  */
-import "./styles.css";
+import "@/components/VSCodeExtension/styles.css";
 
 function VSCodeExtension() {
   return (

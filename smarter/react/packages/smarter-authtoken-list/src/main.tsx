@@ -14,7 +14,7 @@ import { createRoot } from "react-dom/client";
 import type { SessionContext } from "@smarter/common";
 
 import App from "@/App";
-import { loggerPrefix, projectName, projectVersion } from "./lib/const";
+import { loggerPrefix, projectName, projectVersion } from "@/lib/const";
 
 const rootEl = document.getElementById("smarter-authtoken-list-root");
 if (!rootEl) throw new Error("Root element not found");

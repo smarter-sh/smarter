@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import WhatsNew from "./Component";
+import WhatsNew from "@/components/WhatsNew/Component";
 
 // Checks the list's invariants rather than its content, so that adding a
 // feature to the top of the list does not break the test.

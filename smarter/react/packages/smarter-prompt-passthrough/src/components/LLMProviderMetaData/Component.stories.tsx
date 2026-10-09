@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { providers } from "@/mocks/fixtures";
 
-import LLMProviderMetaData from "./Component";
+import LLMProviderMetaData from "@/components/LLMProviderMetaData/Component";
 
 /** The selected provider's details, flags and links. */
 const meta = {

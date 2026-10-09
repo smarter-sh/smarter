@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import DownloadNpm from "./Component";
+import DownloadNpm from "@/components/DownloadNpm/Component";
 
 /** The npm package of the Smarter chat component. */
 const meta = {

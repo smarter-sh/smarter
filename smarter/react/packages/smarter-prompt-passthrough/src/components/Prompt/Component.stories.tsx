@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PROVIDER_API_URL, sessionContext } from "@/mocks/fixtures";
 import { passthroughErrorHandlers, passthroughHandlers } from "@/mocks/handlers";
 
-import Prompt from "./Component";
+import Prompt from "@/components/Prompt/Component";
 
 /** Send a raw request to an LLM provider's API, through Smarter, and see its response. */
 const meta = {

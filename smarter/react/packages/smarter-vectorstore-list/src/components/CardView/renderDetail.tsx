@@ -53,9 +53,6 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
       return value;
     }
-    if (value === null || value === undefined) {
-      return "";
-    }
     // For objects/arrays, stringify for display
     if (typeof value === "object") {
       return JSON.stringify(value);
