@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { sessionContext } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
-import useDashboardApi from "./useDashboardApi";
+import useDashboardApi from "@/hooks/useDashboardApi";
 
 describe("useDashboardApi", () => {
   it("returns the api's data", async () => {

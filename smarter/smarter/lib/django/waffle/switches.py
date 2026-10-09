@@ -158,6 +158,9 @@ class SmarterWaffleSwitches:
     ENABLE_PLUGIN_FUZZY_MATCHING = "enable_plugin_fuzzy_matching"
     """Enables typo tolerant (Levenshtein distance) matching of plugin selector search terms."""
 
+    ENABLE_PLUGIN_THESAURUS_MATCHING = "enable_plugin_thesaurus_matching"
+    """Enables synonym (WordNet thesaurus) matching of plugin selector search terms."""
+
     ENABLE_NEW_USER_PASSWORD_EMAIL = "enable_new_user_password_email"
     """Enables sending textemail with password to new users."""
 
@@ -383,6 +386,11 @@ class SmarterWaffleSwitches:
         ENABLE_PLUGIN_FUZZY_MATCHING: SmarterWaffleSwitch(
             name=ENABLE_PLUGIN_FUZZY_MATCHING,
             comment="Enables typo tolerant (Levenshtein distance) matching of plugin selector search terms.",
+            default=True,
+        ),
+        ENABLE_PLUGIN_THESAURUS_MATCHING: SmarterWaffleSwitch(
+            name=ENABLE_PLUGIN_THESAURUS_MATCHING,
+            comment="Enables synonym (WordNet thesaurus) matching of plugin selector search terms.",
             default=True,
         ),
         ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(

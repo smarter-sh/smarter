@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { completion } from "@/mocks/fixtures";
 
-import LLMProviderPassthroughResponse from "./Component";
+import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse/Component";
 
 /** The provider's HTTP response: ready, working, succeeded or failed. */
 const meta = {

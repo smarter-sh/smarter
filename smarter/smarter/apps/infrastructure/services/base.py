@@ -10,10 +10,14 @@ The base class of every infrastructure service.
 - :meth:`~InfrastructureService.operation`, which translates a provider's SDK errors into the
   service's own exception, so that the platform never catches a provider's exceptions.
 - the unit test guard: :func:`refuse_in_unit_tests`.
+
+:class:`DiscoveredResource` describes a resource that a service found, rather than created, for
+the inventory, :mod:`smarter.apps.infrastructure.services.inventory`.
 """
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import Any, Iterator, Optional
 
 from django.dispatch import Signal
@@ -63,6 +67,25 @@ def refuse_in_unit_tests(what: str, allow_in_tests: bool = False) -> None:
             f"Refusing to reach {what} from the unit tests. Install a fake, e.g. with "
             "smarter.apps.infrastructure.providers.configure_provider(), or pass allow_in_tests=True."
         )
+
+
+@dataclass
+class DiscoveredResource:
+    """
+    A resource that exists in the platform's infrastructure, whoever created it.
+
+    e.g. a Kubernetes node, or the Kubernetes cluster itself.
+
+    :param resource_type: The kind of resource, e.g. ``kubernetes.node``.
+    :param resource_name: The resource's name, e.g. ``ip-192-168-1-1.ec2.internal``.
+    :param resource_id: The provider's id of the resource, if any, e.g. its ARN.
+    :param billable: Whether the provider bills for the resource.
+    """
+
+    resource_type: str
+    resource_name: str
+    resource_id: str = ""
+    billable: bool = False
 
 
 class InfrastructureService(ABC, SmarterHelperMixin):
@@ -217,4 +240,4 @@ class InfrastructureService(ABC, SmarterHelperMixin):
             raise self.error_class(f"{self} {name} failed: {e}") from e
 
 
-__all__ = ["InfrastructureService", "refuse_in_unit_tests"]
+__all__ = ["DiscoveredResource", "InfrastructureService", "refuse_in_unit_tests"]

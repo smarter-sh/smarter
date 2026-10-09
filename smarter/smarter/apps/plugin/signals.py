@@ -136,6 +136,31 @@ Example::
     )
 """
 
+search_term_matched = Signal()
+"""
+Signal sent when :func:`smarter.apps.plugin.nlp.does_refer_to` finds that a prompt refers to a search term.
+
+Plugin selectors use it to decide whether to select a plugin, so this reports why each
+plugin was selected, and how often each kind of matching (exact, typo tolerant, thesaurus)
+succeeds.
+
+Arguments:
+    prompt: The prompt, as given to does_refer_to().
+    search_term: The search term that the prompt refers to.
+    method: How it matched, a :class:`smarter.apps.plugin.nlp.MatchMethod`: exact, fuzzy or thesaurus.
+    matched_text: For thesaurus matches, the words of the prompt that matched, e.g. a synonym. Otherwise None.
+
+Example::
+
+    search_term_matched.send(
+        sender=does_refer_to,
+        prompt="I want to buy an automobile",
+        search_term="car",
+        method="thesaurus",
+        matched_text="automobile",
+    )
+"""
+
 broker_ready = Signal()
 """
 Signal sent when a broker achieves a ready state.

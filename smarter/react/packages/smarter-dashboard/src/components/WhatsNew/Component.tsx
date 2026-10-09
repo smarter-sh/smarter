@@ -12,7 +12,7 @@
  *
  *     <WhatsNew />
  */
-import "./styles.css";
+import "@/components/WhatsNew/styles.css";
 
 interface Feature {
   name: string;

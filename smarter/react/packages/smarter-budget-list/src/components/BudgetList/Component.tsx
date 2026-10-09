@@ -9,14 +9,14 @@ import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Loading, actionUrl, fetchDjangoUrl, formatDateTime } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import { formatAmount } from "./format";
+import { formatAmount } from "@/components/BudgetList/format";
 import type { Budget, BudgetListResponse, BudgetResourceStatus } from "@/lib/Types";
 import { loggerPrefix } from "@/lib/const";
 
-import "./styles.css";
+import "@/components/BudgetList/styles.css";
 
 // recharts is a large dependency, so the chart is loaded in its own chunk.
-const ResourceChart = lazy(() => import("./ResourceChart"));
+const ResourceChart = lazy(() => import("@/components/BudgetList/ResourceChart"));
 
 function resourceLabel(status: BudgetResourceStatus): string {
   const { kind, name, recordLocator } = status.resource;

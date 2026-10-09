@@ -18,7 +18,7 @@
  *     <DownloadNpm apiUrl="https://customer.smarter.sh/dashboard/api/npm" />
  */
 import { loggerPrefix } from "@/const";
-import "./styles.css";
+import "@/components/DownloadNpm/styles.css";
 
 interface DownloadNpmProps {
   apiUrl: string;

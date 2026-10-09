@@ -3,7 +3,7 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import DropZone from "./components/DropZone";
+import DropZone from "@/components/DropZone";
 import type { SessionContext } from "@smarter/common";
 
 function App({ sessionContext }: { sessionContext: SessionContext }) {

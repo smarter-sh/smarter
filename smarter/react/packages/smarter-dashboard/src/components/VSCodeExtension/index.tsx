@@ -1,3 +1,3 @@
-import VSCodeExtension from "./Component";
+import VSCodeExtension from "@/components/VSCodeExtension/Component";
 
 export default VSCodeExtension;

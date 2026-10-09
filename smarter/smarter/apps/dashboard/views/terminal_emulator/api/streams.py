@@ -14,6 +14,10 @@ Behavior
 - Uses the ``default`` Redis connection configured through ``django-redis``.
 - Verifies ``smarter_settings.enable_dashboard_server_logs`` before opening a
     stream.
+- Streams only the records at or above a minimum log level: the ``level``
+    query parameter, for example ``?level=DEBUG``, or by default
+    ``smarter_settings.log_level``. Smarter Chat's Sandbox mode asks for
+    ``DEBUG``, and its Production mode for the default.
 - Emits a retry hint and keepalive comments to keep long-lived connections
     healthy through intermediate proxies.
 - Closes the Redis Pub/Sub connection when the stream terminates.
@@ -140,7 +144,49 @@ def _should_skip_stream_internal_log(payload_text: str) -> bool:
     return level == "DEBUG" and is_transport_logger
 
 
-async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterator[str]:
+def _min_log_level(request: HttpRequest) -> int:
+    """
+    Return the minimum log level of the records that a stream sends.
+
+    The ``level`` query parameter is a Python log level name, such as ``DEBUG`` or ``info``.
+    Without it, or when it isn't a log level name, the level is ``smarter_settings.log_level``.
+
+    :param request: The stream's request.
+    :type request: django.http.HttpRequest
+    :return: The minimum log level, as a Python logging level number.
+    :rtype: int
+    """
+    name = str(request.GET.get("level", "")).strip().upper()
+    level = logging.getLevelNamesMapping().get(name)
+    return level if level is not None else smarter_settings.log_level
+
+
+def _is_below_level(payload_text: str, min_level: int) -> bool:
+    """
+    Return True when a payload is a log record below the minimum log level.
+
+    Payloads that aren't JSON log records, or whose level isn't a log level name, are never below
+    it, so that they are always streamed.
+
+    :param payload_text: The log record, as JSON, or as plain text.
+    :type payload_text: str
+    :param min_level: The minimum log level, as a Python logging level number.
+    :type min_level: int
+    :return: True if the record should not be streamed.
+    :rtype: bool
+    """
+    try:
+        payload_json = json.loads(payload_text)
+    except (ValueError, TypeError):
+        return False
+    if not isinstance(payload_json, dict):
+        return False
+    name = str(payload_json.get("level", payload_json.get("levelname", ""))).upper()
+    level = logging.getLevelNamesMapping().get(name)
+    return level is not None and level < min_level
+
+
+async def _replay_stream_history(redis_cache: Any, channel: str, min_level: int = logging.NOTSET) -> AsyncIterator[str]:
     """
     Replay persisted Redis stream entries as SSE frames before live Pub/Sub.
 
@@ -158,6 +204,10 @@ async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterato
         Redis Pub/Sub channel name whose persisted stream mirror should be
         replayed, for example ``"logs:User.admin"``.
     :type channel: str
+    :param min_level:
+        The minimum log level of the replayed records. Records below it are
+        dropped. See :func:`_is_below_level`.
+    :type min_level: int
     :yields:
         Individual SSE frame fragments for each persisted log payload. Each
         payload is emitted as one or more ``data:`` lines followed by a blank
@@ -201,7 +251,7 @@ async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterato
             # Redis field keys may be bytes or str depending on client decode settings.
             raw = payload.get("data", payload.get(b"data", ""))
             decoded = _decode_redis_payload(raw)
-            if _should_skip_stream_internal_log(decoded):
+            if _should_skip_stream_internal_log(decoded) or _is_below_level(decoded, min_level):
                 # Advance the cursor past this entry even though we're dropping it,
                 # so the next batch starts from the correct position.
                 upper_bound = f"({_decode_redis_payload(entry_id)}"
@@ -230,6 +280,10 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     context and forwards incoming messages as SSE frames. When no message is
     available, keepalive comments are emitted so that long-lived connections
     remain active through reverse proxies.
+
+    Only the records at or above the ``level`` query parameter, for example
+    ``?level=DEBUG``, are streamed. Without it, the level is
+    ``smarter_settings.log_level``. See :func:`_min_log_level`.
 
     :param request: Incoming HTTP request. The view requires authentication
         via :func:`django.contrib.auth.decorators.login_required`.
@@ -260,7 +314,13 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     else:
         user_context = get_user_context(user)
     logger_prefix = logging.formatted_text(f"{__name__}.stream_user_logs()")
-    logger.info("%s called for user_context='%s'", logger_prefix, user_context)
+    min_level = _min_log_level(request)
+    logger.info(
+        "%s called for user_context='%s' min_level=%s",
+        logger_prefix,
+        user_context,
+        logging.getLevelName(min_level),
+    )
 
     if not smarter_settings.enable_dashboard_server_logs:
         return HttpResponse(
@@ -307,7 +367,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
             yield "retry: 3000\n\n"
 
             try:
-                async for event in _replay_stream_history(redis_cache, channel):
+                async for event in _replay_stream_history(redis_cache, channel, min_level):
                     yield event
             except RedisError:
                 logger.exception("%s Failed to replay Redis stream history for log streaming.", logger_prefix)
@@ -322,7 +382,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                 if message and message.get("type") == "message":
                     raw = message.get("data", "")
                     decoded = _decode_redis_payload(raw)
-                    if _should_skip_stream_internal_log(decoded):
+                    if _should_skip_stream_internal_log(decoded) or _is_below_level(decoded, min_level):
                         continue
                     for frame in _iter_sse_data_frames(decoded):
                         yield frame

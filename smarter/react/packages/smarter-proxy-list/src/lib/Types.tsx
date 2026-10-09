@@ -12,7 +12,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Proxy Definition
@@ -78,4 +78,5 @@ export interface ProxyListViewProps {
   sessionContext: SessionContext;
   objects: Proxy[];
   onRequery: () => void;
+  sorting?: Sorting;
 }

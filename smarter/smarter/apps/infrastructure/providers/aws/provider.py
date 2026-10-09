@@ -7,7 +7,7 @@ authenticates with AWS, with ``smarter_settings``' AWS credentials, and implemen
 - DNS, with Route53: :class:`~smarter.apps.infrastructure.providers.aws.dns.Route53DNSService`.
 - TLS certificates, with ACM:
   :class:`~smarter.apps.infrastructure.providers.aws.certificates.ACMCertificateService`.
-- the Kubernetes cluster's kubeconfig and description, with EKS.
+- the Kubernetes cluster's kubeconfig, description, add-ons and node groups, with EKS.
 
 Of the AWS services that the old helpers wrapped, only these are used by the platform. API
 Gateway, DynamoDB, IAM, Lambda, RDS, Rekognition and S3 were not, and were removed.
@@ -23,9 +23,9 @@ import boto3
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from ...const import CloudProviders
-from ...exceptions import InfrastructureConfigurationError
-from ...services.base import refuse_in_unit_tests
+from ...const import CloudProviders, KubernetesResourceTypes
+from ...exceptions import InfrastructureConfigurationError, SmarterInfrastructureError
+from ...services.base import DiscoveredResource, refuse_in_unit_tests
 from ..base import CloudProvider
 from .certificates import ACMCertificateService
 from .dns import Route53DNSService
@@ -147,6 +147,34 @@ class AWSProvider(CloudProvider):
         self.require_ready()
         with self.operation("get_kubernetes_cluster_info"):
             return self.eks.get_kubernetes_info()
+
+    def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
+        """
+        Return the EKS cluster, which is billed by the hour, its add-ons, and its managed node groups.
+
+        A node group is not billed: its nodes, EC2 instances, are, and the inventory finds them
+        in the cluster. Nothing is returned if EKS cannot be described.
+        """
+        if not self.ready:
+            return {}
+        try:
+            with self.operation("get_kubernetes_cluster_resources"):
+                resources = self.eks.get_cluster_resources()
+        except SmarterInfrastructureError as e:
+            logger.warning("%s could not describe the EKS cluster's resources: %s", self.formatted_class_name, e)
+            return {}
+        return {
+            str(resource_type): [
+                DiscoveredResource(str(resource_type), item["name"], item["arn"], billable)
+                for item in resources[key]
+                if item["name"]
+            ]
+            for resource_type, key, billable in (
+                (KubernetesResourceTypes.CLUSTER, "cluster", True),
+                (KubernetesResourceTypes.ADDON, "addons", False),
+                (KubernetesResourceTypes.NODEGROUP, "nodegroups", False),
+            )
+        }
 
 
 __all__ = ["AWSProvider"]

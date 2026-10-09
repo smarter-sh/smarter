@@ -87,7 +87,8 @@ class KubernetesService(InfrastructureService):
 
     Implementations provide the primitives: :meth:`apply_manifest`, :meth:`get_resource`,
     :meth:`list_resources`, :meth:`delete_resource`, :meth:`delete_resources` and
-    :meth:`get_pod_logs`. The ingress operations that LLMClient deployments use are built on them.
+    :meth:`get_pod_logs`, and optionally :meth:`find_resources`, for the inventory. The ingress
+    operations that LLMClient deployments use are built on them.
     """
 
     service_name = InfrastructureServiceNames.KUBERNETES
@@ -131,6 +132,22 @@ class KubernetesService(InfrastructureService):
     @abstractmethod
     def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
         """Return the resources of a kind, optionally those that match a label selector."""
+
+    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[dict]]:
+        """
+        Return every resource of a kind, for the inventory.
+
+        Unlike :meth:`list_resources`, it tells a kind that has no resources from one that could
+        not be listed, so that the inventory never mistakes an unavailable cluster for an empty one.
+        This implementation cannot list, and returns None.
+
+        :param kind: The kind, e.g. ``node``.
+        :param namespace: The namespace of a namespaced kind, or None for a cluster-scoped kind,
+            e.g. a node.
+        :returns: The resources, or None if they could not be listed, e.g. because the cluster
+            is unavailable, or the kind's CustomResourceDefinition is not installed.
+        """
+        return None
 
     @abstractmethod
     def delete_resource(self, kind: str, name: str, namespace: str) -> bool:
@@ -439,6 +456,21 @@ class KubectlKubernetesService(KubernetesService):
             args += ["-l", selector]
         output = self._kubectl_json(*args)
         return (output or {}).get("items", [])
+
+    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[dict]]:
+        if not self.ready:
+            return None
+        args = ["get", kind] + (["-n", namespace] if namespace else [])
+        result = self._kubectl(*args, "-o", "json")
+        if result.returncode != 0:
+            logger.warning("%s kubectl %s failed: %s", self.formatted_class_name, " ".join(args), result.stderr)
+            return None
+        try:
+            items = json.loads(result.stdout).get("items")
+        except (json.JSONDecodeError, AttributeError) as e:
+            logger.error("%s kubectl %s returned invalid json: %s", self.formatted_class_name, " ".join(args), e)
+            return None
+        return items if isinstance(items, list) else None
 
     def delete_resource(self, kind: str, name: str, namespace: str) -> bool:
         if not self.ready:

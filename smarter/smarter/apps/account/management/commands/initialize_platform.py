@@ -156,6 +156,17 @@ class Command(SmarterCommand):
             logger.error("Failed to apply the built-in vectorstores: %s", e)
 
         try:
+            call_command("add_plugin_examples", username=username)
+        except Exception as e:
+            logger.error("Failed to add plugin examples: %s", e)
+
+        try:
+            # after initialize_providers: the Stackademy LLMClients use a built-in Provider.
+            call_command("create_stackademy", account_number=SMARTER_ACCOUNT_NUMBER)
+        except Exception as e:
+            logger.error("Failed to create the Stackademy resources: %s", e)
+
+        try:
             call_command(
                 "verify_dns_configuration"
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records

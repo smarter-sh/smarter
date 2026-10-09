@@ -147,6 +147,15 @@ class DocsJsonSchemaWebsearchView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.WEBSEARCH_PLUGIN)
 
 
+class DocsJsonSchemaImageSearchView(DocsJsonSchemaBaseView):
+    """Plugin ImageSearch JSON Schema view.
+
+    Experimental.
+    """
+
+    kind = SAMKinds(SAMKinds.IMAGE_SEARCH_PLUGIN)
+
+
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
     """Plugin Sql JSON Schema view."""
 

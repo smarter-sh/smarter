@@ -13,3 +13,4 @@ Plugin Reference
    plugin/utils
    plugin/skill
    plugin/websearch
+   plugin/image-search

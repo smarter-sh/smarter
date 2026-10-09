@@ -4,7 +4,6 @@
 from http import HTTPStatus
 
 from django.core.handlers.asgi import ASGIRequest
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 
@@ -21,10 +20,10 @@ from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-DEFAULT_PAGE_SIZE = 25
 STATE_FIELDS = {
     # what a clone does not copy: it is a new, undeployed vectorstore.
     "status": VectorstoreStatus.PENDING,
@@ -42,14 +41,19 @@ STATE_FIELDS = {
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
 
+SORT_FIELDS = {
+    **DEFAULT_SORT_FIELDS,
+    "database": "backend",
+    "vectorCount": "vector_count",
+}
+"""The columns of the Vectorstore list that it may be sorted by, and the fields that sort them."""
+
 
 class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
     """The vectorstores that the user owns, those shared with them, or both."""
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
         ownership_filter = kwargs.get("ownership_filter") or SmarterResourceOwnershipFilterEnum.ALL
-        page = request.GET.get("page", 1)
-        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         if request.GET.get("invalidate_cache", "false").lower() == "true":
             invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
         if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
@@ -63,12 +67,13 @@ class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
                 {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
                 status=HTTPStatus.BAD_REQUEST,
             )
-        vectorstores = Paginator(qs.order_by("-updated_at"), page_size).get_page(page)
+        vectorstores, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
         return JsonResponse(
             {
                 "user": UserProfileSerializer(self.user_profile).data,
                 "admin": UserProfileSerializer(smarter_cached_objects.smarter_admin_user_profile).data,
                 "objects": VectorstoreSerializer(vectorstores, many=True, context={"request": request}).data,
+                "pagination": pagination,
             }
         )
 
