@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.19.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.18.11...v0.19.0-alpha.1) (2026-10-09)
+
+### Features
+
+* **plugin:** add ImageSearchPlugin and thesaurus plugin selection ([1da6bcc](https://github.com/smarter-sh/smarter/commit/1da6bccc3847f0d06e1b801496cbb838cffb0dab))
+
 ## [0.18.11](https://github.com/smarter-sh/smarter/compare/v0.18.10...v0.18.11) (2026-10-08)
 
 ### Bug Fixes
