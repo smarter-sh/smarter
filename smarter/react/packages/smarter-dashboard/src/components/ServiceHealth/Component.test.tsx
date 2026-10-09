@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { appContext, serviceHealth } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
-import ServiceHealth from "./Component";
+import ServiceHealth from "@/components/ServiceHealth/Component";
 
 const apiUrl = appContext.serviceHealthApiUrl;
 

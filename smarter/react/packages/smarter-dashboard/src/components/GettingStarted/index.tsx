@@ -1,3 +1,3 @@
-import GettingStarted from "./Component";
+import GettingStarted from "@/components/GettingStarted/Component";
 
 export default GettingStarted;

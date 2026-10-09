@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fakeEditor } from "@/mocks/fakeEditor";
 import { SECRET_YAML } from "@/mocks/fixtures";
 
-import Toolbar from "./Component";
+import Toolbar from "@/components/Toolbar/Component";
 
 type ToolbarProps = Parameters<typeof Toolbar>[0];
 

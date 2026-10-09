@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
-import RecentActivity from "./Component";
+import RecentActivity from "@/components/RecentActivity/Component";
 
 const apiUrl = appContext.activityApiUrl;
 

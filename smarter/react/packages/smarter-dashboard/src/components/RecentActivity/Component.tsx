@@ -21,7 +21,7 @@ import type { SessionContext } from "@smarter/common";
 import { Loading } from "@smarter/common";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
-import "./styles.css";
+import "@/components/RecentActivity/styles.css";
 
 interface ActivityItem {
   created_at: string;

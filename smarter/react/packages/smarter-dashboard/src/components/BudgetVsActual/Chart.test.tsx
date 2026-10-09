@@ -7,7 +7,7 @@ import { appContext, budgets, makeBudgetStatus, sessionContext } from "@/mocks/f
 import { budgetsHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import BudgetVsActualChart from "./Chart";
+import BudgetVsActualChart from "@/components/BudgetVsActual/Chart";
 
 vi.mock("recharts", async (importOriginal) => (await import("@test/recharts")).withFixedSize(await importOriginal()));
 

@@ -11,7 +11,7 @@ import type * as monaco from "monaco-editor";
 
 import { useCopy } from "@/lib/useCopy";
 
-import "./styles.css";
+import "@/components/Toolbar/styles.css";
 
 // the most paths that a Keenicons duotone icon in this toolbar has: ki-trash has 5.
 const DUOTONE_PATHS = [1, 2, 3, 4, 5];

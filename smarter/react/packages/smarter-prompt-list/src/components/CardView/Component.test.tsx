@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeObject, sessionContext } from "@/mocks/fixtures";
 import type { LLMClient } from "@/lib/Types";
 
-import { CardView } from "./Component";
+import { CardView } from "@/components/CardView/Component";
 
 /** The value of a card's detail row, by its label. */
 function detail(label: string) {

@@ -12,7 +12,7 @@
 import { createRoot } from "react-dom/client";
 import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix, projectName, projectVersion } from "./lib/const";
+import { loggerPrefix, projectName, projectVersion } from "@/lib/const";
 import App from "@/App";
 
 const rootEl = document.getElementById("smarter-mcpclient-list-root");

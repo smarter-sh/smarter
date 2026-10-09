@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { makeObject, sessionContext } from "@/mocks/fixtures";
 import type { Proxy } from "@/lib/Types";
 
-import CardView from "./Component";
+import CardView from "@/components/CardView/Component";
 
 /** The value of a card's detail row, by its label. */
 function detail(label: string) {

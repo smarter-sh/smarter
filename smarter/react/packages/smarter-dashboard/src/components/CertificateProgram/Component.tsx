@@ -14,7 +14,7 @@
  *
  *     <CertificateProgram apiUrl="https://customer.smarter.sh/dashboard/api/certificate-program" />
  */
-import "./styles.css";
+import "@/components/CertificateProgram/styles.css";
 
 function CertificateProgram() {
   return (

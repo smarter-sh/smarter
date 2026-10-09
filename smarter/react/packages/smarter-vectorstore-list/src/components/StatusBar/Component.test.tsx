@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { makeObject } from "@/mocks/fixtures";
 
-import { StatusBar } from "./Component";
+import { StatusBar } from "@/components/StatusBar/Component";
 
 describe("StatusBar", () => {
   it("shows a ready vectorstore, and its scheduled snapshots", () => {

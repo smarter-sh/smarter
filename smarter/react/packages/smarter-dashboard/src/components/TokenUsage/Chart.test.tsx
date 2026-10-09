@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { appContext, sessionContext, tokenUsage } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
-import TokenUsageChart from "./Chart";
+import TokenUsageChart from "@/components/TokenUsage/Chart";
 
 vi.mock("recharts", async (importOriginal) => (await import("@test/recharts")).withFixedSize(await importOriginal()));
 

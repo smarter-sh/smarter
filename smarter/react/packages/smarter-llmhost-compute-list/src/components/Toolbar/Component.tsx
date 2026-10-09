@@ -27,7 +27,7 @@ import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { LLMHostCompute } from "@/lib/Types";
-import "./styles.css";
+import "@/components/Toolbar/styles.css";
 
 interface ToolbarProps {
   sessionContext: SessionContext;

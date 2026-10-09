@@ -22,7 +22,7 @@ import { loggerPrefix } from "@/const";
 import DropZoneModal from "@/components/Modal";
 import type { ApplyResult } from "@/components/Modal";
 
-import "./styles.css";
+import "@/components/DropZone/styles.css";
 
 type DropZoneProps = {
   sessionContext: SessionContext;

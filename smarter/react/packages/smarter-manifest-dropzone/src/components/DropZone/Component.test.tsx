@@ -7,7 +7,7 @@ import { API_URL, SECRET_MANIFEST, applyResult, sessionContext } from "@/mocks/f
 import { applyErrorHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import DropZone from "./Component";
+import DropZone from "@/components/DropZone/Component";
 
 const manifestFile = (content = SECRET_MANIFEST) => new File([content], "manifest.yaml", { type: "application/yaml" });
 

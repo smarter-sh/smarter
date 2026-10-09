@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { SERIES_URL, makeResourceStatus, series, sessionContext } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
-import ResourceChart from "./ResourceChart";
+import ResourceChart from "@/components/BudgetList/ResourceChart";
 
 vi.mock("recharts", async (importOriginal) => (await import("@test/recharts")).withFixedSize(await importOriginal()));
 

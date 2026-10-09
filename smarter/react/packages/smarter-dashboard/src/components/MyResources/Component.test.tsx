@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { appContext, myResources } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
-import MyResources from "./Component";
+import MyResources from "@/components/MyResources/Component";
 
 const apiUrl = appContext.myResourcesApiUrl;
 

@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import { makeObject } from "@/mocks/fixtures";
 import type { CustomDomain } from "@/lib/Types";
 
-import { StatusBar } from "./Component";
-import { VerificationBadge } from "./VerificationBadge";
+import { StatusBar } from "@/components/StatusBar/Component";
+import { VerificationBadge } from "@/components/StatusBar/VerificationBadge";
 
 const llmclient = { name: "example_llmclient", deployed: true } as CustomDomain["llmclient"];
 

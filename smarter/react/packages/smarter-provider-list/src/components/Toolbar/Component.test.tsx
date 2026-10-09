@@ -7,7 +7,7 @@ import { ACTIONS_URL as BASE, makeObject, sessionContext } from "@/mocks/fixture
 import { actionHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import { Toolbar } from "./Component";
+import { Toolbar } from "@/components/Toolbar/Component";
 
 function renderToolbar(provider = makeObject(1, { name: "first_example" })) {
   const onRequery = vi.fn();

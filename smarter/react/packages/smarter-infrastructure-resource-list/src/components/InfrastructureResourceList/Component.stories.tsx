@@ -4,7 +4,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { manyResources, sessionContext } from "@/mocks/fixtures";
 import { listErrorHandlers, listForbiddenHandlers, listHandlers } from "@/mocks/handlers";
 
-import InfrastructureResourceList from "./Component";
+import InfrastructureResourceList from "@/components/InfrastructureResourceList/Component";
 
 const meta = {
   title: "Infrastructure Resource List/InfrastructureResourceList",

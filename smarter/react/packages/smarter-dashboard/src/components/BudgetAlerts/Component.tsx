@@ -20,8 +20,8 @@
 import type { SessionContext } from "@smarter/common";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
-import { formatAmount } from "../BudgetVsActual/format";
-import type { BudgetStatus } from "../BudgetVsActual/types";
+import { formatAmount } from "@/components/BudgetVsActual/format";
+import type { BudgetStatus } from "@/components/BudgetVsActual/types";
 
 export const ALERT_PERCENT = 80;
 

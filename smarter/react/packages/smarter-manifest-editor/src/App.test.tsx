@@ -7,7 +7,7 @@ import { APPLY_API_URL, SECRET_IN_USE_YAML, VALIDATE_API_URL, appProps } from "@
 import { cliHandlers, invalidHandler, validHandler } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import App from "./App";
+import App from "@/App";
 
 vi.mock("@monaco-editor/react", async () => await import("@/mocks/MonacoEditor"));
 

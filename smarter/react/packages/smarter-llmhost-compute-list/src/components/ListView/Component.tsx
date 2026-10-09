@@ -35,7 +35,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/lib/const";
 import { formatCpuMemory, formatGpus, formatPrice } from "@/lib/format";
 
-import "./styles.css";
+import "@/components/ListView/styles.css";
 
 /**
  * LoadingText

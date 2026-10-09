@@ -7,7 +7,7 @@ import { API_URL, PROVIDER_API_URL, completion, sessionContext } from "@/mocks/f
 import { passthroughErrorHandlers, providerHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import Prompt from "./Component";
+import Prompt from "@/components/Prompt/Component";
 
 vi.mock("@monaco-editor/react", async () => await import("@/mocks/MonacoEditor"));
 

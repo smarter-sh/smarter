@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { makeObject } from "@/mocks/fixtures";
 
-import { StatusBar } from "./Component";
+import { StatusBar } from "@/components/StatusBar/Component";
 
 describe("StatusBar", () => {
   it("shows an active Proxy with an API key and restricted paths", () => {

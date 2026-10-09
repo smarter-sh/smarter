@@ -36,7 +36,7 @@ import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/const";
 
-import "./styles.css";
+import "@/components/ListView/styles.css";
 
 /**
  * TableHeader
