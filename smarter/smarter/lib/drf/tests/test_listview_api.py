@@ -57,9 +57,30 @@ class TestAuthTokenListApi(TestAccountMixin):
                 response = self.client.post(f"{url}?invalidate_cache=true&page_size=100")
                 self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
                 data = response.json()
-                self.assertEqual(set(data.keys()), {"user", "admin", "objects"})
+                self.assertEqual(set(data.keys()), {"user", "admin", "objects", "pagination"})
                 if kwargs.get("ownership_filter") != "shared":
                     self.assertIn(self.token.name, [obj["name"] for obj in data["objects"]])
+
+    def test_list_search_and_pages(self):
+        """Test that the list searches all of the user's tokens, a page at a time, and describes the page."""
+        for index in range(3):
+            SmarterAuthToken.objects.create(  # type: ignore[misc]
+                user_profile=self.user_profile,
+                name=f"test_listview_api_page_{index}",
+                user=self.admin_user,
+                description="test",
+            )
+        url = reverse(f"{namespace}:{AuthTokenReverseNames.listview_api}", kwargs={"ownership_filter": "owned"})
+
+        data = self.client.post(f"{url}?invalidate_cache=true&search=listview_api_PAGE&page_size=2&page=2").json()
+        self.assertEqual(
+            data["pagination"], {"page": 2, "pageSize": 2, "numPages": 2, "count": 3, "search": "listview_api_PAGE"}
+        )
+        self.assertEqual(len(data["objects"]), 1)
+        self.assertTrue(data["objects"][0]["name"].startswith("test_listview_api_page_"))
+
+        data = self.client.post(f"{url}?search=no_such_token").json()
+        self.assertEqual((data["objects"], data["pagination"]["count"]), ([], 0))
 
     def test_clone(self):
         response, data = self.call(

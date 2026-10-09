@@ -1,8 +1,8 @@
 /**
  * TabbedListView React Component
  *
- * Displays a tabbed interface for viewing llmclients owned by the current user
- * and llmclients shared with the user.
+ * Displays a tabbed interface for viewing objects owned by the current user
+ * and objects shared with the user, one page at a time.
  *
  * Tabs:
  * - Your LLMClients
@@ -14,6 +14,11 @@
  *
  * Features:
  * - Loads owned and shared llmclient lists from the backend using session context.
+ * - Paginates each tab: previous and next page buttons, and a page number box. The backend
+ *   paginates, so each page is a request to the list api, for ?page=N.
+ * - Searches both tabs: the backend searches all of the objects, not only the page shown, so
+ *   the search is a request to the list api, for ?search=..., once typing pauses. A new search
+ *   returns each tab to its first page.
  * - Hydrates the UI from cached results before the initial fetch resolves.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
@@ -25,13 +30,12 @@
  * - sessionContext (SessionContext): Authentication and API context used for requests.
  *
  * State:
- * - isLoadingOwned: Loading state for owned llmclients.
- * - isLoadingShared: Loading state for shared llmclients.
+ * - lists: Each tab's objects, loading state, and pagination, as the list api last described it.
+ * - pages: Each tab's requested page.
+ * - searchInput: The search as typed; search: the search requested, once typing pauses.
  * - errorMessage: Error text for failed requests.
- * - userListObjects: Owned llmclient list.
- * - sharedListObjects: Shared llmclient list.
  * - viewMode: Current display mode ("list" or "thumbnail").
- * - activeTab: Current tab ("user" or "shared").
+ * - activeTab: Current tab ("owned" or "shared").
  *
  * Internal Helpers:
  * - getCookie: Reads cookie values used for skeleton sizing.
@@ -44,15 +48,15 @@
  *   a UX perspective.
  * - Reads the most recent owned/shared llmclient results from sessionStorage on mount,
  *   keyed by API URL and tab.
- * - Writes successful fetch results back to the cache so the next initial page load
- *   can show recent data without waiting on the network.
+ * - Writes successful fetch results of each tab's first page, without a search, back to the
+ *   cache so the next initial page load can show recent data without waiting on the network.
  *
  * Usage:
  * <TabbedListView sessionContext={sessionContext} />
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
+import type { Pagination, SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
 import { load } from "../../lib/load";
 import { loggerPrefix } from "../../lib/const";
 import { makeCacheKey, readCache, writeCache } from "../../lib/cache";
@@ -61,6 +65,8 @@ import ToggleButton from "../ToggleButton";
 import type { ViewMode } from "../ToggleButton";
 
 import { getCookieForUrl } from "./cookie";
+import { PaginationControls } from "./PaginationControls";
+import { SearchBox } from "./SearchBox";
 import { TabNav } from "./TabNavigation";
 
 type TabbedListViewProps<TObject> = {
@@ -68,14 +74,41 @@ type TabbedListViewProps<TObject> = {
   tabbedListViewContext: TabbedViewContext<TObject>;
 };
 
+type TabList<TObject> = {
+  objects: TObject[];
+  isLoading: boolean;
+  pagination: Pagination | null;
+};
+
+type TabRecord<T> = Record<TabKey, T>;
+
+const TAB_KEYS: TabKey[] = ["owned", "shared"];
+
+/** How long to wait after the last keystroke of a search before it is requested, in milliseconds. */
+export const SEARCH_DELAY_MS = 300;
+
+/** The lists, with those of tabs loading, so that they show their loading skeleton while they load another page, or another search. */
+function withLoading<TObject>(lists: TabRecord<TabList<TObject>>, tabs: TabKey[]): TabRecord<TabList<TObject>> {
+  const retval = { ...lists };
+  tabs.forEach((tab) => {
+    retval[tab] = { ...lists[tab], isLoading: true };
+  });
+  return retval;
+}
+
+// throttle duration for requerying to prevent excessive backend requests
+const REQUERY_THROTTLE_MS = 2000;
+
 export default function TabbedListView<TObject>({
   sessionContext,
   tabbedListViewContext,
 }: TabbedListViewProps<TObject>) {
-  // cache keys for session-based local caching of owned/shared lists
+  // cache keys for session-based local caching of each tab's first page, without a search,
   // to improve perceived load times on repeat visits
-  const sharedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "shared");
-  const ownedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "owned");
+  const cacheKeys: TabRecord<string> = {
+    owned: makeCacheKey(sessionContext.ApiUrl, "owned"),
+    shared: makeCacheKey(sessionContext.ApiUrl, "shared"),
+  };
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -88,14 +121,23 @@ export default function TabbedListView<TObject>({
   // they'd most recently been, which should help prevent jarring resizing when
   // the real data loads.
   // A list is loading until the first load completes, unless its cache already has its objects.
-  const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(() => readCache<TObject>(ownedListCacheKey) === null);
-  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(
-    () => readCache<TObject>(sharedListCacheKey) === null,
-  );
-  const [userListObjects, setUserListObjects] = useState<TObject[]>(() => readCache<TObject>(ownedListCacheKey) || []);
-  const [sharedListObjects, setSharedListObjects] = useState<TObject[]>(
-    () => readCache<TObject>(sharedListCacheKey) || [],
-  );
+  const [lists, setLists] = useState<TabRecord<TabList<TObject>>>(() => {
+    const initialList = (cacheKey: string): TabList<TObject> => {
+      const cached = readCache<TObject>(cacheKey);
+      return { objects: cached || [], isLoading: cached === null, pagination: null };
+    };
+    return { owned: initialList(cacheKeys.owned), shared: initialList(cacheKeys.shared) };
+  });
+
+  // each tab's requested page, and the search of both tabs. searchInput is the search as it is
+  // typed, and search follows it once typing pauses, so that every keystroke is not a request.
+  const [pages, setPages] = useState<TabRecord<number>>({ owned: 1, shared: 1 });
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+
+  // only the latest request of a tab is shown, when several are in flight, e.g. when the user
+  // pages quickly, or a requery and a page change overlap.
+  const latestRequest = useRef<TabRecord<number>>({ owned: 0, shared: 0 });
 
   // for sizing the skeleton loaders that are rendered if no cached data is available
   const maxGhostRows = 25;
@@ -114,49 +156,61 @@ export default function TabbedListView<TObject>({
     sessionStorage.setItem("viewMode", mode);
   };
 
-  // throttle duration for requerying to prevent excessive backend requests
-  const REQUERY_THROTTLE_MS = 2000;
   const requeryRef = useRef<number | null>(null);
 
-  // load both owned and shared lists, on mount, whenever the session context changes, and on requery.
+  // load a page of a tab's objects that match the search.
   // invalidateCache: whether the backend (Django-Redis) cache should be invalidated, e.g. after a
   // clone, rename or delete. It is a parameter, rather than state, so that a requery's load sees it.
   // isActive: whether the results are still wanted; a load that a newer one replaced, or that
   // finishes after the component unmounts, is ignored.
-  const handleLoad = useCallback(
-    (invalidateCache: boolean, isActive: () => boolean = () => true): Promise<void> => {
+  const loadTab = useCallback(
+    (
+      tab: TabKey,
+      page: number,
+      tabSearch: string,
+      invalidateCache: boolean,
+      isActive: () => boolean = () => true,
+    ): Promise<void> => {
+      const request = ++latestRequest.current[tab];
       console.debug(
-        `${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCache=${invalidateCache}`,
+        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", invalidateCache=${invalidateCache}`,
       );
-      return load<TObject>(sessionContext, invalidateCache, "owned", setErrorMessage)
-        .then((ownedObjects) => {
-          if (!isActive()) return;
-          console.debug(
-            `${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`,
-            ownedObjects,
-          );
-          setUserListObjects(ownedObjects);
-          writeCache(ownedListCacheKey, ownedObjects);
-          setIsLoadingOwned(false);
-          return load<TObject>(sessionContext, invalidateCache, "shared", setErrorMessage);
-        })
-        .then((sharedObjects) => {
-          if (!sharedObjects || !isActive()) return;
-          console.debug(
-            `${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`,
-            sharedObjects,
-          );
-          setSharedListObjects(sharedObjects);
-          writeCache(sharedListCacheKey, sharedObjects);
-          setIsLoadingShared(false);
-        });
+      return load<TObject>(sessionContext, invalidateCache, tab, setErrorMessage, { page, search: tabSearch }).then(
+        ({ objects, pagination }) => {
+          if (!isActive() || request !== latestRequest.current[tab]) return;
+          console.debug(`${loggerPrefix} loadTab() received ${tab} objects:`, objects, pagination);
+          setLists((prev) => ({ ...prev, [tab]: { objects, isLoading: false, pagination } }));
+          if (page === 1 && !tabSearch) {
+            writeCache(makeCacheKey(sessionContext.ApiUrl, tab), objects);
+          }
+        },
+      );
     },
-    [sessionContext, ownedListCacheKey, sharedListCacheKey],
+    [sessionContext],
   );
+
+  const onPage = (page: number) => {
+    console.debug(`${loggerPrefix} onPage() going to page ${page} of the ${activeTab} objects`);
+    setLists((prev) => withLoading(prev, [activeTab]));
+    setPages((prev) => ({ ...prev, [activeTab]: page }));
+  };
+
+  // request the search once typing pauses, from the first page of each tab.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const requested = searchInput.trim();
+      if (requested === search) return;
+      console.debug(`${loggerPrefix} search changed to "${requested}", reloading the first page of each tab`);
+      setLists((prev) => withLoading(prev, TAB_KEYS));
+      setPages({ owned: 1, shared: 1 });
+      setSearch(requested);
+    }, SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput, search]);
 
   const onRequery = () => {
     console.debug(`${loggerPrefix} onRequery() called, reloading data and invalidating the backend cache`);
-    if (isLoadingOwned || isLoadingShared) {
+    if (lists.owned.isLoading || lists.shared.isLoading) {
       return;
     }
     // throttle to prevent excessive requerying if user clicks multiple times in a short span
@@ -165,21 +219,27 @@ export default function TabbedListView<TObject>({
       return;
     }
     requeryRef.current = now;
-    void handleLoad(true);
+    TAB_KEYS.forEach((tab) => void loadTab(tab, pages[tab], search, true));
   };
 
-  // the cached objects, if any, are shown at once (see the state initializers above), and
-  // replaced by the freshly loaded ones.
+  // load each tab on mount, whenever the session context changes, and whenever its page or the
+  // search changes. The cached objects, if any, are shown at once (see the state initializers
+  // above), and replaced by the freshly loaded ones.
   useEffect(() => {
-    console.debug(
-      `${loggerPrefix} useEffect() triggered on mount/sessionContext change, loading data with handleLoad()`,
-    );
     let active = true;
-    void handleLoad(false, () => active);
+    void loadTab("owned", pages.owned, search, false, () => active);
     return () => {
       active = false;
     };
-  }, [handleLoad]);
+  }, [loadTab, pages.owned, search]);
+
+  useEffect(() => {
+    let active = true;
+    void loadTab("shared", pages.shared, search, false, () => active);
+    return () => {
+      active = false;
+    };
+  }, [loadTab, pages.shared, search]);
 
   if (errorMessage) {
     return (
@@ -189,44 +249,44 @@ export default function TabbedListView<TObject>({
     );
   }
 
+  const list = lists[activeTab];
+  const ghostRows = activeTab === "owned" ? userGhostCount : sharedGhostCount;
+
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
       <div className="card-header rounded align-items-start ps-3" data-bs-theme="light">
         <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabbedListViewContext.tabs} />
       </div>
       <div className="m-0 p-0 card-body list-view">
-        <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pe-3">
+          <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+          <SearchBox
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder={`Search ${tabbedListViewContext.objectTypeName}s`}
+          />
+        </div>
 
-        {activeTab === "owned" ? (
-          viewMode === "list" ? (
-            <tabbedListViewContext.ListView
-              isLoading={isLoadingOwned}
-              ghostRows={userGhostCount}
-              sessionContext={sessionContext}
-              objects={userListObjects}
-              onRequery={onRequery}
-            />
-          ) : (
-            <tabbedListViewContext.CardView
-              sessionContext={sessionContext}
-              objects={userListObjects}
-              onRequery={onRequery}
-            />
-          )
-        ) : viewMode === "list" ? (
+        {viewMode === "list" ? (
           <tabbedListViewContext.ListView
-            isLoading={isLoadingShared}
-            ghostRows={sharedGhostCount}
+            key={activeTab}
+            isLoading={list.isLoading}
+            ghostRows={ghostRows}
             sessionContext={sessionContext}
-            objects={sharedListObjects}
+            objects={list.objects}
             onRequery={onRequery}
           />
         ) : (
           <tabbedListViewContext.CardView
+            key={activeTab}
             sessionContext={sessionContext}
-            objects={sharedListObjects}
+            objects={list.objects}
             onRequery={onRequery}
           />
+        )}
+
+        {list.pagination && list.pagination.count > 0 && (
+          <PaginationControls pagination={list.pagination} disabled={list.isLoading} onPage={onPage} />
         )}
       </div>
     </div>
