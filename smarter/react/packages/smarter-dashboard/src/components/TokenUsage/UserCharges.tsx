@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import type { SessionContext } from "@smarter/common";
 
-import "./styles.css";
+import "@/components/TokenUsage/styles.css";
 
 // recharts is a large dependency and is only needed for this chart, so it's
 // loaded in its own chunk instead of bloating the main app bundle.
-const TokenUsageChart = lazy(() => import("./Chart"));
+const TokenUsageChart = lazy(() => import("@/components/TokenUsage/Chart"));
 
 interface UserUsageProps {
   sessionContext: SessionContext;

@@ -1,10 +1,10 @@
 import { lazy, Suspense } from "react";
 import type { SessionContext } from "@smarter/common";
 
-import "./styles.css";
+import "@/components/BudgetVsActual/styles.css";
 
 // recharts is a large dependency, so the chart is loaded in its own chunk.
-const BudgetVsActualChart = lazy(() => import("./Chart"));
+const BudgetVsActualChart = lazy(() => import("@/components/BudgetVsActual/Chart"));
 
 interface BudgetVsActualProps {
   sessionContext: SessionContext;

@@ -7,7 +7,7 @@ import { ACTIONS_URL as BASE, makeObject, sessionContext } from "@/mocks/fixture
 import { actionHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import { Toolbar } from "./Component";
+import { Toolbar } from "@/components/Toolbar/Component";
 
 function renderToolbar(orchestrator = makeObject(1, { name: "first_example" })) {
   const onRequery = vi.fn();
@@ -84,5 +84,20 @@ describe("Toolbar", () => {
   it("disables deleting one that cannot be deleted", () => {
     renderToolbar(makeObject(3, { canDelete: false }));
     expect(screen.getByRole("button", { name: /You can't delete this orchestrator/ })).toBeDisabled();
+  });
+
+  it("starts renaming one without a name from an empty name", async () => {
+    const { user } = renderToolbar(makeObject(1, { name: "" }));
+    await user.click(screen.getByRole("button", { name: /^Rename:/ }));
+    expect(screen.getByPlaceholderText("Enter new orchestrator name")).toHaveValue("");
+  });
+
+  it("shows the status of a failed action without an error message", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    server.use(http.post(`${BASE}delete/:id/`, () => new HttpResponse("oops", { status: 500, statusText: "Oops" })));
+    const { user } = renderToolbar();
+    await user.click(screen.getByRole("button", { name: /^Delete:/ }));
+    await user.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByRole("dialog", { name: /Error/ })).toHaveTextContent(/\(500\): Oops/);
   });
 });

@@ -8,7 +8,7 @@ from django.urls import reverse
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.urls import InfrastructureReverseNames
-from smarter.apps.infrastructure.views.listview import summary
+from smarter.apps.infrastructure.views.listview import DEFAULT_PAGE_SIZE, summary
 
 
 def url(name: str) -> str:
@@ -74,21 +74,61 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         self.assertEqual(ours[0]["status"], "destroyed")
         self.assertIsNotNone(ours[0]["destroyedAt"])
 
-    def test_list_api_limit(self):
-        self.client.force_login(self.admin_user)
-        for body, expected in (({"limit": 1}, 1), ({"limit": 0}, None), ({"limit": "x"}, None)):
-            with self.subTest(body=body):
-                response = self.client.post(
-                    url(InfrastructureReverseNames.listview_api), data=json.dumps(body), content_type="application/json"
-                )
-                if expected is None:
-                    self.assertGreaterEqual(len(response.json()["objects"]), 2)
-                else:
-                    self.assertEqual(len(response.json()["objects"]), expected)
+    def post(self, body) -> dict:
         response = self.client.post(
-            url(InfrastructureReverseNames.listview_api), data="not json", content_type="application/json"
+            url(InfrastructureReverseNames.listview_api),
+            data=body if isinstance(body, str) else json.dumps(body),
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
+        return response.json()
+
+    def test_list_api_filters(self):
+        """The list API filters the whole ledger, by status, billable, provider, type and text."""
+        self.client.force_login(self.admin_user)
+        mine = {"provider": "test"}
+        cases = (
+            ({}, ["dns.record", "dns.zone"]),
+            ({"status": "active"}, ["dns.zone"]),
+            ({"status": "destroyed"}, ["dns.record"]),
+            ({"status": "all", "billableOnly": True}, ["dns.zone"]),
+            ({"resourceType": "dns.record"}, ["dns.record"]),
+            ({"text": "  WWW.  "}, ["dns.record"]),
+            ({"text": "z1"}, ["dns.zone"]),
+            ({"text": "nothing matches this"}, []),
+        )
+        for body, expected in cases:
+            with self.subTest(body=body):
+                data = self.post({**mine, **body})
+                self.assertEqual([o["resourceType"] for o in data["objects"]], expected)
+                self.assertEqual(data["pagination"]["count"], len(expected))
+        self.assertEqual(self.post({"provider": "nobody"})["objects"], [])
+
+    def test_list_api_choices(self):
+        """The providers and types of the whole ledger, whatever the filters, for the dropdowns."""
+        self.client.force_login(self.admin_user)
+        data = self.post({"provider": "nobody"})
+        self.assertIn("test", data["choices"]["providers"])
+        self.assertIn("dns.zone", data["choices"]["resourceTypes"])
+        self.assertEqual(data["choices"]["resourceTypes"], sorted(set(data["choices"]["resourceTypes"])))
+
+    def test_list_api_pagination(self):
+        self.client.force_login(self.admin_user)
+        mine = {"provider": "test"}
+        data = self.post({**mine, "pageSize": 1})
+        self.assertEqual(data["pagination"], {"page": 1, "pageSize": 1, "numPages": 2, "count": 2})
+        self.assertEqual(data["objects"][0]["resourceType"], "dns.record")
+        data = self.post({**mine, "pageSize": 1, "page": 2})
+        self.assertEqual(data["objects"][0]["resourceType"], "dns.zone")
+        # a page past the last is the last.
+        self.assertEqual(self.post({**mine, "pageSize": 1, "page": 99})["pagination"]["page"], 2)
+        for body in ({"pageSize": 0}, {"pageSize": "x"}, {"pageSize": True}, {"pageSize": 10_000}, {"page": -1}):
+            with self.subTest(body=body):
+                pagination = self.post({**mine, **body})["pagination"]
+                self.assertEqual((pagination["page"], pagination["pageSize"]), (1, DEFAULT_PAGE_SIZE))
+        for body in ("not json", "[]"):
+            with self.subTest(body=body):
+                self.assertEqual(self.post(body)["pagination"]["page"], 1)
 
     def test_list_api_is_for_superusers(self):
         self.client.force_login(self.non_admin_user)

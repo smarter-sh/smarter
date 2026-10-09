@@ -3,7 +3,7 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import Dashboard from "./components/Dashboard";
+import Dashboard from "@/components/Dashboard";
 import type { AppContextInterface } from "@/main";
 
 function App({ appContext }: { appContext: AppContextInterface }) {

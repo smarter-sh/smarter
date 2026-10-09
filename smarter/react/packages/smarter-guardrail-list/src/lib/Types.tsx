@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Guardrail Definition
@@ -101,4 +101,5 @@ export interface GuardrailListViewProps {
   sessionContext: SessionContext;
   objects: Guardrail[];
   onRequery: () => void;
+  sorting?: Sorting;
 }

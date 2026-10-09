@@ -55,8 +55,7 @@ spec:
       Lead with a sentence or two that answers the question, then the code, then a short
       explanation, as a bulleted list, of anything that is not obvious. Write file names,
       functions, classes and variables in inline code. Use a table to compare approaches or
-      languages. Do not use HTML, LaTeX or Mermaid, which the chat window does not render,
-      and NEVER invent image urls.
+      languages.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
@@ -64,6 +63,7 @@ spec:
   functions: []
   plugins:
     - code_review
+    - image_search
   guardrails:
     - prompt_injection_keyword_input
     - secrets_redaction_input

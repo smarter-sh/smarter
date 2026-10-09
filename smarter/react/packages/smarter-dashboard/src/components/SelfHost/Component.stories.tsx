@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import SelfHost from "./Component";
+import SelfHost from "@/components/SelfHost/Component";
 
 /** Self-hosting Smarter. */
 const meta = {

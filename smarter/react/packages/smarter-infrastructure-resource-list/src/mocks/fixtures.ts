@@ -4,7 +4,7 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { InfrastructureResource, InfrastructureResourceListResponse } from "@/lib/Types";
+import type { InfrastructureResource, InfrastructureResourceSummary } from "@/lib/Types";
 
 export const API_URL = "/infrastructure/react-integration/api/listview/";
 
@@ -63,9 +63,41 @@ export const resources: InfrastructureResource[] = [
     destroyedAt: "2026-10-03T08:00:00Z",
   }),
   makeResource({ id: 5, provider: "memory", resourceName: "local.example.com", resourceId: "Z000000000001" }),
+  makeResource({
+    id: 6,
+    service: "kubernetes",
+    resourceType: "kubernetes.node",
+    resourceName: "ip-192-168-1-1.ec2.internal",
+    resourceId: "aws:///us-east-1a/i-0abc",
+  }),
+  makeResource({
+    id: 7,
+    service: "kubernetes",
+    resourceType: "kubernetes.ingress",
+    resourceName: "example.3141-5926-5359.api.example.com",
+    resourceId: "k8s-ingress.elb.us-east-1.amazonaws.com",
+    billable: false,
+  }),
 ];
 
-export const listResponse: InfrastructureResourceListResponse = {
-  summary: { total: 5, active: 4, activeBillable: 2, destroyed: 1 },
-  objects: resources,
-};
+/** Many nodes, for pagination. */
+export const manyResources: InfrastructureResource[] = Array.from({ length: 120 }, (_, index) =>
+  makeResource({
+    id: 1000 + index,
+    service: "kubernetes",
+    resourceType: "kubernetes.node",
+    resourceName: `node-${index + 1}`,
+    resourceId: `aws:///us-east-1a/i-${index + 1}`,
+  }),
+);
+
+/** The summary of some resources, as the api counts them. */
+export function summarize(objects: InfrastructureResource[]): InfrastructureResourceSummary {
+  const active = objects.filter((resource) => resource.status === "active");
+  return {
+    total: objects.length,
+    active: active.length,
+    activeBillable: active.filter((resource) => resource.billable).length,
+    destroyed: objects.length - active.length,
+  };
+}

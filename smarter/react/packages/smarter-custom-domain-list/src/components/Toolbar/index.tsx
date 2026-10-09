@@ -1,2 +1,2 @@
-import { Toolbar } from "./Component";
+import { Toolbar } from "@/components/Toolbar/Component";
 export { Toolbar };

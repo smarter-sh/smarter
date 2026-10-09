@@ -1,0 +1,60 @@
+---
+# An ImageSearchPlugin for kid-friendly image searches. Brave's safe search is
+# strict, and images only come from Wikimedia Commons, whose media are all in the
+# public domain or freely licensed. Thumbnails narrower than 400 pixels are
+# skipped. The tool returns a JSON list of https image urls, each of which has
+# been checked to respond with HTTP 200.
+#
+# Requires a Brave Search API key, in the Smarter Secret brave_search_api_key.
+# Without it the plugin returns an empty list, and logs how to create it.
+#
+# Experimental: the ImageSearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: ImageSearchPlugin
+metadata:
+  name: safe_image_search
+  pluginClass: imagesearch
+  description: Finds kid-friendly, freely licensed images from Wikimedia Commons. Use it to illustrate answers for children.
+  version: 0.1.0
+  tags:
+    - imagesearch
+    - kid-friendly
+  annotations:
+    - smarter.sh/safe-image-search/use-case: education
+spec:
+  selector:
+    directive: search_terms
+    # Complete search terms that will trigger the llmclient to use your customized system prompt.
+    searchTerms:
+      - kid-friendly
+      - children
+      - educational
+      - safe
+      - family-friendly
+      - wholesome
+      - child-appropriate
+      - age-appropriate
+      - child-safe
+      - child-friendly
+      - family-safe
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a friendly assistant for children. When a picture would help to
+      explain your answer, search for images, and include one or two of them in
+      your answer as Markdown images.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  imageSearchData:
+    apiKey: brave_search_api_key
+    searchParams:
+      count: 5
+      safesearch: strict
+    filters:
+      minWidth: 400
+      allowedDomains:
+        - wikimedia.org
+    validateUrls: true
+    timeout: 10

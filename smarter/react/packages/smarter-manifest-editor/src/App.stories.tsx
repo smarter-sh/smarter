@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SECRET_IN_USE_YAML, appProps } from "@/mocks/fixtures";
 import { cliHandlers, invalidHandler } from "@/mocks/handlers";
 
-import App from "./App";
+import App from "@/App";
 
 /** Edit, validate, save, clone and delete a resource's manifest. */
 const meta = {

@@ -14,7 +14,10 @@ new chat button, a blank page, starts a new chat session, and clears the Server 
 
 The Sandbox mode / Production mode button shows and hides the backend's own messages in the chat
 thread: the system prompt, tool results, and Smarter's notes about the plugins it selected. In
-production mode, the thread is the conversation as the LLMClient's users see it. While a prompt runs, the chat displays
+production mode, the thread is the conversation as the LLMClient's users see it. The Server Logs tab
+follows the mode: in sandbox mode it streams every log record, DEBUG included, and in production mode
+only the records at the platform's log level (``smarter_settings.log_level``) and above. Switching modes
+reconnects the stream, which replays the recent history at the new level. While a prompt runs, the chat displays
 its progress: each request to the LLM, and each tool, plugin and MCP server that the LLM calls.
 Those steps are replaced by the response when it arrives. A failed prompt, for example one that the
 LLM provider rejects, is displayed in the chat thread, with the provider's error message.
@@ -29,6 +32,19 @@ displayed as you typed them, except for their links and images. Raw html is disp
 and ``[![alt](url)](href)`` is an image that links to ``href``. Links open in a new tab. Urls must be
 ``http(s)`` or relative to the page. Images may also be base64 ``png``, ``jpeg``, ``gif`` or ``webp``
 data urls, for example from a tool that generates them.
+
+Math, written in LaTeX, is typeset by `KaTeX <https://katex.org>`__: ``\( ... \)`` is inline math,
+and ``\[ ... \]`` or ``$$ ... $$`` is an equation displayed on a line of its own, which scrolls
+sideways if it is wider than its chat bubble. A single dollar sign is not math, so prices stay as
+text. Math in inline code and code blocks stays as code, and LaTeX that KaTeX cannot typeset, such as
+an equation that is still streaming, is displayed as its source.
+
+A fenced code block whose language is ``mermaid`` is drawn as a `Mermaid <https://mermaid.js.org>`__
+diagram, such as a flowchart or a sequence diagram, in its code block, whose **Code** button shows
+its source instead, and back. A diagram that Mermaid cannot draw, for example because of a syntax
+error, stays as its code. Mermaid is large, so it is downloaded only when a message first has a
+diagram. It runs at its ``strict`` security level, with plain text labels, and its svg is sanitized
+again before it is displayed, because the diagram comes from the LLM.
 
 .. raw:: html
 
@@ -125,13 +141,17 @@ status of the stream itself is always 200, and the prompt's own status is in its
 .. code-block:: text
 
   event: progress
-  data: {"type": "tool_requested", "message": "Calling tool get_current_weather", "tool": "get_current_weather", "arguments": "{...}"}
+  data: {"type": "tool_requested", "message": "Calling tool stackademy_sql", "tool": "stackademy_sql", "function": "smarter_plugin_0000000016", "arguments": "{...}"}
 
   event: progress
   data: {"type": "mcp_tool_called", "message": "Calling MCP server github: search_code", "mcpclient": "github", "tool": "search_code", "arguments": "{...}"}
 
   event: result
   data: {"status": 200, "response": {"data": {"statusCode": 200, "body": "..."}}}
+
+A tool's ``tool`` is its name as users know it: a plugin's name, an MCP server's tool, or a
+built-in function such as ``get_current_weather``. ``function`` is the function name that the LLM
+called, which for a plugin is the symbolic ``smarter_plugin_<id>``.
 
 The prompt itself runs synchronously in a worker thread, exactly as it does for a JSON client, so
 its history, charges and journal are the same. Its progress comes from the signals that the prompt
@@ -158,6 +178,7 @@ appear. React 19 is a peer dependency.
   import { createRoot } from "react-dom/client";
   import { SmarterChat } from "@smarter.sh/ui-chat";
   import "@smarter.sh/ui-chat/dist/ui-chat.css";
+  import "katex/dist/katex.min.css";
 
   createRoot(document.getElementById("chat")!).render(
     <SmarterChat
@@ -166,6 +187,18 @@ appear. React 19 is a peer dependency.
       showConsole={false}
     />,
   );
+
+``katex/dist/katex.min.css`` is the stylesheet and fonts of the math in the LLM's responses.
+``katex`` is installed with ``@smarter.sh/ui-chat``, and your bundler copies its fonts, which
+browsers download only when an equation uses them. Without it, math is displayed twice: as plain
+text, and as unstyled MathML.
+
+``mermaid`` is also installed with ``@smarter.sh/ui-chat``, which imports it only when a message has
+a diagram, so your bundler splits it into chunks that are downloaded only then. The UMD bundle, for
+pages without a bundler, can't import it, and displays diagrams as code, unless the page maps
+``mermaid`` to Mermaid's ES module with an import map, for example to
+``https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs``, which is the latest release
+of Mermaid 11, the major version that Smarter Chat uses.
 
 ``apiUrl`` is the url of a deployed LLMClient's api. Its other props are optional:
 
@@ -178,7 +211,9 @@ appear. React 19 is a peer dependency.
   ``cookieDomain``: the cookies that the chat reads and sets.
 - ``streamProgress``: display the progress of a running prompt. It defaults to ``true``. A Smarter
   platform that doesn't stream answers with JSON, as before.
-- ``logStreamUrl``: the url of a server log stream, for the Console's Server Logs tab.
+- ``logStreamUrl``: the url of a server log stream, for the Console's Server Logs tab. In sandbox
+  mode, the chat adds ``?level=DEBUG`` to it. Without a ``level``, the stream sends the records at
+  the platform's log level and above.
 
 Requests from your page to the Smarter api are cross-origin, so your page's origin must be allowed
 by the Smarter platform's CORS configuration. The chat's custom ``X-Smarter-*`` request headers are

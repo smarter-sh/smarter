@@ -18,7 +18,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
 export type TabKey = "user" | "shared";
 
 export type Plugin = {
@@ -62,10 +62,10 @@ export type LLMClient = {
   sandboxUrl: string;
   hostname: string;
   url: string;
-  urlLLMClient: string;
+  urlLlmclient: string;
   urlChatConfig: string;
   urlChatapp: string;
-  urlManifest: string; // ADD ME PLEASE
+  manifestUrl: string; // the web console page that renders the llmclient's manifest
   ready: boolean;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   deployed: boolean;
@@ -103,4 +103,5 @@ export interface LLMClientListViewProps {
   sessionContext: SessionContext;
   objects: LLMClient[];
   onRequery: () => void;
+  sorting?: Sorting;
 }

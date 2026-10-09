@@ -52,8 +52,7 @@ spec:
       findings, tables to compare options, figures or sources, and block quotes for direct
       quotations. When a source that you read has a chart, figure or photo that supports
       your answer, show it with markdown image syntax, ![description](https://...), using
-      the image url from that source, and cite the source beneath it. NEVER invent an image
-      url. Do not use HTML or LaTeX, which the chat window does not render.
+      the image url from that source, and cite the source beneath it.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
@@ -62,6 +61,7 @@ spec:
   plugins:
     - url_reader
     - anthropic_pdf
+    - image_search
   mcpClients:
     - exa
   guardrails:

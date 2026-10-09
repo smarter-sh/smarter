@@ -248,6 +248,7 @@ class TestApplicationEntryPoints(SmarterTestBase):
             schedule = module.app.conf.beat_schedule
             self.assertIn("aggregate-prompt-history", schedule)
             self.assertEqual(schedule["refresh-llmhost-status"]["options"], module.INFRASTRUCTURE)
+            self.assertEqual(schedule["sync-infrastructure-inventory"]["options"], module.INFRASTRUCTURE)
             self.assertEqual(schedule["aggregate-charges"]["options"], module.OPERATIONAL)
             for entry in schedule.values():
                 self.assertTrue(entry["task"].startswith("smarter.apps."))

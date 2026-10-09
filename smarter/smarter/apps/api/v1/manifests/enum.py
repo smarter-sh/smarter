@@ -43,6 +43,9 @@ from smarter.apps.orchestrator.manifest.models.orchestrator.const import (
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
 )
+from smarter.apps.plugin.manifest.models.image_search_plugin.const import (
+    MANIFEST_KIND as IMAGESEARCHPLUGIN_MANIFEST_KIND,
+)
 from smarter.apps.plugin.manifest.models.skill_plugin.const import (
     MANIFEST_KIND as SKILLPLUGIN_MANIFEST_KIND,
 )
@@ -115,6 +118,7 @@ class SAMKinds(SmarterEnumAbstract):
         SKILL_PLUGIN: Skill plugin manifest.
         SQL_PLUGIN: SQL plugin manifest.
         WEBSEARCH_PLUGIN: Websearch plugin manifest. Experimental.
+        IMAGE_SEARCH_PLUGIN: Image search plugin manifest. Experimental.
         API_CONNECTION: API connection manifest.
         SQL_CONNECTION: SQL connection manifest.
         ACCOUNT: Account manifest.
@@ -164,6 +168,7 @@ class SAMKinds(SmarterEnumAbstract):
     SKILL_PLUGIN = SKILLPLUGIN_MANIFEST_KIND
     SQL_PLUGIN = SQLPLUGIN_MANIFEST_KIND
     WEBSEARCH_PLUGIN = WEBSEARCHPLUGIN_MANIFEST_KIND
+    IMAGE_SEARCH_PLUGIN = IMAGESEARCHPLUGIN_MANIFEST_KIND
 
     # connections
     API_CONNECTION = APICONNECTION_MANIFEST_KIND
@@ -233,7 +238,14 @@ class SAMKinds(SmarterEnumAbstract):
 
     @classmethod
     def all_plugins(cls):
-        return [cls.STATIC_PLUGIN, cls.API_PLUGIN, cls.SKILL_PLUGIN, cls.SQL_PLUGIN, cls.WEBSEARCH_PLUGIN]
+        return [
+            cls.STATIC_PLUGIN,
+            cls.API_PLUGIN,
+            cls.SKILL_PLUGIN,
+            cls.SQL_PLUGIN,
+            cls.WEBSEARCH_PLUGIN,
+            cls.IMAGE_SEARCH_PLUGIN,
+        ]
 
     @classmethod
     def all_connections(cls):

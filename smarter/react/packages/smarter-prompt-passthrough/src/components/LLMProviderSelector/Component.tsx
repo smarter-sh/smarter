@@ -1,6 +1,6 @@
 import { type LLMProvider } from "@/components/LLMProviders";
 
-import "./styles.css";
+import "@/components/LLMProviderSelector/styles.css";
 
 interface LLMProviderSelectorProps {
   providersJson: LLMProvider[];

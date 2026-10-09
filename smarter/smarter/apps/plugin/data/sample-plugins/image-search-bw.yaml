@@ -1,0 +1,62 @@
+---
+# An ImageSearchPlugin for high quality black and white photographs. The terms
+# "black and white photograph" are appended to the LLM's query, so that a query
+# for "formula 1 race cars" searches for "formula 1 race cars black and white
+# photograph". Only jpg and png images at least 1200 pixels wide are returned. Shopping websites, whose
+# product photos of prints would otherwise dominate the results, are blocked.
+# The tool returns a JSON list of https image urls, each of which has been
+# checked to respond with HTTP 200.
+#
+# Requires a Brave Search API key, in the Smarter Secret brave_search_api_key.
+# Without it the plugin returns an empty list, and logs how to create it.
+#
+# Experimental: the ImageSearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: ImageSearchPlugin
+metadata:
+  name: bw_image_search
+  pluginClass: imagesearch
+  description: Finds high resolution, black and white photographs.
+  version: 0.1.0
+  tags:
+    - imagesearch
+    - photography
+  annotations:
+    - smarter.sh/bw-image-search/use-case: photography
+spec:
+  selector:
+    directive: search_terms
+    # Complete search terms that will trigger the llmclient to use your customized system prompt.
+    searchTerms:
+      - black and white
+      - bw
+      - b&w
+      - monochrome
+      - monochromatic
+      - grayscale
+      - greyscale
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a photography curator. Search for black and white photographs that
+      match the user's request, and present them as Markdown images, each with a
+      short caption.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  imageSearchData:
+    queryTerms: black and white photograph
+    searchParams:
+      count: 10
+      safesearch: strict
+    filters:
+      fileType: jpg|png
+      minWidth: 1200
+      blockedDomains:
+        - etsy.com
+        - amazon.com
+        - ebay.com
+        - walmart.com
+        - pinterest.com
+    validateUrls: true

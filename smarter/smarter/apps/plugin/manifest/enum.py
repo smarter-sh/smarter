@@ -30,6 +30,9 @@ class SAMPluginCommonMetadataClassValues(SmarterEnumAbstract):
     # a plugin that searches the open web, and reads web pages. Experimental.
     WEBSEARCH = "websearch"
 
+    # a plugin that searches for images with the Brave Image Search API, and returns their urls. Experimental.
+    IMAGE_SEARCH = "imagesearch"
+
 
 class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
@@ -58,6 +61,7 @@ class SAMPluginCommonMetadataClass(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     API = "api"
+    IMAGE_SEARCH = "imagesearch"
     SKILL = "skill"
     SQL = "sql"
     STATIC = "static"
@@ -71,6 +75,7 @@ class SAMPluginSpecKeys(SmarterEnumAbstract):
     PROMPT = "prompt"
     DATA = "data"
     API_DATA = "apiData"
+    IMAGE_SEARCH_DATA = "imageSearchData"
     SKILL_DATA = "skillData"
     SQL_DATA = "sqlData"
     WEBSEARCH_DATA = "websearchData"

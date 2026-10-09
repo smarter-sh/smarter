@@ -11,7 +11,7 @@ metadata:
     - code
   annotations:
     - smarter.sh/llmclient/use-case: MCP server development
-    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, ImageSearchPlugin, Guardrail
     - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
@@ -53,8 +53,7 @@ spec:
       fenced code blocks, with the language named. Put each security risk in a block quote
       that begins with ⚠️. When a page that you read has a diagram that clarifies the
       protocol, show it with markdown image syntax, ![description](https://...), using the
-      image url from that page. NEVER invent an image url. Do not use HTML or Mermaid, which
-      the chat window does not render.
+      image url from that page, or that your image search returned.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
@@ -64,6 +63,7 @@ spec:
     - anthropic_mcp_builder
     - code_review
     - url_reader
+    - image_search
   mcpClients:
     - deepwiki
     - gitmcp
