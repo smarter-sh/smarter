@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.19.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.4...v0.19.0-alpha.5) (2026-10-09)
+
+### Features
+
+* **react:** sort list view columns on the server, across all pages ([742c2f3](https://github.com/smarter-sh/smarter/commit/742c2f3769a4c0066fbd2fa115e8d7b636cf123c))
+
 ## [0.19.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.3...v0.19.0-alpha.4) (2026-10-09)
 
 ### Features
