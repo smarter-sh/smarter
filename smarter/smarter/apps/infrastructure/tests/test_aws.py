@@ -40,6 +40,7 @@ from smarter.apps.infrastructure.providers.aws.helpers.route53 import (
     AWSRoute53,
     hosted_zone_id,
 )
+from smarter.apps.infrastructure.services.base import DiscoveredResource
 from smarter.apps.infrastructure.services.dns import DNSRecord
 from smarter.apps.infrastructure.signals import (
     infrastructure_authenticated,
@@ -253,6 +254,33 @@ class TestAWSProvider(AWSTestBase):
         with patch.object(AWSEks, "update_kubeconfig", return_value=True):
             self.assertTrue(provider.update_kubeconfig())
 
+    def test_kubernetes_cluster_resources(self):
+        provider = self.aws_provider()
+        eks = connect(AWSEks(), MagicMock())
+        provider._eks = eks  # pylint: disable=protected-access
+        with patch.object(AWSEks, "get_cluster_resources") as get:
+            get.return_value = {
+                "cluster": [{"name": "cluster", "arn": "arn:cluster"}],
+                "addons": [{"name": "coredns", "arn": "arn:addon"}, {"name": "", "arn": ""}],
+                "nodegroups": [{"name": "default", "arn": "arn:nodegroup"}],
+            }
+            resources = provider.get_kubernetes_cluster_resources()
+            self.assertEqual(
+                resources["kubernetes.cluster"],
+                [DiscoveredResource("kubernetes.cluster", "cluster", "arn:cluster", billable=True)],
+            )
+            self.assertEqual(
+                resources["kubernetes.addon"], [DiscoveredResource("kubernetes.addon", "coredns", "arn:addon")]
+            )
+            self.assertFalse(resources["kubernetes.nodegroup"][0].billable)
+            get.side_effect = AWSNotReadyError("aws_eks_cluster_name is not set.")
+            self.assertEqual(provider.get_kubernetes_cluster_resources(), {})
+            get.side_effect = RuntimeError("AccessDenied")
+            self.assertEqual(provider.get_kubernetes_cluster_resources(), {})
+
+    def test_kubernetes_cluster_resources_not_ready(self):
+        self.assertEqual(AWSProvider().get_kubernetes_cluster_resources(), {})
+
     def test_kubernetes_cluster_not_ready(self):
         with self.assertRaises(InfrastructureNotReadyError):
             AWSProvider().get_kubernetes_cluster_info()
@@ -447,6 +475,39 @@ class TestAWSHelpers(AWSTestBase):
             info = eks.get_kubernetes_info()
         eks.client.describe_cluster.assert_called_once_with(name="cluster")
         self.assertEqual(info["status"], "ACTIVE")
+
+    def test_get_cluster_resources(self):
+        eks = connect(AWSEks(), MagicMock())
+        eks.client.describe_cluster.return_value = {"cluster": {"name": "cluster", "arn": "arn:cluster"}}
+        pages = {
+            "list_addons": [{"addons": ["coredns", "vpc-cni"]}],
+            "list_nodegroups": [{"nodegroups": ["default"]}, {"nodegroups": []}],
+        }
+        eks.client.get_paginator.side_effect = lambda name: Paginator(lambda clusterName: pages[name])
+        eks.client.describe_addon.side_effect = lambda clusterName, addonName: {
+            "addon": {"addonName": addonName, "addonArn": f"arn:addon/{addonName}"}
+        }
+        eks.client.describe_nodegroup.side_effect = lambda clusterName, nodegroupName: {
+            "nodegroup": {"nodegroupName": nodegroupName, "nodegroupArn": f"arn:nodegroup/{nodegroupName}"}
+        }
+        with patch(f"{HELPERS}.eks.smarter_settings") as settings:
+            settings.aws_eks_cluster_name = "cluster"
+            resources = eks.get_cluster_resources()
+        self.assertEqual(resources["cluster"], [{"name": "cluster", "arn": "arn:cluster"}])
+        self.assertEqual([a["name"] for a in resources["addons"]], ["coredns", "vpc-cni"])
+        self.assertEqual(resources["nodegroups"], [{"name": "default", "arn": "arn:nodegroup/default"}])
+        eks.client.describe_addon.assert_any_call(clusterName="cluster", addonName="vpc-cni")
+
+    def test_get_cluster_resources_not_ready(self):
+        with patch.object(AWSEks, "ready", new_callable=PropertyMock, return_value=False):
+            with self.assertRaises(AWSNotReadyError):
+                AWSEks().get_cluster_resources()
+        eks = connect(AWSEks(), MagicMock())
+        with patch(f"{HELPERS}.eks.smarter_settings") as settings, patch.object(AWSEks, "_cluster_name_warned", True):
+            settings.aws_eks_cluster_name = None
+            with self.assertRaises(AWSNotReadyError):
+                eks.get_cluster_resources()
+        eks.client.describe_cluster.assert_not_called()
 
     def test_get_token(self):
         """The EKS token is an STS GetCallerIdentity url, presigned for the cluster, as aws eks get-token creates."""

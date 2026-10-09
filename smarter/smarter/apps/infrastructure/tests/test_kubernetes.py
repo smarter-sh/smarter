@@ -402,6 +402,32 @@ class TestIngressResources(KubernetesTestBase):
         self.assertEqual(set(self.kubectl.resources), {("namespace", NAMESPACE)})
 
 
+class TestFindResources(KubernetesTestBase):
+    """Test find_resources(), which tells a kind with no resources from one that could not be listed."""
+
+    def test_find_resources(self):
+        self.kubectl.resources[("node", "node-1")] = {"metadata": {"name": "node-1"}}
+        self.assertEqual(self.kubernetes.find_resources("node"), [{"metadata": {"name": "node-1"}}])
+        self.assertEqual(self.kubectl.commands[-1][1:5], ["get", "node", "-o", "json"])
+        self.assertEqual(self.kubernetes.find_resources("ingress", NAMESPACE), [])
+        self.assertEqual(self.kubectl.commands[-1][1:5], ["get", "ingress", "-n", NAMESPACE])
+
+    def test_cannot_list(self):
+        self.assertTrue(self.kubernetes.ready)
+        self.kubectl.fail = 'the server doesn\'t have a resource type "certificate"'
+        self.assertIsNone(self.kubernetes.find_resources("certificate", NAMESPACE))
+        self.kubectl.fail = None
+        for stdout in ("{not json", "[]", '{"items": "x"}'):
+            with self.subTest(stdout=stdout):
+                with patch(f"{MODULE}.subprocess.run", return_value=completed(stdout=stdout)):
+                    self.assertIsNone(self.kubernetes.find_resources("node"))
+
+    def test_not_ready(self):
+        self.provider.ready = False
+        kubernetes = KubectlKubernetesService(provider=self.provider, allow_in_tests=True)
+        self.assertIsNone(kubernetes.find_resources("node"))
+
+
 class TestBillableResources(InfrastructureTestBase):
     """Test billable_resources() and manifest_kinds()."""
 
