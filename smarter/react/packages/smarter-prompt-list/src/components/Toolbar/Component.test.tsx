@@ -18,7 +18,7 @@ function renderToolbar(llmclient = makeObject(1, { name: "first_example" })) {
 describe("Toolbar", () => {
   it("links to the manifest", () => {
     renderToolbar();
-    expect(screen.getByRole("link", { name: /^(Edit|Manifest):/ })).toHaveAttribute("href", makeObject(1).urlManifest);
+    expect(screen.getByRole("link", { name: /^(Edit|Manifest):/ })).toHaveAttribute("href", makeObject(1).manifestUrl);
   });
 
   it("deletes, then queries the list again", async () => {

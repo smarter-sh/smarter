@@ -42,6 +42,9 @@ from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
     SAMOrchestratorBroker,
 )
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
+from smarter.apps.plugin.manifest.brokers.image_search_plugin import (
+    SAMImageSearchPluginBroker,
+)
 from smarter.apps.plugin.manifest.brokers.skill_plugin import SAMSkillPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
@@ -137,6 +140,7 @@ class Brokers:
         SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
         SAMKinds.VECTORSEARCH.value: SAMVectorsearchBroker,
         SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPluginBroker,
+        SAMKinds.IMAGE_SEARCH_PLUGIN.value: SAMImageSearchPluginBroker,
     }
 
     @classmethod

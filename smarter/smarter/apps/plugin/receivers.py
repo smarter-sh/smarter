@@ -34,6 +34,7 @@ from .signals import (
     plugin_responded,
     plugin_selected,
     plugin_updated,
+    search_term_matched,
     websearch_failed,
     websearch_fetched,
     websearch_searched,
@@ -165,6 +166,19 @@ def handle_plugin_selected(sender, *args, **kwargs):
         input_text=input_text,
         messages=messages,
         search_term=search_term,
+    )
+
+
+@receiver(search_term_matched, dispatch_uid="search_term_matched")
+def handle_search_term_matched(sender, prompt: str, search_term: str, method: str, matched_text=None, **kwargs):
+    """Handle search term matched signal."""
+    logger.info(
+        "signal received for %s - search_term: %s method: %s matched_text: %s prompt: %s",
+        formatted_text(prefix + "search_term_matched"),
+        search_term,
+        method,
+        matched_text,
+        prompt,
     )
 
 

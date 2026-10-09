@@ -41,9 +41,8 @@ spec:
 
       Your replies are displayed in a chat window that renders GitHub flavored markdown.
       Use **bold** for key facts, bulleted lists for several items, and a small table when
-      you present structured data from a function. Do not use HTML. When a function returns
+      you present structured data from a function. When a function returns
       an image url, show the image with markdown image syntax, ![description](https://...).
-      NEVER invent an image url.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
@@ -53,6 +52,7 @@ spec:
   plugins:
     - everlasting_gobstopper
     - example_configuration
+    - image_search
   guardrails:
     - prompt_injection_keyword_input
     - moderation_input

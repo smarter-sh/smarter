@@ -1,0 +1,71 @@
+---
+# An open ImageSearchPlugin, which is always selected, and whose systemRole and
+# description tell the LLM to proactively include an image in any answer about
+# something that can be seen or drawn. The LLM sets every search
+# parameter in each tool call: the query, and, optionally, count (up to 20),
+# country, search_lang, safesearch and spellcheck. The searchParams below are the
+# defaults. Stock photo websites, whose images are watermarked previews, are
+# blocked, as are thumbnails narrower than 400 pixels. The tool returns a JSON
+# list of https image urls, each of which has been checked to respond with HTTP
+# 200.
+#
+# This is the image search plugin of the example LLMClients.
+#
+# Requires a Brave Search API key, in the Smarter Secret brave_search_api_key.
+# Without it the plugin returns an empty list, and logs how to create it.
+#
+# Experimental: the ImageSearchPlugin was designed and coded by Claude Code (Anthropic's
+# Claude Opus 5.5), with Lawrence McDaniel as co-author.
+apiVersion: smarter.sh/v1
+kind: ImageSearchPlugin
+metadata:
+  name: image_search
+  pluginClass: imagesearch
+  description: >
+    Searches the web for images. Call it before answering any question about
+    something that can be seen or drawn, such as a person, place, animal, object,
+    building, artwork, process, structure, pattern or map, and show an image in your
+    answer, even when the user did not ask for one.
+  version: 0.1.0
+  tags:
+    - imagesearch
+  annotations:
+    - smarter.sh/image-search/use-case: general
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      You have an image search tool. Use it proactively: answers that include a
+      relevant image are better than answers without one. ALWAYS call the image
+      search tool before you answer a question about anything that can be seen or
+      drawn, such as a person, place, animal, plant, object, building, artwork,
+      product, historical event, process, structure, pattern, map, chart or
+      diagram, even when the user did not ask for an image. Then show the best result
+      in your answer with Markdown image syntax, ![description](https://...), next to
+      the text that it illustrates. Skip the image search only for greetings, short
+      conversational replies, arithmetic, code, and other answers that no picture
+      would improve. If the search returns no images, answer without one.
+    model: gpt-6-luna
+    temperature: 1.0
+    maxTokens: 2048
+  imageSearchData:
+    apiKey: brave_search_api_key
+    llmSearchParams: true
+    searchParams:
+      count: 5
+      safesearch: strict
+    filters:
+      minWidth: 400
+      blockedDomains:
+        - gettyimages.com
+        - istockphoto.com
+        - shutterstock.com
+        - dreamstime.com
+        - alamy.com
+        - vecteezy.com
+        - 123rf.com
+        - depositphotos.com
+        - stock.adobe.com
+    validateUrls: true

@@ -17,6 +17,7 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 # plugin
 from ..models import PluginMeta
 from ..plugin.api import ApiPlugin
+from ..plugin.image_search import ImageSearchPlugin
 from ..plugin.skill import SkillPlugin
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
@@ -26,6 +27,7 @@ from ..plugin.websearch import WebsearchPlugin
 from .enum import SAMPluginCommonMetadataClassValues
 from .models.api_plugin.model import SAMApiPlugin
 from .models.common.plugin.model import SAMPluginCommon
+from .models.image_search_plugin.model import SAMImageSearchPlugin
 from .models.skill_plugin.model import SAMSkillPlugin
 from .models.sql_plugin.model import SAMSqlPlugin
 from .models.static_plugin.model import SAMStaticPlugin
@@ -37,14 +39,36 @@ VALID_MANIFEST_KINDS = [
     SAMKinds.API_PLUGIN.value,
     SAMKinds.SKILL_PLUGIN.value,
     SAMKinds.WEBSEARCH_PLUGIN.value,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value,
 ]
-PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin] | type[SkillPlugin] | type[WebsearchPlugin]
-Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin, WebsearchPlugin]]
+PluginType = (
+    type[ApiPlugin]
+    | type[SqlPlugin]
+    | type[StaticPlugin]
+    | type[SkillPlugin]
+    | type[WebsearchPlugin]
+    | type[ImageSearchPlugin]
+)
+Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin, WebsearchPlugin, ImageSearchPlugin]]
 SAMPluginType = (
-    type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin] | type[SAMSkillPlugin] | type[SAMWebsearchPlugin]
+    type[SAMApiPlugin]
+    | type[SAMSqlPlugin]
+    | type[SAMStaticPlugin]
+    | type[SAMSkillPlugin]
+    | type[SAMWebsearchPlugin]
+    | type[SAMImageSearchPlugin]
 )
 SAMPlugins = Optional[
-    Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin, SAMSkillPlugin, SAMWebsearchPlugin]
+    Union[
+        dict,
+        SAMPluginCommon,
+        SAMApiPlugin,
+        SAMSqlPlugin,
+        SAMStaticPlugin,
+        SAMSkillPlugin,
+        SAMWebsearchPlugin,
+        SAMImageSearchPlugin,
+    ]
 ]
 PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
@@ -52,6 +76,7 @@ PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
     SAMKinds.SKILL_PLUGIN.value: SkillPlugin,
     SAMKinds.WEBSEARCH_PLUGIN.value: WebsearchPlugin,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value: ImageSearchPlugin,
 }
 PLUGIN_META_CLASS_MAP = {
     SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
@@ -59,6 +84,7 @@ PLUGIN_META_CLASS_MAP = {
     SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
     SAMPluginCommonMetadataClassValues.SKILL.value: SkillPlugin,
     SAMPluginCommonMetadataClassValues.WEBSEARCH.value: WebsearchPlugin,
+    SAMPluginCommonMetadataClassValues.IMAGE_SEARCH.value: ImageSearchPlugin,
 }
 SAM_MAP: dict[str, SAMPluginType] = {
     SAMKinds.API_PLUGIN.value: SAMApiPlugin,
@@ -66,6 +92,7 @@ SAM_MAP: dict[str, SAMPluginType] = {
     SAMKinds.STATIC_PLUGIN.value: SAMStaticPlugin,
     SAMKinds.SKILL_PLUGIN.value: SAMSkillPlugin,
     SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPlugin,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value: SAMImageSearchPlugin,
 }
 
 
@@ -289,6 +316,8 @@ class PluginController(AbstractController):
             return SAMPluginCommonMetadataClassValues.SKILL.value
         if self.manifest.kind == SmarterJournalThings.WEBSEARCH_PLUGIN.value:
             return SAMPluginCommonMetadataClassValues.WEBSEARCH.value
+        if self.manifest.kind == SmarterJournalThings.IMAGE_SEARCH_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.IMAGE_SEARCH.value
         return None
 
     @property

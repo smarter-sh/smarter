@@ -150,7 +150,7 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                     )}
                     {renderDetailRow(
                       "URL LLMClient",
-                      llmclient.urlLLMClient,
+                      llmclient.urlLlmclient,
                       "url",
                       "POST only endpoint for llmclient interactions.",
                     )}
@@ -161,7 +161,7 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                       "POST only endpoint for llmclient configuration retrieval.",
                     )}
                     {renderDetailRow("URL Chatapp", llmclient.urlChatapp, "url")}
-                    {renderDetailRow("URL Manifest", llmclient.urlManifest, "url")}
+                    {renderDetailRow("Manifest URL", llmclient.manifestUrl, "url")}
                     {renderDetailRow("Provider", llmclient.provider)}
                     {renderDetailRow("Model", llmclient.defaultModel)}
                     {renderDetailRow("Temperature", llmclient.defaultTemperature, "number")}

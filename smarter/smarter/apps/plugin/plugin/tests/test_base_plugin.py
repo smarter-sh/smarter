@@ -626,6 +626,38 @@ class TestPluginBase(PluginTestBase):
         """Test that unrelated input text does not select the plugin."""
         self.assertFalse(self.load_sql_plugin().selected(user=self.admin_user, input_text="xyzzy quux"))
 
+    def test_base_not_selected_by_thesaurus_if_switch_is_off(self):
+        """Test that, with the thesaurus matching waffle switch off, does_refer_to() never matches synonyms."""
+
+        # pylint: disable=unused-argument
+        def refers_by_synonym_only(prompt, search_term, use_thesaurus=None, **kwargs):
+            return bool(use_thesaurus)
+
+        input_text = "Who is the system administrator?"
+        with (
+            mock.patch("smarter.apps.plugin.plugin.base.does_refer_to", side_effect=refers_by_synonym_only) as refer,
+            mock.patch("smarter.apps.plugin.plugin.base.waffle.switch_is_active", return_value=False),
+        ):
+            self.assertFalse(self.load_sql_plugin().selected(user=self.admin_user, input_text=input_text))
+        self.assertTrue(all(call.kwargs["use_thesaurus"] is False for call in refer.call_args_list))
+
+    def test_base_selected_by_thesaurus_if_switch_is_on(self):
+        """Test that, with the thesaurus matching waffle switch on, a synonym selects the plugin."""
+
+        # pylint: disable=unused-argument
+        def refers_by_synonym_only(prompt, search_term, use_thesaurus=None, **kwargs):
+            return bool(use_thesaurus)
+
+        with (
+            mock.patch("smarter.apps.plugin.plugin.base.does_refer_to", side_effect=refers_by_synonym_only),
+            mock.patch("smarter.apps.plugin.plugin.base.waffle.switch_is_active", return_value=True),
+            capture_signal(plugin_selected) as selected,
+        ):
+            self.assertTrue(
+                self.load_sql_plugin().selected(user=self.admin_user, input_text="Who is the system administrator?")
+            )
+        self.assertEqual(len(selected), 1)
+
     def test_base_not_selected_without_input(self):
         """Test that a search_terms plugin is not selected without any input."""
         self.assertFalse(self.load_sql_plugin().selected(user=self.admin_user))
