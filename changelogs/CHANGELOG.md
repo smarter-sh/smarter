@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.19.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.2...v0.19.0-alpha.3) (2026-10-09)
+
+### Bug Fixes
+
+* discover and add missing k8s infrastructure resources ([b79b4bb](https://github.com/smarter-sh/smarter/commit/b79b4bb787bf293e48a64b54425aa17f5081f1ac))
+
 ## [0.19.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.19.0-alpha.1...v0.19.0-alpha.2) (2026-10-09)
 
 ### Features
