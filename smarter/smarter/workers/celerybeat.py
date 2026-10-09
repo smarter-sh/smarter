@@ -66,6 +66,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": INFRASTRUCTURE,
     },
+    "sync-infrastructure-inventory": {
+        "task": "smarter.apps.infrastructure.tasks.sync_infrastructure_inventory",
+        "schedule": timedelta(minutes=15),
+        "options": INFRASTRUCTURE,
+    },
     "refresh-mcpclients": {
         "task": "smarter.apps.mcpclient.tasks.refresh_mcpclients",
         "schedule": timedelta(hours=1),

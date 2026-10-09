@@ -12,7 +12,7 @@
  *
  *     <Cli />
  */
-import "./styles.css";
+import "@/components/Cli/styles.css";
 
 function Cli() {
   return (

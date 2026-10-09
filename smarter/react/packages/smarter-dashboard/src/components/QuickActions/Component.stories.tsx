@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, quickActionsHandler } from "@/mocks/handlers";
 
-import QuickActions from "./Component";
+import QuickActions from "@/components/QuickActions/Component";
 
 /** Shortcuts to common tasks. */
 const meta = {

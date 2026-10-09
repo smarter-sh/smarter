@@ -7,7 +7,7 @@ import { ACTIONS_URL as BASE, makeObject, sessionContext } from "@/mocks/fixture
 import { actionHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import { Toolbar } from "./Component";
+import { Toolbar } from "@/components/Toolbar/Component";
 
 function renderToolbar(customDomain = makeObject(1, { name: "first_example" })) {
   const onRequery = vi.fn();
@@ -84,5 +84,39 @@ describe("Toolbar", () => {
   it("disables deleting one that cannot be deleted", () => {
     renderToolbar(makeObject(3, { canDelete: false }));
     expect(screen.getByRole("button", { name: /You can't delete this custom domain/ })).toBeDisabled();
+  });
+
+  it("links to the verified domain's LLMClient", () => {
+    const llmclient = { name: "example_llmclient", url: "https://example-1.example.com/", deployed: true };
+    renderToolbar(makeObject(1, { llmclient } as never));
+    expect(screen.getByRole("link", { name: /^Visit:/ })).toHaveAttribute("href", llmclient.url);
+  });
+
+  it("explains why it can't link to the LLMClient", () => {
+    const llmclient = { name: "example_llmclient", url: "https://example-1.example.com/", deployed: true };
+    renderToolbar(makeObject(1, { llmclient, verificationStatus: "Verifying" } as never));
+    expect(screen.getByRole("button", { name: "Visit: The custom domain is not verified yet" })).toBeDisabled();
+  });
+
+  it("explains that no LLMClient uses the domain", () => {
+    renderToolbar();
+    expect(screen.getByRole("button", { name: "Visit: No LLMClient uses this custom domain" })).toBeDisabled();
+  });
+
+  it("starts renaming a domain without a name from an empty name", async () => {
+    const { user } = renderToolbar(makeObject(1, { name: "" }));
+    await user.click(screen.getByRole("button", { name: /^Rename:/ }));
+    expect(screen.getByPlaceholderText("Enter new custom domain name")).toHaveValue("");
+  });
+
+  it("shows the status of a failed action without an error message", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    server.use(http.post(`${BASE}delete/:id/`, () => new HttpResponse("oops", { status: 500, statusText: "Oops" })));
+    const { user } = renderToolbar();
+    await user.click(screen.getByRole("button", { name: /^Delete:/ }));
+    await user.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByRole("dialog", { name: /Error/ })).toHaveTextContent(
+      "Failed to delete custom domain (500): Oops",
+    );
   });
 });

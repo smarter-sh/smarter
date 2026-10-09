@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Annotations, Tags, User, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, User, UserProfile } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Provider Definition
@@ -84,4 +84,5 @@ export interface ProviderListViewProps {
   sessionContext: SessionContext;
   objects: Provider[];
   onRequery: () => void;
+  sorting?: Sorting;
 }

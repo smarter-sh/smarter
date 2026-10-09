@@ -1,3 +1,3 @@
-import DropZone from "./Component";
+import DropZone from "@/components/DropZone/Component";
 
 export default DropZone;

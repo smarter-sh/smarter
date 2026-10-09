@@ -28,15 +28,15 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, Loading } from "@smarter/common";
-import type { SessionContext } from "@smarter/common";
+import { formatDateTime, Loading, SortableHeader } from "@smarter/common";
+import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { Secret, SecretListViewProps } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/lib/const";
 
-import "./styles.css";
+import "@/components/ListView/styles.css";
 
 /**
  * LoadingText
@@ -51,15 +51,24 @@ const LoadingText = () => {
  * TableHeader
  *
  * Renders the table header row for the secret list, including column titles for all displayed fields.
+ * Its sortable columns sort the list, with the list api (see SortableHeader).
  */
-const TableHeader = () => {
+const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
   return (
     <thead className="table-light border-bottom-2">
       <tr className="">
-        <th className=" p-1">Name</th>
-        <th className="d-none d-lg-table-cell width-100">Created</th>
-        <th className="d-none d-lg-table-cell width-100">Updated</th>
-        <th className="">Description</th>
+        <SortableHeader column="name" sorting={sorting} className=" p-1">
+          Name
+        </SortableHeader>
+        <SortableHeader column="createdAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
+          Created
+        </SortableHeader>
+        <SortableHeader column="updatedAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
+          Updated
+        </SortableHeader>
+        <SortableHeader column="description" sorting={sorting} className="">
+          Description
+        </SortableHeader>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
       </tr>
@@ -232,15 +241,16 @@ function ChunkedRows({
  * @param sessionContext - Authentication and API context for actions.
  * @param secrets - Array of secret objects to display.
  * @param onRequery - Callback to refresh secret data.
+ * @param sorting - The sort of the list, which its sortable column headers change.
  */
-export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: SecretListViewProps) {
+export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery, sorting }: SecretListViewProps) {
   console.debug(
     `${loggerPrefix} ListView() Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
   return (
     <div className="table-responsive secret-list-table-wrap ps-3 pe-3">
       <table className="table table-striped table-hover align-middle border">
-        <TableHeader />
+        <TableHeader sorting={sorting} />
         <tbody>
           {isLoading ? (
             <SecretRowGhosts count={ghostRows} />

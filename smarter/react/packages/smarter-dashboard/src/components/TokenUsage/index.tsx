@@ -1,3 +1,3 @@
-import UserCharges from "./UserCharges";
+import UserCharges from "@/components/TokenUsage/UserCharges";
 
 export default UserCharges;

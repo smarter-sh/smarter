@@ -30,7 +30,7 @@ import { fetchDjangoUrl, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 import type { LLMClient } from "@/lib/Types";
-import "./styles.css";
+import "@/components/Toolbar/styles.css";
 
 type ModalType = null | "clone" | "rename" | "delete" | "confirmation" | "error";
 
@@ -208,7 +208,7 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
           <i className="bi bi-chat-dots md-teal" />
         </a>
         <a
-          href={llmclient.urlManifest}
+          href={llmclient.manifestUrl}
           className="btn btn-icon btn-sm border"
           title="Edit: Open the YAML manifest that defines this llmclient resource"
           tabIndex={0}

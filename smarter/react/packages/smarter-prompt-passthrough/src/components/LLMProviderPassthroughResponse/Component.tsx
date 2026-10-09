@@ -15,12 +15,17 @@
  * - `http_response_status` and `responseJson` are currently hardcoded placeholders.
  * - In production usage, these values should come from API call state/props.
  */
-import "./styles.css";
-import SuccessEmoji from "./status_success";
-import FailureEmoji from "./status_failure";
-import WorkingEmoji from "./status_working";
-import ReadyEmoji from "./status_ready";
-import { failure_style, ready_style, success_style, working_style } from "./status_styles";
+import "@/components/LLMProviderPassthroughResponse/styles.css";
+import SuccessEmoji from "@/components/LLMProviderPassthroughResponse/status_success";
+import FailureEmoji from "@/components/LLMProviderPassthroughResponse/status_failure";
+import WorkingEmoji from "@/components/LLMProviderPassthroughResponse/status_working";
+import ReadyEmoji from "@/components/LLMProviderPassthroughResponse/status_ready";
+import {
+  failure_style,
+  ready_style,
+  success_style,
+  working_style,
+} from "@/components/LLMProviderPassthroughResponse/status_styles";
 
 function LLMProviderPassthroughResponse({
   apiResponse,

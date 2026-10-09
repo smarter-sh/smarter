@@ -1,4 +1,4 @@
-import type { TokenUsageInterface } from "./types";
+import type { TokenUsageInterface } from "@/components/TokenUsage/types";
 
 export const data: TokenUsageInterface[] = [
   {

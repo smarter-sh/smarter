@@ -11,6 +11,7 @@ from smarter.apps.account.serializers import (
 from smarter.apps.connection.models import ApiConnection, SqlConnection
 from smarter.apps.plugin.models import (
     PluginDataApi,
+    PluginDataImageSearch,
     PluginDataSkill,
     PluginDataSql,
     PluginDataStatic,
@@ -328,6 +329,60 @@ class PluginWebsearchSerializer(SmarterCamelCaseSerializer):
             "fetch_respect_robots_txt",
             "allowed_domains",
             "blocked_domains",
+            "timeout",
+            "cache_ttl",
+        ]
+
+
+class PluginImageSearchSerializer(SmarterCamelCaseSerializer):
+    """
+    Serializer for the PluginDataImageSearch model.
+
+    Experimental.
+
+    This serializer exposes the configuration of an ImageSearchPlugin: the name of the Secret
+    that contains its Brave Search API key, its Brave Image Search API query parameters, its
+    filters, url validation, timeout and cache duration. The api key itself is never serialized.
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        serializer = PluginImageSearchSerializer(PluginDataImageSearch.objects.first())
+        print(serializer.data)
+        # Output: {
+        #   "description": "...",
+        #   "apiKeySecretName": "brave_search_api_key",
+        #   "count": 10,
+        #   "safesearch": "strict",
+        #   ...
+        # }
+
+    .. note::
+
+        **Experimental.** The ImageSearchPlugin was designed and coded by Claude Code (Anthropic's
+        Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental.
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataImageSearch
+        fields = [
+            "description",
+            "api_key_secret_name",
+            "query_terms",
+            "llm_search_params",
+            "count",
+            "country",
+            "search_lang",
+            "safesearch",
+            "spellcheck",
+            "file_type",
+            "min_width",
+            "min_height",
+            "allowed_domains",
+            "blocked_domains",
+            "validate_urls",
             "timeout",
             "cache_ttl",
         ]

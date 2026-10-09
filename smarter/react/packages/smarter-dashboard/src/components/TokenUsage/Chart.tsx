@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchDjangoUrl } from "@smarter/common";
 import { ResponsiveContainer, AreaChart, Area, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
-import type { AreaSeries, LineSeries, TokenUsageChartProps, TokenUsageInterface } from "./types";
+import type { AreaSeries, LineSeries, TokenUsageChartProps, TokenUsageInterface } from "@/components/TokenUsage/types";
 import { loggerPrefix } from "@/const";
 
 const areas: AreaSeries[] = [

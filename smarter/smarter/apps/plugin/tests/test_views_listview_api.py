@@ -95,6 +95,23 @@ class TestPluginListApiViews(PluginAppTestBase):
         self.assertEqual(self.listed("owned", page_size=1, invalidate_cache="true"), [name])
         self.assertEqual(self.listed("owned", page_size=1, page=2), [STATIC_PLUGIN_NAME])
 
+    def test_list_sorts(self):
+        """Test that the list api sorts by name, and by the plugin's kind and selector, in either direction."""
+        name = "test_plugin_app_api_sorted"
+        self.new_static_plugin(name)
+        expected = sorted([name, STATIC_PLUGIN_NAME])
+        listed = [
+            plugin for plugin in self.listed("owned", ordering="name", invalidate_cache="true") if plugin in expected
+        ]
+        self.assertEqual(listed, expected)
+        listed = [plugin for plugin in self.listed("owned", ordering="-name") if plugin in expected]
+        self.assertEqual(listed, list(reversed(expected)))
+        for ordering in ("kind", "-kind", "selector", "-selector"):
+            pagination = self.post(self.list_url("owned", ordering=ordering))["pagination"]
+            self.assertEqual(pagination["ordering"], ordering)
+            self.assertIn("kind", pagination["sortFields"])
+            self.assertIn("selector", pagination["sortFields"])
+
     def test_list_invalidate_cache(self):
         """Test that invalidate_cache makes a new plugin visible."""
         name = "test_plugin_app_api_invalidate"

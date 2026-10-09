@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, dashboardHandlers } from "@/mocks/handlers";
 
-import Dashboard from "./Component";
+import Dashboard from "@/components/Dashboard/Component";
 
 /** The web console's dashboard, with its api mocked. */
 const meta = {

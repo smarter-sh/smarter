@@ -10,8 +10,8 @@ import { useEffect, useRef, useState } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import { useLogStream } from "./logStream";
-import "./styles.css";
+import { useLogStream } from "@/components/Terminal/logStream";
+import "@/components/Terminal/styles.css";
 
 // These strings are internal SSE stream status messages emitted by the server. They can
 // appear in replay history from older log entries and should never surface to dashboard users.

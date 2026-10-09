@@ -8,8 +8,8 @@ import { useEffect, useState } from "react";
 import { fetchDjangoUrl } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import BudgetChart from "./BudgetChart";
-import type { BudgetSeriesRow } from "./format";
+import BudgetChart from "@/components/BudgetList/BudgetChart";
+import type { BudgetSeriesRow } from "@/components/BudgetList/format";
 import type { BudgetResourceStatus } from "@/lib/Types";
 import { loggerPrefix } from "@/lib/const";
 

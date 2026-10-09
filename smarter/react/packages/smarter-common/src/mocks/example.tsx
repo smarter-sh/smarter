@@ -2,7 +2,8 @@
  * An example object type, with a minimal ListView and CardView, for the stories and tests of the
  * generic TabbedListView. Each list app supplies its own object type, ListView and CardView.
  */
-import type { SessionContext, TabbedViewContext, TabKey } from "../lib/Types";
+import SortableHeader from "../components/SortableHeader";
+import type { SessionContext, Sorting, TabbedViewContext, TabKey } from "../lib/Types";
 
 export type Example = { id: number; name: string };
 
@@ -25,21 +26,50 @@ export const ownedExamples: Example[] = [
 ];
 export const sharedExamples: Example[] = [{ id: 3, name: "shared_example" }];
 
-type ListProps = { isLoading: boolean; ghostRows: number; objects: Example[]; onRequery: () => void };
+type ListProps = {
+  isLoading: boolean;
+  ghostRows: number;
+  objects: Example[];
+  onRequery: () => void;
+  sorting?: Sorting;
+};
 
-function ExampleListView({ isLoading, ghostRows, objects, onRequery }: ListProps) {
-  if (isLoading) return <p>Loading {ghostRows} rows</p>;
+function ExampleListView({ isLoading, ghostRows, objects, onRequery, sorting }: ListProps) {
+  const header = (
+    <table>
+      <thead>
+        <tr>
+          <SortableHeader column="name" sorting={sorting}>
+            Name
+          </SortableHeader>
+          <SortableHeader column="id" sorting={sorting}>
+            Id
+          </SortableHeader>
+        </tr>
+      </thead>
+    </table>
+  );
+  if (isLoading)
+    return (
+      <>
+        {header}
+        <p>Loading {ghostRows} rows</p>
+      </>
+    );
   return (
-    <ul aria-label="Examples">
-      {objects.map((example) => (
-        <li key={example.id}>{example.name}</li>
-      ))}
-      <li>
-        <button type="button" onClick={onRequery}>
-          Requery
-        </button>
-      </li>
-    </ul>
+    <>
+      {header}
+      <ul aria-label="Examples">
+        {objects.map((example) => (
+          <li key={example.id}>{example.name}</li>
+        ))}
+        <li>
+          <button type="button" onClick={onRequery}>
+            Requery
+          </button>
+        </li>
+      </ul>
+    </>
   );
 }
 
