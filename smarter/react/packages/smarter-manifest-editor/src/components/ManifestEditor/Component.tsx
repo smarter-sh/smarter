@@ -16,7 +16,7 @@ import { useCopy } from "@/lib/useCopy";
 import { useLockedFields } from "@/lib/useLockedFields";
 import type { ManifestError } from "@/lib/validation";
 
-import "./styles.css";
+import "@/components/ManifestEditor/styles.css";
 
 const THEME = "smarter-manifest";
 const BACKGROUND = "#333333";

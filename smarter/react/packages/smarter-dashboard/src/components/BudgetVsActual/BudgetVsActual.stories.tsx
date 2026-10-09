@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { budgetsHandlers, dashboardErrorHandlers } from "@/mocks/handlers";
 
-import BudgetVsActual from "./BudgetVsActual";
+import BudgetVsActual from "@/components/BudgetVsActual/BudgetVsActual";
 
 /** The budget versus actual spending of the resources that budgets apply to. */
 const meta = {

@@ -8,9 +8,9 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchDjangoUrl } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import BudgetChart from "./BudgetChart";
-import { formatAmount } from "./format";
-import type { BudgetSeries, BudgetStatus } from "./types";
+import BudgetChart from "@/components/BudgetVsActual/BudgetChart";
+import { formatAmount } from "@/components/BudgetVsActual/format";
+import type { BudgetSeries, BudgetStatus } from "@/components/BudgetVsActual/types";
 import { loggerPrefix } from "@/const";
 
 const PERIODS = 12;

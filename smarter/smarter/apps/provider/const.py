@@ -12,6 +12,9 @@ GOOGLE_SERVICE_ACCOUNT_SECRET_NAME = "google_service_account"
 GOOGLE_MAPS_API_KEY_SECRET_NAME = "google_maps_api_key"
 # the Tavily web search api key, which WebsearchPlugins such as smarter_project_websearch use.
 TAVILY_API_KEY_SECRET_NAME = "tavily_api_key"
+# the Brave Search api key, which ImageSearchPlugins such as safe_image_search, and the
+# Brave WebsearchPlugin samples such as research_assistant, use.
+BRAVE_SEARCH_API_KEY_SECRET_NAME = "brave_search_api_key"
 
 BUILTIN_PROVIDER_API_KEY_ENV_VARS = {
     "anthropic": "ANTHROPIC_API_KEY",

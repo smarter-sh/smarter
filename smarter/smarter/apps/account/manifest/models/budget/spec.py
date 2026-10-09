@@ -66,6 +66,7 @@ RESOURCE_KINDS = (
     "SqlPlugin",
     "StaticPlugin",
     "WebsearchPlugin",
+    "ImageSearchPlugin",
 )
 """The kinds of resource that a budget can be attached to by kind and name."""
 

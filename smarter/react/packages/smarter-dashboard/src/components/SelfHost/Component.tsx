@@ -12,7 +12,7 @@
  *
  *     <SelfHost />
  */
-import "./styles.css";
+import "@/components/SelfHost/styles.css";
 
 function SelfHost() {
   return (

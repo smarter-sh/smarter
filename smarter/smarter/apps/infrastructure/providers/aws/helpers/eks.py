@@ -1,7 +1,7 @@
 """
 The low-level AWS EKS helper.
 
-It describes the platform's EKS cluster, and writes its kubeconfig, for
+It describes the platform's EKS cluster, its add-ons and node groups, and writes its kubeconfig, for
 :class:`~smarter.apps.infrastructure.providers.aws.AWSProvider`.
 """
 
@@ -89,6 +89,39 @@ class AWSEks(AWSBase):
             "platformVersion": response.get("platformVersion"),
             "status": response.get("status"),
             "version": response.get("version"),
+        }
+
+    def get_cluster_resources(self) -> dict[str, list[dict[str, str]]]:
+        """
+        Describe the cloud resources of the platform's EKS cluster: the cluster, its add-ons and its node groups.
+
+        :returns: The ``name`` and ``arn`` of each, by ``cluster``, ``addons`` and ``nodegroups``.
+        :raises AWSNotReadyError: If AWS is not ready, or the cluster's name is not set.
+        """
+        logger.debug("%s.get_cluster_resources() called", self.formatted_class_name)
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
+        if not self.cluster_name_is_set():
+            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
+        cluster_name = smarter_settings.aws_eks_cluster_name
+        cluster = self.client.describe_cluster(name=cluster_name)["cluster"]
+        addons = [
+            self.client.describe_addon(clusterName=cluster_name, addonName=name)["addon"]
+            for page in self.client.get_paginator("list_addons").paginate(clusterName=cluster_name)
+            for name in page.get("addons", [])
+        ]
+        nodegroups = [
+            self.client.describe_nodegroup(clusterName=cluster_name, nodegroupName=name)["nodegroup"]
+            for page in self.client.get_paginator("list_nodegroups").paginate(clusterName=cluster_name)
+            for name in page.get("nodegroups", [])
+        ]
+        return {
+            "cluster": [{"name": cluster.get("name", cluster_name), "arn": cluster.get("arn", "")}],
+            "addons": [{"name": addon.get("addonName", ""), "arn": addon.get("addonArn", "")} for addon in addons],
+            "nodegroups": [
+                {"name": nodegroup.get("nodegroupName", ""), "arn": nodegroup.get("nodegroupArn", "")}
+                for nodegroup in nodegroups
+            ],
         }
 
     def update_kubeconfig(self) -> bool:

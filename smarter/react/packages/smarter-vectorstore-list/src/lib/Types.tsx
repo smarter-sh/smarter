@@ -4,7 +4,7 @@
  * Vectorstore mirrors smarter.apps.vectorstore.serializers.VectorstoreSerializer, whose JSON field
  * names are camelCase. Related objects are given by name, and a Secret's value is never included.
  */
-import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Vectorstore Definition
@@ -72,4 +72,5 @@ export interface VectorstoreListViewProps {
   sessionContext: SessionContext;
   objects: Vectorstore[];
   onRequery: () => void;
+  sorting?: Sorting;
 }

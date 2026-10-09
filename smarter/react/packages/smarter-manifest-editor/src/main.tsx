@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix, projectName, projectVersion } from "@/const.tsx";
-import App from "./App.tsx";
+import App from "@/App.tsx";
 
 const rootEl = document.getElementById("smarter-manifest-editor-root");
 if (!rootEl) throw new Error("Root element not found");

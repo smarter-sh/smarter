@@ -126,6 +126,24 @@ class ResourceViewsTestMixin:
         resource = self.throwaway("newest")
         self.assertIn(resource.name, self.listed("owned", invalidate_cache="true", page_size=100))  # type: ignore[attr-defined]
 
+    def test_list_api_sorts(self):
+        """Test that the list api sorts by name in either direction, and by every column that it describes as sortable."""
+        # the throwaway's name follows the resource's: "..._zz_sorted_<hash>" after "..._<hash>".
+        resource = self.throwaway("zz_sorted")
+        url = self.url("listview_api", ownership_filter="owned") + "?invalidate_cache=true&page_size=100"
+        data = self.post(url)
+        sort_fields = data["pagination"]["sortFields"]
+        self.assertTrue({"name", "createdAt", "updatedAt"} <= set(sort_fields), sort_fields)  # type: ignore[attr-defined]
+        expected = [self.resource.name, resource.name]  # type: ignore[attr-defined]
+        for ordering, names in (("name", expected), ("-name", list(reversed(expected)))):
+            listed = [name for name in self.listed("owned", ordering=ordering, page_size=100) if name in expected]
+            self.assertEqual(listed, names, ordering)  # type: ignore[attr-defined]
+        for column in sort_fields:
+            for ordering in (column, f"-{column}"):
+                data = self.post(url + f"&ordering={ordering}")
+                self.assertEqual(data["pagination"]["ordering"], ordering)  # type: ignore[attr-defined]
+                self.assertIn(resource.name, [item["name"] for item in data["objects"]], ordering)  # type: ignore[attr-defined]
+
     # -------------------------------------------------------------------------
     # the clone, delete and rename apis
     # -------------------------------------------------------------------------

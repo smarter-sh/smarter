@@ -1,3 +1,3 @@
-import BudgetVsActual from "./BudgetVsActual";
+import BudgetVsActual from "@/components/BudgetVsActual/BudgetVsActual";
 
 export default BudgetVsActual;

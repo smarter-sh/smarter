@@ -2,14 +2,64 @@
 
 import re
 import string
-from typing import Optional
+from functools import lru_cache
+from typing import Any, Optional
 
 import Levenshtein
 
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+
+from .signals import search_term_matched
+
+logger = logging.getLogger(__name__)
 
 PLURAL_SUFFIXES = ("s", "es")
 """Suffixes with which a prompt's word still matches a search term's word, e.g. Gobstoppers and Gobstopper."""
+
+THESAURUS_MAX_SENSES = 2
+"""
+The number of a word's most common senses from which its synonyms come.
+
+A word has many senses in WordNet, ordered from the most to the least common. For example,
+the fifth noun sense of ``car`` is an elevator car. Synonyms of rare senses would select
+plugins for prompts that have nothing to do with them. For the same reason, a word that is a
+noun only has the synonyms of its noun senses: the verb ``image`` means ``see``, so that
+``let me see the code`` would otherwise refer to ``image``.
+"""
+
+THESAURUS_MIN_WORD_LENGTH = 3
+"""
+Search term words shorter than this are matched exactly, never by synonym.
+
+Short words are mostly pronouns and abbreviations, whose WordNet senses are rarely the
+intended ones. For example, ``me`` is the abbreviation of Maine.
+"""
+
+WORDNET_DOWNLOAD_HELP = "Install it with: python -m nltk.downloader wordnet. The Docker image installs it into /home/smarter_user/nltk_data."
+
+
+class MatchMethod:
+    """How :func:`does_refer_to` matched a search term.
+
+    Sent as the ``method`` of :data:`search_term_matched`.
+    """
+
+    EXACT = "exact"
+    """Every word of the search term is in the prompt.
+
+    See :func:`simple_search`.
+    """
+    FUZZY = "fuzzy"
+    """The search term is in the prompt, with a typo or two.
+
+    See :func:`within_levenshtein_distance`.
+    """
+    THESAURUS = "thesaurus"
+    """The search term, or a synonym of each of its words, is in the prompt.
+
+    See :func:`thesaurus_match`.
+    """
 
 
 def clean_prompt(prompt: str) -> str:
@@ -281,14 +331,188 @@ def within_levenshtein_distance(prompt: str, search_term: str, threshold: Option
     return False
 
 
-def does_refer_to(prompt: str, search_term: str, threshold: Optional[int] = None, fuzzy: Optional[bool] = None) -> bool:
+@lru_cache(maxsize=1)
+def wordnet() -> Optional[Any]:
+    """
+    Return the WordNet corpus reader, loading the corpus on first use.
+
+    `WordNet <https://wordnet.princeton.edu/>`__ is the thesaurus of :func:`thesaurus_match`.
+    It is read with `NLTK <https://www.nltk.org/>`__, whose corpus data must be installed
+    separately. If it is not installed, a warning is logged once, and thesaurus matching is
+    disabled.
+
+    :return: The ``nltk.corpus.wordnet`` reader, or None if the corpus is not installed.
+    """
+    # pylint: disable=import-outside-toplevel
+    from nltk.corpus import wordnet as wn
+
+    try:
+        wn.ensure_loaded()
+    except LookupError:
+        logger.warning(
+            "The NLTK WordNet corpus is not installed, so thesaurus matching is disabled. %s", WORDNET_DOWNLOAD_HELP
+        )
+        return None
+    return wn
+
+
+@lru_cache(maxsize=4096)
+def synonyms(phrase: str, nouns_only: bool = False) -> frozenset[str]:
+    """
+    Return the synonyms of a word or phrase, from the most common senses of WordNet.
+
+    Synonyms come from the first :data:`THESAURUS_MAX_SENSES` noun senses of the phrase, or,
+    if it is not a noun, from the first senses of each of its other parts of speech. They are
+    lower case, and multi-word synonyms have spaces, e.g. ``motor vehicle``. The
+    phrase itself is not included.
+
+    :param phrase: A lower case word, e.g. ``car``, or phrase, e.g. ``black and white``.
+    :type phrase: str
+    :param nouns_only: Whether a phrase that is not a noun has no synonyms, rather than those of its other parts of speech.
+    :type nouns_only: bool
+
+    :return: The synonyms, which are empty if WordNet is not installed, or does not know the phrase.
+    :rtype: frozenset[str]
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.plugin.nlp import synonyms
+
+        print(sorted(synonyms("car")))
+        # Output: ['auto', 'automobile', 'machine', 'motorcar', 'railcar', 'railroad car', 'railway car']
+        print(sorted(synonyms("image")))
+        # Output: ['mental image', 'persona']
+    """
+    wn = wordnet()
+    if wn is None or not phrase:
+        return frozenset()
+    key = phrase.replace(" ", "_")
+    synsets = wn.synsets(key, pos=wn.NOUN)[:THESAURUS_MAX_SENSES]
+    if not synsets and not nouns_only:
+        for pos in (wn.VERB, wn.ADJ, wn.ADV):
+            synsets += wn.synsets(key, pos=pos)[:THESAURUS_MAX_SENSES]
+    retval: set[str] = set()
+    for synset in synsets:
+        retval.update(lemma.name().replace("_", " ").lower() for lemma in synset.lemmas())
+    retval.discard(phrase)
+    return frozenset(retval)
+
+
+def contains_phrase(prompt_words: list[str], phrase: str) -> bool:
+    """
+    Check if a list of words contains a phrase, as consecutive words.
+
+    Each word matches with :func:`word_matches`, so plurals match, e.g. ``motor vehicles``
+    contains the phrase ``motor vehicle``.
+
+    :param prompt_words: The prompt's words, as returned by :func:`normalized_words`.
+    :type prompt_words: list[str]
+    :param phrase: A lower case word or phrase.
+    :type phrase: str
+
+    :return: `True` if the words contain the phrase, otherwise `False`.
+    :rtype: bool
+    """
+    phrase_words = normalized_words(phrase)
+    if not phrase_words:
+        return False
+    size = len(phrase_words)
+    return any(
+        all(word_matches(prompt_words[i + j], phrase_words[j]) for j in range(size))
+        for i in range(len(prompt_words) - size + 1)
+    )
+
+
+def thesaurus_match(prompt: str, search_term: str) -> Optional[str]:
+    """
+    Check if the prompt contains the search term, or synonyms of it, from the WordNet thesaurus.
+
+    The prompt matches if it contains a synonym of the whole search term, e.g. ``monochrome``
+    for ``black and white``, or if, for each word of the search term, it contains the word, one
+    of its :func:`synonyms`, e.g. ``automobile`` for ``car``, or a noun of which it is a
+    synonym. WordNet's synonyms are not symmetric: ``image`` is a synonym of ``picture``, but
+    ``picture`` is not a synonym of the noun ``image``. Only nouns count in this direction,
+    since ``weather`` is a synonym of the verb ``endure``. Words shorter than
+    :data:`THESAURUS_MIN_WORD_LENGTH` must match exactly. Synonyms come only from each word's
+    most common senses, to keep plugin selection precise.
+
+    :param prompt: The input string to search within.
+    :type prompt: str
+    :param search_term: The target string or phrase to look for.
+    :type search_term: str
+
+    :return: The words of the prompt that matched, e.g. ``automobile``, or None if the prompt
+        does not match, or WordNet is not installed.
+    :rtype: Optional[str]
+
+    .. seealso::
+
+        - :func:`synonyms`
+        - :func:`does_refer_to`
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.plugin.nlp import thesaurus_match
+
+        print(thesaurus_match("I want to buy an automobile", "car"))  # 'automobile'
+        print(thesaurus_match("show me a picture of a cat", "image"))  # 'picture'
+        print(thesaurus_match("what is the weather", "car"))           # None
+    """
+    term_words = normalized_words(search_term)
+    prompt_words = normalized_words(prompt)
+    if not term_words or not prompt_words or wordnet() is None:
+        return None
+    if len(term_words) > 1:
+        for synonym in sorted(synonyms(" ".join(term_words))):
+            if contains_phrase(prompt_words, synonym):
+                return synonym
+    matched: list[str] = []
+    for term_word in term_words:
+        if any(word_matches(prompt_word, term_word) for prompt_word in prompt_words):
+            matched.append(term_word)
+            continue
+        if len(term_word) < THESAURUS_MIN_WORD_LENGTH:
+            return None
+        synonym = next(
+            (synonym for synonym in sorted(synonyms(term_word)) if contains_phrase(prompt_words, synonym)), None
+        )
+        if synonym is None:
+            synonym = next(
+                (
+                    prompt_word
+                    for prompt_word in prompt_words
+                    if len(prompt_word) >= THESAURUS_MIN_WORD_LENGTH
+                    and any(word_matches(term_word, word) for word in synonyms(prompt_word, nouns_only=True))
+                ),
+                None,
+            )
+        if synonym is None:
+            return None
+        matched.append(synonym)
+    return " ".join(matched)
+
+
+def does_refer_to(
+    prompt: str,
+    search_term: str,
+    threshold: Optional[int] = None,
+    fuzzy: Optional[bool] = None,
+    use_thesaurus: Optional[bool] = None,
+) -> bool:
     """
     Check if the prompt refers to the given string.
 
     This function determines whether a prompt refers to a search term by first cleaning
     the prompt with :func:`clean_prompt`, and then searching it with :func:`simple_search`.
     If typo tolerant matching is enabled, it then also tries
-    :func:`within_levenshtein_distance`.
+    :func:`within_levenshtein_distance` and, if thesaurus matching is enabled,
+    :func:`thesaurus_match`. When the prompt refers to the search term, the
+    :data:`~smarter.apps.plugin.signals.search_term_matched` signal is sent, with the
+    :class:`MatchMethod` that matched.
 
     :param prompt: The input string to analyze.
     :type prompt: str
@@ -300,6 +524,9 @@ def does_refer_to(prompt: str, search_term: str, threshold: Optional[int] = None
     :param fuzzy: Whether to tolerate typos. Defaults to the
         ``enable_plugin_fuzzy_matching`` waffle switch, which is on by default.
     :type fuzzy: Optional[bool]
+    :param use_thesaurus: Whether to match synonyms, from the WordNet thesaurus. Defaults to
+        the ``enable_plugin_thesaurus_matching`` waffle switch, which is on by default.
+    :type use_thesaurus: Optional[bool]
 
     :return: `True` if the prompt refers to the search term, otherwise `False`.
     :rtype: bool
@@ -309,13 +536,16 @@ def does_refer_to(prompt: str, search_term: str, threshold: Optional[int] = None
         Plugin selectors use this function to decide whether to select a plugin,
         which adds the plugin's system prompt and tools to the conversation. Typo
         tolerant matching selects plugins more often, and it is controlled by
-        :attr:`SmarterWaffleSwitches.ENABLE_PLUGIN_FUZZY_MATCHING`.
+        :attr:`SmarterWaffleSwitches.ENABLE_PLUGIN_FUZZY_MATCHING`. Thesaurus matching
+        selects plugins more often still, and it is controlled by
+        :attr:`SmarterWaffleSwitches.ENABLE_PLUGIN_THESAURUS_MATCHING`.
 
     .. seealso::
 
         - :func:`clean_prompt`
         - :func:`simple_search`
         - :func:`within_levenshtein_distance`
+        - :func:`thesaurus_match`
 
     **Example usage**:
 
@@ -327,17 +557,36 @@ def does_refer_to(prompt: str, search_term: str, threshold: Optional[int] = None
         print(does_refer_to(prompt, "Lawrence McDaniel", fuzzy=True))   # True
         print(does_refer_to(prompt, "Lawrence McDaniel", fuzzy=False))  # False
         print(does_refer_to(prompt, "John Doe", fuzzy=True))            # False
+        print(does_refer_to("buy an automobile", "car", use_thesaurus=True))  # True
     """
 
+    original_prompt = prompt
     prompt = clean_prompt(prompt)
 
-    if simple_search(prompt=prompt, search_term=search_term):
+    def matched(method: str, matched_text: Optional[str] = None) -> bool:
+        search_term_matched.send(
+            sender=does_refer_to,
+            prompt=original_prompt,
+            search_term=search_term,
+            method=method,
+            matched_text=matched_text,
+        )
         return True
+
+    if simple_search(prompt=prompt, search_term=search_term):
+        return matched(MatchMethod.EXACT)
 
     if fuzzy is None:
         fuzzy = switch_is_active(SmarterWaffleSwitches.ENABLE_PLUGIN_FUZZY_MATCHING)
     if fuzzy and within_levenshtein_distance(prompt=prompt, search_term=search_term, threshold=threshold):
-        return True
+        return matched(MatchMethod.FUZZY)
+
+    if use_thesaurus is None:
+        use_thesaurus = switch_is_active(SmarterWaffleSwitches.ENABLE_PLUGIN_THESAURUS_MATCHING)
+    if use_thesaurus:
+        synonym = thesaurus_match(prompt=prompt, search_term=search_term)
+        if synonym is not None:
+            return matched(MatchMethod.THESAURUS, synonym)
 
     # bust. we didn't find the target string in the prompt
     return False

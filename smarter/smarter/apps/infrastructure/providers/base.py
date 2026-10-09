@@ -3,7 +3,8 @@ The base class of the cloud providers.
 
 A cloud provider implements the services that depend on a cloud, :class:`CloudProvider.dns` and
 :class:`CloudProvider.certificates`, and contributes what the cloud-independent services need
-from it: the Kubernetes cluster's kubeconfig, and the cluster's description.
+from it: the Kubernetes cluster's kubeconfig, the cluster's description, and the cloud resources
+of the cluster, for the inventory.
 
 To add a cloud, e.g. Azure:
 
@@ -22,7 +23,7 @@ from abc import abstractmethod
 from typing import Any, Optional
 
 from ..const import InfrastructureServiceNames
-from ..services.base import InfrastructureService
+from ..services.base import DiscoveredResource, InfrastructureService
 from ..services.certificates import CertificateService
 from ..services.dns import DNSService
 from ..signals import infrastructure_authenticated, infrastructure_authentication_failed
@@ -120,6 +121,19 @@ class CloudProvider(InfrastructureService):
 
         :raises InfrastructureNotReadyError: If the provider is not ready.
         """
+
+    def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
+        """
+        Return the cloud resources of the platform's Kubernetes cluster, for the inventory.
+
+        e.g. the cluster itself, its add-ons, and its node groups, which are provisioned outside
+        the platform, e.g. with Terraform, so that no signal records them.
+
+        :returns: The resources, by resource type, e.g. ``kubernetes.cluster``. A type that
+            could not be listed is left out, so that the inventory does not record its
+            resources as destroyed. This implementation lists none.
+        """
+        return {}
 
 
 __all__ = ["CloudProvider"]

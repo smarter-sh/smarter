@@ -22,9 +22,9 @@ import { useEffect, useState } from "react";
 import { Loading } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
-import HealthRing from "./HealthRing";
-import GitHubStatus from "./GitHubStatus";
-import "./styles.css";
+import HealthRing from "@/components/ServiceHealth/HealthRing";
+import GitHubStatus from "@/components/ServiceHealth/GitHubStatus";
+import "@/components/ServiceHealth/styles.css";
 
 interface ServiceHealthProps {
   apiUrl: string;

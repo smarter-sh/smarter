@@ -4,7 +4,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { SECRET_MANIFEST, sessionContext } from "@/mocks/fixtures";
 import { applyErrorHandlers, applyHandlers } from "@/mocks/handlers";
 
-import DropZone from "./Component";
+import DropZone from "@/components/DropZone/Component";
 
 /** Apply a manifest by dropping, or choosing, its YAML file. */
 const meta = {

@@ -25,6 +25,7 @@ For more information about Django, see the `official Django documentation <https
    django/manage
    django/middleware
    django/models
+   django/pagination
    django/serializers
    django/settings
    django/signals

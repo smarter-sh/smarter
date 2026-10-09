@@ -26,6 +26,7 @@ from .views.json_schema import (
     DocsJsonSchemaBudgetView,
     DocsJsonSchemaCustomDomainView,
     DocsJsonSchemaGuardrailView,
+    DocsJsonSchemaImageSearchView,
     DocsJsonSchemaLLMClientView,
     DocsJsonSchemaLLMHostComputeView,
     DocsJsonSchemaLLMHostView,
@@ -52,6 +53,7 @@ from .views.manifest import (
     DocsExampleManifestBudgetView,
     DocsExampleManifestCustomDomainView,
     DocsExampleManifestGuardrailView,
+    DocsExampleManifestImageSearchView,
     DocsExampleManifestLLMClientView,
     DocsExampleManifestLLMHostComputeView,
     DocsExampleManifestLLMHostView,
@@ -207,6 +209,11 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.WEBSEARCH_PLUGIN.value),
     ),
     path(
+        json_schema_path(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
+        DocsJsonSchemaImageSearchView.as_view(),
+        name=json_schema_name(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
+    ),
+    path(
         json_schema_path(SAMKinds.SQL_PLUGIN.value),
         DocsJsonSchemaSqlView.as_view(),
         name=json_schema_name(SAMKinds.SQL_PLUGIN.value),
@@ -318,6 +325,11 @@ urlpatterns = [
         manifest_path(SAMKinds.WEBSEARCH_PLUGIN.value),
         DocsExampleManifestWebsearchView.as_view(),
         name=manifest_name(SAMKinds.WEBSEARCH_PLUGIN.value),
+    ),
+    path(
+        manifest_path(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
+        DocsExampleManifestImageSearchView.as_view(),
+        name=manifest_name(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
     ),
     path(
         manifest_path(SAMKinds.SQL_CONNECTION.value),

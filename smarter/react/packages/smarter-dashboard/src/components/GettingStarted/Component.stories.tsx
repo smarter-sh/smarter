@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext, sessionContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, gettingStartedHandler } from "@/mocks/handlers";
 
-import GettingStarted from "./Component";
+import GettingStarted from "@/components/GettingStarted/Component";
 
 /** The steps to get started, until they are all done. */
 const meta = {

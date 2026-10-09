@@ -168,27 +168,38 @@ def handle_chat_request(sender, iteration: Optional[int] = None, **kwargs):
 
 
 @receiver(llm_tool_requested, dispatch_uid="smarter.apps.prompt.progress.llm_tool_requested")
-def handle_llm_tool_requested(sender, tool_call: Optional[dict] = None, **kwargs):
-    """The LLM called a tool."""
+def handle_llm_tool_requested(sender, tool_call: Optional[dict] = None, tool_name: Optional[str] = None, **kwargs):
+    """
+    The LLM called a tool.
+
+    ``tool_name`` is the tool's name as users know it, e.g. a plugin's name rather than its
+    symbolic function name, ``smarter_plugin_0000000016``, which is sent as ``function``.
+    """
     if not _is_tool_call_loop(sender):
         return
-    name = _tool_name(tool_call)
+    function = _tool_name(tool_call)
+    name = tool_name or function
     arguments = (tool_call or {}).get("function", {}).get("arguments", "")
     emit(
         PromptProgressEvents.TOOL_REQUESTED,
         f"Calling tool {name}",
         tool=name,
+        function=function,
         arguments=_arguments_text(arguments),
     )
 
 
 @receiver(llm_tool_responded, dispatch_uid="smarter.apps.prompt.progress.llm_tool_responded")
-def handle_llm_tool_responded(sender, tool_call: Optional[dict] = None, **kwargs):
-    """A tool returned its result to the LLM."""
+def handle_llm_tool_responded(sender, tool_call: Optional[dict] = None, tool_name: Optional[str] = None, **kwargs):
+    """A tool returned its result to the LLM.
+
+    See :func:`handle_llm_tool_requested`.
+    """
     if not _is_tool_call_loop(sender):
         return
-    name = _tool_name(tool_call)
-    emit(PromptProgressEvents.TOOL_RESPONDED, f"Tool {name} responded", tool=name)
+    function = _tool_name(tool_call)
+    name = tool_name or function
+    emit(PromptProgressEvents.TOOL_RESPONDED, f"Tool {name} responded", tool=name, function=function)
 
 
 @receiver(chat_plugin_called, dispatch_uid="smarter.apps.prompt.progress.chat_plugin_called")

@@ -52,7 +52,7 @@ spec:
       results as a markdown table, with readable column headings, numeric columns
       right-aligned, and thousands separators and units, such as $ or %. Show a trend as a
       table by period, and use ▲ and ▼ for increases and decreases. Put your assumptions in a
-      block quote. Do not use HTML or LaTeX, and NEVER invent image or chart urls.
+      block quote.
     defaultTemperature: 1.0
     deployed: false
     provider: openai

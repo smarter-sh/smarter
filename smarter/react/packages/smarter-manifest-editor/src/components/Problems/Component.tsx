@@ -8,7 +8,7 @@ import type * as monaco from "monaco-editor";
 
 import type { ManifestError } from "@/lib/validation";
 
-import "./styles.css";
+import "@/components/Problems/styles.css";
 
 interface ProblemsProps {
   errors: ManifestError[];

@@ -13,6 +13,7 @@ from pydantic import SecretStr
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.provider.const import (
+    BRAVE_SEARCH_API_KEY_SECRET_NAME,
     GOOGLE_MAPS_API_KEY_SECRET_NAME,
     GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
     TAVILY_API_KEY_SECRET_NAME,
@@ -450,6 +451,34 @@ class Command(SmarterCommand):
             user_profile=self.user_profile,
         )
 
+    def initialize_brave_search(self):
+        """
+        Initialize the Brave Search api key Secret.
+
+        ImageSearchPlugins, such as safe_image_search, and the Brave WebsearchPlugin samples, such
+        as research_assistant, read their api key from this Secret. As with Tavily, a missing key
+        is not stored. An ImageSearchPlugin without it returns no images, and logs how to create it.
+        """
+        NAME = "brave search"
+        API_KEY_ENV_VAR = "BRAVE_SEARCH_API_KEY"
+
+        api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
+        if is_missing_value(api_key):
+            self.missing_api_key(
+                API_KEY_ENV_VAR,
+                f"image and web search: the {BRAVE_SEARCH_API_KEY_SECRET_NAME} Secret of ImageSearchPlugins such as "
+                "safe_image_search, and of the Brave WebsearchPlugin samples",
+                "https://api-dashboard.search.brave.com/app/keys",
+            )
+            return
+
+        initialize_secret(
+            secret_string=api_key,
+            secret_name=BRAVE_SEARCH_API_KEY_SECRET_NAME,
+            description=f"API key for {NAME}.",
+            user_profile=self.user_profile,
+        )
+
     def initialize_metaai(self):
         """Initialize Meta AI provider and its models."""
         API_KEY_ENV_VAR = "LLAMA_API_KEY"
@@ -592,6 +621,7 @@ class Command(SmarterCommand):
             self.initialize_googleai()
             self.initialize_google_maps()
             self.initialize_tavily()
+            self.initialize_brave_search()
             self.initialize_metaai()
             self.initialize_mistral()
             self.initialize_openai()

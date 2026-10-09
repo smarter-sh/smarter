@@ -7,7 +7,7 @@ import TemplateSelector from "@/components/TemplateSelector/";
 
 import { type LLMProvider } from "@/components/LLMProviders";
 
-import "./styles.css";
+import "@/components/LLMProviderPassthroughRequest/styles.css";
 
 export interface ProviderPassthroughRequestProps {
   providersJson: LLMProvider[];

@@ -145,3 +145,51 @@ does_refer_to:
     search_term: API
     fuzzy: true
     expected: false
+# thesaurus_match() returns the words of the prompt that matched, or null. These
+# cases use the real WordNet corpus, and are skipped if it is not installed.
+thesaurus_match:
+  - prompt: I want to buy an automobile
+    search_term: car
+    expected: automobile
+  - prompt: Show me a picture of a cat
+    search_term: image
+    expected: picture
+  - prompt: A monochrome photograph of Paris
+    search_term: black and white
+    expected: monochrome
+  - prompt: I need an aid
+    search_term: help
+    expected: aid
+  - prompt: Show me the bill
+    search_term: invoice
+    expected: bill
+  - prompt: Can I see the bills from my last trip?
+    search_term: travel invoice
+    expected: null
+  - prompt: Can I see the bills from my last travel?
+    search_term: travel invoice
+    expected: travel bill
+  - prompt: Tell me about everlasting gobstoppers
+    search_term: gobstopper
+    expected: gobstopper
+  # verb senses are excluded: the verb image means see.
+  - prompt: Let me see the code
+    search_term: image
+    expected: null
+  # in the reverse direction, only nouns count: weather is a synonym of the verb endure.
+  - prompt: Can you endure the cold?
+    search_term: weather
+    expected: null
+  - prompt: What is the weather like?
+    search_term: car
+    expected: null
+  # words shorter than THESAURUS_MIN_WORD_LENGTH must match exactly.
+  - prompt: artificial intelligence aid
+    search_term: ai help
+    expected: null
+  - prompt: ""
+    search_term: car
+    expected: null
+  - prompt: buy an automobile
+    search_term: "?"
+    expected: null

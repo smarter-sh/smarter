@@ -1452,14 +1452,16 @@ LOGGING = {
             "filters": ["health_check"],
         },
         "redis": {
-            "level": smarter_settings.log_level_name,
+            # every level, so that Smarter Chat's Sandbox mode can stream DEBUG records. The log
+            # stream filters them by level. See stream_user_logs().
+            "level": "DEBUG",
             "class": "smarter.lib.logging.RedisLogHandler",
             "formatter": "truncated",
         },
     },
     "root": {
         "handlers": ["default", "redis"],
-        "level": smarter_settings.log_level_name,
+        "level": "DEBUG",
     },
     "loggers": {
         "uvicorn.access": {
@@ -1505,14 +1507,18 @@ default
     ``smarter_settings.log_level_name``.
 redis
     Custom handler (:class:`smarter.lib.logging.RedisLogHandler`) for sending logs
-    to Redis. Uses the 'truncated' formatter and applies the health_check filter.
-    Log level is hardcoded to INFO.
+    to Redis, for the web console's log viewer and Smarter Chat's Server Logs tab.
+    Uses the 'truncated' formatter. Its level is DEBUG, whatever
+    ``smarter_settings.log_level_name`` is: the log stream,
+    :func:`smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs`,
+    sends DEBUG records only when they are asked for, as Smarter Chat's Sandbox mode
+    does, and otherwise only the records at ``smarter_settings.log_level_name`` and above.
 
 Root Logger
 -----------
 Handlers: ['default', 'redis']
-Level: Set by ``smarter_settings.log_level_name``
-All log messages are sent to both the console and Redis unless filtered out.
+Level: DEBUG, so that the redis handler receives DEBUG records. Each handler
+filters by its own level, so the console's output is unchanged.
 
 Loggers
 -------
@@ -1522,8 +1528,9 @@ celery, celery.task
 
 Log Level
 ---------
-The log level for all handlers and loggers is dynamically set by
-``smarter_settings.log_level_name`` (e.g., 'INFO', 'DEBUG', 'WARNING').
+The log level for the console handlers, and for the celery and uvicorn.access loggers,
+is dynamically set by ``smarter_settings.log_level_name`` (e.g., 'INFO', 'DEBUG', 'WARNING').
+The root logger and the redis handler are always DEBUG.
 
 References
 ----------

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import CertificateProgram from "./Component";
+import CertificateProgram from "@/components/CertificateProgram/Component";
 
 /** The Smarter certificate program. */
 const meta = {

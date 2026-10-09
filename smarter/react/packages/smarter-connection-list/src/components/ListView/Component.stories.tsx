@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ownedObjects, sessionContext } from "@/mocks/fixtures";
 import { actionHandlers } from "@/mocks/handlers";
 
-import ListView from "./Component";
+import ListView from "@/components/ListView/Component";
 
 const meta = {
   title: "Connection List/ListView",
