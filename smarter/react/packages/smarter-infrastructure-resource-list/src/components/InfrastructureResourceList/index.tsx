@@ -1,2 +1,2 @@
-import InfrastructureResourceList from "./Component";
+import InfrastructureResourceList from "@/components/InfrastructureResourceList/Component";
 export default InfrastructureResourceList;

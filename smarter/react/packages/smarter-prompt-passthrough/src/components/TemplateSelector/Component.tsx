@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { promptTemplates } from "@/components/Prompt/templates";
-import "./styles.css";
+import "@/components/TemplateSelector/styles.css";
 
 interface TemplateSelectorProps {
   value: number;

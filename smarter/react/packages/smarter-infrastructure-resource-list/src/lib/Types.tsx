@@ -7,7 +7,7 @@
 
 export type InfrastructureResourceStatus = "active" | "destroyed";
 
-/** A cloud resource that the platform created, and whether it still exists. */
+/** A cloud resource that the platform created or discovered, and whether it still exists. */
 export type InfrastructureResource = {
   id: number;
   createdAt: string;
@@ -35,7 +35,26 @@ export type InfrastructureResourceSummary = {
   destroyed: number;
 };
 
+/** The page of the list's resources that the response has. */
+export type InfrastructureResourcePagination = {
+  /** The page's number, from 1. */
+  page: number;
+  pageSize: number;
+  numPages: number;
+  /** The number of resources that match the filters. */
+  count: number;
+};
+
+/** The providers and resource types of the whole ledger, for the filters. */
+export type InfrastructureResourceChoices = {
+  providers: string[];
+  resourceTypes: string[];
+};
+
 export type InfrastructureResourceListResponse = {
   summary: InfrastructureResourceSummary;
+  /** A page of the resources that match the filters, newest first. */
   objects: InfrastructureResource[];
+  pagination: InfrastructureResourcePagination;
+  choices: InfrastructureResourceChoices;
 };

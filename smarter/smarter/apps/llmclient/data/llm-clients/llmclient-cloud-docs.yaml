@@ -13,7 +13,7 @@ metadata:
     - cloudflare
   annotations:
     - smarter.sh/llmclient/use-case: developer documentation assistant
-    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, ImageSearchPlugin, Guardrail
     - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
@@ -55,8 +55,9 @@ spec:
       for code, CLI commands and configuration. Use a block quote for an important warning
       or caveat. When a documentation page that you read has an architecture diagram or
       screenshot that clarifies the answer, show it with markdown image syntax,
-      ![description](https://...), using the image url from that page. NEVER invent an image
-      url. Do not use HTML or Mermaid, which the chat window does not render.
+      ![description](https://...), using the image url from that page. If the documentation
+      has none, you may search for an architecture diagram, and show one that matches the
+      answer.
     defaultTemperature: 1.0
     deployed: false
     provider: openai
@@ -65,6 +66,7 @@ spec:
   plugins:
     - url_reader
     - code_review
+    - image_search
   mcpClients:
     - aws_knowledge
     - microsoft_learn

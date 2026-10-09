@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, serviceHealthHandler } from "@/mocks/handlers";
 
-import ServiceHealth from "./Component";
+import ServiceHealth from "@/components/ServiceHealth/Component";
 
 /** The health of the platform's backend services. */
 const meta = {

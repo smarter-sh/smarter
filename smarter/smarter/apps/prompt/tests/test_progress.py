@@ -121,11 +121,29 @@ class TestReceivers(TestCase):
                     "type": "tool_requested",
                     "message": "Calling tool get_current_weather",
                     "tool": "get_current_weather",
+                    "function": "get_current_weather",
                     "arguments": '{"a": 1}',
                 }
             ],
         )
         self.assertEqual(responded[0]["message"], "Tool get_current_weather responded")
+
+    def test_tool_calls_are_described_by_their_tool_name(self):
+        """A plugin's symbolic function name is replaced by the tool name that the provider sends."""
+        tool_call = {"function": {"name": "smarter_plugin_0000000016", "arguments": "{}"}}
+        received = self.received(
+            lambda: (
+                llm_tool_requested.send(sender=process_tool_call, tool_call=tool_call, tool_name="stackademy_sql"),
+                llm_tool_responded.send(
+                    sender=process_tool_call, tool_call=tool_call, tool_response={}, tool_name="stackademy_sql"
+                ),
+            )
+        )
+        self.assertEqual(received[0]["message"], "Calling tool stackademy_sql")
+        self.assertEqual(received[0]["tool"], "stackademy_sql")
+        self.assertEqual(received[0]["function"], "smarter_plugin_0000000016")
+        self.assertEqual(received[1]["message"], "Tool stackademy_sql responded")
+        self.assertEqual(received[1]["function"], "smarter_plugin_0000000016")
 
     def test_tool_signals_of_built_in_functions_are_not_duplicated(self):
         received = self.received(

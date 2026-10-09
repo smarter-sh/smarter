@@ -11,7 +11,7 @@ metadata:
     - code
   annotations:
     - smarter.sh/llmclient/use-case: codebase question answering
-    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, ImageSearchPlugin, Guardrail
     - smarter.sh/llmclient/last-updated: 2026-10-08
     - smarter.sh/llmclient/owner: Lawrence McDaniel
 spec:
@@ -53,8 +53,9 @@ spec:
       step by step, and fenced code blocks, with the language named, for short code excerpts.
       When a repository's README or documentation has an architecture diagram or logo that
       clarifies the answer, show it with markdown image syntax, ![description](https://...),
-      using the image url that your tools returned. NEVER invent an image url. Do not use
-      HTML or Mermaid, which the chat window does not render.
+      using the image url that your tools returned. To illustrate a well known architecture
+      or pattern, such as MVC or a message queue, you may search for a diagram of it.
+
     defaultTemperature: 1.0
     deployed: false
     provider: openai
@@ -63,6 +64,7 @@ spec:
   plugins:
     - url_reader
     - code_review
+    - image_search
   mcpClients:
     - deepwiki
     - gitmcp

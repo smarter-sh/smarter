@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import Problems from "./Component";
+import Problems from "@/components/Problems/Component";
 
 /** The manifest's syntax and validation problems, under the editor. */
 const meta = {

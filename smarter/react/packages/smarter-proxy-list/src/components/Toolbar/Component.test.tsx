@@ -7,7 +7,7 @@ import { ACTIONS_URL as BASE, makeObject, sessionContext } from "@/mocks/fixture
 import { actionHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
-import { Toolbar } from "./Component";
+import { Toolbar } from "@/components/Toolbar/Component";
 
 function renderToolbar(proxy = makeObject(1, { name: "first_example" })) {
   const onRequery = vi.fn();
@@ -82,5 +82,46 @@ describe("Toolbar", () => {
   it("disables deleting one that cannot be deleted", () => {
     renderToolbar(makeObject(3, { canDelete: false }));
     expect(screen.getByRole("button", { name: /You can't delete this proxy/ })).toBeDisabled();
+  });
+
+  it("copies the Proxy's url, and shows that it did", async () => {
+    const { user } = renderToolbar();
+    const copy = screen.getByRole("button", { name: /^Copy URL:/ });
+    await user.click(copy);
+    expect(await navigator.clipboard.readText()).toBe("http://localhost:9357/api/v1/proxy/example-1/");
+    // eslint-disable-next-line testing-library/no-node-access -- the button shows that it copied with its icon.
+    expect(copy.querySelector("i")).toHaveClass("bi-clipboard-check");
+  });
+
+  it("says when it can't copy the url", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { user } = renderToolbar();
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("denied"));
+    await user.click(screen.getByRole("button", { name: /^Copy URL:/ }));
+    expect(await screen.findByRole("dialog", { name: /Error/ })).toHaveTextContent(
+      "Could not copy the URL to the clipboard: http://localhost:9357/api/v1/proxy/example-1/",
+    );
+  });
+
+  it("can't copy the url of a Proxy whose endpoints are disabled", () => {
+    renderToolbar(makeObject(1, { url: "" }));
+    expect(screen.getByRole("button", { name: /^The proxy endpoints are disabled/ })).toBeDisabled();
+  });
+
+  it("starts renaming a Proxy without a name from an empty name", async () => {
+    const { user } = renderToolbar(makeObject(1, { name: "" }));
+    await user.click(screen.getByRole("button", { name: /^Rename:/ }));
+    expect(screen.getByPlaceholderText(/new/i)).toHaveValue("");
+  });
+
+  it("shows the status of a failed action without an error message", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    server.use(http.post(`${BASE}delete/:id/`, () => new HttpResponse("oops", { status: 500, statusText: "Oops" })));
+    const { user } = renderToolbar();
+    await user.click(screen.getByRole("button", { name: /^Delete:/ }));
+    await user.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByRole("dialog", { name: /Error/ })).toHaveTextContent(
+      "Failed to delete proxy (500): Oops",
+    );
   });
 });

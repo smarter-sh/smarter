@@ -28,31 +28,44 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { Loading, LoadingText, formatDateTime } from "@smarter/common";
-import type { SessionContext } from "@smarter/common";
+import { Loading, LoadingText, formatDateTime, SortableHeader } from "@smarter/common";
+import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { LLMClient } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/const";
 
-import "./styles.css";
+import "@/components/ListView/styles.css";
 
 /**
  * TableHeader
  *
  * Renders the table header row for the llmclient list, including column titles for all displayed fields.
+ * Its sortable columns sort the list, with the list api (see SortableHeader).
  */
-const TableHeader = () => {
+const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
   return (
     <thead className="table-light border-bottom-2">
       <tr className="">
-        <th className=" p-1">Name</th>
-        <th className="d-none d-lg-table-cell width-100">Created</th>
-        <th className="d-none d-lg-table-cell width-100">Updated</th>
-        <th className="">Description</th>
-        <th className="">Provider</th>
-        <th className="min-width-150">Model</th>
+        <SortableHeader column="name" sorting={sorting} className=" p-1">
+          Name
+        </SortableHeader>
+        <SortableHeader column="createdAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
+          Created
+        </SortableHeader>
+        <SortableHeader column="updatedAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
+          Updated
+        </SortableHeader>
+        <SortableHeader column="description" sorting={sorting} className="">
+          Description
+        </SortableHeader>
+        <SortableHeader column="provider" sorting={sorting} className="">
+          Provider
+        </SortableHeader>
+        <SortableHeader column="defaultModel" sorting={sorting} className="min-width-150">
+          Model
+        </SortableHeader>
         <th className="d-none d-xl-table-cell">Plugins</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
@@ -249,6 +262,7 @@ export interface ListViewProps {
   sessionContext: SessionContext;
   objects: LLMClient[];
   onRequery: () => void;
+  sorting?: Sorting;
 }
 
 /**
@@ -261,15 +275,16 @@ export interface ListViewProps {
  * @param sessionContext - Authentication and API context for actions.
  * @param llmclients - Array of llmclient objects to display.
  * @param onRequery - Callback to refresh llmclient data.
+ * @param sorting - The sort of the list, which its sortable column headers change.
  */
-export function ListView({ isLoading, sessionContext, objects, onRequery }: ListViewProps) {
+export function ListView({ isLoading, sessionContext, objects, onRequery, sorting }: ListViewProps) {
   console.debug(
     `${loggerPrefix} ListView() Rendering ListView - {isLoading: ${isLoading}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
   return (
     <div className="table-responsive prompt-list-table-wrap ps-3 pe-3">
       <table className="table table-striped table-hover align-middle border">
-        <TableHeader />
+        <TableHeader sorting={sorting} />
         <tbody>
           {isLoading && (!objects || objects.length === 0) ? (
             <LLMClientRowGhosts count={5} />

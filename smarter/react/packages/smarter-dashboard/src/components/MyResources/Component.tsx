@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import { Loading } from "@smarter/common";
 import { loggerPrefix } from "@/const";
 
-import "./styles.css";
+import "@/components/MyResources/styles.css";
 
 interface MyResourcesProps {
   apiUrl: string;

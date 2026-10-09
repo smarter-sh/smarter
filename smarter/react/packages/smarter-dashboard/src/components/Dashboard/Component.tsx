@@ -36,22 +36,22 @@
  */
 import type { AppContextInterface } from "@/main";
 
-import "./styles.css";
-import MyResources from "../MyResources/Component";
-import ServiceHealth from "../ServiceHealth/Component";
-import QuickActions from "../QuickActions/Component";
-import CertificateProgram from "../CertificateProgram/Component";
-import VSCodeExtension from "../VSCodeExtension/Component";
-import WhatsNew from "../WhatsNew/Component";
-import GettingStarted from "../GettingStarted/Component";
-import RecentActivity from "../RecentActivity/Component";
-import BudgetAlerts from "../BudgetAlerts/Component";
-import Sdk from "../Sdk/Component";
-import Cli from "../Cli/Component";
-import SelfHost from "../SelfHost/Component";
-import Contribute from "../Contribute/Component";
-import UserCharges from "../TokenUsage/";
-import BudgetVsActual from "../BudgetVsActual/";
+import "@/components/Dashboard/styles.css";
+import MyResources from "@/components/MyResources/Component";
+import ServiceHealth from "@/components/ServiceHealth/Component";
+import QuickActions from "@/components/QuickActions/Component";
+import CertificateProgram from "@/components/CertificateProgram/Component";
+import VSCodeExtension from "@/components/VSCodeExtension/Component";
+import WhatsNew from "@/components/WhatsNew/Component";
+import GettingStarted from "@/components/GettingStarted/Component";
+import RecentActivity from "@/components/RecentActivity/Component";
+import BudgetAlerts from "@/components/BudgetAlerts/Component";
+import Sdk from "@/components/Sdk/Component";
+import Cli from "@/components/Cli/Component";
+import SelfHost from "@/components/SelfHost/Component";
+import Contribute from "@/components/Contribute/Component";
+import UserCharges from "@/components/TokenUsage";
+import BudgetVsActual from "@/components/BudgetVsActual";
 
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
   return (

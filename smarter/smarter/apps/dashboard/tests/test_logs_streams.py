@@ -1,6 +1,7 @@
 """Tests for dashboard log streaming views."""
 
 import asyncio
+import logging
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import AnonymousUser
@@ -79,12 +80,14 @@ class TestLogStreams(TestAccountMixin):
             count=min(streams.STREAM_REPLAY_BATCH_SIZE, streams.STREAM_REPLAY_MAX_ENTRIES),
         )
 
-    def _stream(self, fake_cache, user=None, limit=3):
+    def _stream(self, fake_cache, user=None, limit=3, query=None, log_level=logging.DEBUG):
         """Call the view with a fake redis, and collect its first chunks."""
-        request = RequestFactory().get("/dashboard/logs/api/stream/")
+        request = RequestFactory().get("/dashboard/logs/api/stream/", query or {})
         request.user = user or self.non_admin_user
         with (
-            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
+            patch.object(
+                streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True, log_level=log_level)
+            ),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
         ):
             response = streams.stream_user_logs(request)
@@ -173,3 +176,50 @@ class TestLogStreams(TestAccountMixin):
         _, chunks = self._stream(fake_cache, limit=4)
         self.assertEqual(chunks, ["retry: 3000\n\n", "data: hello\n", "\n", ": keepalive\n\n"])
         fake_pubsub.close.assert_called_once()
+
+    def test_min_log_level(self):
+        """Test that the minimum log level is the level query parameter, or else the server's log level."""
+        factory = RequestFactory()
+        with patch.object(streams, "smarter_settings", MagicMock(log_level=logging.INFO)):
+            self.assertEqual(streams._min_log_level(factory.get("/", {"level": "DEBUG"})), logging.DEBUG)
+            self.assertEqual(streams._min_log_level(factory.get("/", {"level": " warning "})), logging.WARNING)
+            self.assertEqual(streams._min_log_level(factory.get("/")), logging.INFO)
+            self.assertEqual(streams._min_log_level(factory.get("/", {"level": "LOUD"})), logging.INFO)
+
+    def test_is_below_level(self):
+        """Test that only log records below the minimum level are dropped."""
+        below = streams._is_below_level
+        self.assertTrue(below('{"level": "DEBUG", "message": "x"}', logging.INFO))
+        self.assertTrue(below('{"levelname": "info", "message": "x"}', logging.WARNING))
+        self.assertFalse(below('{"level": "INFO", "message": "x"}', logging.INFO))
+        self.assertFalse(below('{"level": "DEBUG", "message": "x"}', logging.DEBUG))
+        self.assertFalse(below('{"level": "LOUD", "message": "x"}', logging.INFO))
+        self.assertFalse(below('{"message": "x"}', logging.INFO))
+        self.assertFalse(below("plain text", logging.INFO))
+        self.assertFalse(below("[1, 2]", logging.INFO))
+
+    def test_stream_filters_by_level(self):
+        """Test that replayed and live records below the stream's level are dropped."""
+        debug = b'{"level": "DEBUG", "message": "debug"}'
+        info = b'{"level": "INFO", "message": "info"}'
+
+        def fake_cache():
+            cache = MagicMock()
+            cache.xrevrange.side_effect = [[(b"2-0", {b"data": info}), (b"1-0", {b"data": debug})], []]
+            cache.pubsub.return_value.get_message.side_effect = [
+                {"type": "message", "data": debug},
+                {"type": "message", "data": info},
+                None,
+            ]
+            return cache
+
+        # production mode: the server's log level.
+        _, chunks = self._stream(fake_cache(), limit=4, log_level=logging.INFO)
+        self.assertEqual(chunks[1], 'event: bulk\ndata: [{"level": "INFO", "message": "info"}]\n\n')
+        self.assertEqual(chunks[2:], [f"data: {info.decode()}\n", "\n"])
+
+        # sandbox mode: DEBUG.
+        _, chunks = self._stream(fake_cache(), limit=5, query={"level": "DEBUG"}, log_level=logging.INFO)
+        self.assertIn('"message": "debug"', chunks[1])
+        self.assertIn('"message": "info"', chunks[1])
+        self.assertEqual(chunks[2:], [f"data: {debug.decode()}\n", "\n", f"data: {info.decode()}\n"])

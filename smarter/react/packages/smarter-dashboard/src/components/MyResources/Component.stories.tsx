@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { appContext } from "@/mocks/fixtures";
 import { dashboardErrorHandlers, myResourcesHandler } from "@/mocks/handlers";
 
-import MyResources from "./Component";
+import MyResources from "@/components/MyResources/Component";
 
 /** The counts of the user's resources. */
 const meta = {

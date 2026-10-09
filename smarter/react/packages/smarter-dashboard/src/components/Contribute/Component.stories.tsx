@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import Contribute from "./Component";
+import Contribute from "@/components/Contribute/Component";
 
 /** Contributing to Smarter. */
 const meta = {

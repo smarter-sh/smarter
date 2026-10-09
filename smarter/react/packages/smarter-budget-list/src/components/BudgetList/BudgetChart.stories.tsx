@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { series } from "@/mocks/fixtures";
 
-import BudgetChart from "./BudgetChart";
+import BudgetChart from "@/components/BudgetList/BudgetChart";
 
 /** The budget versus actual spending of a resource, per period. */
 const meta = {

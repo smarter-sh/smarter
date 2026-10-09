@@ -3,8 +3,8 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import Hero from "./components/Hero";
-import TerminalEmulator from "./components/Terminal";
+import Hero from "@/components/Hero";
+import TerminalEmulator from "@/components/Terminal";
 
 interface AppProps {
   apiUrl: string;
