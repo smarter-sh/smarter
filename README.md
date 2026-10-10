@@ -1,5 +1,7 @@
 # The Smarter Project
 
+Hello World!!!!
+
 ![Build Status](https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main)
 ![Test Status](https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main)
 ![Deploy Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
