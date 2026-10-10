@@ -134,7 +134,7 @@ jobs:
           fetch-tags: true
 
       #------------------------------------------------------------------------
-      # Prerequisites for `make init`: python3.13 (check-python, python-init),
+      # Prerequisites for `make init`: python3.14 (check-python, python-init),
       # Node/npm (python-init, react-install, react-build) and the
       # docker-compose v1 command name, which GitHub-hosted runners no longer
       # ship. The shim forwards to the Docker Compose v2 plugin.
@@ -147,7 +147,7 @@ jobs:
         id: python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install Node
         id: node
@@ -329,9 +329,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .pypi_cache
-          key: pypi-${{ runner.os }}-py3.13-${{ hashFiles('smarter/requirements/local.txt') }}
+          key: pypi-${{ runner.os }}-py3.14-${{ hashFiles('smarter/requirements/local.txt') }}
           restore-keys: |
-            pypi-${{ runner.os }}-py3.13-
+            pypi-${{ runner.os }}-py3.14-
 
       - name: Restore root node_modules
         id: root-node-modules
@@ -413,6 +413,19 @@ jobs:
       #========================================================================
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          # BuildKit's image, from the ECR Public Gallery's mirror of Docker Hub.
+          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
+
+      # The build pulls the python base image, and docker-init pulls mariadb
+      # and redis, all from Docker Hub. Anonymous pulls share the runner's
+      # IP-based rate limit and fail with 429 Too Many Requests.
+      - name: Login to Docker Hub
+        id: login-dockerhub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Expose GitHub runtime for BuildKit cache
         uses: crazy-max/ghaction-github-runtime@v3
