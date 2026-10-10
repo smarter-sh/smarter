@@ -18,22 +18,23 @@ Smarter.
 Start with `smarter-development`. It sets out the rules that apply to every
 change, and its table says which narrower skill to load for each kind of task.
 
-| Skill                           | Use it when                                                                 |
-| ------------------------------- | --------------------------------------------------------------------------- |
-| `smarter-development`           | You're making any change. Start here.                                       |
-| `smarter-sam-resource`          | You're adding or changing a resource kind (manifest, broker, model).        |
-| `smarter-django-react`          | You're building a React app that Django hosts, e.g. a console list page.    |
-| `smarter-react-testing`         | You're writing Storybook stories, Vitest tests, or fixing ESLint/Prettier.  |
-| `smarter-python-testing`        | You're writing or running Django unit tests, or raising coverage.           |
-| `smarter-docker-environment`    | Code must run in the containers (tests, migrations, `manage.py`).           |
-| `smarter-infrastructure-safety` | Code touches Kubernetes, AWS, Route53, ACM, LLM providers, or Celery tasks. |
-| `smarter-migrations`            | A model, or an enum that a model uses, changes.                             |
-| `smarter-management-commands`   | You're writing a `manage.py` command or adding built-in data.               |
-| `smarter-api-testing`           | You're testing the REST API by hand against the local dev server.           |
-| `smarter-docstrings`            | You're writing Python docstrings, which Sphinx publishes.                   |
-| `smarter-sphinx-docs`           | You're editing `docs/source`.                                               |
-| `smarter-code-quality`          | You're about to finish a change and need to run the pre-commit hooks.       |
-| `smarter-git-commits`           | You've been asked to write a commit message.                                |
+| Skill                                  | Use it when                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| `smarter-development`                  | You're making any change. Start here.                                       |
+| `smarter-sam-resource`                 | You're adding or changing a resource kind (manifest, broker, model).        |
+| `smarter-django-react`                 | You're building a React app that Django hosts, e.g. a console list page.    |
+| `smarter-react-testing`                | You're writing Storybook stories, Vitest tests, or fixing ESLint/Prettier.  |
+| `smarter-python-testing`               | You're writing or running Django unit tests, or raising coverage.           |
+| `smarter-docker-environment`           | Code must run in the containers (tests, migrations, `manage.py`).           |
+| `smarter-infrastructure-safety`        | Code touches Kubernetes, AWS, Route53, ACM, LLM providers, or Celery tasks. |
+| `smarter-migrations`                   | A model, or an enum that a model uses, changes.                             |
+| `smarter-management-commands`          | You're writing a `manage.py` command or adding built-in data.               |
+| `smarter-api-testing`                  | You're testing the REST API by hand against the local dev server.           |
+| `smarter-docstrings`                   | You're writing Python docstrings, which Sphinx publishes.                   |
+| `smarter-sphinx-docs`                  | You're editing `docs/source`.                                               |
+| `smarter-code-quality`                 | You're about to finish a change and need to run the pre-commit hooks.       |
+| `smarter-git-commits`                  | You've been asked to write a commit message.                                |
+| `blog.smarter.sh-release-announcement` | You're writing a release announcement post for blog.smarter.sh.             |
 
 ### Layout of a skill
 
