@@ -16,7 +16,7 @@ are installed in your local environment:
 - Docker Desktop or Docker CE 25x or later
 - Docker Compose
 - Node: 24 or later
-- python: 3.13 or later
+- python: 3.14 or later
 - git: 2.x or later
 - make: 3.8 or later
 

@@ -85,7 +85,7 @@ A simple starter pattern is:
    Task: Write a Python helper function.
    Context: This function will be used in our internal service.
    Requirements:
-   - Python 3.13
+   - Python 3.14
    - add docstring
    - handle invalid input safely
    - include one example test case
