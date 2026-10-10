@@ -168,8 +168,9 @@ longer exists as destroyed, with the same signals as the services send, so the l
 written only by its receivers. A resource type that can't be listed, for example because the
 cluster is unavailable, is left as it is. The inventory only reads the cloud: it never creates
 or destroys anything. Celery Beat runs it every 15 minutes, with the task
-``smarter.apps.infrastructure.tasks.sync_infrastructure_inventory``, on the infrastructure queue.
-To run it on demand:
+``smarter.apps.infrastructure.tasks.sync_infrastructure_inventory``, on the infrastructure queue,
+and ``manage.py initialize_platform`` runs it once at the end, so a new platform's ledger isn't
+empty until the first scheduled run. To run it on demand:
 
 .. code-block:: bash
 

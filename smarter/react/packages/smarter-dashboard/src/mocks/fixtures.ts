@@ -46,7 +46,7 @@ export const serviceHealth = {
   linux_distribution: "Debian GNU/Linux 13",
   smarter_version: "0.18.0",
   django_version: "6.0.8",
-  python_version: "3.13.7",
+  python_version: "3.14.0",
   pydantic_version: "2.13.5",
   drf_version: "3.16.1",
   health_checks: [

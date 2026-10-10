@@ -1,6 +1,6 @@
 """Test the initialize_platform management command, whose sub-commands are patched."""
 
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from smarter.common.const import SmarterEnvironments
 
@@ -21,6 +21,18 @@ class TestInitializePlatform(CommandTestBase):
         self.assertIn("create_stackademy", names)
         self.assertLess(names.index("initialize_providers"), names.index("create_stackademy"))
         self.assertIn("verify_dns_configuration", names)
+        self.assertEqual(names[-1], "sync_infrastructure_inventory")
+
+    def test_inventory_exit_is_logged(self):
+        """Test that sync_infrastructure_inventory exiting, e.g. without a cluster, doesn't stop initialize_platform."""
+
+        def call(name, **kwargs):
+            if name == "sync_infrastructure_inventory":
+                raise SystemExit(1)
+
+        with patch(f"{MODULE}.call_command", side_effect=call), patch(f"{MODULE}.logger") as logger:
+            self.run_command("initialize_platform", password="pw")
+        logger.error.assert_called_once_with("Failed to sync the infrastructure inventory: %s", ANY)
 
     def test_failures_are_logged(self):
         """Test that a failure of an optional initialization command doesn't stop the others."""

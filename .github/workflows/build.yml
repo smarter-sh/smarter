@@ -78,10 +78,15 @@ jobs:
         run: |
           python scripts/bump_version.py $TAG --cicd
 
+      # QEMU and Buildx pull their helper images (tonistiigi/binfmt,
+      # moby/buildkit) from Docker Hub by default. Pull them from the ECR
+      # Public Gallery's mirrors instead, so that Docker Hub's token service
+      # (auth.docker.io) timing out can't fail the build.
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
+          image: public.ecr.aws/vend/tonistiigi/binfmt:latest
 
       # Get the latest release tag and append branch name for non-main branches
       # example: v0.14.0-alpha.27
@@ -132,6 +137,18 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
+
+      # Log in to Docker Hub for the final step, which copies the image there.
+      # The build itself pulls its python base image from the ECR Public
+      # Gallery, so Docker Hub outages and rate limits can't fail the build.
+      - name: Login to Docker Hub
+        id: login-dockerhub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Configure AWS credentials
         id: aws-credentials
@@ -251,31 +268,24 @@ jobs:
           aws ecr start-image-scan --repository-name ${{ env.AWS_ECR_REPO }} --image-id imageTag=latest || echo "Scan already in progress or failed"
           echo "ECR image scan triggered"
 
-      - name: Login to Docker Hub
-        id: login-dockerhub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PAT }}
-
-      - name: Build and push to Docker Hub
-        id: build-and-push-to-dockerhub
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:latest
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_RELEASE }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.MAJOR_RELEASE }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.MINOR_RELEASE }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.PATCH_RELEASE }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
-          build-args: |
-            ENVIRONMENT=${{ env.ENVIRONMENT }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-        env:
-          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+      # -----------------------------------------------------------------------
+      # Copy the image to Docker Hub
+      # Copies the multi-platform image that was just pushed to ECR, with its
+      # attestations, instead of building it a second time. Uses the same tags
+      # as ECR.
+      # -----------------------------------------------------------------------
+      - name: Push to Docker Hub
+        id: push-to-dockerhub
+        shell: bash
+        run: |
+          SOURCE="${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}"
+          TARGET="${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}"
+          docker buildx imagetools create \
+            --tag "$TARGET:latest" \
+            --tag "$TARGET:${{ env.LATEST_RELEASE }}" \
+            --tag "$TARGET:${{ env.MAJOR_RELEASE }}" \
+            --tag "$TARGET:${{ env.MINOR_RELEASE }}" \
+            --tag "$TARGET:${{ env.PATCH_RELEASE }}" \
+            --tag "$TARGET:${{ github.run_id }}" \
+            --tag "$TARGET:${{ env.DATESTAMP }}" \
+            "$SOURCE"
