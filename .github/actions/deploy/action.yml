@@ -26,6 +26,9 @@ inputs:
   aws-region:
     description: "The AWS region to deploy to"
     required: true
+  brave-search-api-key:
+    description: "The Brave Search API key"
+    required: false
   debug-mode:
     description: "Whether to enable debug mode (true/false)"
     required: false
@@ -410,6 +413,7 @@ runs:
             "SMARTER_BRANDING_SUPPORT_EMAIL": ${{ inputs.smarter-branding-support-email && format('"{0}"', inputs.smarter-branding-support-email) || 'null' }},
             "SMARTER_BRANDING_SUPPORT_HOURS": ${{ inputs.smarter-branding-support-hours && format('"{0}"', inputs.smarter-branding-support-hours) || 'null' }},
             "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ inputs.smarter-branding-support-phone-number && format('"{0}"', inputs.smarter-branding-support-phone-number) || 'null' }},
+            "SMARTER_BRAVE_SEARCH_API_KEY": ${{ inputs.brave-search-api-key && format('"{0}"', inputs.brave-search-api-key) || 'null' }},
             "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_AWS_EKS_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
