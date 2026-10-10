@@ -59,8 +59,22 @@ semantic-release (`release.config.js`) to version the release.
 - **scope:** the Django app or area that the change centers on, in lower case:
   `llmclient`, `guardrail`, `plugin`, `passthrough`, `react`, `api`, ... You
   can omit it for changes that span the whole repository.
-- **subject:** imperative mood, lower case, no trailing period. Aim for 72
-  characters for the whole header (config-angular's `header-max-length`).
+- **subject:** imperative mood, lower case, no trailing period.
+- **length:** the whole header, type and scope included, must be **72
+  characters or fewer** (config-angular's `header-max-length`). This is a hard
+  limit: the commitlint pre-commit hook rejects a 73-character header, and the
+  user has to come back for a new command. Don't count by eye, because that has
+  produced 73-character headers more than once. Measure it, and aim for 70 or
+  fewer to leave a margin:
+
+  ```console
+  printf %s "refactor(account): run add_plugin_examples, create_stackademy at init" | wc -c
+  ```
+
+  If it's too long, shorten the subject, for example by naming the area
+  instead of listing every command or file. Don't drop the scope just to save
+  characters.
+
 - `chore(release): ...` belongs to semantic-release. Never write it yourself.
 
 ## Body
@@ -85,7 +99,9 @@ now. A terse four-bullet body has been rejected as "too brief".
 1. Run `git status` and `git diff --stat` (and `git diff` on anything unclear),
    so the message describes the actual working tree, not your memory of it.
 2. Ask, or check, which files belong to the commit, if that's ambiguous.
-3. Start the response with a one-line `Written for:` audience note, because a
+3. Measure the header with `wc -c`, as described in "Subject line", before you
+   hand the command over.
+4. Start the response with a one-line `Written for:` audience note, because a
    commit message is written for other readers.
 
 See [references/canonical-git-commit.md](references/canonical-git-commit.md) for

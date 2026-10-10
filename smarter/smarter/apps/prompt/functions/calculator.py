@@ -117,8 +117,6 @@ def safe_eval(expr: str) -> float:
             elif isinstance(node, ast.UnaryOp):
                 operand = self.visit(node.operand)
                 return self._unaryop(node.op, operand)
-            elif isinstance(node, ast.Num):
-                return node.n
             elif isinstance(node, ast.Constant):
                 if isinstance(node.value, (int, float)):
                     return node.value
