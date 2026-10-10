@@ -37,7 +37,7 @@ VS Code. These are not actually used at run-time.
 
 | Package             | Description                               |
 | ------------------- | ----------------------------------------- |
-| Python 3.13         | Python 3.13 interpreter                   |
+| Python 3.14         | Python 3.14 interpreter                   |
 | BLIS/OpenBLAS       | Math acceleration (BLAS-like)             |
 | zlib                | Compression library for Python and others |
 | zstd                | Fast lossless compression                 |
