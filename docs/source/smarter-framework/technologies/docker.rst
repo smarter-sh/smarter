@@ -26,9 +26,9 @@ The Smarter Dockerfile begins with a novel base image declaration that helps to 
 
 .. code-block:: docker
 
-   FROM public.ecr.aws/docker/library/python:3.13-slim-trixie AS linux_base
+   FROM public.ecr.aws/docker/library/python:3.14-slim-trixie AS linux_base
 
-python:3.13-slim-trixie includes the latest Python 3.13, installed on a minimal Debian 13 ("Trixie") operating system base
+python:3.14-slim-trixie includes the latest Python 3.14, installed on a minimal Debian 13 ("Trixie") operating system base
 which is optimized for size and performance. It is the official Docker Hub image, pulled from its mirror in the
 Amazon ECR Public Gallery so that builds don't depend on Docker Hub's availability or pull rate limits. The Dockerfile is laid out in stages (eg, layers),
 ordered to optimize build caching and minimize final image size.

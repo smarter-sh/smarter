@@ -20,7 +20,7 @@ bypass a hook (`--no-verify`, `SKIP=`, blanket `# noqa`) to make a change pass.
 | autoflake            | `--remove-all-unused-imports`       | Deletes unused imports. Re-check that nothing you need was removed.            |
 | flake8               | `.flake8`                           | Selects **only C101** (coding magic comment). It is not a general style check. |
 | bandit               | `-ll`                               | Medium or high severity security findings fail.                                |
-| pyupgrade            |                                     | Modern syntax for Python 3.13.                                                 |
+| pyupgrade            |                                     | Modern syntax for Python 3.14.                                                 |
 | pydocstringformatter |                                     | Normalizes docstring layout.                                                   |
 | codespell            | `codespell.txt` ignore list         | Also runs on docs and React. Add real project words to `codespell.txt`.        |
 
