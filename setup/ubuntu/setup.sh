@@ -40,7 +40,7 @@ sudo apt update
 sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
-sudo apt install python3.13-venv python3.13-full python3.13-dev -y
+sudo apt install python3.14-venv python3.14-full python3.14-dev -y
 sudo apt-get install libmariadb-dev-compat libmariadb-dev -y
 
 sudo snap install k9s
@@ -68,8 +68,8 @@ echo "gcc:"
 gcc --version | head -n 1
 
 echo "python:"
-python3.13 --version
-echo "Python interpreter path: $(which python3.13)"
+python3.14 --version
+echo "Python interpreter path: $(which python3.14)"
 
 echo "go:"
 go version
