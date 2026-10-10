@@ -61,9 +61,7 @@ pint                                    # Define, operate and manipulate physica
 # LLM support
 # ------------
 langchain~=1.2.0                        # -----------------------------
-langchain_community                     # for pinecone vectorstore backend
 langchain_openai                        #
-langchain_pinecone                      #
 langchain-text-splitters                # -----------------------------
 openai~=2.31                            # OpenAI API
 mcp~=2.2                                # Model Context Protocol SDK, for the MCPClient resource

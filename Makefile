@@ -6,7 +6,7 @@ ifeq ($(OS),Windows_NT)
     PYTHON := python.exe
     ACTIVATE_VENV := venv/Scripts/activate
 else
-    PYTHON := python3.13
+    PYTHON := python3.14
     ACTIVATE_VENV := source venv/bin/activate
 endif
 PIP := $(PYTHON) -m pip
@@ -50,7 +50,7 @@ init:
 	@echo "build the Docker containers, initialize the MariaDB database, and create example users,"
 	@echo "prompts and AI resources. This may take up to 20 minutes..."
 	@echo "==============================================================================="
-	make check-python							# verify Python 3.13 is installed
+	make check-python							# verify Python 3.14 is installed
 	make docker-check							# verify Docker is installed and running
 	make python-init							# create/replace Python virtual environment and install dependencies
 	make react-install							# install npm dependencies for React frontend apps
@@ -405,7 +405,7 @@ sphinx-init:
 	@echo "Note: this is a simplified Python environment that skips setting up the full"
 	@echo "      development environment."
 	@echo "==============================================================================="
-	make check-python		# verify Python 3.13 is installed
+	make check-python		# verify Python 3.14 is installed
 	make python-init		# create/replace Python virtual environment and install dependencies
 	make build			    # build the Smarter Docker container
 	make pre-commit-init	# install and configure pre-commit
@@ -456,7 +456,7 @@ help:
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'
 	@echo 'docker-prune           - Remove unused Docker objects and clean up Docker artifacts'
 	@echo '<************************** Python **************************>'
-	@echo 'check-python           - Verify Python 3.13 is installed'
+	@echo 'check-python           - Verify Python 3.14 is installed'
 	@echo 'python-init            - Create a Python virtual environment and install dependencies'
 	@echo 'python-lint            - Run Python linting using pre-commit and pylint'
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'

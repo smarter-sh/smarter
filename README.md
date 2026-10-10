@@ -130,7 +130,7 @@ This setup uses Docker and takes around 20 minutes for first time installations.
      operating system
    - 20Gib disk storage capacity
    - 4Gib system memory
-   - [Python 3.13](https://www.python.org/)
+   - [Python 3.14](https://www.python.org/)
    - [Docker](https://www.docker.com/products/docker-desktop/),
    - [Docker Compose](https://docs.docker.com/compose/install/).
 

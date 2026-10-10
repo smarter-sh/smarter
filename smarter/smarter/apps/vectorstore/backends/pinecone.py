@@ -2,17 +2,17 @@
 The Pinecone backend: a managed service.
 
 See https://www.pinecone.io/. A vectorstore is one serverless Pinecone index. Its API key is
-the Secret of the vectorstore's ApiConnection. The chunks' text is in the metadata's ``text``,
-as LangChain's PineconeVectorStore stores it. Dumps are Pinecone backups, which Pinecone keeps,
+the Secret of the vectorstore's ApiConnection. The backend embeds the chunks itself and calls the
+Pinecone index directly. The chunks' text is in the metadata's ``text``, where LangChain's
+PineconeVectorStore stores it, so indexes that it wrote stay searchable. Dumps are Pinecone backups, which Pinecone keeps,
 and which require a paid Pinecone plan.
 """
 
 from typing import Any, Optional
 
-from langchain_community.vectorstores.utils import DistanceStrategy
-from langchain_core.documents import Document
+import numpy as np
 from langchain_core.embeddings import Embeddings
-from langchain_pinecone import PineconeVectorStore
+from langchain_core.vectorstores.utils import maximal_marginal_relevance
 from pinecone import Pinecone
 from pinecone.db_control.models import ServerlessSpec
 
@@ -27,11 +27,6 @@ from .base import (
     VectorStoreBackendError,
 )
 
-DISTANCE_STRATEGIES = {
-    "cosine": DistanceStrategy.COSINE,
-    "euclidean": DistanceStrategy.EUCLIDEAN_DISTANCE,
-    "dotproduct": DistanceStrategy.DOT_PRODUCT,
-}
 TEXT_KEY = "text"
 
 
@@ -70,14 +65,6 @@ class PineconeBackend(SmarterVectorstoreBackend):
         if self._index is None:
             self._index = self.client.Index(name=self.index_name)
         return self._index
-
-    def vector_store(self) -> PineconeVectorStore:
-        return PineconeVectorStore(
-            index=self.index,
-            embedding=self.embeddings,
-            text_key=TEXT_KEY,
-            distance_strategy=DISTANCE_STRATEGIES[self.vectorstore.metric],
-        )
 
     # --- lifecycle --------------------------------------------------------------
     def infrastructure_ready(self) -> tuple[bool, str]:
@@ -124,9 +111,21 @@ class PineconeBackend(SmarterVectorstoreBackend):
 
     # --- data -------------------------------------------------------------------
     def upsert(self, ids: list[str], texts: list[str], metadatas: list[dict[str, Any]], batch_size: int = 64) -> None:
-        self.vector_store().add_texts(
-            texts=texts, metadatas=metadatas, ids=ids, batch_size=batch_size, embedding_chunk_size=batch_size
-        )
+        """Embed the texts, and upsert them in batches, with each text in its metadata's ``text``."""
+        for start in range(0, len(texts), batch_size):
+            batch_texts = texts[start : start + batch_size]
+            vectors = self.embeddings.embed_documents(batch_texts)
+            self.index.upsert(
+                vectors=[
+                    {"id": chunk_id, "values": vector, "metadata": {**metadata, TEXT_KEY: text}}
+                    for chunk_id, vector, metadata, text in zip(
+                        ids[start : start + batch_size],
+                        vectors,
+                        metadatas[start : start + batch_size],
+                        batch_texts,
+                    )
+                ]
+            )
 
     def delete(self, ids: list[str]) -> None:
         if ids:
@@ -142,22 +141,54 @@ class PineconeBackend(SmarterVectorstoreBackend):
         lambda_mult: Optional[float] = None,
         metadata_filter: Optional[dict[str, Any]] = None,
     ) -> list[SearchResult]:
-        store = self.vector_store()
+        """Search the index with the query's embedding.
+
+        Scores are Pinecone's raw scores for the index's metric. MMR re-ranks ``fetch_k`` matches
+        for diversity, and its results have no score.
+        """
+        vector = self.embeddings.embed_query(query)
         if search_type == "mmr":
-            documents = store.max_marginal_relevance_search(
-                query, k=k, fetch_k=fetch_k or max(20, k * 4), lambda_mult=lambda_mult or 0.5, filter=metadata_filter
+            response = self.index.query(
+                vector=vector,
+                top_k=fetch_k or max(20, k * 4),
+                include_values=True,
+                include_metadata=True,
+                filter=metadata_filter,
             )
-            return [self._result(document, None) for document in documents]
-        pairs = store.similarity_search_with_score(query, k=k, filter=metadata_filter)
+            matches = self._matches(response)
+            if not matches:
+                return []
+            selected = maximal_marginal_relevance(
+                np.array([vector], dtype=np.float32),
+                [match["values"] for match in matches],
+                k=k,
+                lambda_mult=lambda_mult or 0.5,
+            )
+            results = [self._result(matches[i], score=None) for i in selected]
+            return [result for result in results if result]
+        response = self.index.query(vector=vector, top_k=k, include_metadata=True, filter=metadata_filter)
+        results = [self._result(match, score=match.get("score")) for match in self._matches(response)]
+        results = [result for result in results if result]
         if search_type == "similarity_score_threshold" and score_threshold is not None:
-            pairs = [(document, score) for document, score in pairs if score >= score_threshold]
-        return [self._result(document, score) for document, score in pairs]
+            results = [result for result in results if result.score >= score_threshold]
+        return results
 
     @staticmethod
-    def _result(document: Document, score: Optional[float]) -> SearchResult:
-        return SearchResult(
-            id=document.id, text=document.page_content, metadata=dict(document.metadata or {}), score=score
-        )
+    def _matches(response) -> list[dict[str, Any]]:
+        response = response.to_dict() if hasattr(response, "to_dict") else response
+        return list(response.get("matches") or [])
+
+    @staticmethod
+    def _result(match: dict[str, Any], score: Optional[float]) -> Optional[SearchResult]:
+        """The match as a SearchResult, or None if its metadata has no text, e.g. a vector that.
+
+        something other than Smarter wrote.
+        """
+        metadata = dict(match.get("metadata") or {})
+        if TEXT_KEY not in metadata:
+            return None
+        text = metadata.pop(TEXT_KEY)
+        return SearchResult(id=match.get("id"), text=text, metadata=metadata, score=score)
 
     # --- dumps ------------------------------------------------------------------
     def create_snapshot(self, name: str) -> SnapshotInfo:
