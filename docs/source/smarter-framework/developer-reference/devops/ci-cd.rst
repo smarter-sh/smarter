@@ -50,7 +50,7 @@ Each file specifies the jobs and steps required for that part of the CI/CD proce
          - name: Set up Python
            uses: actions/setup-python@v6
            with:
-             python-version: '3.13'
+             python-version: '3.14'
          - name: Install dependencies
            run: pip install -r requirements.txt
          - name: Run tests
