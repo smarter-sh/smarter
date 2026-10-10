@@ -17,6 +17,8 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/getting-started-with-claude-code-2
    claude-code/getting-started-claude-code-with-smarter
    claude-code/adding-anthropic-provider
+   claude-code/napl-getting-started-claude-code-simonhua
+   claude-code/napl-howto-add-anthropic-provider-simonhua
    claude-code/getting-started-claude-code-mtran
    claude-code/smarter-claude-plugin
    claude-code/napl-adding-llm-provider

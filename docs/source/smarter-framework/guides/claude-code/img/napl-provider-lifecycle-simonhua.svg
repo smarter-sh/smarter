@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 580" width="800" height="580" role="img" aria-labelledby="lifecycle-title lifecycle-desc" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="lifecycle-title">How Anthropic goes live in Smarter</title>
+  <desc id="lifecycle-desc">An account admin applies a Secret manifest and a Provider manifest with the Smarter CLI. Smarter stores the encrypted API key, creates the anthropic Provider and runs a verification test bank of 10 checks every 10 days. The checks call the Anthropic API, load Anthropic web pages and read the server setting ANTHROPIC_API_KEY. A platform admin accepts the terms and verifies the emails in the Django Admin console. When every check passes, the status moves from unverified to verifying to verified to active. If any check fails, the status becomes failed until the field is fixed and the manifest is applied again.</desc>
+  <defs>
+    <marker id="lc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="lc-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="lc-arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f766e"/>
+    </marker>
+    <marker id="lc-arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <marker id="lc-arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+
+  <rect x="1" y="1" width="798" height="578" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="24" y="38" font-size="20" font-weight="700" fill="#0f172a">How Anthropic goes live in Smarter</text>
+
+  <text x="40" y="70" font-size="12" font-weight="700" fill="#64748b" letter-spacing="0.8">YOU (ACCOUNT ADMIN)</text>
+  <text x="560" y="70" font-size="12" font-weight="700" fill="#64748b" letter-spacing="0.8">PLATFORM TEAM</text>
+
+  <rect x="40" y="80" width="200" height="60" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="54" y="106" font-size="13" font-weight="700" fill="#1e293b" font-family="Consolas, Menlo, monospace">anthropic-secret.yaml</text>
+  <text x="54" y="127" font-size="13.5" fill="#475569">kind: Secret</text>
+
+  <rect x="300" y="80" width="200" height="60" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="314" y="106" font-size="13" font-weight="700" fill="#1e293b" font-family="Consolas, Menlo, monospace">anthropic-provider.yaml</text>
+  <text x="314" y="127" font-size="13.5" fill="#475569">kind: Provider</text>
+
+  <rect x="560" y="80" width="200" height="60" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="574" y="104" font-size="15" font-weight="700" fill="#1e293b">Platform admin</text>
+  <text x="574" y="126" font-size="12.5" fill="#475569">terms + emails: checks 3, 4, 9</text>
+
+  <rect x="24" y="178" width="752" height="114" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="40" y="198" font-size="12" font-weight="700" fill="#1d4ed8" letter-spacing="0.8">SMARTER PLATFORM</text>
+
+  <line x1="140" y1="140" x2="140" y2="209" stroke="#334155" stroke-width="2" marker-end="url(#lc-arrow)"/>
+  <line x1="370" y1="140" x2="370" y2="209" stroke="#334155" stroke-width="2" marker-end="url(#lc-arrow)"/>
+  <text x="255" y="166" font-size="12.5" text-anchor="middle" fill="#334155" font-family="Consolas, Menlo, monospace">smarter apply -f</text>
+  <polyline points="620,140 620,164 440,164 440,209" fill="none" stroke="#1d4ed8" stroke-width="2" marker-end="url(#lc-arrow-blue)"/>
+  <text x="530" y="157" font-size="12.5" text-anchor="middle" fill="#1d4ed8">Django Admin</text>
+
+  <rect x="40" y="212" width="200" height="64" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="54" y="238" font-size="14.5" font-weight="700" fill="#1e3a8a">Secret (encrypted)</text>
+  <text x="54" y="259" font-size="12.5" fill="#475569" font-family="Consolas, Menlo, monospace">anthropic_api_key</text>
+
+  <rect x="300" y="212" width="200" height="64" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="314" y="238" font-size="14.5" font-weight="700" fill="#1e3a8a">Provider: anthropic</text>
+  <text x="314" y="259" font-size="12.5" fill="#475569" font-family="Consolas, Menlo, monospace">api.anthropic.com/v1/</text>
+
+  <rect x="560" y="212" width="200" height="64" rx="8" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <text x="574" y="238" font-size="14.5" font-weight="700" fill="#115e59">Verification</text>
+  <text x="574" y="259" font-size="12.5" fill="#475569">10 checks, every 10 days</text>
+
+  <line x1="300" y1="244" x2="243" y2="244" stroke="#1d4ed8" stroke-width="2" marker-end="url(#lc-arrow-blue)"/>
+  <text x="270" y="236" font-size="12" text-anchor="middle" fill="#1d4ed8">api_key</text>
+  <line x1="500" y1="244" x2="557" y2="244" stroke="#0f766e" stroke-width="2" marker-end="url(#lc-arrow-teal)"/>
+  <text x="529" y="236" font-size="12" text-anchor="middle" fill="#0f766e">on save</text>
+
+  <polyline points="660,276 660,310 140,310 140,329" fill="none" stroke="#c2410c" stroke-width="2" marker-end="url(#lc-arrow-orange)"/>
+  <line x1="400" y1="310" x2="400" y2="329" stroke="#c2410c" stroke-width="2" marker-end="url(#lc-arrow-orange)"/>
+  <line x1="660" y1="310" x2="660" y2="329" stroke="#c2410c" stroke-width="2" marker-end="url(#lc-arrow-orange)"/>
+  <text x="672" y="302" font-size="12.5" fill="#c2410c">tests</text>
+
+  <rect x="40" y="332" width="200" height="72" rx="10" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="54" y="356" font-size="14.5" font-weight="700" fill="#9a3412">Anthropic API</text>
+  <text x="54" y="376" font-size="12.5" fill="#7c2d12">check 1: GET /v1/models</text>
+  <text x="54" y="394" font-size="12.5" fill="#7c2d12">must return HTTP 200</text>
+
+  <rect x="300" y="332" width="200" height="72" rx="10" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="314" y="356" font-size="14.5" font-weight="700" fill="#9a3412">Anthropic web pages</text>
+  <text x="314" y="376" font-size="12.5" fill="#7c2d12">checks 5-8: website, docs,</text>
+  <text x="314" y="394" font-size="12.5" fill="#7c2d12">terms, privacy must load</text>
+
+  <rect x="560" y="332" width="200" height="72" rx="10" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="574" y="356" font-size="14.5" font-weight="700" fill="#9a3412">Server setting</text>
+  <text x="574" y="376" font-size="12.5" fill="#7c2d12">check 10: the variable</text>
+  <text x="574" y="394" font-size="12.5" fill="#7c2d12" font-family="Consolas, Menlo, monospace">ANTHROPIC_API_KEY</text>
+
+  <text x="40" y="436" font-size="12" font-weight="700" fill="#64748b" letter-spacing="0.8">PROVIDER STATUS</text>
+
+  <rect x="40" y="446" width="130" height="42" rx="21" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="105" y="472" font-size="14.5" font-weight="700" text-anchor="middle" fill="#334155">unverified</text>
+  <line x1="170" y1="467" x2="227" y2="467" stroke="#334155" stroke-width="2" marker-end="url(#lc-arrow)"/>
+  <text x="199" y="459" font-size="12" text-anchor="middle" fill="#334155">checks</text>
+
+  <rect x="230" y="446" width="130" height="42" rx="21" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="295" y="472" font-size="14.5" font-weight="700" text-anchor="middle" fill="#92400e">verifying</text>
+  <line x1="360" y1="467" x2="417" y2="467" stroke="#0f766e" stroke-width="2" marker-end="url(#lc-arrow-teal)"/>
+  <text x="389" y="459" font-size="12" text-anchor="middle" fill="#0f766e">all pass</text>
+
+  <rect x="420" y="446" width="130" height="42" rx="21" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+  <text x="485" y="472" font-size="14.5" font-weight="700" text-anchor="middle" fill="#115e59">verified</text>
+  <line x1="550" y1="467" x2="607" y2="467" stroke="#0f766e" stroke-width="2" marker-end="url(#lc-arrow-teal)"/>
+  <text x="579" y="459" font-size="12" text-anchor="middle" fill="#0f766e">activate</text>
+
+  <rect x="610" y="446" width="150" height="42" rx="21" fill="#0f766e" stroke="#0f766e" stroke-width="1.5"/>
+  <text x="685" y="472" font-size="14.5" font-weight="700" text-anchor="middle" fill="#ffffff">active</text>
+  <text x="610" y="508" font-size="12.5" fill="#115e59">LLMClients can use it</text>
+
+  <line x1="295" y1="488" x2="295" y2="515" stroke="#b91c1c" stroke-width="2" marker-end="url(#lc-arrow-red)"/>
+  <text x="285" y="506" font-size="12" text-anchor="end" fill="#b91c1c">any check fails</text>
+  <rect x="230" y="518" width="130" height="40" rx="20" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="295" y="543" font-size="14" font-weight="700" text-anchor="middle" fill="#991b1b">failed</text>
+  <text x="372" y="543" font-size="13" fill="#991b1b">fix the field, then apply again</text>
+</svg>
