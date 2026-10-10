@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560" width="800" height="560" role="img" aria-labelledby="map-title map-desc" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="map-title">Two roads to Claude at NAPL</title>
+  <desc id="map-desc">Road 1, daily coding: the programmer asks and approves, and Claude Code in the terminal reads and edits files and runs tests, calling Anthropic's Messages API at /v1/messages. Road 2, company AI apps: the programmer types smarter apply in the Smarter CLI; the Smarter platform runs the watt_coach LLMClient, which uses the active anthropic Provider and calls Anthropic's OpenAI-compatible API at /v1/chat/completions while logging prompts and tracking tokens and cost. Claude Code can also run smarter commands after the programmer approves them. Both roads reach the same Claude models.</desc>
+  <defs>
+    <marker id="map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="map-arrow-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/>
+    </marker>
+    <marker id="map-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+
+  <rect x="1" y="1" width="798" height="558" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="24" y="38" font-size="20" font-weight="700" fill="#0f172a">Two roads to Claude at NAPL</text>
+
+  <rect x="300" y="56" width="200" height="58" rx="12" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <text x="400" y="82" font-size="18" font-weight="700" text-anchor="middle" fill="#115e59">You</text>
+  <text x="400" y="102" font-size="13" text-anchor="middle" fill="#334155">NAPL programmer</text>
+
+  <polyline points="370,114 370,140 140,140 140,167" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#map-arrow)"/>
+  <text x="255" y="133" font-size="12.5" text-anchor="middle" fill="#334155">asks + approves</text>
+  <polyline points="430,114 430,140 660,140 660,167" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#map-arrow)"/>
+  <text x="545" y="133" font-size="12.5" text-anchor="middle" fill="#334155">types commands</text>
+
+  <rect x="40" y="170" width="300" height="112" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="56" y="192" font-size="12" font-weight="700" fill="#6d28d9" letter-spacing="0.8">ROAD 1 · DAILY CODING</text>
+  <text x="56" y="218" font-size="17" font-weight="700" fill="#5b21b6">Claude Code</text>
+  <text x="56" y="242" font-size="14" fill="#4c1d95">AI pair programmer in your terminal</text>
+  <text x="56" y="264" font-size="13.5" fill="#6d28d9">reads + edits files, runs tests</text>
+
+  <line x1="340" y1="214" x2="447" y2="214" stroke="#6d28d9" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#map-arrow-violet)"/>
+  <text x="394" y="176" font-size="12.5" text-anchor="middle" fill="#6d28d9">runs smarter</text>
+  <text x="394" y="190" font-size="12.5" text-anchor="middle" fill="#6d28d9">commands for you</text>
+  <text x="394" y="204" font-size="12.5" text-anchor="middle" fill="#6d28d9">(you approve)</text>
+
+  <rect x="450" y="170" width="320" height="70" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="466" y="192" font-size="12" font-weight="700" fill="#1d4ed8" letter-spacing="0.8">ROAD 2 · COMPANY AI APPS</text>
+  <text x="466" y="213" font-size="15" font-weight="700" fill="#1e293b">Smarter CLI</text>
+  <text x="466" y="231" font-size="12.5" fill="#334155" font-family="Consolas, Menlo, monospace">smarter apply -f watt-coach.yaml</text>
+
+  <line x1="610" y1="240" x2="610" y2="261" stroke="#334155" stroke-width="2" marker-end="url(#map-arrow)"/>
+
+  <rect x="450" y="264" width="320" height="160" rx="12" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="466" y="286" font-size="12.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.8">SMARTER PLATFORM</text>
+  <rect x="466" y="296" width="288" height="36" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="480" y="319" font-size="14" font-weight="700" fill="#1e3a8a">LLMClient: watt_coach</text>
+  <line x1="610" y1="332" x2="610" y2="351" stroke="#1d4ed8" stroke-width="2" marker-end="url(#map-arrow-blue)"/>
+  <text x="618" y="347" font-size="12" fill="#1d4ed8">uses</text>
+  <rect x="466" y="354" width="288" height="36" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="1.5"/>
+  <text x="480" y="377" font-size="14" font-weight="700" fill="#115e59">Provider: anthropic (active)</text>
+  <text x="466" y="412" font-size="12.5" fill="#475569">logs prompts, tracks tokens + cost</text>
+
+  <line x1="190" y1="282" x2="190" y2="465" stroke="#6d28d9" stroke-width="2.5" marker-end="url(#map-arrow-violet)"/>
+  <text x="202" y="368" font-size="13.5" fill="#5b21b6">Messages API</text>
+  <text x="202" y="387" font-size="12.5" fill="#5b21b6" font-family="Consolas, Menlo, monospace">POST /v1/messages</text>
+
+  <line x1="610" y1="424" x2="610" y2="465" stroke="#1d4ed8" stroke-width="2.5" marker-end="url(#map-arrow-blue)"/>
+  <text x="600" y="442" font-size="12.5" text-anchor="end" fill="#1d4ed8">OpenAI-compatible</text>
+  <text x="600" y="458" font-size="11.5" text-anchor="end" fill="#1d4ed8" font-family="Consolas, Menlo, monospace">/v1/chat/completions</text>
+
+  <rect x="40" y="468" width="730" height="72" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="405" y="500" font-size="17" font-weight="700" text-anchor="middle" fill="#9a3412">Anthropic · Claude models</text>
+  <text x="405" y="522" font-size="12.5" text-anchor="middle" fill="#9a3412" font-family="Consolas, Menlo, monospace">api.anthropic.com</text>
+</svg>

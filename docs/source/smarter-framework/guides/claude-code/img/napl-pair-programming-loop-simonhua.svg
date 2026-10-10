@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="800" height="420" role="img" aria-labelledby="loop-title loop-desc" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="loop-title">The pair-programming loop with Claude Code</title>
+  <desc id="loop-desc">Five steps repeat in a circle, in small steps. One, Plan: you set the goal and Claude plans it. Two, Write: Claude writes the code. Three, Review: you read every change. Four, Test: Claude runs the tests and you check that they all pass. Five, Commit: you save the work with git commit. Then the loop starts again. You are the navigator who decides, reviews and commits. Claude Code is the driver who types and runs tools.</desc>
+  <defs>
+    <marker id="loop-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect x="1" y="1" width="798" height="418" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="24" y="38" font-size="20" font-weight="700" fill="#0f172a">The pair-programming loop</text>
+
+  <rect x="310" y="54" width="180" height="78" rx="12" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <circle cx="332" cy="76" r="12" fill="#334155"/>
+  <text x="332" y="81" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">1</text>
+  <text x="352" y="82" font-size="16" font-weight="700" fill="#1e293b">Plan</text>
+  <text x="324" y="104" font-size="13.5" fill="#334155">You set the goal;</text>
+  <text x="324" y="122" font-size="13.5" fill="#334155">Claude plans it.</text>
+
+  <rect x="580" y="140" width="180" height="78" rx="12" fill="#f5f3ff" stroke="#6d28d9" stroke-width="2"/>
+  <circle cx="602" cy="162" r="12" fill="#6d28d9"/>
+  <text x="602" y="167" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">2</text>
+  <text x="622" y="168" font-size="16" font-weight="700" fill="#4c1d95">Write</text>
+  <text x="594" y="190" font-size="13.5" fill="#4c1d95">Claude writes the</text>
+  <text x="594" y="208" font-size="13.5" fill="#4c1d95">code (driver).</text>
+
+  <rect x="480" y="276" width="180" height="78" rx="12" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <circle cx="502" cy="298" r="12" fill="#0f766e"/>
+  <text x="502" y="303" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">3</text>
+  <text x="522" y="304" font-size="16" font-weight="700" fill="#115e59">Review</text>
+  <text x="494" y="326" font-size="13.5" fill="#134e4a">You read every</text>
+  <text x="494" y="344" font-size="13.5" fill="#134e4a">change (navigator).</text>
+
+  <rect x="140" y="276" width="180" height="78" rx="12" fill="#f5f3ff" stroke="#6d28d9" stroke-width="2"/>
+  <circle cx="162" cy="298" r="12" fill="#6d28d9"/>
+  <text x="162" y="303" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">4</text>
+  <text x="182" y="304" font-size="16" font-weight="700" fill="#4c1d95">Test</text>
+  <text x="154" y="326" font-size="13.5" fill="#4c1d95">Claude runs tests;</text>
+  <text x="154" y="344" font-size="13.5" fill="#4c1d95">you check: all pass?</text>
+
+  <rect x="40" y="140" width="180" height="78" rx="12" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <circle cx="62" cy="162" r="12" fill="#0f766e"/>
+  <text x="62" y="167" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">5</text>
+  <text x="82" y="168" font-size="16" font-weight="700" fill="#115e59">Commit</text>
+  <text x="54" y="190" font-size="13.5" fill="#134e4a">You save it with</text>
+  <text x="54" y="208" font-size="13.5" fill="#134e4a">git commit.</text>
+
+  <line x1="490" y1="104" x2="606" y2="137" stroke="#334155" stroke-width="2" marker-end="url(#loop-arrow)"/>
+  <line x1="660" y1="218" x2="614" y2="273" stroke="#334155" stroke-width="2" marker-end="url(#loop-arrow)"/>
+  <line x1="480" y1="315" x2="323" y2="315" stroke="#334155" stroke-width="2" marker-end="url(#loop-arrow)"/>
+  <line x1="190" y1="276" x2="144" y2="221" stroke="#334155" stroke-width="2" marker-end="url(#loop-arrow)"/>
+  <line x1="194" y1="140" x2="307" y2="104" stroke="#334155" stroke-width="2" marker-end="url(#loop-arrow)"/>
+
+  <text x="400" y="200" font-size="14" font-weight="700" text-anchor="middle" fill="#334155">repeat in</text>
+  <text x="400" y="219" font-size="14" font-weight="700" text-anchor="middle" fill="#334155">small steps</text>
+
+  <rect x="40" y="380" width="16" height="16" rx="4" fill="#0f766e"/>
+  <text x="64" y="393" font-size="13" fill="#1e293b">You = navigator (decides, reviews, commits)</text>
+  <rect x="440" y="380" width="16" height="16" rx="4" fill="#6d28d9"/>
+  <text x="464" y="393" font-size="13" fill="#1e293b">Claude Code = driver (types, runs tools)</text>
+</svg>
