@@ -6,6 +6,7 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+import builtins
 import logging
 import os
 import subprocess
@@ -62,6 +63,7 @@ for _noisy_logger in ("urllib3", "requests_cache", "github"):
 # and return "Unknown" instead of raising an exception when it encounters
 # an issue.
 ###############################################################################
+from sphinx.addnodes import pending_xref
 from sphinxcontrib_django.docstrings import classes, field_utils
 
 # Import the guardrail services' Pydantic contracts before sphinx_autodoc_typehints resolves
@@ -183,3 +185,23 @@ autodoc_type_aliases = {
 html_baseurl = f"https://docs.{smarter_settings.root_domain}/"
 sitemap_url_scheme = "{link}"
 sitemap_filename = "sitemap.xml"
+
+
+###############################################################################
+# Resolve builtin names in docstring fields, e.g. "sender (type)" or
+# ":rtype: type[Foo]", to the Python builtin. Sphinx resolves these fields with
+# a fuzzy search that matches any documented attribute ending in the same name,
+# e.g. DNSRecord.type, and links there, or warns "more than one target found".
+# Dropping refspecific makes Sphinx look for the exact name, which falls through
+# to intersphinx.
+###############################################################################
+def resolve_builtins_exactly(app, doctree):  # pylint: disable=unused-argument
+    """Make Python domain references to builtin names exact rather than fuzzy."""
+    for node in doctree.findall(pending_xref):
+        if node.get("refdomain") == "py" and node.get("reftarget") in vars(builtins):
+            node.attributes.pop("refspecific", None)
+
+
+def setup(app):
+    """Register this configuration's Sphinx event handlers."""
+    app.connect("doctree-read", resolve_builtins_exactly)

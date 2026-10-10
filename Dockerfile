@@ -20,14 +20,14 @@
 # rate limits or the availability of its token service (auth.docker.io).
 # see https://gallery.ecr.aws/docker/library/python
 #
-# 3.13-slim-trixie is an official Docker image tag for Python 3.13 based on
+# 3.14-slim-trixie is an official Docker image tag for Python 3.14 based on
 # Debian "Trixie" (the codename for Debian 13).
 # The "slim" variant is a minimal image that excludes unnecessary files and packages,
 # making it smaller and faster to download and build.
 # It is commonly used for production deployments where a lightweight Python environment is preferred.
 # This is important because the Smarter container image build exceeds 2.4 GB,
 # even when using the slim image as a base.
-FROM public.ecr.aws/docker/library/python:3.13-slim-trixie AS linux_base
+FROM public.ecr.aws/docker/library/python:3.14-slim-trixie AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   description="Docker image for the Smarter Api and web console" \
