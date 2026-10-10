@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.19.1-alpha.1...v0.20.0-alpha.1) (2026-10-10)
+
+### Features
+
+* python3.14 upgrade ([f2ac55c](https://github.com/smarter-sh/smarter/commit/f2ac55cbea2351c67be0e26bab78e048316b6108))
+
 ## [0.19.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.19.0...v0.19.1-alpha.1) (2026-10-09)
 
 ### Bug Fixes
