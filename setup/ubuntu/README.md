@@ -32,7 +32,7 @@ VS Code. These are not actually used at run-time.
 
 | Package             | Description                                    |
 | ------------------- | ---------------------------------------------- |
-| python@3.13         | Python 3.13 interpreter                        |
+| python@3.14         | Python 3.14 interpreter                        |
 | gcc                 | GNU Compiler Collection for native code builds |
 | sqlite              | Lightweight SQL database (Python default)      |
 | mariadb-connector-c | MariaDB/MySQL client library                   |

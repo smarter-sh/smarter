@@ -1,9 +1,9 @@
 # pylint: disable=missing-docstring
 """Django token generators for single-use authentications."""
 
+from typing import Union
 from urllib.parse import urlparse
 
-from aiohttp_retry import Union
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.handlers.asgi import ASGIRequest
@@ -47,9 +47,7 @@ class SmarterTokenIntegrityError(SmarterTokenError):
 
 
 class ExpiringTokenGenerator(PasswordResetTokenGenerator):
-    """
-    An object of this class can generate a token that expires after a certain amount of time.
-    """
+    """An object of this class can generate a token that expires after a certain amount of time."""
 
     def __init__(self, expiration: int = DEFAULT_LINK_EXPIRATION):
         self.expiration = expiration
@@ -107,9 +105,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         return timestamp + HFS_EPOCH_UNIX_TIMESTAMP
 
     def validate(self, user, token) -> bool:
-        """
-        Check that a password reset token is correct for a given user.
-        """
+        """Check that a password reset token is correct for a given user."""
         # Ensure token contains exactly one dash and two parts
         parts = token.split("-")
         if len(parts) != 2:

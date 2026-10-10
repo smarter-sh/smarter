@@ -32,12 +32,12 @@ export PATH="$PATH:/usr/local/bin/docker-compose"
 
 # 3. Python Configuration
 # -------------------------
-# Use Homebrew Python 3.13 as default
-alias python="/usr/local/bin/python3.13"
-alias python3="/usr/local/bin/python3.13"
-export LDFLAGS="-L/opt/homebrew/opt/python@3.13/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/python@3.13/include"
-export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.13/lib/pkgconfig"
+# Use Homebrew Python 3.14 as default
+alias python="/usr/local/bin/python3.14"
+alias python3="/usr/local/bin/python3.14"
+export LDFLAGS="-L/opt/homebrew/opt/python@3.14/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/python@3.14/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.14/lib/pkgconfig"
 
 # 4. Homebrew Aliases and Shellenv
 # --------------------------------

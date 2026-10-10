@@ -46,6 +46,7 @@ class Command(SmarterCommand):
         7. Initialize providers, and the built-in Proxies of their APIs.
         8. Create StackAcademy SQL and API llmclients.
         9. Apply manifests and update secrets for database connections.
+        10. Sync the ledger of infrastructure resources with the Kubernetes cluster.
         """
         self.handle_begin()
 
@@ -172,5 +173,12 @@ class Command(SmarterCommand):
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
         except Exception as e:
             logger.error("Failed to verify DNS configuration: %s", e)
+
+        try:
+            # read-only: record the Kubernetes cluster's resources in the ledger now, rather than
+            # 15 minutes later when Celery Beat first runs it. It exits on failure, e.g. no cluster.
+            call_command("sync_infrastructure_inventory")
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to sync the infrastructure inventory: %s", e)
 
         self.handle_completed_success()
