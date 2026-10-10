@@ -1,6 +1,6 @@
 default_language_version:
   # default language version for each language
-  python: python3.13
+  python: python3.14
 # Install the commit-msg hook too, so that commitlint checks each commit message.
 # semantic-release versions Smarter from the conventional commit messages.
 default_install_hook_types: [pre-commit, commit-msg]
