@@ -14,6 +14,7 @@ from rest_framework.request import Request
 
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1
 from smarter.apps.prompt.models import Prompt, PromptHistory
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
@@ -406,7 +407,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             self.new_session,
         )
 
-        chat_config: JsonResponse = PromptConfigView.as_view(legacy_keys=False)(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
+        chat_config: JsonResponse = PromptConfigView.as_view(legacy_keys=False, include_diagnostics=True)(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
         if not isinstance(chat_config, JsonResponse):
             raise APIV1CLIChatViewError(
                 f"Internal error. Prompt config view did not return a JsonResponse. chat_config: {chat_config}"
@@ -462,7 +463,9 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
 
         # create a Smarter llmclient request and prompt the llmclient
         chat_request = self.chat_request_factory(request_body=request_body)
-        chat_response = DefaultLLMClientApiView.as_view()(request=chat_request, name=name)
+        chat_response = DefaultLLMClientApiView.as_view(include_diagnostics=True, forced_contract=CHAT_CONTRACT_V1)(
+            request=chat_request, name=name
+        )
         if not isinstance(chat_response, JsonResponse):
             raise APIV1CLIChatViewError(
                 f"Internal error. Prompt response is not a JsonResponse. chat_response: {chat_response}"

@@ -242,6 +242,16 @@ class LLMClient(MetaDataWithOwnershipModel):
     #: Example: True
     app_file_attachment = models.BooleanField(default=False, blank=True, null=True)
 
+    #: The origins of the web pages that may call the LLMClient from a browser, with the @smarter.sh/ui-chat
+    #: React component, in addition to those that the platform's CORS settings allow. See
+    #: :mod:`smarter.apps.llmclient.cors`.
+    #: Example: ["https://www.example.com"]
+    allowed_origins = models.JSONField(
+        default=list,
+        blank=True,
+        encoder=json.SmarterJSONEncoder,
+    )
+
     # : The DNS verification status of the LLMClient's custom domain. This is part of the deployment process and is managed by
     # : the asynchronous LLMClient deployment workflow.
     # : Example: "Verified"

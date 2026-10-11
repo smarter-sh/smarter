@@ -2,11 +2,9 @@
 """Smarter Customer API view."""
 
 import traceback
-from http import HTTPStatus
-
-from django.http import JsonResponse
 
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.contract.builders import PromptChatApiErrorInternal
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -61,14 +59,9 @@ class DefaultLLMClientApiView(LLMClientApiBaseViewSet):
             retval = super().dispatch(request, *args, **kwargs)
         # pylint: disable=broad-except
         except Exception as e:
-            err_traceback = traceback.format_exc()
-            logger.error("DefaultLLMClientApiView.dispatch: %s, %s", e, err_traceback)
-            retval = JsonResponse(
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-                data={
-                    "error": "An error occurred while processing your request.",
-                    "details": str(e),
-                    "trace": err_traceback,
-                },
+            # logged, never returned: the client receives the error envelope, without a stack trace.
+            logger.error("DefaultLLMClientApiView.dispatch: %s, %s", e, traceback.format_exc())
+            retval = self.error_response(
+                request, PromptChatApiErrorInternal("An error occurred while processing your request.")
             )
         return retval

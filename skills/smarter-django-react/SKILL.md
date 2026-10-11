@@ -105,3 +105,17 @@ Copy the closest existing list package, then rename it everywhere.
 
 See [references/canonical-django-react-reference.md](references/canonical-django-react-reference.md)
 for the files to read.
+
+## A blank page with no console errors
+
+The page renders an empty root element, and the browser console shows nothing:
+the app's build is missing from the static files. `make build` builds the image
+with `DOCKER_COLLECT_STATIC_FILES=false`, so it uses the host's previously
+collected `smarter/staticfiles/`, in which a new or rebuilt app is missing. The
+template tag then finds no `manifest.json` and emits no script tags.
+
+- Check `staticfiles/react/<app>/manifest.json` in `smarter-app` first.
+- Use `make react-build` (npm build, collectstatic, image build), not
+  `make build`, after any React change.
+- The template tag caches a missing manifest for the life of the process, so
+  restart `smarter-app` after fixing the static files.

@@ -17,6 +17,10 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.api.v1.views.base import LLMClientApiBaseViewSet
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.contract.models import (
+    PromptChatApiErrorResponse,
+    PromptChatApiPromptResponse,
+)
 
 MODULE = "smarter.apps.llmclient.api.v1.views.base"
 HARNESS = "smarter.apps.provider.services.text_completion.providers.smarter_compatible_client"
@@ -59,13 +63,20 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         with patch(HARNESS):
             return self.view(**self.post_properties(**overrides)).post(request)
 
-    def post_with_harness(self, handler, **headers):
+    def post_with_harness(self, handler, include_diagnostics: bool = False, **headers):
         """Post() with a prompt handler, and the given request headers."""
         request = RequestFactory().post("/api/v1/llm-clients/1/prompt/", **headers)
         request.user = self.admin_user
         with patch(HARNESS) as harness:
             harness.get_smarter_harness.return_value = handler
-            return self.view(**self.post_properties()).post(request)
+            view = self.view(**self.post_properties())
+            view.include_diagnostics = include_diagnostics
+            return view.post(request)
+
+    @staticmethod
+    def lambda_response(body: dict, status: int = HTTPStatus.OK.value) -> dict:
+        """A prompt's Lambda style result, as the provider's handler returns it."""
+        return {"isBase64Encoded": False, "statusCode": status, "headers": {}, "body": json.dumps(body)}
 
     @staticmethod
     def stream_events(response: StreamingHttpResponse) -> list[str]:
@@ -81,14 +92,16 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
 
     def test_post_returns_the_prompt_as_json(self):
         handler = MagicMock(return_value={"statusCode": HTTPStatus.OK.value, "body": "{}"})
-        response = self.post_with_harness(handler)
+        response = self.post_with_harness(handler, HTTP_X_SMARTER_CAPABILITIES="chat-contract-v1")
         self.assertNotIsInstance(response, StreamingHttpResponse)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(json.loads(response.content)["data"]["body"], "{}")
 
     def test_post_streams_the_prompt_to_a_client_that_accepts_server_sent_events(self):
         handler = MagicMock(return_value={"statusCode": HTTPStatus.UNAUTHORIZED.value, "body": "{}"})
-        response = self.post_with_harness(handler, HTTP_ACCEPT="text/event-stream, application/json")
+        response = self.post_with_harness(
+            handler, HTTP_ACCEPT="text/event-stream, application/json", HTTP_X_SMARTER_CAPABILITIES="chat-contract-v1"
+        )
         self.assertIsInstance(response, StreamingHttpResponse)
         self.assertEqual(response["Content-Type"], "text/event-stream")
         frames = self.stream_events(response)
@@ -102,7 +115,11 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         response = self.post_with_harness(handler, HTTP_ACCEPT="text/event-stream")
         result = json.loads(self.stream_events(response)[-1].split("data: ", 1)[1])
         self.assertEqual(result["status"], HTTPStatus.INTERNAL_SERVER_ERROR.value)
-        self.assertIn("the LLM is down", json.dumps(result["response"]))
+        # the exception's text and stack trace are logged, never returned to a browser.
+        error = result["response"]["error"]
+        self.assertEqual(error["description"], "An error occurred while processing your prompt.")
+        self.assertNotIn("stacktrace", error)
+        self.assertNotIn("the LLM is down", json.dumps(result["response"]))
 
     def test_post_without_an_llmclient_is_not_found(self):
         self.assertEqual(self.post(llmclient=None).status_code, HTTPStatus.NOT_FOUND)
@@ -148,3 +165,71 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         with patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment_platform_domain = "not-the-platform.example.com"
             self.assertTrue(self.view(smarter_request=request).is_web_platform)
+
+    COMPLETION = {
+        "id": "chatcmpl-1",
+        "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "hi"}}],
+        "smarter": {
+            "first_iteration": {"request": {"messages": [{"role": "system", "content": "secret"}]}},
+            "second_iteration": {},
+            "plugins": ["p"],
+            "messages": [{"role": "assistant", "content": "hi"}],
+        },
+    }
+
+    def test_post_strips_the_llm_requests_from_a_browser_response(self):
+        handler = MagicMock(return_value=self.lambda_response(self.COMPLETION))
+        body = json.loads(
+            json.loads(self.post_with_harness(handler, HTTP_X_SMARTER_CAPABILITIES="chat-contract-v1").content)["data"][
+                "body"
+            ]
+        )
+        self.assertNotIn("first_iteration", body["smarter"])
+        self.assertNotIn("second_iteration", body["smarter"])
+        self.assertEqual(body["smarter"]["messages"], [{"role": "assistant", "content": "hi"}])
+
+    def test_post_keeps_the_llm_requests_for_the_cli(self):
+        handler = MagicMock(return_value=self.lambda_response(self.COMPLETION))
+        response = self.post_with_harness(
+            handler, include_diagnostics=True, HTTP_X_SMARTER_CAPABILITIES="chat-contract-v1"
+        )
+        body = json.loads(json.loads(response.content)["data"]["body"])
+        self.assertIn("first_iteration", body["smarter"])
+
+    def test_post_returns_version_2_of_the_contract_to_a_client_that_asks_for_it(self):
+        handler = MagicMock(return_value=self.lambda_response(self.COMPLETION))
+        response = self.post_with_harness(handler, HTTP_X_SMARTER_CAPABILITIES="chat-contract-v2")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        payload = PromptChatApiPromptResponse.model_validate(json.loads(response.content))
+        self.assertEqual(payload.data.contract, 2)
+        self.assertEqual(payload.data.messages[0].content, "hi")
+        self.assertEqual(payload.data.plugins, ["p"])
+        self.assertIsNone(payload.error)
+        self.assertNotIn("secret", response.content.decode())
+
+    def test_post_returns_version_2_by_default(self):
+        handler = MagicMock(return_value=self.lambda_response(self.COMPLETION))
+        payload = PromptChatApiPromptResponse.model_validate(json.loads(self.post_with_harness(handler).content))
+        self.assertEqual(payload.data.contract, 2)
+
+    def test_post_returns_a_failed_prompt_in_version_2_with_the_error_envelope(self):
+        failure = {
+            "error": {"status": 429, "message": "Rate limit reached."},
+            "response": {
+                "smarter": {"messages": [{"role": "smarter_error", "content": "429 error: Rate limit reached."}]}
+            },
+        }
+        handler = MagicMock(return_value=self.lambda_response(failure, status=429))
+        response = self.post_with_harness(handler, HTTP_X_SMARTER_CAPABILITIES="chat-contract-v2")
+        self.assertEqual(response.status_code, 429)
+        payload = PromptChatApiPromptResponse.model_validate(json.loads(response.content))
+        self.assertEqual(payload.error.description, "Rate limit reached.")
+        self.assertEqual(payload.error.errorClass, "PromptChatApiErrorLLMProvider")
+        self.assertEqual(payload.data.messages[0].role, "smarter_error")
+
+    def test_post_errors_share_one_envelope(self):
+        response = self.post(llmclient=None)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        error = PromptChatApiErrorResponse.model_validate(json.loads(response.content)).error
+        self.assertEqual(error.errorClass, "PromptChatApiErrorNotFound")
+        self.assertNotIn("stacktrace", json.loads(response.content)["error"])

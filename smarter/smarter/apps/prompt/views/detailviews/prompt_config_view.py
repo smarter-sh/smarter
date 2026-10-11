@@ -1,7 +1,6 @@
 # pylint: disable=W0613,C0302
 """PromptConfigView is a Django class-based view responsible for providing configuration data to the ReactJS prompt UI component in the Smarter web application."""
 
-from http import HTTPStatus
 from typing import Any, Optional, Union
 
 from django.http import (
@@ -10,6 +9,7 @@ from django.http import (
     HttpResponseNotAllowed,
     JsonResponse,
 )
+from pydantic import ValidationError
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.llmclient.models import (
@@ -22,13 +22,33 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.apps.llmclient.serializers import (
     LLMClientConfigSerializer,
-    LLMClientFunctionsSerializer,
-    LLMClientPluginSerializer,
-    LLMClientRequestsSerializer,
 )
 from smarter.apps.plugin.models import (
     PluginSelectorHistory,
-    PluginSelectorHistorySerializer,
+)
+from smarter.apps.prompt.contract.builders import (
+    PromptChatApiError,
+    PromptChatApiErrorForbidden,
+    PromptChatApiErrorInternal,
+    PromptChatApiErrorNotFound,
+    chat_error_response,
+    requested_contract,
+)
+from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1, CHAT_CONTRACT_V2
+from smarter.apps.prompt.contract.models import (
+    PromptChatApiConfig,
+    PromptChatApiFunctionList,
+    PromptChatApiHistory,
+    PromptChatApiListMetaData,
+    PromptChatApiLLMClient,
+    PromptChatApiLLMClientFunction,
+    PromptChatApiLLMClientPlugin,
+    PromptChatApiLLMClientRequest,
+    PromptChatApiMetaData,
+    PromptChatApiPluginList,
+    PromptChatApiPluginSelection,
+    PromptChatApiPromptPluginUsage,
+    PromptChatApiPromptToolCall,
 )
 from smarter.apps.prompt.signals import prompt_config_invoked
 from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
@@ -40,14 +60,12 @@ from smarter.common.const import (
     SmarterHttpMethods,
 )
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import is_authenticated_request, search_replace
+from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseForbidden,
-)
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.views import (
-    SmarterAuthenticatedNeverCachedWebView,
+    SmarterOptionallyAuthenticatedApiView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.helpers import UnauthenticatedPermissionClass
@@ -78,7 +96,7 @@ def should_log_verbose(level):
 verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
 
-class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
+class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
     """
     Prompt configuration view for the Smarter web application.
 
@@ -130,7 +148,7 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
 
     **See Also:**
         - `SmarterPromptSession`: Helper class for managing prompt sessions.
-        - `LLMClientConfigSerializer`, `LLMClientPluginSerializer`: Serializers for llmclient and plugin data.
+        - `LLMClientConfigSerializer`: Serializer for the llmclient's data.
         - `LLMClientHelper`: Helper for llmclient-related operations.
     """
 
@@ -141,10 +159,22 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
     command: Optional[SmarterJournalCliCommands] = None
     session: Optional[SmarterPromptSession] = None
     legacy_keys: bool = True
-    """Rename keys for older versions of the React app ('llmclient' to 'chatbot').
+    """Rename keys for older versions of the React app ('llmclient' to 'chatbot'), in version 1 of the contract.
 
     The cli passes as_view(legacy_keys=False).
     """
+    include_diagnostics: bool = False
+    """Return the complete configuration, whatever url resolved the LLMClient.
+
+    The cli passes as_view(include_diagnostics=True). See :meth:`full_config`.
+    """
+    contract: int = CHAT_CONTRACT_V1
+    """The version of the contract that the client asked for.
+
+    See :func:`~smarter.apps.prompt.contract.builders.requested_contract`.
+    """
+    resolved_by_id: bool = False
+    """True if the LLMClient was found by its id or hashed id, which also checks that the user may read it."""
     llmclient_name: Optional[str] = None
     _llmclient_helper: Optional[LLMClientHelper] = None
     _llmclient: Optional[LLMClient] = None
@@ -218,66 +248,86 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
             retval = retval[:-8]
         return retval
 
-    def legacy_config(self, config: Union[dict[str, Any], list[Any]], replace_str: str, with_str: str) -> Any:
-        """Recursively replaces any key value of 'llmclient' with 'chatbot' for legacy support of older versions of the React app that expect 'chatbot' instead of 'llmclient'."""
-        retval = search_replace(config, replace_str="llmclient", with_str="chatbot")
-        retval = search_replace(retval, replace_str="account_number", with_str="accountNumber")
-        retval = search_replace(retval, replace_str="prompt_history", with_str="chat_history")
-        return retval
-
-    def config(self) -> dict[str, Any]:
+    @property
+    def full_config(self) -> bool:
         """
-        Assemble and return the configuration dictionary required by the ReactJS prompt UI component.
+        Whether the client receives the complete configuration.
+
+        The complete configuration includes the LLMClient's every field, e.g. its owner's profile, the
+        session's diagnostic histories, and the lists of plugins and functions. It is returned when the
+        LLMClient was found by its id or hashed id, i.e. by a workbench or platform api url, which
+        checks that the user may read it, and to the cli. A deployed LLMClient's own host, which pages
+        that embed Smarter Chat call, receives :func:`~smarter.apps.prompt.contract.builders.public_config`.
+
+        :returns: True for the complete configuration.
+        :rtype: bool
+        """
+        return self.resolved_by_id or self.include_diagnostics
+
+    def prompt_url(self, url_llmclient: Optional[str]) -> Optional[str]:
+        """
+        The url of the LLMClient's prompt api, on the host that served the configuration.
+
+        A deployed LLMClient's host, or its custom domain, also serves its prompt api, at ``/prompt/``,
+        so that a page that embeds Smarter Chat needs access to one host only. A workbench or platform
+        api url keeps the platform's prompt api url.
+
+        :param url_llmclient: The LLMClient's prompt api url on the platform, ``LLMClient.url_llmclient``.
+        :type url_llmclient: Optional[str]
+        :returns: The prompt api url to return to the client.
+        :rtype: Optional[str]
+        """
+        if self.resolved_by_id or not self.smarter_request:
+            return url_llmclient
+        host = self.smarter_request.get_host()
+        return SmarterValidator.urlify(f"{host}/prompt/", environment=smarter_settings.environment)
+
+    def error_response(self, request: HttpRequest, error: PromptChatApiError) -> SmarterJournaledJsonErrorResponse:
+        """
+        The configuration api's error response, the same shape for every error.
+
+        See :func:`~smarter.apps.prompt.contract.builders.chat_error_response`.
+
+        :param request: The request.
+        :type request: django.http.HttpRequest
+        :param error: The error.
+        :type error: PromptChatApiError
+        :returns: The error response, without a stack trace.
+        :rtype: SmarterJournaledJsonErrorResponse
+        """
+        return chat_error_response(
+            request,
+            error,
+            thing=SmarterJournalThings(SmarterJournalThings.PROMPT_CONFIG),
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT_CONFIG),
+        )
+
+    def chat_config(self) -> Optional[PromptChatApiConfig]:
+        """
+        Assemble the configuration required by the ReactJS prompt UI component, as the contract's model.
 
         This method gathers all relevant context and configuration data for the prompt session and llmclient,
-        and returns it as a dictionary suitable for JSON serialization. This configuration is consumed by
-        the ReactJS frontend to initialize and render the prompt interface.
+        and returns it as a :class:`~smarter.apps.prompt.contract.models.PromptChatApiConfig`, the Pydantic model of
+        version 2 of the Smarter Chat api contract. :meth:`config` derives the response from it: the complete
+        or public configuration, in version 2 or 1 of the contract.
 
-        **Key Features:**
+        **Performance:**
+          Since this endpoint is called on every browser load and refresh, the logic is optimized to minimize
+          database queries and serialization overhead. Only a limited number of plugins (see
+          ``MAX_RETURNED_PLUGINS``) are returned to keep payloads small and response times fast.
 
-        - **Django Template-Based:**
-          This logic is part of a Django class-based view and does not use Django REST Framework (DRF) serializers
-          for the main response, though serializers are used for some nested data.
-
-        - **CSRF Exempt:**
-          The parent view is CSRF exempt because this endpoint is strictly read-only and does not modify server-side data.
-
-        - **ReactJS UI Integration:**
-          The returned dictionary provides all configuration and context information needed by the ReactJS prompt component,
-          including llmclient metadata, plugin information, session keys, and prompt history.
-
-        - **Session-Based:**
-          The configuration is tied to a unique prompt session, as defined by the :class:`SmarterPromptSession` helper,
-          which uses a combination of the user's IP address and device-identifying information to uniquely identify
-          each session.
-
-        - **Performance:**
-          Since this endpoint is called on every browser load and refresh, the logic is optimized to minimize database
-          queries and serialization overhead. Only a limited number of plugins (see ``MAX_RETURNED_PLUGINS``) are returned
-          to keep payloads small and response times fast.
-
-        Returns
-        -------
-        dict
-            A dictionary containing all configuration data required by the ReactJS prompt UI component. The structure includes:
-
-            - ``session_key``: Unique identifier for the prompt session.
-            - ``sandbox_mode``: Boolean indicating if the llmclient is running in sandbox mode.
-            - ``debug_mode``: Boolean indicating if debug mode is enabled.
-            - ``llmclient``: Serialized llmclient configuration.
-            - ``history``: Prompt and plugin selector history for the session.
-            - ``meta_data``: Additional metadata for the llmclient.
-            - ``plugins``: Plugin metadata and a limited list of plugins.
-
-        Raises
-        ------
-        SmarterValueError
-            If the session or llmclient helper is not set.
+        :returns: The configuration, or None if the session or the LLMClient helper is not set. Its fields:
+            ``session_key``, ``sandbox_mode``, ``debug_mode``, ``llmclient`` (serialized by
+            ``LLMClientConfigSerializer``, with ``url_llmclient`` from :meth:`prompt_url`), ``history``
+            (the session's messages in ``chat_history``, and its diagnostic histories), ``meta_data``
+            (``LLMClientHelper.to_json()``), ``plugins`` and ``functions``.
+        :rtype: Optional[PromptChatApiConfig]
+        :raises pydantic.ValidationError: If the data breaks the contract.
 
         See Also
         --------
         SmarterPromptSession : Helper class for managing prompt sessions.
-        LLMClientConfigSerializer, LLMClientPluginSerializer : Serializers for llmclient and plugin data.
+        LLMClientConfigSerializer : Serializer for the llmclient's data.
         LLMClientHelper : Helper for llmclient-related operations.
         """
         # add llmclient_request_history and plugin_selector_history to history
@@ -286,13 +336,13 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
             logger.error(
                 "%s.config() - session is None. Cannot retrieve llmclient request history.", self.formatted_class_name
             )
-            return {}
+            return None
         if self.llmclient_helper is None:
             logger.error(
                 "%s.config() - LLMClientHelper is None. Cannot retrieve llmclient request history.",
                 self.formatted_class_name,
             )
-            return {}
+            return None
 
         llmclient_serializer = (
             LLMClientConfigSerializer(self.llmclient, context={"request": self.smarter_request})
@@ -304,62 +354,90 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         # returned to some reasonable number, since we'll probaably have cases where
         # the llmclient has a lot of plugins (hundreds, thousands...).
         llmclient_plugins_count = LLMClientPlugin.objects.filter(llmclient=self.llmclient).count()
-        llmclient_plugins = LLMClientPlugin.objects.filter(llmclient=self.llmclient).order_by("-pk")[
-            :MAX_RETURNED_PLUGINS
-        ]
-        llmclient_plugin_serializer = LLMClientPluginSerializer(llmclient_plugins, many=True)
+        llmclient_plugins = (
+            LLMClientPlugin.objects.filter(llmclient=self.llmclient)
+            .select_related("plugin_meta")
+            .prefetch_related("plugin_meta__tags")
+            .order_by("-pk")[:MAX_RETURNED_PLUGINS]
+        )
 
         llmclient_functions_count = LLMClientFunctions.objects.filter(llmclient=self.llmclient).count()
         llmclient_functions = LLMClientFunctions.objects.filter(llmclient=self.llmclient).order_by("-pk")[
             :MAX_RETURNED_PLUGINS
         ]
-        llmclient_functions_serializer = LLMClientFunctionsSerializer(llmclient_functions, many=True)
 
-        history = self.session.chat_helper.history if self.session.chat_helper else {}
-
-        llmclient_requests_queryset = LLMClientRequests.objects.filter(session_key=self.session.session_key).order_by(
-            "-id"
+        # the session's history, from its rows. The messages are "prompt_history" in PromptHelper.
+        chat_helper = self.session.chat_helper
+        session_key = self.session.session_key
+        history = PromptChatApiHistory(
+            chat_history=(chat_helper.prompt_history if chat_helper else None) or [],
+            prompt_tool_call_history=[
+                PromptChatApiPromptToolCall.from_model(row)
+                for row in (chat_helper.prompt_tool_call if chat_helper else [])
+            ],
+            prompt_plugin_usage_history=[
+                PromptChatApiPromptPluginUsage.from_model(row)
+                for row in (chat_helper.prompt_plugin_usage if chat_helper else [])
+            ],
+            plugin_selector_history=[
+                PromptChatApiPluginSelection.from_model(row)
+                for row in PluginSelectorHistory.objects.filter(session_key=session_key).order_by("-id")
+            ],
+            llmclient_request_history=[
+                PromptChatApiLLMClientRequest.from_model(row)
+                for row in LLMClientRequests.objects.filter(session_key=session_key).order_by("-id")
+            ],
         )
-        llmclient_requests_serializer = LLMClientRequestsSerializer(llmclient_requests_queryset, many=True)
-        history["llmclient_request_history"] = llmclient_requests_serializer.data
 
-        plugin_selector_history_queryset = PluginSelectorHistory.objects.filter(session_key=self.session.session_key)
-        plugin_selector_history_serializer = PluginSelectorHistorySerializer(
-            plugin_selector_history_queryset, many=True
+        llmclient = self.to_snake_case(llmclient_serializer.data) if llmclient_serializer else {}
+        llmclient["url_llmclient"] = self.prompt_url(llmclient.get("url_llmclient"))
+
+        return PromptChatApiConfig(
+            contract=CHAT_CONTRACT_V2,
+            session_key=self.session.session_key,
+            sandbox_mode=self.llmclient_helper.is_llmclient_sandbox_url,
+            debug_mode=waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+            llmclient=PromptChatApiLLMClient(**llmclient),
+            history=history,
+            meta_data=PromptChatApiMetaData(**self.to_snake_case(self.llmclient_helper.to_json())),
+            plugins=PromptChatApiPluginList(
+                meta_data=PromptChatApiListMetaData(
+                    total_plugins=llmclient_plugins_count, plugins_returned=len(llmclient_plugins)
+                ),
+                plugins=[PromptChatApiLLMClientPlugin.from_model(plugin) for plugin in llmclient_plugins],
+            ),
+            functions=PromptChatApiFunctionList(
+                meta_data=PromptChatApiListMetaData(
+                    total_functions=llmclient_functions_count, functions_returned=len(llmclient_functions)
+                ),
+                functions=[PromptChatApiLLMClientFunction.from_model(function) for function in llmclient_functions],
+            ),
         )
-        history["plugin_selector_history"] = plugin_selector_history_serializer.data
 
-        retval = {
-            "data": {
-                SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
-                "sandbox_mode": self.llmclient_helper.is_llmclient_sandbox_url,
-                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "llmclient": llmclient_serializer.data if llmclient_serializer else None,
-                "history": history,
-                "meta_data": self.llmclient_helper.to_json(),
-                "plugins": {
-                    "meta_data": {
-                        "total_plugins": llmclient_plugins_count,
-                        "plugins_returned": len(llmclient_plugins),
-                    },
-                    "plugins": llmclient_plugin_serializer.data,
-                },
-                "functions": {
-                    "meta_data": {
-                        "total_functions": llmclient_functions_count,
-                        "functions_returned": len(llmclient_functions),
-                    },
-                    "functions": llmclient_functions_serializer.data,
-                },
-            },
-        }
-        # Legacy support for older versions of the React app that expect
-        # 'chatbot' instead of 'llmclient'
-        # ---------------------------------------------------------------------
-        retval = self.to_snake_case(retval)
-        if self.legacy_keys:
-            retval = self.legacy_config(retval, replace_str="llmclient", with_str="chatbot")
-            retval = self.legacy_config(retval, replace_str="account_number", with_str="accountNumber")
+    def config(self) -> dict[str, Any]:
+        """
+        The configuration api's response body: :meth:`chat_config`, in the form that the client receives.
+
+        - The complete configuration, or :meth:`PromptChatApiConfig.public() <smarter.apps.prompt.contract.models.PromptChatApiConfig.public>`
+          unless :attr:`full_config`.
+        - Version 2 of the contract to a client that asks for it, and to the cli (``legacy_keys=False``),
+          or :meth:`PromptChatApiConfig.to_v1() <smarter.apps.prompt.contract.models.PromptChatApiConfig.to_v1>`.
+
+        :returns: ``{"data": <the configuration>}``, or ``{}`` without a session or LLMClient helper.
+        :rtype: dict[str, Any]
+        :raises pydantic.ValidationError: If the configuration breaks the contract.
+        """
+        chat_config = self.chat_config()
+        if chat_config is None:
+            return {}
+        if not self.full_config:
+            chat_config = chat_config.public()
+        if self.contract == CHAT_CONTRACT_V2 or not self.legacy_keys:
+            data = chat_config.model_dump(mode="json", exclude_unset=True)
+        else:
+            # version 1, for older versions of the React app, which expect 'chatbot' instead of 'llmclient'.
+            data = chat_config.to_v1().model_dump(mode="json", exclude_unset=True)
+        retval = {"data": data}
         prompt_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
         return retval
 
@@ -417,9 +495,13 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         See Also
         --------
         SmarterPromptSession : Helper class for managing prompt sessions.
-        LLMClientConfigSerializer, LLMClientPluginSerializer : Serializers for llmclient and plugin data.
+        LLMClientConfigSerializer : Serializer for the llmclient's data.
         LLMClientHelper : Helper for llmclient-related operations.
         """
+        self.thing = SmarterJournalThings(SmarterJournalThings.PROMPT_CONFIG)
+        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT_CONFIG)
+        self.contract = requested_contract(request)
+        self.resolved_by_id = False
         hashed_id = kwargs.pop("hashed_id", None)
         if hashed_id:
             llmclient_id = LLMClient.id_from_hashed_id(hashed_id)
@@ -430,9 +512,13 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
             try:
                 self._llmclient = LLMClient.get_cached_object(pk=llmclient_id)
                 # a 404 rather than a 403, so that the ids of other accounts' LLMClients can't be discovered.
+                # A url with an id is a workbench or platform api url, which requires a user who may read it.
                 user = get_resolved_user(request.user)
+                if not self.is_authenticated:
+                    raise LLMClient.DoesNotExist(f"LLMClient {llmclient_id} is not readable by an anonymous user")
                 if not LLMClient.objects.with_read_permission_for(user).filter(pk=llmclient_id).exists():  # type: ignore[arg-type]
                     raise LLMClient.DoesNotExist(f"LLMClient {llmclient_id} is not readable by {user}")
+                self.resolved_by_id = True
                 self.llmclient_name = self._llmclient.name
                 verbose_logger.debug(
                     "%s.dispatch() - set llmclient=%s from llmclient_id=%s",
@@ -446,7 +532,7 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
                     self.formatted_class_name,
                     llmclient_id,
                 )
-                return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
+                return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         else:
             self.llmclient_name = kwargs.get("name")
             try:
@@ -466,7 +552,7 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
                         user_profile=self.user_profile,
                     )
             except LLMClient.DoesNotExist:
-                return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
+                return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
 
         # Initialize the prompt session for this request. session_key is generated
         # and managed by the /config/ endpoint for the llmclient
@@ -479,16 +565,23 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual llmclient session
         # for the device.
+        if not self.llmclient:
+            # before the session, which requires an LLMClient.
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         self.session = SmarterPromptSession(request, session_key=self.session_key, llmclient=self.llmclient)
 
+        # "is not None", not truthiness: LLMClientHelper is a SmarterRequestMixin, whose __bool__ is its
+        # readiness, so a helper that isn't ready would skip this check.
         if (
-            self.llmclient_helper
+            self.llmclient_helper is not None
             and self.llmclient_helper.is_authentication_required
             and not is_authenticated_request(request)
         ):
-            return SmarterHttpResponseForbidden(
+            return self.error_response(
                 request,
-                "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours.",
+                PromptChatApiErrorForbidden(
+                    "Authentication failed. This LLMClient requires a Smarter api key, or a logged-in user."
+                ),
             )
 
         verbose_logger.debug(
@@ -498,11 +591,9 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
             self.llmclient_helper,
         )
 
-        if not self.llmclient:
-            return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
-
-        self.thing = SmarterJournalThings(SmarterJournalThings.PROMPT_CONFIG)
-        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT_CONFIG)
+        if not (self.resolved_by_id or self.include_diagnostics) and not self.llmclient.deployed:
+            # a host that isn't a workbench or platform api url serves deployed LLMClients only.
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
 
         verbose_logger.debug(
             "%s.dispatch() completed with llmclient=%s, session_key=%s",
@@ -516,14 +607,37 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         return str(self.llmclient) if self.llmclient else "PromptConfigView"
 
     # pylint: disable=unused-argument
-    def post(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def post(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse]:
         """Get the llmclient configuration."""
         logger.debug("%s - post()", self.formatted_class_name)
-        data = self.config()
+        return self.config_response(request)
+
+    def config_response(
+        self, request: HttpRequest
+    ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse]:
+        """
+        The configuration, as the response to the client.
+
+        :param request: The request.
+        :type request: django.http.HttpRequest
+        :returns: The configuration, or an error response if it breaks the contract.
+        :rtype: Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse]
+        """
+        try:
+            data = self.config()
+        except ValidationError as e:
+            logger.error("%s.config_response() the configuration breaks the contract: %s", self.formatted_class_name, e)
+            return self.error_response(
+                request, PromptChatApiErrorInternal("The LLMClient's configuration could not be built.")
+            )
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request: HttpRequest, *args, **kwargs) -> Union[SmarterJournaledJsonResponse, HttpResponseNotAllowed]:
+    def get(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse, HttpResponseNotAllowed]:
         """Get the llmclient configuration."""
         logger.warning(
             "%s - get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
@@ -537,5 +651,4 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
                 SmarterWaffleSwitches.ALLOW_API_GET,
             )
             return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
-        data = self.config()
-        return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
+        return self.config_response(request)

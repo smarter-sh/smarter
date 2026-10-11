@@ -23,21 +23,51 @@ in every app container. The working directory for `manage.py` is
 docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py <command>"
 ```
 
+### Local hostnames
+
+Two api domains are both valid locally, for different setups. Neither is a
+misconfiguration:
+
+- `api.localhost:9357` is `smarter_settings.environment_api_domain` for the
+  bare local dev server.
+- `api.local.smarter.sh` is the proxy host of a local Kubernetes deployment.
+  `LLMClient.default_host` builds deployed LLMClient hosts on it, e.g.
+  `stackademy-sql.3141-5926-5359.api.local.smarter.sh`.
+
+The local dev server can't resolve a deployed LLMClient's own host in either
+form, because `LLMClientHelper(request).llmclient` is `None`. So you can't
+exercise a deployed host end to end with `HTTP_HOST`. Test those views with
+`get_cached_llmclient_by_request` patched (see `smarter-python-testing`), and
+never deploy an LLMClient for real to try (see `smarter-infrastructure-safety`).
+
 ## The containers don't see your edits
 
-There's **no bind mount** of the source. Edits on the host do nothing until you
-copy them in. The containers can drift far behind the host, by dozens of files
-and unapplied migrations. Before trusting any test result:
+There's **no bind mount** of the source. Edits on the host do nothing until they
+reach the containers, which can drift far behind the host, by dozens of files
+and unapplied migrations. Celery tasks run in the workers, so a stale worker runs
+stale task code even when smarter-app is current.
 
-1. Compare md5s of the host files with the container's.
-2. Copy the files that differ into **every** app container. Celery tasks run in
-   the workers, so a stale worker runs stale task code even when smarter-app is
-   current.
-3. Fix ownership, restart, and wait for the dev server to come back.
-4. Run `migrate` if the change includes migrations.
+**Prefer a rebuild.** `make build && make run` rebuilds the images from the
+host's tree and restarts every container, in about 5 seconds when only source
+files changed. That beats copying files one at a time, and leaves no container
+behind. `make run` is `docker compose up`, which stays in the foreground, so
+start it in the background (with `run_in_background`, never `&` in a foreground
+shell), then wait for the dev server and apply any migrations:
 
-[scripts/sync-to-containers.sh](scripts/sync-to-containers.sh) does steps 1–3
-for one or more subpaths:
+```console
+make build && make run          # in the background
+until [ "$(curl -s -o /dev/null -w '%{http_code}' localhost:9357/)" = "302" ]; do sleep 2; done
+docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
+```
+
+`make build` doesn't collect static files. After a React change, use
+`make react-build` instead (see `smarter-django-react`).
+
+**When a rebuild isn't possible**, e.g. while the user is running the stack
+themselves, [scripts/sync-to-containers.sh](scripts/sync-to-containers.sh)
+copies the files whose md5 differs into every app container, fixes their
+ownership, restarts them, and waits for the dev server. Give it subpaths:
+comparing all of `smarter/smarter` takes many minutes.
 
 ```console
 skills/smarter-docker-environment/scripts/sync-to-containers.sh apps/llmclient lib/unittest
@@ -71,10 +101,37 @@ docker cp smarter-app:/home/smarter_user/smarter/smarter/apps/widget/migrations/
 
 ## Shell notes (zsh on the host)
 
+- Never name a variable `path` in zsh: it is tied to `$PATH`, and assigning it
+  breaks every command that follows ("command not found: curl").
 - An unquoted `$FILES` is **not** word-split in zsh. Loop with
   `while read -r f; do ...; done <<< "$FILES"`, or pipe to `xargs`.
 - Use absolute paths, or paths from the repository root. A wrong relative `cd`
   silently runs a command against the wrong tree.
+
+## Testing a credential-free `make init`
+
+To see what a newcomer gets from `make init` (no AWS, no api keys, no SMTP),
+without touching the dev database, the workers or live infrastructure, run the
+image on an isolated network:
+
+1. `docker network create smarter-newcomer`, then throwaway `mariadb:latest` and
+   `redis:latest` (`--requirepass smarter`) on it, with
+   `--network-alias smarter-mariadb` and `--network-alias smarter-redis`. The
+   hostnames are hard-coded in `settings/base.py`, so the aliases redirect
+   everything.
+2. Load `scripts/smarter_test_db.sql`, and grant `smarter` all privileges, as
+   `docker-init` does.
+3. Run `smarter:latest` with `--env-file` (a copy of the template, plus a Fernet
+   key), and a copy of the host's `smarter/smarter` mounted over
+   `/home/smarter_user/smarter/smarter`. The image has an empty kubeconfig and no
+   `~/.aws`, so it holds no credentials.
+4. Run each `docker-init` step separately (`reset_cache`, `migrate`,
+   `initialize_platform`, `add_plugin_examples`, `create_stackademy`,
+   `deploy_builtin_llmclients`, `deploy_example_llmclient`), recording each exit
+   code, with two Celery workers (default and infrastructure queues) on the same
+   network.
+5. The logs are huge with `DEBUG_MODE=true`: strip the ANSI codes, and grep for
+   `ERROR`, `Traceback` and the exit codes.
 
 ## Safety: live credentials inside
 
