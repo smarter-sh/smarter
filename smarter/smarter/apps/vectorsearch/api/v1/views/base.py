@@ -5,7 +5,7 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -19,7 +19,6 @@ from smarter.apps.vectorsearch.models import (
 )
 from smarter.apps.vectorsearch.serializers import VectorsearchSerializer
 from smarter.apps.vectorsearch.signals import vectorsearch_called
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -291,22 +290,6 @@ class VectorsearchApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
 
         return super().dispatch(request, *args, **kwargs)
-
-    def options(self, request, *args, **kwargs):
-        """
-        OPTIONS request handler for the Smarter Prompt API.
-
-        Sets CORS headers to allow cross-origin requests from the Smarter environment URL.
-
-        :param request: The HTTP request object.
-        :type request: ASGIRequest
-        """
-        logger.debug("%s.options(): vectorsearch=%s", self.formatted_class_name, self.vectorsearch)
-        response = HttpResponse()
-        response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
-        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response["Access-Control-Allow-Headers"] = "origin, content-type, accept"
-        return response
 
     # pylint: disable=W0613
     def get(self, request, *args, name: Optional[str] = None, **kwargs):

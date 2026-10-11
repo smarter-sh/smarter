@@ -31,7 +31,7 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
 
 import re
 from datetime import datetime
-from typing import Any, Optional, Type, Union
+from typing import Optional, Type, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
@@ -837,10 +837,13 @@ class SqlPlugin(PluginBase):
         # the cache key must include everything that can alter the result,
         # including the connection, since identical sql can run against different databases.
         @cache_results(timeout=PluginCacheTtl.SQL)
-        def get_cached_query_result(connection_id: int, sql: str, limit: int) -> str:
+        def get_cached_query_result(connection_id: int, sql: str, limit: int) -> Union[str, bool]:
             retval = sql_connection.execute_query(sql=sql, limit=limit)
-            if not isinstance(retval, str):
-                # raise rather than return so that failed queries are never cached.
+            if retval is False:
+                # execute_query() returns False when the query fails. raise rather than
+                # return so that failed queries are never cached. any other unexpected
+                # type is returned, and rejected below, so that it isn't mistaken for a
+                # failed query.
                 raise SmarterSqlPluginError(
                     f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query failed: {sql}"
                 )
