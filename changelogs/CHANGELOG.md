@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.20.2-alpha.1...v0.20.2-alpha.2) (2026-10-11)
+
+### Bug Fixes
+
+* **prompt:** enforce the chat api contract with pydantic models ([0630dcb](https://github.com/smarter-sh/smarter/commit/0630dcb55ff54f81bae9ce3c3b62e55331c2203a))
+
 ## [0.20.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.1...v0.20.2-alpha.1) (2026-10-11)
 
 ### Bug Fixes
