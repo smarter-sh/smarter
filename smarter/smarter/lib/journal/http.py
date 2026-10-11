@@ -18,6 +18,7 @@ from smarter.lib.django.http.serializers import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.typing import SmarterDictType
 
 from .enum import (
     SCLIResponseMetadata,
@@ -93,7 +94,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
 
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
 
-        def anonymous_serialized_request(request) -> dict:
+        def anonymous_serialized_request(request) -> SmarterDictType:
             """Handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`."""
             try:
                 return HttpAnonymousRequestSerializer(request).data
@@ -106,7 +107,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 )
                 return {}
 
-        def authenticated_serialized_request(request) -> dict:
+        def authenticated_serialized_request(request) -> SmarterDictType:
             """Handles the same but for authenticated requests."""
             try:
                 return HttpAuthenticatedRequestSerializer(request).data
@@ -216,6 +217,10 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     :type stack_trace: str, optional
     :param description: Human-readable error description.
     :type description: str, optional
+    :param include_stack_trace: Whether the response includes ``stack_trace``. Defaults to ``True``.
+        Responses that a browser may receive, e.g. those of the Smarter Chat apis, pass ``False``:
+        the stack trace is still logged, but is never sent to the client.
+    :type include_stack_trace: bool, optional
     :param kwargs: Additional keyword arguments passed to the parent class.
 
     **Example error response JSON**::
@@ -246,6 +251,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         stack_trace: str = "No stack trace available.",
         description: Optional[str] = None,
         status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value,
+        include_stack_trace: bool = True,
         **kwargs,
     ):
         error_class = e.__class__.__name__ if e else "Unknown Exception"
@@ -284,6 +290,9 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         }
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
         logger.error("%s %s", logger_prefix, formatted_json(data))
+        if not include_stack_trace:
+            # logged above, but never sent to the client.
+            data[SmarterJournalApiResponseKeys.ERROR].pop(SmarterJournalApiResponseErrorKeys.STACK_TRACE)
 
         super().__init__(
             request=request,

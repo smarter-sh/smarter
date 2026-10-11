@@ -10,7 +10,7 @@ from .llmclient_helper import LLMClientHelper
 from .llmclient_mcpclient import LLMClientMCPClients
 from .llmclient_plugin import LLMClientPlugin
 from .llmclient_requests import LLMClientRequests
-from .utils import get_cached_llmclient_by_request
+from .utils import get_cached_llmclient_by_request, invalidate_cached_llmclient_by_hosts
 
 __all__ = [
     "LLMClientAPIKey",
@@ -24,5 +24,6 @@ __all__ = [
     "LLMClient",
     "LLMClientHelper",
     "get_cached_llmclient_by_request",
+    "invalidate_cached_llmclient_by_hosts",
     "validate_provider",
 ]

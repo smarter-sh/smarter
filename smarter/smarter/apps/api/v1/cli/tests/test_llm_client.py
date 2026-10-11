@@ -13,6 +13,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
 
@@ -59,7 +60,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         )
         return llmclient
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         # validate the response and status are both good
         self.assertIsInstance(response, dict)
 
@@ -76,7 +77,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         self.assertIn(SAMMetadataKeys.DESCRIPTION.value, metadata.keys())
         self.assertIn(SAMMetadataKeys.VERSION.value, metadata.keys())
 
-    def validate_spec(self, data: dict) -> None:
+    def validate_spec(self, data: SmarterDictType) -> None:
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         config = spec["config"]

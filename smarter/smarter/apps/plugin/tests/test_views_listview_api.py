@@ -18,6 +18,7 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.urls import PluginReverseNames
 from smarter.lib import json, logging
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase
 
@@ -37,7 +38,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         invalidate_all_cached_plugins_for_user_profile(self.user_profile)
         invalidate_all_cached_plugins_for_user_profile(self.non_admin_user_profile)
 
-    def post(self, url: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """POST to ``url``, assert the response's status, and return its json."""
         response = self.client.post(url)
         self.assertEqual(response.status_code, status, response.content)

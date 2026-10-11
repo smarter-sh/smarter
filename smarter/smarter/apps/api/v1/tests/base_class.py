@@ -15,6 +15,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
@@ -43,11 +44,9 @@ class ApiV1TestBase(TestAccountMixin):
         return super().tearDown()
 
     def get_response(
-        self, path, manifest: Optional[str] = None, data: Optional[dict] = None
-    ) -> tuple[dict[str, Any], int]:
-        """
-        Prepare and get a response from an api/v1/ endpoint.
-        """
+        self, path, manifest: Optional[str] = None, data: Optional[SmarterDictType] = None
+    ) -> tuple[SmarterDictType, int]:
+        """Prepare and get a response from an api/v1/ endpoint."""
         client = APIClient()
 
         headers = {"Authorization": f"Token {self.token_key}"}

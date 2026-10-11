@@ -9,6 +9,8 @@ helper. A certificate's id is its ARN.
 
 from typing import TYPE_CHECKING, Any, Optional
 
+from smarter.lib.typing import SmarterDictType
+
 from ...services.certificates import Certificate, CertificateService
 from ...services.dns import DNSRecord, DNSService
 from .helpers.acm import AWSCertificateManager
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
     from .provider import AWSProvider
 
 
-def to_certificate(description: dict[str, Any]) -> Certificate:
+def to_certificate(description: SmarterDictType) -> Certificate:
     """An ACM certificate's description as a :class:`Certificate`."""
     records = [
         DNSRecord(

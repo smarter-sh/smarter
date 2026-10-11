@@ -9,6 +9,7 @@ import yaml
 from smarter.common.api import SmarterApiVersions
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
+from smarter.lib.typing import SmarterDictType
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
@@ -242,14 +243,14 @@ class SAMLoader(SmarterHelperMixin):
 
     _api_version: str = SmarterApiVersions.V1
     _kind: Optional[str] = None
-    _manifest: Optional[Union[str, dict]] = None
+    _manifest: Optional[Union[str, SmarterDictType]] = None
     _file_path: Optional[str] = None
     _url: Optional[str] = None
 
     _raw_data: Optional[str] = None
-    _dict_data: Optional[dict] = None
+    _dict_data: Optional[SmarterDictType] = None
     _data_format: Optional[SAMDataFormats] = None
-    _specification: dict = {
+    _specification: dict[SAMKeys, Any] = {
         SAMKeys.APIVERSION: SmarterApiVersions.V1,
         SAMKeys.KIND: "PLACEHOLDER",
         SAMKeys.METADATA: {
@@ -272,7 +273,7 @@ class SAMLoader(SmarterHelperMixin):
         *args,
         api_version: str = SmarterApiVersions.V1,
         kind: Optional[str] = None,
-        manifest: Optional[Union[str, dict]] = None,
+        manifest: Optional[Union[str, SmarterDictType]] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
         **kwargs,
@@ -384,7 +385,7 @@ class SAMLoader(SmarterHelperMixin):
         return self.manifest_kind or self._kind or "unknown-kind"
 
     @property
-    def manifest(self) -> Optional[Union[str, dict[str, Any]]]:
+    def manifest(self) -> Optional[Union[str, SmarterDictType]]:
         if self._manifest is not None and not isinstance(self._manifest, (str, dict)):
             logger.error(
                 "%s.manifest - integrity error. Invalid manifest type: %s",
@@ -419,15 +420,15 @@ class SAMLoader(SmarterHelperMixin):
         return "unknown-source"
 
     @property
-    def specification(self) -> dict:
+    def specification(self) -> dict[SAMKeys, Any]:
         return self._specification
 
     @property
-    def raw_data(self) -> Optional[Union[str, dict]]:
+    def raw_data(self) -> Optional[Union[str, SmarterDictType]]:
         return self._raw_data
 
     @property
-    def json_data(self) -> Optional[dict[str, Any]]:
+    def json_data(self) -> Optional[SmarterDictType]:
         if self.data_format == SAMDataFormats.JSON:
             return json.loads(self.raw_data) if isinstance(self.raw_data, str) else self.raw_data
         if self.data_format == SAMDataFormats.YAML:
@@ -472,7 +473,7 @@ class SAMLoader(SmarterHelperMixin):
     def formatted_data(self) -> str:
         return json.dumps(self.json_data)
 
-    def pydantic_model_dump(self) -> dict:
+    def pydantic_model_dump(self) -> SmarterDictType:
         """
         Return a dictionary representation of the manifest data suitable for use with Pydantic models.
 
@@ -634,7 +635,7 @@ class SAMLoader(SmarterHelperMixin):
         return self.get_key(SAMKeys.KIND.value)
 
     @property
-    def manifest_metadata(self) -> dict:
+    def manifest_metadata(self) -> SmarterDictType:
         """
         Returns the metadata section of the manifest.
 
@@ -644,7 +645,7 @@ class SAMLoader(SmarterHelperMixin):
         return self.get_key(SAMKeys.METADATA.value)
 
     @property
-    def manifest_spec(self) -> dict:
+    def manifest_spec(self) -> SmarterDictType:
         """
         Returns the spec section of the manifest.
 
@@ -654,7 +655,7 @@ class SAMLoader(SmarterHelperMixin):
         return self.get_key(SAMKeys.SPEC.value)
 
     @property
-    def manifest_status(self) -> dict:
+    def manifest_status(self) -> SmarterDictType:
         """
         Returns the status section of the manifest.
 
@@ -720,7 +721,7 @@ class SAMLoader(SmarterHelperMixin):
         else:
             logger.warning(msg)
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Return the manifest data as a JSON string.
 

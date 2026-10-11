@@ -1,0 +1,100 @@
+"""
+Constants of the Smarter Chat api contract.
+
+The contract is versioned. Version 2 is the default. Version 1, the original shape, is deprecated,
+and returned only to clients that need it:
+
+- a client that asks for it, with ``chat-contract-v1`` in the ``X-Smarter-Capabilities`` request
+  header, a comma-separated list of the capabilities that the client supports,
+- Smarter Chat (``X-Smarter-Client: @smarter.sh/ui-chat``) when it lists no contract capability,
+  which is what its versions up to 0.7 do, so that the pages that installed them keep working,
+- the ``smarter`` cli's prompt, whose output its clients parse.
+
+A client may also ask for version 2 explicitly, with ``chat-contract-v2``, as Smarter Chat does. The
+header is in ``CORS_ALLOW_HEADERS`` on every Smarter platform, so a new client can send it to an
+older platform, which ignores it.
+"""
+
+import os
+
+CHAT_CONTRACT_V1 = 1
+"""
+Deprecated: the original contract, with legacy key names, and the prompt's completion as a JSON.
+
+string. ``typing_extensions.deprecated`` can't mark a constant (PEP 702 covers classes and functions
+only), so every version 1 model, and :meth:`~.models.PromptChatApiConfig.to_v1`, is marked instead.
+"""
+
+CHAT_CONTRACT_V2 = 2
+"""The current contract: plain key names, and the prompt's messages and completion as JSON."""
+
+DEFAULT_CHAT_CONTRACT = CHAT_CONTRACT_V2
+"""The version of the contract that a client receives unless it needs version 1."""
+
+CHAT_CONTRACT_V1_CAPABILITY = "chat-contract-v1"
+"""The capability with which a client asks for the deprecated version 1 of the contract."""
+
+CHAT_CONTRACT_V2_CAPABILITY = "chat-contract-v2"
+"""The capability with which a client asks for version 2 of the contract."""
+
+LEGACY_CHAT_CLIENT = "@smarter.sh/ui-chat"
+"""
+The ``X-Smarter-Client`` of Smarter Chat.
+
+Its versions that list no contract capability, up to 0.7,
+read version 1 only.
+"""
+
+CLIENT_HEADER = "HTTP_X_SMARTER_CLIENT"
+"""``request.META`` key of the ``X-Smarter-Client`` request header."""
+
+CAPABILITIES_HEADER = "HTTP_X_SMARTER_CAPABILITIES"
+"""``request.META`` key of the ``X-Smarter-Capabilities`` request header."""
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+SCHEMA_PATH = os.path.join(HERE, "chat-contract.schema.json")
+"""The JSON Schema of the contract, generated from :mod:`smarter.apps.prompt.contract.models`."""
+
+PUBLIC_LLMCLIENT_FIELDS = (
+    "id",
+    "name",
+    "description",
+    "version",
+    "deployed",
+    "provider",
+    "default_model",
+    "default_system_role",
+    "app_name",
+    "app_assistant",
+    "app_welcome_message",
+    "app_example_prompts",
+    "app_placeholder",
+    "app_info_url",
+    "app_background_image_url",
+    "app_logo_url",
+    "app_file_attachment",
+    "url_llmclient",
+)
+"""
+The LLMClient fields of the public configuration.
+
+The public configuration is returned by a deployed LLMClient's own host, which pages that embed
+Smarter Chat call. Workbench and platform api urls, and the cli, receive every field.
+"""
+
+PUBLIC_META_DATA_FIELDS = ("ready", "is_valid", "is_deployed", "is_custom_domain", "is_authentication_required")
+"""The ``meta_data`` fields of the public configuration."""
+
+DIAGNOSTIC_COMPLETION_TOP_KEYS = ("metadata",)
+"""
+The keys of a completion that are returned only to the ``smarter`` cli: ``metadata`` describes the.
+
+prompt's tool calls with each plugin's ``PluginMeta``, including its owner's profile.
+"""
+
+DIAGNOSTIC_COMPLETION_KEYS = ("first_iteration", "second_iteration")
+"""
+The keys of a completion's ``smarter`` object that hold the complete LLM requests and responses.
+
+They are returned only to the ``smarter`` cli, never to a browser.
+"""

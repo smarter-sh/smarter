@@ -22,6 +22,7 @@ from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
@@ -129,7 +130,7 @@ class PluginDataApi(PluginDataBase):
         """Return the full URL for the API endpoint."""
         return urljoin(self.connection.base_url, self.endpoint)
 
-    def data(self, params: Optional[dict] = None) -> dict:
+    def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         return {
             "parameters": self.parameters,
             "endpoint": self.endpoint,
@@ -137,7 +138,7 @@ class PluginDataApi(PluginDataBase):
             "body": self.body,
         }
 
-    def prepare_request(self, params: Optional[dict]) -> dict:
+    def prepare_request(self, params: Optional[SmarterDictType]) -> SmarterDictType:
         """Prepare the API request by merging parameters, headers, and body."""
         params = params or {}
         self.validate_url_params()
@@ -150,7 +151,7 @@ class PluginDataApi(PluginDataBase):
         }
         return request_data
 
-    def execute_request(self, params: Optional[dict]) -> Union[dict, bool]:
+    def execute_request(self, params: Optional[SmarterDictType]) -> Union[SmarterDictType, bool]:
         """Execute the API request and return the results."""
         request_data = self.prepare_request(params)
         try:
@@ -161,11 +162,11 @@ class PluginDataApi(PluginDataBase):
             logger.error("%s.execute_request() API request failed: %s", self.formatted_class_name, e)
             return False
 
-    def test(self) -> Union[dict, bool]:
+    def test(self) -> Union[SmarterDictType, bool]:
         """Test the API request using the test_values in the record."""
         return self.execute_request(self.test_values)
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> Union[dict, bool]:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> Union[SmarterDictType, bool]:
         """Return a dict by executing the API request with the provided params."""
         logger.info("%s.sanitized_return_data called. - %s", self.formatted_class_name, params)
         return self.execute_request(params)

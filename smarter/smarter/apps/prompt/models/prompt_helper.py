@@ -17,6 +17,7 @@ from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .prompt import Prompt
 from .prompt_history import PromptHistory
@@ -126,7 +127,7 @@ class PromptHelper(SmarterRequestMixin):
     _llmclient: Optional[LLMClient] = None
     _prompt_tool_call: Optional[Union[models.QuerySet, list]] = None
     _prompt_plugin_usage: Optional[Union[models.QuerySet, list]] = None
-    _history: Optional[dict] = None
+    _history: Optional[SmarterDictType] = None
 
     def __init__(
         self, request: HttpRequest, session_key: Optional[str], *args, llmclient: Optional[LLMClient] = None, **kwargs
@@ -219,7 +220,7 @@ class PromptHelper(SmarterRequestMixin):
         """
         return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._llmclient)
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Convert the PromptHelper instance to a JSON serializable dictionary.
 
@@ -228,7 +229,7 @@ class PromptHelper(SmarterRequestMixin):
         and a unique client string.
 
         :returns: A dictionary containing the serialized state of the PromptHelper.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         """
         return self.sorted_dict(
             {
@@ -332,7 +333,7 @@ class PromptHelper(SmarterRequestMixin):
         return self._prompt_plugin_usage
 
     @property
-    def history(self) -> dict:
+    def history(self) -> SmarterDictType:
         """
         Serialize the most recent logged history output for the prompt session.
 

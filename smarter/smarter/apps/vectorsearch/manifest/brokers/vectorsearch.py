@@ -48,6 +48,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -270,7 +271,7 @@ class SAMVectorsearchBroker(AbstractBroker):
             )
         return secret
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the Smarter API Vectorsearch manifest into a dictionary suitable for creating or updating a Django ORM Vectorsearch model.
 
@@ -316,7 +317,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         return retval
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """
         Transform the Django ORM Vectorsearch model instance into a dictionary compatible with the.
 

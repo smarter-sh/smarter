@@ -22,6 +22,7 @@ from django.db import models
 from smarter.apps.account.models import MetaDataWithOwnershipModel
 from smarter.apps.llmhost.const import TAINT_COMPUTE, TAINT_GPU
 from smarter.common.conf import smarter_settings
+from smarter.lib.typing import SmarterDictType
 
 
 class LLMHostComputeNodeGroupStatus:
@@ -117,12 +118,12 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
         return self.gpu_count > 0
 
     @property
-    def node_spec(self) -> dict:
+    def node_spec(self) -> SmarterDictType:
         """Spec.node, as stored."""
         return (self.spec or {}).get("node", {}) or {}
 
     @property
-    def nodegroup_spec(self) -> dict:
+    def nodegroup_spec(self) -> SmarterDictType:
         """Spec.nodeGroup, as stored."""
         return (self.spec or {}).get("nodeGroup", {}) or {}
 

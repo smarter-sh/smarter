@@ -28,6 +28,7 @@ from smarter.apps.account.models import (
 from smarter.apps.account.models.budget import is_visible
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ DEFAULT_PERIODS = 12
 MAX_PERIODS = 120
 
 
-def _jsonable(data: dict[str, Any]) -> dict[str, Any]:
+def _jsonable(data: SmarterDictType) -> SmarterDictType:
     """Decimals as numbers, for charts."""
     return {key: float(value) if isinstance(value, Decimal) else value for key, value in data.items()}
 

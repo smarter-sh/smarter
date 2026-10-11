@@ -27,6 +27,6 @@ spec:
       - aws___get_regional_availability
     includeInstructions: true
     timeout: 30
-    cacheTtl: 300
+    cacheTtl: 3600
     isActive: true
     priority: 100

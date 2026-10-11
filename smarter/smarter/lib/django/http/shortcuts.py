@@ -1,6 +1,8 @@
 # pylint: disable=C0115,W1113
 """
-Smarter http responses. these are wrappers around the Django HttpResponse class,
+Smarter http responses.
+
+these are wrappers around the Django HttpResponse class,
 with a custom error_message attribute for the custom templates, and default error messages.
 """
 
@@ -10,10 +12,12 @@ from typing import Optional
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
+from smarter.lib.typing import SmarterDictType
+
 
 class SmarterHttpResponse(HttpResponse):
     """
-    SmarterHttpResponse(request, error_message=None, status_code=200, template_file="200.html", *args, **kwargs)
+    SmarterHttpResponse(request, error_message=None, status_code=200, template_file="200.html", *args, **kwargs).
 
     A generic HTTP response class for Smarter applications, extending Django's ``HttpResponse``.
     This class is designed to render a specified template with a customizable error message and HTTP status code.
@@ -56,11 +60,10 @@ class SmarterHttpResponse(HttpResponse):
     **Warning:**
         - If the specified template file does not exist, Django will raise a ``TemplateDoesNotExist`` exception.
         - The default error message is generic; always provide a specific message for better user experience.
-
     """
 
     status_code: int
-    context: dict = {}
+    context: SmarterDictType = {}
 
     def __init__(
         self,
@@ -85,7 +88,7 @@ class SmarterHttpErrorResponse(SmarterHttpResponse):
 
 class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseBadRequest(request, error_message=None, *args, **kwargs)
+    SmarterHttpResponseBadRequest(request, error_message=None, *args, **kwargs).
 
     Specialized HTTP 400 (Bad Request) response for Smarter Django applications.
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
@@ -124,7 +127,6 @@ class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
     **Warning:**
         - If the specified template file does not exist, Django will raise a ``TemplateDoesNotExist`` exception.
         - Always provide a clear error message to help users understand what went wrong.
-
     """
 
     def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
@@ -143,7 +145,7 @@ class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
 
 class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseForbidden(request, error_message=None, *args, **kwargs)
+    SmarterHttpResponseForbidden(request, error_message=None, *args, **kwargs).
 
     Specialized HTTP 403 (Forbidden) response for Smarter Django applications.
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
@@ -182,7 +184,6 @@ class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
     **Warning:**
         - If the specified template file does not exist, Django will raise a ``TemplateDoesNotExist`` exception.
         - Always provide a clear error message to help users understand why access was denied.
-
     """
 
     def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
@@ -201,7 +202,7 @@ class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
 
 class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseNotFound(request, error_message=None, *args, **kwargs)
+    SmarterHttpResponseNotFound(request, error_message=None, *args, **kwargs).
 
     Specialized HTTP 404 (Not Found) response for Smarter Django applications.
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
@@ -241,7 +242,6 @@ class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
     **Warning:**
         - If the specified template file does not exist, Django will raise a ``TemplateDoesNotExist`` exception.
         - Always provide a clear error message to help users understand what could not be found.
-
     """
 
     def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
@@ -260,7 +260,7 @@ class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
 
 class SmarterHttpResponseServerError(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseServerError(request, error_message=None, *args, **kwargs)
+    SmarterHttpResponseServerError(request, error_message=None, *args, **kwargs).
 
     Specialized HTTP 500 (Internal Server Error) response for Smarter Django applications.
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
@@ -301,7 +301,6 @@ class SmarterHttpResponseServerError(SmarterHttpErrorResponse):
     **Warning:**
         - If the specified template file does not exist, Django will raise a ``TemplateDoesNotExist`` exception.
         - Always provide a clear error message to help users understand that a server error has occurred.
-
     """
 
     def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):

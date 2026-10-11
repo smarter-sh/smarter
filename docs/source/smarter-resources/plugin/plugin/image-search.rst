@@ -52,6 +52,12 @@ Only https urls of the original images are returned, never Brave's thumbnails an
 ``validateUrls`` is false, only those that respond to a request with HTTP 200, and not with a
 web page, such as that of a website that blocks hotlinking.
 
+Brave's results are cached for ``cacheTtl`` seconds, and always come back in the same order. So
+that a repeated prompt, such as "show me cats", does not always show the same image, the images
+that pass the filters are shuffled before each search picks ``count`` of them. Each tool call,
+including one answered from the cache, returns a random selection of the matching images, in
+random order.
+
 Brave Search API key
 --------------------
 

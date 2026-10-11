@@ -26,6 +26,7 @@ from smarter.apps.provider.services.text_completion.contracts import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .strategies.regex_strategy import compiled_pattern
 from .text_extraction import read_segment, write_segment
@@ -48,7 +49,7 @@ class ActionOutcome:
     :ivar halt_pipeline: True for block: no further guardrails run.
     """
 
-    payload: dict[str, Any]
+    payload: SmarterDictType
     disposition: PipelineDisposition
     event_disposition: str
     message: str | None = None
@@ -67,7 +68,7 @@ def replace_matches(text: str, matches: list[GuardrailMatch], replacement: str) 
     return text
 
 
-def apply_action(*, payload: dict[str, Any], finding: GuardrailFinding, guardrail: Guardrail) -> ActionOutcome:
+def apply_action(*, payload: SmarterDictType, finding: GuardrailFinding, guardrail: Guardrail) -> ActionOutcome:
     """
     Apply the guardrail's action to the payload, for a triggered finding.
 

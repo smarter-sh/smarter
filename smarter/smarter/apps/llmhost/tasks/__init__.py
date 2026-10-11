@@ -39,6 +39,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 from smarter.workers.celery import app
 
 logger = logging.getSmarterLogger(
@@ -152,7 +153,7 @@ def refresh_llmhost_status(llmhost_id: Optional[int] = None) -> dict[str, str]:
 
 
 @app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
-def reconcile_llmhost_compute(compute_id: int, attempt: int = 1) -> Optional[dict[str, Any]]:
+def reconcile_llmhost_compute(compute_id: int, attempt: int = 1) -> Optional[SmarterDictType]:
     """
     Reconcile a compute's node group with its LLMHosts, and check their status.
 

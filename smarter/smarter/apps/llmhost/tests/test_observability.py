@@ -15,16 +15,17 @@ from smarter.apps.llmhost.services.observability import (
     interpret,
     summarize_pod,
 )
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-def deployment(replicas: int = 1, ready: int = 0, conditions=None) -> dict:
+def deployment(replicas: int = 1, ready: int = 0, conditions=None) -> SmarterDictType:
     return {"spec": {"replicas": replicas}, "status": {"readyReplicas": ready, "conditions": conditions or []}}
 
 
 def pod(
     phase="Running", ready=False, waiting=None, init_running=False, unschedulable=None, restarts=0, oom=False
-) -> dict:
+) -> SmarterDictType:
     state = {"waiting": {"reason": waiting, "message": "details"}} if waiting else {"running": {}}
     container = {"name": "engine", "ready": ready, "restartCount": restarts, "state": state}
     if oom:

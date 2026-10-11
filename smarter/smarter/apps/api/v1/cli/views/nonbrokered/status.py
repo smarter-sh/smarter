@@ -17,6 +17,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         this_class = f".{ApiV1CliStatusApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
-    def get_kubernetes_info(self) -> dict:
+    def get_kubernetes_info(self) -> SmarterDictType:
         """
         Return Kubernetes cluster information.
 

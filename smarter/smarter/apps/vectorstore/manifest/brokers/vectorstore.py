@@ -71,6 +71,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -208,7 +209,7 @@ class SAMVectorstoreBroker(AbstractBroker):
     # -------------------------------------------------------------------------
     # conversions
     # -------------------------------------------------------------------------
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """The VectorstoreMeta fields of the manifest."""
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"Manifest not loaded for {self.kind} broker.", thing=self.kind)
@@ -244,7 +245,7 @@ class SAMVectorstoreBroker(AbstractBroker):
             }
         return SAMVectorstoreSpec(**data)
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """The Vectorstore as a manifest, with its status."""
         vectorstore = self.vectorstore
         if not vectorstore:

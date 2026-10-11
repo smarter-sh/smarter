@@ -20,6 +20,7 @@ from smarter.apps.llmhost.const import (
 )
 from smarter.apps.llmhost.manifest.enum import SAMLLMHostModelSource
 from smarter.apps.llmhost.manifest.models.llmhost.spec import SAMLLMHostModel
+from smarter.lib.typing import SmarterDictType
 
 from .exceptions import LLMHostConfigurationError
 
@@ -45,7 +46,7 @@ class ResolvedModel:
     revision: Optional[str] = None
     file: Optional[str] = None
     local: bool = False
-    init_containers: list[dict[str, Any]] = field(default_factory=list)
+    init_containers: list[SmarterDictType] = field(default_factory=list)
 
     @property
     def path(self) -> str:

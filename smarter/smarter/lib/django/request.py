@@ -55,6 +55,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 # Match netloc: llmclient_name.account_number.api.environment_api_domain
 netloc_pattern_named_url = re.compile(
@@ -164,7 +165,7 @@ class SmarterRequestMixin(AccountMixin):
         self._parsed_url: Optional[ParseResult] = None
         self._params: Optional[QueryDict] = None
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
-        self._data: Optional[dict] = None
+        self._data: Optional[SmarterDictType] = None
         self._cache_key: Optional[str] = None
         self._srm_ready: bool = False
 
@@ -1186,7 +1187,7 @@ class SmarterRequestMixin(AccountMixin):
         return self._timestamp
 
     @cached_property
-    def data(self) -> Optional[Union[dict, list, str]]:
+    def data(self) -> Optional[Union[SmarterDictType, list, str]]:
         """
         Get the request body data as a dictionary, list or str.
 
@@ -1203,8 +1204,8 @@ class SmarterRequestMixin(AccountMixin):
         if self._data:
             return self._data
 
-        body: Union[dict, bytes, str, bytearray, None] = None
-        body_str: Union[dict, bytes, str, bytearray, None] = None
+        body: Union[SmarterDictType, bytes, str, bytearray, None] = None
+        body_str: Union[SmarterDictType, bytes, str, bytearray, None] = None
 
         verbose_logger.debug(
             "%s.data() - parsing request body for: %s",
@@ -2360,7 +2361,7 @@ class SmarterRequestMixin(AccountMixin):
         msg = f"{self.formatted_class_name} is {self.ready_state}"
         logger.info(msg)
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Serializes the object.
 

@@ -23,6 +23,7 @@ from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -138,7 +139,7 @@ class SmarterView(View):
 
     _ready: bool = False
     template_path: str = ""
-    context: dict = {}
+    context: SmarterDictType = {}
 
     @property
     def formatted_class_name(self) -> str:
@@ -376,8 +377,6 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
-        :return: The result of the superclass setup method.
-        :rtype: Any
         """
         user = getattr(request, "user", None)
         verbose_logger.debug(
@@ -535,6 +534,99 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
             # Redirect to admin login page for non-staff users
             return redirect_and_expire_cache(path="/admin/login/?next=" + request.path)
 
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ["Cookie"])
+        return response
+
+
+@method_decorator(never_cache, name="dispatch")
+class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
+    """
+    A JSON api view whose clients may or may not be authenticated, and which is never cached.
+
+    The web console's views, e.g. :class:`SmarterAuthenticatedWebView`, serve pages to logged-in users,
+    and redirect everyone else to the login page. This view is for the apis that a deployed LLMClient
+    serves to browsers and api clients that are not web console users, e.g. the configuration and
+    prompt apis of a page that embeds Smarter Chat: it never redirects, and leaves authorization to the
+    subclass, which knows the resource. A subclass decides, in its ``dispatch()``, whether the request
+    may proceed, typically with :attr:`is_authenticated`, and answers with a JSON error if not.
+
+    - **No login redirect.** An anonymous request reaches the subclass's ``dispatch()``.
+    - **CSRF exempt.** Its clients send api keys or no credentials, not the web console's session.
+    - **Never cached**, and responses vary by ``Cookie``, so that one client's data is never served to another.
+
+    It initializes :class:`~smarter.lib.django.request.SmarterRequestMixin` with the request, as
+    :class:`SmarterAuthenticatedWebView` does, so the request's account, user and user profile are set
+    for an authenticated request, and empty for an anonymous one.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        SmarterRequestMixin.__init__(self, **kwargs)
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        """
+        The view function, CSRF exempt.
+
+        The exemption is set here, as Django REST Framework's ``APIView`` does, rather than with
+        ``@method_decorator(csrf_exempt, name="dispatch")``, because Django copies it from the most
+        derived ``dispatch()``, so a subclass that overrides ``dispatch()`` would lose it.
+
+        :param initkwargs: The view's class attributes to override, as for ``View.as_view()``.
+        :returns: The view function.
+        """
+        view = super().as_view(**initkwargs)
+        view.csrf_exempt = True  # type: ignore[attr-defined]
+        return view
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterOptionallyAuthenticatedApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    @property
+    def is_authenticated(self) -> bool:
+        """
+        Whether the request is authenticated, by the web console's session or by an api key.
+
+        :returns: True for an authenticated user.
+        :rtype: bool
+        """
+        user = getattr(self.smarter_request, "user", None)
+        return bool(user and getattr(user, "is_authenticated", False))
+
+    def setup(self, request: HttpRequest, *args, **kwargs):
+        """
+        Set up the view with the request, and initialize SmarterRequestMixin with it.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        """
+        user = getattr(request, "user", None)
+        request = self.set_is_internal_api_request(request, False)
+        super().setup(request, *args, **kwargs)
+        if isinstance(user, AnonymousUser):
+            user = None
+        SmarterRequestMixin.setup(self, *args, request=request, user=user, **kwargs)
+        if not self.smarter_request:
+            self.smarter_request = request
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Dispatch the request, authenticated or not, and vary the response by ``Cookie``.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :return: An HttpResponse object.
+        :rtype: HttpResponse
+        """
+        verbose_logger.debug(
+            "%s.dispatch() called with request: %s, user: %s", self.formatted_class_name, request, request.user
+        )
         response = super().dispatch(request, *args, **kwargs)
         patch_vary_headers(response, ["Cookie"])
         return response

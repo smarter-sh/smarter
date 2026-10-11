@@ -2,7 +2,7 @@
 
 import traceback
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
 import openai
 from openai.types.chat.chat_completion import ChatCompletion
@@ -34,6 +34,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -44,6 +45,8 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+_RequestDataT = TypeVar("_RequestDataT")
 
 
 class OpenAIPassthroughClient(SmarterHelperMixin):
@@ -76,7 +79,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         self.api_key = api_key
 
     @staticmethod
-    def normalize_request_data(provider: str, data: Any) -> Any:
+    def normalize_request_data(provider: str, data: _RequestDataT) -> _RequestDataT:
         """
         Adapt a passthrough request body to the provider's current API.
 
@@ -110,7 +113,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             and "reasoning_effort" not in data
         )
 
-    def create_chat_completion(self, data: dict[str, Any], logger_prefix: str):
+    def create_chat_completion(self, data: SmarterDictType, logger_prefix: str):
         """Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools."""
         try:
             return openai.chat.completions.create(**data)
@@ -134,7 +137,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         self,
         request: Request,
         user_profile: UserProfile,
-        data: dict[str, Any],
+        data: SmarterDictType,
         **kwargs,
     ):
         charge_authorization(user_profile.record_locator, self.__class__.__name__)
@@ -219,7 +222,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         chat_response.send(sender=self.handler, request=request, response=response)
         prompt_finished.send(sender=self.handler, request=request, response=response)
 
-        response_dict: dict = {"message": "Response is not a ChatCompletion object"}
+        response_dict: SmarterDictType = {"message": "Response is not a ChatCompletion object"}
         if isinstance(response, ChatCompletion):
             response_dict = response.model_dump()
 

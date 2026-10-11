@@ -18,7 +18,7 @@ import os
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Union
 from urllib.parse import quote
 
 import requests
@@ -33,6 +33,7 @@ from smarter.apps.llmhost.manifest.enum import (
 from smarter.apps.llmhost.models import LLMHostCompute
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.journal.enum import SmarterJournalThings
+from smarter.lib.typing import SmarterDictType
 
 from .compute import (
     PodRequests,
@@ -76,10 +77,10 @@ class ModelInfo:
     likes: Optional[int] = None
     tags: list[str] = field(default_factory=list)
     files: list[str] = field(default_factory=list)
-    manifest: Optional[dict[str, Any]] = None
+    manifest: Optional[SmarterDictType] = None
     """A ready-made manifest, for built-in models."""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> SmarterDictType:
         return asdict(self)
 
 
@@ -108,7 +109,7 @@ class BuiltinCatalog(ModelCatalog):
     def __init__(self, path: str = BUILTIN_MANIFESTS_PATH):
         self.path = path
 
-    def manifests(self) -> list[dict[str, Any]]:
+    def manifests(self) -> list[SmarterDictType]:
         """The built-in manifests, sorted by file name."""
         retval = []
         for filespec in sorted(glob.glob(os.path.join(self.path, "*.yaml"))):
@@ -118,7 +119,7 @@ class BuiltinCatalog(ModelCatalog):
         return retval
 
     @staticmethod
-    def to_info(manifest: dict[str, Any]) -> ModelInfo:
+    def to_info(manifest: SmarterDictType) -> ModelInfo:
         metadata = manifest.get("metadata", {})
         model = manifest.get("spec", {}).get("model", {})
         return ModelInfo(
@@ -180,7 +181,9 @@ class HuggingFaceCatalog(ModelCatalog):
         self.session = session or requests.Session()
         self.timeout = timeout
 
-    def _get(self, path: str, params: Optional[Any] = None) -> Any:
+    def _get(
+        self, path: str, params: Optional[Union[SmarterDictType, list[tuple[str, Any]]]] = None
+    ) -> Union[SmarterDictType, list[Any]]:
         headers = {"Authorization": f"Bearer {self.token}"} if self.token else {}
         try:
             response = self.session.get(f"{self.base_url}{path}", params=params, headers=headers, timeout=self.timeout)
@@ -201,7 +204,7 @@ class HuggingFaceCatalog(ModelCatalog):
         return SAMLLMHostTask.TEXT_GENERATION.value
 
     @staticmethod
-    def _quantization(data: dict[str, Any], files: list[str]) -> str:
+    def _quantization(data: SmarterDictType, files: list[str]) -> str:
         tags = [str(t).lower() for t in data.get("tags", []) or []]
         if "gguf" in tags or any(f.lower().endswith(".gguf") for f in files):
             return SAMLLMHostQuantization.GGUF.value
@@ -214,7 +217,7 @@ class HuggingFaceCatalog(ModelCatalog):
             return {"bf16": "bf16", "f16": "fp16", "fp16": "fp16", "f32": "fp32"}.get(dtype, "none")
         return SAMLLMHostQuantization.NONE.value
 
-    def to_info(self, data: dict[str, Any]) -> ModelInfo:
+    def to_info(self, data: SmarterDictType) -> ModelInfo:
         files = [s.get("rfilename", "") for s in data.get("siblings", []) or []]
         card = data.get("cardData") or {}
         config = data.get("config") or {}
@@ -248,7 +251,10 @@ class HuggingFaceCatalog(ModelCatalog):
     def get(self, repository: str) -> ModelInfo:
         if not re.match(r"^[\w.-]+/[\w.-]+$", repository):
             raise LLMHostDiscoveryError(f"{repository} is not a Hugging Face repository id, e.g. Qwen/Qwen3-8B.")
-        info = self.to_info(self._get(f"/api/models/{quote(repository)}"))
+        data = self._get(f"/api/models/{quote(repository)}")
+        if not isinstance(data, dict):
+            raise LLMHostDiscoveryError(f"Hugging Face returned an unexpected response for {repository}.")
+        info = self.to_info(data)
         info.context_window = self.context_window(repository)
         return info
 
@@ -342,7 +348,7 @@ def recommend_resources(
     quantization: str = SAMLLMHostQuantization.NONE.value,
     cpu_ok: bool = False,
     computes: Optional[Iterable[LLMHostCompute]] = None,
-) -> dict[str, Any]:
+) -> SmarterDictType:
     """
     Recommend the compute, and the spec.resources of one replica's pod, for a model.
 
@@ -364,7 +370,7 @@ def recommend_resources(
         return {}
     computes = list(computes if computes is not None else builtin_computes())
     size_gb = weights_gb(parameter_count, quantization)
-    options: list[tuple[dict[str, Any], PodRequests]] = []
+    options: list[tuple[SmarterDictType, PodRequests]] = []
     if cpu_ok and vram_gb <= 4:
         resources = {"gpuCount": 0, "cpu": pod_cpu(0), "memory": pod_memory(size_gb, 0)}
         options.append((resources, PodRequests(cpu_millicores(resources["cpu"]), memory_mib(resources["memory"]))))
@@ -408,7 +414,7 @@ def draft_manifest(
     name: Optional[str] = None,
     token_secret: Optional[str] = None,
     computes: Optional[Iterable[LLMHostCompute]] = None,
-) -> dict[str, Any]:
+) -> SmarterDictType:
     """
     Draft an LLMHost manifest for a model.
 
@@ -442,7 +448,7 @@ def draft_manifest(
     if not resources and engine in (SAMLLMHostEngine.VLLM.value, SAMLLMHostEngine.SGLANG.value):
         resources = {"gpuCount": 1}
 
-    model: dict[str, Any] = {
+    model: SmarterDictType = {
         "source": info.source,
         "repository": info.repository,
         "task": info.task,
@@ -459,7 +465,7 @@ def draft_manifest(
         "contextWindow": info.context_window,
     }
     model.update({key: value for key, value in optional.items() if value is not None})
-    engine_config: dict[str, Any] = {"name": engine}
+    engine_config: SmarterDictType = {"name": engine}
     if tensor_parallel_size:
         engine_config["tensorParallelSize"] = tensor_parallel_size
     if info.context_window and engine == SAMLLMHostEngine.VLLM.value and info.context_window > 32768:

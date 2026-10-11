@@ -20,6 +20,7 @@ from smarter.apps.provider.services.text_completion.contracts import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .exceptions import GuardrailServiceError
 from .strategies.base import StrategyContext
@@ -38,7 +39,7 @@ class GuardrailEngine:
     def evaluate(
         self,
         guardrail: Guardrail,
-        payload: dict[str, Any],
+        payload: SmarterDictType,
         stage: GuardrailStage,
         context: StrategyContext,
     ) -> GuardrailOutcome:

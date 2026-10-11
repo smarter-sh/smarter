@@ -21,6 +21,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
 )
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         super().tearDown()
 
     @property
-    def kwargs(self) -> dict:
+    def kwargs(self) -> SmarterDictType:
         """Return default kwargs for broker methods."""
         if not self.ready:
             raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
@@ -293,7 +294,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         # Validate that the response content can be
         # properly decoded to a dict
-        response_json: dict = json.loads(response.content.decode("utf-8"))
+        response_json: SmarterDictType = json.loads(response.content.decode("utf-8"))
         self.assertIsInstance(response_json, dict)
 
         return True
@@ -306,7 +307,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         # Validate that the response is a properly
         # structured SAM manifest dict
-        response_json: dict = json.loads(response.content.decode("utf-8"))
+        response_json: SmarterDictType = json.loads(response.content.decode("utf-8"))
         self.assertIsInstance(response_json, dict)
         data = response_json.get(SCLIResponseGet.DATA.value)
         self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
@@ -331,11 +332,11 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
     def validate_get(self, response: SmarterJournaledJsonResponse) -> bool:
         """Validate that the response is a SmarterJournaledJsonResponse containing a properly structured SAM manifest dict."""
-        response_json: dict = json.loads(response.content.decode("utf-8"))
+        response_json: SmarterDictType = json.loads(response.content.decode("utf-8"))
         self.assertIsInstance(response_json, dict)
         data = response_json.get(SCLIResponseGet.DATA.value)  # type: ignore
         self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
-        data: dict = data.get(SCLIResponseGet.DATA.value)  # type: ignore
+        data: SmarterDictType = data.get(SCLIResponseGet.DATA.value)  # type: ignore
         self.assertIsInstance(data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}")
 
         self.assertIn("titles", data.keys(), msg=f"'titles' missing in manifest dict. response_json: {response_json}")
@@ -351,7 +352,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         # Validate that the response is a properly
         # structured SAM manifest dict
-        response_json: dict = json.loads(response.content.decode("utf-8"))
+        response_json: SmarterDictType = json.loads(response.content.decode("utf-8"))
         self.assertIsInstance(response_json, dict)
         data = response_json.get(SCLIResponseGet.DATA.value)
         self.assertIsInstance(

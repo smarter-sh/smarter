@@ -24,6 +24,7 @@ from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
@@ -36,7 +37,7 @@ def visible_constraints(user_profile: UserProfile, budget: Budget) -> list[Resou
     return [c for c in constraints if is_visible(user_profile, c.resource_locator)]
 
 
-def budget_list_item(view: SmarterAuthenticatedNeverCachedWebView, budget: Budget, constraints) -> dict[str, Any]:
+def budget_list_item(view: SmarterAuthenticatedNeverCachedWebView, budget: Budget, constraints) -> SmarterDictType:
     """A budget, with the budget versus the actual spending of each of its resources."""
     # pylint: disable=C0415
     from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames

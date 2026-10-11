@@ -11,7 +11,6 @@ Test :mod:`smarter.apps.mcpclient.caching`.
 from unittest import mock
 
 from smarter.apps.mcpclient.caching import (
-    catalog_cache_key,
     get_cached_catalog,
     get_cached_mcpclients_available_to_user_profile,
     get_cached_mcpclients_owned_by_user_profile,
@@ -104,8 +103,11 @@ class TestMCPClientCaching(MCPClientTestBase):
         """Test that refresh bypasses the cache."""
         with mock_mcp_server():
             get_cached_catalog(self.mcpclient)
-            with mock.patch.object(MCPServerConnection, "discover", wraps=MCPServerConnection(self.mcpclient).discover):
+            with mock.patch.object(
+                MCPServerConnection, "discover", wraps=MCPServerConnection(self.mcpclient).discover
+            ) as discover:
                 get_cached_catalog(self.mcpclient, refresh=True)
+        discover.assert_called_once()
 
     def test_catalog_not_cached_when_ttl_is_zero(self):
         """Test that a cacheTtl of 0 disables caching."""
@@ -117,16 +119,39 @@ class TestMCPClientCaching(MCPClientTestBase):
 
     def test_fingerprint_changes_cache_key(self):
         """Test that changing how the MCPClient connects changes its cache key, while its status does not."""
-        key = catalog_cache_key(self.mcpclient)
+        fingerprint = self.mcpclient.fingerprint
         mcpclient = MCPClient.objects.get(pk=self.mcpclient.pk)
         mcpclient.status = MCPConnectionStatus.ERROR
         mcpclient.last_error = "an error"
-        self.assertEqual(catalog_cache_key(mcpclient), key)
+        self.assertEqual(mcpclient.fingerprint, fingerprint)
         mcpclient.allowed_tools = ["echo"]
-        self.assertNotEqual(catalog_cache_key(mcpclient), key)
+        self.assertNotEqual(mcpclient.fingerprint, fingerprint)
         mcpclient.allowed_tools = self.mcpclient.allowed_tools
         mcpclient.endpoint_url = "https://mcp.example.org/mcp"
-        self.assertNotEqual(catalog_cache_key(mcpclient), key)
+        self.assertNotEqual(mcpclient.fingerprint, fingerprint)
+
+    def test_fingerprint_change_misses_cache(self):
+        """Test that a cached catalog is not used once how the MCPClient connects has changed."""
+        with mock_mcp_server():
+            get_cached_catalog(self.mcpclient)
+            mcpclient = MCPClient.objects.get(pk=self.mcpclient.pk)
+            mcpclient.allowed_tools = ["echo"]
+            with mock.patch.object(
+                MCPServerConnection, "discover", wraps=MCPServerConnection(mcpclient).discover
+            ) as discover:
+                get_cached_catalog(mcpclient)
+        discover.assert_called_once()
+
+    def test_invalidate_clears_catalog(self):
+        """Test that invalidating the catalog makes the next call contact the server."""
+        with mock_mcp_server():
+            get_cached_catalog(self.mcpclient)
+            invalidate_cached_catalog(self.mcpclient)
+            with mock.patch.object(
+                MCPServerConnection, "discover", wraps=MCPServerConnection(self.mcpclient).discover
+            ) as discover:
+                get_cached_catalog(self.mcpclient)
+        discover.assert_called_once()
 
     def test_failure_is_recorded_and_cached(self):
         """Test that a failed connection is recorded, and remembered, so that prompts do not wait on it."""

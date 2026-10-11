@@ -15,6 +15,7 @@ from qdrant_client import QdrantClient, models
 
 from smarter.apps.vectorstore.kubernetes import SNAPSHOTS_PATH, QdrantKubernetes
 from smarter.apps.vectorstore.models import VectorstoreMeta
+from smarter.lib.typing import SmarterDictType
 
 from .base import (
     SearchResult,
@@ -33,7 +34,7 @@ DISTANCES = {
 DOCUMENT_ID_KEY = "metadata.document_id"
 
 
-def qdrant_filter(metadata_filter: Optional[dict[str, Any]]) -> Optional[models.Filter]:
+def qdrant_filter(metadata_filter: Optional[SmarterDictType]) -> Optional[models.Filter]:
     """A Qdrant filter that matches chunks whose metadata has every value of metadata_filter."""
     if not metadata_filter:
         return None
@@ -145,7 +146,7 @@ class QdrantBackend(SmarterVectorstoreBackend):
             return
         self.drop()
 
-    def stats(self) -> dict[str, Any]:
+    def stats(self) -> SmarterDictType:
         info = self.client.get_collection(self.index_name)
         return {
             "vector_count": self.client.count(self.index_name, exact=True).count,
@@ -155,7 +156,7 @@ class QdrantBackend(SmarterVectorstoreBackend):
         }
 
     # --- data -------------------------------------------------------------------
-    def upsert(self, ids: list[str], texts: list[str], metadatas: list[dict[str, Any]], batch_size: int = 64) -> None:
+    def upsert(self, ids: list[str], texts: list[str], metadatas: list[SmarterDictType], batch_size: int = 64) -> None:
         self.vector_store().add_texts(texts=texts, metadatas=metadatas, ids=ids, batch_size=batch_size)
 
     def delete(self, ids: list[str]) -> None:
@@ -181,7 +182,7 @@ class QdrantBackend(SmarterVectorstoreBackend):
         score_threshold: Optional[float] = None,
         fetch_k: Optional[int] = None,
         lambda_mult: Optional[float] = None,
-        metadata_filter: Optional[dict[str, Any]] = None,
+        metadata_filter: Optional[SmarterDictType] = None,
     ) -> list[SearchResult]:
         store = self.vector_store()
         query_filter = qdrant_filter(metadata_filter)

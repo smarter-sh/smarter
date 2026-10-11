@@ -101,7 +101,7 @@ This is a Non-brokered operation.
             self.account,
         )
 
-        response = PromptConfigView.as_view(legacy_keys=False)(
+        response = PromptConfigView.as_view(legacy_keys=False, include_diagnostics=True)(
             request, *args, name=name, uid=uid, session_key=session_key, user_profile=self.user_profile, **kwargs
         )
 

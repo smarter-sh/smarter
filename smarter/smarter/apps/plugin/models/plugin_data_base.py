@@ -10,6 +10,7 @@ from smarter.lib import json
 from smarter.lib.django.models import (
     TimestampedModel,
 )
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_meta import PluginMeta
 from .validators import validate_openai_parameters_dict
@@ -86,12 +87,12 @@ class PluginDataBase(TimestampedModel):
     """
 
     @abstractmethod
-    def sanitized_return_data(self, params: Optional[dict] = None) -> dict:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """Returns a dict of custom data return results."""
         raise NotImplementedError
 
     @abstractmethod
-    def data(self, params: Optional[dict] = None) -> dict:
+    def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """Returns a dict of custom data return results."""
         raise NotImplementedError
 
@@ -123,7 +124,7 @@ class PluginDataBase(TimestampedModel):
         """
         if self.parameters is None or self.test_values is None:
             return None
-        parameters: dict[str, Any] = {}
+        parameters: SmarterDictType = {}
 
         try:
             if not isinstance(self.parameters, dict):

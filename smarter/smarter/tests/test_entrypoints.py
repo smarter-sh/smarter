@@ -20,6 +20,7 @@ from pydantic import SecretStr
 import smarter.settings.base as base_settings
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -149,7 +150,7 @@ class TestBaseSettings(SmarterTestBase):
         # the live module is untouched
         self.assertNotIn("SMARTER_TEST_STR", vars(base_settings))
 
-    def _reload_base_with_secret_key(self, secret_key: str) -> tuple[dict, list[str]]:
+    def _reload_base_with_secret_key(self, secret_key: str) -> tuple[SmarterDictType, list[str]]:
         """Re-execute base.py with the given smarter_settings.secret_key, capturing every log message it emits."""
         with (
             patch.dict(os.environ),

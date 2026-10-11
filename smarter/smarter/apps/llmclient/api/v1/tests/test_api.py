@@ -207,17 +207,30 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
         with patch.object(LLMClientHelper, "ready", new_callable=PropertyMock, return_value=False):
             response = self.api_client.post(url, data={}, format="json")
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:300])
-        self.assertIn("Could not initialize", response.json()["data"]["error"]["message"])
+        error = response.json()["error"]
+        self.assertIn("Could not initialize", error["description"])
+        self.assertNotIn("stacktrace", error)
 
     def test_default_api_requires_authentication(self):
         """Test that the default api is a 403 to an unauthenticated request when the LLMClient requires authentication."""
         url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)
+        # update(), rather than save(), whose signals would deploy it.
+        LLMClient.objects.filter(pk=self.resource.pk).update(deployed=True)
+        self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, deployed=False)
         with (
             patch.object(LLMClientHelper, "is_authentication_required", new_callable=PropertyMock, return_value=True),
             patch("smarter.apps.llmclient.api.v1.views.base.is_authenticated_request", return_value=False),
         ):
             response = self.api_client.post(url, data={}, format="json")
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content[:300])
+
+    def test_default_api_is_not_found_to_an_anonymous_client_of_an_undeployed_llmclient(self):
+        """Test that anonymous clients may prompt deployed LLMClients only."""
+        url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)
+        with patch("smarter.apps.llmclient.api.v1.views.base.is_authenticated_request", return_value=False):
+            response = self.api_client.post(url, data={}, format="json")
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:300])
+        self.assertEqual(response.json()["error"]["errorClass"], "PromptChatApiErrorNotFound")
 
     def test_list(self):
         super().test_list()

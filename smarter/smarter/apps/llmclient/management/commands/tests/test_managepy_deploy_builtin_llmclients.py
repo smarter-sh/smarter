@@ -23,6 +23,7 @@ from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.llmclient.management.commands.deploy_builtin_llmclients"
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -43,7 +44,7 @@ class TestDeployBuiltinLLMClients(TestAccountMixin):
         self.command = Command(stdout=StringIO(), stderr=StringIO())
         self.command.user_profile = self.user_profile
 
-    def write_manifest(self, manifest: dict) -> str:
+    def write_manifest(self, manifest: SmarterDictType) -> str:
         """Write a manifest to a temporary yaml file, and return its path."""
         directory = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
         self.addCleanup(directory.cleanup)

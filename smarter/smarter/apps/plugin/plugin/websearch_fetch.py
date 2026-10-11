@@ -36,9 +36,10 @@ from typing import Callable, Optional
 from urllib.parse import urljoin, urlparse, urlunparse
 from urllib.robotparser import RobotFileParser
 
-from bs4 import BeautifulSoup, Comment, NavigableString, Tag
-from django.core.cache import cache
+from bs4 import BeautifulSoup, Comment
+from bs4.element import NavigableString, Tag
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.websearch_plugin.const import (
     MAX_URL_LENGTH,
 )
@@ -46,8 +47,10 @@ from smarter.apps.plugin.manifest.models.websearch_plugin.policy import (
     DomainPolicy,
     url_host,
 )
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from . import safe_http
@@ -61,7 +64,6 @@ ACCEPT = "text/html,application/xhtml+xml,text/plain,text/markdown,application/j
 MAX_PAGE_BYTES = 5_000_000
 MAX_ROBOTS_BYTES = 512_000
 MAX_REDIRECTS = 5
-ROBOTS_CACHE_TTL = 3600
 TRUNCATION_MARKER = "\n\n[content truncated]"
 
 HTML_TYPES = ("text/html", "application/xhtml+xml")
@@ -135,6 +137,7 @@ class FetchedPage:
     :ivar content_type: The media type of the page, e.g. ``text/html``.
     :ivar truncated: True if the content was truncated.
     :ivar retrieved_at: When the page was read.
+    :ivar cached: True if the page was served from the cache.
     """
 
     url: str
@@ -144,6 +147,7 @@ class FetchedPage:
     content_type: str
     truncated: bool = False
     retrieved_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    cached: bool = False
 
 
 def normalize_url(url: str) -> str:
@@ -176,22 +180,28 @@ def robots_rules(url: str, timeout: float) -> Optional[RobotFileParser]:
     (5xx, or a network error) permits nothing. robots.txt files are cached for an hour.
     """
     parsed = urlparse(url)
-    robots_url = f"https://{parsed.netloc}/robots.txt"
-    cache_key = f"smarter.websearch.robots:{parsed.netloc.lower()}"
-    text = cache.get(cache_key)
-    if text is None:
+
+    @cache_results(timeout=PluginCacheTtl.WEBSEARCH_ROBOTS_TXT)
+    def get_cached_robots_txt(netloc: str) -> str:
         try:
             response = safe_http.fetch(
-                robots_url, headers={"User-Agent": USER_AGENT}, timeout=timeout, max_bytes=MAX_ROBOTS_BYTES
+                f"https://{netloc}/robots.txt",
+                headers={"User-Agent": USER_AGENT},
+                timeout=timeout,
+                max_bytes=MAX_ROBOTS_BYTES,
             )
-            text = response.content.decode("utf-8", errors="replace")
         except safe_http.SafeHttpError as e:
             if e.status_code and 400 <= e.status_code < 500:
-                text = ""
-            else:
-                logger.info("robots_rules() robots.txt of %s is unreachable: %s", parsed.netloc, e)
-                return None
-        cache.set(cache_key, text, ROBOTS_CACHE_TTL)
+                return ""
+            # raise rather than return so that an unreachable robots.txt is never cached.
+            raise
+        return response.content.decode("utf-8", errors="replace")
+
+    try:
+        text = get_cached_robots_txt(parsed.netloc.lower())
+    except safe_http.SafeHttpError as e:
+        logger.info("robots_rules() robots.txt of %s is unreachable: %s", parsed.netloc, e)
+        return None
     parser = RobotFileParser()
     parser.parse(text.splitlines())
     return parser
@@ -349,15 +359,21 @@ def fetch_page(
     max_characters: int = 20_000,
     timeout: float = safe_http.DEFAULT_TIMEOUT,
     respect_robots_txt: bool = True,
+    cache_ttl: int = smarter_settings.cache_expiration,
 ) -> FetchedPage:
     """
     Read a web page, and return its main content.
+
+    The HTTP response is cached for ``cache_ttl`` seconds, keyed on the URL and on everything
+    that decides whether its redirects may be followed: the domain policy and
+    ``respect_robots_txt``. Failed requests are never cached.
 
     :param url: The URL of the page.
     :param policy: The domain policy that the URL, and any redirects, must satisfy.
     :param max_characters: The maximum number of characters of content to return.
     :param timeout: Seconds to wait for each request.
     :param respect_robots_txt: Whether to obey the website's robots.txt.
+    :param cache_ttl: Seconds to cache the HTTP response. 0 disables caching.
     :return: The page.
     :raises WebFetchError: If the page cannot be read. The message is safe to show to the LLM.
 
@@ -375,15 +391,29 @@ def fetch_page(
         )
     if respect_robots_txt and not robots_permit(url, timeout):
         raise WebFetchError(f"the website's robots.txt does not permit reading {url}.")
-    try:
+    cached = True
+
+    @cache_results(timeout=cache_ttl)
+    def get_response(
+        url: str, allowed: tuple[str, ...], blocked: tuple[str, ...], respect_robots_txt: bool
+    ) -> tuple[safe_http.SafeResponse, datetime]:
+        nonlocal cached
+        cached = False
+        # failures raise SafeHttpError, so that they are never cached.
         response = safe_http.fetch(
             url,
             headers={"User-Agent": USER_AGENT, "Accept": ACCEPT},
             timeout=timeout,
             max_bytes=MAX_PAGE_BYTES,
             max_redirects=MAX_REDIRECTS,
-            redirect_policy=make_redirect_policy(policy, respect_robots_txt, timeout),
+            redirect_policy=make_redirect_policy(
+                DomainPolicy(allowed=allowed, blocked=blocked), respect_robots_txt, timeout
+            ),
         )
+        return response, datetime.now(timezone.utc)
+
+    try:
+        response, retrieved_at = get_response(url, policy.allowed, policy.blocked, respect_robots_txt)
     except safe_http.SafeHttpError as e:
         if e.status_code:
             raise WebFetchError(f"{url} could not be read: HTTP {e.status_code}.") from e
@@ -412,6 +442,8 @@ def fetch_page(
         content=content,
         content_type=content_type,
         truncated=truncated,
+        retrieved_at=retrieved_at,
+        cached=cached,
     )
 
 
@@ -428,7 +460,6 @@ __all__ = [
     "MAX_REDIRECTS",
     "MAX_ROBOTS_BYTES",
     "REMOVED_TAGS",
-    "ROBOTS_CACHE_TTL",
     "SUPPORTED_TYPES",
     "TEXT_TYPES",
     "TRUNCATION_MARKER",

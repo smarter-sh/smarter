@@ -21,6 +21,10 @@ docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.
 - **Run the tests yourself, every time.** Don't ask the user to re-run. Run long
   suites in the background, with output written to a log file in your
   scratchpad, and read the summary at the end.
+- **Run the modules you touched, not the full suite.** The full
+  `manage.py test smarter` and `make coverage` take long and make billable LLM
+  calls; the user runs them when the work is finished. Run them only when asked,
+  and say in your summary that you left them to the user.
 - A log that stops partway through usually means an earlier session ran out of
   context. It doesn't mean the tests crashed.
 - **Save the complete output, then grep it with `-a`.** Smarter's logs contain
@@ -98,9 +102,32 @@ class names its views differently, add a small adapter class (see
   kwargs.** Use Django's `reverse(f"{ns}:{name}", kwargs=...)`.
 - **GitHub rate limits.** Tests that load plugins from GitHub must wrap them in
   `mock_remote_skills()` (`smarter/smarter/apps/plugin/plugin/tests/base_classes.py`).
+- **Deployed LLMClient hosts don't resolve locally.** A request with
+  `HTTP_HOST=<name>.<account>.api...` never finds its LLMClient in the dev stack
+  (see `smarter-docker-environment`). To test what a deployed host serves, call
+  the view with `RequestFactory`, `override_settings(ALLOWED_HOSTS=["*"])`, and
+  `get_cached_llmclient_by_request` patched where the view imports it. Set
+  `deployed=True` with `LLMClient.objects.filter(pk=...).update(...)`, never
+  `save()`. See `TestPromptConfigViewForDeployedHosts` in
+  `smarter/smarter/apps/prompt/tests/test_views.py`.
+- **`get_cached_llmclient_by_request` caches `None`**, per url, in Redis, across
+  runs. A probe that reuses an LLMClient's name, and so its host, can be refused
+  by `SmarterSecurityMiddleware` long after the LLMClient exists. Give throwaway
+  LLMClients unique names.
 - **Live provider calls.** `test_passthrough_templates` calls every provider for
   real. Provider-side errors are logged at ERROR and skipped, not failed. Read
-  the skip reasons.
+  the skip reasons. A provider's `base_url` is its SDK's root (the client
+  appends `chat/completions`), not an endpoint url, and provider rows change
+  only after `manage.py initialize_providers`, which reads the keys from `.env`.
+- **`PluginController(manifest=...)` prefers an existing `PluginMeta`** over the
+  manifest, and doesn't update it. To apply a manifest to an existing plugin,
+  instantiate `PLUGIN_MAP[kind](manifest=..., user_profile=...)`.
+- **`ApiConnectionTestMixin` and `SqlConnectionTestMixin` can't share a class.**
+  Both set `cls.connection_django_model` and use the secret name
+  `test_secret_{hash_suffix}`, which `secret_factory` silently overwrites.
+- **A cleanup that re-creates a fixture** through a helper that registers its own
+  `addCleanup` leaks: cleanups added during `doCleanups` run too, deleting it
+  again, or never.
 
 ## Real infrastructure: never by default
 

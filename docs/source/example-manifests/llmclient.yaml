@@ -9,6 +9,8 @@ metadata:
 spec:
   apiKey: snake_case_api_key_name
   config:
+    allowedOrigins:
+      - https://www.example.com
     appAssistant: Elle
     appBackgroundImageUrl: https://example.com/background-image.jpg
     appExamplePrompts:

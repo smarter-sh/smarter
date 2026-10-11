@@ -38,6 +38,7 @@ from smarter.apps.llmhost.const import (
 )
 from smarter.apps.llmhost.manifest.enum import SAMLLMHostStorageAccessMode
 from smarter.apps.llmhost.manifest.models.llmhost.spec import SAMLLMHostSpec
+from smarter.lib.typing import SmarterDictType
 
 from .engines import Engine, get_engine
 from .sources import MODELS_VOLUME, ResolvedModel, resolve_model
@@ -155,14 +156,14 @@ class RenderContext:
             return None
         return f"https://{self.hostname}{self.engine.openai_path}"
 
-    def metadata(self, name: Optional[str] = None, annotations: Optional[dict] = None) -> dict[str, Any]:
-        retval: dict[str, Any] = {"name": name or self.base_name, "namespace": self.namespace, "labels": self.labels}
+    def metadata(self, name: Optional[str] = None, annotations: Optional[SmarterDictType] = None) -> SmarterDictType:
+        retval: SmarterDictType = {"name": name or self.base_name, "namespace": self.namespace, "labels": self.labels}
         if annotations:
             retval["annotations"] = annotations
         return retval
 
 
-def render_volume_claim(ctx: RenderContext) -> Optional[dict[str, Any]]:
+def render_volume_claim(ctx: RenderContext) -> Optional[SmarterDictType]:
     """The model volume.
 
     None with storage.existingClaim, which is mounted instead.
@@ -170,7 +171,7 @@ def render_volume_claim(ctx: RenderContext) -> Optional[dict[str, Any]]:
     storage = ctx.spec.storage
     if storage.existingClaim:
         return None
-    spec: dict[str, Any] = {
+    spec: SmarterDictType = {
         "accessModes": [storage.accessMode],
         "resources": {"requests": {"storage": storage.size}},
     }
@@ -184,7 +185,7 @@ def render_volume_claim(ctx: RenderContext) -> Optional[dict[str, Any]]:
     }
 
 
-def render_secret(ctx: RenderContext, hf_token: Optional[str], api_key: Optional[str]) -> Optional[dict[str, Any]]:
+def render_secret(ctx: RenderContext, hf_token: Optional[str], api_key: Optional[str]) -> Optional[SmarterDictType]:
     """The Secret with the Hugging Face token and the API key.
 
     None if there are neither.
@@ -205,11 +206,11 @@ def render_secret(ctx: RenderContext, hf_token: Optional[str], api_key: Optional
     }
 
 
-def secret_env(ctx: RenderContext, variable: str, key: str) -> dict[str, Any]:
+def secret_env(ctx: RenderContext, variable: str, key: str) -> SmarterDictType:
     return {"name": variable, "valueFrom": {"secretKeyRef": {"name": ctx.secret_name, "key": key}}}
 
 
-def render_container(ctx: RenderContext) -> dict[str, Any]:
+def render_container(ctx: RenderContext) -> SmarterDictType:
     """The inference server's container."""
     spec = ctx.spec
     engine = ctx.engine
@@ -217,7 +218,7 @@ def render_container(ctx: RenderContext) -> dict[str, Any]:
     served_name = engine.served_name(spec, ctx.served_name)
     api_key = ctx.api_key and engine.supports_api_key()
 
-    env: list[dict[str, Any]] = [{"name": k, "value": v} for k, v in engine.env(spec, model).items()]
+    env: list[SmarterDictType] = [{"name": k, "value": v} for k, v in engine.env(spec, model).items()]
     if ctx.hf_token:
         env.append(secret_env(ctx, "HF_TOKEN", SECRET_HF_TOKEN))
         env.append(secret_env(ctx, "HUGGING_FACE_HUB_TOKEN", SECRET_HF_TOKEN))
@@ -226,8 +227,8 @@ def render_container(ctx: RenderContext) -> dict[str, Any]:
 
     resources = spec.resources
     memory = resources.memory or DEFAULT_MEMORY
-    limits: dict[str, Any] = {"memory": memory}
-    requests: dict[str, Any] = {"cpu": resources.cpu or DEFAULT_CPU, "memory": memory}
+    limits: SmarterDictType = {"memory": memory}
+    requests: SmarterDictType = {"cpu": resources.cpu or DEFAULT_CPU, "memory": memory}
     if resources.gpuCount:
         limits[resources.gpuResource] = resources.gpuCount
         requests[resources.gpuResource] = resources.gpuCount
@@ -235,7 +236,7 @@ def render_container(ctx: RenderContext) -> dict[str, Any]:
     period = spec.healthCheck.periodSeconds
     probe = engine.probe(spec)
     liveness_probe = {"httpGet": {"path": engine.health_path_for(spec), "port": "http"}}
-    container: dict[str, Any] = {
+    container: SmarterDictType = {
         "name": CONTAINER_NAME,
         "image": engine.image(spec),
         "imagePullPolicy": "IfNotPresent",
@@ -264,7 +265,7 @@ def render_container(ctx: RenderContext) -> dict[str, Any]:
     return container
 
 
-def render_deployment(ctx: RenderContext) -> dict[str, Any]:
+def render_deployment(ctx: RenderContext) -> SmarterDictType:
     """The Deployment of the inference server, which restarts and reschedules its pods."""
     spec = ctx.spec
     resources = spec.resources
@@ -279,7 +280,7 @@ def render_deployment(ctx: RenderContext) -> dict[str, Any]:
             {"key": ctx.compute_taint["key"], "operator": "Exists", "effect": ctx.compute_taint["effect"]}
         )
 
-    pod_spec: dict[str, Any] = {
+    pod_spec: SmarterDictType = {
         # writable model volume for non-root download containers; chown only once.
         "securityContext": {"fsGroup": 1000, "fsGroupChangePolicy": "OnRootMismatch"},
         "terminationGracePeriodSeconds": 60,
@@ -315,7 +316,7 @@ def render_deployment(ctx: RenderContext) -> dict[str, Any]:
     }
 
 
-def render_service(ctx: RenderContext) -> dict[str, Any]:
+def render_service(ctx: RenderContext) -> SmarterDictType:
     """The Service, which reaches the ready pods inside the cluster, on port 80."""
     return {
         "apiVersion": "v1",
@@ -329,7 +330,7 @@ def render_service(ctx: RenderContext) -> dict[str, Any]:
     }
 
 
-def render_ingress(ctx: RenderContext) -> Optional[dict[str, Any]]:
+def render_ingress(ctx: RenderContext) -> Optional[SmarterDictType]:
     """The Ingress, with a cert-manager certificate, if network.ingress.
 
     Mirrors the LLMClient Ingress.
@@ -370,7 +371,7 @@ def render_ingress(ctx: RenderContext) -> Optional[dict[str, Any]]:
 
 def render_resources(
     ctx: RenderContext, hf_token: Optional[str] = None, api_key: Optional[str] = None
-) -> list[dict[str, Any]]:
+) -> list[SmarterDictType]:
     """
     Render an LLMHost's Kubernetes resources, in the order in which they are applied.
 

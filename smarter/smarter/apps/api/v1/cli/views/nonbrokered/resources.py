@@ -194,12 +194,13 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.typing import SmarterDictType
 
 
 class ApiV1CliResourcesApiView(CliBaseApiView):
     """Smarter API command-line interface 'resources' view."""
 
-    def dictionaryize(self, sam_kind: str, deployable: bool = False) -> dict:
+    def dictionaryize(self, sam_kind: str, deployable: bool = False) -> SmarterDictType:
 
         sam_kind_singular = SAMKinds.str_to_kind(sam_kind)
         sam_kind_plural = SAMKinds.plural(sam_kind_singular)

@@ -62,6 +62,8 @@ console, API, or llmclient endpoints, and supports multiple environments for
 development, staging, and production.
 """
 
+import re
+
 from django_hosts import host, patterns
 
 from smarter.common.conf import smarter_settings
@@ -69,6 +71,12 @@ from smarter.common.const import SmarterEnvironments
 from smarter.urls import api as smarter_api_urls
 from smarter.urls import console as smarter_console_urls
 from smarter.urls import llmclients as smarter_llmclients_urls
+
+API_DOMAIN = re.escape(f"{smarter_settings.api_subdomain}.{smarter_settings.root_domain}")
+"""The api domain, e.g. api.example.com, as a regular expression.
+
+Deployed LLMClients are its subdomains.
+"""
 
 host_patterns = patterns(
     "",
@@ -127,22 +135,22 @@ host_patterns = patterns(
     # eg https://education.3141-5926-5359.alpha.api.example.com/
     # -------------------------------------------------------------------------
     host(
-        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.{API_DOMAIN}",
         smarter_llmclients_urls,
         name="llmclient_named_api",
     ),  # for https://<llmclient_name>.<account_number>.api.platform.example.com/
     host(
-        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.{re.escape(SmarterEnvironments.ALPHA)}\.{API_DOMAIN}",
         smarter_llmclients_urls,
         name=f"llmclient_named_{SmarterEnvironments.ALPHA}_api",
     ),  # for https://<llmclient_name>.<account_number>.alpha.api.platform.example.com/
     host(
-        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.{re.escape(SmarterEnvironments.BETA)}\.{API_DOMAIN}",
         smarter_llmclients_urls,
         name=f"llmclient_named_{SmarterEnvironments.BETA}_api",
     ),  # for https://<llmclient_name>.<account_number>.beta.api.platform.example.com/
     host(
-        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}})\.{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"(?P<llmclient_name>[\w\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.{re.escape(SmarterEnvironments.NEXT)}\.{API_DOMAIN}",
         smarter_llmclients_urls,
         name=f"llmclient_named_{SmarterEnvironments.NEXT}_api",
     ),  # for https://<llmclient_name>.<account_number>.next.api.platform.example.com/
