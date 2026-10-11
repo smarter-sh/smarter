@@ -389,14 +389,17 @@ react-lint:
 react-storybook:
 	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
 
-# Regenerate the Smarter Chat api contract's JSON Schema from its Pydantic models
-# (smarter.apps.prompt.contract.models), in the smarter-app container, and copy it into
+# Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
+# (smarter.apps.prompt.contract.models), in the smarter-app container, and copy the schema into
 # Smarter Chat, which generates its TypeScript types from it. Run it after changing the
 # models, and commit both repositories' changes.
 CHAT_CONTRACT_SCHEMA := smarter/apps/prompt/contract/chat-contract.schema.json
+CHAT_CONTRACT_EXAMPLE := smarter/apps/prompt/contract/chat-contract.example.json
 chat-contract: react-smarter-chat
 	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_schema"
 	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_example"
+	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_EXAMPLE) smarter/$(CHAT_CONTRACT_EXAMPLE)
 	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
 	cd $(SMARTER_CHAT_DIR) && npm run contract:types
 
