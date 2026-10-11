@@ -11,6 +11,8 @@ in the documented format of each API.
     be documented.
 """
 
+from unittest import mock
+
 from smarter.apps.plugin.manifest.models.websearch_plugin.policy import DomainPolicy
 from smarter.apps.plugin.plugin.websearch_providers import (
     PROVIDERS,
@@ -24,10 +26,13 @@ from smarter.apps.plugin.plugin.websearch_providers import (
     get_provider,
     post_filter,
 )
+from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import FakeWebHost, mock_web_host
 
+API_KEY = "the-api-key"
+API_KEY_SECRET_ID = 42
 BRAVE_URL = BraveSearchProvider.url
 TAVILY_URL = TavilySearchProvider.url
 
@@ -69,13 +74,22 @@ def tavily_response(*urls: str) -> dict:
 class TestWebsearchProviders(SmarterTestBase):
     """Test the web search APIs."""
 
+    def setUp(self):
+        super().setUp()
+        # safe_http caches responses, and these tests serve different content at the same urls.
+        lazy_cache.clear()
+        # the api key is read from a Secret, which these tests do not create.
+        patcher = mock.patch.object(SearchProvider, "api_key", return_value=API_KEY)
+        self.api_key = patcher.start()
+        self.addCleanup(patcher.stop)
+
     def search(self, provider: SearchProvider, response: dict, status_code: int = 200, **request_kwargs):
         """Search with a provider whose API returns a response."""
         host = FakeWebHost()
         host.add_json(provider.url, response, status_code)  # type: ignore[attr-defined]
         request = SearchRequest(**{"query": "django release", "max_results": 3, **request_kwargs})
         with mock_web_host(host):
-            results = provider.search(request, "the-api-key")
+            results, _ = provider.search(request, API_KEY_SECRET_ID)
         return results, host.calls[0]
 
     # =========================================================================
@@ -288,7 +302,7 @@ class TestWebsearchProviders(SmarterTestBase):
         with mock_web_host(host):
             host.remove(BRAVE_URL)
             with self.assertRaises(WebsearchError):
-                BraveSearchProvider().search(SearchRequest(query="q", max_results=1), "key")
+                BraveSearchProvider().search(SearchRequest(query="q", max_results=1), API_KEY_SECRET_ID)
 
     def test_invalid_json(self):
         """Test that an invalid API response raises a WebsearchError."""
@@ -297,4 +311,72 @@ class TestWebsearchProviders(SmarterTestBase):
             host.add(BRAVE_URL, content)
             with mock_web_host(host):
                 with self.assertRaises(WebsearchError, msg=f"content={content!r}"):
-                    BraveSearchProvider().search(SearchRequest(query="q", max_results=1), "key")
+                    BraveSearchProvider().search(SearchRequest(query="q", max_results=1), API_KEY_SECRET_ID)
+
+    # =========================================================================
+    # caching
+    # =========================================================================
+    def test_search_is_cached(self):
+        """Test that the API response is cached, keyed on the search, and that the api key is read only on a miss."""
+        host = FakeWebHost()
+        host.add_json(BRAVE_URL, brave_response("https://a.com/"))
+        request = SearchRequest(query="cached django release", max_results=3)
+        with mock_web_host(host):
+            first, first_cached = BraveSearchProvider().search(request, API_KEY_SECRET_ID, cache_ttl=60)
+            second, second_cached = BraveSearchProvider().search(request, API_KEY_SECRET_ID, cache_ttl=60)
+            BraveSearchProvider().search(
+                SearchRequest(query="cached django release", max_results=3, freshness="week"),
+                API_KEY_SECRET_ID,
+                cache_ttl=60,
+            )
+        self.assertEqual(first, second)
+        self.assertEqual((first_cached, second_cached), (False, True))
+        self.assertEqual(len(host.calls), 2)
+        self.assertEqual(self.api_key.call_count, 2)
+        for call in self.api_key.call_args_list:
+            self.assertNotIn(API_KEY, call.args)
+
+    def test_search_cache_key_includes_provider(self):
+        """Test that identical searches with different providers are cached separately."""
+        host = FakeWebHost()
+        host.add_json(BRAVE_URL, brave_response("https://a.com/"))
+        host.add_json(TAVILY_URL, tavily_response("https://b.com/"))
+        request = SearchRequest(query="provider django release", max_results=3)
+        with mock_web_host(host):
+            brave, _ = BraveSearchProvider().search(request, API_KEY_SECRET_ID, cache_ttl=60)
+            tavily, tavily_cached = TavilySearchProvider().search(request, API_KEY_SECRET_ID, cache_ttl=60)
+        self.assertFalse(tavily_cached)
+        self.assertNotEqual(brave, tavily)
+
+    def test_search_without_cache(self):
+        """Test that a cache_ttl of 0, the default, disables caching."""
+        host = FakeWebHost()
+        host.add_json(BRAVE_URL, brave_response("https://a.com/"))
+        request = SearchRequest(query="uncached django release", max_results=3)
+        with mock_web_host(host):
+            BraveSearchProvider().search(request, API_KEY_SECRET_ID)
+            _, cached = BraveSearchProvider().search(request, API_KEY_SECRET_ID)
+        self.assertFalse(cached)
+        self.assertEqual(len(host.calls), 2)
+
+    def test_failed_search_is_not_cached(self):
+        """Test that a failed API request is not cached."""
+        host = FakeWebHost()
+        host.add_json(BRAVE_URL, {"error": "down"}, 503)
+        request = SearchRequest(query="failing django release", max_results=3)
+        with mock_web_host(host):
+            for _ in range(2):
+                with self.assertRaises(WebsearchError):
+                    BraveSearchProvider().search(request, API_KEY_SECRET_ID, cache_ttl=60)
+        self.assertEqual(len(host.calls), 2)
+
+    def test_unavailable_api_key_is_not_cached(self):
+        """Test that a search whose api key is unavailable raises, and is not cached."""
+        self.api_key.side_effect = WebsearchError("the web search api key is unavailable.")
+        request = SearchRequest(query="no key django release", max_results=3)
+        with mock_web_host(FakeWebHost()) as host:
+            for _ in range(2):
+                with self.assertRaises(WebsearchError):
+                    BraveSearchProvider().search(request, None, cache_ttl=60)
+        self.assertEqual(host.calls, [])
+        self.assertEqual(self.api_key.call_count, 2)

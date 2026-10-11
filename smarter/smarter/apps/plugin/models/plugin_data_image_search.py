@@ -12,12 +12,11 @@ from typing import Any, Optional, Union
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.image_search_plugin.const import (
     DEFAULT_API_KEY_SECRET_NAME,
-    DEFAULT_CACHE_TTL,
     DEFAULT_COUNT,
     DEFAULT_TIMEOUT,
-    MAX_CACHE_TTL,
     MAX_COUNT,
     MAX_DIMENSION,
     MAX_QUERY_LENGTH,
@@ -155,8 +154,8 @@ class PluginDataImageSearch(PluginDataBase):
         help_text="Seconds to wait for each web request.",
     )
     cache_ttl = models.PositiveIntegerField(
-        default=DEFAULT_CACHE_TTL,
-        validators=[MaxValueValidator(MAX_CACHE_TTL)],
+        default=PluginCacheTtl.IMAGE_SEARCH,
+        validators=[MaxValueValidator(PluginCacheTtl.IMAGE_SEARCH)],
         help_text="Seconds to cache search results. 0 disables caching.",
     )
 
@@ -229,7 +228,7 @@ class PluginDataImageSearch(PluginDataBase):
             ("min_width", self.min_width, 1, MAX_DIMENSION, True),
             ("min_height", self.min_height, 1, MAX_DIMENSION, True),
             ("timeout", self.timeout, 1, MAX_TIMEOUT, False),
-            ("cache_ttl", self.cache_ttl, 0, MAX_CACHE_TTL, False),
+            ("cache_ttl", self.cache_ttl, 0, PluginCacheTtl.IMAGE_SEARCH, False),
         ):
             if optional and value is None:
                 continue

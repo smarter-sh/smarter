@@ -26,13 +26,13 @@ from http import HTTPStatus
 from typing import Callable
 from uuid import uuid4
 
-from django.core.cache import cache
 from django.db import connection
 from django.http import JsonResponse
 from django.http.request import HttpRequest
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.cache import lazy_cache
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
@@ -53,11 +53,11 @@ def check_database() -> bool:
 def check_cache() -> bool:
     """True if a value written to the cache can be read back."""
     key = f"smarter_service_health_{uuid4().hex}"
-    cache.set(key, "ok", timeout=10)
+    lazy_cache.set(key, "ok", timeout=10)
     try:
-        return cache.get(key) == "ok"
+        return lazy_cache.get(key) == "ok"
     finally:
-        cache.delete(key)
+        lazy_cache.delete(key)
 
 
 def check_task_broker() -> bool:

@@ -46,6 +46,10 @@ inside the `smarter-app` container.
 6. **The minimum Code coverage ratio** is 90% at the Django app or subsystem
    module levels. But we'd like at least 95% if that's achievable with moderate
    effort. Exercise common sense when deciding when "enough is enough".
+7. **Long-lived caching goes through `@cache_results`.** For anything cached
+   for 600 seconds or longer, use `from smarter.lib.cache import cache_results`.
+   Never hand-roll `cache.get()`/`cache.set()` with `django.core.cache`. See
+   [Caching](#caching).
 
 ## Pattern-first workflow
 
@@ -65,6 +69,56 @@ Smarter is large and highly consistent. Almost every change has a precedent.
 
 When existing code disagrees with these skills, the code that is newest and
 consistent with most of the codebase wins. Say so in your summary.
+
+## Caching
+
+`@cache_results` (`smarter/smarter/lib/cache/decorators.py`) is the one way to
+cache results for an hour or longer. It builds a deterministic key from the
+module, function name and bound arguments, stores results in Redis through
+`lazy_cache` (which avoids Django silently falling back to a local-memory cache
+when `django.core.cache` is imported too early), caches `None` correctly, and
+gives every decorated function an `.invalidate(*args)`. Outside tests, only `lazy_cache`
+and the `reset_cache` management command import `django.core.cache`.
+
+- **Cache the expensive call itself**: the HTTP request, the third-party API
+  call or the query, not a wrapper around a whole workflow. Cheap work such as
+  filtering and formatting then runs on every call, against the cached raw
+  result, so configuration changes apply immediately.
+- **The signature is the cache key.** The decorated function's parameters must
+  be, explicitly and one by one, everything that can change the result: every
+  query parameter, filter and flag. Don't fold them into an opaque JSON string
+  or an object id. Use plain values (str, int, bool, tuples), never model
+  instances or `self`. `@cache_results` can't decorate an instance method,
+  because `self` would be part of the key.
+- **Never pass a secret as an argument.** Arguments become the cache key and are
+  logged on hits and misses when cache logging is on. The normal pattern is an
+  internal function, without the sensitive data, that can be decorated: pass a
+  Secret's id, or nothing, and read the API key inside it (e.g.
+  `SearchProvider.api_key(secret_id)` in `websearch_providers.py`). For the same
+  reason, never decorate a generic transport such as `safe_http.fetch()`, whose
+  `headers` carry credentials.
+- **Never cache a security check.** `safe_http.validate_public_url()` must
+  resolve DNS fresh before every request. Caching it would widen the DNS
+  rebinding window from milliseconds to the cache lifetime.
+- **A per-object TTL** (e.g. a manifest's `cacheTtl`): decorate a function
+  defined inside the method with a plain `@cache_results(timeout=<ttl>)`. A
+  timeout of 0 stores nothing, so it needs no special case. See
+  `ImageSearchPlugin.brave_images()` in `apps/plugin/plugin/image_search.py`.
+- **Don't cache failures.** Raise inside the cached function and catch outside
+  it, so that an error or empty result is never stored. See
+  `get_cached_api_response` in `apps/plugin/plugin/api.py`. To remember a
+  failure for less time than a success, wrap a short-TTL function that returns
+  the result or the error inside a long-TTL one that raises on the error. See
+  `cached_catalog_functions()` in `apps/mcpclient/caching.py`.
+- **Invalidating a nested function.** A key depends only on the function's
+  module, name and arguments, not its timeout, so rebuilding the same nested
+  function and calling `.invalidate()` with the same arguments works. See
+  `invalidate_cached_catalog()`.
+- **Short-lived values** (seconds to minutes) may still use `@cache_results`
+  (e.g. `@cache_results(15)` in `plugin_meta.py`). For raw `get`/`set`, use
+  `smarter.lib.cache.lazy_cache`, never `django.core.cache`.
+- In tests, `SmarterTestBase` clears the cache. To drop one entry, call the
+  decorated function's `.invalidate()` with the same arguments.
 
 ## Which skill to load
 

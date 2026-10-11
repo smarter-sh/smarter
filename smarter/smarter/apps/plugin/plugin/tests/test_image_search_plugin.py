@@ -65,12 +65,14 @@ from smarter.apps.plugin.plugin.image_search import (
     file_type_of_url,
     is_https_url,
     parse_brave_images,
+    shuffled,
 )
 from smarter.apps.plugin.plugin.safe_http import SafeHttpError
 from smarter.apps.plugin.serializers import PluginImageSearchSerializer
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
+from smarter.lib.cache import lazy_cache
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 from .base_classes import FakeWebHost, PluginTestBase, get_test_data, mock_web_host
@@ -83,6 +85,7 @@ WEATHER_IMAGE_SEARCH_DESCRIPTION = "Searches the web for images"
 API_KEY_SECRET = "test_brave_image_search_api_key"
 API_KEY = "test-brave-api-key"
 LOGGER = "smarter.apps.plugin.plugin.image_search"
+SHUFFLED = "smarter.apps.plugin.plugin.image_search.shuffled"
 
 CAT = "https://images.example.com/cat.png"
 DOG = "https://images.example.com/dog.jpg"
@@ -151,6 +154,15 @@ class TestImageSearchPlugin(PluginTestBase):
     image_search_yaml: dict
     image_search_plugin: ImageSearchPlugin
     api_key_secret = None
+
+    def setUp(self):
+        super().setUp()
+        # safe_http caches responses, and these tests serve different content at the same urls.
+        lazy_cache.clear()
+        # searches shuffle the images. Keep Brave's order, so that results are predictable.
+        patcher = mock.patch(SHUFFLED, side_effect=list)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @classmethod
     def setUpClass(cls):
@@ -397,6 +409,17 @@ class TestImageSearchPlugin(PluginTestBase):
         )
         self.assertEqual(images, [ImageResult(url=CAT, page_url=None, width=800, height=None)])
 
+    def test_shuffled(self):
+        """Test that shuffled returns a new list of the same images, in random order."""
+        images = [ImageResult(url=f"https://images.example.com/{i}.png") for i in range(20)]
+        original = list(images)
+        orders = {tuple(image.url for image in shuffled(images)) for _ in range(10)}
+        self.assertEqual(images, original)
+        self.assertGreater(len(orders), 1)
+        for order in orders:
+            self.assertEqual(sorted(order), sorted(image.url for image in images))
+        self.assertEqual(shuffled([]), [])
+
     def test_describe_brave_error(self):
         """Test that Brave errors are described without disclosing the api key."""
         self.assertIn("rejected the api key", describe_brave_error(SafeHttpError("x", status_code=401)))
@@ -447,12 +470,58 @@ class TestImageSearchPlugin(PluginTestBase):
         self.assertEqual(urls, [CAT])
         self.assertEqual(self.brave_calls(fake)[0]["params"]["count"], 50)
 
+    def test_search_returns_random_cached_images(self):
+        """Test that repeated searches return a random selection of the cached images, not always the same ones."""
+        plugin = self.new_plugin("test_image_search_random", validateUrls=False)
+        with mock.patch(SHUFFLED, side_effect=lambda images: list(reversed(images))) as shuffle:
+            urls, fake = self.call({"query": "kittens", "count": 1}, plugin=plugin)
+            self.assertEqual(urls, [DOG])
+            self.assertEqual(len(self.brave_calls(fake)), 1)
+            shuffle.assert_called_once()
+        urls, fake = self.call({"query": "kittens", "count": 1}, plugin=plugin)
+        self.assertEqual(urls, [CAT])
+        self.assertEqual(self.brave_calls(fake), [])
+        seen = set()
+        with mock.patch(SHUFFLED, wraps=shuffled):
+            for _ in range(30):
+                urls, _ = self.call({"query": "kittens", "count": 1}, plugin=plugin)
+                seen.update(urls)
+        self.assertEqual(seen, {CAT, MISSING, DOG})
+
     def test_search_is_cached(self):
-        """Test that search results are cached."""
+        """Test that Brave's response is cached, while the image urls are still validated."""
         first, _ = self.call({"query": "kittens"})
         second, fake = self.call({"query": "kittens"})
         self.assertEqual(first, second)
-        self.assertEqual(fake.requested, [])
+        self.assertEqual(self.brave_calls(fake), [])
+        self.assertIn(CAT, fake.requested)
+
+    def test_search_cache_key_is_the_brave_query(self):
+        """Test that the cache key is Brave's query parameters, so that changing a filter applies to cached results."""
+        self.call({"query": "kittens"})
+        plugin = self.new_plugin("test_image_search_other_filters", filters={}, validateUrls=False)
+        urls, fake = self.call({"query": "kittens"}, plugin=plugin)
+        self.assertEqual(self.brave_calls(fake), [])
+        self.assertIn("https://images.example.com/tiny.png", urls)
+        urls, fake = self.call({"query": "puppies"}, plugin=plugin)
+        self.assertEqual(len(self.brave_calls(fake)), 1)
+
+    def test_failed_search_is_not_cached(self):
+        """Test that a failed search is not cached, so that the next search runs again."""
+        plugin = self.new_plugin("test_image_search_failure_not_cached", validateUrls=False)
+        for _ in range(2):
+            with self.assertLogs(LOGGER, level="WARNING"):
+                urls, fake = self.call({"query": "flaky kittens"}, plugin=plugin, host=web([], status_code=503))
+            self.assertEqual(urls, [])
+            self.assertEqual(fake.requested, [BRAVE_IMAGE_SEARCH_URL])
+
+    def test_search_cache_disabled(self):
+        """Test that a cacheTtl of 0 disables caching."""
+        plugin = self.new_plugin("test_image_search_no_cache", validateUrls=False, cacheTtl=0)
+        for _ in range(2):
+            urls, fake = self.call({"query": "kittens"}, plugin=plugin)
+            self.assertEqual(urls, [CAT, MISSING, DOG])
+            self.assertEqual(fake.requested, [BRAVE_IMAGE_SEARCH_URL])
 
     def test_search_without_validation(self):
         """Test that, without url validation, no image url is requested, and urls without a file type are dropped."""

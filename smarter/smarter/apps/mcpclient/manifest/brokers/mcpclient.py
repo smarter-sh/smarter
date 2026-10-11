@@ -348,7 +348,7 @@ class SAMMCPClientBroker(AbstractBroker):
             allowedTools=["get_*", "list_*", "search_*"],
             allowedResources=[],
             includeInstructions=True,
-            cacheTtl=300,
+            cacheTtl=3600,
             isActive=True,
             priority=100,
         )

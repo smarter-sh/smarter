@@ -64,6 +64,7 @@ from smarter.apps.plugin.signals import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
+from smarter.lib.cache import lazy_cache
 
 from .base_classes import (
     BRAVE_API_KEY,
@@ -124,6 +125,11 @@ class TestWebsearchPlugin(PluginTestBase):
     sql_fixtures = False
     api_fixtures = False
     websearch_fixtures = True
+
+    def setUp(self):
+        super().setUp()
+        # safe_http caches responses, and these tests serve different content at the same urls.
+        lazy_cache.clear()
 
     def call(self, function_args: Any, variant: str = "research", host: Optional[FakeWebHost] = None):
         """Run a tool call against a freshly loaded shared plugin, on a fake web."""
