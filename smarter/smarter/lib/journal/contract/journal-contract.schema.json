@@ -1,0 +1,309 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "SAMJournalApiEnvelope": {
+      "additionalProperties": true,
+      "description": "The fields that every journaled response adds beside the view's own data.",
+      "properties": {
+        "api": {
+          "default": "smarter.sh/v1",
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/SAMJournalApiMetadata",
+          "description": "The journal's command and thing, and its entry's key."
+        }
+      },
+      "required": [
+        "metadata"
+      ],
+      "title": "SAMJournalApiEnvelope",
+      "type": "object"
+    },
+    "SAMJournalApiErrorBody": {
+      "additionalProperties": true,
+      "description": "The ``error`` of a journaled error response: the same shape for every error of the cli and the other journaled apis.\n\nThe field names are the values of :class:`smarter.lib.journal.enum.SmarterJournalApiResponseErrorKeys`.",
+      "properties": {
+        "args": {
+          "$ref": "#/$defs/JsonValue",
+          "description": "The exception's arguments, or the request's url."
+        },
+        "cause": {
+          "description": "The exception's cause, e.g. 'ValueError: ...', or 'Python Exception'.",
+          "title": "Cause",
+          "type": "string"
+        },
+        "command": {
+          "description": "The journal's command, e.g. describe.",
+          "title": "Command",
+          "type": "string"
+        },
+        "context": {
+          "description": "The exception's context, or the response's thing and command.",
+          "title": "Context",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A human-readable description of the error.",
+          "title": "Description"
+        },
+        "errorClass": {
+          "description": "The name of the exception's class, e.g. SAMBrokerErrorNotFound.",
+          "title": "Errorclass",
+          "type": "string"
+        },
+        "stacktrace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The stack trace. Left out of the responses that a browser may receive.",
+          "title": "Stacktrace"
+        },
+        "status": {
+          "description": "The http status.",
+          "title": "Status",
+          "type": "integer"
+        },
+        "thing": {
+          "description": "The journal's thing, e.g. Guardrail.",
+          "title": "Thing",
+          "type": "string"
+        }
+      },
+      "required": [
+        "errorClass",
+        "status",
+        "args",
+        "cause",
+        "context",
+        "thing",
+        "command"
+      ],
+      "title": "SAMJournalApiErrorBody",
+      "type": "object"
+    },
+    "SAMJournalApiErrorResponse": {
+      "additionalProperties": true,
+      "description": "The body of a journaled error response.\n\n:class:`SAMJournalApiEnvelope`'s ``api`` and ``metadata`` are added beside ``error``.",
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/SAMJournalApiErrorBody"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "SAMJournalApiErrorResponse",
+      "type": "object"
+    },
+    "SAMJournalApiMetadata": {
+      "additionalProperties": true,
+      "description": "The ``metadata`` of a journaled response: its command and thing, and, when the journal is enabled, the key of its journal entry.\n\n``command`` and ``thing`` are the strings of the values that the view passed, which may be\n``\"None\"`` when it passed none, so they are not limited to the journal's choices.",
+      "properties": {
+        "command": {
+          "description": "The journal's command, e.g. apply.",
+          "title": "Command",
+          "type": "string"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The key of the response's journal entry. Absent while the journal is disabled, or if the entry could not be saved.",
+          "title": "Key"
+        },
+        "thing": {
+          "description": "The journal's thing, e.g. Guardrail.",
+          "title": "Thing",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "thing"
+      ],
+      "title": "SAMJournalApiMetadata",
+      "type": "object"
+    },
+    "SAMJournalApiOrmModel": {
+      "additionalProperties": false,
+      "description": "A journal entry: a :class:`smarter.lib.journal.models.SAMJournal` row.\n\nIts fields are exactly the row's fields, so extra fields are forbidden. It is built from the row by\n:meth:`from_model`.",
+      "properties": {
+        "command": {
+          "description": "SAMJournal.command.",
+          "enum": [
+            "apply",
+            "prompt",
+            "chat_config",
+            "delete",
+            "deploy",
+            "describe",
+            "get",
+            "journal",
+            "logs",
+            "example_manifest",
+            "status",
+            "json_schema",
+            "version",
+            "undeploy",
+            "validate",
+            "whoami",
+            "resources"
+          ],
+          "title": "Command",
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SAMJournal.created_at.",
+          "title": "Created At"
+        },
+        "key": {
+          "description": "SAMJournal.key, the entry's primary key.",
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Key",
+          "type": "string"
+        },
+        "request": {
+          "$ref": "#/$defs/JsonValue",
+          "description": "SAMJournal.request: the serialized http request."
+        },
+        "response": {
+          "$ref": "#/$defs/JsonValue",
+          "description": "SAMJournal.response: the response's JSON body."
+        },
+        "status_code": {
+          "description": "SAMJournal.status_code: the http status.",
+          "maximum": 65535,
+          "minimum": 0,
+          "title": "Status Code",
+          "type": "integer"
+        },
+        "thing": {
+          "description": "SAMJournal.thing.",
+          "enum": [
+            "Account",
+            "ApiConnection",
+            "ApiPlugin",
+            "SmarterAuthToken",
+            "Budget",
+            "CustomDomain",
+            "Guardrail",
+            "ImageSearchPlugin",
+            "LLMClient",
+            "MCPClient",
+            "Orchestrator",
+            "Prompt",
+            "ChatConfig",
+            "Proxy",
+            "Provider",
+            "Secret",
+            "SkillPlugin",
+            "SqlConnection",
+            "SqlPlugin",
+            "Plugin",
+            "User",
+            "Vectorsearch",
+            "Vectorstore",
+            "WebsearchPlugin"
+          ],
+          "title": "Thing",
+          "type": "string"
+        },
+        "user": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SAMJournal.user: the user's id, or null for an anonymous request.",
+          "title": "User"
+        }
+      },
+      "required": [
+        "key",
+        "thing",
+        "command",
+        "request",
+        "response",
+        "status_code"
+      ],
+      "title": "SAMJournalApiOrmModel",
+      "type": "object"
+    },
+    "SAMJournalApiResponse": {
+      "additionalProperties": true,
+      "description": "A journaled response: the envelope, beside the view's own data, e.g. ``data`` or ``error``.",
+      "properties": {
+        "api": {
+          "default": "smarter.sh/v1",
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMJournalApiErrorBody"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The error of an error response."
+        },
+        "metadata": {
+          "$ref": "#/$defs/SAMJournalApiMetadata",
+          "description": "The journal's command and thing, and its entry's key."
+        }
+      },
+      "required": [
+        "metadata"
+      ],
+      "title": "SAMJournalApiResponse",
+      "type": "object"
+    }
+  },
+  "$id": "https://smarter.sh/schemas/journal-contract.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The envelope and error body of the Smarter api's journaled responses, and a journal entry. Generated from smarter.lib.journal.contract.models; do not edit.",
+  "title": "Smarter Journal API contract"
+}
