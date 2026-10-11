@@ -36,6 +36,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-code-quality`                 | You're about to finish a change and need to run the pre-commit hooks.       |
 | `smarter-git-commits`                  | You've been asked to write a commit message.                                |
 | `blog.smarter.sh-release-announcement` | You're writing a release announcement post for blog.smarter.sh.             |
+| `blog.smarter.sh-blog-post`            | You're writing any other article for blog.smarter.sh.                       |
 
 ### Layout of a skill
 
