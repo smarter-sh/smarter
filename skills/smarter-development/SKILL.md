@@ -181,6 +181,7 @@ reference implementations.
 | Lint, format, pre-commit                                        | `smarter-code-quality`                 |
 | Writing a commit message                                        | `smarter-git-commits`                  |
 | A release announcement post for blog.smarter.sh                 | `blog.smarter.sh-release-announcement` |
+| Any other article for blog.smarter.sh                           | `blog.smarter.sh-blog-post`            |
 
 ## Definition of done
 
