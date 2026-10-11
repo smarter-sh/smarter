@@ -1,17 +1,25 @@
 """Smarter common environment variable utilities."""
 
 import os
-from typing import Any, Optional
+from typing import Any, Optional, Union, overload
 
 from pydantic import SecretStr
 
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils.utils import bool_environment_variable
 from smarter.lib import json, logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
+
+EnvValueType = Union[str, bool, int, float, list[str], SmarterDictType, None]
+"""
+The types of value that :func:`get_env` returns.
+
+Which one is determined by the type of its ``default``.
+"""
 
 
 def is_missing_value(value: Any) -> bool:
@@ -33,7 +41,27 @@ def is_missing_value(value: Any) -> bool:
     return not text or text.upper().startswith("SET-ME")
 
 
-def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False) -> Any:
+@overload
+def get_env(var_name: str, default: bool, is_secret: bool = False, is_required: bool = False) -> bool: ...
+@overload
+def get_env(var_name: str, default: int, is_secret: bool = False, is_required: bool = False) -> int: ...
+@overload
+def get_env(var_name: str, default: float, is_secret: bool = False, is_required: bool = False) -> float: ...
+@overload
+def get_env(var_name: str, default: list[str], is_secret: bool = False, is_required: bool = False) -> list[str]: ...
+@overload
+def get_env(
+    var_name: str, default: SmarterDictType, is_secret: bool = False, is_required: bool = False
+) -> SmarterDictType: ...
+@overload
+def get_env(var_name: str, default: None, is_secret: bool = False, is_required: bool = False) -> Optional[str]: ...
+@overload
+def get_env(
+    var_name: str, default: str = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False
+) -> str: ...
+def get_env(
+    var_name: str, default: EnvValueType = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False
+) -> EnvValueType:
     """
     Retrieve a configuration value from the environment, with  prefix fallback and type conversion.
 
@@ -46,7 +74,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
 
     - Checks for the presence of the environment variable ``<var_name>``.
     - If found, attempts to convert the value to the type of ``default``.
-    - If not found, returns the ``default`` value.
+    - If not found, or if it holds the ``SET-ME-PLEASE`` placeholder, returns the ``default`` value.
     - Logs a message if the environment variable is missing or if type conversion fails.
 
     This utility is used throughout the Smarter platform to provide a consistent and robust
@@ -55,14 +83,15 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
     :param var_name: The base name of the environment variable (without the  prefix).
     :type var_name: str
     :param default: The default value to return if the environment variable is not set. The type of this value determines the expected type and conversion logic.
-    :type default: Any
-    :return: The value from the environment (converted to the appropriate type), or the default if not set or conversion fails.
-    :rtype: Any
+    :type default: EnvValueType
+    :return: The value from the environment (converted to the appropriate type), or the default if it is not set,
+        holds the ``SET-ME-PLEASE`` placeholder, or cannot be converted. Only a ``default`` of None returns None.
+    :rtype: EnvValueType
     """
     # pylint: disable=W0621
     logger_prefix = formatted_text(__name__ + ".get_env()")
 
-    def cast_value(val: Optional[str], default: Any) -> Any:
+    def cast_value(val: Optional[str], default: EnvValueType) -> EnvValueType:
         """
         Cast the environment variable value to the type of the default value.
 
@@ -73,7 +102,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         if val is None:
             return default
         if val == DEFAULT_MISSING_VALUE:
-            return None
+            return default
         if isinstance(default, str):
             return val.strip() if val is not None else default
         if isinstance(default, bool):
@@ -162,4 +191,4 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         return cast_val
 
 
-__all__ = ["get_env", "is_missing_value"]
+__all__ = ["EnvValueType", "get_env", "is_missing_value"]

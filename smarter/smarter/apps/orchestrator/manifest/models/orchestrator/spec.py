@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from smarter.apps.orchestrator.enum import HarnessRole, OrchestrationStrategy
 from smarter.apps.orchestrator.manifest.models.orchestrator.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.lib.typing import SmarterDictType
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
@@ -27,7 +28,7 @@ class SAMOrchestratorHarnessConfig(BaseModel):
     role: HarnessRole = HarnessRole.EXECUTOR
     executionOrder: int = Field(default=0, ge=0, description="Relative ordering for sequential/supervisor strategies.")
     isActive: bool = True
-    config: dict[str, Any] = Field(
+    config: SmarterDictType = Field(
         default_factory=dict,
         description="Per-membership overrides (e.g. temperature, system prompt fragment, tool allowlist).",
     )

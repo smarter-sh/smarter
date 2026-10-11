@@ -64,6 +64,8 @@ from smarter.apps.plugin.signals import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
+from smarter.lib.cache import lazy_cache
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import (
     BRAVE_API_KEY,
@@ -89,7 +91,7 @@ PAGE = """<html><head><title>Example page</title></head><body>
 <nav>Menu</nav><main><h1>Heading</h1><p>Some <a href="/more">content</a>.</p></main></body></html>"""
 
 
-def brave_response(*urls: str) -> dict[str, Any]:
+def brave_response(*urls: str) -> SmarterDictType:
     """Return a Brave Search API response with a result for each URL."""
     return {
         "web": {
@@ -101,7 +103,7 @@ def brave_response(*urls: str) -> dict[str, Any]:
     }
 
 
-def tavily_response(*urls: str) -> dict[str, Any]:
+def tavily_response(*urls: str) -> SmarterDictType:
     """Return a Tavily Search API response with a result for each URL."""
     return {"results": [{"title": f"Title {i}", "url": url, "content": f"Snippet {i}"} for i, url in enumerate(urls)]}
 
@@ -124,6 +126,11 @@ class TestWebsearchPlugin(PluginTestBase):
     sql_fixtures = False
     api_fixtures = False
     websearch_fixtures = True
+
+    def setUp(self):
+        super().setUp()
+        # safe_http caches responses, and these tests serve different content at the same urls.
+        lazy_cache.clear()
 
     def call(self, function_args: Any, variant: str = "research", host: Optional[FakeWebHost] = None):
         """Run a tool call against a freshly loaded shared plugin, on a fake web."""

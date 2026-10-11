@@ -33,6 +33,7 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_class import ApiV1CliTestBase
@@ -63,7 +64,7 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
 
     def authentication_scenarios(
         self, path, wrong_key: bool = False, missing_key: bool = False, session_authentication: bool = False
-    ) -> tuple[dict[str, Any], int]:
+    ) -> tuple[SmarterDictType, int]:
         """Prepare and get a response from an api/v1/ endpoint."""
         logger.info(
             "TestApiCliV1BaseClass.authentication_scenarios() testing API endpoint: %s, wrong_key: %s, missing_key: %s, session_authentication: %s",

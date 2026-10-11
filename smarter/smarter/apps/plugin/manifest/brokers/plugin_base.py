@@ -48,6 +48,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 from . import PluginSerializer, SAMPluginBrokerError
 
@@ -622,14 +623,14 @@ class SAMPluginBaseBroker(AbstractBroker):
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
-    def plugin_data_orm2pydantic(self) -> dict[str, Any]:
+    def plugin_data_orm2pydantic(self) -> SmarterDictType:
         """
         Convert plugin data from the Django ORM model format to the Pydantic manifest format.
 
         This method transforms plugin data, typically retrieved as a dictionary from the Django ORM (`plugin_data`), into a format suitable for Pydantic manifest models. It handles conversion of nested structures, such as parameters, and ensures all fields are properly camel-cased and validated.
 
         :return: The plugin data as a dictionary formatted for Pydantic manifest models.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
 
         :raises SAMPluginBrokerError:
             If the plugin or plugin data is not found, or if conversion fails.

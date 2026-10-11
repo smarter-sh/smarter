@@ -190,8 +190,8 @@ urlpatterns = [
     path("secret/", include(secret_urls, namespace=secret_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
-    # LLMClients.
-    # mcdaniel: 2026-01-31: are these even reachable anymore?
+    # LLMClients on their verified custom domains, which smarter.hosts doesn't match, so they are
+    # served by this urlconf. Deployed LLMClients' default hosts are served by smarter.urls.llmclients.
     # -----------------------------------
     path("prompt/", DefaultLLMClientApiView.as_view(), name=f"{name_prefix}_chat"),
     path("config/", PromptConfigView.as_view(), name=f"{name_prefix}_config"),

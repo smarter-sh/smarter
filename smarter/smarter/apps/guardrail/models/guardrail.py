@@ -28,6 +28,7 @@ from smarter.apps.guardrail.manifest.models.guardrail.const import (
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
@@ -150,7 +151,7 @@ class Guardrail(MetaDataWithOwnershipModel):
     is_active = models.BooleanField(default=True)
 
     @property
-    def settings(self) -> dict[str, Any]:
+    def settings(self) -> SmarterDictType:
         """The strategy's fields, from ``config``."""
         return self.config if isinstance(self.config, dict) else {}
 

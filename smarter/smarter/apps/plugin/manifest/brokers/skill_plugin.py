@@ -36,6 +36,7 @@ from smarter.apps.plugin.plugin.skill import (
     EXAMPLE_TEMPLATE,
     SkillPlugin,
 )
+from smarter.apps.plugin.plugin.skill_sources import retrieve_skill
 from smarter.apps.plugin.signals import broker_ready
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
@@ -823,6 +824,12 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
+
+        # an account admin who applies a manifest gets the current skill, rather than a cached
+        # copy. This must precede the first access of self.plugin, which retrieves the skill.
+        source = self.manifest.spec.skillData.source if self.manifest else None
+        if source:
+            retrieve_skill.invalidate(source.url)  # type: ignore[attr-defined]
 
         if not self.plugin:
             raise SAMPluginBrokerError(

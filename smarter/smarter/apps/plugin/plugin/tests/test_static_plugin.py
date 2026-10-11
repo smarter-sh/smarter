@@ -19,6 +19,7 @@ from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import (
     STATIC_EDGE_CASES_PLUGIN_NAME,
@@ -65,7 +66,7 @@ class TestStaticPlugin(PluginTestBase):
     api_fixtures = False
     static_fixtures = True
 
-    def static_data(self, edge_cases: bool = False) -> dict:
+    def static_data(self, edge_cases: bool = False) -> SmarterDictType:
         """Return the staticData of a test data manifest, normalized as it is stored in the database."""
         manifest = self.static_edge_cases_yaml if edge_cases else self.static_plugin_yaml
         return json.loads(json.dumps(manifest["spec"]["data"]["staticData"]))

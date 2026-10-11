@@ -10,7 +10,7 @@ The scored strategies use :class:`.base_classes.FakeGuardrailClient` instead of 
     be documented.
 """
 
-from django.core.cache import cache
+from unittest import mock
 
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.services.exceptions import (
@@ -26,7 +26,6 @@ from smarter.apps.guardrail.services.strategies.registry import (
 )
 from smarter.apps.guardrail.services.strategies.semantic_strategy import (
     cosine_similarity,
-    embedding_cache_key,
 )
 from smarter.apps.provider.services.text_completion.contracts import (
     GuardrailStage,
@@ -120,7 +119,6 @@ class TestGuardrailStrategies(SmarterTestBase):
     def test_semantic(self):
         """Test that the semantic strategy triggers on similarity to a reference text."""
         g = guardrail("semantic", threshold=0.9, referenceTexts=["a forbidden example", "another forbidden thing"])
-        cache.delete_many([embedding_cache_key("text-embedding-3-small", t) for t in g.settings["referenceTexts"]])
         with fake_client() as client:
             match = evaluate(g, "this is forbidden")
             self.assertTrue(match.triggered)
@@ -129,6 +127,17 @@ class TestGuardrailStrategies(SmarterTestBase):
         # the reference texts were embedded once, and then cached
         embedded = [text for name, texts in client.calls if name == "embed" for text in texts]
         self.assertEqual(embedded.count("a forbidden example"), 1)
+
+    def test_semantic_wrong_number_of_vectors(self):
+        """Test that an embeddings response with the wrong number of vectors raises, and is not cached."""
+        g = guardrail("semantic", threshold=0.9, referenceTexts=["an uncached forbidden example"])
+        with fake_client() as client:
+            with mock.patch.object(FakeGuardrailClient, "embed", return_value=[]):
+                with self.assertRaises(GuardrailProviderError):
+                    evaluate(g, "this is forbidden")
+            self.assertTrue(evaluate(g, "this is forbidden").triggered)
+        embedded = [text for name, texts in client.calls if name == "embed" for text in texts]
+        self.assertEqual(embedded.count("an uncached forbidden example"), 1)
 
     def test_semantic_misconfigured(self):
         """Test that a semantic guardrail without reference texts raises."""

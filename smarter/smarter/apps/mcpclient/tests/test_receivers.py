@@ -10,10 +10,7 @@ Test :mod:`smarter.apps.mcpclient.receivers`.
 
 from unittest import mock
 
-from django.core.cache import cache
-
 from smarter.apps.mcpclient import receivers
-from smarter.apps.mcpclient.caching import catalog_cache_key
 from smarter.apps.mcpclient.connection import MCPServerCatalog
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.signals import (
@@ -75,10 +72,9 @@ class TestMCPClientReceivers(MCPClientTestBase):
     def test_deleted_invalidates_catalog(self):
         """Test that deleting an MCPClient invalidates its cached catalog."""
         mcpclient = self.new_mcpclient("test_mcpclient_receivers_deleted")
-        key = catalog_cache_key(mcpclient)
-        cache.set(key, {"tools": []}, 60)
-        mcpclient.delete()
-        self.assertIsNone(cache.get(key))
+        with mock.patch.object(receivers, "invalidate_cached_catalog") as invalidate:
+            mcpclient.delete()
+        invalidate.assert_called_once_with(mcpclient)
         self.assertIn("mcpclient_deleted", self.logged())
 
     def test_signal_receivers(self):

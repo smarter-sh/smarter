@@ -47,6 +47,7 @@ import yaml
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 SKILL_FILENAME = "SKILL.md"
 
@@ -95,7 +96,7 @@ class SkillDocument:
     """
 
     document: str
-    frontmatter: dict[str, Any]
+    frontmatter: SmarterDictType
     body: str
     allowed_tools: list[str] = field(default_factory=list)
 
@@ -120,7 +121,7 @@ class SkillDocument:
         return self.frontmatter.get("compatibility")
 
     @property
-    def metadata(self) -> dict[str, Any]:
+    def metadata(self) -> SmarterDictType:
         """The ``metadata`` frontmatter field: additional properties not defined by the specification."""
         return self.frontmatter.get("metadata") or {}
 
@@ -178,7 +179,7 @@ def parse_allowed_tools(value: Any) -> list[str]:
     return tools
 
 
-def validate_frontmatter(frontmatter: dict[str, Any]) -> None:
+def validate_frontmatter(frontmatter: SmarterDictType) -> None:
     """
     Validate the standard frontmatter fields against the Agent Skills specification.
 

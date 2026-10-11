@@ -14,6 +14,7 @@ certificate's description.
 from typing import Any, Optional
 
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 from .base import AWSBase
 from .exceptions import AWSNotReadyError
@@ -60,7 +61,7 @@ class AWSCertificateManager(AWSBase):
         )
         return response["CertificateArn"]
 
-    def describe_certificate(self, certificate_arn: str) -> Optional[dict[str, Any]]:
+    def describe_certificate(self, certificate_arn: str) -> Optional[SmarterDictType]:
         """
         Return a certificate's description: its ``Certificate``.
 

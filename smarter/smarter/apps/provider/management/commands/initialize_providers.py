@@ -27,6 +27,7 @@ from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT
 from smarter.common.helpers.console_helpers import formatted_banner
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class Command(SmarterCommand):
         self,
         api_key_env_var: str,
         name: str,
-        provider_configuration: dict,
+        provider_configuration: SmarterDictType,
         logo_filename: str,
         provider_api_url: str,
     ):

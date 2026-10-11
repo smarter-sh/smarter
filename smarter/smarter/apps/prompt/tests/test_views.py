@@ -4,19 +4,27 @@ Test the Prompt dashboard views: the React list of LLMClients, its list, clone, 
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
+import json
 import secrets
 from http import HTTPStatus
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlparse
 
-from django.test import RequestFactory
+from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory, override_settings
 
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.caching import (
     invalidate_all_cached_llmclients_for_user_profile,
 )
-from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient, LLMClientHelper
+from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
+from smarter.apps.prompt.contract.models import (
+    PromptChatApiConfigResponse,
+    PromptChatApiConfigResponseV1,
+    PromptChatApiErrorResponse,
+)
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.prompt.views.detailviews.prompt_config_view import PromptConfigView
@@ -111,6 +119,54 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         response = self.client.post(self.url("config_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
+    def test_config_v1_matches_the_contract(self):
+        """Test that Smarter Chat up to 0.7, which lists no contract capability, receives version 1, complete for its owner."""
+        response = self.client.post(
+            self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id),
+            HTTP_X_SMARTER_CLIENT="@smarter.sh/ui-chat",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        config = PromptChatApiConfigResponseV1.model_validate(response.json())
+        self.assertNotIn("contract", response.json()["data"])
+        # a workbench url keeps the platform's prompt api url.
+        self.assertEqual(config.data.chatbot.url_chatbot, self.resource.url_llmclient)
+        # the complete configuration includes e.g. the owner's profile.
+        self.assertIn("user_profile", response.json()["data"]["chatbot"])
+
+    def test_config_v2_matches_the_contract(self):
+        """Test that a client that asks for version 2 of the contract receives it, without legacy keys."""
+        response = self.client.post(
+            self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id),
+            HTTP_X_SMARTER_CAPABILITIES=CHAT_CONTRACT_V2_CAPABILITY,
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        config = PromptChatApiConfigResponse.model_validate(response.json())
+        self.assertEqual(config.data.contract, 2)
+        self.assertEqual(config.data.llmclient.url_llmclient, self.resource.url_llmclient)
+        content = response.content.decode()
+        self.assertNotIn('"chatbot', content)
+        self.assertNotIn("url_chatbot", content)
+
+    def test_config_v2_is_the_default(self):
+        """Test that a client that asks for no version of the contract receives version 2."""
+        response = self.client.post(self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertEqual(PromptChatApiConfigResponse.model_validate(response.json()).data.contract, 2)
+
+    def test_config_errors_share_one_envelope(self):
+        """Test that a config api error is the contract's error envelope, without a stack trace."""
+        unknown = LLMClient(id=999999999)
+        response = self.client.post(self.url("config_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        error = PromptChatApiErrorResponse.model_validate(response.json()).error
+        self.assertEqual(error.errorClass, "PromptChatApiErrorNotFound")
+        self.assertEqual(error.description, "LLMClient not found.")
+        self.assertNotIn("stacktrace", response.json()["error"])
+
+    def test_config_is_csrf_exempt(self):
+        """Test that the config api, which only reads, accepts a POST without a CSRF token."""
+        self.assertTrue(getattr(PromptConfigView.as_view(), "csrf_exempt", False))
+
     def test_config_get_when_allowed(self):
         """Test that the config api answers a GET when the ALLOW_API_GET switch is active."""
         url = self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id)
@@ -169,3 +225,109 @@ class TestPromptSessionAndConfigView(TestAccountMixin):
 
         view.session = None
         self.assertEqual(view.config(), {})
+
+
+class TestPromptConfigViewForDeployedHosts(TestAccountMixin):
+    """Test the config api as a deployed LLMClient's own host serves it, to pages that embed Smarter Chat."""
+
+    def setUp(self):
+        super().setUp()
+        self.llmclient = LLMClient.objects.create(
+            name=f"test_public_config_{self.hash_suffix}", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
+        # update(), rather than save(), whose signals would deploy it.
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=True)
+        self.llmclient.refresh_from_db()
+        self.host = f"public-config-{self.hash_suffix}.{self.account.account_number}.api.example.com"
+
+    def post(self, user=None, **headers):
+        """POST /config/ to the LLMClient's host, anonymously by default."""
+        request = RequestFactory().post(
+            "/config/", data={}, content_type="application/json", HTTP_HOST=self.host, **headers
+        )
+        request.user = user or AnonymousUser()
+        with (
+            override_settings(ALLOWED_HOSTS=["*"]),
+            patch(
+                "smarter.apps.prompt.views.detailviews.prompt_config_view.get_cached_llmclient_by_request",
+                return_value=self.llmclient,
+            ),
+        ):
+            response = PromptConfigView.as_view()(request)
+        self.addCleanup(Prompt.objects.filter(llmclient=self.llmclient).delete)
+        return response
+
+    def test_public_config_for_an_anonymous_client(self):
+        """Test that a deployed LLMClient without api keys serves its public configuration to anyone."""
+        response = self.post()
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        payload = json.loads(response.content)
+        PromptChatApiConfigResponse.model_validate(payload)
+        data = payload["data"]
+        self.assertEqual(data["contract"], 2)
+        self.assertNotIn("user_profile", data["llmclient"])
+        self.assertEqual(set(data["history"]), {"chat_history"})
+        self.assertEqual(data["plugins"]["plugins"], [])
+        content = response.content.decode()
+        self.assertNotIn(self.admin_user.email, content)
+        self.assertNotIn(self.admin_user.username, content)
+
+    def test_public_config_for_an_authenticated_client(self):
+        """Test that an api key's user, too, receives only the public configuration from the host."""
+        data = json.loads(self.post(user=self.non_admin_user).content)["data"]
+        self.assertNotIn("user_profile", data["llmclient"])
+
+    def test_public_config_v1(self):
+        response = self.post(HTTP_X_SMARTER_CLIENT="@smarter.sh/ui-chat")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        PromptChatApiConfigResponseV1.model_validate(json.loads(response.content))
+        data = json.loads(response.content)["data"]
+        self.assertNotIn("user_profile", data["chatbot"])
+
+    def test_prompt_url_is_on_the_same_host(self):
+        """Test that the configuration sends the page's prompts to the host that served it."""
+        data = json.loads(self.post().content)["data"]
+        url = urlparse(data["llmclient"]["url_llmclient"])
+        self.assertEqual(url.netloc, self.host)
+        self.assertEqual(url.path, "/prompt/")
+
+    def test_undeployed_llmclient_is_not_found(self):
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=False)
+        self.llmclient.refresh_from_db()
+        response = self.post()
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:500])
+        error = PromptChatApiErrorResponse.model_validate(json.loads(response.content)).error
+        self.assertEqual(error.errorClass, "PromptChatApiErrorNotFound")
+
+    def test_llmclient_with_an_api_key_requires_authentication(self):
+        with patch.object(LLMClientHelper, "is_authentication_required", new_callable=PropertyMock, return_value=True):
+            response = self.post()
+            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content[:500])
+            error = PromptChatApiErrorResponse.model_validate(json.loads(response.content)).error
+            self.assertEqual(error.errorClass, "PromptChatApiErrorForbidden")
+            # an api key's user may use it.
+            self.assertEqual(self.post(user=self.non_admin_user).status_code, HTTPStatus.OK)
+
+    def test_anonymous_client_of_a_workbench_url_is_not_found(self):
+        """Test that a url with an id, which requires a user who may read the LLMClient, is a 404 to anonymous clients."""
+        request = RequestFactory().post(f"/workbench/llm-clients/{self.llmclient.hashed_id}/config/")
+        request.user = AnonymousUser()
+        response = PromptConfigView.as_view()(request, hashed_id=self.llmclient.hashed_id)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_unresolved_host_is_not_found(self):
+        """Test that a host that resolves to no LLMClient is the contract's 404, not a server error."""
+        request = RequestFactory().post("/config/", data={}, content_type="application/json", HTTP_HOST=self.host)
+        request.user = AnonymousUser()
+        with (
+            override_settings(ALLOWED_HOSTS=["*"]),
+            patch(
+                "smarter.apps.prompt.views.detailviews.prompt_config_view.get_cached_llmclient_by_request",
+                return_value=None,
+            ),
+            patch("smarter.apps.prompt.views.detailviews.prompt_config_view.LLMClientHelper") as helper,
+        ):
+            helper.return_value.llmclient = None
+            response = PromptConfigView.as_view()(request)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:300])

@@ -16,6 +16,7 @@ from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
     SmarterReactTemplateTagManager,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.typing import SmarterDictType
 
 register = template.Library()
 
@@ -38,7 +39,7 @@ def manifest_editor_react_assets() -> AssetDict:
 
 
 @register.simple_tag
-def manifest_editor_context() -> dict[str, Any]:
+def manifest_editor_context() -> SmarterDictType:
     """
     Return the settings of the Manifest Editor's root element.
 

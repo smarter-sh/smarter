@@ -51,6 +51,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .charge import Actuals, get_actuals
 
@@ -390,7 +391,7 @@ class ResourceConstraint(TimestampedModel):
         """Spending since the start date."""
         return self.measure(get_actuals(self.resource_locator, self.start_date, now or timezone.now()))
 
-    def status(self, now: Optional[datetime] = None) -> dict[str, Any]:
+    def status(self, now: Optional[datetime] = None) -> SmarterDictType:
         """The budget versus the actual spending, now."""
         now = now or timezone.now()
         budget: Budget = self.budget  # type: ignore[assignment]
@@ -420,7 +421,7 @@ class ResourceConstraint(TimestampedModel):
             "lock_reason": lock.reason if lock else None,
         }
 
-    def series(self, periods: int = 12, now: Optional[datetime] = None) -> list[dict[str, Any]]:
+    def series(self, periods: int = 12, now: Optional[datetime] = None) -> list[SmarterDictType]:
         """
         The budget versus the actual spending of each of the last periods billing periods, for charts.
 

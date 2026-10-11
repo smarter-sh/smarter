@@ -56,6 +56,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     try:
@@ -81,7 +82,7 @@ verbose_logger = logging.getSmarterLogger(
 )
 
 
-def welcome_email_context(first_name: str) -> dict:
+def welcome_email_context(first_name: str) -> SmarterDictType:
     """
     Return the context for the welcome email template.
 
@@ -344,10 +345,10 @@ class Account(MetaDataModel):
                 "%s.save() Multiple accounts marked as default: %s. Account IDs: %s. Ensure that only one account is marked as default.",
                 self.formatted_class_name,
                 accounts,
-                [account for account in accounts],
+                [*accounts],
             )
             raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.save() Multiple accounts are marked as default: {[account for account in accounts]}. Only one default account is allowed. {e}"
+                f"{self.formatted_class_name}.save() Multiple accounts are marked as default: {[*accounts]}. Only one default account is allowed. {e}"
             ) from e
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()

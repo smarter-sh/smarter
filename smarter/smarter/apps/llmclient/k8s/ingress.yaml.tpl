@@ -8,7 +8,10 @@ metadata:
     kubernetes.io/tls-acme: "true"
     cert-manager.io/cluster-issuer: ${cluster_issuer}
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: ${environment_namespace}-cors@kubernetescrd,${environment_namespace}-https-redirect@kubernetescrd
+    # No Traefik cors middleware: it answers CORS preflight requests itself, with a fixed list of
+    # origins and headers, so Django, whose CORS middleware applies the platform's settings and each
+    # LLMClient's spec.config.allowedOrigins (smarter.apps.llmclient.cors), would never see them.
+    traefik.ingress.kubernetes.io/router.middlewares: ${environment_namespace}-https-redirect@kubernetescrd
   labels:
     app.kubernetes.io/application-group: ${app_name}
     app.kubernetes.io/name: ${app_name}

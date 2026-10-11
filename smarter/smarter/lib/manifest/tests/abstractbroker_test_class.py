@@ -27,6 +27,7 @@ from smarter.lib import logging
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -62,14 +63,14 @@ class SAMTestBroker(AbstractBroker):
         """Not implemented: the abstract broker's apply() raises SAMBrokerErrorNotImplemented."""
         return super().apply(request, *args, **kwargs)
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """Transform the Smarter API User manifest into a Django ORM model."""
         config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
         config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> dict:
+    def django_orm_to_manifest_dict(self) -> SmarterDictType:
         """
         Transform the Django ORM model into a Pydantic readable.
 

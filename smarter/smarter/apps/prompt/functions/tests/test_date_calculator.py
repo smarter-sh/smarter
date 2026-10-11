@@ -6,12 +6,13 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..date_calculator import date_calculator, date_calculator_tool_factory
 
 
-def calculate(**arguments) -> dict:
+def calculate(**arguments) -> SmarterDictType:
     """Call the date calculator with ``arguments``, and return its single result."""
     call = ChatCompletionMessageToolCall(
         id="test_date_calculator",

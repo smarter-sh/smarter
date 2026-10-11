@@ -25,6 +25,7 @@ from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from ..const import DEFAULT_DNS_RECORD_TTL, InfrastructureServiceNames
 from ..exceptions import DNSRecordTimeout, DNSServiceError, DNSZoneNotFound
@@ -78,7 +79,7 @@ class DNSRecord:
     values: list[str] = field(default_factory=list)
     """The record's values, e.g. IP addresses."""
 
-    alias: Optional[dict[str, Any]] = None
+    alias: Optional[SmarterDictType] = None
     """A provider-specific alias target, e.g. an AWS load balancer, in place of values."""
 
     def __post_init__(self):
@@ -314,7 +315,7 @@ class DNSService(InfrastructureService):
         record_type: str,
         ttl: Optional[int] = DEFAULT_DNS_RECORD_TTL,
         values: Optional[list[str]] = None,
-        alias: Optional[dict[str, Any]] = None,
+        alias: Optional[SmarterDictType] = None,
     ) -> tuple[DNSRecord, bool]:
         """
         Return a record, and create it, or update its values, if it does not match.

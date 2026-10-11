@@ -19,6 +19,7 @@ from smarter.apps.mcpclient.caching import (
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.urls import MCPClientReverseNames as Names
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import MCPCLIENT_NAME, MCPClientTestBase
@@ -39,7 +40,7 @@ class TestMCPClientViews(MCPClientTestBase):
         self.addCleanup(self.client.logout)
         invalidate_all_cached_mcpclients_for_user_profile(self.user_profile)
 
-    def post(self, path: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, path: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """POST to a path, assert the status, and return the json."""
         response = self.client.post(path)
         self.assertEqual(response.status_code, status, response.content)

@@ -13,6 +13,7 @@ from smarter.common.helpers.console_helpers import formatted_text, formatted_tex
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import json, logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 HERE = __name__
@@ -78,20 +79,20 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         return hash_factory(length=64)
 
     @classmethod
-    def get_readonly_yaml_file(cls, file_path) -> dict:
+    def get_readonly_yaml_file(cls, file_path) -> SmarterDictType:
         """Read a YAML file in read-only mode."""
         with open(file_path, encoding="utf-8") as file:
             return yaml.safe_load(file)
 
     @classmethod
-    def get_readonly_csv_file(cls, file_path) -> Union[dict, list[dict]]:
+    def get_readonly_csv_file(cls, file_path) -> Union[SmarterDictType, list[SmarterDictType]]:
         """Read a CSV file in read-only mode."""
         with open(file_path, encoding="utf-8") as file:
             reader = csv.DictReader(file)
             return list(reader)
 
     @classmethod
-    def get_readonly_json_file(cls, file_path) -> Union[dict, list]:
+    def get_readonly_json_file(cls, file_path) -> Union[SmarterDictType, list]:
         """Read a JSON file in read-only mode."""
         with open(file_path, encoding="utf-8") as file:
             return json.load(file)

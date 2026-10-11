@@ -23,6 +23,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerReadOnlyError,
 )
 from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.typing import SmarterDictType
 
 from .abstractbroker_test_class import SAMTestBroker
 
@@ -38,7 +39,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
     """
 
     good_manifest_path: Optional[str] = None
-    good_manifest_dict: Optional[dict] = None
+    good_manifest_dict: Optional[SmarterDictType] = None
     broker: Optional[SAMTestBroker] = None
 
     @classmethod

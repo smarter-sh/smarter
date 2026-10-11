@@ -14,6 +14,7 @@ from langchain_core.embeddings import Embeddings
 
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.exceptions import SmarterException
+from smarter.lib.typing import SmarterDictType
 
 SEARCH_TYPES = ("similarity", "similarity_score_threshold", "mmr")
 
@@ -32,7 +33,7 @@ class SearchResult:
 
     id: Optional[str]
     text: str
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: SmarterDictType = field(default_factory=dict)
     score: Optional[float] = None
 
 
@@ -101,7 +102,7 @@ class SmarterVectorstoreBackend(ABC):
         self.drop()
 
     @abstractmethod
-    def stats(self) -> dict[str, Any]:
+    def stats(self) -> SmarterDictType:
         """The database's statistics.
 
         It includes vector_count.
@@ -109,7 +110,7 @@ class SmarterVectorstoreBackend(ABC):
 
     # --- data -------------------------------------------------------------------
     @abstractmethod
-    def upsert(self, ids: list[str], texts: list[str], metadatas: list[dict[str, Any]], batch_size: int = 64) -> None:
+    def upsert(self, ids: list[str], texts: list[str], metadatas: list[SmarterDictType], batch_size: int = 64) -> None:
         """Embed and insert, or replace, chunks."""
 
     @abstractmethod
@@ -128,7 +129,7 @@ class SmarterVectorstoreBackend(ABC):
         score_threshold: Optional[float] = None,
         fetch_k: Optional[int] = None,
         lambda_mult: Optional[float] = None,
-        metadata_filter: Optional[dict[str, Any]] = None,
+        metadata_filter: Optional[SmarterDictType] = None,
     ) -> list[SearchResult]:
         """
         Find the chunks that are closest in meaning to a query.

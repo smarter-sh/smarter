@@ -9,6 +9,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.infrastructure.views.listview import DEFAULT_PAGE_SIZE, summary
+from smarter.lib.typing import SmarterDictType
 
 
 def url(name: str) -> str:
@@ -74,7 +75,7 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         self.assertEqual(ours[0]["status"], "destroyed")
         self.assertIsNotNone(ours[0]["destroyedAt"])
 
-    def post(self, body) -> dict:
+    def post(self, body) -> SmarterDictType:
         response = self.client.post(
             url(InfrastructureReverseNames.listview_api),
             data=body if isinstance(body, str) else json.dumps(body),

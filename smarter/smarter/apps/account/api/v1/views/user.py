@@ -17,6 +17,7 @@ from smarter.apps.api.signals import api_request_completed
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -150,7 +151,7 @@ def get_user(request, user_id: Optional[int] = None):
 def create_user(request: Request):
     """Create an account from a json representation in the body of the request."""
     logger.debug("%s.create_user() - request: %s", request, request)
-    data: dict
+    data: SmarterDictType
 
     user = get_resolved_user(request.user)
     if user is None:
@@ -189,7 +190,7 @@ def create_user(request: Request):
 def update_user(request: Request, user_id: int):
     """Update an account from a json representation in the body of the request."""
     logger.debug("%s.update_user() - user_id: %s, request: %s", request, user_id, request)
-    data: dict
+    data: SmarterDictType
 
     # a partial update: the body needn't have the username and password that validate_request_body() requires.
     try:

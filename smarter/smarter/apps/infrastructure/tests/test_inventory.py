@@ -29,6 +29,7 @@ from smarter.apps.infrastructure.signals import (
 )
 from smarter.apps.infrastructure.tasks import sync_infrastructure_inventory
 from smarter.common.conf import smarter_settings
+from smarter.lib.typing import SmarterDictType
 
 from .base import InfrastructureTestBase
 
@@ -46,7 +47,7 @@ class FakeKubernetes(KubernetesService):
 
     def __init__(self, provider_name: str):
         super().__init__(provider_name=provider_name)
-        self.items: dict[str, list[dict]] = {}
+        self.items: dict[str, list[SmarterDictType]] = {}
         self.calls: list[tuple[str, Optional[str]]] = []
 
     @property
@@ -79,11 +80,13 @@ class FakeKubernetes(KubernetesService):
         raise NotImplementedError
 
 
-def item(name: str, namespace: str = "", spec: Optional[dict] = None, status: Optional[dict] = None) -> dict:
+def item(
+    name: str, namespace: str = "", spec: Optional[SmarterDictType] = None, status: Optional[SmarterDictType] = None
+) -> SmarterDictType:
     return {"metadata": {"name": name, "namespace": namespace}, "spec": spec or {}, "status": status or {}}
 
 
-def load_balanced(hostname: str = "", ip: str = "") -> dict:
+def load_balanced(hostname: str = "", ip: str = "") -> SmarterDictType:
     return {"loadBalancer": {"ingress": [{"hostname": hostname, "ip": ip}]}}
 
 

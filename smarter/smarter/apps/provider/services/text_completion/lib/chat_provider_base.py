@@ -46,6 +46,7 @@ from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .internal_keys import _InternalKeys
 from .mixins import ChatDbMixin
@@ -139,7 +140,7 @@ class SmarterChatProviderBase(ChatDbMixin):
     _api_key: Optional[str]
     _chat: Optional[Prompt]
 
-    data: Optional[dict[str, Any]]
+    data: Optional[SmarterDictType]
     plugins: Optional[List[PluginBase]]
     functions: Optional[List[str]]
 
@@ -154,16 +155,16 @@ class SmarterChatProviderBase(ChatDbMixin):
     reference: Optional[str]
 
     iteration: int
-    request_meta_data: dict[str, Any]
-    first_iteration: dict[str, Any]
+    request_meta_data: SmarterDictType
+    first_iteration: SmarterDictType
     first_response: Optional[ChatCompletion]
     second_response: Optional[ChatCompletion]
-    second_iteration: Optional[dict[str, Any]]
-    serialized_tool_calls: Optional[list[dict[str, Any]]]
+    second_iteration: Optional[SmarterDictType]
+    serialized_tool_calls: Optional[list[SmarterDictType]]
 
     # built-in tools that we make available to all providers
-    tools: Optional[list[dict[str, Any]]]
-    available_functions: dict[str, Any]
+    tools: Optional[list[SmarterDictType]]
+    available_functions: SmarterDictType
 
     def __init__(
         self,
@@ -278,7 +279,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         llm_provider_initialized.send(sender=self)
 
-    def prune_empty_values(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
+    def prune_empty_values(self, data: SmarterDictType) -> Optional[SmarterDictType]:
         """
         Remove empty values from a dictionary.
 
@@ -290,7 +291,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         if not isinstance(data, dict):
             raise SmarterValueError(f"{self.formatted_class_name}: data must be a dictionary")
 
-        def _prune(obj: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+        def _prune(obj: Optional[SmarterDictType]) -> Optional[SmarterDictType]:
             if isinstance(obj, dict):
                 return {k: _prune(v) for k, v in obj.items() if v is not None}
             elif isinstance(obj, list):
@@ -537,7 +538,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         return self._valid_chat_completion_models
 
-    def messages_set_is_new(self, messages: list[dict[str, Any]], is_new: bool = False) -> list[dict[str, Any]]:
+    def messages_set_is_new(self, messages: list[SmarterDictType], is_new: bool = False) -> list[SmarterDictType]:
         """
         Set the is_new flag for all messages in the message thread.
 
@@ -548,7 +549,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         are styled differently.
 
         :param messages: The list of messages to set the is_new flag for.
-        :type messages: list[dict[str, Any]]
+        :type messages: list[SmarterDictType]
         """
         retval = []
         for message in messages:
@@ -557,7 +558,7 @@ class SmarterChatProviderBase(ChatDbMixin):
             retval.append(new_message)
         return retval
 
-    def get_message_thread(self, data: dict[str, Any]) -> List[Dict[str, str]]:
+    def get_message_thread(self, data: SmarterDictType) -> List[Dict[str, str]]:
         """
         Initialize a new message thread with a system prompt and the incoming data.
 
@@ -566,7 +567,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         :raises SmarterValueError: If the request body is invalid.
 
         :param data: The incoming data containing the message thread.
-        :type data: dict[str, Any]
+        :type data: SmarterDictType
         :returns: The initialized message thread.
         :rtype: List[Dict[str, str]]
         """
@@ -585,7 +586,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         retval = self.messages_set_is_new(client_message_thread, is_new=False)
         return retval
 
-    def get_input_text_prompt(self, data: dict[str, Any]) -> str:
+    def get_input_text_prompt(self, data: SmarterDictType) -> str:
         """
         Extract the input text prompt from the incoming data.
 
@@ -595,7 +596,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         :raises SmarterValueError: If the input text is missing or invalid.
 
         :param data: The incoming data containing the input text.
-        :type data: dict[str, Any]
+        :type data: SmarterDictType
         :returns: The input text prompt.
         :rtype: str
         """
@@ -608,7 +609,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         return input_text
 
     def append_message(
-        self, role: str, content: Optional[Union[dict[str, Any], list, str]], message: Optional[dict[str, Any]] = None
+        self, role: str, content: Optional[Union[SmarterDictType, list, str]], message: Optional[SmarterDictType] = None
     ) -> None:
         """
         Append a message to the internal message list.
@@ -619,8 +620,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         :param role: The role of the message (e.g., "user", "assistant", "system").
         :type role: str
 
-        :param content: The content of the message. Can be a string, dict[str, Any], or list.
-        :type content: Optional[Union[dict[str, Any], list, str]]
+        :param content: The content of the message. Can be a string, SmarterDictType, or list.
+        :type content: Optional[Union[SmarterDictType, list, str]]
 
         :param message: An optional message dictionary to append. If provided,
             it will be used instead of creating a new message.

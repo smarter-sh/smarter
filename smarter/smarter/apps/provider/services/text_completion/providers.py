@@ -75,6 +75,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .lib.protocols import (
     OpenAICompatibleChatCompletionResponseType,
@@ -250,7 +251,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         def get_handler(
             request: ProviderRequestType,
             user_profile: UserProfile,
-            data: dict[str, Any],
+            data: SmarterDictType,
             *args,
             **kwargs,
         ) -> OpenAICompatibleChatCompletionResponseType:
@@ -278,7 +279,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         def get_handler(
             user_profile: UserProfile,
             prompt: Prompt,
-            data: Union[dict[str, Any], list],
+            data: Union[SmarterDictType, list],
             plugins: Optional[List[PluginBase]] = None,
             functions: Optional[list[str]] = None,
         ) -> SmarterChatCompletionResponseType:
