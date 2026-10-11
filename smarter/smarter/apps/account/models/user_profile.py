@@ -77,9 +77,8 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
         )
         if user.is_superuser:
             logger.debug(
-                "%s.with_read_permission_for() user is superuser, returning all resources. count: %s",
+                "%s.with_read_permission_for() user is superuser, returning all resources.",
                 logging.formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
-                self.count(),
             )
             return self.all()
         return self.none()
@@ -110,9 +109,8 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
 
         if user.is_superuser:
             logger.debug(
-                "%s.with_ownership_permission_for() user is superuser, returning all resources. count: %s",
+                "%s.with_ownership_permission_for() user is superuser, returning all resources.",
                 logging.formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
-                self.count(),
             )
             return self.all()
         return self.none()
@@ -322,6 +320,11 @@ class UserProfile(MetaDataModel):
             if user:
                 print(user.email)
         """
+        if not UserProfile.user.is_cached(self):  # type: ignore[attr-defined]
+            # pylint: disable=import-outside-toplevel
+            from smarter.apps.account.utils import get_cached_user_for_user_id
+
+            self.user = get_cached_user_for_user_id(user_id=self.user_id)  # type: ignore[attr-defined]
         return self.user
 
     @property
@@ -341,6 +344,8 @@ class UserProfile(MetaDataModel):
             if account:
                 print(account.company_name)
         """
+        if not UserProfile.account.is_cached(self):  # type: ignore[attr-defined]
+            self.account = Account.get_cached_object(pk=self.account_id)  # type: ignore[attr-defined]
         return self.account
 
     def add_to_account_contacts(self, is_primary: bool = False):
@@ -695,7 +700,7 @@ class UserProfile(MetaDataModel):
                 logging.formatted_text(__name__ + ".UserProfile.get_cached_objects()"),
                 cls.__name__,
                 user_id,
-                retval.count(),
+                len(retval),
             )
             return retval
 

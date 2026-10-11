@@ -16,7 +16,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -27,8 +26,6 @@ from .signals import (
     smarter_token_authentication_request,
     smarter_token_authentication_success,
 )
-
-CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
 
 
 # pylint: disable=W0613
@@ -90,7 +87,6 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             kwargs,
         )
 
-    @cache_results(CACHE_TIMEOUT)
     def authenticate_credentials(self, token: bytes) -> tuple[User, SmarterAuthToken]:
         """Override parent authenticate_credentials() to add token activity check and logging.
 
@@ -153,9 +149,10 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             )
             raise error
 
-        # update the last used time for the token
+        # update the last used time for the token. A queryset update, rather than save(), so that
+        # authenticating a request doesn't invalidate and reload the token's cached objects.
         smarter_auth_token.last_used_at = timezone.now()
-        smarter_auth_token.save()
+        SmarterAuthToken.objects.filter(pk=smarter_auth_token.pk).update(last_used_at=smarter_auth_token.last_used_at)
 
         # if the token is active, we can return the user and token as a tuple
         # exactly as the default token authentication does.

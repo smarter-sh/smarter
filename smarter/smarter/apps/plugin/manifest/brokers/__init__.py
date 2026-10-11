@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API SqlPlugin Manifest handler"""
+"""Smarter API SqlPlugin Manifest handler."""
 
 from rest_framework import serializers
 
@@ -18,13 +18,13 @@ class SAMPluginBrokerError(SAMBrokerError):
 
 
 class PluginSerializer(SmarterCamelCaseSerializer):
-    """Django ORM model serializer for get()"""
+    """Django ORM model serializer for get()."""
 
     email = serializers.SerializerMethodField()
 
     def get_email(self, obj: PluginMeta):
         if obj.user_profile:
-            user_profile = UserProfile.objects.get(id=obj.user_profile_id)  # type: ignore[union-attr]
+            user_profile = UserProfile.get_cached_object(pk=obj.user_profile_id)  # type: ignore[union-attr]
             return user_profile.cached_user.email if user_profile.cached_user else None
         return None
 

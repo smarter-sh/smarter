@@ -13,13 +13,11 @@ from smarter.apps.llmclient.models import LLMClient, get_cached_llmclient_by_req
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache as cache
-from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
-from .prompt import Prompt
+from .prompt import Prompt, get_cached_prompt_by_session_key
 from .prompt_history import PromptHistory
 from .prompt_plugin_usage import PromptPluginUsage
 from .prompt_tool_call import PromptToolCall
@@ -371,19 +369,10 @@ class PromptHelper(SmarterRequestMixin):
             logger.error("%s - request object is required for PromptHelper.", self.formatted_class_name)
             return None
 
-        prompt: Prompt = cache.get(self.session_key)  # type: ignore[assignment]
-        if prompt:
-            logger_verbose.debug(
-                "%s - retrieved cached Prompt: %s session_key: %s",
-                self.formatted_class_name,
-                prompt,
-                prompt.session_key,
-            )
-            return prompt
-
+        prompt: Optional[Prompt] = None
         if self.session_key:
             try:
-                prompt = Prompt.objects.get(session_key=self.session_key)
+                prompt = get_cached_prompt_by_session_key(self.session_key)
                 logger_verbose.debug(
                     "%s - retrieved Prompt instance: %s session_key: %s",
                     self.formatted_class_name,
@@ -414,12 +403,6 @@ class PromptHelper(SmarterRequestMixin):
                 )
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
-
-        cache.set(key=self.session_key, value=prompt, timeout=smarter_settings.chat_cache_expiration or 300)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger_verbose.debug(
-                "%s - cached prompt instance: %s session_key: %s", self.formatted_class_name, prompt, prompt.session_key
-            )
 
         if not prompt.llmclient:
             raise ValueError(f"{self.formatted_class_name} LLMClient instance is required for Prompt object.")
