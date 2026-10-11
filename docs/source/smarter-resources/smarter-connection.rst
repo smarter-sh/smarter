@@ -39,7 +39,7 @@ as out-of-band infrastructure setup.
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
     - :doc:`Smarter LLMClient <../smarter-resources/smarter-llmclient>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
-    - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
+    - :doc:`Smarter Chat <../smarter-framework/smarter-chat>`
 
 
 Example Manifest
