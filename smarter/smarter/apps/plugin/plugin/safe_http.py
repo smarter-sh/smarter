@@ -166,11 +166,37 @@ def fetch(
 
         response = fetch("https://example.com/", max_bytes=100_000)
         response.content_type  # 'text/html'
+
+    .. note::
+
+        This function is deliberately not cached with ``@cache_results``, and must stay that
+        way. Cache the expensive call that is made with it instead, in its caller, keyed on
+        the caller's own parameters and with the caller's TTL, e.g.
+        ``ImageSearchPlugin.brave_images()``.
+
+        A brief experiment decorated its request with ``@cache_results(timeout=PluginCacheTtl.DEFAULT)``,
+        to cache every plugin's remote calls in one place. Because this is the transport that
+        every plugin shares, the cache sat beneath each plugin's own, and silently overrode it:
+
+        - a manifest's ``cacheTtl: 0`` no longer disabled caching, and a plugin's longer or
+          shorter TTL was masked by the transport's ten minutes;
+        - re-applying a remote SkillPlugin served the old skill, instead of retrieving the
+          latest version;
+        - each hop of a redirect was replayed from the cache, so a redirect loop was no longer
+          requested, and detected, as it happened;
+        - HEAD requests that validate image urls were answered from the cache, instead of
+          confirming that each url is still available.
     """
     request_headers = {"User-Agent": DEFAULT_USER_AGENT, **(headers or {})}
-    redirects: list[str] = []
-    for _ in range(max_redirects + 1):
-        validate_public_url(url)
+
+    def get_response(
+        method: str,
+        url: str,
+        params: Optional[dict[str, Any]],
+        json_body: Optional[Any],
+        max_bytes: int,
+        accept_status: tuple[int, ...],
+    ) -> tuple[int, dict[str, str], bytes]:
         try:
             response = requests.request(
                 method,
@@ -185,16 +211,9 @@ def fetch(
         except requests.exceptions.RequestException as e:
             raise SafeHttpError(f"request to {urlparse(url).netloc} failed: {type(e).__name__}") from e
         try:
-            location = response.headers.get("Location") or response.headers.get("location")
-            if response.status_code in REDIRECT_STATUS_CODES and location:
-                redirects.append(url)
-                url = urljoin(url, location)
-                if response.status_code in (301, 302, 303):
-                    method, json_body = "GET", None
-                params = None
-                if redirect_policy:
-                    redirect_policy(url)
-                continue
+            response_headers = {str(key).lower(): str(value) for key, value in (response.headers or {}).items()}
+            if response.status_code in REDIRECT_STATUS_CODES and response_headers.get("location"):
+                return response.status_code, response_headers, b""
             if response.status_code not in accept_status:
                 raise SafeHttpError(
                     f"{urlparse(url).netloc} responded with HTTP {response.status_code}",
@@ -205,13 +224,30 @@ def fetch(
                 content += chunk
                 if len(content) > max_bytes:
                     raise SafeHttpError(f"the response from {url} exceeds the maximum size of {max_bytes} bytes.")
-            return SafeResponse(
-                url=url,
-                status_code=response.status_code,
-                headers={str(key).lower(): str(value) for key, value in (response.headers or {}).items()},
-                content=content,
-                redirects=redirects,
-            )
+            return response.status_code, response_headers, content
         finally:
             response.close()
+
+    redirects: list[str] = []
+    for _ in range(max_redirects + 1):
+        # validated before every request, including each redirect, since a host's addresses can change.
+        validate_public_url(url)
+        status_code, response_headers, content = get_response(method, url, params, json_body, max_bytes, accept_status)
+        location = response_headers.get("location")
+        if status_code in REDIRECT_STATUS_CODES and location:
+            redirects.append(url)
+            url = urljoin(url, location)
+            if status_code in (301, 302, 303):
+                method, json_body = "GET", None
+            params = None
+            if redirect_policy:
+                redirect_policy(url)
+            continue
+        return SafeResponse(
+            url=url,
+            status_code=status_code,
+            headers=response_headers,
+            content=content,
+            redirects=redirects,
+        )
     raise SafeHttpError(f"{url} redirected more than {max_redirects} times.")

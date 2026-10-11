@@ -54,11 +54,8 @@ A Plugin that gives the LLM access to the open web: searching it, and reading we
     be documented.
 """
 
-import hashlib
 from datetime import datetime
 from typing import Any, Optional, Type, Union
-
-from django.core.cache import cache
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -139,7 +136,6 @@ UNTRUSTED_NOTE = (
 SEARCH_NOTE = f"{UNTRUSTED_NOTE} Cite the url of each result that you use."
 SEARCH_FETCH_NOTE = f"{SEARCH_NOTE} To read a result in full, call this tool again with url set to its url."
 FETCH_NOTE = f"{UNTRUSTED_NOTE} Cite final_url when you use this content."
-CACHE_KEY_PREFIX = "smarter.websearch"
 
 
 class SmarterWebsearchPluginError(SmarterPluginError):
@@ -480,16 +476,6 @@ class WebsearchPlugin(PluginBase):
             retval["url" if operation == WebsearchOperation.FETCH.value else "query"] = target
         return retval
 
-    def cache_key(self, operation: str, **params) -> str:
-        """Return a cache key that is unique to the plugin, the operation, and its parameters."""
-        plugin_data = self.plugin_data
-        payload = json.dumps(
-            {"plugin_data": plugin_data.pk if plugin_data else None, "operation": operation, **params},
-            sort_keys=True,
-            default=str,
-        )
-        return f"{CACHE_KEY_PREFIX}.{operation}:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
-
     def search(
         self, query: str, policy: DomainPolicy, max_results: Any = None, freshness: Any = None
     ) -> dict[str, Any]:
@@ -527,26 +513,15 @@ class WebsearchPlugin(PluginBase):
             timeout=plugin_data.timeout,
         )
         provider_name = str(plugin_data.search_provider)
-        key = self.cache_key(
-            operation,
-            query=query,
-            max_results=max_results,
-            freshness=freshness,
-            allowed=policy.allowed,
-            blocked=policy.blocked,
-        )
-        results = cache.get(key) if plugin_data.cache_ttl else None
-        cached = results is not None
-        if results is None:
-            api_key = plugin_data.api_key()
-            if not api_key:
-                return self.error_response(operation, query, "the web search api key is unavailable.")
-            try:
-                results = [result.to_dict() for result in get_provider(provider_name).search(request, api_key)]
-            except WebsearchError as e:
-                return self.error_response(operation, query, str(e))
-            if plugin_data.cache_ttl:
-                cache.set(key, results, plugin_data.cache_ttl)
+        try:
+            if not plugin_data.search_enabled:
+                raise WebsearchError("the web search api key is unavailable.")
+            search_results, cached = get_provider(provider_name).search(
+                request, plugin_data.search_api_key_id, cache_ttl=plugin_data.cache_ttl  # type: ignore[attr-defined]
+            )
+            results = [result.to_dict() for result in search_results]
+        except WebsearchError as e:
+            return self.error_response(operation, query, str(e))
 
         websearch_searched.send(
             sender=self.__class__,
@@ -573,40 +548,28 @@ class WebsearchPlugin(PluginBase):
         """
         operation = WebsearchOperation.FETCH.value
         plugin_data: PluginDataWebsearch = self.plugin_data  # type: ignore[assignment]
-        key = self.cache_key(
-            operation,
-            url=url.strip(),
-            allowed=policy.allowed,
-            blocked=policy.blocked,
-            max_characters=plugin_data.fetch_max_characters,
-            robots=plugin_data.fetch_respect_robots_txt,
-        )
-        retval = cache.get(key) if plugin_data.cache_ttl else None
-        cached = retval is not None
-        if retval is None:
-            try:
-                page = fetch_page(
-                    url,
-                    policy=policy,
-                    max_characters=plugin_data.fetch_max_characters,
-                    timeout=plugin_data.timeout,
-                    respect_robots_txt=plugin_data.fetch_respect_robots_txt,
-                )
-            except WebFetchError as e:
-                return self.error_response(operation, url.strip()[:MAX_URL_LENGTH], str(e))
-            retval = {
-                "operation": operation,
-                "url": page.url,
-                "final_url": page.final_url,
-                "title": page.title,
-                "content_type": page.content_type,
-                "content": page.content,
-                "truncated": page.truncated,
-                "retrieved_at": page.retrieved_at.isoformat(),
-                "note": FETCH_NOTE,
-            }
-            if plugin_data.cache_ttl:
-                cache.set(key, retval, plugin_data.cache_ttl)
+        try:
+            page = fetch_page(
+                url,
+                policy=policy,
+                max_characters=plugin_data.fetch_max_characters,
+                timeout=plugin_data.timeout,
+                respect_robots_txt=plugin_data.fetch_respect_robots_txt,
+                cache_ttl=plugin_data.cache_ttl,
+            )
+        except WebFetchError as e:
+            return self.error_response(operation, url.strip()[:MAX_URL_LENGTH], str(e))
+        retval = {
+            "operation": operation,
+            "url": page.url,
+            "final_url": page.final_url,
+            "title": page.title,
+            "content_type": page.content_type,
+            "content": page.content,
+            "truncated": page.truncated,
+            "retrieved_at": page.retrieved_at.isoformat(),
+            "note": FETCH_NOTE,
+        }
 
         websearch_fetched.send(
             sender=self.__class__,
@@ -615,7 +578,7 @@ class WebsearchPlugin(PluginBase):
             final_url=retval["final_url"],
             characters=len(retval["content"]),
             truncated=retval["truncated"],
-            cached=cached,
+            cached=page.cached,
         )
         return retval
 

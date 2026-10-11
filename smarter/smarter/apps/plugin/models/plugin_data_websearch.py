@@ -13,8 +13,8 @@ from typing import Any, Optional, Union
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.websearch_plugin.const import (
-    DEFAULT_CACHE_TTL,
     DEFAULT_FETCH_CHARACTERS,
     DEFAULT_MAX_RESULTS,
     DEFAULT_TIMEOUT,
@@ -142,7 +142,7 @@ class PluginDataWebsearch(PluginDataBase):
         help_text="Seconds to wait for each web request.",
     )
     cache_ttl = models.PositiveIntegerField(
-        default=DEFAULT_CACHE_TTL,
+        default=PluginCacheTtl.WEBSEARCH,
         validators=[MaxValueValidator(MAX_CACHE_TTL)],
         help_text="Seconds to cache search results and web pages. 0 disables caching.",
     )

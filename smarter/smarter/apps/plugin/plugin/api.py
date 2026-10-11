@@ -37,6 +37,7 @@ from urllib.parse import quote
 from django.core.exceptions import MultipleObjectsReturned
 
 from smarter.apps.connection.models import ApiConnection
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -876,7 +877,7 @@ class ApiPlugin(PluginBase):
                 )
             return retval
 
-        @cache_results()
+        @cache_results(timeout=PluginCacheTtl.API)
         def get_cached_api_response(connection_id: int, method: str, endpoint: str, request: str) -> Any:
             retval = execute_request()
             logger.debug(

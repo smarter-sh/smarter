@@ -36,6 +36,7 @@ from typing import Any, Optional, Type, Union
 from django.core.exceptions import MultipleObjectsReturned
 
 from smarter.apps.connection.models import SqlConnection
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -834,7 +835,7 @@ class SqlPlugin(PluginBase):
 
         # the cache key must include everything that can alter the result,
         # including the connection, since identical sql can run against different databases.
-        @cache_results()
+        @cache_results(timeout=PluginCacheTtl.SQL)
         def get_cached_query_result(connection_id: int, sql: str, limit: int) -> Any:
             retval = sql_connection.execute_query(sql=sql, limit=limit)
             if retval is False:
