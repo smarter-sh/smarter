@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.3-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.3...v0.20.3-alpha.4) (2026-10-11)
+
+### Bug Fixes
+
+* **account:** refresh cached UserProfiles when their User is saved ([e1ae6bd](https://github.com/smarter-sh/smarter/commit/e1ae6bd6c19f42ca5abe41fd936e3579e5d05dfd))
+
 ## [0.20.3-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.2...v0.20.3-alpha.3) (2026-10-11)
 
 ### Bug Fixes
