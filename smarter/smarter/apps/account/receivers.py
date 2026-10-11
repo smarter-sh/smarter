@@ -162,8 +162,12 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         return
     get_cached_user_for_user_id(invalidate=True, user_id=instance.id)  # type: ignore[attr-defined]
     get_cached_user_for_username(invalidate=True, username=instance.username)
-    user_profiles = UserProfile.objects.filter(user=instance)
+    # The cached UserProfiles carry a copy of the User, e.g. is_staff, and cache_invalidations()
+    # only refreshes the one cached by pk, so refresh the ones cached by user and by user and account.
+    UserProfile.get_cached_objects(invalidate=True, user=instance)
+    user_profiles = UserProfile.objects.filter(user=instance).select_related("account")
     for user_profile in user_profiles:
+        UserProfile.get_cached_object(invalidate=True, user=instance, account=user_profile.account)
         cache_invalidations(user_profile=user_profile)
 
 

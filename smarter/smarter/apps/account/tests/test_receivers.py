@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.utils import timezone
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
@@ -24,6 +24,9 @@ class TestUserPostSave(TestAccountMixin):
 
     def test_last_login_does_not_invalidate(self):
         """A save of only last_login, as on every token-authenticated request, leaves the caches alone."""
+        user_profile = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)
+        self.addCleanup(user_profile.delete)
+        UserProfile.get_cached_object(user=self.user)
         with patch(CACHE_INVALIDATIONS) as cache_invalidations:
             self.user.last_login = timezone.now()
             self.user.save(update_fields=["last_login"])
@@ -42,3 +45,17 @@ class TestUserPostSave(TestAccountMixin):
         self.user.save()
         self.assertEqual(get_cached_user_for_user_id(user_id=self.user.pk).first_name, "Changed")
         self.assertEqual(get_cached_user_for_username(username=self.user.username).first_name, "Changed")
+
+    def test_edit_invalidates_cached_user_profiles(self):
+        """A save refreshes the User carried by the UserProfiles cached by user, and by user and account."""
+        user_profile = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)
+        self.addCleanup(user_profile.delete)
+        self.assertFalse(UserProfile.get_cached_object(user=self.user).user.is_staff)
+        self.assertFalse(UserProfile.get_cached_object(user=self.user, account=self.account).user.is_staff)
+        self.assertFalse(UserProfile.get_cached_objects(user=self.user)[0].user.is_staff)
+
+        self.user.is_staff = True
+        self.user.save()
+        self.assertTrue(UserProfile.get_cached_object(user=self.user).user.is_staff)
+        self.assertTrue(UserProfile.get_cached_object(user=self.user, account=self.account).user.is_staff)
+        self.assertTrue(UserProfile.get_cached_objects(user=self.user)[0].user.is_staff)
