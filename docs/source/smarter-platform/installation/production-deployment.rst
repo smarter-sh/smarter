@@ -27,7 +27,7 @@ Production deployment involves the following steps:
 1. Build AWS Infrastructure using the `Smarter Official Terraform Modules <https://github.com/smarter-sh/smarter-infrastructure>`__.
 2. Deploy the Smarter Platform to your Kubernetes cluster using the `Official Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
 
-The web console's React apps, including :doc:`Smarter Chat <../../smarter-framework/developer-reference/react-integration/smarter-chat>`,
+The web console's React apps, including :doc:`Smarter Chat <../../smarter-framework/smarter-chat>`,
 the chat of the Prompt Engineer Workbench, are built into the Smarter Docker image's static files, so they need no
 separate deployment.
 
