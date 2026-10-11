@@ -22,6 +22,8 @@ The platform does not change.
 from abc import abstractmethod
 from typing import Any, Optional
 
+from smarter.lib.typing import SmarterDictType
+
 from ..const import InfrastructureServiceNames
 from ..services.base import DiscoveredResource, InfrastructureService
 from ..services.certificates import CertificateService
@@ -47,7 +49,7 @@ class CloudProvider(InfrastructureService):
         self.allow_in_tests = allow_in_tests
         self._authenticated: Optional[bool] = None
 
-    def authentication_state(self, identity: Optional[dict], error: Optional[str] = None) -> bool:
+    def authentication_state(self, identity: Optional[SmarterDictType], error: Optional[str] = None) -> bool:
         """
         Record whether the provider is authenticated with its cloud.
 
@@ -70,7 +72,7 @@ class CloudProvider(InfrastructureService):
 
     @property
     @abstractmethod
-    def identity(self) -> Optional[dict[str, Any]]:
+    def identity(self) -> Optional[SmarterDictType]:
         """The identity that the provider authenticates as, e.g. its account, or None."""
 
     @property
@@ -115,7 +117,7 @@ class CloudProvider(InfrastructureService):
         return None
 
     @abstractmethod
-    def get_kubernetes_cluster_info(self) -> dict[str, Any]:
+    def get_kubernetes_cluster_info(self) -> SmarterDictType:
         """
         Describe the platform's Kubernetes cluster, e.g. for the status API.
 

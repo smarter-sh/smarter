@@ -16,6 +16,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 from smarter.workers.celery import app
 
 from .models import PluginSelectorHistory
@@ -151,7 +152,7 @@ def create_plugin_selector_history(*args, **kwargs):
         user_profile,
     )
     input_text: Optional[str] = kwargs.get("input_text")
-    messages: Optional[list[dict]] = kwargs.get("messages")
+    messages: Optional[list[SmarterDictType]] = kwargs.get("messages")
     search_term: Optional[str] = kwargs.get("search_term")
     session_key: Optional[str] = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
 

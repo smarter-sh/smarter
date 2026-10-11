@@ -75,6 +75,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 MAX_RETURNED_PLUGINS = 10
 
@@ -414,7 +415,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             ),
         )
 
-    def config(self) -> dict[str, Any]:
+    def config(self) -> SmarterDictType:
         """
         The configuration api's response body: :meth:`chat_config`, in the form that the client receives.
 
@@ -424,7 +425,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
           or :meth:`PromptChatApiConfig.to_v1() <smarter.apps.prompt.contract.models.PromptChatApiConfig.to_v1>`.
 
         :returns: ``{"data": <the configuration>}``, or ``{}`` without a session or LLMClient helper.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         :raises pydantic.ValidationError: If the configuration breaks the contract.
         """
         chat_config = self.chat_config()

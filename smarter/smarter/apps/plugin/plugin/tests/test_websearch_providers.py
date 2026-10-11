@@ -27,6 +27,7 @@ from smarter.apps.plugin.plugin.websearch_providers import (
     post_filter,
 )
 from smarter.lib.cache import lazy_cache
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import FakeWebHost, mock_web_host
@@ -37,7 +38,7 @@ BRAVE_URL = BraveSearchProvider.url
 TAVILY_URL = TavilySearchProvider.url
 
 
-def brave_response(*urls: str) -> dict:
+def brave_response(*urls: str) -> SmarterDictType:
     """Return a Brave Search API response with a result for each URL."""
     return {
         "type": "search",
@@ -58,7 +59,7 @@ def brave_response(*urls: str) -> dict:
     }
 
 
-def tavily_response(*urls: str) -> dict:
+def tavily_response(*urls: str) -> SmarterDictType:
     """Return a Tavily Search API response with a result for each URL."""
     return {
         "query": "q",
@@ -83,7 +84,7 @@ class TestWebsearchProviders(SmarterTestBase):
         self.api_key = patcher.start()
         self.addCleanup(patcher.stop)
 
-    def search(self, provider: SearchProvider, response: dict, status_code: int = 200, **request_kwargs):
+    def search(self, provider: SearchProvider, response: SmarterDictType, status_code: int = 200, **request_kwargs):
         """Search with a provider whose API returns a response."""
         host = FakeWebHost()
         host.add_json(provider.url, response, status_code)  # type: ignore[attr-defined]

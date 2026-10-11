@@ -14,7 +14,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text,
 )
 from smarter.common.utils import (
-    ConvertibleCaseType,
+    ConvertibleCaseT,
 )
 from smarter.common.utils import (
     bool_environment_variable as utils_bool_environment_variable,
@@ -38,6 +38,7 @@ from smarter.common.utils import (
 from smarter.common.utils import to_camel_case as utils_snake_to_camel
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -298,7 +299,7 @@ class SmarterHelperMixin:
         """
         return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BOLD_DARK_BLUE)
 
-    def formatted_json(self, json_obj: Union[dict, list]) -> str:
+    def formatted_json(self, json_obj: Union[SmarterDictType, list]) -> str:
         """
         Formats a JSON object as a pretty-printed string with ANSI color codes for logging.
 
@@ -341,7 +342,7 @@ class SmarterHelperMixin:
     ###########################################################################
     # Dictionary utilities
     ###########################################################################
-    def data_to_dict(self, data: Union[dict, str]) -> dict:
+    def data_to_dict(self, data: Union[SmarterDictType, str]) -> SmarterDictType:
         """
         Converts data to a dictionary, handling different types of input.
 
@@ -368,7 +369,7 @@ class SmarterHelperMixin:
         else:
             raise SmarterValueError("Unsupported data type for conversion to dict.")
 
-    def sorted_dict(self, data: dict) -> dict:
+    def sorted_dict(self, data: SmarterDictType) -> SmarterDictType:
         """
         Returns a new dictionary with keys sorted.
 
@@ -379,7 +380,7 @@ class SmarterHelperMixin:
         """
         return {k: data[k] for k in sorted(data.keys())}
 
-    def dict_is_contained_in(self, dict1: dict, dict2: dict) -> bool:
+    def dict_is_contained_in(self, dict1: SmarterDictType, dict2: SmarterDictType) -> bool:
         """
         Checks if one dictionary is contained within another.
 
@@ -394,7 +395,7 @@ class SmarterHelperMixin:
         """
         return utils_dict_is_contained_in(dict1=dict1, dict2=dict2)
 
-    def dict_is_subset(self, small: dict, big: dict) -> bool:
+    def dict_is_subset(self, small: SmarterDictType, big: SmarterDictType) -> bool:
         """
         Checks if one dictionary is a subset of another.
 
@@ -411,7 +412,7 @@ class SmarterHelperMixin:
         """
         return utils_dict_is_subset(small=small, big=big)
 
-    def recursive_sort_dict(self, data: dict) -> dict:
+    def recursive_sort_dict(self, data: SmarterDictType) -> SmarterDictType:
         """
         Recursively sorts a dictionary by its keys.
 
@@ -461,7 +462,7 @@ class SmarterHelperMixin:
     # Case conversion utilities
     ###########################################################################
 
-    def to_snake_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
+    def to_snake_case(self, data: ConvertibleCaseT, convert_values: bool = False) -> ConvertibleCaseT:
         """
         Converts a camelCase or PascalCase string to snake_case.
 
@@ -473,12 +474,12 @@ class SmarterHelperMixin:
         :param convert_values: Whether to convert the values of dictionaries and lists recursively.
         :type convert_values: bool
         :return: The converted string in snake_case.
-        :rtype: Optional[Union[str, dict, list]]
+        :rtype: Union[str, dict, list]
         """
 
         return utils_to_snake_case(data, convert_values=convert_values)
 
-    def to_camel_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
+    def to_camel_case(self, data: ConvertibleCaseT, convert_values: bool = False) -> ConvertibleCaseT:
         """
         Converts a snake_case string to camelCase.
 
@@ -486,11 +487,11 @@ class SmarterHelperMixin:
         It is useful for standardizing naming conventions across different formats.
 
         :param data: The snake_case string to convert.
-        :type data: ConvertibleCaseType
+        :type data: ConvertibleCaseT
         :param convert_values: Whether to convert the values of dictionaries and lists recursively.
         :type convert_values: bool
         :return: The converted string in camelCase.
-        :rtype: Optional[Union[str, dict, list]]
+        :rtype: Union[str, dict, list]
         """
 
         return utils_snake_to_camel(data, convert_values=convert_values)

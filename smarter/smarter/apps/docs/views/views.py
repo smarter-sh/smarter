@@ -3,6 +3,7 @@
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.django.views import SmarterWebHtmlView
+from smarter.lib.typing import SmarterDictType
 
 from ..utils import json_schema_path, manifest_path
 
@@ -17,7 +18,7 @@ class ManifestsView(SmarterWebHtmlView):
 
     def get(self, request, *args, **kwargs):
 
-        def manifest(kind: str) -> dict:
+        def manifest(kind: str) -> SmarterDictType:
             return {
                 "name": kind,
                 "path": "/docs/" + manifest_path(kind),
@@ -39,7 +40,7 @@ class JsonSchemasView(SmarterWebHtmlView):
 
     def get(self, request, *args, **kwargs):
 
-        def json_schema(kind: str) -> dict:
+        def json_schema(kind: str) -> SmarterDictType:
             return {
                 "name": kind,
                 "path": "/docs/" + json_schema_path(kind),

@@ -40,6 +40,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
@@ -238,7 +239,7 @@ class PluginDataWebsearch(PluginDataBase):
             self.search_api_key = None
         super().save(*args, **kwargs)
 
-    def data(self, params: Optional[dict] = None) -> dict[str, Any]:
+    def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Return the configuration of the plugin, without the api key.
 
@@ -252,7 +253,7 @@ class PluginDataWebsearch(PluginDataBase):
             "blocked_domains": self.blocked_domains,
         }
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> dict[str, Any]:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Return the configuration of the plugin, without the api key.
 
@@ -261,7 +262,7 @@ class PluginDataWebsearch(PluginDataBase):
         """
         return self.data(params)
 
-    def manifest_data(self) -> dict[str, Any]:
+    def manifest_data(self) -> SmarterDictType:
         """
         Return the ``spec.websearchData`` section of the plugin manifest.
 
@@ -269,7 +270,7 @@ class PluginDataWebsearch(PluginDataBase):
 
         :return: The manifest section, in camelCase.
         """
-        retval: dict[str, Any] = {
+        retval: SmarterDictType = {
             "allowedDomains": self.allowed_domains or None,
             "blockedDomains": self.blocked_domains or None,
             "timeout": self.timeout,

@@ -50,6 +50,7 @@ from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -285,7 +286,7 @@ def date_calculator(tool_call: ChatCompletionMessageToolCall) -> list:
     return [result]
 
 
-def date_calculator_tool_factory() -> dict:
+def date_calculator_tool_factory() -> SmarterDictType:
     """
     Constructs and returns a JSON-compatible dictionary defining the date calculator tool for OpenAI LLM function calling.
 

@@ -17,6 +17,7 @@ from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -54,7 +55,7 @@ class GuardrailExample:
 
     _filename: Optional[str]
     _filepath: Optional[str]
-    _json: Optional[Union[list, dict]]
+    _json: Optional[Union[list, SmarterDictType]]
     _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
@@ -96,7 +97,7 @@ class GuardrailExample:
 
     # TODO: this fails on Guardrail.create() due to missing tags
     # django.core.exceptions.ValidationError: ["Invalid data: missing meta_data['tags']"]
-    def to_json(self) -> Optional[Union[dict, list]]:
+    def to_json(self) -> Optional[Union[SmarterDictType, list]]:
         """Return the guardrail as a dictionary."""
         return self._json
 

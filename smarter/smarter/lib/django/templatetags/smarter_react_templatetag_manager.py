@@ -80,12 +80,13 @@ from django.conf import settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
 register = template.Library()
 
-ManifestValues = dict[str, Any]
+ManifestValues = SmarterDictType
 ManifestType = dict[str, ManifestValues]
 
 
@@ -154,7 +155,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         Load and cache the manifest.json as a dictionary.
 
         :return: The manifest.json loaded from the static files directory.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         """
         if self._manifest:
             return self._manifest

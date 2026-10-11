@@ -27,6 +27,7 @@ from typing import Callable, Optional
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from ..const import KubernetesResourceTypes
 from ..models import InfrastructureResource
@@ -38,17 +39,17 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 logger_prefix = logging.formatted_text(__name__)
 
 
-def _name(item: dict) -> str:
+def _name(item: SmarterDictType) -> str:
     return str((item.get("metadata") or {}).get("name", ""))
 
 
-def _load_balancer_hostname(item: dict) -> str:
+def _load_balancer_hostname(item: SmarterDictType) -> str:
     """The cloud load balancer's hostname, or IP address, of an Ingress or a Service."""
     ingress = ((item.get("status") or {}).get("loadBalancer") or {}).get("ingress") or [{}]
     return str(ingress[0].get("hostname") or ingress[0].get("ip") or "")
 
 
-def _volume_id(item: dict) -> str:
+def _volume_id(item: SmarterDictType) -> str:
     """The cloud volume's id of a PersistentVolume, e.g. an EBS volume id."""
     spec = item.get("spec") or {}
     return str(
@@ -56,7 +57,7 @@ def _volume_id(item: dict) -> str:
     )
 
 
-def _claimed_by_environment(item: dict) -> bool:
+def _claimed_by_environment(item: SmarterDictType) -> bool:
     """Whether a PersistentVolume is bound to a claim in the environment's namespace."""
     claim = (item.get("spec") or {}).get("claimRef") or {}
     return claim.get("namespace") == smarter_settings.environment_namespace
@@ -85,8 +86,8 @@ class InventorySource:
     kind: str
     namespaced: bool
     billable: bool
-    resource_id: Callable[[dict], str]
-    include: Callable[[dict], bool] = lambda item: True
+    resource_id: Callable[[SmarterDictType], str]
+    include: Callable[[SmarterDictType], bool] = lambda item: True
 
     def find(self, kubernetes: KubernetesService) -> Optional[list[DiscoveredResource]]:
         """The resources of this source that exist, or None if they could not be listed."""

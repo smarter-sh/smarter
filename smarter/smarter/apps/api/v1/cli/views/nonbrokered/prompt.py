@@ -36,6 +36,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
+from smarter.lib.typing import SmarterDictType
 
 from ..base import APIV1CLIViewError, CliBaseApiView
 from ..swagger import (
@@ -65,7 +66,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
     """Smarter API command-line interface 'prompt' view."""
 
     _cache_key: Optional[str] = None
-    _data: Optional[dict] = None
+    _data: Optional[SmarterDictType] = None
     _name: Optional[str] = None
     _prompt: Optional[str] = None
 
@@ -242,7 +243,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
     """
 
     _chat: Optional[Prompt] = None
-    _chat_config: dict = {}
+    _chat_config: SmarterDictType = {}
     _chat_history: Optional[PromptHistory] = None
     _messages: Optional[list[dict[str, str]]] = None
 
@@ -254,12 +255,12 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @property
-    def chat_config(self) -> dict:
+    def chat_config(self) -> SmarterDictType:
         """The prompt configuration dict."""
         return self._chat_config
 
     @property
-    def llmclient_config(self) -> dict[str, Any]:
+    def llmclient_config(self) -> SmarterDictType:
         """The llmclient configuration dict."""
         return self.chat_config.get("llmclient", {})
 
@@ -317,9 +318,9 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
 
         logger.debug("%s.new_message_list_factory() called", self.formatted_class_name)
 
-        system_dict: Optional[dict] = None
-        welcome_dict: Optional[dict] = None
-        prompt_dict: Optional[dict] = None
+        system_dict: Optional[SmarterDictType] = None
+        welcome_dict: Optional[SmarterDictType] = None
+        prompt_dict: Optional[SmarterDictType] = None
 
         system_role: str = self.llmclient_config.get(
             "default_system_role",
@@ -354,12 +355,12 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         logger.debug("%s.new_message_list_factory() retval: %s", self.formatted_class_name, retval)
         return retval
 
-    def chat_request_body_factory(self) -> dict[str, Any]:
+    def chat_request_body_factory(self) -> SmarterDictType:
         retval = {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
         logger.debug("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
         return retval
 
-    def chat_request_factory(self, request_body: dict) -> HttpRequest:
+    def chat_request_factory(self, request_body: SmarterDictType) -> HttpRequest:
         """Create a new request for the llmclient API."""
         if self.parsed_url is None:
             raise SmarterConfigurationError(
@@ -381,7 +382,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return new_request
 
     @staticmethod
-    def prompt_error_message(chat_response: dict) -> str:
+    def prompt_error_message(chat_response: SmarterDictType) -> str:
         """The error message of a prompt's error response, e.g. the LLM provider's error message."""
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA) or {}
         body = response_data.get("body") if isinstance(response_data, dict) else None
@@ -428,7 +429,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             chat_config_content = (
                 chat_config_content.decode("utf-8") if isinstance(chat_config_content, bytes) else chat_config_content
             )
-            chat_config: dict = json.loads(chat_config_content)
+            chat_config: SmarterDictType = json.loads(chat_config_content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value, {})
             session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             if session_key is not None:

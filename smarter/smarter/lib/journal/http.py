@@ -18,6 +18,7 @@ from smarter.lib.django.http.serializers import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.typing import SmarterDictType
 
 from .enum import (
     SCLIResponseMetadata,
@@ -93,7 +94,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
 
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
 
-        def anonymous_serialized_request(request) -> dict:
+        def anonymous_serialized_request(request) -> SmarterDictType:
             """Handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`."""
             try:
                 return HttpAnonymousRequestSerializer(request).data
@@ -106,7 +107,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 )
                 return {}
 
-        def authenticated_serialized_request(request) -> dict:
+        def authenticated_serialized_request(request) -> SmarterDictType:
             """Handles the same but for authenticated requests."""
             try:
                 return HttpAuthenticatedRequestSerializer(request).data

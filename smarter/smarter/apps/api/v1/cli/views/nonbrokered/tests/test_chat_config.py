@@ -17,6 +17,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
@@ -63,7 +64,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         )
         return llmclient
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertEqual(
@@ -73,7 +74,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
-    def validate_data(self, data: dict) -> None:
+    def validate_data(self, data: SmarterDictType) -> None:
         config_fields = [
             SMARTER_CHAT_SESSION_KEY_NAME,
             "sandbox_mode",

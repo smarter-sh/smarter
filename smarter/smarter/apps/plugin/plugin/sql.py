@@ -73,6 +73,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 
@@ -356,7 +357,7 @@ class SqlPlugin(PluginBase):
         return PluginSqlSerializer
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic model to the PluginDataSql Django ORM model and return the plugin data definition as a JSON object.
 
@@ -370,7 +371,7 @@ class SqlPlugin(PluginBase):
         :raises SmarterSqlPluginError: If the plugin manifest or SQL data is missing or invalid.
         :raises SmarterConfigurationError: If the parameters are not in the expected format.
         :returns: A dictionary representing the PluginDataSql Django ORM model.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         **Example of a correctly formatted dictionary:**
 
@@ -566,7 +567,7 @@ class SqlPlugin(PluginBase):
         }  # type: ignore[call-arg]
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Use Pydantic models to generate an example manifest for SqlPlugin.
 
@@ -695,8 +696,8 @@ class SqlPlugin(PluginBase):
 
     # pylint: disable=too-many-branches,too-many-statements
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], list]
-    ) -> Optional[Union[dict, list, str]]:
+        self, function_args: Union[SmarterDictType, list]
+    ) -> Optional[Union[SmarterDictType, list, str]]:
         """
         Fetch information from a Plugin object in response to an OpenAI API tool call.
 
@@ -836,9 +837,9 @@ class SqlPlugin(PluginBase):
         # the cache key must include everything that can alter the result,
         # including the connection, since identical sql can run against different databases.
         @cache_results(timeout=PluginCacheTtl.SQL)
-        def get_cached_query_result(connection_id: int, sql: str, limit: int) -> Any:
+        def get_cached_query_result(connection_id: int, sql: str, limit: int) -> str:
             retval = sql_connection.execute_query(sql=sql, limit=limit)
-            if retval is False:
+            if not isinstance(retval, str):
                 # raise rather than return so that failed queries are never cached.
                 raise SmarterSqlPluginError(
                     f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query failed: {sql}"
@@ -868,7 +869,7 @@ class SqlPlugin(PluginBase):
             )
         return retval
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the SqlPlugin instance to a JSON-compatible dictionary suitable for Pydantic import.
 
@@ -885,7 +886,7 @@ class SqlPlugin(PluginBase):
         :type version: str
 
         :returns: A dictionary representing the plugin in JSON format, or ``None`` if the plugin is not ready.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         :raises SmarterPluginError: If the plugin is not ready, the data is not a valid JSON object, or an unsupported version is specified.
 

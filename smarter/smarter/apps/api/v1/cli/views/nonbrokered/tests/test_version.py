@@ -11,6 +11,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
+from smarter.lib.typing import SmarterDictType
 
 
 class TestApiCliV1Version(ApiV1CliTestBase):
@@ -25,7 +26,7 @@ class TestApiCliV1Version(ApiV1CliTestBase):
     Account.
     """
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)

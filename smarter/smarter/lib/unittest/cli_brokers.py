@@ -21,6 +21,7 @@ from django.db import models
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.typing import SmarterDictType
 
 # the statuses with which a broker answers a command that its kind does not implement. Some
 # raise SAMBrokerError, a 400.
@@ -48,26 +49,26 @@ class CliBrokerTestMixin:
         url = reverse(ApiV1CliReverseViews.namespace + getattr(ApiV1CliReverseViews, command), kwargs=kwargs)
         return f"{url}?{urlencode(params)}" if params else url
 
-    def cli(self, command: str, status=HTTPStatus.OK, data=None, with_kind: bool = True, **params) -> dict:
+    def cli(self, command: str, status=HTTPStatus.OK, data=None, with_kind: bool = True, **params) -> SmarterDictType:
         """Call a cli command, assert its status, which may be a tuple of statuses, and return its json."""
         response, received = self.get_response(path=self.cli_url(command, with_kind, **params), data=data)  # type: ignore[attr-defined]
         statuses = status if isinstance(status, tuple) else (status,)
         self.assertIn(received, statuses, msg=f"{command}: {response}")  # type: ignore[attr-defined]
         return response
 
-    def example_manifest(self) -> dict[str, Any]:
+    def example_manifest(self) -> SmarterDictType:
         response = self.cli("example_manifest")
         manifest = response["data"]
         self.assertEqual(manifest[SAMKeys.KIND.value], self.kind)  # type: ignore[attr-defined]
         return manifest
 
-    def prepare_manifest(self, manifest: dict[str, Any]) -> dict[str, Any]:
+    def prepare_manifest(self, manifest: SmarterDictType) -> SmarterDictType:
         """Return the example manifest, renamed for this test, without the status that apply ignores."""
         manifest[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value] = self.name
         manifest.pop(SAMKeys.STATUS.value, None)
         return manifest
 
-    def apply(self) -> dict:
+    def apply(self) -> SmarterDictType:
         manifest = self.prepare_manifest(self.example_manifest())
         return self.cli("apply", data=manifest, with_kind=False)
 

@@ -32,6 +32,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
     REASONING_EFFORT_NONE,
     OpenAISmarterClient,
 )
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 CREATE_PATCH = (
@@ -68,7 +69,7 @@ class TestCreateFirstCompletion(SmarterTestBase):
         models.start()
         self.addCleanup(models.stop)
 
-    def kwargs(self, model: str, tools: bool = True) -> dict:
+    def kwargs(self, model: str, tools: bool = True) -> SmarterDictType:
         self.client.model = model
         kwargs = {"model": model, "messages": [{"role": "user", "content": "hi"}]}
         if tools:

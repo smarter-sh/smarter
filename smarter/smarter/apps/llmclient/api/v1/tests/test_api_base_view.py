@@ -21,6 +21,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiErrorResponse,
     PromptChatApiPromptResponse,
 )
+from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.llmclient.api.v1.views.base"
 HARNESS = "smarter.apps.provider.services.text_completion.providers.smarter_compatible_client"
@@ -39,7 +40,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
             )
         return LLMClientApiBaseViewSet()
 
-    def post_properties(self, **overrides) -> dict:
+    def post_properties(self, **overrides) -> SmarterDictType:
         """Properties under which post() passes every guard."""
         properties = {
             "llmclient": MagicMock(),
@@ -74,7 +75,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
             return view.post(request)
 
     @staticmethod
-    def lambda_response(body: dict, status: int = HTTPStatus.OK.value) -> dict:
+    def lambda_response(body: SmarterDictType, status: int = HTTPStatus.OK.value) -> SmarterDictType:
         """A prompt's Lambda style result, as the provider's handler returns it."""
         return {"isBase64Encoded": False, "statusCode": status, "headers": {}, "body": json.dumps(body)}
 

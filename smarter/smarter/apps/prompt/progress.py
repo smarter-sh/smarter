@@ -27,12 +27,13 @@ import contextvars
 import json
 from contextlib import contextmanager
 from http import HTTPStatus
-from typing import Any, AsyncIterator, Callable, Generator, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Generator, Optional
 
 from asgiref.sync import sync_to_async
 from django.db import close_old_connections
 from django.dispatch import receiver
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
+from pydantic import JsonValue
 
 from smarter.apps.mcpclient.signals import (
     mcpclient_tool_called,
@@ -40,6 +41,7 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_tool_responded,
 )
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 from .signals import (
     chat_plugin_called,
@@ -48,13 +50,17 @@ from .signals import (
     llm_tool_responded,
 )
 
+if TYPE_CHECKING:
+    from smarter.apps.mcpclient.models import MCPClient
+    from smarter.apps.plugin.plugin.base import PluginBase
+
 logger = logging.getLogger(__name__)
 
 EVENT_STREAM_CONTENT_TYPE = "text/event-stream"
 KEEPALIVE_SECONDS = 15.0
 MAX_ARGUMENTS_LENGTH = 500
 
-ProgressSink = Callable[[dict[str, Any]], None]
+ProgressSink = Callable[[SmarterDictType], None]
 _progress_sink: contextvars.ContextVar[Optional[ProgressSink]] = contextvars.ContextVar(
     "smarter_prompt_progress_sink", default=None
 )
@@ -144,7 +150,7 @@ def _is_tool_call_loop(sender: Any) -> bool:
     return getattr(sender, "__name__", "") == "process_tool_call"
 
 
-def _sse(event: Optional[str], data: Any) -> str:
+def _sse(event: Optional[str], data: JsonValue) -> str:
     """One SSE frame.
 
     Its JSON data has no newlines, so it fits on one ``data:`` line.
@@ -168,7 +174,9 @@ def handle_chat_request(sender, iteration: Optional[int] = None, **kwargs):
 
 
 @receiver(llm_tool_requested, dispatch_uid="smarter.apps.prompt.progress.llm_tool_requested")
-def handle_llm_tool_requested(sender, tool_call: Optional[dict] = None, tool_name: Optional[str] = None, **kwargs):
+def handle_llm_tool_requested(
+    sender, tool_call: Optional[SmarterDictType] = None, tool_name: Optional[str] = None, **kwargs
+):
     """
     The LLM called a tool.
 
@@ -190,7 +198,9 @@ def handle_llm_tool_requested(sender, tool_call: Optional[dict] = None, tool_nam
 
 
 @receiver(llm_tool_responded, dispatch_uid="smarter.apps.prompt.progress.llm_tool_responded")
-def handle_llm_tool_responded(sender, tool_call: Optional[dict] = None, tool_name: Optional[str] = None, **kwargs):
+def handle_llm_tool_responded(
+    sender, tool_call: Optional[SmarterDictType] = None, tool_name: Optional[str] = None, **kwargs
+):
     """A tool returned its result to the LLM.
 
     See :func:`handle_llm_tool_requested`.
@@ -203,14 +213,16 @@ def handle_llm_tool_responded(sender, tool_call: Optional[dict] = None, tool_nam
 
 
 @receiver(chat_plugin_called, dispatch_uid="smarter.apps.prompt.progress.chat_plugin_called")
-def handle_chat_plugin_called(sender, plugin: Any = None, **kwargs):
+def handle_chat_plugin_called(sender, plugin: Optional["PluginBase"] = None, **kwargs):
     """The LLM called a plugin."""
     name = str(getattr(plugin, "name", "") or "")
     emit(PromptProgressEvents.PLUGIN_CALLED, f"Running plugin {name}", plugin=name)
 
 
 @receiver(mcpclient_tool_called, dispatch_uid="smarter.apps.prompt.progress.mcpclient_tool_called")
-def handle_mcpclient_tool_called(sender, mcpclient: Any = None, tool_name: str = "", arguments: Any = None, **kwargs):
+def handle_mcpclient_tool_called(
+    sender, mcpclient: Optional["MCPClient"] = None, tool_name: str = "", arguments: Any = None, **kwargs
+):
     """The LLM called an MCP server's tool."""
     server = str(getattr(mcpclient, "name", "") or "")
     emit(
@@ -223,7 +235,7 @@ def handle_mcpclient_tool_called(sender, mcpclient: Any = None, tool_name: str =
 
 
 @receiver(mcpclient_tool_responded, dispatch_uid="smarter.apps.prompt.progress.mcpclient_tool_responded")
-def handle_mcpclient_tool_responded(sender, mcpclient: Any = None, tool_name: str = "", **kwargs):
+def handle_mcpclient_tool_responded(sender, mcpclient: Optional["MCPClient"] = None, tool_name: str = "", **kwargs):
     """An MCP server's tool returned a result."""
     server = str(getattr(mcpclient, "name", "") or "")
     emit(
@@ -236,7 +248,9 @@ def handle_mcpclient_tool_responded(sender, mcpclient: Any = None, tool_name: st
 
 
 @receiver(mcpclient_tool_failed, dispatch_uid="smarter.apps.prompt.progress.mcpclient_tool_failed")
-def handle_mcpclient_tool_failed(sender, mcpclient: Any = None, tool_name: str = "", error: str = "", **kwargs):
+def handle_mcpclient_tool_failed(
+    sender, mcpclient: Optional["MCPClient"] = None, tool_name: str = "", error: str = "", **kwargs
+):
     """An MCP server's tool could not be called."""
     server = str(getattr(mcpclient, "name", "") or "")
     emit(
@@ -253,7 +267,7 @@ def handle_mcpclient_tool_failed(sender, mcpclient: Any = None, tool_name: str =
 # ------------------------------------------------------------------------------
 
 
-def _response_json(response: HttpResponse) -> Any:
+def _response_json(response: HttpResponse) -> JsonValue:
     """The JSON content of the prompt api's response, or its text if it isn't JSON."""
     content = response.content.decode(response.charset or "utf-8")
     try:
@@ -277,9 +291,9 @@ async def prompt_event_stream(
     :rtype: AsyncIterator[str]
     """
     loop = asyncio.get_running_loop()
-    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+    queue: asyncio.Queue[SmarterDictType] = asyncio.Queue()
 
-    def sink(event: dict[str, Any]) -> None:
+    def sink(event: SmarterDictType) -> None:
         loop.call_soon_threadsafe(queue.put_nowait, event)
 
     def run() -> HttpResponse:

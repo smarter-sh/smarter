@@ -19,6 +19,7 @@ from smarter.lib import (
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .const import OpenAIMessageKeys
 from .validators import (
@@ -40,7 +41,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[list, dict]:
+def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[list, SmarterDictType]:
     """
     Generate a standardized JSON return dictionary for all possible response scenarios.
 
@@ -77,7 +78,9 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
     return retval
 
 
-def exception_response_factory(exception, request_meta_data: Optional[dict] = None) -> Union[list, dict]:
+def exception_response_factory(
+    exception, request_meta_data: Optional[SmarterDictType] = None
+) -> Union[list, SmarterDictType]:
     """
     Generate a standardized error response dictionary that includes the Python exception type and stack trace.
 
@@ -94,7 +97,7 @@ def exception_response_factory(exception, request_meta_data: Optional[dict] = No
     return retval
 
 
-def get_request_body(data) -> dict:
+def get_request_body(data) -> SmarterDictType:
     """
     Returns the request body as a dictionary.
 
@@ -143,11 +146,11 @@ def get_request_body(data) -> dict:
     return request_body
 
 
-def parse_request(request_body: dict):
+def parse_request(request_body: SmarterDictType):
     """Parse the request body and return the endpoint, model, messages, and input_text."""
-    messages: Optional[list[dict[str, Any]]] = request_body.get("messages")
+    messages: Optional[list[SmarterDictType]] = request_body.get("messages")
     input_text: Optional[str] = request_body.get("input_text")
-    prompt_history: Optional[list[dict[str, Any]]] = request_body.get("prompt_history")
+    prompt_history: Optional[list[SmarterDictType]] = request_body.get("prompt_history")
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
@@ -206,7 +209,7 @@ def get_messages_for_role(messages: list, role: str) -> list:
 
 
 def ensure_system_role_present(
-    messages: list[dict[str, Any]], default_system_role: str = smarter_settings.llm_default_system_role  # type: ignore
+    messages: list[SmarterDictType], default_system_role: str = smarter_settings.llm_default_system_role  # type: ignore
 ) -> list:
     """Ensure that a system role is present in the messages list."""
     if not isinstance(messages, list):
@@ -232,7 +235,7 @@ def ensure_system_role_present(
     return messages
 
 
-def pair_tool_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def pair_tool_messages(messages: list[SmarterDictType]) -> list[SmarterDictType]:
     """
     Return the messages with every tool call paired with its tool reply, as OpenAI requires.
 
@@ -251,7 +254,7 @@ def pair_tool_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     :return: The message thread, in which every tool call is paired with its reply.
     """
     role_key, tool_calls_key = OpenAIMessageKeys.MESSAGE_ROLE_KEY, "tool_calls"
-    retval: list[dict[str, Any]] = []
+    retval: list[SmarterDictType] = []
     i = 0
     while i < len(messages):
         message = messages[i]
@@ -271,7 +274,7 @@ def pair_tool_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         # the tool messages that immediately follow the assistant message
         j = i + 1
-        replies: list[dict[str, Any]] = []
+        replies: list[SmarterDictType] = []
         while j < len(messages) and messages[j].get(role_key) == OpenAIMessageKeys.TOOL_MESSAGE_KEY:
             replies.append(messages[j])
             j += 1

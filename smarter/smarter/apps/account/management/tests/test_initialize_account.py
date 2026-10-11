@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 
+from smarter.lib.typing import SmarterDictType
+
 from .base import CommandTestBase
 
 MODULE = "smarter.apps.account.management.commands.initialize_account"
@@ -19,7 +21,7 @@ class TestInitializeAccount(CommandTestBase):
     def names(self) -> list[str]:
         return [c.args[0] for c in self.call.call_args_list]
 
-    def options(self, **overrides) -> dict:
+    def options(self, **overrides) -> SmarterDictType:
         options = {
             "account_number": self.account.account_number,
             "username": self.non_admin_user.username,

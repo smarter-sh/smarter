@@ -40,6 +40,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -89,7 +90,7 @@ class SecretTransformer(SmarterHelperMixin):
         manifest: Optional[SAMSecret] = None,
         secret_id: Optional[int] = None,
         secret: Optional[Secret] = None,
-        data: Optional[Union[dict, str]] = None,
+        data: Optional[Union[SmarterDictType, str]] = None,
         **kwargs,
     ):
         """
@@ -202,7 +203,7 @@ class SecretTransformer(SmarterHelperMixin):
     ###########################################################################
     # pylint: disable=W0613
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         return {
             SAMKeys.APIVERSION.value: SMARTER_API_MANIFEST_DEFAULT_VERSION,
             SAMKeys.KIND.value: MANIFEST_KIND,
@@ -333,7 +334,7 @@ class SecretTransformer(SmarterHelperMixin):
         return set()
 
     @property
-    def annotations(self) -> list[dict[str, Any]]:
+    def annotations(self) -> list[SmarterDictType]:
         """Return the secret annotations."""
         if self._manifest and self._manifest.metadata and self._manifest.metadata.annotations:
             return self._manifest.metadata.annotations
@@ -447,7 +448,7 @@ class SecretTransformer(SmarterHelperMixin):
             self._secret_serializer = SecretSerializer(self.secret)
         return self._secret_serializer
 
-    def manifest_to_django_orm(self) -> Optional[dict[str, Any]]:
+    def manifest_to_django_orm(self) -> Optional[SmarterDictType]:
         """Return a dict for loading the secret Django ORM model."""
         if not self.manifest:
             return None
@@ -533,7 +534,7 @@ class SecretTransformer(SmarterHelperMixin):
         return False
 
     @property
-    def data(self) -> Optional[dict]:
+    def data(self) -> Optional[SmarterDictType]:
         """Return the secret as a dictionary."""
         if self.ready:
             return self.to_json()
@@ -553,7 +554,7 @@ class SecretTransformer(SmarterHelperMixin):
             return self.ready
         return False
 
-    def yaml_to_json(self, yaml_string: str) -> dict:
+    def yaml_to_json(self, yaml_string: str) -> SmarterDictType:
         """Convert a yaml string to a dictionary."""
 
         if self.is_valid_yaml(yaml_string):
@@ -655,7 +656,7 @@ class SecretTransformer(SmarterHelperMixin):
         logger.debug("%s.delete() secret %s: %s.", self.formatted_class_name, secret_id, secret_name)
         return True
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """Serialize a secret in JSON format that is importable by Pydantic."""
         if not self.ready:
             return None

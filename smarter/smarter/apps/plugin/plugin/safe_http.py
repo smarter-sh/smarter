@@ -41,8 +41,10 @@ from typing import Any, Callable, Optional
 from urllib.parse import urljoin, urlparse
 
 import requests
+from pydantic import JsonValue
 
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.typing import SmarterDictType
 
 DEFAULT_TIMEOUT = 15
 """Seconds to wait for each request."""
@@ -135,8 +137,8 @@ def fetch(
     *,
     method: str = "GET",
     headers: Optional[dict[str, str]] = None,
-    params: Optional[dict[str, Any]] = None,
-    json_body: Optional[Any] = None,
+    params: Optional[SmarterDictType] = None,
+    json_body: Optional[JsonValue] = None,
     timeout: float = DEFAULT_TIMEOUT,
     max_bytes: int = DEFAULT_MAX_BYTES,
     max_redirects: int = DEFAULT_MAX_REDIRECTS,
@@ -192,8 +194,8 @@ def fetch(
     def get_response(
         method: str,
         url: str,
-        params: Optional[dict[str, Any]],
-        json_body: Optional[Any],
+        params: Optional[SmarterDictType],
+        json_body: Optional[JsonValue],
         max_bytes: int,
         accept_status: tuple[int, ...],
     ) -> tuple[int, dict[str, str], bytes]:

@@ -17,6 +17,7 @@ from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.guardrail.api.v1.urls import GuardrailApiV1ReverseViews as Names
 from smarter.apps.guardrail.models import Guardrail, GuardrailEvent
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import GuardrailTestBase, get_test_data
 
@@ -56,7 +57,7 @@ class TestGuardrailApi(GuardrailTestBase):
         self.client.force_login(self.admin_user)
         self.addCleanup(self.client.logout)
 
-    def request(self, method: str, path: str, data=None, status: int = HTTPStatus.OK) -> dict:
+    def request(self, method: str, path: str, data=None, status: int = HTTPStatus.OK) -> SmarterDictType:
         """Make a request, assert its status, and return its json."""
         response = getattr(self.client, method)(path, data=data, format="json")
         self.assertEqual(response.status_code, status, response.content)

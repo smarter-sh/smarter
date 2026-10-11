@@ -75,6 +75,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,7 @@ API_REQUEST_PATCH = "smarter.apps.connection.models.api_connection.requests.requ
 LIVE_API_PROBE_URL = "http://localhost:9357/api/v1/tests/unauthenticated/list/"
 
 
-def get_test_data(filename: str) -> dict[str, Any]:
+def get_test_data(filename: str) -> SmarterDictType:
     """Return the contents of a yaml file in ./data."""
     data = get_readonly_yaml_file(os.path.join(DATA_PATH, filename))
     if not isinstance(data, dict):
@@ -146,7 +147,7 @@ def get_test_data(filename: str) -> dict[str, Any]:
 @contextmanager
 def capture_signal(signal):
     """Collect the kwargs of every send of a Django signal for the duration of the context."""
-    received: list[dict[str, Any]] = []
+    received: list[SmarterDictType] = []
 
     def handler(sender, **kwargs):
         received.append({"sender": sender, **kwargs})
@@ -181,7 +182,9 @@ def read_skill_remote_files() -> dict[str, bytes]:
     return files
 
 
-def fake_http_response(content: bytes = b"", status_code: int = 200, headers: Optional[dict] = None) -> mock.MagicMock:
+def fake_http_response(
+    content: bytes = b"", status_code: int = 200, headers: Optional[SmarterDictType] = None
+) -> mock.MagicMock:
     """Return a mock of a streamed requests.Response."""
     response = mock.MagicMock(spec=requests.Response)
     response.status_code = status_code
@@ -208,11 +211,13 @@ class FakeWebHost:
     """
 
     def __init__(self):
-        self.routes: dict[str, tuple[bytes, int, dict]] = {}
+        self.routes: dict[str, tuple[bytes, int, SmarterDictType]] = {}
         self.requested: list[str] = []
-        self.calls: list[dict[str, Any]] = []
+        self.calls: list[SmarterDictType] = []
 
-    def add(self, url: str, content: bytes = b"", status_code: int = 200, headers: Optional[dict] = None) -> None:
+    def add(
+        self, url: str, content: bytes = b"", status_code: int = 200, headers: Optional[SmarterDictType] = None
+    ) -> None:
         """Serve a response for a URL."""
         self.routes[url] = (content, status_code, headers or {})
 
@@ -331,13 +336,13 @@ class PluginTestBase(TestAccountMixin):
     skill_fixtures: bool = False
     websearch_fixtures: bool = False
 
-    sql_plugin_yaml: dict
-    api_plugin_yaml: dict
-    static_plugin_yaml: dict
-    static_edge_cases_yaml: dict
-    skill_plugin_yaml: dict
-    skill_remote_yaml: dict
-    websearch_yaml: dict[str, dict]
+    sql_plugin_yaml: SmarterDictType
+    api_plugin_yaml: SmarterDictType
+    static_plugin_yaml: SmarterDictType
+    static_edge_cases_yaml: SmarterDictType
+    skill_plugin_yaml: SmarterDictType
+    skill_remote_yaml: SmarterDictType
+    websearch_yaml: dict[str, SmarterDictType]
     api_key: str
 
     sql_secret: Optional[Secret] = None
@@ -492,7 +497,7 @@ class PluginTestBase(TestAccountMixin):
     @classmethod
     def sql_manifest_dict(
         cls, name: str, connection: str = SQL_CONNECTION_NAME, sql_query: str = SQL_QUERY
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """Return a SqlPlugin manifest dict based on ./data/sql-plugin.yaml."""
         data = copy.deepcopy(cls.sql_plugin_yaml)
         data["metadata"]["name"] = name
@@ -506,7 +511,7 @@ class PluginTestBase(TestAccountMixin):
         return SAMSqlPlugin(**cls.sql_manifest_dict(name, **kwargs))
 
     @classmethod
-    def api_manifest_dict(cls, name: str, connection: str = API_CONNECTION_NAME) -> dict[str, Any]:
+    def api_manifest_dict(cls, name: str, connection: str = API_CONNECTION_NAME) -> SmarterDictType:
         """Return an ApiPlugin manifest dict based on ./data/api-plugin.yaml."""
         data = copy.deepcopy(cls.api_plugin_yaml)
         data["metadata"]["name"] = name
@@ -520,8 +525,8 @@ class PluginTestBase(TestAccountMixin):
 
     @classmethod
     def static_manifest_dict(
-        cls, name: str, static_data: Optional[dict] = None, edge_cases: bool = False
-    ) -> dict[str, Any]:
+        cls, name: str, static_data: Optional[SmarterDictType] = None, edge_cases: bool = False
+    ) -> SmarterDictType:
         """
         Return a StaticPlugin manifest dict based on ./data/static-plugin.yaml, or on.
 
@@ -542,7 +547,7 @@ class PluginTestBase(TestAccountMixin):
         return SAMStaticPlugin(**cls.static_manifest_dict(name, **kwargs))
 
     @classmethod
-    def skill_manifest_dict(cls, name: str, remote: bool = False, **skill_data) -> dict[str, Any]:
+    def skill_manifest_dict(cls, name: str, remote: bool = False, **skill_data) -> SmarterDictType:
         """
         Return a SkillPlugin manifest dict based on ./data/skill-plugin.yaml, or on.
 
@@ -566,7 +571,7 @@ class PluginTestBase(TestAccountMixin):
         return SAMSkillPlugin(**cls.skill_manifest_dict(name, **kwargs))
 
     @classmethod
-    def websearch_manifest_dict(cls, name: str, variant: str = "research", **websearch_data) -> dict[str, Any]:
+    def websearch_manifest_dict(cls, name: str, variant: str = "research", **websearch_data) -> SmarterDictType:
         """
         Return a WebsearchPlugin manifest dict based on ./data/websearch-plugin*.yaml, optionally replacing its websearchData fields.
 
@@ -662,7 +667,7 @@ class PluginTestBase(TestAccountMixin):
         """Return a fresh instance of the shared ApiPlugin, loaded from the database."""
         return ApiPlugin(plugin_id=self.api_plugin.id, user_profile=self.user_profile)
 
-    def sql_rows(self, plugin: SqlPlugin, function_args: Any) -> list[dict]:
+    def sql_rows(self, plugin: SqlPlugin, function_args: Any) -> list[SmarterDictType]:
         """Run a SqlPlugin tool call and decode its JSON string result."""
         retval = plugin.tool_call_fetch_plugin_response(function_args)
         self.assertIsInstance(retval, str)

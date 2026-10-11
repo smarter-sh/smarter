@@ -23,6 +23,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING])
 
@@ -101,7 +102,7 @@ class VectorsearchView(ViewBase):
 
     def patch(self, request: Request, *args, vectorsearch_id: Optional[int] = None, **kwargs):
         vectorsearch: Optional[Vectorsearch] = None
-        data: Optional[dict] = None
+        data: Optional[SmarterDictType] = None
 
         vectorsearch = self.vectorsearch
         if not vectorsearch:

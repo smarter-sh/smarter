@@ -34,6 +34,7 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
     def llmhost(self) -> LLMHost:
         return LLMHost.objects.get(user_profile=self.user_profile, name=LLMHOST_NAME)
 
-    def data(self, response) -> dict:
+    def data(self, response) -> SmarterDictType:
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         return json.loads(response.content)["data"]
 

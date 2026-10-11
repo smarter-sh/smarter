@@ -115,6 +115,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 from .websearch_fetch import WebFetchError, fetch_page
@@ -270,7 +271,7 @@ class WebsearchPlugin(PluginBase):
         return secret
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic manifest into a Django ORM-compatible dictionary.
 
@@ -320,7 +321,7 @@ class WebsearchPlugin(PluginBase):
         return " ".join(sentence for sentence in sentences if sentence)
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
+    def custom_tool(self) -> Optional[SmarterDictType]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -356,7 +357,7 @@ class WebsearchPlugin(PluginBase):
         if not self.ready or not self.plugin_data:
             return None
         plugin_data = self.plugin_data
-        properties: dict[str, Any] = {}
+        properties: SmarterDictType = {}
         if plugin_data.search_enabled:
             properties["query"] = {
                 "type": "string",
@@ -400,7 +401,7 @@ class WebsearchPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Use Pydantic models to generate an example manifest for a WebsearchPlugin.
 
@@ -462,7 +463,7 @@ class WebsearchPlugin(PluginBase):
     # -------------------------------------------------------------------------
     # tool calls
     # -------------------------------------------------------------------------
-    def error_response(self, operation: str, target: Optional[str], error: str) -> dict[str, Any]:
+    def error_response(self, operation: str, target: Optional[str], error: str) -> SmarterDictType:
         """
         Return an error to the LLM, and send the websearch_failed signal.
 
@@ -471,14 +472,14 @@ class WebsearchPlugin(PluginBase):
         :param error: A description of the error, which must not contain secrets.
         """
         websearch_failed.send(sender=self.__class__, plugin=self, operation=operation, target=target, error=error)
-        retval: dict[str, Any] = {"operation": operation, "error": error}
+        retval: SmarterDictType = {"operation": operation, "error": error}
         if target:
             retval["url" if operation == WebsearchOperation.FETCH.value else "query"] = target
         return retval
 
     def search(
         self, query: str, policy: DomainPolicy, max_results: Any = None, freshness: Any = None
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """
         Search the web.
 
@@ -531,14 +532,14 @@ class WebsearchPlugin(PluginBase):
             result_count=len(results),
             cached=cached,
         )
-        retval: dict[str, Any] = {"operation": operation, "query": query, "results": results}
+        retval: SmarterDictType = {"operation": operation, "query": query, "results": results}
         if not results:
             retval["note"] = "The search returned no results. Try a different query."
         else:
             retval["note"] = SEARCH_FETCH_NOTE if plugin_data.fetch_enabled else SEARCH_NOTE
         return retval
 
-    def fetch(self, url: str, policy: DomainPolicy) -> dict[str, Any]:
+    def fetch(self, url: str, policy: DomainPolicy) -> SmarterDictType:
         """
         Read a web page.
 
@@ -584,8 +585,8 @@ class WebsearchPlugin(PluginBase):
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], str, None]
-    ) -> Union[dict, list, str]:
+        self, function_args: Union[SmarterDictType, str, None]
+    ) -> Union[SmarterDictType, list, str]:
         """
         Search the web, or read a web page, in response to a tool call.
 
@@ -688,7 +689,7 @@ class WebsearchPlugin(PluginBase):
         )
         return retval
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the WebsearchPlugin to a JSON-compatible dictionary suitable for Pydantic import.
 

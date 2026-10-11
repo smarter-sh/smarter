@@ -63,6 +63,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.openai.enum import OpenAIToolCall, OpenAIToolTypes
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -146,12 +147,12 @@ class PluginBase(ABC, AccountMixin):
     _plugin_selector_serializer: Optional[PluginSelectorSerializer] = None
     _plugin_meta_serializer: Optional[PluginMetaSerializer] = None
     _plugin_data_serializer: Optional[serializers.Serializer] = None
-    _plugin_meta_django_model: Optional[dict[str, Any]] = None
-    _plugin_selector_django_model: Optional[dict[str, Any]] = None
-    _plugin_prompt_django_model: Optional[dict[str, Any]] = None
+    _plugin_meta_django_model: Optional[SmarterDictType] = None
+    _plugin_selector_django_model: Optional[SmarterDictType] = None
+    _plugin_prompt_django_model: Optional[SmarterDictType] = None
 
     _selected: bool = False
-    _params: Optional[dict[str, Any]] = None
+    _params: Optional[SmarterDictType] = None
 
     _user_profile: Optional[UserProfile] = None
 
@@ -165,7 +166,7 @@ class PluginBase(ABC, AccountMixin):
         manifest: Optional[SAMPluginCommon] = None,
         plugin_id: Optional[int] = None,
         plugin_meta: Optional[PluginMeta] = None,
-        data: Union[dict[str, Any], str, None] = None,
+        data: Union[SmarterDictType, str, None] = None,
         name: Union[str, None] = None,
         **kwargs,
     ):
@@ -214,7 +215,7 @@ class PluginBase(ABC, AccountMixin):
         :param plugin_meta: The Django ORM PluginMeta instance.
         :type plugin_meta: Optional[PluginMeta]
         :param data: YAML/JSON manifest as a string or dictionary.
-        :type data: Union[dict[str, Any], str, None]
+        :type data: Union[SmarterDictType, str, None]
         :param name: The name of the plugin.
         :type name: Optional[str]
         :param kwargs: Additional keyword arguments.
@@ -563,7 +564,7 @@ class PluginBase(ABC, AccountMixin):
 
     @property
     @abstractmethod
-    def plugin_data_django_model(self) -> dict:
+    def plugin_data_django_model(self) -> SmarterDictType:
         """
         Return the plugin data definition as a json object.
 
@@ -574,7 +575,7 @@ class PluginBase(ABC, AccountMixin):
         raise NotImplementedError()
 
     @cached_property
-    def custom_tool(self) -> dict[str, Any]:
+    def custom_tool(self) -> SmarterDictType:
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -638,14 +639,14 @@ class PluginBase(ABC, AccountMixin):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Return an example manifest for the plugin.
 
         Must be implemented by subclasses.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
-        :type kwargs: Optional[dict[str, Any]]
+        :type kwargs: Optional[SmarterDictType]
         :return: NotImplementedError
         :rtype: NotImplementedError
         """
@@ -679,12 +680,12 @@ class PluginBase(ABC, AccountMixin):
         return self.plugin_meta.plugin_class if self.plugin_meta else None
 
     @property
-    def params(self) -> Optional[dict[str, Any]]:
+    def params(self) -> Optional[SmarterDictType]:
         """
         Return the plugin parameters.
 
         :return: The plugin parameters.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         :Example:
             ```python
@@ -696,7 +697,7 @@ class PluginBase(ABC, AccountMixin):
         return self._params
 
     @params.setter
-    def params(self, value: dict):
+    def params(self, value: SmarterDictType):
         """
         Set the plugin parameters.
 
@@ -865,12 +866,12 @@ class PluginBase(ABC, AccountMixin):
         return self._plugin_meta_serializer
 
     @property
-    def plugin_meta_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_meta_django_model(self) -> Optional[SmarterDictType]:
         """
         Return a dict for loading the plugin meta Django ORM model.
 
         :return: The plugin meta definition as a json object.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
         """
         if not self._plugin_meta_django_model:
             if self.user_profile and self._manifest:
@@ -952,12 +953,12 @@ class PluginBase(ABC, AccountMixin):
         return self._plugin_selector_serializer
 
     @property
-    def plugin_selector_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_selector_django_model(self) -> Optional[SmarterDictType]:
         """
         Return the plugin selector definition as a json object.
 
         :return: The plugin selector definition as a dictionary.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
         """
         if not self._plugin_selector_django_model:
             if self._manifest:
@@ -1020,12 +1021,12 @@ class PluginBase(ABC, AccountMixin):
         return self._plugin_prompt_serializer
 
     @property
-    def plugin_prompt_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_prompt_django_model(self) -> Optional[SmarterDictType]:
         """
         Return the plugin prompt definition as a json object that can be used to load the Django ORM model.
 
         :return: The plugin prompt definition as a dictionary.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
         """
         if not self._plugin_prompt_django_model:
             if self._manifest:
@@ -1137,7 +1138,7 @@ class PluginBase(ABC, AccountMixin):
         return True
 
     @property
-    def data(self) -> Optional[dict]:
+    def data(self) -> Optional[SmarterDictType]:
         """
         Return the plugin as a dictionary.
 
@@ -1189,7 +1190,9 @@ class PluginBase(ABC, AccountMixin):
             return self.ready
         return False
 
-    def selected(self, user: User, input_text: Optional[str] = None, messages: Optional[list[dict]] = None) -> bool:
+    def selected(
+        self, user: User, input_text: Optional[str] = None, messages: Optional[list[SmarterDictType]] = None
+    ) -> bool:
         """
         Determine whether the plugin should be selected for a given user and input context.
 
@@ -1286,7 +1289,7 @@ class PluginBase(ABC, AccountMixin):
 
         return False
 
-    def customize_prompt(self, messages: list[dict]) -> list[dict]:
+    def customize_prompt(self, messages: list[SmarterDictType]) -> list[SmarterDictType]:
         """
         Modify the system prompt based on the plugin object.
 
@@ -1318,12 +1321,14 @@ class PluginBase(ABC, AccountMixin):
         return messages_copy
 
     @abstractmethod
-    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[Union[dict, list, str]]:
+    def tool_call_fetch_plugin_response(
+        self, function_args: SmarterDictType
+    ) -> Optional[Union[SmarterDictType, list, str]]:
         """
         Fetch information from a Plugin object.
 
         :param function_args: The function arguments from the OpenAI function call.
-        :type function_args: dict[str, Any]
+        :type function_args: SmarterDictType
         :return: The plugin response as a string.
         :rtype: Optional[Union[dict, list, str]]
 
@@ -1331,7 +1336,7 @@ class PluginBase(ABC, AccountMixin):
         """
         raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
 
-    def yaml_to_json(self, yaml_string: str) -> dict:
+    def yaml_to_json(self, yaml_string: str) -> SmarterDictType:
         """
         Convert a yaml string to a dictionary.
 
@@ -1362,7 +1367,7 @@ class PluginBase(ABC, AccountMixin):
             return False
 
     @property
-    def function_parameters(self) -> Optional[dict[str, Any]]:
+    def function_parameters(self) -> Optional[SmarterDictType]:
         """
         Fetch the function parameters from the Django model.
 
@@ -1370,7 +1375,7 @@ class PluginBase(ABC, AccountMixin):
         formatted according to the OpenAI function calling schema.
 
         :return: The function parameters as a dictionary.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
         """
         if not self.plugin_data:
             raise SmarterPluginError(
@@ -1720,8 +1725,8 @@ class PluginBase(ABC, AccountMixin):
         description: str,
         enum: Optional[list] = None,
         required: Optional[bool] = False,
-        default: Optional[Any] = None,
-    ) -> dict[str, Any]:
+        default: Any = None,
+    ) -> SmarterDictType:
         """
         Factory method to create a parameter dictionary for the SQL plugin.
 
@@ -1736,9 +1741,9 @@ class PluginBase(ABC, AccountMixin):
         :param required: Whether the parameter is required. Default is False.
         :type required: Optional[bool]
         :param default: The default value of the parameter. Default is None.
-        :type default: Optional[Any]
+        :type default: Any
         :return: A dictionary representing the parameter.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         """
         retval = {
             "name": name,
@@ -1757,8 +1762,8 @@ class PluginBase(ABC, AccountMixin):
 
     @classmethod
     def parameters_to_manifest(
-        cls, parameters: Optional[Union[dict[str, Any], list[dict[str, Any]]]]
-    ) -> Optional[list[dict[str, Any]]]:
+        cls, parameters: Optional[Union[SmarterDictType, list[SmarterDictType]]]
+    ) -> Optional[list[SmarterDictType]]:
         """
         Convert plugin parameters from the OpenAI function calling schema, as stored in the.
 
@@ -1768,9 +1773,9 @@ class PluginBase(ABC, AccountMixin):
         in the SqlPlugin and ApiPlugin subclasses.
 
         :param parameters: The parameters in OpenAI function calling schema. A list is assumed to already be in manifest format.
-        :type parameters: Optional[Union[dict[str, Any], list[dict[str, Any]]]]
+        :type parameters: Optional[Union[SmarterDictType, list[SmarterDictType]]]
         :return: A list of manifest parameters, or ``None`` if there are no parameters.
-        :rtype: Optional[list[dict[str, Any]]]
+        :rtype: Optional[list[SmarterDictType]]
 
         **Example:**
 
@@ -1805,7 +1810,7 @@ class PluginBase(ABC, AccountMixin):
             for name, definition in (parameters.get("properties") or {}).items()
         ]
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the plugin as a JSON-compatible dictionary suitable for Pydantic import.
 
@@ -1839,7 +1844,7 @@ class PluginBase(ABC, AccountMixin):
         :param version: The manifest version to serialize. Only ``"v1"`` is supported.
         :type version: str
         :return: A dictionary representing the plugin manifest, or None if not ready.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         :raises SmarterConfigurationError: If serialization fails or the output is not a dictionary.
         :raises SmarterPluginError: If an unsupported version is requested.

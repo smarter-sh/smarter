@@ -24,6 +24,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
@@ -218,7 +219,7 @@ class PluginDataSkill(PluginDataBase):
             self.description = document.description
         super().save(*args, **kwargs)
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> dict[str, Any]:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Return the skill, or one of its bundled files, for the LLM.
 
@@ -232,7 +233,7 @@ class PluginDataSkill(PluginDataBase):
             at that path is returned instead of the instructions.
         :type params: Optional[dict]
         :return: The skill instructions, or the bundled file.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         :raises SmarterValueError: If the requested resource does not exist.
 
         **Example:**
@@ -249,7 +250,7 @@ class PluginDataSkill(PluginDataBase):
         requested = (params or {}).get("resource")
         if requested:
             path, content = self.find_resource(requested)
-            retval: dict[str, Any] = {"name": document.name, "resource": path, "content": content}
+            retval: SmarterDictType = {"name": document.name, "resource": path, "content": content}
             if content is None:
                 retval["note"] = "The contents of this file are not available, because it is not a text file."
             return retval
@@ -276,7 +277,7 @@ class PluginDataSkill(PluginDataBase):
             )
         return retval
 
-    def data(self, params: Optional[dict] = None) -> Optional[dict]:
+    def data(self, params: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Return the skill as a structured dictionary of frontmatter, instructions and bundled files.
 
@@ -293,13 +294,13 @@ class PluginDataSkill(PluginDataBase):
             return None
         return {"frontmatter": document.frontmatter, "instructions": document.body, "resources": self.resources}
 
-    def manifest_data(self) -> dict[str, Any]:
+    def manifest_data(self) -> SmarterDictType:
         """
         Return the ``spec.skillData`` section of the plugin manifest, as the author wrote it.
 
         :return: ``{"source": {"url": ...}}`` for a remotely sourced skill, otherwise
             ``{"skill": ..., "resources": ...}``.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         """
         if self.source_url:
             return {"source": {"url": self.source_url}}
