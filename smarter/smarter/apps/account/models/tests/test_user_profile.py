@@ -149,10 +149,13 @@ class TestUserProfile(TestAccountMixin):
         """
         Test the `__repr__` method.
 
-        Ensures that the repr of the UserProfile instance matches its string representation.
+        Ensures that the repr of the UserProfile instance identifies its row, user and account.
         """
-        self.assertIsInstance(repr(self.user_profile), str)
-        self.assertGreater(len(repr(self.user_profile)), 0)
+        self.assertEqual(
+            repr(self.user_profile),
+            f"<UserProfile pk={self.user_profile.pk} user_id={self.user_profile.user_id} "  # type: ignore[attr-defined]
+            f"account_id={self.user_profile.account_id}>",  # type: ignore[attr-defined]
+        )
 
     def test_queryset_with_read_permission_for_superuser(self):
         qs = SmarterBaseQuerySetWithPermissions(UserProfile)

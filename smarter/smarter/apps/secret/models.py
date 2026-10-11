@@ -216,7 +216,7 @@ class Secret(MetaDataWithOwnershipModel):
         expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
         return timezone.now() > expiration
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name) or "no name" + " - " + str(self.user_profile) or "no user profile"
 
     @classmethod

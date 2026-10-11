@@ -69,7 +69,7 @@ class LLMClientPlugin(TimestampedModel):
     #: The metadata for the plugin associated with the LLMClient.
     plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         try:
             url = self.llmclient.url if self.llmclient else "undefined llmclient"
             plugin_name = self.plugin_meta.name if self.plugin_meta else "undefined plugin"

@@ -598,7 +598,7 @@ class Provider(MetaDataWithOwnershipModel):
     def validate(self) -> None:
         """Validate the provider before saving."""
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation of the provider."""
         return f"{self.name} ({self.user_profile}) - {self.status}"
 
@@ -647,7 +647,7 @@ class ProviderModel(TimestampedModel):
     supports_image_generation = models.BooleanField(default=False, blank=False, null=False)
     supports_audio_generation = models.BooleanField(default=False, blank=False, null=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation of the model."""
         return f"{self.provider.name} - {self.name}"
 
@@ -686,7 +686,7 @@ class ProviderVerification(TimestampedModel):
         """Get the next verification time."""
         return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation of the verification."""
         return f"{self.provider.name} - {self.verification_type}: {'Success' if self.is_successful else 'Failed'}"
 
@@ -722,7 +722,7 @@ class ProviderModelVerification(TimestampedModel):
         """Get the next verification time."""
         return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation of the verification."""
         return f"{self.provider_model.name} - {self.verification_type}: {'Success' if self.is_successful else 'Failed'}"
 

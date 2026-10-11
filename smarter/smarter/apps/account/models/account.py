@@ -473,11 +473,11 @@ class Account(MetaDataModel):
         verbose_name = "Account"
         verbose_name_plural = "Accounts"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.account_number) + " - " + str(self.company_name)
 
     def __repr__(self) -> str:
-        return super().__str__()
+        return f"<{self.__class__.__name__} pk={self.pk} account_number={self.account_number} company_name={self.company_name}>"
 
 
 __all__ = [

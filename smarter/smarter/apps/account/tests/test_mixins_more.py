@@ -71,20 +71,13 @@ class TestAccountMixinMore(TestAccountMixin):
         mixin.init(account=self.account)
         self.assertEqual(mixin.account, self.account)
 
-    def test_ordering(self):
+    def test_account_mixins_are_not_ordered(self):
+        """Account mixins compare for equality by user_profile, but have no order."""
         admin = AccountMixin(user_profile=self.user_profile)
         mortal = AccountMixin(user_profile=self.non_admin_user_profile)
-        empty, other_empty = AccountMixin(), AccountMixin()
-        self.assertEqual(admin < mortal, str(self.user_profile) < str(self.non_admin_user_profile))
-        self.assertTrue(admin <= admin)  # pylint: disable=comparison-with-itself
-        self.assertTrue(admin >= admin)  # pylint: disable=comparison-with-itself
-        self.assertNotEqual(admin > mortal, admin < mortal)
-        self.assertTrue(empty < admin)
-        self.assertFalse(admin < empty)
-        self.assertFalse(empty < other_empty)
-        for method in ("__lt__", "__le__", "__gt__", "__ge__"):
-            with self.subTest(method=method):
-                self.assertIs(getattr(admin, method)("not a mixin"), NotImplemented)
+        with self.assertRaises(TypeError):
+            admin < mortal  # pylint: disable=pointless-statement
+        self.assertIs(admin.__eq__("not a mixin"), NotImplemented)
 
     def test_authenticate(self):
         """Test that a valid api token authenticates its user, and an invalid one doesn't."""

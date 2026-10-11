@@ -993,10 +993,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
         return retval
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.pk} {self.name} (owned by {self.user_profile})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} pk={self.pk} name={self.name} version={self.version} user_profile={self.user_profile}>"
 
 

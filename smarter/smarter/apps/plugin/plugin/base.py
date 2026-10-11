@@ -310,18 +310,18 @@ class PluginBase(ABC, AccountMixin):
 
     def __str__(self) -> str:
         """
-        Returns a string representation of the class.
+        Returns a string representation of the plugin, naming its concrete class.
 
-        :return: String representation of the class.
+        :return: String representation of the plugin.
         :rtype: str
         """
-        return f"{formatted_text(PluginBase.__name__)}[{id(self)}](name={self.name}, kind={self.kind}, user_profile={self.user_profile})"
+        return f"{self.__class__.__name__}[{id(self)}](name={self.name}, kind={self.kind}, user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
-        Returns a JSON representation of the class.
+        Returns the developer representation of the plugin, which is the same as :meth:`__str__`.
 
-        :return: JSON representation of the class.
+        :return: Developer representation of the plugin.
         :rtype: str
         """
         return self.__str__()
@@ -344,80 +344,19 @@ class PluginBase(ABC, AccountMixin):
         """
         return hash((self.user_profile, self.kind, self.name))
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
-        Compares two plugin instances for equality.
+        Compares two plugin instances for equality by user_profile, kind and name.
 
-        :param other: The other plugin instance to compare.
-        :type other: Any
-        :return: True if the plugin instances are equal, False otherwise.
+        :param other: The object to compare to.
+        :type other: object
+        :return: True if the plugin instances are equal, or ``NotImplemented`` if
+            ``other`` is not a :class:`PluginBase`.
         :rtype: bool
         """
         if not isinstance(other, PluginBase):
-            return False
+            return NotImplemented
         return self.user_profile == other.user_profile and self.kind == other.kind and self.name == other.name
-
-    def __lt__(self, other: Any) -> bool:
-        """
-        Compares if this plugin instance is less than another.
-
-        :param other: The other plugin instance to compare.
-        :type other: Any
-        :return: True if this plugin instance is less than the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, PluginBase):
-            return NotImplemented
-        # Compare by user_profile id if both exist, else handle None
-        self_string = str(self.user_profile) + str(self.kind) + str(self.name)
-        other_string = str(other.user_profile) + str(other.kind) + str(other.name)
-        if self_string is None and other_string is None:
-            return False
-        if self_string is None:
-            return True  # None is considered less than any profile
-        if other_string is None:
-            return False
-
-        return str(self_string) < str(other_string)
-
-    def __le__(self, other: Any) -> bool:
-        """
-        Compares if this plugin instance is less than or equal to another.
-
-        :param other: The other plugin instance to compare.
-        :type other: Any
-        :return: True if this plugin instance is less than or equal to the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, PluginBase):
-            return NotImplemented
-        return self == other or self < other
-
-    def __gt__(self, other: Any) -> bool:
-        """
-        Compares if this plugin instance is greater than another.
-
-        :param other: The other plugin instance to compare.
-        :type other: Any
-        :return: True if this plugin instance is greater than the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, PluginBase):
-            return NotImplemented
-        return not self <= other
-
-    def __ge__(self, other: Any) -> bool:
-        """
-        Compares if this plugin instance is greater than or equal to another.
-
-        :param other: The other plugin instance to compare.
-        :type other: Any
-        :return: True if this plugin instance is greater than or equal to the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, PluginBase):
-            return NotImplemented
-        return not self < other
 
     def cache_invalidations(self) -> None:
         """

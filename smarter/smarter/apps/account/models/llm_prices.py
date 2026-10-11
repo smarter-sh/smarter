@@ -107,7 +107,7 @@ class LLMPrices(TimestampedModel):
     class Meta:
         unique_together = ("charge_type", "provider", "model")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.charge_type} - {self.provider} - {self.model} - {self.price}"
 
     def save(self, *args, **kwargs):

@@ -3,7 +3,7 @@
 
 import os
 import re
-from typing import Any, Optional, Union
+from typing import Iterator, Optional, Union
 
 import yaml
 
@@ -77,6 +77,17 @@ class Plugins:
                 plugin = self.load_plugin(plugin_meta=plugin_meta, user_profile=user_profile)
                 if plugin is not None:
                     self.plugins.append(plugin)
+
+    def __len__(self) -> int:
+        """Return the number of loaded plugins, ready or not."""
+        return len(self.plugins)
+
+    def __iter__(self) -> Iterator[PluginBase]:
+        """Iterate over the loaded plugins, ready or not."""
+        return iter(self.plugins)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} user_profile={self.user_profile} count={len(self)}>"
 
     @staticmethod
     def load_plugin(plugin_meta: PluginMeta, user_profile: UserProfile) -> Optional[PluginBase]:
@@ -167,6 +178,9 @@ class PluginExample:
 
         self._filename = filename
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} filename={self.filename} name={self.name}>"
+
     @property
     def filename(self) -> Optional[str]:
         """Return the name of the plugin."""
@@ -249,6 +263,14 @@ class PluginExamples:
             if file.endswith(".yaml"):
                 plugin_example = PluginExample(filepath=self.PLUGINS_PATH, filename=file)
                 self._plugin_examples.append(plugin_example)
+
+    def __len__(self) -> int:
+        """Return the number of plugin examples."""
+        return len(self._plugin_examples)
+
+    def __iter__(self) -> Iterator[PluginExample]:
+        """Iterate over the plugin examples."""
+        return iter(self._plugin_examples)
 
     def count(self) -> int:
         """Return the number of plugins."""

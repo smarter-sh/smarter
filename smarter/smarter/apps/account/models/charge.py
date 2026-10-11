@@ -140,7 +140,7 @@ class Charge(TimestampedModel):
             )
             new_charge_created.send(sender=self.__class__, charge=self)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"""{self.resource_locator} - {self.charge_type} - {self.total_tokens} - {self.total_cost}"""
 
 

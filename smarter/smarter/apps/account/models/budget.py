@@ -253,7 +253,7 @@ class Budget(MetaDataModel):
         help_text="What people are told when this budget blocks their request, e.g. in the chat window. Empty means a description of the limit that was reached.",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name)
 
     def validate(self):
@@ -344,7 +344,7 @@ class ResourceConstraint(TimestampedModel):
         null=True, blank=True, help_text="When the budget_exceeded signal was last sent for this resource."
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.budget} -> {self.resource_locator}"
 
     def validate(self):
@@ -562,7 +562,7 @@ class ResourceLock(TimestampedModel):
     )
     reason = models.TextField(blank=True, default="", help_text="Which limit was reached.")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.resource_locator}: {self.reason}"
 
     @property

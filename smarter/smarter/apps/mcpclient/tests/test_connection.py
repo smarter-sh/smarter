@@ -65,6 +65,10 @@ class TestMCPServerConnection(MCPClientTestBase):
             setattr(mcpclient, key, value)
         return MCPServerConnection(mcpclient)
 
+    def test_repr(self):
+        """Test that the connection's repr names its MCPClient."""
+        self.assertEqual(repr(self.connection()), f"<MCPServerConnection mcpclient={self.mcpclient.name}>")
+
     # -------------------------------------------------------------------------
     # discover()
     # -------------------------------------------------------------------------

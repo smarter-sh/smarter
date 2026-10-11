@@ -201,7 +201,7 @@ class PromptHelper(SmarterRequestMixin):
             self._chat,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.session_key
 
     @property
