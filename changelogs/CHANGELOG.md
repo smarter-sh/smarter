@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.1...v0.20.2-alpha.1) (2026-10-11)
+
+### Bug Fixes
+
+* **cache:** correct caching design mistakes in plugins and mcpclient ([eeb7a7a](https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48))
+
 ## [0.20.1](https://github.com/smarter-sh/smarter/compare/v0.20.0...v0.20.1) (2026-10-10)
 
 ### Bug Fixes
