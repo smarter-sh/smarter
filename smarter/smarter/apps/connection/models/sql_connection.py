@@ -86,8 +86,33 @@ class SqlConnection(ConnectionBase):
 
     _connection: Optional[BaseDatabaseWrapper] = None
 
-    def __del__(self):
-        """Close the database connection when the object instance is destroyed."""
+    def __enter__(self) -> "SqlConnection":
+        """
+        Use the SQL connection as a context manager, which closes its database.
+
+        connection on exit.
+
+        .. code-block:: python
+
+            with SqlConnection.objects.get(name="my-database") as sql_connection:
+                sql_connection.connection.cursor().execute("SELECT 1;")
+
+        :return: This SQL connection.
+        :rtype: SqlConnection
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """
+        Close the database connection when the ``with`` block exits.
+
+        Exceptions propagate.
+
+        :param exc_type: The exception type raised in the ``with`` block, if any.
+        :param exc_value: The exception raised in the ``with`` block, if any.
+        :param traceback: The traceback of the exception, if any.
+        :return: None
+        """
         self.close()
 
     class ParamikoUpdateKnownHostsPolicy(paramiko.MissingHostKeyPolicy):
@@ -592,7 +617,14 @@ class SqlConnection(ConnectionBase):
         - :meth:`get_connection`
         """
         connection = self.get_connection()
-        return connection is not None
+        if connection is None:
+            return False
+        try:
+            connection.close()
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.error("%s.test_connection() Failed to close the test connection: %s", self.formatted_class_name, e)
+        return True
 
     def get_connection(self) -> Optional[BaseDatabaseWrapper]:
         """

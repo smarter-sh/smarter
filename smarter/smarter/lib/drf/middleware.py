@@ -122,7 +122,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
         return self.process_request(request)
 
-    async def __acall__(self, request: Request):
+    async def __acall__(self, request: Request) -> HttpResponseBase:
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         # process_request() returns get_response()'s coroutine, in async mode, which must be awaited.

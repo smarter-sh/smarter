@@ -711,7 +711,7 @@ class UserProfile(MetaDataModel):
 
         return super().get_cached_objects()  # type: ignore[return-value]
 
-    def __str__(self):
+    def __str__(self) -> str:
         user_identifier = "NoUser"
         company_name = "NoAccount"
         try:
@@ -725,8 +725,8 @@ class UserProfile(MetaDataModel):
             pass
         return f"{company_name}-{user_identifier}"
 
-    def __repr__(self):
-        return self.__str__()
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} pk={self.pk} user_id={self.user_id} account_id={self.account_id}>"  # type: ignore[attr-defined]
 
 
 __all__ = ["UserProfile", "SmarterBaseModelManager", "SmarterBaseQuerySetWithPermissions"]

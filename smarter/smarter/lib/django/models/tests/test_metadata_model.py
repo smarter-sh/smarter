@@ -38,5 +38,10 @@ class TestMetaDataModel(TestAccountMixin):
         self.assertEqual(self.account.rfc1034_compliant_name, self.account.name.lower().replace("_", "-"))
         # Account overrides __str__(), so MetaDataModel's own representations are called directly.
         self.assertEqual(MetaDataModel.__str__(self.account), f"{self.account.pk} {self.account.name}")
-        self.assertIn(self.account.name, MetaDataModel.__repr__(self.account))
+        self.assertIn(f"pk={self.account.pk} name={self.account.name}", MetaDataModel.__repr__(self.account))
+        self.assertEqual(
+            repr(self.account),
+            f"<Account pk={self.account.pk} account_number={self.account.account_number} "
+            f"company_name={self.account.company_name}>",
+        )
         self.assertIsNone(Account(name="").rfc1034_compliant_name)

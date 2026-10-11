@@ -58,6 +58,9 @@ class SmarterVectorstoreBackend(ABC):
         self.vectorstore = vectorstore
         self._embeddings = embeddings
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} vectorstore={self.vectorstore.name}>"
+
     @property
     def embeddings(self) -> Embeddings:
         if self._embeddings is None:

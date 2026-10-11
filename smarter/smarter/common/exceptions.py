@@ -16,7 +16,7 @@ class SmarterException(Exception):
         logger.error(msg)
         super().__init__(self.message)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.get_formatted_err_message + ": " + self.message
 
     @property

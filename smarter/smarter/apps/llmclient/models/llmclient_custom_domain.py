@@ -209,7 +209,7 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
                 self.name = custom_domain_name(self.domain_name)
         super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.domain_name) if self.domain_name else "undefined"
 
 

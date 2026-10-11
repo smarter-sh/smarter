@@ -45,7 +45,7 @@ class Prompt(MetaDataWithOwnershipModel):
         """
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         # pylint: disable=E1136
         return f"{self.id} - {self.ip_address} - {self.url}"  # type: ignore[return]
 

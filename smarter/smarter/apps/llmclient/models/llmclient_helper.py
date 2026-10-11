@@ -209,7 +209,7 @@ class LLMClientHelper(SmarterRequestMixin):
         else:
             llmclient_helper_logger.error(msg)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.llmclient) if self._llmclient else "undefined"
 
     @cached_property
