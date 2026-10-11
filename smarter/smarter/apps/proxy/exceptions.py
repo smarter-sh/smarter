@@ -9,6 +9,8 @@ most of them are the caller's mistakes, e.g. an unknown Proxy, and are logged as
 
 from http import HTTPStatus
 
+from smarter.lib.typing import SmarterDictType
+
 
 class ProxyError(Exception):
     """Base class of the Proxy passthrough's errors: a 502 Bad Gateway, unless a subclass says otherwise."""
@@ -20,7 +22,7 @@ class ProxyError(Exception):
         self.message = message
         super().__init__(message)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> SmarterDictType:
         """The error, in the shape that the OpenAI and Anthropic SDKs report: ``{"error": {...}}``."""
         return {"error": {"message": self.message, "type": "smarter_proxy_error", "code": self.code}}
 

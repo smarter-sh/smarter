@@ -5,7 +5,7 @@ Overview
 --------
 
 Smarter Prompt manages :py:class:`prompt sessions <smarter.apps.prompt.views.views.SmarterPromptSession>` and the
-integration between the Smarter backend and the :doc:`ReactJS chat component <../smarter-framework/developer-reference/react-integration/smarter-chat>`
+integration between the Smarter backend and the :doc:`ReactJS chat component <../smarter-framework/smarter-chat>`
 used to manage sessions in the Smarter Chat HTML integration, as well as in the :doc:`command-line interface (CLI) <../smarter-framework/smarter-cli>`.
 It is chiefly responsible for storing and retrieving
 :py:class:`prompt sessions <smarter.apps.prompt.models.Chat>` and messages in the
@@ -47,7 +47,7 @@ Usage
 
 .. seealso::
 
-    - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
+    - :doc:`Smarter Chat <../smarter-framework/smarter-chat>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter API <../smarter-framework/smarter-api>`
     - :doc:`Smarter Journal <../smarter-framework/developer-reference/smarter-journal>`

@@ -46,6 +46,7 @@ from smarter.common.const import VERSION
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .exceptions import (
     SmarterMCPClientConfigurationError,
@@ -183,7 +184,7 @@ class MCPToolInfo:
     name: str
     description: str = ""
     title: Optional[str] = None
-    input_schema: dict[str, Any] = field(default_factory=dict)
+    input_schema: SmarterDictType = field(default_factory=dict)
     read_only: Optional[bool] = None
     destructive: Optional[bool] = None
 
@@ -200,12 +201,12 @@ class MCPServerCatalog:
     has_resources: bool = False
     tools: list[MCPToolInfo] = field(default_factory=list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> SmarterDictType:
         """Return the catalog as a JSON-serializable dict, e.g. for caching."""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "MCPServerCatalog":
+    def from_dict(cls, data: SmarterDictType) -> "MCPServerCatalog":
         """Return a catalog from :meth:`to_dict`."""
         data = dict(data)
         data["tools"] = [MCPToolInfo(**tool) for tool in data.get("tools", [])]
@@ -220,7 +221,7 @@ class MCPToolResult:
     is_error: bool = False
 
 
-def content_to_text(block: Any) -> str:
+def content_to_text(block: mcp_types.ContentBlock) -> str:
     """
     Render one content block of a tool result as text for the LLM.
 
@@ -422,7 +423,7 @@ class MCPServerConnection:
 
         return self.run(operation, "list its tools")
 
-    def call_tool(self, tool_name: str, arguments: Optional[dict[str, Any]] = None) -> MCPToolResult:
+    def call_tool(self, tool_name: str, arguments: Optional[SmarterDictType] = None) -> MCPToolResult:
         """
         Call one of the MCP server's tools.
 

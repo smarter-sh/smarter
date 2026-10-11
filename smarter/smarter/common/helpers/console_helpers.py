@@ -5,6 +5,7 @@ from warnings import deprecated
 
 from smarter.lib import json
 from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.typing import SmarterDictType
 
 
 class SmarterFormattedTextColorCodes:
@@ -19,7 +20,7 @@ class SmarterFormattedTextColorCodes:
     RESET = "\033[0m"
 
 
-def formatted_json(json_obj: Union[dict, list]) -> str:
+def formatted_json(json_obj: Union[SmarterDictType, list]) -> str:
     """
     Format a JSON object as a pretty-printed string with ANSI color codes for better readability in logs.
 

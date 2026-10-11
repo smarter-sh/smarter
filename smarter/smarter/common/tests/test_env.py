@@ -1,4 +1,4 @@
-"""Test :func:`smarter.common.conf.env.get_env`."""
+"""Test :func:`smarter.common.conf.env.get_env`, and the helpers built on it."""
 
 import os
 from unittest import TestCase
@@ -7,6 +7,7 @@ from unittest.mock import patch
 from pydantic import SecretStr
 
 from smarter.common.conf import env
+from smarter.common.conf.defaults import optional_secret_env
 from smarter.common.conf.env import DEFAULT_MISSING_VALUE, get_env, is_missing_value
 
 VAR = "TEST_SMARTER_GET_ENV"
@@ -33,7 +34,12 @@ class TestGetEnv(TestCase):
             self.assertEqual(get_env(VAR, ""), "prefixed")
 
     def test_missing_value_marker(self):
-        self.assertIsNone(self.get(DEFAULT_MISSING_VALUE, "default"))
+        """Test that a variable holding the placeholder is its default, of the default's type."""
+        self.assertEqual(self.get(DEFAULT_MISSING_VALUE, "default"), "default")
+        self.assertEqual(self.get(DEFAULT_MISSING_VALUE, 587), 587)
+        self.assertFalse(self.get(DEFAULT_MISSING_VALUE, False))
+        self.assertEqual(self.get(DEFAULT_MISSING_VALUE, ["a"]), ["a"])
+        self.assertIsNone(self.get(DEFAULT_MISSING_VALUE, None))
 
     def test_str(self):
         self.assertEqual(self.get(' "quoted value" ', ""), "quoted value")
@@ -89,3 +95,22 @@ class TestIsMissingValue(TestCase):
             with self.subTest(value=value):
                 self.assertFalse(is_missing_value(value))
         self.assertFalse(is_missing_value(SecretStr("sk-key")))
+
+
+class TestOptionalSecretEnv(TestCase):
+    """Test that optional_secret_env() is a SecretStr when the variable is set, and None otherwise."""
+
+    def test_set(self):
+        with patch.dict(os.environ, {VAR: "sk-key"}):
+            secret = optional_secret_env(VAR)
+        self.assertIsInstance(secret, SecretStr)
+        self.assertEqual(secret.get_secret_value(), "sk-key")  # type: ignore[union-attr]
+
+    def test_missing(self):
+        for value in ("", DEFAULT_MISSING_VALUE, "SET-ME-IN-helm/charts/smarter/values.yaml"):
+            with self.subTest(value=value), patch.dict(os.environ, {VAR: value}):
+                self.assertIsNone(optional_secret_env(VAR))
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop(VAR, None)
+            os.environ.pop(f"SMARTER_{VAR}", None)
+            self.assertIsNone(optional_secret_env(VAR))

@@ -44,6 +44,7 @@ from smarter.apps.llmhost.models.compute import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .cluster import ClusterBackend, get_cluster
 from .exceptions import LLMHostComputeError
@@ -235,7 +236,7 @@ def nodes_needed(pods: Iterable[PodRequests], compute: LLMHostCompute) -> int:
     return len(nodes)
 
 
-def node_ready(node: dict[str, Any]) -> bool:
+def node_ready(node: SmarterDictType) -> bool:
     for condition in node.get("status", {}).get("conditions", []) or []:
         if condition.get("type") == "Ready":
             return condition.get("status") == "True"
@@ -316,7 +317,7 @@ class ComputeProvisioner:
             pods.extend([pod_requests(spec)] * spec.scaling.replicas)
         return pods
 
-    def nodes(self, compute: LLMHostCompute) -> list[dict[str, Any]]:
+    def nodes(self, compute: LLMHostCompute) -> list[SmarterDictType]:
         """The compute's Kubernetes Nodes."""
         return self.cluster.list_resources("nodes", f"{LABEL_COMPUTE}={compute.name}")
 

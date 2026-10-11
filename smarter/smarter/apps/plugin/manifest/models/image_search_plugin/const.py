@@ -35,12 +35,6 @@ MAX_DIMENSION = 10_000
 """The maximum value of minWidth and minHeight, in pixels."""
 MAX_TIMEOUT = 60
 DEFAULT_TIMEOUT = 10
-MAX_CACHE_TTL = 86_400
-DEFAULT_CACHE_TTL = 900
-"""Seconds to cache search results.
-
-15 minutes.
-"""
 
 CREDENTIALS_HELP = (
     "An ImageSearchPlugin requires a Brave Search API key, stored in a Smarter Secret. "

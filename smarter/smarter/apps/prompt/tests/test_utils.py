@@ -30,6 +30,7 @@ from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
     pair_tool_messages,
     parse_request,
 )
+from smarter.lib.typing import SmarterDictType
 
 from ..tests.test_setup import get_test_file  # noqa: E402
 
@@ -102,7 +103,7 @@ class TestUtils(SmarterTestBase):
         self.assertEqual(user_messages[0], "return the integer value 42.")
 
 
-def tool_call(call_id: str) -> dict:
+def tool_call(call_id: str) -> SmarterDictType:
     """Return an assistant tool call."""
     return {"id": call_id, "type": "function", "function": {"name": "example_tool", "arguments": "{}"}}
 

@@ -20,7 +20,7 @@ and the server's instructions are added to the system prompt.
         allowedTools: []             # glob patterns. Empty means all of the server's tools
         allowedResources: []         # glob patterns of resource URIs the LLM may read
         includeInstructions: true    # add the server's instructions to the system prompt
-        cacheTtl: 300                # seconds to cache the server's tools and instructions
+        cacheTtl: 3600               # seconds to cache the server's tools and instructions
         isActive: true
         priority: 100                # lower runs first
 

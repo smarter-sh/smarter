@@ -41,3 +41,4 @@ See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting
    adr/028-code-quality
    adr/029-docstrings
    adr/030-task-queues
+   adr/031-pydantic-over-json

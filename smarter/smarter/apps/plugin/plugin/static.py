@@ -61,6 +61,7 @@ from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 
@@ -301,7 +302,7 @@ class StaticPlugin(PluginBase):
         return PluginStaticSerializer
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic model into a Django ORM-compatible dictionary.
 
@@ -316,7 +317,7 @@ class StaticPlugin(PluginBase):
 
         Returns
         -------
-        Optional[dict[str, Any]]
+        Optional[SmarterDictType]
             A dictionary containing the fields necessary to create or update a
             :class:`PluginDataStatic` ORM instance, or ``None`` if the manifest is not available.
 
@@ -378,7 +379,7 @@ class StaticPlugin(PluginBase):
         return list(dict.fromkeys(str(key) for key in keys or []))
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
+    def custom_tool(self) -> Optional[SmarterDictType]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -390,7 +391,7 @@ class StaticPlugin(PluginBase):
         https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
 
         :return: The tool definition, or ``None`` if the plugin is not ready.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         **Example:**
 
@@ -421,7 +422,7 @@ class StaticPlugin(PluginBase):
             or (self.plugin_meta.description if self.plugin_meta else None)
             or "Static Plugin"
         )
-        inquiry_type: dict[str, Any] = {"type": "string"}
+        inquiry_type: SmarterDictType = {"type": "string"}
         if self.inquiry_types:
             inquiry_type["enum"] = self.inquiry_types
         return {
@@ -438,15 +439,15 @@ class StaticPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Use Pydantic models to generate an example manifest for a StaticPlugin.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
-        :type kwargs: Optional[dict[str, Any]]
+        :type kwargs: Optional[SmarterDictType]
 
         :return: An example manifest as a dictionary.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         :raises SmarterConfigurationError: If there is an error generating the example manifest.
 
@@ -547,7 +548,7 @@ class StaticPlugin(PluginBase):
         return json.loads(sam_static_plugin.model_dump_json())
 
     @classmethod
-    def find_inquiry_value(cls, data: dict[str, Any], inquiry_type: str) -> tuple[bool, Any]:
+    def find_inquiry_value(cls, data: SmarterDictType, inquiry_type: str) -> tuple[bool, Any]:
         """
         Find the value of an inquiry type in the static data.
 
@@ -556,7 +557,7 @@ class StaticPlugin(PluginBase):
         advertised inquiry type can be resolved.
 
         :param data: The static data.
-        :type data: dict[str, Any]
+        :type data: SmarterDictType
         :param inquiry_type: The inquiry type to find.
         :type inquiry_type: str
         :return: A tuple of (found, value). ``found`` distinguishes a missing inquiry type from one whose value is ``None``.
@@ -579,7 +580,7 @@ class StaticPlugin(PluginBase):
         return False, None
 
     @classmethod
-    def to_tool_response(cls, value: Any) -> Union[dict, list, str]:
+    def to_tool_response(cls, value: Any) -> Union[SmarterDictType, list, str]:
         """
         Convert a static data value to a tool call response.
 
@@ -611,8 +612,8 @@ class StaticPlugin(PluginBase):
         return json.dumps(value)
 
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], str, None]
-    ) -> Union[dict, list, str]:
+        self, function_args: Union[SmarterDictType, str, None]
+    ) -> Union[SmarterDictType, list, str]:
         """
         Fetch a response from the StaticPlugin based on the provided inquiry type.
 
@@ -647,7 +648,7 @@ class StaticPlugin(PluginBase):
             ]
 
         :param function_args: The function arguments, which must include ``inquiry_type``.
-        :type function_args: Union[dict[str, Any], str, None]
+        :type function_args: Union[SmarterDictType, str, None]
         :return: The static data for the inquiry type.
         :rtype: Union[dict, list, str]
         :raises SmarterPluginError: If the arguments are malformed, the inquiry type is missing, not a string or

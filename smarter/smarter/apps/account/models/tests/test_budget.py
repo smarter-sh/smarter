@@ -36,6 +36,7 @@ from smarter.apps.account.signals import (
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.views.views.api.budgets import is_visible
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class TestBudget(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.locator = f"testbudgetresource-{self.hash_suffix}-{self._testMethodName}"
-        self.signals: dict[str, list[dict]] = {"warning": [], "exceeded": [], "released": []}
+        self.signals: dict[str, list[SmarterDictType]] = {"warning": [], "exceeded": [], "released": []}
 
         def receiver_for(name):
             def receiver(sender, **kwargs):

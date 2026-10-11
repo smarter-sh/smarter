@@ -31,6 +31,8 @@ from django.core.paginator import Page, Paginator
 from django.db.models import F, Model, Q, QuerySet
 from django.http import HttpRequest
 
+from smarter.lib.typing import SmarterDictType
+
 DEFAULT_PAGE_SIZE = 25
 """The resources of a page, unless the list asks for another number."""
 
@@ -174,7 +176,7 @@ def paginate_listview(
     queryset: QuerySet,
     search_fields: Sequence[str] = DEFAULT_SEARCH_FIELDS,
     sort_fields: Mapping[str, str] = DEFAULT_SORT_FIELDS,
-) -> tuple[Page, dict[str, Any]]:
+) -> tuple[Page, SmarterDictType]:
     """
     One page of a list api's resources, which match its search, and a description of the page.
 

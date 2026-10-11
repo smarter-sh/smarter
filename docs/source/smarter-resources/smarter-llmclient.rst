@@ -37,7 +37,7 @@ LLMClients are managed using the :doc:`Smarter command-line interface (CLI) <../
     - :doc:`Smarter Plugin <../smarter-resources/smarter-plugin>`
     - :doc:`Smarter Prompt <../smarter-resources/smarter-prompt>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
-    - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
+    - :doc:`Smarter Chat <../smarter-framework/smarter-chat>`
 
 Usage
 --------
@@ -49,6 +49,27 @@ Usage
 
   # Deployed Smarter LLMClient - Production
   curl -X GET https://stackademy.3141-5926-5359.api.example.com/chat/?session_key=<SESSION-KEY>
+
+Web Pages That Embed It
+-----------------------
+
+A deployed LLMClient can be the chat backend of any web page, with
+:doc:`Smarter Chat <../smarter-framework/smarter-chat>`, the ``@smarter.sh/ui-chat`` React component.
+The page calls the LLMClient from the browser, so its origin must be allowed, in
+``spec.config.allowedOrigins``:
+
+.. code-block:: yaml
+
+  spec:
+    config:
+      allowedOrigins:
+        - https://www.example.com
+        - http://localhost:5173
+
+Each origin is a scheme, a host and an optional port, without a path or a wildcard. If the LLMClient
+has an api key, the page must send one; without api keys, the LLMClient is public, and its prompts
+are charged to its owner. See
+:doc:`Embedding Smarter Chat <../smarter-framework/smarter-chat/embedding>`.
 
 Example Manifest
 ----------------

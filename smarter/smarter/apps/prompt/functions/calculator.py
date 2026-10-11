@@ -42,6 +42,7 @@ from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -232,7 +233,7 @@ def calculator(tool_call: ChatCompletionMessageToolCall) -> list:
     return [result]
 
 
-def calculator_tool_factory() -> dict:
+def calculator_tool_factory() -> SmarterDictType:
     """
     Constructs and returns a JSON-compatible dictionary defining the calculator tool for OpenAI LLM function calling.
 

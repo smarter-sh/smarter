@@ -18,4 +18,5 @@ Ideally, these extensions are thin and otherwise benign to the original library.
    lib/logging
    lib/openai
    lib/social-core
+   lib/typing
    lib/unittest

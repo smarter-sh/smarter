@@ -30,6 +30,7 @@ from typing import Any, Optional
 
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .caching import get_cached_catalog
 from .connection import (
@@ -69,7 +70,7 @@ class MCPFunction:
     tool_name: Optional[str] = None
 
 
-def input_schema(tool: MCPToolInfo) -> dict[str, Any]:
+def input_schema(tool: MCPToolInfo) -> SmarterDictType:
     """
     Return a tool's input schema as OpenAI function parameters.
 
@@ -99,7 +100,7 @@ class MCPToolkit:
 
     def __init__(self, mcpclients: list[MCPClient]):
         self.mcpclients = mcpclients
-        self.tools: list[dict[str, Any]] = []
+        self.tools: list[SmarterDictType] = []
         self.functions: dict[str, MCPFunction] = {}
         self.instructions: dict[str, str] = {}
         self.errors: dict[str, str] = {}
@@ -128,7 +129,7 @@ class MCPToolkit:
             candidate = candidate[: MAX_FUNCTION_NAME_LENGTH - len(suffix)] + suffix
         return candidate
 
-    def add_function(self, function: MCPFunction, description: str, parameters: dict[str, Any]) -> None:
+    def add_function(self, function: MCPFunction, description: str, parameters: SmarterDictType) -> None:
         """Add a function tool, and remember what it calls."""
         self.functions[function.name] = function
         self.tools.append(
@@ -207,7 +208,7 @@ class MCPToolkit:
         function = self.functions.get(function_name)
         return function.mcpclient if function else None
 
-    def call(self, function_name: str, arguments: Optional[dict[str, Any]] = None) -> str:
+    def call(self, function_name: str, arguments: Optional[SmarterDictType] = None) -> str:
         """
         Run a tool call, and return its result as text for the LLM.
 

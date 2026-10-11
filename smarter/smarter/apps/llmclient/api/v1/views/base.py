@@ -8,9 +8,7 @@ from urllib.parse import ParseResult, urlparse
 
 from django.contrib.auth.models import User
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse, HttpResponseNotAllowed
 
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
@@ -20,10 +18,20 @@ from smarter.apps.llmclient.models import (
     LLMClientHelper,
     LLMClientPlugin,
 )
-from smarter.apps.llmclient.serializers import LLMClientSerializer
 from smarter.apps.llmclient.signals import llmclient_called
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.prompt.models import Prompt, PromptHelper
+from smarter.apps.prompt.contract.builders import (
+    PromptChatApiError,
+    PromptChatApiErrorForbidden,
+    PromptChatApiErrorNotFound,
+    PromptChatApiErrorNotReady,
+    chat_error_response,
+    prompt_result_v2,
+    requested_contract,
+    without_diagnostics,
+)
+from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2
+from smarter.apps.prompt.models import PromptHelper
 from smarter.apps.prompt.progress import (
     prompt_event_stream_response,
     wants_event_stream,
@@ -32,7 +40,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.views import SmarterOptionallyAuthenticatedApiView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -49,8 +57,7 @@ logger = base_logger
 
 
 # pylint: disable=too-many-instance-attributes
-@method_decorator(csrf_exempt, name="dispatch")
-class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
+class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
     """
     Base viewset for all LLMClient API endpoints.
 
@@ -111,6 +118,41 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     http_method_names: list[str] = ["get", "post", "options"]
     plugins: Optional[List[PluginBase]] = None
     functions: Optional[list[str]] = None
+    include_diagnostics: bool = False
+    """
+    Return the complete requests to and responses from the LLM, and the stack traces of errors.
+
+    The cli passes ``as_view(include_diagnostics=True)``. A browser never receives them. See
+    :func:`smarter.apps.prompt.contract.builders.without_diagnostics`.
+    """
+
+    forced_contract: Optional[int] = None
+    """
+    The version of the contract to return, whatever the request asks for.
+
+    The cli passes
+    ``as_view(forced_contract=CHAT_CONTRACT_V1)``, because its clients parse version 1.
+    """
+
+    def error_response(self, request, error: PromptChatApiError) -> SmarterJournaledJsonErrorResponse:
+        """
+        The prompt api's error response, the same shape for every error.
+
+        See :func:`~smarter.apps.prompt.contract.builders.chat_error_response`.
+
+        :param request: The request.
+        :type request: ASGIRequest
+        :param error: The error.
+        :type error: PromptChatApiError
+        :returns: The error response, without a stack trace.
+        :rtype: SmarterJournaledJsonErrorResponse
+        """
+        return chat_error_response(
+            request,
+            error,
+            thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
+        )
 
     @property
     def llmclient_id(self):
@@ -414,7 +456,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 args,
                 kwargs,
             )
-            return JsonResponse({}, status=HTTPStatus.NOT_FOUND.value)
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
 
         logger.debug("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
         logger.debug("%s.dispatch() - id=%s", self.formatted_class_name, self.llmclient_id)
@@ -431,24 +473,18 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 f"LLMClientHelper not found. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             )
         if not self.llmclient_helper.ready:
-            data = {
-                "data": {
-                    "error": {
-                        "message": "Could not initialize LLMClient object.",
-                        "account": self.account.account_number if self.account else None,
-                        "llmclient": LLMClientSerializer(self.llmclient).data if self.llmclient else None,
-                        "user": self.user.username if self.user else None,
-                        "name": self.llmclient_helper.name,
-                        "url": self.llmclient_helper.url,
-                    },
-                },
-            }
             logger.debug("%s.dispatch() - LLMClientHelper not ready", self.formatted_class_name)
-            return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
+            return self.error_response(request, PromptChatApiErrorNotReady("Could not initialize LLMClient object."))
+        if not is_authenticated_request(request) and not self.llmclient.deployed:
+            # anonymous clients may prompt deployed LLMClients only. Their prompts run, and are
+            # charged, as the LLMClient's owner. See dispatch()'s first lines.
+            logger.debug("%s.dispatch() - anonymous request for an undeployed llmclient", self.formatted_class_name)
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         if self.llmclient_helper.is_authentication_required and not is_authenticated_request(request):
-            data = {"message": "Forbidden. Please provide a valid API key."}
             logger.debug("%s.dispatch() - Authentication required", self.formatted_class_name)
-            return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN.value)
+            return self.error_response(
+                request, PromptChatApiErrorForbidden("Forbidden. Please provide a valid API key.")
+            )
 
         self.plugins = LLMClientPlugin().plugins(llmclient=self.llmclient)
         self.functions = LLMClientFunctions().functions(llmclient=self.llmclient)
@@ -476,26 +512,6 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
 
         return super().dispatch(request, *args, **kwargs)
-
-    def options(self, request, *args, **kwargs):
-        """
-        OPTIONS request handler for the Smarter Prompt API.
-
-        Sets CORS headers to allow cross-origin requests from the Smarter environment URL.
-
-        :param request: The HTTP request object.
-        :type request: ASGIRequest
-        """
-        logger.debug(
-            "%s.options(): url=%s",
-            self.formatted_class_name,
-            self.llmclient_helper.url if self.llmclient_helper else "(Missing LLMClientHelper.url)",
-        )
-        response = HttpResponse()
-        response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
-        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response["Access-Control-Allow-Headers"] = "origin, content-type, accept"
-        return response
 
     # pylint: disable=W0613
     def get(self, request, *args, name: Optional[str] = None, **kwargs):
@@ -608,32 +624,26 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         logger.debug("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
         if not self.llmclient:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                e=LLMClient.DoesNotExist(
-                    f"LLMClient not found. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
-                ),
-                safe=False,
-                thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
-                status=HTTPStatus.NOT_FOUND.value,
-                stack_trace=traceback.format_exc(),
+            logger.error(
+                "%s.post() LLMClient not found. name=%s, llmclient_id=%s, session_key=%s",
+                self.formatted_class_name,
+                self.name,
+                self.llmclient_id,
+                self.session_key,
             )
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         handler: SmarterChatHarnessProtocol = smarter_compatible_client.get_smarter_harness(
             request=request, provider_name=self.llmclient.provider
         )
         if not self.chat_helper:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                e=Prompt.DoesNotExist(
-                    f"PromptHelper not found. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
-                ),
-                safe=False,
-                thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
-                status=HTTPStatus.NOT_FOUND.value,
-                stack_trace=traceback.format_exc(),
+            logger.error(
+                "%s.post() PromptHelper not found. name=%s, llmclient_id=%s, session_key=%s",
+                self.formatted_class_name,
+                self.name,
+                self.llmclient_id,
+                self.session_key,
             )
+            return self.error_response(request, PromptChatApiErrorNotFound("The chat session was not found."))
         if not self.chat_helper.prompt:
             raise SmarterLLMClientException(
                 f"Prompt not found. This is a bug. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
@@ -657,17 +667,29 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 f"UserProfile is not a valid UserProfile instance. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_profile_type={type(self.user_profile)}"
             )
 
+        contract = self.forced_contract or requested_contract(request)
+
         def complete() -> HttpResponse:
             response = handler(
                 self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins, functions=self.functions  # type: ignore[union-attr]
             )
-            # the prompt's own status, e.g. the status of the LLM provider's error response.
-            status = (
-                response.get("statusCode", HTTPStatus.OK.value) if isinstance(response, dict) else HTTPStatus.OK.value
-            )
-            response = {
-                SmarterJournalApiResponseKeys.DATA: response,
-            }
+            if not self.include_diagnostics:
+                response = without_diagnostics(response)
+            if contract == CHAT_CONTRACT_V2:
+                data, error, status = prompt_result_v2(response)
+                response = {SmarterJournalApiResponseKeys.DATA: data}
+                if error:
+                    response[SmarterJournalApiResponseKeys.ERROR] = error
+            else:
+                # the prompt's own status, e.g. the status of the LLM provider's error response.
+                status = (
+                    response.get("statusCode", HTTPStatus.OK.value)
+                    if isinstance(response, dict)
+                    else HTTPStatus.OK.value
+                )
+                response = {
+                    SmarterJournalApiResponseKeys.DATA: response,
+                }
             response = SmarterJournaledJsonResponse(
                 request=request,
                 data=response,
@@ -688,6 +710,9 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
                 status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
                 stack_trace=traceback.format_exc(),
+                # the exception's text is logged, and returned only to the cli.
+                description=str(e) if self.include_diagnostics else "An error occurred while processing your prompt.",
+                include_stack_trace=self.include_diagnostics,
             )
 
         # a client that accepts Server-Sent Events receives the prompt's progress, e.g. its tool

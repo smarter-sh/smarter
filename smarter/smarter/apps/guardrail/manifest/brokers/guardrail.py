@@ -64,6 +64,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -163,7 +164,7 @@ class SAMGuardrailBroker(AbstractBroker):
         self._guardrail = Guardrail.objects.filter(user_profile=self.user_profile, name=self.name).first()
         return self._guardrail
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the manifest into a dict of Django ORM Guardrail fields.
 
@@ -181,7 +182,7 @@ class SAMGuardrailBroker(AbstractBroker):
         retval["config"] = {field: getattr(config, field) for field in STRATEGY_FIELDS.get(config.strategy, [])}
         return retval
 
-    def status_for(self, guardrail: Guardrail) -> dict[str, Any]:
+    def status_for(self, guardrail: Guardrail) -> SmarterDictType:
         """Return a Guardrail's events of the last 30 days.
 
         The LLMClients that use it are reported in ``status.dependencies``.
@@ -200,7 +201,7 @@ class SAMGuardrailBroker(AbstractBroker):
             "lastTriggered": counts["last"],
         }
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """Convert the Guardrail into a manifest dict, with its status."""
         if not self.account or not self.user_profile:
             raise SAMBrokerErrorNotReady(

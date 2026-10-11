@@ -14,6 +14,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .llmclient import LLMClient
 from .llmclient_api_key import LLMClientAPIKey
@@ -501,7 +502,7 @@ class LLMClientHelper(SmarterRequestMixin):
 
         return self.is_helper_ready
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Serialize the LLMClientHelper to a dictionary.
 
@@ -509,7 +510,7 @@ class LLMClientHelper(SmarterRequestMixin):
         including key metadata and related objects such as the llmclient, account, and custom domain.
 
         :returns: A dictionary containing the serialized state of the LLMClientHelper.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         """
         # pylint: disable=C0415
         from smarter.apps.llmclient.serializers import (

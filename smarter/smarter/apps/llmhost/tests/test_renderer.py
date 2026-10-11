@@ -12,6 +12,7 @@ from smarter.apps.llmhost.services.renderer import (
     resource_name,
 )
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import spec_data
@@ -36,7 +37,7 @@ def context(
     )
 
 
-def by_kind(resources: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def by_kind(resources: list[SmarterDictType]) -> dict[str, SmarterDictType]:
     return {resource["kind"]: resource for resource in resources}
 
 
@@ -45,10 +46,10 @@ class TestRenderer(SmarterTestBase):
 
     def render(
         self, ctx: RenderContext = None, hf_token="hf_secret", api_key="api_secret"
-    ) -> dict[str, dict[str, Any]]:
+    ) -> dict[str, SmarterDictType]:
         return by_kind(render_resources(ctx or context(), hf_token=hf_token, api_key=api_key))
 
-    def container(self, resources: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    def container(self, resources: dict[str, SmarterDictType]) -> SmarterDictType:
         return resources["Deployment"]["spec"]["template"]["spec"]["containers"][0]
 
     def test_names(self):

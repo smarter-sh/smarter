@@ -20,6 +20,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
+from smarter.lib.typing import SmarterDictType
 
 CREATE_PATCH = (
     "smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.openai.chat.completions.create"
@@ -84,7 +85,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
         )
         return llmclient
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertEqual(
@@ -94,7 +95,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
-    def validate_data(self, data: dict) -> None:
+    def validate_data(self, data: SmarterDictType) -> None:
         config_fields = [
             "request",
             "response",

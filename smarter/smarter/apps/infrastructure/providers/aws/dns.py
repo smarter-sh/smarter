@@ -11,6 +11,8 @@ translates between Route53's hosted zones and record sets and the provider-indep
 
 from typing import TYPE_CHECKING, Any, Optional
 
+from smarter.lib.typing import SmarterDictType
+
 from ...services.dns import DNSRecord, DNSService, DNSZone
 from .helpers.route53 import AWSRoute53, hosted_zone_id
 
@@ -22,7 +24,7 @@ def _unquote(value: str) -> str:
     return value[1:-1] if len(value) >= 2 and value.startswith('"') and value.endswith('"') else value
 
 
-def to_record(record_set: dict[str, Any]) -> DNSRecord:
+def to_record(record_set: SmarterDictType) -> DNSRecord:
     """A Route53 record set as a :class:`DNSRecord`.
 
     TXT values are unquoted.
@@ -40,12 +42,12 @@ def to_record(record_set: dict[str, Any]) -> DNSRecord:
     )
 
 
-def to_record_set(record: DNSRecord) -> dict[str, Any]:
+def to_record_set(record: DNSRecord) -> SmarterDictType:
     """A :class:`DNSRecord` as a Route53 record set.
 
     TXT values are quoted, as Route53 requires.
     """
-    record_set: dict[str, Any] = {"Name": record.name, "Type": record.type}
+    record_set: SmarterDictType = {"Name": record.name, "Type": record.type}
     if record.alias:
         record_set["AliasTarget"] = record.alias
         return record_set
@@ -57,7 +59,7 @@ def to_record_set(record: DNSRecord) -> dict[str, Any]:
     return record_set
 
 
-def to_zone(hosted_zone: dict[str, Any], delegation_set: Optional[dict[str, Any]] = None) -> DNSZone:
+def to_zone(hosted_zone: SmarterDictType, delegation_set: Optional[SmarterDictType] = None) -> DNSZone:
     """A Route53 hosted zone, and optionally its delegation set, as a :class:`DNSZone`."""
     return DNSZone(
         id=hosted_zone_id(hosted_zone["Id"]),

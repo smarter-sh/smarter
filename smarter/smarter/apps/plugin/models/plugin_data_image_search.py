@@ -12,12 +12,11 @@ from typing import Any, Optional, Union
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.image_search_plugin.const import (
     DEFAULT_API_KEY_SECRET_NAME,
-    DEFAULT_CACHE_TTL,
     DEFAULT_COUNT,
     DEFAULT_TIMEOUT,
-    MAX_CACHE_TTL,
     MAX_COUNT,
     MAX_DIMENSION,
     MAX_QUERY_LENGTH,
@@ -40,6 +39,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
@@ -155,8 +155,8 @@ class PluginDataImageSearch(PluginDataBase):
         help_text="Seconds to wait for each web request.",
     )
     cache_ttl = models.PositiveIntegerField(
-        default=DEFAULT_CACHE_TTL,
-        validators=[MaxValueValidator(MAX_CACHE_TTL)],
+        default=PluginCacheTtl.IMAGE_SEARCH,
+        validators=[MaxValueValidator(PluginCacheTtl.IMAGE_SEARCH)],
         help_text="Seconds to cache search results. 0 disables caching.",
     )
 
@@ -179,8 +179,8 @@ class PluginDataImageSearch(PluginDataBase):
         return [item for item in (self.file_type or "").split("|") if item]
 
     def search_params(
-        self, query: Optional[str] = None, count: Optional[int] = None, llm_params: Optional[dict[str, Any]] = None
-    ) -> dict[str, Any]:
+        self, query: Optional[str] = None, count: Optional[int] = None, llm_params: Optional[SmarterDictType] = None
+    ) -> SmarterDictType:
         """
         Return the Brave Image Search API query parameters.
 
@@ -202,7 +202,7 @@ class PluginDataImageSearch(PluginDataBase):
             if isinstance(llm_params.get("spellcheck"), bool):
                 spellcheck = llm_params["spellcheck"]
         max_count = MAX_COUNT if self.llm_search_params else self.count
-        retval: dict[str, Any] = {
+        retval: SmarterDictType = {
             "q": terms[:MAX_QUERY_LENGTH] or None,
             "count": max(1, min(count or self.count, max_count)),
             "country": country.upper() if country else None,
@@ -229,7 +229,7 @@ class PluginDataImageSearch(PluginDataBase):
             ("min_width", self.min_width, 1, MAX_DIMENSION, True),
             ("min_height", self.min_height, 1, MAX_DIMENSION, True),
             ("timeout", self.timeout, 1, MAX_TIMEOUT, False),
-            ("cache_ttl", self.cache_ttl, 0, MAX_CACHE_TTL, False),
+            ("cache_ttl", self.cache_ttl, 0, PluginCacheTtl.IMAGE_SEARCH, False),
         ):
             if optional and value is None:
                 continue
@@ -254,7 +254,7 @@ class PluginDataImageSearch(PluginDataBase):
             raise SmarterValueError(str(e)) from e
         super().save(*args, **kwargs)
 
-    def data(self, params: Optional[dict] = None) -> dict[str, Any]:
+    def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Return the configuration of the plugin, without its api key.
 
@@ -270,7 +270,7 @@ class PluginDataImageSearch(PluginDataBase):
             "validate_urls": self.validate_urls,
         }
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> dict[str, Any]:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Return the configuration of the plugin, without its api key.
 
@@ -279,7 +279,7 @@ class PluginDataImageSearch(PluginDataBase):
         """
         return self.data(params)
 
-    def manifest_data(self) -> dict[str, Any]:
+    def manifest_data(self) -> SmarterDictType:
         """
         Return the ``spec.imageSearchData`` section of the plugin manifest.
 

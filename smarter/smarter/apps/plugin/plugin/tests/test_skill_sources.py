@@ -32,6 +32,7 @@ from smarter.apps.plugin.plugin.skill_sources import (
     validate_public_https_url,
 )
 from smarter.lib import json
+from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (
@@ -80,6 +81,22 @@ def resolves_to(*addresses):
 
 class TestSkillSources(SmarterTestBase):
     """Test the retrieval of remote skills."""
+
+    def setUp(self):
+        super().setUp()
+        # retrieved skills are cached, and these tests serve different content at the same urls.
+        lazy_cache.clear()
+
+    def test_retrieve_skill_is_cached(self):
+        """Test that a retrieved skill is cached, so that its files are not downloaded again."""
+        host = FakeSkillHost()
+        with mock_skill_host(host):
+            first = retrieve_skill(SKILL_REMOTE_URL)
+            requests = len(host.requested)
+            second = retrieve_skill(SKILL_REMOTE_URL)
+        self.assertEqual(len(host.requested), requests)
+        self.assertEqual(second.document, first.document)
+        self.assertEqual(second.resources, first.resources)
 
     # =========================================================================
     # validate_public_https_url()

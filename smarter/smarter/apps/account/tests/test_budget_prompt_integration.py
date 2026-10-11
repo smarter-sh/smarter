@@ -27,6 +27,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
 )
 from smarter.common.conf import smarter_settings
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 SYSTEM_ROLE = "You are a helpful assistant."
 CREATE_PATCH = (
@@ -125,7 +126,7 @@ class TestBudgetPromptIntegration(TestAccountMixin):
             default_model="gpt-6-luna",
         )
 
-    def data(self) -> dict:
+    def data(self) -> SmarterDictType:
         return {
             "session_key": self.prompt.session_key,
             "messages": [{"role": "system", "content": SYSTEM_ROLE}, {"role": "user", "content": "Hello"}],
