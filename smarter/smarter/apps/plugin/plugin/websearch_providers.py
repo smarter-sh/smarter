@@ -40,6 +40,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from . import safe_http
 
@@ -104,9 +105,9 @@ class SearchResult:
         """The host of the result's URL."""
         return url_host(self.url)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> SmarterDictType:
         """Return the result as a dict for the LLM, omitting empty fields."""
-        retval: dict[str, Any] = {"title": self.title, "url": self.url, "snippet": self.snippet}
+        retval: SmarterDictType = {"title": self.title, "url": self.url, "snippet": self.snippet}
         if self.published:
             retval["published"] = self.published
         return retval
@@ -237,7 +238,7 @@ class SearchProvider(ABC):
         """
 
     @abstractmethod
-    def parse(self, data: dict[str, Any]) -> list[SearchResult]:
+    def parse(self, data: SmarterDictType) -> list[SearchResult]:
         """Parse the web search API response."""
 
 
@@ -258,7 +259,7 @@ class BraveSearchProvider(SearchProvider):
         operators = self.site_operators(request.policy)
         if operators:
             query = f"{query} {operators}"
-        params: dict[str, Any] = {
+        params: SmarterDictType = {
             "q": query,
             # request extra results, since some may be removed by the domain policy
             "count": min(20, request.max_results * 2),
@@ -278,7 +279,7 @@ class BraveSearchProvider(SearchProvider):
             max_bytes=MAX_RESPONSE_BYTES,
         )
 
-    def parse(self, data: dict[str, Any]) -> list[SearchResult]:
+    def parse(self, data: SmarterDictType) -> list[SearchResult]:
         web = data.get("web") or {}
         results = web.get("results") if isinstance(web, dict) else None
         return [
@@ -310,7 +311,7 @@ class TavilySearchProvider(SearchProvider):
 
     def request(self, request: SearchRequest, api_key_secret_id: Optional[int]) -> safe_http.SafeResponse:
         api_key = self.api_key(api_key_secret_id)
-        body: dict[str, Any] = {
+        body: SmarterDictType = {
             "query": request.query,
             "max_results": min(20, request.max_results * 2),
             "topic": "general",
@@ -337,7 +338,7 @@ class TavilySearchProvider(SearchProvider):
             max_bytes=MAX_RESPONSE_BYTES,
         )
 
-    def parse(self, data: dict[str, Any]) -> list[SearchResult]:
+    def parse(self, data: SmarterDictType) -> list[SearchResult]:
         return [
             SearchResult(
                 title=clean_text(item.get("title"), MAX_TITLE_LENGTH),

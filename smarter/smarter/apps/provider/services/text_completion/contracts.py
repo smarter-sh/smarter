@@ -15,6 +15,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from smarter.lib.typing import SmarterDictType
+
 
 # ----------------------------------------------------------------------
 # Pipeline stage
@@ -68,7 +70,7 @@ class FunctionParameter(BaseModel):
     :vartype type: str or None
     :ivar properties: The JSON Schema ``properties`` mapping for the
         function's parameters.
-    :vartype properties: dict[str, typing.Any]
+    :vartype properties: SmarterDictType
     :ivar required: Names of parameters that are required.
     :vartype required: list[str]
     """
@@ -76,7 +78,7 @@ class FunctionParameter(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     type: str | None = None
-    properties: dict[str, Any] = Field(default_factory=dict)
+    properties: SmarterDictType = Field(default_factory=dict)
     required: list[str] = Field(default_factory=list)
 
 
@@ -188,9 +190,9 @@ class ChoiceMessage(BaseModel):
     :vartype refusal: str or None
     :ivar function_call: A legacy single function call, if the model
         invoked one.
-    :vartype function_call: dict[str, typing.Any] or None
+    :vartype function_call: SmarterDictType or None
     :ivar tool_calls: One or more tool calls, if the model invoked any.
-    :vartype tool_calls: list[dict[str, typing.Any]] or None
+    :vartype tool_calls: list[SmarterDictType] or None
     """
 
     model_config = ConfigDict(extra="allow")
@@ -198,8 +200,8 @@ class ChoiceMessage(BaseModel):
     role: str
     content: str | None = None
     refusal: str | None = None
-    function_call: dict[str, Any] | None = None
-    tool_calls: list[dict[str, Any]] | None = None
+    function_call: SmarterDictType | None = None
+    tool_calls: list[SmarterDictType] | None = None
 
 
 class Choice(BaseModel):
@@ -237,7 +239,7 @@ class PostCompletionPayload(BaseModel):
     :vartype api: str or None
     :ivar metadata: Provider- or platform-specific metadata attached to
         the response.
-    :vartype metadata: dict[str, typing.Any]
+    :vartype metadata: SmarterDictType
     """
 
     model_config = ConfigDict(extra="allow")
@@ -247,7 +249,7 @@ class PostCompletionPayload(BaseModel):
     choices: list[Choice] = Field(default_factory=list)
     usage: Usage | None = None
     api: str | None = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: SmarterDictType = Field(default_factory=dict)
 
 
 # ----------------------------------------------------------------------
@@ -412,7 +414,7 @@ class PipelineResult(BaseModel):
     :ivar payload: The (possibly redacted/transformed) payload the
         Harness should use going forward; identical to the input
         payload when ``disposition`` is ``ALLOWED``.
-    :vartype payload: dict[str, typing.Any]
+    :vartype payload: SmarterDictType
     :ivar fallback_message: The user-facing message to show when
         ``disposition`` is ``BLOCKED``; ``None`` otherwise.
     :vartype fallback_message: str or None
@@ -434,7 +436,7 @@ class PipelineResult(BaseModel):
 
     stage: GuardrailStage
     disposition: PipelineDisposition
-    payload: dict[str, Any]
+    payload: SmarterDictType
     fallback_message: str | None = None
     outcomes: list[GuardrailOutcome] = Field(default_factory=list)
     guardrails_evaluated: int = 0

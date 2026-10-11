@@ -1,4 +1,4 @@
-"""Smarter API Manifest - Connection.spec"""
+"""Smarter API Manifest - Connection.spec."""
 
 from enum import Enum
 from typing import Any, List, Optional, Union
@@ -10,9 +10,7 @@ from smarter.lib.django.validators import SmarterValidator
 
 
 class UrlParam(BaseModel):
-    """
-    Model for storing url param k-v pairs.
-    """
+    """Model for storing url param k-v pairs."""
 
     key: str = Field(..., description="The key (ie 'name') of the url param.")
     value: Union[str, int, float, bool] = Field(..., description="The value for the key.")
@@ -33,9 +31,7 @@ class UrlParam(BaseModel):
 
 
 class RequestHeader(BaseModel):
-    """
-    Model for storing HTTP request headers.
-    """
+    """Model for storing HTTP request headers."""
 
     name: str = Field(..., description="The name of the HTTP header.")
     value: Union[str, int, float, bool] = Field(..., description="The value of the HTTP header.")
@@ -86,7 +82,9 @@ class ParameterType(str, Enum):
 
 class Parameter(BaseModel):
     """
-    Parameter class for parameterized Connections. This structure is
+    Parameter class for parameterized Connections.
+
+    This structure is
     intended to match that which is used in the OpenAPI
     function calling specification.
     It is used to define the parameters that a connection can accept,
@@ -107,7 +105,7 @@ class Parameter(BaseModel):
         default=None,
         description="A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
     )
-    default: Optional[Any] = Field(None, description="The default value of the parameter, if any.")
+    default: Any = Field(None, description="The default value of the parameter, if any.")
 
     @field_validator("default")
     def validate_default(cls, v):

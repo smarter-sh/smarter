@@ -101,6 +101,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 from .safe_http import SafeHttpError, fetch
@@ -398,7 +399,7 @@ class ImageSearchPlugin(PluginBase):
         return PluginImageSearchSerializer
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic manifest into a Django ORM-compatible dictionary.
 
@@ -447,7 +448,7 @@ class ImageSearchPlugin(PluginBase):
         return " ".join(sentences)
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
+    def custom_tool(self) -> Optional[SmarterDictType]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -476,7 +477,7 @@ class ImageSearchPlugin(PluginBase):
         if not self.ready or not self.plugin_data:
             return None
         plugin_data = self.plugin_data
-        properties: dict[str, Any] = {
+        properties: SmarterDictType = {
             "query": {
                 "type": "string",
                 "maxLength": MAX_QUERY_LENGTH,
@@ -530,7 +531,7 @@ class ImageSearchPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Use Pydantic models to generate an example manifest for an ImageSearchPlugin.
 
@@ -622,7 +623,7 @@ class ImageSearchPlugin(PluginBase):
             )
         return value
 
-    def brave_images(self, search_params: dict[str, Any]) -> list[ImageResult]:
+    def brave_images(self, search_params: SmarterDictType) -> list[ImageResult]:
         """
         Search the Brave Image Search API.
 
@@ -773,7 +774,7 @@ class ImageSearchPlugin(PluginBase):
                     return retval
         return retval
 
-    def search(self, query: str, count: Any = None, llm_params: Optional[dict[str, Any]] = None) -> list[str]:
+    def search(self, query: str, count: Any = None, llm_params: Optional[SmarterDictType] = None) -> list[str]:
         """
         Search for images.
 
@@ -795,8 +796,8 @@ class ImageSearchPlugin(PluginBase):
         return self.validated_urls(images, search_params["count"])
 
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], str, None]
-    ) -> Union[dict, list, str]:
+        self, function_args: Union[SmarterDictType, str, None]
+    ) -> Union[SmarterDictType, list, str]:
         """
         Search for images in response to a tool call.
 
@@ -843,7 +844,7 @@ class ImageSearchPlugin(PluginBase):
         )
         return retval
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the ImageSearchPlugin to a JSON-compatible dictionary suitable for Pydantic import.
 

@@ -31,6 +31,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-management-commands`          | You're writing a `manage.py` command or adding built-in data.               |
 | `smarter-api-testing`                  | You're testing the REST API by hand against the local dev server.           |
 | `smarter-docstrings`                   | You're writing Python docstrings, which Sphinx publishes.                   |
+| `smarter-python-typing`                | You're writing type annotations, especially with `Any`.                     |
 | `smarter-sphinx-docs`                  | You're editing `docs/source`.                                               |
 | `smarter-code-quality`                 | You're about to finish a change and need to run the pre-commit hooks.       |
 | `smarter-git-commits`                  | You've been asked to write a commit message.                                |

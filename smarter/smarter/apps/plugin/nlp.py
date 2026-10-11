@@ -3,7 +3,7 @@
 import re
 import string
 from functools import lru_cache
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import Levenshtein
 
@@ -11,6 +11,9 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 from .signals import search_term_matched
+
+if TYPE_CHECKING:
+    from nltk.corpus.util import LazyCorpusLoader
 
 logger = logging.getLogger(__name__)
 
@@ -332,7 +335,7 @@ def within_levenshtein_distance(prompt: str, search_term: str, threshold: Option
 
 
 @lru_cache(maxsize=1)
-def wordnet() -> Optional[Any]:
+def wordnet() -> Optional["LazyCorpusLoader"]:
     """
     Return the WordNet corpus reader, loading the corpus on first use.
 

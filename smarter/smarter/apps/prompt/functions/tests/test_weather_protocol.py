@@ -10,6 +10,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..function_weather.protocol import OpenMeteoRequestsError, get_current_weather
@@ -24,7 +25,7 @@ def tool_call(arguments: str = '{"location": "Cambridge, MA"}') -> ChatCompletio
     return ChatCompletionMessageToolCall(id="test_weather_protocol", function=function, type="function")
 
 
-def geocode_result(lat: float = 42.36, lng: float = -71.08) -> list[dict]:
+def geocode_result(lat: float = 42.36, lng: float = -71.08) -> list[SmarterDictType]:
     """Return a Google Maps geocode() result."""
     return [{"geometry": {"location": {"lat": lat, "lng": lng}}, "formatted_address": "Cambridge, MA, USA"}]
 

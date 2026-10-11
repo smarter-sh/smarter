@@ -6,7 +6,7 @@ store the personal data or secret that the guardrail detected: personal data kee
 four characters, and secrets only their length.
 """
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from smarter.apps.guardrail.models import (
     Guardrail,
@@ -19,6 +19,9 @@ from smarter.apps.provider.services.text_completion.contracts import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+
+if TYPE_CHECKING:
+    from smarter.apps.llmclient.models import LLMClient
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
@@ -74,7 +77,7 @@ def record_event(  # pylint: disable=too-many-arguments
     finding: Optional[GuardrailFinding] = None,
     segment_text: Optional[str] = None,
     error: Optional[str] = None,
-    llmclient: Any = None,
+    llmclient: Optional["LLMClient"] = None,
     session_key: Optional[str] = None,
 ) -> Optional[GuardrailEvent]:
     """

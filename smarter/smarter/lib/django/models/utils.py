@@ -1,5 +1,5 @@
 """
-smarter.lib.django.models.utils
+Smarter.lib.django.models.utils
 ================================
 
 This module provides utility functions for working with Django ORM base models and related data structures.
@@ -21,6 +21,7 @@ These utilities are intended to simplify common data manipulation tasks in Djang
 from typing import Optional
 
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__)
 cache_prefix = f"{__name__}."
@@ -48,7 +49,7 @@ def dict_key_cleaner(key: str) -> str:
     return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
 
 
-def dict_keys_to_list(data: dict, keys=None) -> list[str]:
+def dict_keys_to_list(data: SmarterDictType, keys=None) -> list[str]:
     """
     Recursively extract all keys from a nested dictionary.
 
@@ -82,7 +83,7 @@ def dict_keys_to_list(data: dict, keys=None) -> list[str]:
     return keys
 
 
-def list_of_dicts_to_list(data: list[dict]) -> Optional[list[str]]:
+def list_of_dicts_to_list(data: list[SmarterDictType]) -> Optional[list[str]]:
     """
     Convert a list of dictionaries into a list of cleaned keys extracted from the first key in each dict.
 
@@ -114,9 +115,10 @@ def list_of_dicts_to_list(data: list[dict]) -> Optional[list[str]]:
     return retval
 
 
-def list_of_dicts_to_dict(data: list[dict]) -> Optional[dict]:
+def list_of_dicts_to_dict(data: list[SmarterDictType]) -> Optional[SmarterDictType]:
     """
-    Convert a list of dictionaries into a single dict with keys extracted
+    Convert a list of dictionaries into a single dict with keys extracted.
+
     from the first key in the first dict.
 
     This function iterates over a list of dictionaries, extracts the value of the first key in each dictionary,

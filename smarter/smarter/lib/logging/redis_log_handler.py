@@ -1,5 +1,5 @@
 """
-smarter.lib.logging.redis_log_handler
+Smarter.lib.logging.redis_log_handler
 =====================================
 
 This module provides a custom logging handler for publishing log records to Redis channels,
@@ -74,7 +74,6 @@ Example Usage
     logger.addHandler(RedisLogHandler())
 
     logger.info("This log will be published to Redis.")
-
 """
 
 import atexit
@@ -83,12 +82,15 @@ import queue
 import threading
 import uuid
 from contextvars import ContextVar
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
 
 from smarter.lib import json, logging
+
+if TYPE_CHECKING:
+    from redis import Redis
 
 CONTEXT_NAME = "user_id"
 CHANNEL_PREFIX = "logs"
@@ -190,7 +192,7 @@ def get_user_context(user: Any) -> str:
     return f"{user.__class__.__name__}.{username}"
 
 
-def get_redis_cache() -> Any:
+def get_redis_cache() -> Optional["Redis"]:
     """
     Lazily retrieves the configured Redis cache connection.
 
@@ -254,9 +256,7 @@ def flush(buffer) -> None:
 
 
 def purge_log_context(context: str):
-    """
-    Delete the Redis stream for a specific logging context.
-    """
+    """Delete the Redis stream for a specific logging context."""
     cache = get_redis_cache()
     if cache is None:
         raise RuntimeError("Redis cache is not available")
@@ -267,7 +267,8 @@ def purge_log_context(context: str):
 
 def redis_worker() -> None:
     """
-    Worker function that continuously processes log entries from the queue
+    Worker function that continuously processes log entries from the queue.
+
     and publishes them to Redis channels. This function runs in a separate
     thread and handles batching of log entries for efficiency.
 
@@ -356,7 +357,6 @@ class RedisLogHandler(logging.Handler):
 
     If the internal log queue is full, log records may be dropped. The number of dropped logs is tracked by
     the class variable dropped_logs, and a message is printed every 100 dropped logs.
-
 
     See Also
     --------

@@ -74,6 +74,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
 from smarter.lib.cache import lazy_cache
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import FakeWebHost, PluginTestBase, get_test_data, mock_web_host
 
@@ -97,9 +98,11 @@ HOTLINK = "https://images.example.com/hotlink"
 """An image url without a file extension, whose response is a web page."""
 
 
-def brave_result(image_url: Optional[str], page_url: str = "https://site.example/page", width: Any = 800) -> dict:
+def brave_result(
+    image_url: Optional[str], page_url: str = "https://site.example/page", width: Any = 800
+) -> SmarterDictType:
     """Return a Brave Image Search API result."""
-    result: dict[str, Any] = {"type": "image_result", "title": "An image", "url": page_url}
+    result: SmarterDictType = {"type": "image_result", "title": "An image", "url": page_url}
     if image_url is not None:
         result["properties"] = {"url": image_url, "placeholder": "https://imgs.search.brave.com/p", "width": width}
     result["thumbnail"] = {"src": "https://imgs.search.brave.com/thumbnail"}
@@ -151,7 +154,7 @@ class TestImageSearchPlugin(PluginTestBase):
     sql_fixtures = False
     api_fixtures = False
 
-    image_search_yaml: dict
+    image_search_yaml: SmarterDictType
     image_search_plugin: ImageSearchPlugin
     api_key_secret = None
 
@@ -180,7 +183,7 @@ class TestImageSearchPlugin(PluginTestBase):
         super().tearDownClass()
 
     @classmethod
-    def image_search_manifest_dict(cls, name: str, **image_search_data) -> dict[str, Any]:
+    def image_search_manifest_dict(cls, name: str, **image_search_data) -> SmarterDictType:
         """Return an ImageSearchPlugin manifest dict, optionally replacing its imageSearchData fields."""
         data = copy.deepcopy(cls.image_search_yaml)
         data["metadata"]["name"] = name
@@ -215,7 +218,7 @@ class TestImageSearchPlugin(PluginTestBase):
         return retval, fake
 
     @staticmethod
-    def brave_calls(fake: FakeWebHost) -> list[dict[str, Any]]:
+    def brave_calls(fake: FakeWebHost) -> list[SmarterDictType]:
         """Return the requests that were made to the Brave Image Search API."""
         return [call for call in fake.calls if call["url"] == BRAVE_IMAGE_SEARCH_URL]
 

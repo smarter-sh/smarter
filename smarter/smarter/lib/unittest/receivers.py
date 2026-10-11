@@ -10,6 +10,8 @@ from types import ModuleType
 from typing import Callable, Iterator
 from unittest.mock import MagicMock, patch
 
+from smarter.lib.typing import SmarterDictType
+
 
 class ReceiversTestMixin:
     """Call each receiver of ``receivers_module`` with mock arguments."""
@@ -38,7 +40,7 @@ class ReceiversTestMixin:
             if parameters and parameters[0] == "sender":
                 yield name, function
 
-    def mock_arguments(self, function: Callable) -> dict:
+    def mock_arguments(self, function: Callable) -> SmarterDictType:
         arguments = {}
         for name, parameter in inspect.signature(function).parameters.items():
             if name == "sender" or parameter.kind in (parameter.VAR_KEYWORD, parameter.VAR_POSITIONAL):

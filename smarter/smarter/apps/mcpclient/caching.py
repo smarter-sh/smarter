@@ -48,6 +48,7 @@ from smarter.apps.account.models.user_profile import UserProfile
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .connection import MCPServerCatalog, MCPServerConnection, is_tool_allowed
 from .exceptions import SmarterMCPClientConnectionError
@@ -293,7 +294,9 @@ def connect(mcpclient: MCPClient) -> MCPServerCatalog:
     return catalog
 
 
-def cached_catalog_functions(mcpclient: MCPClient) -> tuple[Callable[[int, str], dict], Callable[[int, str], dict]]:
+def cached_catalog_functions(
+    mcpclient: MCPClient,
+) -> tuple[Callable[[int, str], SmarterDictType], Callable[[int, str], SmarterDictType]]:
     """
     Return the cached functions behind an MCPClient's catalog.
 
@@ -312,14 +315,14 @@ def cached_catalog_functions(mcpclient: MCPClient) -> tuple[Callable[[int, str],
     """
 
     @cache_results(timeout=min(FAILURE_CACHE_TTL, mcpclient.cache_ttl))
-    def get_cached_connection_result(mcpclient_id: int, fingerprint: str) -> dict:
+    def get_cached_connection_result(mcpclient_id: int, fingerprint: str) -> SmarterDictType:
         try:
             return {"catalog": connect(mcpclient).to_dict()}
         except SmarterMCPClientConnectionError as e:
             return {"error": e.message}
 
     @cache_results(timeout=mcpclient.cache_ttl)
-    def get_cached_catalog_data(mcpclient_id: int, fingerprint: str) -> dict:
+    def get_cached_catalog_data(mcpclient_id: int, fingerprint: str) -> SmarterDictType:
         result = get_cached_connection_result(mcpclient_id, fingerprint)
         if "error" in result:
             # raise rather than return so that a failure is cached for FAILURE_CACHE_TTL seconds only.

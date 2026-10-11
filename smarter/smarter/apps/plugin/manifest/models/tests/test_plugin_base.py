@@ -55,6 +55,7 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ logger = logging.getLogger(__name__)
 class TestPluginBase(TestAccountMixin):
     """Test plugin base class."""
 
-    data: dict
+    data: SmarterDictType
     kind: str
     plugin_class: PluginType
     plugin_data: PluginDataType

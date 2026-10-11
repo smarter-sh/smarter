@@ -62,6 +62,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.typing import SmarterDictType
 
 from .cluster import ClusterBackend, get_cluster
 from .compute import ComputeProvisioner, ComputeState, computes_for, resolve_compute
@@ -147,7 +148,7 @@ class LLMHostService:
         name: Optional[str] = None,
         token_secret: Optional[str] = None,
         user_profile: Optional[UserProfile] = None,
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """
         Draft an LLMHost manifest for a model in a catalog, sized for its GPU memory.
 
@@ -264,7 +265,7 @@ class LLMHostService:
 
     # --- launch -------------------------------------------------------------------
 
-    def plan(self, llmhost: LLMHost) -> list[dict[str, Any]]:
+    def plan(self, llmhost: LLMHost) -> list[SmarterDictType]:
         """
         Preview the Kubernetes resources that :meth:`launch` would apply.
 
@@ -473,7 +474,7 @@ class LLMHostService:
         tail = max(1, min(int(tail), MAX_LOG_LINES))
         return self.cluster.logs(label_selector(self.base_name(llmhost)), container=CONTAINER_NAME, tail=tail) or ""
 
-    def report(self, llmhosts: Iterable[LLMHost]) -> dict[str, Any]:
+    def report(self, llmhosts: Iterable[LLMHost]) -> SmarterDictType:
         """Summarize LLMHosts' status, GPUs and cost.
 
         See :func:`~smarter.apps.llmhost.services.observability.build_report`.

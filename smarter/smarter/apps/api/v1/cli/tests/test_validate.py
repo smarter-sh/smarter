@@ -9,6 +9,7 @@ import yaml
 
 from smarter.apps.guardrail.models import Guardrail
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
 
@@ -39,14 +40,14 @@ class TestApiCliV1Validate(ApiV1CliTestBase):
         self.manifest["metadata"]["name"] = "test_cli_validate"
         self.addCleanup(Guardrail.objects.filter(name="test_cli_validate").delete)
 
-    def validate(self, manifest: dict) -> dict:
+    def validate(self, manifest: SmarterDictType) -> SmarterDictType:
         """Validate a manifest, and return the response's data."""
         response, status = self.get_response(path=self.path, data=manifest)
         self.assertEqual(status, HTTPStatus.OK, response)
         self.assertEqual(response[SmarterJournalApiResponseKeys.METADATA]["command"], "validate")
         return response[SmarterJournalApiResponseKeys.DATA]
 
-    def locs(self, data: dict) -> list[list[str]]:
+    def locs(self, data: SmarterDictType) -> list[list[str]]:
         return [error["loc"] for error in data["errors"]]
 
     def test_valid(self):

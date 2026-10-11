@@ -54,6 +54,10 @@ inside the `smarter-app` container.
 8. **Model structured data with Pydantic, not raw JSON.** Any sizable JSON that
    code builds, returns or reads gets a Pydantic model. No `list[Any]` or
    `dict[str, Any]` stand-ins. See [Pydantic over JSON](#pydantic-over-json).
+9. **`Any` only when the value really can be anything.** If you can list the
+   types a value can have, annotate with them. Repeated constructions use the
+   `Smarter...Type` aliases in `smarter.lib.typing` (e.g. `SmarterDictType`
+   for `dict[str, Any]`). See `smarter-python-typing`.
 
 ## Pattern-first workflow
 
@@ -172,6 +176,7 @@ reference implementations.
 | `manage.py` commands, built-in data, `initialize_platform`      | `smarter-management-commands`          |
 | Probing the REST API by hand                                    | `smarter-api-testing`                  |
 | Python docstrings                                               | `smarter-docstrings`                   |
+| Type annotations, `Any`, the `smarter.lib.typing` aliases       | `smarter-python-typing`                |
 | Sphinx pages                                                    | `smarter-sphinx-docs`                  |
 | Lint, format, pre-commit                                        | `smarter-code-quality`                 |
 | Writing a commit message                                        | `smarter-git-commits`                  |

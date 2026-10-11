@@ -14,6 +14,7 @@ from smarter.apps.dashboard.views.views.api.activity import (
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.lib import json
 from smarter.lib.journal.models import SAMJournal
+from smarter.lib.typing import SmarterDictType
 
 from ..const import namespace
 
@@ -40,7 +41,7 @@ class TestActivityApiView(TestAccountMixin):
         self.addCleanup(entry.delete)
         return entry
 
-    def activity(self) -> dict:
+    def activity(self) -> SmarterDictType:
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
         return json.loads(response.content)

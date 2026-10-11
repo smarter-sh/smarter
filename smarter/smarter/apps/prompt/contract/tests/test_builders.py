@@ -17,6 +17,7 @@ from smarter.apps.prompt.contract.builders import (
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1, CHAT_CONTRACT_V2
 from smarter.apps.prompt.contract.models import PromptChatApiPromptResponse
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -30,7 +31,7 @@ class TestContractBuilders(SmarterTestBase):
         super().setUpClass()
         cls.responses = cls.get_readonly_yaml_file(os.path.join(HERE, "data", "prompt_responses.yaml"))
 
-    def lambda_response(self, name: str) -> dict:
+    def lambda_response(self, name: str) -> SmarterDictType:
         """A prompt's Lambda style result from the fixtures, with its body as a JSON string."""
         response = dict(self.responses[name])
         response["body"] = json.dumps(response["body"])

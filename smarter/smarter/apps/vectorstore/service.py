@@ -38,6 +38,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterException, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .backends import (
     SEARCH_TYPES,
@@ -225,7 +226,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             vectorstore.save(update_fields=["last_checked_at", "updated_at"])
         return vectorstore.status
 
-    def refresh_stats(self) -> dict[str, Any]:
+    def refresh_stats(self) -> SmarterDictType:
         stats = self.backend.stats()
         self.vectorstore.stats = stats
         self.vectorstore.vector_count = int(stats.get("vector_count") or 0)
@@ -283,7 +284,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         text: Optional[str] = None,
         content_type: Optional[str] = None,
         source: str = VectorstoreDocumentSource.UPLOAD,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: Optional[SmarterDictType] = None,
     ) -> tuple[VectorstoreDocument, bool]:
         """
         Extract and store a document's text.
@@ -325,11 +326,11 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             chunk_overlap=embeddings_spec.get("chunkOverlap") or DEFAULT_CHUNK_OVERLAP,
         )
 
-    def chunks(self, document: VectorstoreDocument) -> tuple[list[str], list[dict[str, Any]]]:
+    def chunks(self, document: VectorstoreDocument) -> tuple[list[str], list[SmarterDictType]]:
         """A document's chunks, and their metadata: the document's, and where the chunk came from."""
         splitter = self.text_splitter()
         texts: list[str] = []
-        metadatas: list[dict[str, Any]] = []
+        metadatas: list[SmarterDictType] = []
         pages = document.pages
         for page_number, page in enumerate(pages, start=1):
             for text in splitter.split_text(page):
@@ -394,7 +395,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         score_threshold: Optional[float] = None,
         fetch_k: Optional[int] = None,
         lambda_mult: Optional[float] = None,
-        metadata_filter: Optional[dict[str, Any]] = None,
+        metadata_filter: Optional[SmarterDictType] = None,
     ) -> list[SearchResult]:
         """Find the chunks closest in meaning to a query.
 
@@ -499,7 +500,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             updated_at__lt=cutoff,
         )
 
-    def maintain(self, now=None) -> dict[str, Any]:
+    def maintain(self, now=None) -> SmarterDictType:
         """
         The scheduled maintenance of a ready database.
 
@@ -509,7 +510,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         :returns: what was done.
         """
         now = now or timezone.now()
-        result: dict[str, Any] = {"status": self.reconcile(), "snapshot": None, "pruned": 0, "retry": []}
+        result: SmarterDictType = {"status": self.reconcile(), "snapshot": None, "pruned": 0, "retry": []}
         if result["status"] != VectorstoreStatus.READY or not self.vectorstore.is_active:
             return result
         if self.snapshot_due(now):

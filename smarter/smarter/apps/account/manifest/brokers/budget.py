@@ -55,6 +55,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -104,7 +105,7 @@ class SAMBudgetBrokerError(SAMBrokerError):
         return "Smarter API Budget Manifest Broker Error"
 
 
-def resource_to_manifest(resource_locator: str) -> dict[str, Any]:
+def resource_to_manifest(resource_locator: str) -> SmarterDictType:
     """A resource as a spec.resources entry: its kind and name if it has them, else its record locator."""
     resource = resolve_resource(resource_locator)
     if isinstance(resource, Account):
@@ -253,7 +254,7 @@ class SAMBudgetBroker(AbstractBroker):
     # -------------------------------------------------------------------------
     # conversions
     # -------------------------------------------------------------------------
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the manifest into a dict of Django ORM Budget fields.
 
@@ -269,7 +270,7 @@ class SAMBudgetBroker(AbstractBroker):
         retval["message"] = retval["message"] or ""
         return retval
 
-    def status_for(self, budget: Budget) -> list[dict[str, Any]]:
+    def status_for(self, budget: Budget) -> list[SmarterDictType]:
         """The budget versus the actual spending of each resource that the user may see."""
         retval = []
         for constraint in budget.constraints.select_related("budget").order_by("resource_locator"):  # type: ignore[attr-defined]
@@ -294,7 +295,7 @@ class SAMBudgetBroker(AbstractBroker):
             )
         return retval
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """Convert the Budget into a manifest dict, with its status."""
         budget = self.budget
         if not budget:

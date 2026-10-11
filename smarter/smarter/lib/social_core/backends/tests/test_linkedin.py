@@ -14,10 +14,11 @@ from smarter.lib.social_core.backends.linkedin import (
     LinkedinOAuth2,
     LinkedinOpenIdConnect,
 )
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-def name(value: str) -> dict:
+def name(value: str) -> SmarterDictType:
     return {"localized": {"en_US": value}, "preferredLocale": {"language": "en", "country": "US"}}
 
 
@@ -28,7 +29,7 @@ class LinkedinTestBase(SmarterTestBase):
 
     def setUp(self):
         super().setUp()
-        self.settings: dict = {}
+        self.settings: SmarterDictType = {}
         self.backend = self.backend_class(strategy=MagicMock())
         patcher = patch.object(
             self.backend_class, "setting", lambda backend, key, default=None: self.settings.get(key, default)

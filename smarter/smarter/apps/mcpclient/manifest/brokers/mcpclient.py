@@ -57,6 +57,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -193,7 +194,7 @@ class SAMMCPClientBroker(AbstractBroker):
             )
         return secret
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the manifest into a dict of Django ORM MCPClient fields.
 
@@ -218,7 +219,7 @@ class SAMMCPClientBroker(AbstractBroker):
         retval["credentials"] = self.resolve_secret(config.credentials)
         return retval
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """
         Convert the MCPClient into a manifest dict.
 

@@ -11,18 +11,20 @@ from typing import Any
 
 from pydantic.json_schema import models_json_schema
 
+from smarter.lib.typing import SmarterDictType
+
 from .const import CHAT_CONTRACT_V2, SCHEMA_PATH
 from .models import CONTRACT_MODELS
 
 SCHEMA_ID = "https://smarter.sh/schemas/chat-contract.schema.json"
 
 
-def chat_contract_schema() -> dict[str, Any]:
+def chat_contract_schema() -> SmarterDictType:
     """
     The contract's JSON Schema (draft 2020-12): one definition, in ``$defs``, per model.
 
     :returns: The schema.
-    :rtype: dict[str, Any]
+    :rtype: SmarterDictType
     """
     _, schema = models_json_schema(
         [(model, "validation") for model in CONTRACT_MODELS],

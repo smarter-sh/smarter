@@ -18,6 +18,7 @@ from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
 # python stuff
 from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ class TestAPIKeyViewRequests(TestAccountMixin):
             f"{DashboardNamedUrls.namespace}:{DashboardNamedUrls.ACCOUNT_API_KEY_NEW}", args=[key_id, new_api_key]
         )
 
-    def patch_json(self, data: dict, key_id=None):
+    def patch_json(self, data: SmarterDictType, key_id=None):
         return self.client.patch(
             self.url(key_id or self.api_key.key_id), data=json.dumps(data), content_type="application/json"
         )

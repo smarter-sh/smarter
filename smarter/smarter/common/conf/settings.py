@@ -75,6 +75,7 @@ from smarter.common.utils import (
     recursive_sort_dict,
 )
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.typing import SmarterDictType
 
 # smarter.common.conf stuff
 from .defaults import settings_defaults
@@ -4270,7 +4271,7 @@ class Settings(BaseSettings):
         """
         return "/home/smarter_user/.cache"
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Dump all settings.
 

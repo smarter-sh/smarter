@@ -23,6 +23,7 @@ from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -138,7 +139,7 @@ class SmarterView(View):
 
     _ready: bool = False
     template_path: str = ""
-    context: dict = {}
+    context: SmarterDictType = {}
 
     @property
     def formatted_class_name(self) -> str:
@@ -376,8 +377,6 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
-        :return: The result of the superclass setup method.
-        :rtype: Any
         """
         user = getattr(request, "user", None)
         verbose_logger.debug(

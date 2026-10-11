@@ -32,6 +32,7 @@ from django.http import HttpRequest
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 
 class RequestData(TypedDict):
@@ -39,10 +40,12 @@ class RequestData(TypedDict):
 
     method: str
     url: str
-    body: Optional[Union[dict[str, Any], list[Any]]]
+    body: Optional[Union[SmarterDictType, list[Any]]]
 
 
-def request_to_json(request: ASGIRequest | dict | list) -> Union[RequestData, ASGIRequest, dict, list]:
+def request_to_json(
+    request: ASGIRequest | SmarterDictType | list,
+) -> Union[RequestData, ASGIRequest, SmarterDictType, list]:
     """
     Convert a Django ASGIRequest object, dictionary, or list to a JSON-serializable dictionary or list.
 
@@ -54,7 +57,7 @@ def request_to_json(request: ASGIRequest | dict | list) -> Union[RequestData, AS
     :type request: ASGIRequest | dict | list
 
     :return: A JSON-serializable dictionary or list representing the request data.
-    :rtype: dict[str, Any] | list[Any]
+    :rtype: SmarterDictType | list[Any]
 
     .. note::
         - If the request is an ASGIRequest, the function attempts to decode and parse the request body as JSON.

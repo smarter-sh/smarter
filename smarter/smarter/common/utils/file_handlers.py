@@ -33,12 +33,13 @@ from typing import Any
 import yaml
 
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
 
-def get_readonly_yaml_file(file_path: str) -> dict[str, Any]:
+def get_readonly_yaml_file(file_path: str) -> SmarterDictType:
     """
     Reads a YAML file from the specified path and returns its contents as a Python dictionary.
 

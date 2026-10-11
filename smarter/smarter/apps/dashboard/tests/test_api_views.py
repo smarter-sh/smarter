@@ -18,6 +18,7 @@ from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
 from smarter.lib.cache import lazy_cache
+from smarter.lib.typing import SmarterDictType
 
 from ..const import namespace
 
@@ -45,7 +46,7 @@ class TestDashboardApiViews(TestAccountMixin):
     def url(self, name: str, **kwargs) -> str:
         return reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{name}", kwargs=kwargs or None)
 
-    def my_resources(self) -> dict:
+    def my_resources(self) -> SmarterDictType:
         response = self.client.post(self.url(DashboardApiReverseNames.my_resources))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
         return json.loads(response.content)

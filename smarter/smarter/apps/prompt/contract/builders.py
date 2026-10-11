@@ -18,6 +18,7 @@ from django.http import HttpRequest
 
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
+from smarter.lib.typing import SmarterDictType
 
 from .const import (
     CAPABILITIES_HEADER,
@@ -137,7 +138,7 @@ def chat_error_response(
     )
 
 
-def _parse_body(response: dict[str, Any]) -> Optional[dict[str, Any]]:
+def _parse_body(response: SmarterDictType) -> Optional[SmarterDictType]:
     """The parsed ``body`` of a prompt's Lambda style result, or None."""
     body = response.get("body")
     if isinstance(body, str):
@@ -187,7 +188,7 @@ def without_diagnostics(response: Any) -> Any:
     return {**response, "body": json.dumps(body)}
 
 
-def prompt_result_v2(response: Any) -> tuple[dict[str, Any], Optional[dict[str, Any]], int]:
+def prompt_result_v2(response: Any) -> tuple[SmarterDictType, Optional[SmarterDictType], int]:
     """
     A prompt's result, in version 2 of the contract.
 
@@ -195,7 +196,7 @@ def prompt_result_v2(response: Any) -> tuple[dict[str, Any], Optional[dict[str, 
     :type response: Any
     :returns: The response's ``data`` (a :class:`~.models.PromptChatApiPromptResult`), its ``error`` (a
         :class:`~.models.PromptChatApiErrorBody`, or None if the prompt succeeded), and its http status.
-    :rtype: tuple[dict[str, Any], Optional[dict[str, Any]], int]
+    :rtype: tuple[SmarterDictType, Optional[SmarterDictType], int]
     """
     response = response if isinstance(response, dict) else {}
     status = int(response.get("statusCode") or HTTPStatus.OK.value)
@@ -205,7 +206,7 @@ def prompt_result_v2(response: Any) -> tuple[dict[str, Any], Optional[dict[str, 
     completion = _completion_without_diagnostics(completion) if isinstance(completion, dict) else {}
     smarter = completion.get(SMARTER_KEY) if isinstance(completion.get(SMARTER_KEY), dict) else {}
 
-    error: Optional[dict[str, Any]] = None
+    error: Optional[SmarterDictType] = None
     if provider_error or status != HTTPStatus.OK.value:
         description = str((provider_error or {}).get("message") or f"The prompt failed with http status {status}.")
         error = PromptChatApiErrorBody(

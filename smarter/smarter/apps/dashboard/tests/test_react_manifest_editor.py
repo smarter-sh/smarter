@@ -12,6 +12,7 @@ from django.utils.crypto import get_random_string
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.templatetags import react_manifest_editor
 from smarter.apps.guardrail.models import Guardrail
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 GUARDRAIL_MANIFEST = os.path.join(
@@ -68,11 +69,11 @@ class TestManifestEditorCliApi(TestAccountMixin):
         self.client.cookies["csrftoken"] = self.csrf_token
         self.context = react_manifest_editor.manifest_editor_context()
 
-    def post(self, url: str, data: dict, csrf: bool = True):
+    def post(self, url: str, data: SmarterDictType, csrf: bool = True):
         headers = {"HTTP_X_CSRFTOKEN": self.csrf_token} if csrf else {}
         return self.client.post(url, data=json.dumps(data), content_type="application/json", **headers)
 
-    def manifest(self) -> dict:
+    def manifest(self) -> SmarterDictType:
         with open(GUARDRAIL_MANIFEST, encoding="utf-8") as f:
             manifest = yaml.safe_load(f)
         manifest["metadata"]["name"] = self.name

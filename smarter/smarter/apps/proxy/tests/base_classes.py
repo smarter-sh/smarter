@@ -28,6 +28,7 @@ from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = os.path.join(HERE, "data")
@@ -46,7 +47,7 @@ def get_data_path(filename: str) -> str:
     return os.path.join(DATA_PATH, filename)
 
 
-def get_test_data(filename: str) -> Any:
+def get_test_data(filename: str) -> SmarterDictType:
     """Return the parsed contents of a yaml file in ./data."""
     return copy.deepcopy(get_readonly_yaml_file(get_data_path(filename)))
 
@@ -57,7 +58,7 @@ def get_test_text(filename: str) -> bytes:
         return f.read()
 
 
-def json_response(data: Any, status: int = 200, headers: Optional[dict] = None) -> httpx.Response:
+def json_response(data: Any, status: int = 200, headers: Optional[SmarterDictType] = None) -> httpx.Response:
     """A provider's JSON response."""
     return httpx.Response(
         status, content=json.dumps(data).encode(), headers={"content-type": "application/json", **(headers or {})}
