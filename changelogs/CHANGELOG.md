@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.3-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.2...v0.20.3-alpha.3) (2026-10-11)
+
+### Bug Fixes
+
+* make dunder methods consistent and add missing ones ([1a68c85](https://github.com/smarter-sh/smarter/commit/1a68c854064de0f97ac57412bc764fd4c66cf0b5))
+
 ## [0.20.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.1...v0.20.3-alpha.2) (2026-10-11)
 
 ### Bug Fixes
