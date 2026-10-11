@@ -30,6 +30,6 @@ spec:
       - "search_*"
     includeInstructions: true
     timeout: 30
-    cacheTtl: 300
+    cacheTtl: 3600
     isActive: true
     priority: 100

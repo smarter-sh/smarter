@@ -13,6 +13,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase
+from smarter.lib.typing import SmarterDictType
 
 # plugin
 from ..models import PluginMeta
@@ -362,7 +363,7 @@ class PluginController(AbstractController):
             self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)  # type: ignore[call-arg]
         return self._plugin
 
-    def model_dump_json(self) -> Optional[dict]:
+    def model_dump_json(self) -> Optional[SmarterDictType]:
         if self.plugin:
             return json.loads(self.plugin.manifest.model_dump_json()) if self.plugin and self.plugin.manifest else None
         return None

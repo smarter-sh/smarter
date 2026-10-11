@@ -1,5 +1,5 @@
-Django View
-===================
+Workbench View
+==============
 
 .. automodule:: smarter.apps.prompt.views.detailviews.prompt_workbench_view
    :members:

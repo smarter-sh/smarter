@@ -39,6 +39,7 @@ from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
+from smarter.lib.cache import lazy_cache
 
 from .base_classes import (
     SKILL_PLUGIN_NAME,
@@ -74,6 +75,11 @@ class TestSkillPlugin(PluginTestBase):
     sql_fixtures = False
     api_fixtures = False
     skill_fixtures = True
+
+    def setUp(self):
+        super().setUp()
+        # safe_http caches responses, and these tests serve different content at the same urls.
+        lazy_cache.clear()
 
     @property
     def inline_skill(self) -> str:
@@ -555,17 +561,44 @@ class TestSkillPlugin(PluginTestBase):
         self.assertEqual(reloaded.plugin_data.description, "A minimal skill. Use when testing.")  # type: ignore[union-attr]
         self.assertEqual(PluginMeta.objects.filter(user_profile__account=self.account, name=name).count(), 1)
 
-    def test_update_remote_retrieves_again(self):
-        """Test that re-applying a remote manifest retrieves the latest version of the skill."""
-        name = "skill_update_remote"
-        plugin = self.new_skill_plugin(name, remote=True)
-        first_retrieved_at = PluginDataSkill.objects.get(plugin_id=plugin.id).source_retrieved_at
+    @staticmethod
+    def skill_host_version_two() -> FakeSkillHost:
+        """Return a FakeSkillHost that serves a new version of the remote skill."""
         host = FakeSkillHost()
         host.add(
             SKILL_REMOTE_RAW_URL + "SKILL.md",
             b"---\nname: test-skill\ndescription: Version two. Use when testing.\n---\nNew instructions.\n",
         )
-        with mock_skill_host(host):
+        return host
+
+    def test_update_remote_without_invalidation_uses_cached_skill(self):
+        """
+        Test that re-applying a remote manifest, other than with the broker, uses the cached skill.
+
+        This is how add_example_plugins() applies the remote sample skills for every new user,
+        without downloading them from GitHub each time.
+        """
+        name = "skill_update_remote_cached"
+        plugin = self.new_skill_plugin(name, remote=True)
+        with mock_skill_host(self.skill_host_version_two()) as host:
+            SkillPlugin(manifest=self.skill_manifest(name, remote=True), user_profile=self.user_profile)
+        self.assertEqual(host.requested, [])
+        plugin_data = PluginDataSkill.objects.get(plugin_id=plugin.id)
+        self.assertNotIn("New instructions.", plugin_data.skill_document)
+
+    def test_update_remote_after_invalidation_retrieves_again(self):
+        """
+        Test that re-applying a remote manifest after invalidating its cached skill retrieves the latest version.
+
+        SAMSkillPluginBroker.apply() invalidates the cached skill before the plugin retrieves it, so
+        that an account admin who applies a manifest always gets the current skill. See
+        test_apply_invalidates_cached_remote_skill in the broker's tests.
+        """
+        name = "skill_update_remote"
+        plugin = self.new_skill_plugin(name, remote=True)
+        first_retrieved_at = PluginDataSkill.objects.get(plugin_id=plugin.id).source_retrieved_at
+        retrieve_skill.invalidate(SKILL_REMOTE_URL)  # type: ignore[attr-defined]
+        with mock_skill_host(self.skill_host_version_two()):
             SkillPlugin(manifest=self.skill_manifest(name, remote=True), user_profile=self.user_profile)
         plugin_data = PluginDataSkill.objects.get(plugin_id=plugin.id)
         self.assertEqual(plugin_data.description, "Version two. Use when testing.")

@@ -41,6 +41,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -156,7 +157,7 @@ class SAMProviderBroker(AbstractBroker):
             return self.provider.logo.name
         return self.provider.logo.url
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the Smarter API Provider manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
 
@@ -199,7 +200,7 @@ class SAMProviderBroker(AbstractBroker):
         return {**dump, **metadata}
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """
         Convert a Django ORM `Provider` model instance into a dictionary formatted for Pydantic manifest consumption.
 
@@ -518,7 +519,7 @@ class SAMProviderBroker(AbstractBroker):
             providers = Provider.objects.filter(user_profile__account=self.account, name=name)
         else:
             providers = Provider.objects.filter(user_profile__account=self.account)
-        providers = [provider for provider in providers]
+        providers = [*providers]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for provider in providers:

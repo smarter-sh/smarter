@@ -27,6 +27,7 @@ from smarter.apps.llmhost.manifest.models.llmhost.spec import (
     SAMLLMHostSpec,
     engine_supports_api_key,
 )
+from smarter.lib.typing import SmarterDictType
 
 from .exceptions import LLMHostConfigurationError
 from .sources import ResolvedModel
@@ -96,7 +97,7 @@ class Engine:
         """
         return {"HF_HOME": HF_HOME, "HF_HUB_CACHE": posixpath.join(HF_HOME, "hub"), **spec.engine.env}
 
-    def probe(self, spec: SAMLLMHostSpec) -> dict[str, Any]:
+    def probe(self, spec: SAMLLMHostSpec) -> SmarterDictType:
         """The handler of the startup and readiness probes."""
         return {"httpGet": {"path": self.health_path_for(spec), "port": "http"}}
 

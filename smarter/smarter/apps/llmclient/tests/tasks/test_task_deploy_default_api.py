@@ -27,6 +27,7 @@ from smarter.apps.llmclient.tasks.verify_domain import (
     DomainCheck,
 )
 from smarter.common.exceptions import SmarterException
+from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.llmclient.tasks.deploy_default_api"
 
@@ -63,7 +64,7 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
     def refresh(self) -> LLMClient:
         return LLMClient.objects.get(pk=self.llmclient.pk)
 
-    def scheduled(self) -> dict:
+    def scheduled(self) -> SmarterDictType:
         """Return the kwargs and countdown of the run that was scheduled."""
         self.apply_async.assert_called_once()
         call = self.apply_async.call_args

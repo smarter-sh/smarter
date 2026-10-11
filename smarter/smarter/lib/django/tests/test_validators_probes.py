@@ -16,6 +16,7 @@ from django.core.exceptions import ValidationError
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import validators as validators_module
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 STRING_PROBES = [
@@ -83,7 +84,7 @@ STRING_PROBES = [
 LIST_PROBES = [[], ["example.com"], ["not valid!"], "not a list"]
 
 
-def public_methods() -> dict:
+def public_methods() -> SmarterDictType:
     return {
         name: getattr(SmarterValidator, name)
         for name, member in inspect.getmembers(SmarterValidator)

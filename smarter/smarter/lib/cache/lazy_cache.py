@@ -43,6 +43,7 @@ from django.apps import apps
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +195,7 @@ class LazyCache:
 
         return self.waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
 
-    def get(self, key: Any, default: Optional[Any] = None) -> Any:
+    def get(self, key: Any, default: Any = None) -> Any:
         """
         Fetch a given key from the cache.
 
@@ -238,11 +239,13 @@ class LazyCache:
         """Check if a key exists in the cache."""
         return self.cache.has_key(key)  # type: ignore[return-value]
 
-    def get_many(self, keys: list, version: Optional[int] = None) -> dict:
+    def get_many(self, keys: list, version: Optional[int] = None) -> SmarterDictType:
         """Fetch multiple keys from the cache."""
         return self.cache.get_many(keys)  # type: ignore[return-value]
 
-    def set_many(self, data: dict, timeout: Optional[float] = None, version: Optional[int] = None) -> list[Any]:
+    def set_many(
+        self, data: SmarterDictType, timeout: Optional[float] = None, version: Optional[int] = None
+    ) -> list[Any]:
         """Set multiple values in the cache."""
         return self.cache.set_many(data, timeout=timeout)  # type: ignore[return-value]
 

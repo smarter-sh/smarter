@@ -53,6 +53,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.keys import unknown_keys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.typing import SmarterDictType
 
 from .error_classes import (
     SAMBrokerError,
@@ -139,7 +140,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     _api_version: str = SmarterApiVersions.V1
     _loader: Optional[SAMLoader] = None
-    _manifest: Optional[Union[AbstractSAMBase, dict]] = None
+    _manifest: Optional[Union[AbstractSAMBase, SmarterDictType]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
     _name: Optional[str] = None
     _kind: Optional[str] = None
@@ -161,7 +162,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         kind: Optional[str] = None,
         loader: Optional[SAMLoader] = None,
         api_version: str = SmarterApiVersions.V1,
-        manifest: Optional[Union[dict, AbstractSAMBase]] = None,
+        manifest: Optional[Union[SmarterDictType, AbstractSAMBase]] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
         **kwargs,
@@ -754,7 +755,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             logger.warning("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
         return self._name
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM LLMClient model.
 
@@ -1345,7 +1346,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     @abstractmethod
-    def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
+    def manifest(self) -> Optional[Union[AbstractSAMBase, SmarterDictType]]:
         """
         The Pydantic model representing the manifest.
 
@@ -1358,7 +1359,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
-    def manifest_setter(self, value: Optional[Union[AbstractSAMBase, dict[str, Any]]]):
+    def manifest_setter(self, value: Optional[Union[AbstractSAMBase, SmarterDictType]]):
         """
         Set the manifest for the broker and override all AbstractBroker model properties based on the manifest data.
 
@@ -1644,7 +1645,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return dependencies
         return [dependency for dependency in dependencies if self.account and dependency.account == self.account]
 
-    def dependencies_status(self) -> List[dict]:
+    def dependencies_status(self) -> List[SmarterDictType]:
         """Return the ``status.dependencies`` of a manifest: the kind and name of each visible dependency.
 
         Example:
@@ -1773,7 +1774,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self.json_response_ok(command=command, data=data)
 
     @classmethod
-    def validation_errors(cls, manifest: dict) -> list[dict[str, Any]]:
+    def validation_errors(cls, manifest: SmarterDictType) -> list[SmarterDictType]:
         """Validate a manifest against the broker's Pydantic model, without saving it.
 
         Pydantic's errors keep their ``loc``, the path of the invalid value in the manifest.
@@ -1790,7 +1791,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :param manifest: The manifest, as a dict.
         :type manifest: dict
         :return: The manifest's errors, as dicts with a ``loc``, a ``message`` and a ``type``, or an empty list.
-        :rtype: list[dict[str, Any]]
+        :rtype: list[SmarterDictType]
         """
         try:
             cls._pydantic_model.model_validate(manifest)
@@ -1925,8 +1926,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # http json response helpers
     ###########################################################################
     def _retval(
-        self, data: Optional[dict] = None, error: Optional[dict] = None, message: Optional[str] = None
-    ) -> dict[str, Any]:
+        self,
+        data: Optional[SmarterDictType] = None,
+        error: Optional[SmarterDictType] = None,
+        message: Optional[str] = None,
+    ) -> SmarterDictType:
         retval = {}
         if data:
             retval[SmarterJournalApiResponseKeys.DATA] = data
@@ -1938,7 +1942,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return retval
 
     def json_response_ok(
-        self, command: SmarterJournalCliCommands, data: Optional[dict] = None, message: Optional[str] = None
+        self, command: SmarterJournalCliCommands, data: Optional[SmarterDictType] = None, message: Optional[str] = None
     ) -> SmarterJournaledJsonResponse:
         """Return a common success response.
 
@@ -2232,7 +2236,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return retval
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Serialize the broker instance to a JSON string.
 
@@ -2330,7 +2334,7 @@ class BrokerNotImplemented(AbstractBroker):
         )
 
     @property
-    def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
+    def manifest(self) -> Optional[Union[AbstractSAMBase, SmarterDictType]]:
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
     def prompt(self, request: SmarterRequest, *args, **kwargs):

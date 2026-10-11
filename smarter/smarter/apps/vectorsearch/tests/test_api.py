@@ -4,6 +4,8 @@ Test the Vectorsearch /api/v1/vectorsearch/ endpoints, :mod:`smarter.apps.vector
 See :class:`smarter.lib.unittest.resource_api.ResourceApiTestMixin`.
 """
 
+from http import HTTPStatus
+
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorsearch.api.v1.urls import VectorsearchApiV1ReverseViews
@@ -71,4 +73,15 @@ class TestVectorsearchApi(ResourceApiTestMixin, ApiV1TestBase):
         super().test_delete()
 
     def test_default_api_get_and_options(self):
-        super().test_default_api_get_and_options()
+        """Test that the default api refuses a GET and a POST, and says so in an OPTIONS response.
+
+        The Vectorsearch default api is a scaffold with no POST handler yet, so its ``Allow``
+        header doesn't list POST. Once it has one, call
+        ``super().test_default_api_get_and_options()`` instead.
+        """
+        url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)
+        self.assertEqual(self.api_client.get(url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(self.api_client.post(url, data={}, format="json").status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        response = self.api_client.options(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertNotIn("POST", response["Allow"])

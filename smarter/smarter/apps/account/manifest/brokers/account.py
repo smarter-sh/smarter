@@ -36,6 +36,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -326,7 +327,7 @@ class SAMAccountBroker(AbstractBroker):
     ###########################################################################
     # Transformation methods
     ###########################################################################
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """Transform the Smarter API Account manifest into a Django ORM model."""
         if not isinstance(self.manifest, SAMAccount):
             raise SAMAccountBrokerError(
@@ -363,7 +364,7 @@ class SAMAccountBroker(AbstractBroker):
         }
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> dict:
+    def django_orm_to_manifest_dict(self) -> SmarterDictType:
         """
         Converts a Django ORM `Account` model instance into a Pydantic-compatible Smarter API Account manifest dictionary.
 

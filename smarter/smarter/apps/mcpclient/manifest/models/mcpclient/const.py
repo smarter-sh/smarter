@@ -9,8 +9,11 @@ DEFAULT_TIMEOUT = 30
 MAX_TIMEOUT = 120
 """Maximum seconds to wait for an MCP server to connect and respond."""
 
-DEFAULT_CACHE_TTL = 300
-"""Default seconds to cache an MCP server's catalog: its tools, instructions and capabilities."""
+DEFAULT_CACHE_TTL = 3600
+"""Default seconds to cache an MCP server's catalog: its tools, instructions and capabilities.
+
+One hour.
+"""
 MAX_CACHE_TTL = 86400
 """Maximum seconds to cache an MCP server's catalog."""
 

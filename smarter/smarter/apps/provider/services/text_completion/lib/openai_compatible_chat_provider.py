@@ -28,6 +28,7 @@ from smarter.apps.guardrail.services import (
     GuardrailPipeline,
     GuardrailStage,
     PipelineDisposition,
+    PipelineResult,
 )
 from smarter.apps.mcpclient.toolkit import MCPToolkit
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -80,6 +81,7 @@ from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .chat_provider_base import SmarterChatProviderBase
 from .exception_map import exception_status_and_message
@@ -187,7 +189,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     """
 
     @property
-    def openai_messages(self) -> list[dict[str, Any]]:
+    def openai_messages(self) -> list[SmarterDictType]:
         """
         Return a sanitized list of messages compatible with OpenAI's prompt completion API.
 
@@ -197,7 +199,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         related to unexpected or extraneous fields.
 
         :returns: A list of dictionaries representing prompt messages, formatted for OpenAI's API.
-        :rtype: list[dict[str, Any]]
+        :rtype: list[SmarterDictType]
 
         :raises SmarterValueError: If the internal message list is not a list.
 
@@ -269,7 +271,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         return pair_tool_messages(retval)
 
     @staticmethod
-    def add_markdown_system_prompt(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def add_markdown_system_prompt(messages: list[SmarterDictType]) -> list[SmarterDictType]:
         """
         Tell the LLM that its responses may use Markdown.
 
@@ -278,10 +280,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         is unchanged.
 
         :param messages: The request's messages.
-        :type messages: list[dict[str, Any]]
+        :type messages: list[SmarterDictType]
 
         :returns: The request's messages, with the Markdown instructions.
-        :rtype: list[dict[str, Any]]
+        :rtype: list[SmarterDictType]
         """
         for i, message in enumerate(messages):
             if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
@@ -301,7 +303,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         ]
 
     @property
-    def new_messages(self) -> list[dict[str, Any]]:
+    def new_messages(self) -> list[SmarterDictType]:
         """
         Return a list of messages that are marked as new.
 
@@ -309,7 +311,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         that have the 'smarter_is_new' flag set to True.
 
         :returns: A list of new messages.
-        :rtype: list[dict[str, Any]]
+        :rtype: list[SmarterDictType]
         """
         if self.messages is None:
             return []
@@ -475,7 +477,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :rtype: None
         """
 
-        def extract_json_objects(text) -> Optional[dict[str, Any]]:
+        def extract_json_objects(text) -> Optional[SmarterDictType]:
             """
             Evaluate the text to attempt to extract any JSON objects that may be present.
 
@@ -892,7 +894,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
-    def append_guardrail_message(self, stage: str, result: Any) -> None:
+    def append_guardrail_message(self, stage: str, result: PipelineResult) -> None:
         """Append a Smarter message that summarizes what the guardrails of a stage did, if anything."""
         triggered = [finding.guardrail_name for finding in result.triggered_findings]
         failed = [outcome.guardrail_name for outcome in result.outcomes if outcome.error]
@@ -1069,7 +1071,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             self.available_functions[calculator.__name__] = calculator
             llm_tool_presented.send(sender=self.handle_function_provided, tool=calculator_tool, plugin=None)
 
-    def handle_completion(self) -> dict:
+    def handle_completion(self) -> SmarterDictType:
         """
         Handle prompt completion response.
 
@@ -1121,7 +1123,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             "input_text": self.input_text,
         }
 
-    def create_first_completion(self, completions_kwargs: dict[str, Any]) -> ChatCompletion:
+    def create_first_completion(self, completions_kwargs: SmarterDictType) -> ChatCompletion:
         """
         Send the first request, which is the only one that offers the LLM tools.
 
@@ -1157,7 +1159,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self,
         user_profile: UserProfile,
         prompt: Prompt,
-        data: Union[dict[str, Any], list],
+        data: Union[SmarterDictType, list],
         plugins: Optional[list[PluginBase]] = None,
         functions: Optional[list[str]] = None,
     ) -> SmarterChatCompletionResponseType:
@@ -1179,7 +1181,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :param prompt: The prompt session instance associated with this request.
         :type prompt: Prompt
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
-        :type data: Union[dict[str, Any], list]
+        :type data: Union[SmarterDictType, list]
 
             Example::
 

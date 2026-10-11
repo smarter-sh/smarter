@@ -2,10 +2,12 @@
 """Test SAMSkillPluginBroker."""
 
 import os
+from unittest import mock
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 
+from smarter.apps.plugin.manifest.brokers import SAMPluginBrokerError
 from smarter.apps.plugin.manifest.brokers.skill_plugin import SAMSkillPluginBroker
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -147,6 +149,27 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
         self.assertEqual(set(plugin_data.resources), set(self.broker.manifest.spec.skillData.resources or {}))
         self.assertEqual(self.broker.manifest.spec.selector.directive, self.broker.plugin.plugin_selector.directive)
         self.assertEqual(self.broker.manifest.spec.prompt.model, self.broker.plugin.plugin_prompt.model)
+
+    def test_apply_invalidates_cached_remote_skill(self):
+        """Test that apply() invalidates a remote skill's cached copy, before the plugin retrieves it."""
+        url = "https://github.com/anthropics/skills/tree/main/skills/pdf"
+        manifest = mock.MagicMock()
+        manifest.spec.skillData.source.url = url
+        with (
+            mock.patch.object(SAMSkillPluginBroker, "manifest", new_callable=mock.PropertyMock, return_value=manifest),
+            mock.patch.object(SAMSkillPluginBroker, "plugin", new_callable=mock.PropertyMock, return_value=None),
+            mock.patch(f"{self.broker_module}.retrieve_skill") as retrieve_skill,
+        ):
+            with self.assertRaises(SAMPluginBrokerError):
+                self.broker.apply(self.request, **self.kwargs)
+        retrieve_skill.invalidate.assert_called_once_with(url)
+
+    def test_apply_verbatim_skill_invalidates_nothing(self):
+        """Test that apply() of a skill written in the manifest does not touch the cache."""
+        with mock.patch(f"{self.broker_module}.retrieve_skill") as retrieve_skill:
+            response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        retrieve_skill.invalidate.assert_not_called()
 
     def test_apply_then_describe(self):
         """Test that describe() renders an applied plugin as the manifest author wrote it."""

@@ -16,6 +16,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING])
 
@@ -45,7 +46,7 @@ class MCPClientExample:
 
     _filename: Optional[str]
     _filepath: Optional[str]
-    _json: Optional[Union[list, dict]]
+    _json: Optional[Union[list, SmarterDictType]]
     _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
@@ -93,7 +94,7 @@ class MCPClientExample:
         """Return the MCPClient as a yaml string."""
         return self._yaml
 
-    def to_json(self) -> Optional[Union[dict, list]]:
+    def to_json(self) -> Optional[Union[SmarterDictType, list]]:
         """Return the MCPClient as a dictionary."""
         return self._json
 

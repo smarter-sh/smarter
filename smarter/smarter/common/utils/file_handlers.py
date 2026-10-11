@@ -1,5 +1,5 @@
 """
-smarter.common.utils.file_handlers
+Smarter.common.utils.file_handlers
 ==================================
 
 Utility functions for the Smarter framework for reading YAML and CSV files.
@@ -28,16 +28,18 @@ Example
 """
 
 import csv
+from typing import Any
 
 import yaml
 
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
 
-def get_readonly_yaml_file(file_path) -> dict:
+def get_readonly_yaml_file(file_path: str) -> SmarterDictType:
     """
     Reads a YAML file from the specified path and returns its contents as a Python dictionary.
 
@@ -61,7 +63,6 @@ def get_readonly_yaml_file(file_path) -> dict:
 
         config = get_readonly_yaml_file('/path/to/config.yaml')
         print(config)  # {'key': 'value', ...}
-
     """
     logger.debug("%s.get_readonly_yaml_file()", logger_prefix)
     with open(file_path, encoding="utf-8") as file:

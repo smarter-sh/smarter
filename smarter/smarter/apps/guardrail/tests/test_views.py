@@ -20,6 +20,7 @@ from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.urls import GuardrailReverseNames as Names
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import GuardrailTestBase
@@ -44,7 +45,7 @@ class TestGuardrailViews(GuardrailTestBase):
         self.addCleanup(self.client.logout)
         invalidate_all_cached_guardrails_for_user_profile(self.user_profile)
 
-    def post(self, path: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, path: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         response = self.client.post(path)
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content)

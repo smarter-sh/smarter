@@ -2,10 +2,11 @@
 
 from smarter.apps.plugin.models.exceptions import PluginDataValueError
 from smarter.apps.plugin.models.validators import validate_openai_parameters_dict
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-def parameters(**properties) -> dict:
+def parameters(**properties) -> SmarterDictType:
     return {"type": "object", "properties": properties, "required": list(properties)[:1]}
 
 

@@ -14,6 +14,7 @@ from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
@@ -79,7 +80,7 @@ class PluginDataSql(PluginDataBase):
         null=True,
     )
 
-    def data(self, params: Optional[dict] = None) -> dict:
+    def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
         return {
             "parameters": self.parameters,
             "sql_query": self.prepare_sql(params=params),
@@ -175,7 +176,7 @@ class PluginDataSql(PluginDataBase):
 
         return True
 
-    def prepare_sql(self, params: Optional[dict]) -> str:
+    def prepare_sql(self, params: Optional[SmarterDictType]) -> str:
         """Prepare the SQL query by replacing placeholders with values."""
         params = params or {}
         sql = self.sql_query
@@ -196,7 +197,7 @@ class PluginDataSql(PluginDataBase):
 
         return sql
 
-    def execute_query(self, params: Optional[dict]) -> Union[str, bool]:
+    def execute_query(self, params: Optional[SmarterDictType]) -> Union[str, bool]:
         """Execute the SQL query and return the results."""
         sql = self.prepare_sql(params)
         return self.connection.execute_query(sql, self.limit)
@@ -205,7 +206,7 @@ class PluginDataSql(PluginDataBase):
         """Test the SQL query using the test_values in the record."""
         return self.execute_query(self.test_values)
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> Union[str, bool]:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> Union[str, bool]:
         """Return a dict by executing the query with the provided params."""
         logger.info("%s.sanitized_return_data called. - %s", self.formatted_class_name, params)
         return self.execute_query(params)

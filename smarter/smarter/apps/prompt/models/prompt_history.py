@@ -5,6 +5,7 @@ from django.db import models
 from smarter.lib import json, logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .prompt import Prompt
 
@@ -39,7 +40,7 @@ class PromptHistory(TimestampedModel):
         return f"{self.prompt.id}"  # type: ignore[return]
 
     @property
-    def prompt_history(self) -> list[dict]:
+    def prompt_history(self) -> list[SmarterDictType]:
         """Used by the Reactapp (via PromptConfigView) to display the prompt history."""
         history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
         return history

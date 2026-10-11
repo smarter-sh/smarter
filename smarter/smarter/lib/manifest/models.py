@@ -31,6 +31,7 @@ from smarter.common.utils import to_snake_case
 from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.typing import SmarterDictType
 
 logger = getLogger(__name__)
 logger_prefix = formatted_text(__name__)
@@ -285,10 +286,10 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         Raises SAMValidationError if invalid.
 
         :param v: The value of the ``annotations`` field to validate.
-        :type v: Optional[List[dict[str, Any]]]
+        :type v: Optional[List[SmarterDictType]]
         :raises smarter.lib.manifest.exceptions.SAMValidationError: If any annotation is invalid.
         :return: The validated list of annotations.
-        :rtype: Optional[List[dict[str, Any]]]
+        :rtype: Optional[List[SmarterDictType]]
         """
         if v is None:
             return v

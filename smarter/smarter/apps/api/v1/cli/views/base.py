@@ -59,6 +59,7 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.typing import SmarterDictType
 
 from .swagger import BUG_REPORT
 
@@ -254,11 +255,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
     _loader: Optional[SAMLoader] = None
-    _manifest_data: Optional[dict] = None
+    _manifest_data: Optional[SmarterDictType] = None
     _manifest_kind: Optional[str] = None
     _manifest_name: Optional[str] = None
     _manifest_load_failed: bool = False
-    _params: Optional[dict[str, Any]] = None
+    _params: Optional[SmarterDictType] = None
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
@@ -435,7 +436,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return self._broker
 
     @property
-    def manifest_data(self) -> Optional[dict]:
+    def manifest_data(self) -> Optional[SmarterDictType]:
         """
         The raw manifest data from the request body.
 

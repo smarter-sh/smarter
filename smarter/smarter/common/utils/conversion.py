@@ -26,7 +26,9 @@ Example
 
 import re
 from functools import lru_cache
-from typing import Any, Union
+from typing import Any, TypeVar, Union, overload
+
+from smarter.lib.typing import SmarterDictType
 
 LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
@@ -34,13 +36,16 @@ ACRONYM_PATTERN = re.compile(r"([A-Z]+)([A-Z][a-z])")
 CAMEL_PATTERN = re.compile(r"([a-z0-9])([A-Z])")
 
 
-ConvertibleCaseType = Union[str, dict[str, Any], list[Any]]
+ConvertibleCaseType = Union[str, SmarterDictType, list[Any]]
 """
 A type alias representing data that can be converted between different case.
 
 formats. This includes strings, dictionaries with string keys, lists of such
 elements, or any object.
 """
+
+ConvertibleCaseT = TypeVar("ConvertibleCaseT", str, SmarterDictType, list[Any])
+"""The type of the data passed to a case conversion function, which is also the type it returns."""
 
 
 @lru_cache(maxsize=LRU_MAXSIZE)
@@ -50,7 +55,17 @@ def _convert_snake_to_camel(name: str) -> str:
 
 
 # pylint: disable=W0613
-def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True) -> Any:
+@overload
+def to_camel_case(data: str, convert_values: bool = False, is_recursive: bool = True) -> str: ...
+@overload
+def to_camel_case(
+    data: SmarterDictType, convert_values: bool = False, is_recursive: bool = True
+) -> SmarterDictType: ...
+@overload
+def to_camel_case(data: list[Any], convert_values: bool = False, is_recursive: bool = True) -> list[Any]: ...
+def to_camel_case(
+    data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True
+) -> ConvertibleCaseType:
     """
     Convert snake_case strings, dictionary keys, or lists to camelCase format.
 
@@ -63,7 +78,7 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             Default is False.
 
     Returns:
-        Any: The converted data in camelCase format. The return type matches the input type (str, dict, or list).
+        str | dict | list: The converted data in camelCase format. The return type matches the input type (str, dict, or list).
 
     Notes:
         - For dictionaries, only keys are converted by default. If ``convert_values`` is True, string values are also converted.
@@ -134,7 +149,17 @@ def _convert_camel_to_snake(name: str):
     return re.sub(r"_+", "_", name)
 
 
-def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True) -> Any:
+@overload
+def to_snake_case(data: str, convert_values: bool = False, is_recursive: bool = True) -> str: ...
+@overload
+def to_snake_case(
+    data: SmarterDictType, convert_values: bool = False, is_recursive: bool = True
+) -> SmarterDictType: ...
+@overload
+def to_snake_case(data: list[Any], convert_values: bool = False, is_recursive: bool = True) -> list[Any]: ...
+def to_snake_case(
+    data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True
+) -> ConvertibleCaseType:
     """
     Convert camelCase or PascalCase strings, dictionary keys, or lists to snake_case format.
 
@@ -147,7 +172,7 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             Default is False.
 
     Returns:
-        Any: The converted data in snake_case format. The return type matches the input type (str, dict, or list).
+        str | dict | list: The converted data in snake_case format. The return type matches the input type (str, dict, or list).
 
     Notes:
         - For dictionaries, only keys are converted by default. If ``convert_values`` is True, string values are also converted.
@@ -214,8 +239,8 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
 
 
 def search_replace(
-    data: Union[dict[str, Any], list[Any]], replace_str: str, with_str: str
-) -> Union[dict[str, Any], list[Any]]:
+    data: Union[SmarterDictType, list[Any]], replace_str: str, with_str: str
+) -> Union[SmarterDictType, list[Any]]:
     """
     Recursively search through a dictionary or list and replace all occurrences of a specified string with another string.
 
@@ -225,7 +250,7 @@ def search_replace(
         with_str (str): The string to replace the found string with.
 
     Returns:
-        Union[dict[str, Any], list[Any]]: A new dictionary or list with the specified replacements made.
+        Union[SmarterDictType, list[Any]]: A new dictionary or list with the specified replacements made.
 
     Notes:
         - This function will recursively search through nested dictionaries and lists within the input dictionary.

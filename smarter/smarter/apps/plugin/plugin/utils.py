@@ -18,6 +18,7 @@ from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase
 
@@ -114,7 +115,7 @@ class Plugins:
             return None
 
     @property
-    def data(self) -> list[dict]:
+    def data(self) -> list[SmarterDictType]:
         """Return a list of plugins in dictionary format."""
         retval = []
         for plugin in self.plugins:
@@ -122,7 +123,7 @@ class Plugins:
                 retval.append(plugin.data)
         return retval
 
-    def to_json(self) -> list[dict[str, Any]]:
+    def to_json(self) -> list[SmarterDictType]:
         """Return a list of plugins in JSON format."""
         retval = []
         for plugin in self.plugins:
@@ -155,7 +156,7 @@ class PluginExample:
     """
 
     _filename: Optional[str]
-    _json: Optional[Union[list, dict]]
+    _json: Optional[Union[list, SmarterDictType]]
     _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
@@ -187,7 +188,7 @@ class PluginExample:
 
     # TODO: this fails on Plugin.create() due to missing tags
     # django.core.exceptions.ValidationError: ["Invalid data: missing meta_data['tags']"]
-    def to_json(self) -> Optional[Union[dict, list]]:
+    def to_json(self) -> Optional[Union[SmarterDictType, list]]:
         """Return the plugin as a dictionary."""
         return self._json
 

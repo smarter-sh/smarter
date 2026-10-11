@@ -35,6 +35,7 @@ from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .const import VERIFICATION_LEAD_TIME, VERIFICATION_LIFETIME
 from .manifest.enum import ProviderModelEnum
@@ -289,7 +290,7 @@ class Provider(MetaDataWithOwnershipModel):
         return api_key if not mask else "********"
 
     @property
-    def authorization_header(self) -> dict:
+    def authorization_header(self) -> SmarterDictType:
         """Return the authorization header for the provider."""
         try:
             return {"Authorization": f"Bearer {self.production_api_key(mask=False)}"}

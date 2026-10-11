@@ -45,6 +45,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+from smarter.lib.typing import SmarterDictType
 
 OpenAICompatibleChatCompletionResponseType = Union[
     ChatCompletion,
@@ -66,7 +67,7 @@ prompt provider handlers that implement the OpenAICompatiblePassthroughProtocol.
 """
 
 SmarterChatCompletionResponseType = Union[
-    dict[str, Any],
+    SmarterDictType,
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
     SmarterHttpResponseBadRequest,
@@ -97,7 +98,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
     :param user_profile: The user profile making the request.
     :type user_profile: UserProfile
     :param data: The OpenAI-compatible prompt completion request data.
-    :type data: dict[str, Any]
+    :type data: SmarterDictType
 
     :returns: The response data.
     :rtype: OpenAICompatibleChatCompletionResponseType
@@ -107,7 +108,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
         self,
         request: Request,
         user_profile: UserProfile,
-        data: dict[str, Any],
+        data: SmarterDictType,
         *args,
         **kwargs,
     ) -> OpenAICompatibleChatCompletionResponseType: ...
@@ -125,21 +126,21 @@ class SmarterChatHarnessProtocol(Protocol):
     :param prompt: The prompt object.
     :type prompt: Prompt
     :param data: The Smarter prompt API request data.
-    :type data: Union[dict[str, Any], list]
+    :type data: Union[SmarterDictType, list]
     :param plugins: Optional list of plugins to use.
     :type plugins: Optional[List[PluginBase]]
     :param functions: Optional list of function names to use.
     :type functions: Optional[list[str]]
 
     :returns: The response data.
-    :rtype: Union[dict[str, Any], list]
+    :rtype: Union[SmarterDictType, list]
     """
 
     def __call__(
         self,
         user_profile: UserProfile,
         prompt: Prompt,
-        data: Union[dict[str, Any], list],
+        data: Union[SmarterDictType, list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
     ) -> SmarterChatCompletionResponseType: ...

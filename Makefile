@@ -28,7 +28,7 @@ SMARTER_CHAT_BRANCH ?= main
 SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 
 
-.PHONY: all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: chat-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -389,6 +389,17 @@ react-lint:
 react-storybook:
 	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
 
+# Regenerate the Smarter Chat api contract's JSON Schema from its Pydantic models
+# (smarter.apps.prompt.contract.models), in the smarter-app container, and copy it into
+# Smarter Chat, which generates its TypeScript types from it. Run it after changing the
+# models, and commit both repositories' changes.
+CHAT_CONTRACT_SCHEMA := smarter/apps/prompt/contract/chat-contract.schema.json
+chat-contract: react-smarter-chat
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_schema"
+	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
+	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
+	cd $(SMARTER_CHAT_DIR) && npm run contract:types
+
 # -------------------------------------------------------------------------
 # Sphinx Documentation
 #
@@ -469,6 +480,7 @@ help:
 	@echo 'react-test             - Run the unit tests of all React apps, with a coverage report'
 	@echo 'react-lint             - Check the formatting, lint and types of all React apps'
 	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
+	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'
