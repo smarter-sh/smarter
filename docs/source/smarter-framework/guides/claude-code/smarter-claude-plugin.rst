@@ -1186,7 +1186,7 @@ stylesheet, and the LLMClient's url:
 
    <SmarterChat apiUrl="https://<llmclient-name>.<account-id>.api.smarter.sh/" showConsole={false} />
 
-See :doc:`Smarter Chat <../../developer-reference/react-integration/smarter-chat>`.
+See :doc:`Smarter Chat <../../smarter-chat>`.
 
 **LLMClient not yet deployed** — verify status before embedding a public URL:
 

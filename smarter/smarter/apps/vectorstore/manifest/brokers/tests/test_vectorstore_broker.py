@@ -28,6 +28,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -59,7 +60,7 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         return self._loader
 
     @property
-    def kwargs(self) -> dict:
+    def kwargs(self) -> SmarterDictType:
         return {SAMMetadataKeys.NAME.value: self.vs_name}
 
     def broker_for(self, text: str, token_key: str = "") -> SAMVectorstoreBroker:
@@ -73,7 +74,7 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         broker.apply(broker.request, **self.kwargs)  # type: ignore[arg-type]
         return VectorstoreMeta.objects.get(name=self.vs_name)
 
-    def data(self, response) -> dict:
+    def data(self, response) -> SmarterDictType:
         return json.loads(response.content.decode("utf-8"))["data"]
 
     def test_apply(self):

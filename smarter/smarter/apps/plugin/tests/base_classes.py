@@ -19,6 +19,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -41,7 +42,7 @@ class TestPluginClassBase(TestAccountMixin):
     """Base class for testing all plugin and connection models."""
 
     _manifest_path: Optional[str] = None
-    _manifest: Optional[dict] = None
+    _manifest: Optional[SmarterDictType] = None
     _loader: Optional[SAMLoader] = None
     _model: Optional[AbstractSAMBase] = (
         None  # any of SAMApiConnection, SAMSqlConnection, SAMStaticPlugin, SAMApiPlugin, SAMPluginSql
@@ -67,7 +68,7 @@ class TestPluginClassBase(TestAccountMixin):
         self._model = None
 
     @property
-    def manifest(self) -> Optional[dict]:
+    def manifest(self) -> Optional[SmarterDictType]:
         if not self._manifest and self.manifest_path:
             logger.info("%s.manifest Loading manifest from %s", self.formatted_class_name, self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)
@@ -112,7 +113,7 @@ class TestPluginBase(TestPluginClassBase):
         raise NotImplementedError("Subclasses must implement this method")
 
     @property
-    def connection_manifest(self) -> dict:
+    def connection_manifest(self) -> SmarterDictType:
         raise NotImplementedError("Subclasses must implement this method")
 
     @property
@@ -136,14 +137,14 @@ def get_data_path(filename: str) -> str:
     return os.path.join(DATA_PATH, filename)
 
 
-def get_test_data(filename: str) -> Any:
+def get_test_data(filename: str) -> SmarterDictType:
     """
     Return the parsed contents of a yaml file in ./data.
 
     :param filename: The name of a yaml file in ./data.
     :type filename: str
     :returns: The file's parsed contents.
-    :rtype: Any
+    :rtype: SmarterDictType
     """
     return get_readonly_yaml_file(get_data_path(filename))
 
@@ -161,7 +162,7 @@ class PluginAppTestBase(TestAccountMixin):
     to create throwaway plugins, which are deleted when the test ends.
     """
 
-    static_plugin_yaml: dict
+    static_plugin_yaml: SmarterDictType
     static_plugin: StaticPlugin
 
     @classmethod

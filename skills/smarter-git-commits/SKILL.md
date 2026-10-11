@@ -56,6 +56,9 @@ semantic-release (`release.config.js`) to version the release.
     release.
   - Use `chore` for data-only or housekeeping changes, such as example manifests
     or model defaults. Don't use `feat` for them.
+  - Work that the user asked for as a list of bugs is `fix`, even when it adds a
+    small capability along the way. Use `feat` only when the user framed the
+    work as a new feature.
 - **scope:** the Django app or area that the change centers on, in lower case:
   `llmclient`, `guardrail`, `plugin`, `passthrough`, `react`, `api`, ... You
   can omit it for changes that span the whole repository.

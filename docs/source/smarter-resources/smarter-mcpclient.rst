@@ -115,7 +115,7 @@ The Manifest
           - search_*
         allowedResources: []         # glob patterns of resource URIs. Empty means none
         includeInstructions: true
-        cacheTtl: 300                # seconds, 0 disables caching
+        cacheTtl: 3600               # seconds, 0 disables caching
         isActive: true
         priority: 100                # lower runs first
 

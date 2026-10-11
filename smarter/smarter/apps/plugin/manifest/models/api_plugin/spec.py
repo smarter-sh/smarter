@@ -1,4 +1,4 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
 import os
 from typing import Any, ClassVar, List, Optional, Union
@@ -20,6 +20,7 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import SmarterBasePydanticModel
+from smarter.lib.typing import SmarterDictType
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
@@ -50,7 +51,7 @@ class ApiData(SmarterBasePydanticModel):
         default=None,
         description="A list of JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
     )
-    body: Optional[Union[dict[str, Any], list[Any]]] = Field(
+    body: Optional[Union[SmarterDictType, list[Any]]] = Field(
         default=None,
         description="Any valid JSON object containing the body of the API request, if applicable.",
     )
@@ -91,7 +92,7 @@ class ApiData(SmarterBasePydanticModel):
 
 
 class SAMApiPluginSpec(SAMPluginCommonSpec):
-    """Smarter API Manifest ApiConnection.spec"""
+    """Smarter API Manifest ApiConnection.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
@@ -107,7 +108,8 @@ class SAMApiPluginSpec(SAMPluginCommonSpec):
     @model_validator(mode="after")
     def validate_connection(self):
         """
-        Validate that the connection value is a valid cleanstring and that at
+        Validate that the connection value is a valid cleanstring and that at.
+
         least 1 record exists in the ApiConnection table with the given name.
 
         If the model includes an authenticated user then also validate that at

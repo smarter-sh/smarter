@@ -12,6 +12,7 @@ from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
 )
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 with open(os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "get", "plugins.json"), encoding="utf-8") as f:
     EXAMPLE_GET_RESPONSE = json.load(f)
@@ -152,12 +153,12 @@ class SuccessResponseSerializer(serializers.Serializer):
     metadata = ResponseMetadataSerializer(required=False)
 
 
-def json_error_response(message: str) -> dict:
+def json_error_response(message: str) -> SmarterDictType:
     """Helper function to generate a JSON error response."""
     return {"status": "error", "message": message}
 
 
-def json_success_response(message: str) -> dict:
+def json_success_response(message: str) -> SmarterDictType:
     """Helper function to generate a JSON success response."""
     return {
         "application/json": {

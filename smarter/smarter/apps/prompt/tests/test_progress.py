@@ -30,6 +30,7 @@ from smarter.apps.prompt.signals import (
     llm_tool_requested,
     llm_tool_responded,
 )
+from smarter.lib.typing import SmarterDictType
 
 TOOL_CALL = {"id": "call_1", "type": "function", "function": {"name": "get_current_weather", "arguments": '{"a": 1}'}}
 
@@ -51,7 +52,7 @@ def collect(stream) -> list[str]:
     return asyncio.run(run())
 
 
-def events(frames: list[str], name: str) -> list[dict]:
+def events(frames: list[str], name: str) -> list[SmarterDictType]:
     """The data of the frames of the named event."""
     prefix = f"event: {name}\ndata: "
     return [json.loads(frame[len(prefix) :]) for frame in frames if frame.startswith(prefix)]
@@ -88,8 +89,8 @@ class TestEmit(TestCase):
 class TestReceivers(TestCase):
     """Test that the prompt's signals become progress events."""
 
-    def received(self, send) -> list[dict]:
-        received: list[dict] = []
+    def received(self, send) -> list[SmarterDictType]:
+        received: list[SmarterDictType] = []
         with progress_sink(received.append):
             send()
         return received

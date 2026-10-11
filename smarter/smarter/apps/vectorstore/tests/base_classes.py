@@ -27,6 +27,7 @@ from smarter.apps.vectorstore.backends import QdrantBackend
 from smarter.apps.vectorstore.kubernetes import QdrantKubernetes, configure_kubernetes
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.service import VectorstoreService
+from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = os.path.join(HERE, "data")
@@ -34,7 +35,7 @@ DATA_PATH = os.path.join(HERE, "data")
 DIMENSION = 32
 
 
-def get_test_data(filename: str) -> Any:
+def get_test_data(filename: str) -> SmarterDictType:
     with open(os.path.join(DATA_PATH, filename), encoding="utf-8") as f:
         return yaml.safe_load(f)
 
@@ -46,8 +47,8 @@ class FakeKubernetes:
         self.ready = True
         self.applied: list[str] = []
         self.deleted: list[tuple[list[str], str]] = []
-        self.statefulset: Optional[dict] = {"status": {"readyReplicas": 1}}
-        self.pods: list[dict] = []
+        self.statefulset: Optional[SmarterDictType] = {"status": {"readyReplicas": 1}}
+        self.pods: list[SmarterDictType] = []
         self.fail_apply: Optional[str] = None
 
     def apply_manifest(self, manifest: str):
@@ -55,10 +56,10 @@ class FakeKubernetes:
             raise RuntimeError(self.fail_apply)
         self.applied.append(manifest)
 
-    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[dict]:
+    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
         return self.statefulset
 
-    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
+    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
         return self.pods
 
     def delete_resources(self, kinds: list[str], namespace: str, selector: str) -> bool:
@@ -112,9 +113,9 @@ class VectorstoreTestBase(TestAccountMixin):
         super().setUp()
         self.kubernetes.__init__()  # pylint: disable=unnecessary-dunder-call
 
-    def spec(self, **overrides) -> dict[str, Any]:
+    def spec(self, **overrides) -> SmarterDictType:
         """A self-hosted Qdrant spec, with overrides."""
-        spec: dict[str, Any] = {
+        spec: SmarterDictType = {
             "backend": "qdrant",
             "hosting": "self_hosted",
             "isActive": True,

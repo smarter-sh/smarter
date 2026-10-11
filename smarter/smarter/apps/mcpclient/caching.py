@@ -39,9 +39,8 @@ Dependencies:
     - smarter.apps.mcpclient.serializers.MCPClientSerializer
 """
 
-from typing import Optional
+from typing import Callable
 
-from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 
@@ -49,6 +48,7 @@ from smarter.apps.account.models.user_profile import UserProfile
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .connection import MCPServerCatalog, MCPServerConnection, is_tool_allowed
 from .exceptions import SmarterMCPClientConnectionError
@@ -228,24 +228,8 @@ def invalidate_all_cached_mcpclients_for_user_profile(user_profile: UserProfile)
 # -----------------------------------------------------------------------------
 # MCP server catalogs
 # -----------------------------------------------------------------------------
-CATALOG_CACHE_PREFIX = "smarter.apps.mcpclient.catalog"
 FAILURE_CACHE_TTL = 60
 """Seconds to remember that an MCP server could not be reached."""
-
-
-def catalog_cache_key(mcpclient: MCPClient) -> str:
-    """
-    Return the cache key of an MCPClient's catalog.
-
-    :param mcpclient: The MCPClient.
-    :returns: A key that changes whenever the MCPClient's connection settings change.
-    """
-    return f"{CATALOG_CACHE_PREFIX}.{mcpclient.id}.{mcpclient.fingerprint}"  # type: ignore[attr-defined]
-
-
-def failure_cache_key(mcpclient: MCPClient) -> str:
-    """Return the cache key of an MCPClient's most recent connection failure."""
-    return catalog_cache_key(mcpclient) + ".failure"
 
 
 def record_connection(mcpclient: MCPClient, catalog: MCPServerCatalog) -> None:
@@ -285,6 +269,69 @@ def record_connection_failure(mcpclient: MCPClient, error: str) -> None:
         setattr(mcpclient, key, value)
 
 
+def connect(mcpclient: MCPClient) -> MCPServerCatalog:
+    """
+    Connect to an MCPClient's server, and return its catalog, without caching.
+
+    The result is recorded in the MCPClient's status fields, and
+    :data:`~smarter.apps.mcpclient.signals.mcpclient_connected` or
+    :data:`~smarter.apps.mcpclient.signals.mcpclient_connection_failed` is sent.
+
+    :param mcpclient: The MCPClient.
+    :returns: The catalog.
+    :rtype: MCPServerCatalog
+    :raises SmarterMCPClientConnectionError: If the server cannot be reached.
+    :raises SmarterMCPClientConfigurationError: If the MCPClient is misconfigured.
+    """
+    try:
+        catalog = MCPServerConnection(mcpclient).discover()
+    except SmarterMCPClientConnectionError as e:
+        record_connection_failure(mcpclient, e.message)
+        mcpclient_connection_failed.send(sender=get_cached_catalog, mcpclient=mcpclient, error=e.message)
+        raise
+    record_connection(mcpclient, catalog)
+    mcpclient_connected.send(sender=get_cached_catalog, mcpclient=mcpclient, catalog=catalog)
+    return catalog
+
+
+def cached_catalog_functions(
+    mcpclient: MCPClient,
+) -> tuple[Callable[[int, str], SmarterDictType], Callable[[int, str], SmarterDictType]]:
+    """
+    Return the cached functions behind an MCPClient's catalog.
+
+    Both are called with the MCPClient's id and :attr:`MCPClient.fingerprint`, so that
+    changing how the MCPClient connects, or what it allows, changes their cache keys.
+    Their timeouts come from the MCPClient, and do not affect their cache keys, so the
+    functions returned for any instance of an MCPClient share its cache entries.
+
+    - ``get_cached_connection_result`` connects to the server, and caches the catalog,
+      or the error, for :data:`FAILURE_CACHE_TTL` seconds, or ``cache_ttl`` if less.
+    - ``get_cached_catalog_data`` caches the catalog for ``cache_ttl`` seconds. It
+      raises, and so caches nothing, when the connection result is an error.
+
+    :param mcpclient: The MCPClient.
+    :returns: ``(get_cached_catalog_data, get_cached_connection_result)``
+    """
+
+    @cache_results(timeout=min(FAILURE_CACHE_TTL, mcpclient.cache_ttl))
+    def get_cached_connection_result(mcpclient_id: int, fingerprint: str) -> SmarterDictType:
+        try:
+            return {"catalog": connect(mcpclient).to_dict()}
+        except SmarterMCPClientConnectionError as e:
+            return {"error": e.message}
+
+    @cache_results(timeout=mcpclient.cache_ttl)
+    def get_cached_catalog_data(mcpclient_id: int, fingerprint: str) -> SmarterDictType:
+        result = get_cached_connection_result(mcpclient_id, fingerprint)
+        if "error" in result:
+            # raise rather than return so that a failure is cached for FAILURE_CACHE_TTL seconds only.
+            raise SmarterMCPClientConnectionError(result["error"])
+        return result["catalog"]
+
+    return get_cached_catalog_data, get_cached_connection_result
+
+
 def get_cached_catalog(mcpclient: MCPClient, refresh: bool = False) -> MCPServerCatalog:
     """
     Return an MCPClient's catalog: its MCP server's tools, instructions and capabilities.
@@ -302,31 +349,12 @@ def get_cached_catalog(mcpclient: MCPClient, refresh: bool = False) -> MCPServer
         ``refresh``, within the last :data:`FAILURE_CACHE_TTL` seconds.
     :raises SmarterMCPClientConfigurationError: If the MCPClient is misconfigured.
     """
-    key = catalog_cache_key(mcpclient)
-    if not refresh and mcpclient.cache_ttl:
-        data: Optional[dict] = cache.get(key)
-        if data:
-            logger.debug("%s.get_cached_catalog() cache hit for %s", logger_prefix, mcpclient.name)
-            return MCPServerCatalog.from_dict(data)
-        failure: Optional[str] = cache.get(failure_cache_key(mcpclient))
-        if failure:
-            raise SmarterMCPClientConnectionError(failure)
-
-    try:
-        catalog = MCPServerConnection(mcpclient).discover()
-    except SmarterMCPClientConnectionError as e:
-        record_connection_failure(mcpclient, e.message)
-        if mcpclient.cache_ttl:
-            cache.set(failure_cache_key(mcpclient), e.message, min(FAILURE_CACHE_TTL, mcpclient.cache_ttl))
-        mcpclient_connection_failed.send(sender=get_cached_catalog, mcpclient=mcpclient, error=e.message)
-        raise
-
-    record_connection(mcpclient, catalog)
-    if mcpclient.cache_ttl:
-        cache.set(key, catalog.to_dict(), mcpclient.cache_ttl)
-        cache.delete(failure_cache_key(mcpclient))
-    mcpclient_connected.send(sender=get_cached_catalog, mcpclient=mcpclient, catalog=catalog)
-    return catalog
+    if not mcpclient.cache_ttl:
+        return connect(mcpclient)
+    if refresh:
+        invalidate_cached_catalog(mcpclient)
+    get_cached_catalog_data, _ = cached_catalog_functions(mcpclient)
+    return MCPServerCatalog.from_dict(get_cached_catalog_data(mcpclient.pk, mcpclient.fingerprint))  # type: ignore[attr-defined]
 
 
 def invalidate_cached_catalog(mcpclient: MCPClient) -> None:
@@ -338,4 +366,5 @@ def invalidate_cached_catalog(mcpclient: MCPClient) -> None:
 
     :param mcpclient: The MCPClient.
     """
-    cache.delete_many([catalog_cache_key(mcpclient), failure_cache_key(mcpclient)])
+    for function in cached_catalog_functions(mcpclient):
+        function.invalidate(mcpclient.pk, mcpclient.fingerprint)  # type: ignore[attr-defined]

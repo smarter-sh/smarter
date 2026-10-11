@@ -14,6 +14,7 @@ from smarter.lib.django.models import (
     list_of_dicts_to_list,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
@@ -60,7 +61,7 @@ class PluginDataStatic(PluginDataBase):
     )
     """The JSON data that this plugin returns to OpenAI API when invoked by the user prompt."""
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> Optional[Union[dict, list]]:
+    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> Optional[Union[SmarterDictType, list]]:
         """
         Return the static data for this plugin, either as a dictionary or a list.
 
@@ -77,7 +78,7 @@ class PluginDataStatic(PluginDataBase):
         :rtype: Optional[Union[dict, list]]
         :raises SmarterValueError: If ``static_data`` is not a dict or list.
         """
-        retval: Union[dict, list, None] = None
+        retval: Union[SmarterDictType, list, None] = None
         if isinstance(self.static_data, dict):
             return self.static_data
         if isinstance(self.static_data, list):
@@ -144,7 +145,7 @@ class PluginDataStatic(PluginDataBase):
 
         return retval[: smarter_settings.plugin_max_data_results] if isinstance(retval, list) else retval
 
-    def data(self, params: Optional[dict] = None) -> Optional[dict]:
+    def data(self, params: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Return the static data as a dictionary.
 

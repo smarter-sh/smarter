@@ -209,7 +209,7 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
 class SmarterAdminAPIMixin(SmarterRequestMixin):
     """Mixin for admin API views that require superuser or staff authentication."""
 
-    request: Any
+    request: Request
 
     def is_superuser(self) -> bool:
         """Check if the authenticated user is a superuser.

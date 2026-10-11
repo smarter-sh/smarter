@@ -58,6 +58,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -66,7 +67,7 @@ logger = logging.getSmarterLogger(
 MAX_RESULTS = 1000
 
 
-def proxy_spec_to_django_orm(spec: SAMProxySpec) -> dict[str, Any]:
+def proxy_spec_to_django_orm(spec: SAMProxySpec) -> SmarterDictType:
     """The Proxy fields of a spec, other than its Provider and Secret, which the broker resolves by name."""
     return {
         "base_url": spec.baseUrl or "",
@@ -224,7 +225,7 @@ class SAMProxyBroker(AbstractBroker):
             )
         return secret
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the manifest into a dict of Django ORM Proxy fields.
 
@@ -240,7 +241,7 @@ class SAMProxyBroker(AbstractBroker):
             "api_key_secret": self.resolve_secret(spec.apiKey),
         }
 
-    def django_orm_to_manifest_dict(self, proxy: Optional[Proxy] = None) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self, proxy: Optional[Proxy] = None) -> Optional[SmarterDictType]:
         """Convert a Proxy, by default the user's, into a manifest dict, with its status."""
         if not self.account or not self.user_profile:
             raise SAMBrokerErrorNotReady(

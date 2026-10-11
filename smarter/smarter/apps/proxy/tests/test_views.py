@@ -10,6 +10,7 @@ from smarter.apps.proxy.caching import invalidate_all_cached_proxies_for_user_pr
 from smarter.apps.proxy.models import Proxy
 from smarter.apps.proxy.urls import ProxyReverseNames as Names
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import API_KEY, ProxyTestBase
@@ -29,7 +30,7 @@ class TestProxyListApi(ProxyTestBase):
         self.client.force_login(self.staff_user)
         self.addCleanup(self.client.logout)
 
-    def post(self, path: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, path: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         response = self.client.post(path)
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content)

@@ -24,6 +24,7 @@ from smarter.common.helpers.console_helpers import (
 )
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 from .exceptions import SmarterAWSError
 
@@ -72,7 +73,7 @@ class AWSBase(SmarterHelperMixin):
     _debug_mode: bool = False
 
     _connected: bool = False
-    _identity: Optional[dict] = None
+    _identity: Optional[SmarterDictType] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -211,7 +212,7 @@ class AWSBase(SmarterHelperMixin):
         return self._client_type
 
     @property
-    def identity(self) -> Optional[dict]:
+    def identity(self) -> Optional[SmarterDictType]:
         """
         Return the AWS identity for the current session.
 

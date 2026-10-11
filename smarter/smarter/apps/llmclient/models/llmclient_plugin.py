@@ -16,6 +16,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 from .llmclient import LLMClient
 
@@ -265,7 +266,7 @@ class LLMClientPlugin(TimestampedModel):
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
     @classmethod
-    def plugins_json(cls, llmclient: LLMClient) -> List[dict]:
+    def plugins_json(cls, llmclient: LLMClient) -> List[SmarterDictType]:
         retval = []
         for plugin in cls.plugins(llmclient):
             retval.append(plugin.to_json())

@@ -17,6 +17,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 STACKADEMY_COURSES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stackademy_courses.json")
@@ -118,7 +119,7 @@ class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
 class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
     """A placeholder view for the Stackademy course catalog."""
 
-    def catalogue(self) -> list[dict]:
+    def catalogue(self) -> list[SmarterDictType]:
 
         # the file is beside this module, not in the working directory.
         with open(STACKADEMY_COURSES, encoding="utf-8") as file:

@@ -368,6 +368,15 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
             self.broker.llmclient.app_file_attachment,
             f"LLMClient appFileAttachment does not match manifest appFileAttachment. manifest: {self.broker.manifest.spec.config.appFileAttachment}, llmclient: {self.broker.llmclient.app_file_attachment}",
         )
+        self.assertEqual(self.broker.llmclient.allowed_origins, ["https://www.example.com", "http://localhost:5173"])
+
+    def test_describe_round_trips_allowed_origins(self):
+        """Test that describe returns the allowedOrigins that apply saved, so that its output can be applied again."""
+        self.broker.apply(self.request, **self.kwargs)
+        manifest = json.loads(self.broker.describe(self.request, **self.kwargs).content)["data"]
+        self.assertEqual(
+            manifest["spec"]["config"]["allowedOrigins"], ["https://www.example.com", "http://localhost:5173"]
+        )
 
     def test_describe(self):
         """

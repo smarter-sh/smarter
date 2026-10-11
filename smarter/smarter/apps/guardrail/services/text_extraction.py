@@ -14,17 +14,18 @@ scanned. Each segment has a path, e.g. ``messages[3].content`` or
 
 import copy
 import re
-from typing import Any
+from typing import Any, Optional, Union
 
 from smarter.apps.provider.services.text_completion.contracts import (
     GuardrailStage,
     TextSegment,
 )
+from smarter.lib.typing import SmarterDictType
 
 USER_ROLE = "user"
 
 
-def extract_segments(payload: dict[str, Any], stage: GuardrailStage) -> list[TextSegment]:
+def extract_segments(payload: SmarterDictType, stage: GuardrailStage) -> list[TextSegment]:
     """
     Return the text segments that guardrails scan, for a payload and stage.
 
@@ -60,7 +61,7 @@ def latest_user_message_index(messages: list[Any]) -> int | None:
     return None
 
 
-def extract_pre_segments(payload: dict[str, Any]) -> list[TextSegment]:
+def extract_pre_segments(payload: SmarterDictType) -> list[TextSegment]:
     """Return the segments of the latest user message of a chat completion request."""
     messages = payload.get("messages") or []
     index = latest_user_message_index(messages)
@@ -69,7 +70,7 @@ def extract_pre_segments(payload: dict[str, Any]) -> list[TextSegment]:
     return content_segments(messages[index].get("content"), f"messages[{index}].content")
 
 
-def extract_post_segments(payload: dict[str, Any]) -> list[TextSegment]:
+def extract_post_segments(payload: SmarterDictType) -> list[TextSegment]:
     """Return the segments of each choice's message content, and refusal, of a chat completion response."""
     segments: list[TextSegment] = []
     for i, choice in enumerate(payload.get("choices") or []):
@@ -81,7 +82,7 @@ def extract_post_segments(payload: dict[str, Any]) -> list[TextSegment]:
     return segments
 
 
-def write_segment(payload: dict[str, Any], path: str, new_text: str) -> dict[str, Any]:
+def write_segment(payload: SmarterDictType, path: str, new_text: str) -> SmarterDictType:
     """
     Return a deep copy of the payload, with the text at ``path`` replaced.
 
@@ -94,7 +95,7 @@ def write_segment(payload: dict[str, Any], path: str, new_text: str) -> dict[str
     return updated
 
 
-def read_segment(payload: dict[str, Any], path: str) -> str | None:
+def read_segment(payload: SmarterDictType, path: str) -> str | None:
     """Return the text at ``path``, or ``None`` if it does not resolve to a string."""
     node, key = resolve_path(payload, path)
     if node is None:
@@ -106,7 +107,7 @@ def read_segment(payload: dict[str, Any], path: str) -> str | None:
     return value if isinstance(value, str) else None
 
 
-def resolve_path(payload: Any, path: str) -> tuple[Any, Any]:
+def resolve_path(payload: Any, path: str) -> tuple[Any, Optional[Union[str, int]]]:
     """
     Walk a ``messages[0].content``-style path to its final container.
 
@@ -125,9 +126,9 @@ def resolve_path(payload: Any, path: str) -> tuple[Any, Any]:
     return node, tokens[-1]
 
 
-def tokenize(path: str) -> list[Any]:
+def tokenize(path: str) -> list[Union[str, int]]:
     """Split a dotted, bracketed path into its keys and indices, e.g. ``a[0].b`` into ``["a", 0, "b"]``."""
-    tokens: list[Any] = []
+    tokens: list[Union[str, int]] = []
     for part in path.split("."):
         name, _, rest = part.partition("[")
         if name:

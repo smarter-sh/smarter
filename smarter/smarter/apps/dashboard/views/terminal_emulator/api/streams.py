@@ -38,7 +38,7 @@ See Also
 import asyncio
 import json
 from http import HTTPStatus
-from typing import Any, AsyncIterator, Iterator, Union
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, Union
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
@@ -55,12 +55,15 @@ from smarter.lib.logging.redis_log_handler import (
     stream_key,
 )
 
+if TYPE_CHECKING:
+    from redis import Redis
+
 logger = logging.getLogger(__name__)
 STREAM_REPLAY_BATCH_SIZE = 500
 STREAM_REPLAY_MAX_ENTRIES = 2000
 
 
-def _decode_redis_payload(raw: Any) -> str:
+def _decode_redis_payload(raw: Union[bytes, bytearray, str, None]) -> str:
     """
     Normalize Redis pubsub or stream payloads into text.
 
@@ -70,7 +73,7 @@ def _decode_redis_payload(raw: Any) -> str:
     log streaming view.
 
     :param raw: The raw payload from Redis, which may be a bytes, bytearray, or str.
-    :type raw: Any
+    :type raw: Union[bytes, bytearray, str, None]
     :return: The decoded payload as a string.
     :rtype: str
     """
@@ -186,7 +189,9 @@ def _is_below_level(payload_text: str, min_level: int) -> bool:
     return level is not None and level < min_level
 
 
-async def _replay_stream_history(redis_cache: Any, channel: str, min_level: int = logging.NOTSET) -> AsyncIterator[str]:
+async def _replay_stream_history(
+    redis_cache: "Redis", channel: str, min_level: int = logging.NOTSET
+) -> AsyncIterator[str]:
     """
     Replay persisted Redis stream entries as SSE frames before live Pub/Sub.
 
@@ -199,7 +204,7 @@ async def _replay_stream_history(redis_cache: Any, channel: str, min_level: int 
     :param redis_cache:
         Redis client obtained from ``django-redis``. The client must provide
         an ``xrange`` method compatible with Redis stream reads.
-    :type redis_cache: Any
+    :type redis_cache: redis.Redis
     :param channel:
         Redis Pub/Sub channel name whose persisted stream mirror should be
         replayed, for example ``"logs:User.admin"``.
@@ -249,7 +254,8 @@ async def _replay_stream_history(redis_cache: Any, channel: str, min_level: int 
 
         for entry_id, payload in entries:
             # Redis field keys may be bytes or str depending on client decode settings.
-            raw = payload.get("data", payload.get(b"data", ""))
+            fields = payload or {}
+            raw = fields.get("data", fields.get(b"data", ""))
             decoded = _decode_redis_payload(raw)
             if _should_skip_stream_internal_log(decoded) or _is_below_level(decoded, min_level):
                 # Advance the cursor past this entry even though we're dropping it,

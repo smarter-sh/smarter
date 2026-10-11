@@ -65,6 +65,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -73,7 +74,7 @@ logger = logging.getSmarterLogger(
 MAX_RESULTS = 1000
 
 
-def spec_to_django_orm(spec: SAMLLMHostSpec, name: str, compute: Optional[LLMHostCompute] = None) -> dict[str, Any]:
+def spec_to_django_orm(spec: SAMLLMHostSpec, name: str, compute: Optional[LLMHostCompute] = None) -> SmarterDictType:
     """
     The LLMHost fields of a spec: the spec itself, and copies of the parts that are queried and reported on.
 
@@ -180,7 +181,7 @@ class SAMLLMHostBroker(AbstractBroker):
         self._llmhost = LLMHost.objects.filter(user_profile=self.user_profile, name=self.name).first()
         return self._llmhost
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """Convert the manifest into a dict of Django ORM LLMHost fields."""
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"Manifest not loaded for {self.kind} broker.", thing=self.kind)
@@ -195,7 +196,7 @@ class SAMLLMHostBroker(AbstractBroker):
             **spec_to_django_orm(self.manifest.spec, self.manifest.metadata.name, compute),
         }
 
-    def status_for(self, llmhost: LLMHost) -> dict[str, Any]:
+    def status_for(self, llmhost: LLMHost) -> SmarterDictType:
         """The LLMHost's state, as of its last status check."""
         return {
             "hostStatus": llmhost.status,
@@ -212,7 +213,7 @@ class SAMLLMHostBroker(AbstractBroker):
             "estimatedCost": llmhost.estimated_cost,
         }
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """Convert the LLMHost into a manifest dict, with its status."""
         if not self.account or not self.user_profile:
             raise SAMBrokerErrorNotReady(

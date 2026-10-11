@@ -58,6 +58,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
 
@@ -223,7 +224,7 @@ class VectorstoreDocumentsView(VectorstoreViewBase):
             if upload.size > MAX_DOCUMENT_BYTES:
                 raise ValueError(f"{upload.name} is larger than {MAX_DOCUMENT_BYTES // (1024 * 1024)} MiB.")
             yield upload.name, upload.read(), None, upload.content_type, VectorstoreDocumentSource.UPLOAD
-        data: Any = request.data if hasattr(request.data, "get") else {}
+        data: SmarterDictType = request.data if isinstance(request.data, dict) else {}
         if data.get("text"):
             yield data.get("name") or "text", None, str(data["text"]), "text/plain", VectorstoreDocumentSource.TEXT
         if data.get("url"):
@@ -253,7 +254,7 @@ class VectorstoreSearchView(VectorstoreViewBase):
 
     def post(self, request: Request, *args, **kwargs):
         vectorstore = self.get_vectorstore(request, **kwargs)
-        data: Any = request.data if hasattr(request.data, "get") else {}
+        data: SmarterDictType = request.data if isinstance(request.data, dict) else {}
         try:
             k = min(int(data.get("k", 4)), MAX_SEARCH_RESULTS)
             results = self.get_service(vectorstore).search(

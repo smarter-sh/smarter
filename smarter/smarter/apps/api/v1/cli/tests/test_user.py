@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for User"""
+"""Test Api v1 CLI commands for User."""
 
 from http import HTTPStatus
 from urllib.parse import urlencode
@@ -13,6 +13,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
 
@@ -26,7 +27,7 @@ logger = logging.getSmarterLogger(
 
 class TestApiCliV1User(ApiV1CliTestBase):
     """
-    Test Api v1 CLI commands for User
+    Test Api v1 CLI commands for User.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -44,7 +45,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
             "TestApiCliV1User.setUp() complete with kwargs %s, query_params: %s", self.kwargs, self.query_params
         )
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         # validate the response and status are both good
         self.assertIsInstance(response, dict)
 
@@ -61,7 +62,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         self.assertIn(SAMMetadataKeys.DESCRIPTION.value, metadata.keys())
         self.assertIn(SAMMetadataKeys.VERSION.value, metadata.keys())
 
-    def validate_spec(self, data: dict) -> None:
+    def validate_spec(self, data: SmarterDictType) -> None:
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         config = spec["config"]
@@ -70,7 +71,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
             assert field in config.keys(), f"{field} not found in config keys"
 
     def test_example_manifest(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
 
         path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
@@ -80,7 +81,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_describe(self) -> None:
-        """Test describe command"""
+        """Test describe command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -91,7 +92,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_apply(self) -> None:
-        """Test apply command"""
+        """Test apply command."""
 
         # retrieve the current manifest by calling "describe"
         logger.info("1.) get the manifest schema from the existing Account that we created in setup()")
@@ -177,7 +178,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         self.assertEqual(config["isActive"], True)
 
     def test_get(self) -> None:
-        """Test get command"""
+        """Test get command."""
 
         def validate_titles(data):
             if "titles" not in data:
@@ -236,7 +237,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
             self.fail(f"Items are not valid: {data}")
 
     def test_deploy(self) -> None:
-        """Test deploy command"""
+        """Test deploy command."""
 
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -256,7 +257,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         self.assertTrue(self.admin_user.is_active)
 
     def test_undeploy(self) -> None:
-        """Test undeploy command"""
+        """Test undeploy command."""
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -271,7 +272,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
 
     def test_logs(self) -> None:
-        """Test logs command"""
+        """Test logs command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         logger.info("base response: %s, Status: %s", response, status)

@@ -22,6 +22,7 @@ from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -61,10 +62,10 @@ class Command(SmarterCommand):
     """
 
     help = "Run API CLI endpoint verifications."
-    _data: Optional[dict] = None
+    _data: Optional[SmarterDictType] = None
 
     @property
-    def data(self) -> Optional[dict]:
+    def data(self) -> Optional[SmarterDictType]:
         """Return the plugin.yaml data."""
         if self._data is None:
             file_path = os.path.join(HERE, "data", "plugin.yaml")
