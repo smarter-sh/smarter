@@ -7,9 +7,10 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
 )
 from smarter.apps.llmclient.models import LLMClient
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache as cache
+from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
@@ -50,5 +51,23 @@ class Prompt(MetaDataWithOwnershipModel):
 
     def delete(self, *args, **kwargs):
         if self.session_key:
-            cache.delete(self.session_key)
+            get_cached_prompt_by_session_key.invalidate(self.session_key)  # type: ignore[attr-defined]
         super().delete(*args, **kwargs)
+
+
+@cache_results(timeout=smarter_settings.chat_cache_expiration or 300)
+def get_cached_prompt_by_session_key(session_key: str) -> Prompt:
+    """
+    Return the Prompt of a chat session.
+
+    Every prompt of a session looks up its Prompt, so it is cached. A missing Prompt
+    raises, and so is never cached: PromptHelper creates it, and the next prompt of the
+    session finds it.
+
+    :param session_key: The chat session's key.
+    :type session_key: str
+    :returns: The session's Prompt.
+    :rtype: Prompt
+    :raises Prompt.DoesNotExist: If the session has no Prompt.
+    """
+    return Prompt.objects.select_related("llmclient").get(session_key=session_key)

@@ -172,9 +172,8 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             )
             if user_profile.user.is_superuser:
                 logger.debug(
-                    "%s user is superuser, returning all resources. count: %s",
+                    "%s user is superuser, returning all resources.",
                     logger_prefix,
-                    self.count(),
                 )
                 return self.all()
 
@@ -183,10 +182,9 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
                 | models.Q(user_profile__account=user_profile.account)
             )
             logger.debug(
-                "%s user is not a superuser. Returning resources owned by account %s + platform. count: %s",
+                "%s user is not a superuser. Returning resources owned by account %s + platform.",
                 logger_prefix,
                 user_profile.account.account_number,
-                retval.count(),
             )
             return retval
 
@@ -213,10 +211,9 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         qs_distinct = qs.distinct()
         logger.debug(
-            "%s final queryset for user: %s has count: %s",
+            "%s final queryset for user: %s",
             logger_prefix,
             user,
-            qs_distinct.count(),
         )
         return qs_distinct
 
@@ -266,9 +263,8 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             # superusers have ownership permission for all resources
             if user_profile.user.is_superuser:
                 logger.debug(
-                    "%s user is superuser, returning all resources. count: %s",
+                    "%s user is superuser, returning all resources.",
                     logger_prefix,
-                    self.all().count(),
                 )
                 return self.all()
 
@@ -276,20 +272,18 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             if user_profile.user.is_staff:
                 retval = self.filter(user_profile__account=user_profile.account)
                 logger.debug(
-                    "%s called for staff user: %s, returning resources. count: %s",
+                    "%s called for staff user: %s, returning resources.",
                     logger_prefix,
                     user_profile.user,
-                    retval.count(),
                 )
                 return retval
 
             # regular authenticated users have ownership permission only for resources they own
             retval = self.filter(user_profile=user_profile)
             logger.debug(
-                "%s called for regular user: %s, returning resources. count: %s",
+                "%s called for regular user: %s, returning resources.",
                 logger_prefix,
                 user_profile.user,
-                retval.count(),
             )
             return retval
 
@@ -316,10 +310,9 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         qs_distinct = qs.distinct()
         logger.debug(
-            "%s final queryset for user: %s has count: %s",
+            "%s final queryset for user: %s",
             logger_prefix,
             user,
-            qs_distinct.count(),
         )
         return qs_distinct
 
@@ -818,7 +811,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             user_profile = None
         except UserProfile.MultipleObjectsReturned:
             user_profile = (
-                UserProfile.objects.select_related("user_profile", "user_profile__account", "user_profile__user")
+                UserProfile.objects.select_related("user", "account")
                 .prefetch_related("tags")
                 .filter(user=user, account=account)
                 .order_by("-pk")

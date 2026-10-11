@@ -19,6 +19,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
+    get_cached_user_for_username,
     smarter_cached_objects,
 )
 from smarter.apps.secret.models import Secret
@@ -751,6 +752,36 @@ def get_provider(provider_name: str) -> Provider:
         raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
 
     logger.debug("Fetched and cached provider %s for provider_name: %s", provider, provider_name)
+    return provider
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_cached_active_provider_for_user(provider_name: str, username: str) -> Optional[Provider]:
+    """
+    Return the active Provider with this name that the user may read, or None.
+
+    Prompts and guardrails look up their Provider on every request, so the result is
+    cached, briefly, as the module's other Provider lookups are.
+
+    .. code-block:: python
+
+        provider = get_cached_active_provider_for_user("openai", request.user.username)
+
+    :param provider_name: The Provider's name.
+    :type provider_name: str
+    :param username: The username of the user who reads the Provider.
+    :type username: str
+    :returns: The Provider, or None if there is no such active Provider that the user may read.
+    :rtype: Optional[Provider]
+    """
+    try:
+        user = get_cached_user_for_username(username=username)
+    except User.DoesNotExist:
+        return None
+    provider = Provider.objects.filter(is_active=True, name=provider_name).with_read_permission_for(user).first()  # type: ignore[attr-defined]
+    logger.debug(
+        "Fetched and cached provider %s for provider_name: %s, username: %s", provider, provider_name, username
+    )
     return provider
 
 

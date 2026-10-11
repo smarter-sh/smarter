@@ -287,17 +287,20 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         if not digest:
             return
 
-        try:
-            token = SmarterAuthToken.objects.get(digest=digest)
+        # authenticate_credentials() returns the SmarterAuthToken itself, so there is no need to fetch it again.
+        token = auth_obj if isinstance(auth_obj, SmarterAuthToken) else None
+        if token is None:
+            try:
+                token = SmarterAuthToken.objects.get(digest=digest)
 
-        except SmarterAuthToken.DoesNotExist:
+            except SmarterAuthToken.DoesNotExist:
 
-            logger.warning(
-                "%s token digest not found",
-                self.formatted_class_name,
-            )
+                logger.warning(
+                    "%s token digest not found",
+                    self.formatted_class_name,
+                )
 
-            return
+                return
 
         max_age = timedelta(days=smarter_settings.smarter_api_key_max_lifetime_days)
 

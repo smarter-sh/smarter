@@ -355,6 +355,9 @@ class Account(MetaDataModel):
 
         SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
+        # UserProfile.cached_account reads accounts by pk, so a change must reach the cache.
+        Account.get_cached_object(invalidate=True, pk=self.pk)
+        Account.get_cached_object(invalidate=True, account_number=self.account_number)
 
     @classmethod
     def get_by_account_number(cls, account_number):
