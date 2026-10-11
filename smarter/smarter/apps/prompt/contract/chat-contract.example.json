@@ -1,0 +1,690 @@
+{
+  "PromptChatApiCompletionV1": {
+    "smarter": {
+      "messages": [
+        {
+          "content": "content",
+          "name": "name",
+          "role": "role",
+          "tool_call_id": "tool_call_id",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "arguments",
+                "name": "name"
+              },
+              "id": "id",
+              "type": "function"
+            }
+          ]
+        }
+      ],
+      "plugins": [
+        "plugins"
+      ],
+      "tools": [
+        "tools"
+      ]
+    }
+  },
+  "PromptChatApiConfigRequest": {
+    "session_key": "session_key"
+  },
+  "PromptChatApiConfigResponse": {
+    "api": "api",
+    "data": {
+      "contract": 2,
+      "debug_mode": false,
+      "functions": {
+        "functions": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "llmclient": 0,
+            "name": "get_current_weather",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "meta_data": {
+          "functions_returned": 0,
+          "plugins_returned": 0,
+          "total_functions": 0,
+          "total_plugins": 0
+        }
+      },
+      "history": {
+        "chat_history": [
+          {
+            "content": "content",
+            "name": "name",
+            "role": "role",
+            "tool_call_id": "tool_call_id",
+            "tool_calls": [
+              {
+                "function": {
+                  "arguments": "arguments",
+                  "name": "name"
+                },
+                "id": "id",
+                "type": "function"
+              }
+            ]
+          }
+        ],
+        "llmclient_request_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "is_aggregation": false,
+            "llmclient": 0,
+            "request": {
+              "messages": [
+                {
+                  "content": "content",
+                  "name": "name",
+                  "role": "role",
+                  "tool_call_id": "tool_call_id",
+                  "tool_calls": [
+                    {
+                      "function": {
+                        "arguments": "arguments",
+                        "name": "name"
+                      },
+                      "id": "id",
+                      "type": "function"
+                    }
+                  ]
+                }
+              ],
+              "session_key": "session_key"
+            },
+            "session_key": "session_key",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "plugin_selector_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "messages": [
+              {
+                "content": "content",
+                "name": "name",
+                "role": "role",
+                "tool_call_id": "tool_call_id",
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "arguments",
+                      "name": "name"
+                    },
+                    "id": "id",
+                    "type": "function"
+                  }
+                ]
+              }
+            ],
+            "plugin_selector": 0,
+            "search_term": "search_term",
+            "session_key": "session_key",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "prompt_plugin_usage_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "input_text": "input_text",
+            "plugin": 0,
+            "prompt": 0,
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "prompt_tool_call_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "function_args": "function_args",
+            "function_name": "function_name",
+            "id": 0,
+            "plugin": 0,
+            "prompt": 0,
+            "request": "value",
+            "response": "value",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "llmclient": {
+        "app_assistant": "app_assistant",
+        "app_example_prompts": [
+          "app_example_prompts"
+        ],
+        "app_file_attachment": false,
+        "app_info_url": "app_info_url",
+        "app_name": "app_name",
+        "app_placeholder": "app_placeholder",
+        "app_welcome_message": "app_welcome_message",
+        "default_model": "default_model",
+        "default_system_role": "default_system_role",
+        "deployed": false,
+        "id": 0,
+        "name": "name",
+        "provider": "provider",
+        "url_llmclient": "url_llmclient",
+        "version": "version"
+      },
+      "meta_data": {
+        "is_deployed": false,
+        "is_valid": false,
+        "ready": false
+      },
+      "plugins": {
+        "meta_data": {
+          "functions_returned": 0,
+          "plugins_returned": 0,
+          "total_functions": 0,
+          "total_plugins": 0
+        },
+        "plugins": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "llmclient": 0,
+            "plugin_meta": {
+              "annotations": [
+                {
+                  "key": "value"
+                }
+              ],
+              "created_at": "2026-01-01T00:00:00Z",
+              "description": "description",
+              "id": 0,
+              "name": "name",
+              "plugin_class": "api",
+              "tags": [
+                "tags"
+              ],
+              "updated_at": "2026-01-01T00:00:00Z",
+              "version": "version"
+            },
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "sandbox_mode": false,
+      "session_key": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    "metadata": {
+      "command": "command",
+      "thing": "thing"
+    }
+  },
+  "PromptChatApiConfigResponseV1": {
+    "api": "api",
+    "data": {
+      "chatbot": {
+        "app_assistant": "app_assistant",
+        "app_example_prompts": [
+          "app_example_prompts"
+        ],
+        "app_file_attachment": false,
+        "app_info_url": "app_info_url",
+        "app_name": "app_name",
+        "app_placeholder": "app_placeholder",
+        "app_welcome_message": "app_welcome_message",
+        "default_model": "default_model",
+        "default_system_role": "default_system_role",
+        "deployed": false,
+        "id": 0,
+        "name": "name",
+        "provider": "provider",
+        "url_chatbot": "url_chatbot",
+        "version": "version"
+      },
+      "debug_mode": false,
+      "functions": {
+        "functions": [
+          {
+            "chatbot": 0,
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "name": "get_current_weather",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "meta_data": {
+          "functions_returned": 0,
+          "plugins_returned": 0,
+          "total_functions": 0,
+          "total_plugins": 0
+        }
+      },
+      "history": {
+        "chat_history": [
+          {
+            "content": "content",
+            "name": "name",
+            "role": "role",
+            "tool_call_id": "tool_call_id",
+            "tool_calls": [
+              {
+                "function": {
+                  "arguments": "arguments",
+                  "name": "name"
+                },
+                "id": "id",
+                "type": "function"
+              }
+            ]
+          }
+        ],
+        "chatbot_request_history": [
+          {
+            "chatbot": 0,
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "is_aggregation": false,
+            "request": {
+              "messages": [
+                {
+                  "content": "content",
+                  "name": "name",
+                  "role": "role",
+                  "tool_call_id": "tool_call_id",
+                  "tool_calls": [
+                    {
+                      "function": {
+                        "arguments": "arguments",
+                        "name": "name"
+                      },
+                      "id": "id",
+                      "type": "function"
+                    }
+                  ]
+                }
+              ],
+              "session_key": "session_key"
+            },
+            "session_key": "session_key",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "plugin_selector_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "messages": [
+              {
+                "content": "content",
+                "name": "name",
+                "role": "role",
+                "tool_call_id": "tool_call_id",
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "arguments",
+                      "name": "name"
+                    },
+                    "id": "id",
+                    "type": "function"
+                  }
+                ]
+              }
+            ],
+            "plugin_selector": 0,
+            "search_term": "search_term",
+            "session_key": "session_key",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "prompt_plugin_usage_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "input_text": "input_text",
+            "plugin": 0,
+            "prompt": 0,
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "prompt_tool_call_history": [
+          {
+            "created_at": "2026-01-01T00:00:00Z",
+            "function_args": "function_args",
+            "function_name": "function_name",
+            "id": 0,
+            "plugin": 0,
+            "prompt": 0,
+            "request": "value",
+            "response": "value",
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "meta_data": {
+        "is_deployed": false,
+        "is_valid": false,
+        "ready": false
+      },
+      "plugins": {
+        "meta_data": {
+          "functions_returned": 0,
+          "plugins_returned": 0,
+          "total_functions": 0,
+          "total_plugins": 0
+        },
+        "plugins": [
+          {
+            "chatbot": 0,
+            "created_at": "2026-01-01T00:00:00Z",
+            "id": 0,
+            "plugin_meta": {
+              "annotations": [
+                {
+                  "key": "value"
+                }
+              ],
+              "created_at": "2026-01-01T00:00:00Z",
+              "description": "description",
+              "id": 0,
+              "name": "name",
+              "plugin_class": "api",
+              "tags": [
+                "tags"
+              ],
+              "updated_at": "2026-01-01T00:00:00Z",
+              "version": "version"
+            },
+            "updated_at": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "sandbox_mode": false,
+      "session_key": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    "metadata": {
+      "command": "command",
+      "thing": "thing"
+    }
+  },
+  "PromptChatApiErrorBody": {
+    "description": "description",
+    "errorClass": "errorClass",
+    "status": 0
+  },
+  "PromptChatApiErrorResponse": {
+    "api": "api",
+    "error": {
+      "description": "description",
+      "errorClass": "errorClass",
+      "status": 0
+    },
+    "metadata": {
+      "command": "command",
+      "thing": "thing"
+    }
+  },
+  "PromptChatApiFailureV1": {
+    "error": {
+      "message": "message",
+      "status": 0
+    },
+    "response": {
+      "smarter": {
+        "messages": [
+          {
+            "content": "content",
+            "name": "name",
+            "role": "role",
+            "tool_call_id": "tool_call_id",
+            "tool_calls": [
+              {
+                "function": {
+                  "arguments": "arguments",
+                  "name": "name"
+                },
+                "id": "id",
+                "type": "function"
+              }
+            ]
+          }
+        ],
+        "plugins": [
+          "plugins"
+        ],
+        "tools": [
+          "tools"
+        ]
+      }
+    }
+  },
+  "PromptChatApiMessage": {
+    "content": "content",
+    "name": "name",
+    "role": "role",
+    "tool_call_id": "tool_call_id",
+    "tool_calls": [
+      {
+        "function": {
+          "arguments": "arguments",
+          "name": "name"
+        },
+        "id": "id",
+        "type": "function"
+      }
+    ]
+  },
+  "PromptChatApiProgressEvent": {
+    "message": "message",
+    "type": "llm_request"
+  },
+  "PromptChatApiProgressResult": {
+    "response": {
+      "api": "api",
+      "data": {
+        "completion": {
+          "choices": [
+            {
+              "finish_reason": "finish_reason",
+              "index": 0,
+              "message": {
+                "content": "content",
+                "name": "name",
+                "role": "role",
+                "tool_call_id": "tool_call_id",
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "arguments",
+                      "name": "name"
+                    },
+                    "id": "id",
+                    "type": "function"
+                  }
+                ]
+              }
+            }
+          ],
+          "created": 0,
+          "id": "id",
+          "model": "model",
+          "object": "object",
+          "service_tier": "service_tier",
+          "system_fingerprint": "system_fingerprint",
+          "usage": {
+            "completion_tokens": 0,
+            "completion_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "prompt_tokens": 0,
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 0
+          }
+        },
+        "contract": 2,
+        "messages": [
+          {
+            "content": "content",
+            "name": "name",
+            "role": "role",
+            "tool_call_id": "tool_call_id",
+            "tool_calls": [
+              {
+                "function": {
+                  "arguments": "arguments",
+                  "name": "name"
+                },
+                "id": "id",
+                "type": "function"
+              }
+            ]
+          }
+        ],
+        "plugins": [
+          "plugins"
+        ],
+        "status": 0,
+        "tools": [
+          "tools"
+        ]
+      },
+      "error": {
+        "description": "description",
+        "errorClass": "errorClass",
+        "status": 0
+      },
+      "metadata": {
+        "command": "command",
+        "thing": "thing"
+      }
+    },
+    "status": 0
+  },
+  "PromptChatApiPromptRequest": {
+    "messages": [
+      {
+        "content": "content",
+        "name": "name",
+        "role": "role",
+        "tool_call_id": "tool_call_id",
+        "tool_calls": [
+          {
+            "function": {
+              "arguments": "arguments",
+              "name": "name"
+            },
+            "id": "id",
+            "type": "function"
+          }
+        ]
+      }
+    ],
+    "session_key": "session_key"
+  },
+  "PromptChatApiPromptResponse": {
+    "api": "api",
+    "data": {
+      "completion": {
+        "choices": [
+          {
+            "finish_reason": "finish_reason",
+            "index": 0,
+            "message": {
+              "content": "content",
+              "name": "name",
+              "role": "role",
+              "tool_call_id": "tool_call_id",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "arguments",
+                    "name": "name"
+                  },
+                  "id": "id",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 0,
+        "id": "id",
+        "model": "model",
+        "object": "object",
+        "service_tier": "service_tier",
+        "system_fingerprint": "system_fingerprint",
+        "usage": {
+          "completion_tokens": 0,
+          "completion_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0,
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens": 0,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0,
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 0
+        }
+      },
+      "contract": 2,
+      "messages": [
+        {
+          "content": "content",
+          "name": "name",
+          "role": "role",
+          "tool_call_id": "tool_call_id",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "arguments",
+                "name": "name"
+              },
+              "id": "id",
+              "type": "function"
+            }
+          ]
+        }
+      ],
+      "plugins": [
+        "plugins"
+      ],
+      "status": 0,
+      "tools": [
+        "tools"
+      ]
+    },
+    "error": {
+      "description": "description",
+      "errorClass": "errorClass",
+      "status": 0
+    },
+    "metadata": {
+      "command": "command",
+      "thing": "thing"
+    }
+  },
+  "PromptChatApiPromptResponseV1": {
+    "api": "api",
+    "data": {
+      "body": "body",
+      "headers": {
+        "key": "key"
+      },
+      "isBase64Encoded": false,
+      "statusCode": 0
+    },
+    "metadata": {
+      "command": "command",
+      "thing": "thing"
+    }
+  }
+}
