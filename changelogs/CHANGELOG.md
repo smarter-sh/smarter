@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.1...v0.20.3-alpha.2) (2026-10-11)
+
+### Bug Fixes
+
+* **journal:** shore up mvp with contract, api and signals ([d7422f4](https://github.com/smarter-sh/smarter/commit/d7422f41d5fbfaee7337c0675bbdaf1766df8b5a))
+
 ## [0.20.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.2...v0.20.3-alpha.1) (2026-10-11)
 
 ### Performance
