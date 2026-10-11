@@ -18,6 +18,7 @@ from smarter.apps.llmhost.manifest.models.llmhost_compute.spec import (
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.apps.llmhost.urls import LLMHostReverseNames as Names
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 from .base_classes import LLMHostTestBase
@@ -36,7 +37,7 @@ class TestLLMHostListViews(LLMHostTestBase):
         self.client.force_login(self.admin_user)
         self.addCleanup(self.client.logout)
 
-    def post(self, path: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, path: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         response = self.client.post(path)
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content)
@@ -71,7 +72,7 @@ class TestLLMHostComputeListViews(LLMHostTestBase):
         self.client.force_login(self.admin_user)
         self.addCleanup(self.client.logout)
 
-    def post(self, path: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, path: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         response = self.client.post(path)
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content)

@@ -54,6 +54,7 @@ from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.enum import SmarterEnumAbstract
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
@@ -316,7 +317,7 @@ class Actuals:
     total_tokens: int = 0
     total_cost: Decimal = Decimal("0")
 
-    def add(self, row: dict) -> None:
+    def add(self, row: SmarterDictType) -> None:
         """Add an aggregate row of Charge or AggregatedCharges sums."""
         self.records += row.get("records") or 0
         self.prompt_tokens += row.get("prompt_tokens") or 0

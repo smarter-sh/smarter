@@ -17,6 +17,7 @@ from typing import Any, Optional
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 from smarter.workers.celery import app
 
 from .models import (
@@ -101,12 +102,12 @@ def _requeue(document_ids: list[int]) -> None:
 
 
 @app.task(queue=INFRASTRUCTURE_QUEUE)
-def maintain_vectorstores() -> dict[str, Any]:
+def maintain_vectorstores() -> SmarterDictType:
     """The scheduled maintenance of every ready vectorstore.
 
     :returns: what was done, by name.
     """
-    results: dict[str, Any] = {}
+    results: SmarterDictType = {}
     vectorstores = VectorstoreMeta.objects.filter(status=VectorstoreStatus.READY, is_active=True).select_related(
         "user_profile", "connection", "api_key_secret"
     )

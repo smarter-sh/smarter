@@ -23,6 +23,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR])
 
@@ -101,7 +102,7 @@ class OrchestratorView(ViewBase):
 
     def patch(self, request: Request, *args, orchestrator_id: Optional[int] = None, **kwargs):
         orchestrator: Optional[Orchestrator] = None
-        data: Optional[dict] = None
+        data: Optional[SmarterDictType] = None
 
         orchestrator = self.orchestrator
         if not orchestrator:

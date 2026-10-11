@@ -86,6 +86,20 @@ install the fakes in `setUpClass`, and reset them in `tearDownClass`.
 
 ## Domain knowledge that affects what you fake
 
+- **The root domain is the marketing site, not the platform.** The apex
+  (`smarter.sh`) A record aliases the marketing CloudFront distribution. The
+  platform (`ubc.smarter.sh`, `api.ubc.smarter.sh`, every LLMClient host) is
+  served by the Traefik network load balancer. The source of truth for the load
+  balancer is the platform domain's own A record. Code that copies the root
+  domain's A record onto platform or LLMClient hosts took production offline
+  once. `verify_dns_configuration` now copies the platform domain's record, and
+  never overwrites an existing child record.
+- **Local development uses the `smarter-local` namespace only.** The EKS cluster
+  is shared with the deployed environments (`smarter-ubc-alpha`,
+  `smarter-ubc-prod`, ...) and unrelated tenants. Don't run `kubectl` against
+  any other namespace, not even a read. To learn what a deployed namespace holds,
+  read the Helm chart and manifests in the repository, or ask the user.
+
 - **Custom domain verification is ACM plus Route53, and nothing else.** A custom
   domain is verified when its Route53 hosted zone's NS records are delegated,
   and its ACM certificate (in us-east-1) is issued. Kubernetes ingresses play no

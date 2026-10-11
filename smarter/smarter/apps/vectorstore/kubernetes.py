@@ -22,6 +22,7 @@ import yaml
 from smarter.apps.infrastructure.services import KubernetesService, infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterException
+from smarter.lib.typing import SmarterDictType
 
 from .manifest.models.vectorstore.const import (
     DEFAULT_CPU,
@@ -48,7 +49,7 @@ class VectorstoreKubernetesError(SmarterException):
     """The Kubernetes cluster is unavailable, or rejected a self-hosted vectorstore's resources."""
 
 
-def configure_kubernetes(factory: Optional[Callable[[], Any]]) -> None:
+def configure_kubernetes(factory: Optional[Callable[[], KubernetesService]]) -> None:
     """Use another Kubernetes service, e.g. a fake in tests.
 
     None restores the default.
@@ -101,7 +102,7 @@ class QdrantKubernetes:
             "app.kubernetes.io/managed-by": "smarter",
         }
 
-    def render(self, api_key: str) -> list[dict[str, Any]]:
+    def render(self, api_key: str) -> list[SmarterDictType]:
         """The Secret, Service and StatefulSet of the Qdrant server."""
         config = (self.vectorstore.spec or {}).get("selfHosted") or {}
         metadata = {"name": self.name, "namespace": self.namespace, "labels": self.labels}
@@ -125,7 +126,7 @@ class QdrantKubernetes:
                 ],
             },
         }
-        volume_claim: dict[str, Any] = {
+        volume_claim: SmarterDictType = {
             "metadata": {"name": "storage", "labels": self.labels},
             "spec": {
                 "accessModes": ["ReadWriteOnce"],

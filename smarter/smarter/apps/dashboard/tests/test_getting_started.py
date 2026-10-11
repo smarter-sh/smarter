@@ -10,6 +10,7 @@ from smarter.apps.dashboard.views.views.api.my_resources import get_llmclients
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from ..const import namespace
 
@@ -25,7 +26,7 @@ class TestGettingStartedApiView(TestAccountMixin):
             f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.getting_started}"
         )
 
-    def steps(self, user) -> dict[str, dict]:
+    def steps(self, user) -> dict[str, SmarterDictType]:
         self.client.force_login(user)
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])

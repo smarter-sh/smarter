@@ -30,6 +30,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):
         return super().broker  # type: ignore
 
     @property
-    def kwargs(self) -> dict:
+    def kwargs(self) -> SmarterDictType:
         """Return default kwargs for broker methods."""
         if not self.ready:
             raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")

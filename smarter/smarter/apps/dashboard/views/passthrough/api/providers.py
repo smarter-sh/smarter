@@ -35,6 +35,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ class ProviderApiView(SmarterAuthenticatedNeverCachedWebView):
 
         @cache_results()
         @camel_case()
-        def _get_cached_providers_for_user(user_id) -> dict:
+        def _get_cached_providers_for_user(user_id) -> SmarterDictType:
 
             providers = Provider.objects.with_read_permission_for(user=user).prefetch_related("tags")  # type: ignore
             serialized_providers = ProviderSerializer(providers, many=True).data

@@ -27,6 +27,7 @@ from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 
 class ResourceViewsTestMixin:
@@ -67,7 +68,7 @@ class ResourceViewsTestMixin:
     def url(self, name: str, **kwargs) -> str:
         return reverse(f"{self.reverse_names.namespace}:{getattr(self.reverse_names, name)}", kwargs=kwargs or None)
 
-    def post(self, url: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """POST to ``url``, assert the response's status, and return its json."""
         response = self.client.post(url)
         self.assertEqual(response.status_code, status, response.content[:500])  # type: ignore[attr-defined]

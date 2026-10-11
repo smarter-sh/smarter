@@ -13,6 +13,7 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 """
 
 from .conversion import (
+    ConvertibleCaseT,
     ConvertibleCaseType,
     search_replace,
     to_camel_case,
@@ -60,5 +61,6 @@ __all__ = [
     "uri",
     "to_camel_case",
     "search_replace",
+    "ConvertibleCaseT",
     "ConvertibleCaseType",
 ]

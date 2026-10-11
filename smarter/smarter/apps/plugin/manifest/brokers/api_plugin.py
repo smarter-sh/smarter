@@ -28,6 +28,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
+from smarter.lib.typing import SmarterDictType
 
 from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
@@ -477,7 +478,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             return None
 
         parameters: list[Parameter] = []
-        orm_parameters: dict = self.plugin_data.parameters if self.plugin_data else {}
+        orm_parameters: SmarterDictType = self.plugin_data.parameters if self.plugin_data else {}
         if not isinstance(orm_parameters, dict):
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} plugin_data_orm2pydantic() expected parameters to be a dict for {self.kind} {self.plugin_meta.name} but got {type(orm_parameters)}: {orm_parameters}",

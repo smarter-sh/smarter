@@ -1,9 +1,10 @@
 """Smarter API Manifest - Plugin.spec."""
 
 import os
+import re
 from typing import ClassVar, List, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.common.conf import settings_defaults
@@ -11,6 +12,8 @@ from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
+ORIGIN_PATTERN = re.compile(r"^https?://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$")
+"""An origin, as browsers send it in the ``Origin`` header: a scheme, a host and an optional port."""
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
@@ -113,6 +116,39 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
         False,
         description=f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the llmclient supports file attachments. Defaults to False. When set to True, a file attachment button will be displayed in the prompt input box of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
+    allowedOrigins: Optional[List[str]] = Field(
+        default_factory=list,
+        description=(
+            f"{class_identifier}.allowed_origins[list[str]]. Optional. The origins of the web pages that may call "
+            "this llmclient from a browser, with the @smarter.sh/ui-chat React component, in addition to those that "
+            "the Smarter platform allows. An origin is a scheme, a host and an optional port, without a path or a "
+            "wildcard. Example: ['https://www.example.com', 'http://localhost:5173']."
+        ),
+    )
+
+    @field_validator("allowedOrigins")
+    @classmethod
+    def validate_allowed_origins(cls, value: Optional[List[str]]) -> List[str]:
+        """
+        Validate and normalize ``allowedOrigins``: each is ``http(s)://host[:port]``, lowercased.
+
+        :param value: The origins.
+        :type value: Optional[List[str]]
+        :returns: The normalized origins, without duplicates, in their order.
+        :rtype: List[str]
+        :raises ValueError: If an origin has a path, a wildcard, or another scheme.
+        """
+        origins: List[str] = []
+        for origin in value or []:
+            normalized = str(origin).strip().lower().rstrip("/")
+            if not ORIGIN_PATTERN.match(normalized):
+                raise ValueError(
+                    f"allowedOrigins: {origin!r} is not an origin. Use a scheme, a host and an optional port, "
+                    "e.g. 'https://www.example.com', without a path or a wildcard."
+                )
+            if normalized not in origins:
+                origins.append(normalized)
+        return origins
 
 
 class SAMLLMClientSpec(AbstractSAMSpecBase):

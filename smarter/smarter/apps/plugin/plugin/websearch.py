@@ -54,11 +54,8 @@ A Plugin that gives the LLM access to the open web: searching it, and reading we
     be documented.
 """
 
-import hashlib
 from datetime import datetime
 from typing import Any, Optional, Type, Union
-
-from django.core.cache import cache
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -118,6 +115,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 from .websearch_fetch import WebFetchError, fetch_page
@@ -139,7 +137,6 @@ UNTRUSTED_NOTE = (
 SEARCH_NOTE = f"{UNTRUSTED_NOTE} Cite the url of each result that you use."
 SEARCH_FETCH_NOTE = f"{SEARCH_NOTE} To read a result in full, call this tool again with url set to its url."
 FETCH_NOTE = f"{UNTRUSTED_NOTE} Cite final_url when you use this content."
-CACHE_KEY_PREFIX = "smarter.websearch"
 
 
 class SmarterWebsearchPluginError(SmarterPluginError):
@@ -274,7 +271,7 @@ class WebsearchPlugin(PluginBase):
         return secret
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic manifest into a Django ORM-compatible dictionary.
 
@@ -324,7 +321,7 @@ class WebsearchPlugin(PluginBase):
         return " ".join(sentence for sentence in sentences if sentence)
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
+    def custom_tool(self) -> Optional[SmarterDictType]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -360,7 +357,7 @@ class WebsearchPlugin(PluginBase):
         if not self.ready or not self.plugin_data:
             return None
         plugin_data = self.plugin_data
-        properties: dict[str, Any] = {}
+        properties: SmarterDictType = {}
         if plugin_data.search_enabled:
             properties["query"] = {
                 "type": "string",
@@ -404,7 +401,7 @@ class WebsearchPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Use Pydantic models to generate an example manifest for a WebsearchPlugin.
 
@@ -466,7 +463,7 @@ class WebsearchPlugin(PluginBase):
     # -------------------------------------------------------------------------
     # tool calls
     # -------------------------------------------------------------------------
-    def error_response(self, operation: str, target: Optional[str], error: str) -> dict[str, Any]:
+    def error_response(self, operation: str, target: Optional[str], error: str) -> SmarterDictType:
         """
         Return an error to the LLM, and send the websearch_failed signal.
 
@@ -475,24 +472,14 @@ class WebsearchPlugin(PluginBase):
         :param error: A description of the error, which must not contain secrets.
         """
         websearch_failed.send(sender=self.__class__, plugin=self, operation=operation, target=target, error=error)
-        retval: dict[str, Any] = {"operation": operation, "error": error}
+        retval: SmarterDictType = {"operation": operation, "error": error}
         if target:
             retval["url" if operation == WebsearchOperation.FETCH.value else "query"] = target
         return retval
 
-    def cache_key(self, operation: str, **params) -> str:
-        """Return a cache key that is unique to the plugin, the operation, and its parameters."""
-        plugin_data = self.plugin_data
-        payload = json.dumps(
-            {"plugin_data": plugin_data.pk if plugin_data else None, "operation": operation, **params},
-            sort_keys=True,
-            default=str,
-        )
-        return f"{CACHE_KEY_PREFIX}.{operation}:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
-
     def search(
         self, query: str, policy: DomainPolicy, max_results: Any = None, freshness: Any = None
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """
         Search the web.
 
@@ -527,26 +514,15 @@ class WebsearchPlugin(PluginBase):
             timeout=plugin_data.timeout,
         )
         provider_name = str(plugin_data.search_provider)
-        key = self.cache_key(
-            operation,
-            query=query,
-            max_results=max_results,
-            freshness=freshness,
-            allowed=policy.allowed,
-            blocked=policy.blocked,
-        )
-        results = cache.get(key) if plugin_data.cache_ttl else None
-        cached = results is not None
-        if results is None:
-            api_key = plugin_data.api_key()
-            if not api_key:
-                return self.error_response(operation, query, "the web search api key is unavailable.")
-            try:
-                results = [result.to_dict() for result in get_provider(provider_name).search(request, api_key)]
-            except WebsearchError as e:
-                return self.error_response(operation, query, str(e))
-            if plugin_data.cache_ttl:
-                cache.set(key, results, plugin_data.cache_ttl)
+        try:
+            if not plugin_data.search_enabled:
+                raise WebsearchError("the web search api key is unavailable.")
+            search_results, cached = get_provider(provider_name).search(
+                request, plugin_data.search_api_key_id, cache_ttl=plugin_data.cache_ttl  # type: ignore[attr-defined]
+            )
+            results = [result.to_dict() for result in search_results]
+        except WebsearchError as e:
+            return self.error_response(operation, query, str(e))
 
         websearch_searched.send(
             sender=self.__class__,
@@ -556,14 +532,14 @@ class WebsearchPlugin(PluginBase):
             result_count=len(results),
             cached=cached,
         )
-        retval: dict[str, Any] = {"operation": operation, "query": query, "results": results}
+        retval: SmarterDictType = {"operation": operation, "query": query, "results": results}
         if not results:
             retval["note"] = "The search returned no results. Try a different query."
         else:
             retval["note"] = SEARCH_FETCH_NOTE if plugin_data.fetch_enabled else SEARCH_NOTE
         return retval
 
-    def fetch(self, url: str, policy: DomainPolicy) -> dict[str, Any]:
+    def fetch(self, url: str, policy: DomainPolicy) -> SmarterDictType:
         """
         Read a web page.
 
@@ -573,40 +549,28 @@ class WebsearchPlugin(PluginBase):
         """
         operation = WebsearchOperation.FETCH.value
         plugin_data: PluginDataWebsearch = self.plugin_data  # type: ignore[assignment]
-        key = self.cache_key(
-            operation,
-            url=url.strip(),
-            allowed=policy.allowed,
-            blocked=policy.blocked,
-            max_characters=plugin_data.fetch_max_characters,
-            robots=plugin_data.fetch_respect_robots_txt,
-        )
-        retval = cache.get(key) if plugin_data.cache_ttl else None
-        cached = retval is not None
-        if retval is None:
-            try:
-                page = fetch_page(
-                    url,
-                    policy=policy,
-                    max_characters=plugin_data.fetch_max_characters,
-                    timeout=plugin_data.timeout,
-                    respect_robots_txt=plugin_data.fetch_respect_robots_txt,
-                )
-            except WebFetchError as e:
-                return self.error_response(operation, url.strip()[:MAX_URL_LENGTH], str(e))
-            retval = {
-                "operation": operation,
-                "url": page.url,
-                "final_url": page.final_url,
-                "title": page.title,
-                "content_type": page.content_type,
-                "content": page.content,
-                "truncated": page.truncated,
-                "retrieved_at": page.retrieved_at.isoformat(),
-                "note": FETCH_NOTE,
-            }
-            if plugin_data.cache_ttl:
-                cache.set(key, retval, plugin_data.cache_ttl)
+        try:
+            page = fetch_page(
+                url,
+                policy=policy,
+                max_characters=plugin_data.fetch_max_characters,
+                timeout=plugin_data.timeout,
+                respect_robots_txt=plugin_data.fetch_respect_robots_txt,
+                cache_ttl=plugin_data.cache_ttl,
+            )
+        except WebFetchError as e:
+            return self.error_response(operation, url.strip()[:MAX_URL_LENGTH], str(e))
+        retval = {
+            "operation": operation,
+            "url": page.url,
+            "final_url": page.final_url,
+            "title": page.title,
+            "content_type": page.content_type,
+            "content": page.content,
+            "truncated": page.truncated,
+            "retrieved_at": page.retrieved_at.isoformat(),
+            "note": FETCH_NOTE,
+        }
 
         websearch_fetched.send(
             sender=self.__class__,
@@ -615,14 +579,14 @@ class WebsearchPlugin(PluginBase):
             final_url=retval["final_url"],
             characters=len(retval["content"]),
             truncated=retval["truncated"],
-            cached=cached,
+            cached=page.cached,
         )
         return retval
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], str, None]
-    ) -> Union[dict, list, str]:
+        self, function_args: Union[SmarterDictType, str, None]
+    ) -> Union[SmarterDictType, list, str]:
         """
         Search the web, or read a web page, in response to a tool call.
 
@@ -725,7 +689,7 @@ class WebsearchPlugin(PluginBase):
         )
         return retval
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the WebsearchPlugin to a JSON-compatible dictionary suitable for Pydantic import.
 

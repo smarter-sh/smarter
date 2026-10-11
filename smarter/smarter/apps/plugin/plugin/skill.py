@@ -92,6 +92,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 from .skill_sources import RetrievedSkill, retrieve_skill
@@ -325,7 +326,7 @@ class SkillPlugin(PluginBase):
         return self._retrieved_skill
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic manifest into a Django ORM-compatible dictionary.
 
@@ -336,7 +337,7 @@ class SkillPlugin(PluginBase):
         the specification, describes what the skill does and when to use it.
 
         :return: A dictionary of :class:`PluginDataSkill` fields, or ``None`` if the manifest is not available.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
         :raises SmarterSkillPluginError: If a remote skill cannot be retrieved, or is invalid.
         """
         if not self._manifest:
@@ -365,7 +366,7 @@ class SkillPlugin(PluginBase):
         }
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
+    def custom_tool(self) -> Optional[SmarterDictType]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -377,7 +378,7 @@ class SkillPlugin(PluginBase):
         https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
 
         :return: The tool definition, or ``None`` if the plugin is not ready.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         **Example:**
 
@@ -404,7 +405,7 @@ class SkillPlugin(PluginBase):
         """
         if not self.ready or not self.plugin_data:
             return None
-        properties: dict[str, Any] = {}
+        properties: SmarterDictType = {}
         if self.plugin_data.resource_paths:
             properties[RESOURCE_PARAMETER] = {
                 "type": "string",
@@ -428,15 +429,15 @@ class SkillPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Use Pydantic models to generate an example manifest for a SkillPlugin.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
-        :type kwargs: Optional[dict[str, Any]]
+        :type kwargs: Optional[SmarterDictType]
 
         :return: An example manifest as a dictionary.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
 
         See Also:
 
@@ -488,8 +489,8 @@ class SkillPlugin(PluginBase):
         return json.loads(sam_skill_plugin.model_dump_json())
 
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], str, None]
-    ) -> Union[dict, list, str]:
+        self, function_args: Union[SmarterDictType, str, None]
+    ) -> Union[SmarterDictType, list, str]:
         """
         Return the skill's instructions, or one of its bundled files, in response to a tool call.
 
@@ -513,7 +514,7 @@ class SkillPlugin(PluginBase):
             ]
 
         :param function_args: The function arguments, as a dict or as the JSON string sent by OpenAI.
-        :type function_args: Union[dict[str, Any], str, None]
+        :type function_args: Union[SmarterDictType, str, None]
         :return: The skill's instructions, or the bundled file.
         :rtype: dict
         :raises SmarterSkillPluginError: If the arguments are malformed, the plugin is not ready or
@@ -564,7 +565,7 @@ class SkillPlugin(PluginBase):
         )
         return retval
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the SkillPlugin to a JSON-compatible dictionary suitable for Pydantic import.
 
@@ -574,7 +575,7 @@ class SkillPlugin(PluginBase):
         :param version: The API version to use for serialization. Only "v1" is supported.
         :type version: str
         :returns: A dictionary representing the plugin in JSON format, or ``None`` if the plugin is not ready.
-        :rtype: Optional[dict[str, Any]]
+        :rtype: Optional[SmarterDictType]
         :raises SmarterPluginError: If the data is not a valid JSON object, or an unsupported version is specified.
         """
         if not self.ready:

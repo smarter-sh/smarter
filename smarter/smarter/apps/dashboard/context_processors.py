@@ -111,6 +111,7 @@ from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.urls import AuthTokenReverseNames
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -135,7 +136,7 @@ def static_version(request):
 
 
 @cache_results()
-def sidebar_context() -> dict[str, Any]:
+def sidebar_context() -> SmarterDictType:
     context = {
         "sidebar": {
             "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
@@ -188,7 +189,7 @@ def sidebar_context() -> dict[str, Any]:
     return context
 
 
-def sidebar(request: "HttpRequest") -> dict[str, Any]:
+def sidebar(request: "HttpRequest") -> SmarterDictType:
     """
     Resolve and cache the href targets for every dashboard sidebar navigation link.
 
@@ -207,12 +208,12 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
     :type request: HttpRequest
     :returns: A dict with a single ``"sidebar"`` key mapping destination names
         to their resolved URL strings.
-    :rtype: dict[str, Any]
+    :rtype: SmarterDictType
     """
     return sidebar_context()
 
 
-def base(request: "HttpRequest") -> dict[str, Any]:
+def base(request: "HttpRequest") -> SmarterDictType:
     """
     Provides the base context for all templates inheriting from ``base.html`` in the Smarter dashboard.
 
@@ -245,7 +246,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
 
     @cache_results()
     @snake_case()
-    def get_cached_context(username: Optional[str]) -> dict[str, Any]:
+    def get_cached_context(username: Optional[str]) -> SmarterDictType:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
@@ -301,7 +302,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
     return context
 
 
-def branding(request: "HttpRequest") -> dict[str, Any]:
+def branding(request: "HttpRequest") -> SmarterDictType:
     """
     Provides organization-specific branding context for dashboard templates.
 
@@ -329,7 +330,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
 
     @cache_results()
     @snake_case()
-    def get_cached_context() -> dict[str, Any]:
+    def get_cached_context() -> SmarterDictType:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
         context = {
@@ -421,7 +422,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
 
 
 @snake_case()
-def cache_buster(request) -> dict[str, Any]:
+def cache_buster(request) -> SmarterDictType:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
 

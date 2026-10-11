@@ -263,13 +263,13 @@ At a glance
 
   - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>`, including `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, and `DeepSeek <https://api-docs.deepseek.com/>`_, as well as open models that you host on your own Kubernetes cluster with :doc:`LLMHost <smarter-resources/smarter-llmhost>`.
   - Multi-agent workflows with :doc:`Orchestrator <smarter-resources/smarter-orchestrator>`.
-  - A :doc:`prompt engineering workbench <smarter-framework/developer-reference/react-integration/smarter-chat>` for testing applications before you deploy them.
+  - A :doc:`prompt engineering workbench <smarter-framework/smarter-chat>` for testing applications before you deploy them.
 
 - **Developer framework**
 
   - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
-  - A :doc:`React component <smarter-framework/developer-reference/react-integration/smarter-chat>` that adds a Smarter chat to any web page.
+  - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
   - `Python SDK <https://pypi.org/project/smarter-api/>`_, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
 
 

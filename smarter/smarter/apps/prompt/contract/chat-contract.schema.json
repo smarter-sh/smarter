@@ -1,0 +1,2732 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "PromptChatApiAudioPart": {
+      "additionalProperties": true,
+      "description": "A message's audio part.",
+      "properties": {
+        "input_audio": {
+          "$ref": "#/$defs/PromptChatApiInputAudio"
+        },
+        "type": {
+          "const": "input_audio",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "input_audio"
+      ],
+      "title": "PromptChatApiAudioPart",
+      "type": "object"
+    },
+    "PromptChatApiChatbotV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The LLMClient, in version 1 of the configuration, whose keys are renamed: llmclient becomes chatbot.",
+      "properties": {
+        "app_assistant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Assistant"
+        },
+        "app_example_prompts": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Example Prompts"
+        },
+        "app_file_attachment": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App File Attachment"
+        },
+        "app_info_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Info Url"
+        },
+        "app_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Name"
+        },
+        "app_placeholder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Placeholder"
+        },
+        "app_welcome_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Welcome Message"
+        },
+        "default_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default Model"
+        },
+        "default_system_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The system prompt of a new chat session.",
+          "title": "Default System Role"
+        },
+        "deployed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deployed"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider"
+        },
+        "url_chatbot": {
+          "description": "The url of the LLMClient's prompt api.",
+          "title": "Url Chatbot",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "url_chatbot"
+      ],
+      "title": "PromptChatApiChatbotV1",
+      "type": "object"
+    },
+    "PromptChatApiChoice": {
+      "additionalProperties": true,
+      "description": "A choice of a chat completion.",
+      "properties": {
+        "finish_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. stop, length or tool_calls.",
+          "title": "Finish Reason"
+        },
+        "index": {
+          "default": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiMessage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "PromptChatApiChoice",
+      "type": "object"
+    },
+    "PromptChatApiCompletion": {
+      "description": "The LLM's chat completion, in the format of the OpenAI api, with only these fields.\n\nSmarter's own additions, ``smarter`` and ``metadata``, are not part of it: the messages, plugins and\ntools are in :class:`PromptChatApiPromptResult`, and ``metadata``, which describes the tool calls\nwith their plugins' owners, is returned only to the cli.",
+      "properties": {
+        "choices": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiChoice"
+          },
+          "title": "Choices",
+          "type": "array"
+        },
+        "created": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Created"
+        },
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "object": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Object"
+        },
+        "service_tier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Service Tier"
+        },
+        "system_fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "System Fingerprint"
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiUsage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "PromptChatApiCompletion",
+      "type": "object"
+    },
+    "PromptChatApiCompletionV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The parsed body of a successful prompt, version 1: a chat completion, with Smarter's additions.",
+      "properties": {
+        "smarter": {
+          "$ref": "#/$defs/PromptChatApiSmarterCompletionV1"
+        }
+      },
+      "required": [
+        "smarter"
+      ],
+      "title": "PromptChatApiCompletionV1",
+      "type": "object"
+    },
+    "PromptChatApiConfig": {
+      "additionalProperties": true,
+      "description": "The configuration, version 2.\n\n``PromptConfigView.config()`` builds one, from which every response is derived:\n:meth:`public` for a deployed LLMClient's own host, and :meth:`to_v1` for older clients.",
+      "properties": {
+        "contract": {
+          "const": 2,
+          "default": 2,
+          "title": "Contract",
+          "type": "integer"
+        },
+        "debug_mode": {
+          "description": "The ENABLE_REACTAPP_DEBUG_MODE waffle switch.",
+          "title": "Debug Mode",
+          "type": "boolean"
+        },
+        "functions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiFunctionList"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "history": {
+          "$ref": "#/$defs/PromptChatApiHistory"
+        },
+        "llmclient": {
+          "$ref": "#/$defs/PromptChatApiLLMClient"
+        },
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiMetaData"
+        },
+        "plugins": {
+          "$ref": "#/$defs/PromptChatApiPluginList"
+        },
+        "sandbox_mode": {
+          "description": "True for a workbench url.",
+          "title": "Sandbox Mode",
+          "type": "boolean"
+        },
+        "session_key": {
+          "description": "The chat session's key.",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "title": "Session Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_key",
+        "sandbox_mode",
+        "debug_mode",
+        "meta_data",
+        "llmclient",
+        "history",
+        "plugins"
+      ],
+      "title": "PromptChatApiConfig",
+      "type": "object"
+    },
+    "PromptChatApiConfigRequest": {
+      "additionalProperties": true,
+      "description": "The configuration api's request body.",
+      "properties": {
+        "session_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The chat session's key, or empty for a new session.",
+          "title": "Session Key"
+        }
+      },
+      "title": "PromptChatApiConfigRequest",
+      "type": "object"
+    },
+    "PromptChatApiConfigResponse": {
+      "additionalProperties": true,
+      "description": "The configuration api's response, version 2.",
+      "properties": {
+        "api": {
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/PromptChatApiConfig"
+        },
+        "metadata": {
+          "$ref": "#/$defs/PromptChatApiJournalMetadata",
+          "description": "The journal's command and thing."
+        }
+      },
+      "required": [
+        "api",
+        "data"
+      ],
+      "title": "PromptChatApiConfigResponse",
+      "type": "object"
+    },
+    "PromptChatApiConfigResponseV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The configuration api's response, version 1.",
+      "properties": {
+        "api": {
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/PromptChatApiConfigV1"
+        },
+        "metadata": {
+          "$ref": "#/$defs/PromptChatApiJournalMetadata",
+          "description": "The journal's command and thing."
+        }
+      },
+      "required": [
+        "api",
+        "data"
+      ],
+      "title": "PromptChatApiConfigResponseV1",
+      "type": "object"
+    },
+    "PromptChatApiConfigV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The configuration, version 1.",
+      "properties": {
+        "chatbot": {
+          "$ref": "#/$defs/PromptChatApiChatbotV1"
+        },
+        "debug_mode": {
+          "description": "The ENABLE_REACTAPP_DEBUG_MODE waffle switch.",
+          "title": "Debug Mode",
+          "type": "boolean"
+        },
+        "functions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiFunctionListV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "history": {
+          "$ref": "#/$defs/PromptChatApiHistoryV1"
+        },
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiMetaData"
+        },
+        "plugins": {
+          "$ref": "#/$defs/PromptChatApiPluginListV1"
+        },
+        "sandbox_mode": {
+          "description": "True for a workbench url.",
+          "title": "Sandbox Mode",
+          "type": "boolean"
+        },
+        "session_key": {
+          "description": "The chat session's key.",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "title": "Session Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_key",
+        "sandbox_mode",
+        "debug_mode",
+        "meta_data",
+        "chatbot",
+        "history",
+        "plugins"
+      ],
+      "title": "PromptChatApiConfigV1",
+      "type": "object"
+    },
+    "PromptChatApiErrorBody": {
+      "additionalProperties": true,
+      "description": "The error of a failed request: the same shape for every error of the configuration and prompt apis.",
+      "properties": {
+        "description": {
+          "description": "A human-readable description, which Smarter Chat displays.",
+          "title": "Description",
+          "type": "string"
+        },
+        "errorClass": {
+          "description": "The name of the error's class, e.g. NotFound or LLMProviderError.",
+          "title": "Errorclass",
+          "type": "string"
+        },
+        "status": {
+          "description": "The http status.",
+          "title": "Status",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "errorClass",
+        "description",
+        "status"
+      ],
+      "title": "PromptChatApiErrorBody",
+      "type": "object"
+    },
+    "PromptChatApiErrorResponse": {
+      "additionalProperties": true,
+      "description": "The body of an error response of the configuration or prompt apis, in both versions of the contract.",
+      "properties": {
+        "api": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Api"
+        },
+        "error": {
+          "$ref": "#/$defs/PromptChatApiErrorBody"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiJournalMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "PromptChatApiErrorResponse",
+      "type": "object"
+    },
+    "PromptChatApiFailureV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The parsed body of a failed prompt, version 1.",
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/PromptChatApiProviderErrorV1"
+        },
+        "response": {
+          "$ref": "#/$defs/PromptChatApiCompletionV1"
+        }
+      },
+      "required": [
+        "error",
+        "response"
+      ],
+      "title": "PromptChatApiFailureV1",
+      "type": "object"
+    },
+    "PromptChatApiFilePart": {
+      "additionalProperties": true,
+      "description": "A message's file part.",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/PromptChatApiFileRef"
+        },
+        "type": {
+          "const": "file",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "file"
+      ],
+      "title": "PromptChatApiFilePart",
+      "type": "object"
+    },
+    "PromptChatApiFileRef": {
+      "additionalProperties": true,
+      "description": "The file of a file part: its base64 data, or the id of an uploaded file.",
+      "properties": {
+        "file_data": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "File Data"
+        },
+        "file_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "File Id"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filename"
+        }
+      },
+      "title": "PromptChatApiFileRef",
+      "type": "object"
+    },
+    "PromptChatApiFunctionCall": {
+      "additionalProperties": true,
+      "description": "The function that an assistant message calls.",
+      "properties": {
+        "arguments": {
+          "description": "The function's arguments, as a JSON string.",
+          "title": "Arguments",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments"
+      ],
+      "title": "PromptChatApiFunctionCall",
+      "type": "object"
+    },
+    "PromptChatApiFunctionList": {
+      "additionalProperties": true,
+      "description": "The LLMClient's built-in functions.\n\nThe list itself is returned only in the complete configuration.",
+      "properties": {
+        "functions": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiLLMClientFunction"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiListMetaData"
+        }
+      },
+      "required": [
+        "meta_data"
+      ],
+      "title": "PromptChatApiFunctionList",
+      "type": "object"
+    },
+    "PromptChatApiFunctionListV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The LLMClient's built-in functions, in version 1.",
+      "properties": {
+        "functions": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiLLMClientFunctionV1"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiListMetaData"
+        }
+      },
+      "required": [
+        "meta_data"
+      ],
+      "title": "PromptChatApiFunctionListV1",
+      "type": "object"
+    },
+    "PromptChatApiHistory": {
+      "additionalProperties": false,
+      "description": "The chat session's history, in version 2.\n\nOnly ``chat_history`` is public.",
+      "properties": {
+        "chat_history": {
+          "description": "The session's messages, which restore the chat thread.",
+          "items": {
+            "$ref": "#/$defs/PromptChatApiMessage"
+          },
+          "title": "Chat History",
+          "type": "array"
+        },
+        "llmclient_request_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiLLMClientRequest"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Llmclient Request History"
+        },
+        "plugin_selector_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiPluginSelection"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plugin Selector History"
+        },
+        "prompt_plugin_usage_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiPromptPluginUsage"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Plugin Usage History"
+        },
+        "prompt_tool_call_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiPromptToolCall"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Tool Call History"
+        }
+      },
+      "title": "PromptChatApiHistory",
+      "type": "object"
+    },
+    "PromptChatApiHistoryV1": {
+      "additionalProperties": false,
+      "deprecated": true,
+      "description": "The chat session's history, in version 1.",
+      "properties": {
+        "chat_history": {
+          "description": "The session's messages, which restore the chat thread.",
+          "items": {
+            "$ref": "#/$defs/PromptChatApiMessage"
+          },
+          "title": "Chat History",
+          "type": "array"
+        },
+        "chatbot_request_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiLLMClientRequestV1"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Chatbot Request History"
+        },
+        "plugin_selector_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiPluginSelection"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plugin Selector History"
+        },
+        "prompt_plugin_usage_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiPromptPluginUsage"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Plugin Usage History"
+        },
+        "prompt_tool_call_history": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiPromptToolCall"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Tool Call History"
+        }
+      },
+      "title": "PromptChatApiHistoryV1",
+      "type": "object"
+    },
+    "PromptChatApiImagePart": {
+      "additionalProperties": true,
+      "description": "A message's image part.",
+      "properties": {
+        "image_url": {
+          "$ref": "#/$defs/PromptChatApiImageUrl"
+        },
+        "type": {
+          "const": "image_url",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "image_url"
+      ],
+      "title": "PromptChatApiImagePart",
+      "type": "object"
+    },
+    "PromptChatApiImageUrl": {
+      "additionalProperties": true,
+      "description": "The image of an image part: an http(s) or base64 data url.",
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "low",
+                "high"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "PromptChatApiImageUrl",
+      "type": "object"
+    },
+    "PromptChatApiInputAudio": {
+      "additionalProperties": true,
+      "description": "The audio of an audio part: base64 encoded.",
+      "properties": {
+        "data": {
+          "title": "Data",
+          "type": "string"
+        },
+        "format": {
+          "enum": [
+            "wav",
+            "mp3"
+          ],
+          "title": "Format",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "format"
+      ],
+      "title": "PromptChatApiInputAudio",
+      "type": "object"
+    },
+    "PromptChatApiJournalMetadata": {
+      "additionalProperties": true,
+      "description": "The journal's record of a request, which every journaled response carries.",
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The journal's command, e.g. prompt.",
+          "title": "Command"
+        },
+        "thing": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The journal's thing, e.g. LLMClient.",
+          "title": "Thing"
+        }
+      },
+      "title": "PromptChatApiJournalMetadata",
+      "type": "object"
+    },
+    "PromptChatApiLLMClient": {
+      "additionalProperties": true,
+      "description": "The LLMClient, in version 2 of the configuration.",
+      "properties": {
+        "app_assistant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Assistant"
+        },
+        "app_example_prompts": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Example Prompts"
+        },
+        "app_file_attachment": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App File Attachment"
+        },
+        "app_info_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Info Url"
+        },
+        "app_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Name"
+        },
+        "app_placeholder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Placeholder"
+        },
+        "app_welcome_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Welcome Message"
+        },
+        "default_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default Model"
+        },
+        "default_system_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The system prompt of a new chat session.",
+          "title": "Default System Role"
+        },
+        "deployed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deployed"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider"
+        },
+        "url_llmclient": {
+          "description": "The url of the LLMClient's prompt api.",
+          "title": "Url Llmclient",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "url_llmclient"
+      ],
+      "title": "PromptChatApiLLMClient",
+      "type": "object"
+    },
+    "PromptChatApiLLMClientFunction": {
+      "additionalProperties": false,
+      "description": "A built-in function of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`.",
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "llmclient": {
+          "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+          "title": "Llmclient",
+          "type": "integer"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "enum": [
+                "get_current_weather",
+                "date_calculator",
+                "calculator"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClientFunctions.name.",
+          "title": "Name"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "llmclient"
+      ],
+      "title": "PromptChatApiLLMClientFunction",
+      "type": "object"
+    },
+    "PromptChatApiLLMClientFunctionV1": {
+      "additionalProperties": false,
+      "deprecated": true,
+      "description": "A built-in function of the LLMClient, in version 1, whose ``llmclient`` is renamed ``chatbot``.",
+      "properties": {
+        "chatbot": {
+          "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+          "title": "Chatbot",
+          "type": "integer"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "enum": [
+                "get_current_weather",
+                "date_calculator",
+                "calculator"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "chatbot"
+      ],
+      "title": "PromptChatApiLLMClientFunctionV1",
+      "type": "object"
+    },
+    "PromptChatApiLLMClientPlugin": {
+      "additionalProperties": false,
+      "description": "A plugin of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientPlugin`.",
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "llmclient": {
+          "description": "LLMClientPlugin.llmclient: the LLMClient's id.",
+          "title": "Llmclient",
+          "type": "integer"
+        },
+        "plugin_meta": {
+          "$ref": "#/$defs/PromptChatApiPluginMeta",
+          "description": "LLMClientPlugin.plugin_meta."
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "llmclient",
+        "plugin_meta"
+      ],
+      "title": "PromptChatApiLLMClientPlugin",
+      "type": "object"
+    },
+    "PromptChatApiLLMClientPluginV1": {
+      "additionalProperties": false,
+      "deprecated": true,
+      "description": "A plugin of the LLMClient, in version 1, whose ``llmclient`` is renamed ``chatbot``.",
+      "properties": {
+        "chatbot": {
+          "description": "LLMClientPlugin.llmclient: the LLMClient's id.",
+          "title": "Chatbot",
+          "type": "integer"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "plugin_meta": {
+          "$ref": "#/$defs/PromptChatApiPluginMeta"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "chatbot",
+        "plugin_meta"
+      ],
+      "title": "PromptChatApiLLMClientPluginV1",
+      "type": "object"
+    },
+    "PromptChatApiLLMClientRequest": {
+      "additionalProperties": false,
+      "description": "A request to the LLMClient's prompt api: a :class:`smarter.apps.llmclient.models.LLMClientRequests`.",
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "is_aggregation": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClientRequests.is_aggregation.",
+          "title": "Is Aggregation"
+        },
+        "llmclient": {
+          "description": "LLMClientRequests.llmclient: the LLMClient's id.",
+          "title": "Llmclient",
+          "type": "integer"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiPromptRequest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClientRequests.request."
+        },
+        "session_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClientRequests.session_key.",
+          "title": "Session Key"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "llmclient"
+      ],
+      "title": "PromptChatApiLLMClientRequest",
+      "type": "object"
+    },
+    "PromptChatApiLLMClientRequestV1": {
+      "additionalProperties": false,
+      "deprecated": true,
+      "description": "A request to the LLMClient's prompt api, in version 1, whose ``llmclient`` is renamed ``chatbot``.",
+      "properties": {
+        "chatbot": {
+          "description": "LLMClientRequests.llmclient: the LLMClient's id.",
+          "title": "Chatbot",
+          "type": "integer"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "is_aggregation": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Is Aggregation"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiPromptRequest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "session_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Key"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "chatbot"
+      ],
+      "title": "PromptChatApiLLMClientRequestV1",
+      "type": "object"
+    },
+    "PromptChatApiLambdaResponseV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "A prompt's result, version 1: an AWS Lambda style response, whose body is a JSON string.",
+      "properties": {
+        "body": {
+          "description": "A PromptChatApiCompletionV1, or a PromptChatApiFailureV1, as a JSON string.",
+          "title": "Body",
+          "type": "string"
+        },
+        "headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Headers",
+          "type": "object"
+        },
+        "isBase64Encoded": {
+          "default": false,
+          "title": "Isbase64Encoded",
+          "type": "boolean"
+        },
+        "statusCode": {
+          "title": "Statuscode",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "statusCode",
+        "body"
+      ],
+      "title": "PromptChatApiLambdaResponseV1",
+      "type": "object"
+    },
+    "PromptChatApiListMetaData": {
+      "additionalProperties": true,
+      "description": "The counts of a list of the LLMClient's plugins or functions.",
+      "properties": {
+        "functions_returned": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Functions Returned"
+        },
+        "plugins_returned": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plugins Returned"
+        },
+        "total_functions": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Functions"
+        },
+        "total_plugins": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Plugins"
+        }
+      },
+      "title": "PromptChatApiListMetaData",
+      "type": "object"
+    },
+    "PromptChatApiMessage": {
+      "additionalProperties": true,
+      "description": "A message, in the format of the OpenAI chat completion api.\n\nSmarter adds two roles, which are only displayed and never sent to an LLM: ``smarter``, a note\nabout what the backend did, and ``smarter_error``, a failed prompt's error.",
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "discriminator": {
+                  "mapping": {
+                    "file": "#/$defs/PromptChatApiFilePart",
+                    "image_url": "#/$defs/PromptChatApiImagePart",
+                    "input_audio": "#/$defs/PromptChatApiAudioPart",
+                    "refusal": "#/$defs/PromptChatApiRefusalPart",
+                    "text": "#/$defs/PromptChatApiTextPart"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/PromptChatApiTextPart"
+                  },
+                  {
+                    "$ref": "#/$defs/PromptChatApiImagePart"
+                  },
+                  {
+                    "$ref": "#/$defs/PromptChatApiAudioPart"
+                  },
+                  {
+                    "$ref": "#/$defs/PromptChatApiFilePart"
+                  },
+                  {
+                    "$ref": "#/$defs/PromptChatApiRefusalPart"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The message's text, or its parts. Null for an assistant message that only calls tools.",
+          "title": "Content"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The name of a tool message's function.",
+          "title": "Name"
+        },
+        "role": {
+          "description": "system, assistant, user, tool, smarter or smarter_error.",
+          "title": "Role",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The tool call that a tool message answers.",
+          "title": "Tool Call Id"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiToolCall"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "An assistant message's tool calls.",
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "PromptChatApiMessage",
+      "type": "object"
+    },
+    "PromptChatApiMetaData": {
+      "additionalProperties": true,
+      "description": "The LLMClient's state.",
+      "properties": {
+        "is_deployed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Is Deployed"
+        },
+        "is_valid": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Is Valid"
+        },
+        "ready": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ready"
+        }
+      },
+      "title": "PromptChatApiMetaData",
+      "type": "object"
+    },
+    "PromptChatApiPluginList": {
+      "additionalProperties": true,
+      "description": "The LLMClient's plugins.\n\nThe list itself is returned only in the complete configuration.",
+      "properties": {
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiListMetaData"
+        },
+        "plugins": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiLLMClientPlugin"
+          },
+          "title": "Plugins",
+          "type": "array"
+        }
+      },
+      "required": [
+        "meta_data"
+      ],
+      "title": "PromptChatApiPluginList",
+      "type": "object"
+    },
+    "PromptChatApiPluginListV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The LLMClient's plugins, in version 1.",
+      "properties": {
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiListMetaData"
+        },
+        "plugins": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiLLMClientPluginV1"
+          },
+          "title": "Plugins",
+          "type": "array"
+        }
+      },
+      "required": [
+        "meta_data"
+      ],
+      "title": "PromptChatApiPluginListV1",
+      "type": "object"
+    },
+    "PromptChatApiPluginMeta": {
+      "additionalProperties": false,
+      "description": "A plugin's metadata: a :class:`smarter.apps.plugin.models.PluginMeta`.\n\nIts owner is left out: the configuration never includes a user's profile.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MetaDataModel.annotations: a list of key-value pairs, or, in legacy rows, an object.",
+          "title": "Annotations"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MetaDataModel.description.",
+          "title": "Description"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "description": "MetaDataModel.name, in snake_case.",
+          "maxLength": 255,
+          "title": "Name",
+          "type": "string"
+        },
+        "plugin_class": {
+          "description": "PluginMeta.plugin_class.",
+          "enum": [
+            "api",
+            "skill",
+            "sql",
+            "static",
+            "websearch",
+            "imagesearch"
+          ],
+          "title": "Plugin Class",
+          "type": "string"
+        },
+        "tags": {
+          "description": "MetaDataModel.tags, by name.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MetaDataModel.version, e.g. 1.0.0.",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "plugin_class"
+      ],
+      "title": "PromptChatApiPluginMeta",
+      "type": "object"
+    },
+    "PromptChatApiPluginSelection": {
+      "additionalProperties": false,
+      "description": "A plugin selector's activation: a :class:`smarter.apps.plugin.models.PluginSelectorHistory`.",
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "messages": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PromptChatApiMessage"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PluginSelectorHistory.messages.",
+          "title": "Messages"
+        },
+        "plugin_selector": {
+          "description": "PluginSelectorHistory.plugin_selector: the PluginSelector's id.",
+          "title": "Plugin Selector",
+          "type": "integer"
+        },
+        "search_term": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PluginSelectorHistory.search_term.",
+          "title": "Search Term"
+        },
+        "session_key": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PluginSelectorHistory.session_key.",
+          "title": "Session Key"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "plugin_selector"
+      ],
+      "title": "PromptChatApiPluginSelection",
+      "type": "object"
+    },
+    "PromptChatApiProgressEvent": {
+      "additionalProperties": true,
+      "description": "The data of a ``progress`` event: a step of a running prompt.",
+      "properties": {
+        "message": {
+          "description": "A short sentence, which Smarter Chat displays as is.",
+          "title": "Message",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "llm_request",
+            "tool_requested",
+            "tool_responded",
+            "plugin_called",
+            "mcp_tool_called",
+            "mcp_tool_responded",
+            "mcp_tool_failed"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "message"
+      ],
+      "title": "PromptChatApiProgressEvent",
+      "type": "object"
+    },
+    "PromptChatApiProgressResult": {
+      "additionalProperties": true,
+      "description": "The data of the final ``result`` event.",
+      "properties": {
+        "response": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiPromptResponse"
+            },
+            {
+              "$ref": "#/$defs/PromptChatApiPromptResponseV1"
+            },
+            {
+              "$ref": "#/$defs/PromptChatApiErrorResponse"
+            }
+          ],
+          "description": "Exactly the JSON of a non-streaming response.",
+          "title": "Response"
+        },
+        "status": {
+          "description": "The prompt's http status.",
+          "title": "Status",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "response"
+      ],
+      "title": "PromptChatApiProgressResult",
+      "type": "object"
+    },
+    "PromptChatApiPromptPluginUsage": {
+      "additionalProperties": false,
+      "description": "A plugin that the chat session used: a :class:`smarter.apps.prompt.models.PromptPluginUsage`.",
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "input_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PromptPluginUsage.input_text.",
+          "title": "Input Text"
+        },
+        "plugin": {
+          "description": "PromptPluginUsage.plugin: the PluginMeta's id.",
+          "title": "Plugin",
+          "type": "integer"
+        },
+        "prompt": {
+          "description": "PromptPluginUsage.prompt: the chat session's id.",
+          "title": "Prompt",
+          "type": "integer"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "plugin"
+      ],
+      "title": "PromptChatApiPromptPluginUsage",
+      "type": "object"
+    },
+    "PromptChatApiPromptRequest": {
+      "additionalProperties": true,
+      "description": "The prompt api's request body: the chat thread, with only the roles that LLMs accept.",
+      "properties": {
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "session_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Key"
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "title": "PromptChatApiPromptRequest",
+      "type": "object"
+    },
+    "PromptChatApiPromptResponse": {
+      "additionalProperties": true,
+      "description": "The prompt api's response, version 2.\n\nA failed prompt has ``error`` too, and its http status is the LLM provider's. Its ``data.messages``\ninclude a ``smarter_error`` message, which is also saved in the session's history.",
+      "properties": {
+        "api": {
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/PromptChatApiPromptResult"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiErrorBody"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "metadata": {
+          "$ref": "#/$defs/PromptChatApiJournalMetadata",
+          "description": "The journal's command and thing."
+        }
+      },
+      "required": [
+        "api",
+        "data"
+      ],
+      "title": "PromptChatApiPromptResponse",
+      "type": "object"
+    },
+    "PromptChatApiPromptResponseV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The prompt api's response, version 1.",
+      "properties": {
+        "api": {
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/PromptChatApiLambdaResponseV1"
+        },
+        "metadata": {
+          "$ref": "#/$defs/PromptChatApiJournalMetadata",
+          "description": "The journal's command and thing."
+        }
+      },
+      "required": [
+        "api",
+        "data"
+      ],
+      "title": "PromptChatApiPromptResponseV1",
+      "type": "object"
+    },
+    "PromptChatApiPromptResult": {
+      "additionalProperties": true,
+      "description": "The result of a prompt, version 2.",
+      "properties": {
+        "completion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiCompletion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The LLM's chat completion, in the format of the OpenAI api: its choices and usage."
+        },
+        "contract": {
+          "const": 2,
+          "default": 2,
+          "title": "Contract",
+          "type": "integer"
+        },
+        "messages": {
+          "description": "The messages that the prompt added to the chat thread, in order.",
+          "items": {
+            "$ref": "#/$defs/PromptChatApiMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "plugins": {
+          "description": "The plugins that Smarter selected.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Plugins",
+          "type": "array"
+        },
+        "status": {
+          "description": "The prompt's http status: 200, or the LLM provider's error status.",
+          "title": "Status",
+          "type": "integer"
+        },
+        "tools": {
+          "description": "The functions that the LLM could call.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "PromptChatApiPromptResult",
+      "type": "object"
+    },
+    "PromptChatApiPromptToolCall": {
+      "additionalProperties": false,
+      "description": "A tool call of the chat session: a :class:`smarter.apps.prompt.models.PromptToolCall`.",
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.created_at.",
+          "title": "Created At"
+        },
+        "function_args": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PromptToolCall.function_args.",
+          "title": "Function Args"
+        },
+        "function_name": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PromptToolCall.function_name.",
+          "title": "Function Name"
+        },
+        "id": {
+          "description": "The row's primary key.",
+          "title": "Id",
+          "type": "integer"
+        },
+        "plugin": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PromptToolCall.plugin: the PluginMeta's id, for a plugin.",
+          "title": "Plugin"
+        },
+        "prompt": {
+          "description": "PromptToolCall.prompt: the chat session's id.",
+          "title": "Prompt",
+          "type": "integer"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PromptToolCall.request: the tool's input."
+        },
+        "response": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "PromptToolCall.response: the tool's result."
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TimestampedModel.updated_at.",
+          "title": "Updated At"
+        }
+      },
+      "required": [
+        "id",
+        "prompt"
+      ],
+      "title": "PromptChatApiPromptToolCall",
+      "type": "object"
+    },
+    "PromptChatApiProviderErrorV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The LLM provider's error, version 1.",
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ],
+      "title": "PromptChatApiProviderErrorV1",
+      "type": "object"
+    },
+    "PromptChatApiRefusalPart": {
+      "additionalProperties": true,
+      "description": "An assistant message's refusal part.",
+      "properties": {
+        "refusal": {
+          "title": "Refusal",
+          "type": "string"
+        },
+        "type": {
+          "const": "refusal",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "refusal"
+      ],
+      "title": "PromptChatApiRefusalPart",
+      "type": "object"
+    },
+    "PromptChatApiSmarterCompletionV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "Smarter's additions to a completion, version 1.",
+      "properties": {
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "plugins": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Plugins",
+          "type": "array"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "title": "PromptChatApiSmarterCompletionV1",
+      "type": "object"
+    },
+    "PromptChatApiTextPart": {
+      "additionalProperties": true,
+      "description": "A message's text part, in the format of the OpenAI chat completion api.",
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "title": "PromptChatApiTextPart",
+      "type": "object"
+    },
+    "PromptChatApiTokenDetails": {
+      "additionalProperties": true,
+      "description": "The breakdown of a completion's tokens.",
+      "properties": {
+        "audio_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio Tokens"
+        },
+        "cached_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cached Tokens"
+        },
+        "reasoning_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasoning Tokens"
+        }
+      },
+      "title": "PromptChatApiTokenDetails",
+      "type": "object"
+    },
+    "PromptChatApiToolCall": {
+      "additionalProperties": true,
+      "description": "A tool call of an assistant message, in the format of the OpenAI chat completion api.",
+      "properties": {
+        "function": {
+          "$ref": "#/$defs/PromptChatApiFunctionCall"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "function",
+          "default": "function",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function"
+      ],
+      "title": "PromptChatApiToolCall",
+      "type": "object"
+    },
+    "PromptChatApiUsage": {
+      "additionalProperties": true,
+      "description": "A chat completion's token usage.",
+      "properties": {
+        "completion_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completion Tokens"
+        },
+        "completion_tokens_details": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiTokenDetails"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "prompt_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Tokens"
+        },
+        "prompt_tokens_details": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiTokenDetails"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Tokens"
+        }
+      },
+      "title": "PromptChatApiUsage",
+      "type": "object"
+    }
+  },
+  "$id": "https://smarter.sh/schemas/chat-contract.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The requests and responses of the Smarter Chat configuration and prompt apis, versions 1 and 2. Generated from smarter.apps.prompt.contract.models; do not edit.",
+  "title": "Smarter Chat API contract"
+}

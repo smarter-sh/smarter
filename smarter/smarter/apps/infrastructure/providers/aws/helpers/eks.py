@@ -15,6 +15,7 @@ from botocore.signers import RequestSigner
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_banner
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 from .base import AWSBase
 from .exceptions import AWSNotReadyError
@@ -72,7 +73,7 @@ class AWSEks(AWSBase):
             )
         return False
 
-    def get_kubernetes_info(self) -> dict[str, Any]:
+    def get_kubernetes_info(self) -> SmarterDictType:
         """
         Describe the platform's EKS cluster.
 

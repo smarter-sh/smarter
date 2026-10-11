@@ -48,6 +48,7 @@ from smarter.apps.infrastructure.signals import (
     infrastructure_connected,
 )
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .base import InfrastructureTestBase
 
@@ -78,9 +79,9 @@ class FakeRoute53Client:
     exceptions = MagicMock(NoSuchHostedZone=NotFound)
 
     def __init__(self):
-        self.zones: dict[str, dict] = {}
-        self.records: dict[str, list[dict]] = {}
-        self.changes: list[tuple[str, dict]] = []
+        self.zones: dict[str, SmarterDictType] = {}
+        self.records: dict[str, list[SmarterDictType]] = {}
+        self.changes: list[tuple[str, SmarterDictType]] = []
 
     def create_hosted_zone(self, Name, CallerReference, HostedZoneConfig):  # pylint: disable=invalid-name
         zone_id = f"Z{len(self.zones) + 1}"
@@ -131,7 +132,7 @@ class FakeACMClient:
     def __init__(self):
         with open(CERTIFICATE_DETAIL, encoding="utf-8") as detail:
             self.template = json.loads(detail.read())["Certificate"]
-        self.certificates: dict[str, dict] = {}
+        self.certificates: dict[str, SmarterDictType] = {}
 
     def get_paginator(self, name):
         return Paginator(

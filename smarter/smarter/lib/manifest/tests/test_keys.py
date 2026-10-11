@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel, Field
 
 from smarter.lib.manifest.keys import unknown_keys
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -21,7 +22,7 @@ class Config(BaseModel):
     temperature: Optional[float] = None
     max_tokens: Optional[int] = Field(None, alias="maxTokens")
     headers: Optional[List[Header]] = None
-    parameters: Optional[dict[str, Any]] = None
+    parameters: Optional[SmarterDictType] = None
 
 
 class Spec(BaseModel):

@@ -16,6 +16,7 @@ from django.dispatch import receiver
 
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .caching import invalidate_cached_catalog
 from .models import MCPClient
@@ -85,7 +86,7 @@ def handle_mcpclient_connection_failed(sender, mcpclient: MCPClient, error: str,
 
 
 @receiver(mcpclient_tool_called, dispatch_uid="mcpclient_tool_called")
-def handle_mcpclient_tool_called(sender, mcpclient: MCPClient, tool_name: str, arguments: dict, **kwargs):
+def handle_mcpclient_tool_called(sender, mcpclient: MCPClient, tool_name: str, arguments: SmarterDictType, **kwargs):
     """Log a tool call.
 
     The arguments are not logged, because they may contain user data.

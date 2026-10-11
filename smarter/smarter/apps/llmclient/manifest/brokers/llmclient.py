@@ -58,6 +58,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -338,7 +339,7 @@ class SAMLLMClientBroker(AbstractBroker):
             return None
         return self._llmclient_api_key
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the Smarter API LLMClient manifest into a dictionary suitable for creating or updating a Django ORM LLMClient model.
 
@@ -392,7 +393,7 @@ class SAMLLMClientBroker(AbstractBroker):
     # the return value is a Pydantic model_dump(), whose keys are already camelCase. It is
     # not passed through @camel_case(), which would also convert the names in lists, e.g.
     # spec.plugins and spec.mcpClients.
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """
         Transform the Django ORM LLMClient model instance into a dictionary compatible with the Smarter API LLMClient manifest format.
 

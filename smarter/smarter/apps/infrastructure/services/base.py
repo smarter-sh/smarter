@@ -25,6 +25,7 @@ from django.dispatch import Signal
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest import running_unit_tests
 
 from ..exceptions import (
@@ -153,7 +154,7 @@ class InfrastructureService(ABC, SmarterHelperMixin):
 
     def creating_resource(
         self, resource_type: str, resource_name: str, billable: bool = False, **kwargs: Any
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """
         Send the signal that precedes the creation of a resource.
 
@@ -167,7 +168,7 @@ class InfrastructureService(ABC, SmarterHelperMixin):
             self.send(billable_resource_creating, resource_type=resource_type, resource_name=resource_name)
         return resource
 
-    def created_resource(self, resource: dict[str, Any], resource_id: Optional[str] = None) -> None:
+    def created_resource(self, resource: SmarterDictType, resource_id: Optional[str] = None) -> None:
         """Send the signal that follows the creation of a resource."""
         signal = billable_resource_created if resource["billable"] else resource_created
         self.send(
@@ -179,7 +180,7 @@ class InfrastructureService(ABC, SmarterHelperMixin):
 
     def destroying_resource(
         self, resource_type: str, resource_name: str, resource_id: Optional[str] = None, billable: bool = False
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """
         Send the signal that precedes the destruction of a resource.
 
@@ -200,7 +201,7 @@ class InfrastructureService(ABC, SmarterHelperMixin):
             )
         return resource
 
-    def destroyed_resource(self, resource: dict[str, Any]) -> None:
+    def destroyed_resource(self, resource: SmarterDictType) -> None:
         """Send the signal that follows the destruction of a resource."""
         signal = billable_resource_destroyed if resource["billable"] else resource_destroyed
         self.send(

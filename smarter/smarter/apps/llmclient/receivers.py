@@ -21,6 +21,7 @@ from .models import (
     LLMClientFunctions,
     LLMClientPlugin,
     LLMClientRequests,
+    invalidate_cached_llmclient_by_hosts,
 )
 from .serializers import LLMClientSerializer
 from .signals import (
@@ -94,6 +95,8 @@ def llmclient_saved(sender, instance: LLMClient, created: bool, **kwargs):
     """Create the default API for the llmclient."""
 
     prefix = logging.formatted_text(f"{module_prefix}.llmclient_saved()")
+    # its hosts may have changed, e.g. when it is renamed.
+    invalidate_cached_llmclient_by_hosts(instance)
     data = logging.formatted_json(LLMClientSerializer(instance).data)
     if created:
         logger.info("%s - created %s, %s", prefix, instance.url, data)
@@ -107,6 +110,7 @@ def llmclient_deleted(sender, instance: LLMClient, **kwargs):
     llmclient: LLMClient = instance
     prefix = logging.formatted_text(f"{module_prefix}.llmclient_deleted()")
     logger.info("%s - %s", prefix, instance.url)
+    invalidate_cached_llmclient_by_hosts(llmclient)
     # the task is passed the account number, read now, because the llmclient may be deleted
     # with its account, which then no longer exists when the task runs. It is queued when the
     # deletion is committed, so that a deletion that is rolled back deletes no resources.

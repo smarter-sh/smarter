@@ -38,6 +38,7 @@ from smarter.apps.llmhost.models.compute import (
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest import running_unit_tests
 
 from .exceptions import LLMHostComputeError
@@ -146,7 +147,7 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         except LLMHostComputeError:
             return False
 
-    def _call(self, operation: str, method: Callable[..., Any], **kwargs) -> Any:
+    def _call(self, operation: str, method: Callable[..., SmarterDictType], **kwargs) -> SmarterDictType:
         try:
             return method(**kwargs)
         except Exception as e:  # pylint: disable=broad-except

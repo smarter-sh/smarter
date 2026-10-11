@@ -22,6 +22,7 @@ import boto3
 
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from ...const import CloudProviders, KubernetesResourceTypes
 from ...exceptions import InfrastructureConfigurationError, SmarterInfrastructureError
@@ -86,7 +87,7 @@ class AWSProvider(CloudProvider):
         return self._eks
 
     @property
-    def identity(self) -> Optional[dict[str, Any]]:
+    def identity(self) -> Optional[SmarterDictType]:
         try:
             return self.base.identity
         except InfrastructureConfigurationError:
@@ -143,7 +144,7 @@ class AWSProvider(CloudProvider):
             logger.warning("%s could not create an EKS token: %s", self.formatted_class_name, e)
             return None
 
-    def get_kubernetes_cluster_info(self) -> dict[str, Any]:
+    def get_kubernetes_cluster_info(self) -> SmarterDictType:
         self.require_ready()
         with self.operation("get_kubernetes_cluster_info"):
             return self.eks.get_kubernetes_info()
