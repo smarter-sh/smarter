@@ -36,6 +36,7 @@ from smarter.apps.llmhost.manifest.enum import (
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
@@ -188,7 +189,7 @@ class LLMHost(MetaDataWithOwnershipModel):
         return (Decimal(str(hours)) * self.replicas * self.cost_per_hour).quantize(Decimal("0.0001"))
 
     def record_event(
-        self, event_type: str, message: str = "", details: Optional[dict[str, Any]] = None
+        self, event_type: str, message: str = "", details: Optional[SmarterDictType] = None
     ) -> "LLMHostEvent":
         """Record a lifecycle event, with the LLMHost's current status."""
         return LLMHostEvent.objects.create(

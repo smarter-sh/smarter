@@ -16,6 +16,7 @@ import requests
 
 from smarter.apps.plugin.plugin import safe_http
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (
@@ -38,6 +39,11 @@ def resolves_to(address: str):
 
 class TestSafeHttp(SmarterTestBase):
     """Test safe HTTP requests."""
+
+    def setUp(self):
+        super().setUp()
+        # safe_http caches responses, and these tests serve different content at the same urls.
+        lazy_cache.clear()
 
     # =========================================================================
     # validate_public_url()

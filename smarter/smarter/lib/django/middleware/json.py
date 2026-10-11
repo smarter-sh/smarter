@@ -163,6 +163,7 @@ from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
@@ -278,7 +279,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return "json" in content_type
 
     @staticmethod
-    def build_error_payload(response: HttpResponseBase) -> dict:
+    def build_error_payload(response: HttpResponseBase) -> SmarterDictType:
         """Build standardized JSON error payload."""
 
         return {

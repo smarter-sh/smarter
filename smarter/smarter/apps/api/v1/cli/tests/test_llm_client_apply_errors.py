@@ -8,7 +8,7 @@ data/llmclient-apply-errors-base.yaml in one way, e.g. a temperature that is out
 import copy
 import os
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Union
 
 import yaml
 
@@ -20,6 +20,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalApiResponseErrorKeys,
     SmarterJournalApiResponseKeys,
 )
+from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
 
@@ -28,12 +29,12 @@ BASE_MANIFEST = os.path.join(HERE, "data", "llmclient-apply-errors-base.yaml")
 CASES = os.path.join(HERE, "data", "llmclient-apply-errors.yaml")
 
 
-def load_yaml(path: str) -> Any:
+def load_yaml(path: str) -> Union[SmarterDictType, list[SmarterDictType], None]:
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-def mutated(manifest: dict, case: dict) -> dict:
+def mutated(manifest: SmarterDictType, case: SmarterDictType) -> SmarterDictType:
     """The manifest, changed as the case says."""
     keys = case["path"].split(".")
     node = manifest
@@ -56,7 +57,7 @@ class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
         self.base_manifest["metadata"]["name"] = self.name
         self.addCleanup(LLMClient.objects.filter(user_profile=self.user_profile, name=self.name).delete)
 
-    def apply(self, body: str) -> tuple[dict, int]:
+    def apply(self, body: str) -> tuple[SmarterDictType, int]:
         return self.get_response(path=self.path, manifest=body)
 
     def test_valid_manifest(self):

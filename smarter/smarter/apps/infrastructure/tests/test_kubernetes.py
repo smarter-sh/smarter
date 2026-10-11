@@ -32,6 +32,7 @@ from smarter.apps.infrastructure.signals import (
     resource_applied,
 )
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .base import InfrastructureTestBase
 
@@ -84,7 +85,7 @@ class FakeKubectl:
     """Answers kubectl commands from a dict of resources, keyed by (kind, name)."""
 
     def __init__(self):
-        self.resources: dict[tuple[str, str], dict] = {("namespace", NAMESPACE): {"kind": "Namespace"}}
+        self.resources: dict[tuple[str, str], SmarterDictType] = {("namespace", NAMESPACE): {"kind": "Namespace"}}
         self.commands: list[list[str]] = []
         self.applied: list[str] = []
         self.fail: Optional[str] = None

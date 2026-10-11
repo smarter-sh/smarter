@@ -11,6 +11,7 @@ from smarter.apps.secret.manifest.transformers.secret import (
 )
 from smarter.apps.secret.models import Secret
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.typing import SmarterDictType
 
 
 class TestSecretTransformerBranches(TestAccountMixin):
@@ -21,7 +22,7 @@ class TestSecretTransformerBranches(TestAccountMixin):
         Secret.objects.filter(user_profile=cls.user_profile, name__startswith="transformer_branches").delete()
         super().tearDownClass()
 
-    def manifest_data(self, name: str) -> dict:
+    def manifest_data(self, name: str) -> SmarterDictType:
         """Return an example Secret manifest dict, with the given name and tags."""
         data = copy.deepcopy(SecretTransformer.example_manifest())
         data["metadata"]["name"] = name

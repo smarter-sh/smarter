@@ -31,6 +31,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -109,7 +110,7 @@ class SAMPromptBroker(AbstractBroker):
 
         return self._chat
 
-    def manifest_to_django_orm(self) -> typing.Optional[dict]:
+    def manifest_to_django_orm(self) -> typing.Optional[SmarterDictType]:
         """Transform the Smarter API SAMPrompt manifest into a Django ORM model."""
         if not self.manifest:
             return None
@@ -125,7 +126,7 @@ class SAMPromptBroker(AbstractBroker):
         return {**metadata, **config_dump}
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> typing.Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> typing.Optional[SmarterDictType]:
         """
         Transform the Django ORM model into a Pydantic readable.
 

@@ -21,6 +21,8 @@ A Plugin that searches for images with the Brave Image Search API, and returns a
     - Only the https urls of the original images are returned, never Brave's thumbnails.
     - Images are filtered by file type, minimum size, and the domain of the web page that
       they come from.
+    - The images that pass the filters are shuffled, so that each search, including one
+      answered from the cache, returns a random selection of them, in random order.
     - Unless ``validateUrls`` is false, only urls that respond to a HEAD request with HTTP
       200, and not with a web page, are returned. Requests are made with
       :py:func:`smarter.apps.plugin.plugin.safe_http.fetch`, so only public hosts are contacted.
@@ -40,15 +42,13 @@ A Plugin that searches for images with the Brave Image Search API, and returns a
     Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental.
 """
 
-import hashlib
 import os
+import secrets
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional, Type, Union
 from urllib.parse import unquote, urlparse
-
-from django.core.cache import cache
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -96,10 +96,12 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 from .safe_http import SafeHttpError, fetch
@@ -115,7 +117,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-CACHE_KEY_PREFIX = "smarter.image_search"
 MAX_VALIDATION_WORKERS = 10
 MAX_RESPONSE_BYTES = 5_000_000
 BRAVE_MAX_COUNT = 200
@@ -132,9 +133,15 @@ LLM_SEARCH_PARAMS = ("country", "search_lang", "safesearch", "spellcheck")
 REJECTED_CONTENT_TYPE_PREFIXES = ("text/", "application/json", "application/xml", "application/xhtml")
 """Content-Types of responses that are not images, e.g. the html page of a hotlink protected image."""
 
+_random = secrets.SystemRandom()
+
 
 class SmarterImageSearchPluginError(SmarterPluginError):
     """Base class for all ImageSearch plugin errors."""
+
+
+class SmarterImageSearchRequestError(SmarterImageSearchPluginError):
+    """Raised by a cached Brave Image Search API request that failed, so that failures are never cached."""
 
 
 @dataclass(frozen=True)
@@ -214,6 +221,8 @@ def parse_brave_images(data: Any) -> list[ImageResult]:
         if not isinstance(item, dict):
             continue
         properties = item.get("properties") if isinstance(item.get("properties"), dict) else {}
+        if not isinstance(properties, dict):
+            continue
         url = properties.get("url")
         if not isinstance(url, str) or not url.strip():
             continue
@@ -226,6 +235,23 @@ def parse_brave_images(data: Any) -> list[ImageResult]:
                 height=as_dimension(properties.get("height")),
             )
         )
+    return retval
+
+
+def shuffled(images: list[ImageResult]) -> list[ImageResult]:
+    """
+    Return the images in random order.
+
+    Brave's results for a query, and therefore the cached results, are always in the same
+    order. Shuffling them before :py:meth:`ImageSearchPlugin.validated_urls` picks the first
+    ``count`` valid images means that repeated searches, e.g. "show me cats", return a
+    different selection of the cached images each time, rather than always the same ones.
+
+    :param images: The filtered images.
+    :return: A new list of the same images, in random order.
+    """
+    retval = list(images)
+    _random.shuffle(retval)
     return retval
 
 
@@ -274,7 +300,7 @@ class ImageSearchPlugin(PluginBase):
         - Filters for file type, minimum size, and the websites that images come from.
         - Returns only https urls, which, by default, are validated to respond with HTTP 200.
         - Returns an empty list, and logs how to create it, when its api key is missing.
-        - Caching of search results.
+        - Caching of search results, from which each search returns a random selection of images.
 
     **Example Use Cases:**
 
@@ -373,7 +399,7 @@ class ImageSearchPlugin(PluginBase):
         return PluginImageSearchSerializer
 
     @property
-    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Transform the Pydantic manifest into a Django ORM-compatible dictionary.
 
@@ -422,7 +448,7 @@ class ImageSearchPlugin(PluginBase):
         return " ".join(sentences)
 
     @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:  # type: ignore[override]
+    def custom_tool(self) -> Optional[SmarterDictType]:  # type: ignore[override]
         """
         Return the plugin tool definition for OpenAI function calling.
 
@@ -451,7 +477,7 @@ class ImageSearchPlugin(PluginBase):
         if not self.ready or not self.plugin_data:
             return None
         plugin_data = self.plugin_data
-        properties: dict[str, Any] = {
+        properties: SmarterDictType = {
             "query": {
                 "type": "string",
                 "maxLength": MAX_QUERY_LENGTH,
@@ -505,7 +531,7 @@ class ImageSearchPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
         """
         Use Pydantic models to generate an example manifest for an ImageSearchPlugin.
 
@@ -597,15 +623,7 @@ class ImageSearchPlugin(PluginBase):
             )
         return value
 
-    def cache_key(self, search_params: dict[str, Any]) -> str:
-        """Return a cache key that is unique to the plugin, and the search parameters."""
-        plugin_data = self.plugin_data
-        payload = json.dumps(
-            {"plugin_data": plugin_data.pk if plugin_data else None, **search_params}, sort_keys=True, default=str
-        )
-        return f"{CACHE_KEY_PREFIX}:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
-
-    def brave_images(self, api_key: str, search_params: dict[str, Any]) -> list[ImageResult]:
+    def brave_images(self, search_params: SmarterDictType) -> list[ImageResult]:
         """
         Search the Brave Image Search API.
 
@@ -614,9 +632,12 @@ class ImageSearchPlugin(PluginBase):
         blocked domains are not, since Brave returns no results for some queries with several
         ``-site:`` operators: :py:meth:`filtered_images` removes their images instead.
 
-        :param api_key: The Brave Search API key.
+        Responses are cached for the plugin's ``cacheTtl`` seconds, keyed on the exact query
+        parameters sent to Brave, so the plugin's filters, which Smarter applies afterwards,
+        are never part of the key. Failed requests are never cached.
+
         :param search_params: The query parameters, from :py:meth:`PluginDataImageSearch.search_params`.
-        :return: The images found, or an empty list if the search fails.
+        :return: The images found, or an empty list if the api key is missing, or the search fails.
         """
         plugin_data: PluginDataImageSearch = self.plugin_data  # type: ignore[assignment]
         params = dict(search_params)
@@ -624,27 +645,56 @@ class ImageSearchPlugin(PluginBase):
         if operators:
             params["q"] = f"{params['q']} {operators}"
         params["count"] = min(BRAVE_MAX_COUNT, max(BRAVE_MIN_COUNT, params["count"] * OVERFETCH_FACTOR))
+
+        @cache_results(timeout=plugin_data.cache_ttl)
+        def get_brave_images(
+            q: str,
+            count: int,
+            country: Optional[str] = None,
+            search_lang: Optional[str] = None,
+            safesearch: Optional[str] = None,
+            spellcheck: Optional[str] = None,
+        ) -> list[ImageResult]:
+            api_key = self.api_key()
+            if not api_key:
+                raise SmarterImageSearchRequestError(f"{self.name} has no Brave Search API key.")
+            query_params = {
+                "q": q,
+                "count": count,
+                "country": country,
+                "search_lang": search_lang,
+                "safesearch": safesearch,
+                "spellcheck": spellcheck,
+            }
+            try:
+                response = fetch(
+                    BRAVE_IMAGE_SEARCH_URL,
+                    headers={"Accept": "application/json", "X-Subscription-Token": api_key},
+                    params={key: value for key, value in query_params.items() if value is not None},
+                    timeout=plugin_data.timeout,
+                    max_bytes=MAX_RESPONSE_BYTES,
+                )
+            except SafeHttpError as e:
+                base_logger.warning(
+                    "%s plugin %s image search failed: %s",
+                    self.formatted_class_name,
+                    self.name,
+                    describe_brave_error(e),
+                )
+                raise SmarterImageSearchRequestError(describe_brave_error(e)) from e
+            try:
+                return parse_brave_images(json.loads(response.content))
+            except (ValueError, UnicodeDecodeError) as e:
+                base_logger.warning(
+                    "%s plugin %s image search failed: the Brave Search API returned an invalid response.",
+                    self.formatted_class_name,
+                    self.name,
+                )
+                raise SmarterImageSearchRequestError("the Brave Search API returned an invalid response.") from e
+
         try:
-            response = fetch(
-                BRAVE_IMAGE_SEARCH_URL,
-                headers={"Accept": "application/json", "X-Subscription-Token": api_key},
-                params=params,
-                timeout=plugin_data.timeout,
-                max_bytes=MAX_RESPONSE_BYTES,
-            )
-        except SafeHttpError as e:
-            base_logger.warning(
-                "%s plugin %s image search failed: %s", self.formatted_class_name, self.name, describe_brave_error(e)
-            )
-            return []
-        try:
-            return parse_brave_images(json.loads(response.content))
-        except (ValueError, UnicodeDecodeError):
-            base_logger.warning(
-                "%s plugin %s image search failed: the Brave Search API returned an invalid response.",
-                self.formatted_class_name,
-                self.name,
-            )
+            return get_brave_images(**params)
+        except SmarterImageSearchRequestError:
             return []
 
     def filtered_images(self, images: list[ImageResult]) -> list[ImageResult]:
@@ -724,7 +774,7 @@ class ImageSearchPlugin(PluginBase):
                     return retval
         return retval
 
-    def search(self, query: str, count: Any = None, llm_params: Optional[dict[str, Any]] = None) -> list[str]:
+    def search(self, query: str, count: Any = None, llm_params: Optional[SmarterDictType] = None) -> list[str]:
         """
         Search for images.
 
@@ -734,30 +784,20 @@ class ImageSearchPlugin(PluginBase):
         :param llm_params: The other search parameters that the LLM set, which are used only
             if the plugin's ``llmSearchParams`` is true. See
             :py:meth:`PluginDataImageSearch.search_params`.
-        :return: The https urls of the images found. Empty if none were found, the api key is
-            missing, or the search failed.
+        :return: The https urls of a random selection of the images found, in random order. Empty
+            if none were found, the api key is missing, or the search failed.
         """
         plugin_data: PluginDataImageSearch = self.plugin_data  # type: ignore[assignment]
         query = " ".join(query.split())[:MAX_QUERY_LENGTH]
         if isinstance(count, bool) or not isinstance(count, int):
             count = None
         search_params = plugin_data.search_params(query=query, count=count, llm_params=llm_params)
-        key = self.cache_key(search_params)
-        urls = cache.get(key) if plugin_data.cache_ttl else None
-        if urls is not None:
-            return urls
-        api_key = self.api_key()
-        if not api_key:
-            return []
-        images = self.filtered_images(self.brave_images(api_key, search_params))
-        urls = self.validated_urls(images, search_params["count"])
-        if urls and plugin_data.cache_ttl:
-            cache.set(key, urls, plugin_data.cache_ttl)
-        return urls
+        images = shuffled(self.filtered_images(self.brave_images(search_params)))
+        return self.validated_urls(images, search_params["count"])
 
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[dict[str, Any], str, None]
-    ) -> Union[dict, list, str]:
+        self, function_args: Union[SmarterDictType, str, None]
+    ) -> Union[SmarterDictType, list, str]:
         """
         Search for images in response to a tool call.
 
@@ -804,7 +844,7 @@ class ImageSearchPlugin(PluginBase):
         )
         return retval
 
-    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+    def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
         Serialize the ImageSearchPlugin to a JSON-compatible dictionary suitable for Pydantic import.
 

@@ -98,6 +98,7 @@ from smarter.apps.prompt.signals import (
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .enum import WeatherMetrics, WeatherParameters, WeatherUnits
 from .models import WeatherRequestModel
@@ -116,7 +117,7 @@ logger_prefix = formatted_text(__name__ + ".get_current_weather()")
 ureg = UnitRegistry()
 
 
-def weather_tool_factory() -> dict[str, Any]:
+def weather_tool_factory() -> SmarterDictType:
     """
     Constructs and returns a JSON-compatible dictionary defining the weather tool for OpenAI LLM function calling.
 
@@ -130,7 +131,7 @@ def weather_tool_factory() -> dict[str, Any]:
 
     Returns
     -------
-    dict[str, Any]
+    SmarterDictType
         A dictionary containing the tool definition for `get_current_weather`,
         formatted for OpenAI LLM function calling.
     """
@@ -168,7 +169,7 @@ def weather_tool_factory() -> dict[str, Any]:
     return tool
 
 
-def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[str, Any]]:
+def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[SmarterDictType]:
     """
     Retrieves the current weather and a 24-hour forecast for a specified.
 
@@ -226,7 +227,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     hourly_data: dict[str, pd.Series | np.ndarray | pd.DatetimeIndex] = {}
 
     # final result dictionary to be returned.
-    result: dict[str, Any] = {}
+    result: SmarterDictType = {}
 
     # -------------------------------------------------------------------------
     # 2.) Check if the necessary API clients are initialized before proceeding.

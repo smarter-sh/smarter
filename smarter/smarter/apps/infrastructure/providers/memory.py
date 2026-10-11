@@ -18,6 +18,8 @@ tests exercise the service layer, and its signals, without reaching real infrast
 import copy
 from typing import Any, Optional
 
+from smarter.lib.typing import SmarterDictType
+
 from ..const import CertificateStatus, CloudProviders
 from ..services.base import DiscoveredResource
 from ..services.certificates import Certificate, CertificateService
@@ -154,7 +156,7 @@ class InMemoryProvider(CloudProvider):
         self._dns = InMemoryDNSService(self)
         self._certificates = InMemoryCertificateService(self, self._dns)
         self.kubeconfig_updates = 0
-        self.cluster_info: dict[str, Any] = {
+        self.cluster_info: SmarterDictType = {
             "health": {"issues": []},
             "platformVersion": "memory",
             "status": "ACTIVE",
@@ -172,7 +174,7 @@ class InMemoryProvider(CloudProvider):
         self._ready = value
 
     @property
-    def identity(self) -> Optional[dict[str, Any]]:
+    def identity(self) -> Optional[SmarterDictType]:
         return {"Account": ACCOUNT_ID, "Arn": f"memory::{ACCOUNT_ID}:user/smarter"} if self._ready else None
 
     @property
@@ -195,7 +197,7 @@ class InMemoryProvider(CloudProvider):
         self.kubeconfig_updates += 1
         return self._ready
 
-    def get_kubernetes_cluster_info(self) -> dict[str, Any]:
+    def get_kubernetes_cluster_info(self) -> SmarterDictType:
         self.require_ready()
         return dict(self.cluster_info)
 

@@ -13,6 +13,8 @@ from typing import Any, Optional, Union
 
 from pydantic import BaseModel
 
+from smarter.lib.typing import SmarterDictType
+
 
 def _models_of(annotation: Any) -> Optional[list[type[BaseModel]]]:
     """
@@ -42,9 +44,9 @@ def _models_of(annotation: Any) -> Optional[list[type[BaseModel]]]:
     return None
 
 
-def _field_names(model: type[BaseModel]) -> dict[str, Any]:
+def _field_names(model: type[BaseModel]) -> SmarterDictType:
     """The keys that the model accepts, i.e. its field names and aliases, and their types."""
-    retval: dict[str, Any] = {}
+    retval: SmarterDictType = {}
     for name, field in model.model_fields.items():
         retval[name] = field.annotation
         for alias in (field.alias, field.validation_alias):
@@ -72,7 +74,7 @@ def unknown_keys(models: Union[type[BaseModel], list[type[BaseModel]]], data: An
     if not isinstance(data, dict):
         return []
     models = models if isinstance(models, list) else [models]
-    fields: dict[str, Any] = {}
+    fields: SmarterDictType = {}
     for model in models:
         fields.update(_field_names(model))
     retval = []

@@ -37,6 +37,7 @@ from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .connection_base import ConnectionBase
 
@@ -331,7 +332,7 @@ class SqlConnection(ConnectionBase):
         return self._connection
 
     @property
-    def db_options(self) -> dict:
+    def db_options(self) -> SmarterDictType:
         """
         Return the database connection options.
 
@@ -363,7 +364,7 @@ class SqlConnection(ConnectionBase):
         return retval
 
     @property
-    def django_db_connection(self) -> dict:
+    def django_db_connection(self) -> SmarterDictType:
         """
         Return the database connection settings for Django.
 
@@ -701,7 +702,7 @@ class SqlConnection(ConnectionBase):
         :return: True if the proxy connection is successful, otherwise False.
         :rtype: bool
         """
-        proxy_dict: Optional[dict] = None
+        proxy_dict: Optional[SmarterDictType] = None
         if self.proxy_protocol is not None and self.proxy_host is not None:
             # proxy_password is a Secret, whose value is the password.
             password = self.proxy_password.get_secret(update_last_accessed=False) if self.proxy_password else None

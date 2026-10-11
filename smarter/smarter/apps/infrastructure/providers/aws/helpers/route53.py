@@ -12,6 +12,7 @@ import time
 from typing import Any, Optional
 
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 from .base import AWSBase
 from .exceptions import AWSNotReadyError
@@ -43,14 +44,14 @@ class AWSRoute53(AWSBase):
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS Route53.")
         return self.client
 
-    def list_hosted_zones(self) -> list[dict[str, Any]]:
+    def list_hosted_zones(self) -> list[SmarterDictType]:
         """Return every hosted zone of the account."""
-        zones: list[dict[str, Any]] = []
+        zones: list[SmarterDictType] = []
         for page in self.route53.get_paginator("list_hosted_zones").paginate():
             zones.extend(page["HostedZones"])
         return zones
 
-    def get_hosted_zone(self, domain_name: str) -> Optional[dict[str, Any]]:
+    def get_hosted_zone(self, domain_name: str) -> Optional[SmarterDictType]:
         """
         Return the hosted zone of a domain.
 
@@ -63,7 +64,7 @@ class AWSRoute53(AWSBase):
                 return zone
         return None
 
-    def get_hosted_zone_by_id(self, zone_id: str) -> Optional[dict[str, Any]]:
+    def get_hosted_zone_by_id(self, zone_id: str) -> Optional[SmarterDictType]:
         """
         Return a hosted zone, and its delegation set, by its id.
 
@@ -84,7 +85,7 @@ class AWSRoute53(AWSBase):
         except self.route53.exceptions.NoSuchHostedZone:
             return None
 
-    def create_hosted_zone(self, domain_name: str) -> dict[str, Any]:
+    def create_hosted_zone(self, domain_name: str) -> SmarterDictType:
         """
         Create a public hosted zone.
 
@@ -96,15 +97,15 @@ class AWSRoute53(AWSBase):
             HostedZoneConfig={"Comment": "Managed by Smarter", "PrivateZone": False},
         )
 
-    def list_record_sets(self, zone_id: str) -> list[dict[str, Any]]:
+    def list_record_sets(self, zone_id: str) -> list[SmarterDictType]:
         """Return every record set of a hosted zone."""
-        record_sets: list[dict[str, Any]] = []
+        record_sets: list[SmarterDictType] = []
         paginator = self.route53.get_paginator("list_resource_record_sets")
         for page in paginator.paginate(HostedZoneId=hosted_zone_id(zone_id)):
             record_sets.extend(page["ResourceRecordSets"])
         return record_sets
 
-    def change_record_set(self, zone_id: str, action: str, record_set: dict[str, Any]) -> None:
+    def change_record_set(self, zone_id: str, action: str, record_set: SmarterDictType) -> None:
         """
         Change one record set.
 

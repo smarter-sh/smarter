@@ -20,6 +20,7 @@ from smarter.apps.mcpclient.connection import MCPServerConnection
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.models import MCPClient, MCPConnectionStatus
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import (
     MCPCLIENT_NAME,
@@ -54,13 +55,13 @@ class TestMCPClientApi(MCPClientTestBase):
         self.client.force_login(self.admin_user)
         self.addCleanup(self.client.logout)
 
-    def get(self, path: str, status: int = HTTPStatus.OK) -> dict:
+    def get(self, path: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """GET a path, assert the status, and return the json."""
         response = self.client.get(path)
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content) if response.content else {}
 
-    def post(self, path: str, data=None, status: int = HTTPStatus.OK) -> dict:
+    def post(self, path: str, data=None, status: int = HTTPStatus.OK) -> SmarterDictType:
         """POST json to a path, assert the status, and return the json."""
         response = self.client.post(path, data=data or {}, format="json")
         self.assertEqual(response.status_code, status, response.content)

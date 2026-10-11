@@ -33,7 +33,7 @@ come from.
         blockedDomains: []           # never images on, or from web pages on, these domains
       validateUrls: true             # only return urls that respond with HTTP 200
       timeout: 10
-      cacheTtl: 900
+      cacheTtl: 604800
 
 .. note::
 
@@ -47,6 +47,7 @@ from typing import Any, ClassVar, Optional
 
 from pydantic import Field, field_validator
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.apps.plugin.manifest.models.websearch_plugin.policy import (
     WebsearchPolicyError,
@@ -57,11 +58,9 @@ from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 from .const import (
     DEFAULT_API_KEY_SECRET_NAME,
-    DEFAULT_CACHE_TTL,
     DEFAULT_COUNT,
     DEFAULT_TIMEOUT,
     MANIFEST_KIND,
-    MAX_CACHE_TTL,
     MAX_COUNT,
     MAX_DIMENSION,
     MAX_QUERY_LENGTH,
@@ -313,9 +312,9 @@ class ImageSearchData(SmarterBasePydanticModel):
         description=f"{class_identifier}.timeout[int]: seconds to wait for each web request, 1 to {MAX_TIMEOUT}.",
     )
     cacheTtl: int = Field(
-        default=DEFAULT_CACHE_TTL,
+        default=PluginCacheTtl.IMAGE_SEARCH,
         ge=0,
-        le=MAX_CACHE_TTL,
+        le=PluginCacheTtl.IMAGE_SEARCH,
         description=f"{class_identifier}.cacheTtl[int]: seconds to cache search results. 0 disables caching.",
     )
 

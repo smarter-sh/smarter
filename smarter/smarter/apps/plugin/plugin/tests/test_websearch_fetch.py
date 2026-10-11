@@ -11,8 +11,6 @@ Unit tests for :py:mod:`smarter.apps.plugin.plugin.websearch_fetch`, which reads
 
 from unittest import mock
 
-from django.core.cache import cache
-
 from smarter.apps.plugin.manifest.models.websearch_plugin.policy import DomainPolicy
 from smarter.apps.plugin.plugin.websearch_fetch import (
     TRUNCATION_MARKER,
@@ -24,6 +22,7 @@ from smarter.apps.plugin.plugin.websearch_fetch import (
     robots_permit,
     truncate,
 )
+from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import SAFE_HTTP_DNS_PATCH, FakeWebHost, mock_web_host
@@ -67,7 +66,7 @@ class TestWebsearchFetch(SmarterTestBase):
     def setUp(self):
         super().setUp()
         # robots.txt files are cached.
-        cache.clear()
+        lazy_cache.clear()
 
     def host(self, **pages) -> FakeWebHost:
         """Return a FakeWebHost serving HTML pages at https://example.com/<name>, with no robots.txt."""
@@ -198,11 +197,13 @@ class TestWebsearchFetch(SmarterTestBase):
             self.assertTrue(robots_permit("https://example.com/private", 5))
 
     def test_robots_unreachable(self):
-        """Test that an unreachable robots.txt (5xx) permits nothing."""
+        """Test that an unreachable robots.txt (5xx) permits nothing, and is not cached."""
         host = FakeWebHost()
         host.add("https://example.com/robots.txt", b"", status_code=503)
         with mock_web_host(host):
             self.assertFalse(robots_permit("https://example.com/page", 5))
+            self.assertFalse(robots_permit("https://example.com/page", 5))
+        self.assertEqual(host.requested.count("https://example.com/robots.txt"), 2)
 
     def test_robots_rules(self):
         """Test that robots.txt rules are obeyed, for all user agents and for Smarter's."""
@@ -238,6 +239,43 @@ class TestWebsearchFetch(SmarterTestBase):
         self.assertTrue(page.content.startswith("# Main heading"))
         self.assertFalse(page.truncated)
         self.assertIsNotNone(page.retrieved_at)
+
+    def test_fetch_page_is_cached(self):
+        """Test that a page's response is cached, with its original retrieval time."""
+        with mock_web_host(self.host(post=ARTICLE)) as host:
+            first = fetch_page("https://example.com/post")
+            second = fetch_page("https://example.com/post", max_characters=100)
+        self.assertEqual(host.requested.count("https://example.com/post"), 1)
+        self.assertFalse(first.cached)
+        self.assertTrue(second.cached)
+        self.assertEqual(second.retrieved_at, first.retrieved_at)
+        self.assertTrue(second.truncated)
+
+    def test_fetch_page_cache_key(self):
+        """Test that the domain policy and robots.txt setting are part of the cache key, since they decide redirects."""
+        with mock_web_host(self.host(post=ARTICLE)) as host:
+            fetch_page("https://example.com/post")
+            fetch_page("https://example.com/post", policy=DomainPolicy.create(blocked=["blocked.example"]))
+            fetch_page("https://example.com/post", respect_robots_txt=False)
+        self.assertEqual(host.requested.count("https://example.com/post"), 3)
+
+    def test_fetch_page_without_cache(self):
+        """Test that a cache_ttl of 0 disables caching."""
+        with mock_web_host(self.host(post=ARTICLE)) as host:
+            fetch_page("https://example.com/post", cache_ttl=0)
+            page = fetch_page("https://example.com/post", cache_ttl=0)
+        self.assertEqual(host.requested.count("https://example.com/post"), 2)
+        self.assertFalse(page.cached)
+
+    def test_fetch_page_failure_is_not_cached(self):
+        """Test that a page that could not be read is not cached."""
+        host = self.host()
+        host.add("https://example.com/down", b"", status_code=503)
+        with mock_web_host(host):
+            for _ in range(2):
+                with self.assertRaises(WebFetchError):
+                    fetch_page("https://example.com/down")
+        self.assertEqual(host.requested.count("https://example.com/down"), 2)
 
     def test_fetch_page_request_headers(self):
         """Test that pages are requested with Smarter's user agent, and an Accept header."""

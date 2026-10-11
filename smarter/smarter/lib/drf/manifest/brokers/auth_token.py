@@ -40,6 +40,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 MAX_RESULTS = 1000
 logger = logging.getLogger(__name__)
@@ -184,7 +185,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self.created and self._token_key:
             return self._token_key
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model."""
         logger.debug("%s.manifest_to_django_orm() called", self.formatted_class_name)
         if not isinstance(self.manifest, SAMSmarterAuthToken):
@@ -215,7 +216,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return retval
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> dict:
+    def django_orm_to_manifest_dict(self) -> SmarterDictType:
         """
         Transform the Django ORM model into a Pydantic readable.
 

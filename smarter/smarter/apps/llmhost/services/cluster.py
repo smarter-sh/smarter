@@ -20,6 +20,7 @@ import yaml
 from smarter.apps.infrastructure.exceptions import KubernetesServiceError
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
+from smarter.lib.typing import SmarterDictType
 
 from .exceptions import LLMHostClusterError
 
@@ -35,18 +36,18 @@ class ClusterBackend(ABC):
         """Whether the cluster is reachable."""
 
     @abstractmethod
-    def apply(self, resources: list[dict[str, Any]]) -> None:
+    def apply(self, resources: list[SmarterDictType]) -> None:
         """Create or update resources.
 
         Raises LLMHostClusterError if the cluster rejects them.
         """
 
     @abstractmethod
-    def get(self, kind: str, name: str) -> Optional[dict[str, Any]]:
+    def get(self, kind: str, name: str) -> Optional[SmarterDictType]:
         """Return a resource, or None if it does not exist."""
 
     @abstractmethod
-    def list_resources(self, kind: str, selector: str) -> list[dict[str, Any]]:
+    def list_resources(self, kind: str, selector: str) -> list[SmarterDictType]:
         """Return the resources of a kind that match a label selector."""
 
     @abstractmethod
@@ -76,7 +77,7 @@ class KubectlClusterBackend(ClusterBackend):
     def ready(self) -> bool:
         return bool(self.helper.ready)
 
-    def apply(self, resources: list[dict[str, Any]]) -> None:
+    def apply(self, resources: list[SmarterDictType]) -> None:
         if not self.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
         manifest = yaml.safe_dump_all(resources, sort_keys=False)
@@ -85,10 +86,10 @@ class KubectlClusterBackend(ClusterBackend):
         except KubernetesServiceError as e:
             raise LLMHostClusterError(f"The Kubernetes cluster rejected the resources: {e}") from e
 
-    def get(self, kind: str, name: str) -> Optional[dict[str, Any]]:
+    def get(self, kind: str, name: str) -> Optional[SmarterDictType]:
         return self.helper.get_resource(kind, name, self.namespace)
 
-    def list_resources(self, kind: str, selector: str) -> list[dict[str, Any]]:
+    def list_resources(self, kind: str, selector: str) -> list[SmarterDictType]:
         return self.helper.list_resources(kind, self.namespace, selector)
 
     def delete(self, kinds: list[str], selector: str) -> bool:
@@ -113,7 +114,7 @@ def _kind(kind: str) -> str:
     return kind[:-1] if kind.endswith("s") and not kind.endswith("ss") else kind
 
 
-def _matches(resource: dict[str, Any], selector: str) -> bool:
+def _matches(resource: SmarterDictType, selector: str) -> bool:
     labels = resource.get("metadata", {}).get("labels", {}) or {}
     for term in filter(None, selector.split(",")):
         key, _, value = term.partition("=")
@@ -134,8 +135,8 @@ class InMemoryClusterBackend(ClusterBackend):
     def __init__(self, namespace: str = "smarter-platform-test", ready: bool = True):
         self.namespace = namespace
         self._ready = ready
-        self.resources: dict[tuple[str, str], dict[str, Any]] = {}
-        self.applied: list[list[dict[str, Any]]] = []
+        self.resources: dict[tuple[str, str], SmarterDictType] = {}
+        self.applied: list[list[SmarterDictType]] = []
         self.deleted: list[tuple[list[str], str]] = []
         self.pod_logs: str = ""
         self.fail_apply: Optional[str] = None
@@ -148,7 +149,7 @@ class InMemoryClusterBackend(ClusterBackend):
     def ready(self, value: bool) -> None:
         self._ready = value
 
-    def apply(self, resources: list[dict[str, Any]]) -> None:
+    def apply(self, resources: list[SmarterDictType]) -> None:
         if not self.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
         if self.fail_apply:
@@ -162,10 +163,10 @@ class InMemoryClusterBackend(ClusterBackend):
                 stored["status"] = previous["status"]
             self.resources[key] = stored
 
-    def get(self, kind: str, name: str) -> Optional[dict[str, Any]]:
+    def get(self, kind: str, name: str) -> Optional[SmarterDictType]:
         return copy.deepcopy(self.resources.get((_kind(kind), name)))
 
-    def list_resources(self, kind: str, selector: str) -> list[dict[str, Any]]:
+    def list_resources(self, kind: str, selector: str) -> list[SmarterDictType]:
         kind = _kind(kind)
         return [copy.deepcopy(r) for (k, _), r in self.resources.items() if k == kind and _matches(r, selector)]
 
@@ -196,7 +197,7 @@ class InMemoryClusterBackend(ClusterBackend):
         self.resources[("deployment", name)].setdefault("status", {}).update(status)
 
     def add_pod(
-        self, name: str, labels: dict[str, str], status: dict[str, Any], node_name: Optional[str] = None
+        self, name: str, labels: dict[str, str], status: SmarterDictType, node_name: Optional[str] = None
     ) -> None:
         """Add a pod with a status, e.g. {'phase': 'Running', 'containerStatuses': [...]}, scheduled on a node."""
         self.resources[("pod", name)] = {

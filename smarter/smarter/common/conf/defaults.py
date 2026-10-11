@@ -50,7 +50,7 @@ def optional_secret_env(var_name: str) -> Optional[SecretStr]:
     :returns: The secret, or None.
     """
     value = get_env(var_name, default=None, is_secret=True)
-    return None if is_missing_value(value) else SecretStr(value)
+    return None if value is None or is_missing_value(value) else SecretStr(value)
 
 
 class DjangoPermittedStorages:
@@ -100,8 +100,8 @@ class SettingsDefaults:
 
     # aws auth
     AWS_PROFILE = get_env("AWS_PROFILE", default=None)
-    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(get_env("AWS_ACCESS_KEY_ID", default=None, is_secret=True))
-    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY", default=None, is_secret=True))
+    AWS_ACCESS_KEY_ID: Optional[SecretStr] = optional_secret_env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = optional_secret_env("AWS_SECRET_ACCESS_KEY")
     AWS_REGION = get_env("AWS_REGION", default=None)
 
     CLOUD_PROVIDER: str = get_env("CLOUD_PROVIDER", "aws")
@@ -120,13 +120,11 @@ class SettingsDefaults:
     BRANDING_COUNTRY: str = get_env("BRANDING_COUNTRY", "USA")
     BRANDING_CURRENCY: str = get_env("BRANDING_CURRENCY", "USD")
     BRANDING_TIMEZONE: str = get_env("BRANDING_TIMEZONE", "America/Denver")
-    BRANDING_CONTACT_URL: Optional[HttpUrl] = get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/")
+    BRANDING_CONTACT_URL: str = get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/")
     BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
-    BRANDING_URL_FACEBOOK: Optional[HttpUrl] = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com")
-    BRANDING_URL_TWITTER: Optional[HttpUrl] = get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry")
-    BRANDING_URL_LINKEDIN: Optional[HttpUrl] = get_env(
-        "BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/"
-    )
+    BRANDING_URL_FACEBOOK: str = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com")
+    BRANDING_URL_TWITTER: str = get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry")
+    BRANDING_URL_LINKEDIN: str = get_env("BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/")
 
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
@@ -218,11 +216,11 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
-    LOGO: HttpUrl = get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png"))
+    LOGO: str = get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png"))
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
+    MARKETING_SITE_URL: str = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
 
     # the user and password that scripts/smarter_test_db.sql creates in the local MariaDB.
     MYSQL_TEST_DATABASE_SECRET_NAME = get_env("MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db")

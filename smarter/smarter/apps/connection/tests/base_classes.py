@@ -14,6 +14,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -33,7 +34,7 @@ class TestConnectionBase(TestAccountMixin):
     """Base class for testing all connection models."""
 
     _manifest_path: Optional[str] = None
-    _manifest: Optional[dict] = None
+    _manifest: Optional[SmarterDictType] = None
     _loader: Optional[SAMLoader] = None
     _model: Optional[AbstractSAMBase] = None  # any of SAMApiConnection, SAMSqlConnection
 
@@ -57,7 +58,7 @@ class TestConnectionBase(TestAccountMixin):
         self._model = None
 
     @property
-    def manifest(self) -> Optional[dict]:
+    def manifest(self) -> Optional[SmarterDictType]:
         if not self._manifest and self.manifest_path:
             logger.info("%s.manifest Loading manifest from %s", self.formatted_class_name, self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)

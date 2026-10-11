@@ -50,4 +50,4 @@ spec:
       - pinterest.com
       - quora.com
     timeout: 15
-    cacheTtl: 900
+    cacheTtl: 3600

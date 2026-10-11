@@ -12,13 +12,14 @@ from smarter.apps.proxy.manifest.models.proxy.model import SAMProxy
 from smarter.apps.proxy.manifest.models.proxy.spec import SAMProxySpec, SAMProxySpecAuth
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import get_data_path, get_test_data
 
 INVALID = (SAMValidationError, ValidationError)
 
 
-def spec(**changes) -> dict:
+def spec(**changes) -> SmarterDictType:
     """The test manifest's spec, with changes.
 
     A None value removes the field.

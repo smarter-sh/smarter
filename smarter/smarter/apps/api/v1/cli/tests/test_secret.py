@@ -27,6 +27,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
 
@@ -82,7 +83,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         )
         return secret
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         # validate the response and status are both good
         self.assertIsInstance(response, dict)
 
@@ -99,7 +100,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertIn(SAMMetadataKeys.DESCRIPTION.value, metadata.keys())
         self.assertIn(SAMMetadataKeys.VERSION.value, metadata.keys())
 
-    def validate_spec(self, data: dict) -> None:
+    def validate_spec(self, data: SmarterDictType) -> None:
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         config = spec["config"]
@@ -214,13 +215,13 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertEqual(response["metadata"]["thing"], SAMKinds.SECRET.value)
         self.assertIsInstance(response["metadata"], dict)
 
-        data: dict = response["data"]
+        data: SmarterDictType = response["data"]
         self.assertIsInstance(data, dict)
         self.assertIn("name", data["data"]["metadata"])
         self.assertIn("description", data["data"]["metadata"])
         self.assertIn("version", data["data"]["metadata"])
 
-        data: dict = response["data"]["data"]
+        data: SmarterDictType = response["data"]["data"]
         self.assertIsInstance(data, dict)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SECRET.value)
@@ -357,7 +358,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
             "metadata": {"key": "e8ea54df1efbedbdbe727f6abcc92ea2f8b0f4513928d58114b0a2b9265f7222"},
         }
 
-        data: dict = response[SCLIResponseGet.DATA.value]
+        data: SmarterDictType = response[SCLIResponseGet.DATA.value]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SECRET.value)
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)
@@ -382,8 +383,8 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertIn("tags", data.get(SAMKeys.METADATA.value, {}))
         self.assertIn("annotations", data.get(SAMKeys.METADATA.value, {}))
 
-        spec: dict = data.get(SAMKeys.SPEC.value, {})
-        config: dict = spec.get("config", {})
+        spec: SmarterDictType = data.get(SAMKeys.SPEC.value, {})
+        config: SmarterDictType = spec.get("config", {})
         self.assertIsInstance(config, dict)
         self.assertIn("value", config.keys())
         self.assertIn("expiration_date", config.keys())

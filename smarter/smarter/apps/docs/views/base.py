@@ -25,6 +25,7 @@ from smarter.lib.django.views import (
     SmarterWebTxtView,
 )
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -53,8 +54,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
     template_path: Optional[str] = None
     name: Optional[str] = None
     kind: Optional[SAMKinds] = None
-    context: dict = {}
-    kwargs: Optional[dict] = None
+    context: SmarterDictType = {}
+    kwargs: Optional[SmarterDictType] = None
 
     @property
     def formatted_class_name(self):
@@ -63,7 +64,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     def get_brokered_json_response(
         self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs
-    ) -> dict[str, Any]:
+    ) -> SmarterDictType:
         """
         Get the JSON response from the brokered smarter.sh/api endpoint.
 

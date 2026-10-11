@@ -26,10 +26,5 @@ DEFAULT_FETCH_CHARACTERS = 20_000
 MAX_TIMEOUT = 60
 DEFAULT_TIMEOUT = 15
 MAX_CACHE_TTL = 86_400
-DEFAULT_CACHE_TTL = 900
-"""Seconds to cache search results and web pages.
-
-15 minutes, as with Claude's own web fetch tool.
-"""
 MAX_DOMAINS = 100
 """The maximum number of domains in an allow list or a block list."""

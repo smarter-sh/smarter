@@ -8,10 +8,7 @@ best similarity reaches ``guardrail.threshold``. The reference texts' embeddings
 so that each prompt embeds only the segment.
 """
 
-import hashlib
 import math
-
-from django.core.cache import cache
 
 from smarter.apps.guardrail.manifest.models.guardrail.const import (
     DEFAULT_EMBEDDING_MODEL,
@@ -20,12 +17,13 @@ from smarter.apps.guardrail.services.exceptions import (
     GuardrailConfigError,
     GuardrailProviderError,
 )
+from smarter.lib.cache import cache_results
 
 from .base import BaseGuardrailStrategy, StrategyContext, StrategyMatch
 from .clients import get_client
 
 EMBEDDING_CACHE_TTL = 60 * 60 * 24 * 7
-"""Seconds to cache a reference text's embedding."""
+"""Seconds to cache the embeddings of a guardrail's reference texts."""
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:
@@ -44,9 +42,29 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
-def embedding_cache_key(model: str, text: str) -> str:
-    """Return the cache key of a text's embedding."""
-    return f"smarter.apps.guardrail.embedding.{model}.{hashlib.sha256(text.encode()).hexdigest()}"
+def reference_embeddings(guardrail, model: str, references: list[str]) -> list[list[float]]:
+    """
+    Return the embeddings of a guardrail's reference texts, in order.
+
+    The embeddings are cached for :data:`EMBEDDING_CACHE_TTL` seconds, keyed on the model and
+    the reference texts, so that each prompt embeds only the segment.
+
+    :param guardrail: The Guardrail, whose LLM provider embeds the texts.
+    :param model: The embedding model.
+    :param references: The reference texts.
+    :returns: One embedding per reference text.
+    :raises GuardrailProviderError: If the embeddings call returns the wrong number of vectors.
+    """
+
+    @cache_results(timeout=EMBEDDING_CACHE_TTL)
+    def get_cached_reference_embeddings(model: str, references: list[str]) -> list[list[float]]:
+        vectors = get_client(guardrail).embed(references, model=model)
+        if len(vectors) != len(references):
+            # raise rather than return so that a bad response is never cached.
+            raise GuardrailProviderError("The embeddings call returned the wrong number of vectors.")
+        return vectors
+
+    return get_cached_reference_embeddings(model, references)
 
 
 class SemanticStrategy(BaseGuardrailStrategy):
@@ -60,18 +78,13 @@ class SemanticStrategy(BaseGuardrailStrategy):
                 f"Guardrail '{guardrail.name}' uses strategy semantic but has no referenceTexts."
             )
         model = guardrail.settings.get("model") or DEFAULT_EMBEDDING_MODEL
-        cached = cache.get_many([embedding_cache_key(model, text) for text in references])
-        missing = [text for text in references if embedding_cache_key(model, text) not in cached]
-        vectors = get_client(guardrail).embed([segment.text, *missing], model=model)
-        if len(vectors) != len(missing) + 1:
+        reference_vectors = reference_embeddings(guardrail, model, references)
+        vectors = get_client(guardrail).embed([segment.text], model=model)
+        if len(vectors) != 1:
             raise GuardrailProviderError("The embeddings call returned the wrong number of vectors.")
         segment_vector = vectors[0]
-        new = {embedding_cache_key(model, text): vector for text, vector in zip(missing, vectors[1:])}
-        if new:
-            cache.set_many(new, EMBEDDING_CACHE_TTL)
-        cached.update(new)
         scores = [
-            (cosine_similarity(segment_vector, cached[embedding_cache_key(model, text)]), text) for text in references
+            (cosine_similarity(segment_vector, vector), text) for vector, text in zip(reference_vectors, references)
         ]
         best_score, best_reference = max(scores)
         threshold = self.threshold(guardrail)
@@ -82,4 +95,4 @@ class SemanticStrategy(BaseGuardrailStrategy):
         )
 
 
-__all__ = ["SemanticStrategy", "cosine_similarity"]
+__all__ = ["SemanticStrategy", "cosine_similarity", "reference_embeddings"]

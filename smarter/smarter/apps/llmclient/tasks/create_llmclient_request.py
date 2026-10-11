@@ -50,6 +50,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 from smarter.workers.celery import app
 
 logger = logging.getSmarterLogger(
@@ -64,7 +65,7 @@ logger_prefix = logging.formatted_text(__name__)
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_llmclient_request(llmclient_id: int, request_data: dict):
+def create_llmclient_request(llmclient_id: int, request_data: SmarterDictType):
     """
     Create a LLMClient request record in the database as a Celery task.
 

@@ -43,6 +43,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
@@ -315,7 +316,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Transform the Smarter API User manifest into a Django ORM model.
 

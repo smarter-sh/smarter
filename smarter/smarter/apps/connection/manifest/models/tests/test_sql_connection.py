@@ -38,6 +38,7 @@ from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 MANIFEST_PATH_SQL_CONNECTION = os.path.abspath(
@@ -271,7 +272,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             self.assertIsNotNone(self._model)
         return self._model
 
-    def properties_factory(self) -> dict:
+    def properties_factory(self) -> SmarterDictType:
         return {
             "properties": {
                 "location": {"type": "string", "description": "The city and state, e.g., San Francisco, CA"},

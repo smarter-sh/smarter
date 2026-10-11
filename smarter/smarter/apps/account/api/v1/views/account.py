@@ -21,6 +21,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -84,7 +85,7 @@ class AccountView(AccountViewBase):
             return HttpResponseNotFound("Account not found")
 
         try:
-            data: dict = request.data
+            data: SmarterDictType = request.data
             if not isinstance(data, dict):
                 return HttpResponseBadRequest(
                     f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"

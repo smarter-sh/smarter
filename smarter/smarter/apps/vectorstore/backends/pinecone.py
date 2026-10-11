@@ -18,6 +18,7 @@ from pinecone.db_control.models import ServerlessSpec
 
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.conf import smarter_settings
+from smarter.lib.typing import SmarterDictType
 
 from .base import (
     SearchResult,
@@ -100,7 +101,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
             self.client.delete_index(self.index_name)
         self._index = None
 
-    def stats(self) -> dict[str, Any]:
+    def stats(self) -> SmarterDictType:
         stats = self.index.describe_index_stats()
         stats = stats.to_dict() if hasattr(stats, "to_dict") else dict(stats)
         return {
@@ -110,7 +111,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
         }
 
     # --- data -------------------------------------------------------------------
-    def upsert(self, ids: list[str], texts: list[str], metadatas: list[dict[str, Any]], batch_size: int = 64) -> None:
+    def upsert(self, ids: list[str], texts: list[str], metadatas: list[SmarterDictType], batch_size: int = 64) -> None:
         """Embed the texts, and upsert them in batches, with each text in its metadata's ``text``."""
         for start in range(0, len(texts), batch_size):
             batch_texts = texts[start : start + batch_size]
@@ -139,7 +140,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
         score_threshold: Optional[float] = None,
         fetch_k: Optional[int] = None,
         lambda_mult: Optional[float] = None,
-        metadata_filter: Optional[dict[str, Any]] = None,
+        metadata_filter: Optional[SmarterDictType] = None,
     ) -> list[SearchResult]:
         """Search the index with the query's embedding.
 
@@ -174,12 +175,12 @@ class PineconeBackend(SmarterVectorstoreBackend):
         return results
 
     @staticmethod
-    def _matches(response) -> list[dict[str, Any]]:
+    def _matches(response) -> list[SmarterDictType]:
         response = response.to_dict() if hasattr(response, "to_dict") else response
         return list(response.get("matches") or [])
 
     @staticmethod
-    def _result(match: dict[str, Any], score: Optional[float]) -> Optional[SearchResult]:
+    def _result(match: SmarterDictType, score: Optional[float]) -> Optional[SearchResult]:
         """The match as a SearchResult, or None if its metadata has no text, e.g. a vector that.
 
         something other than Smarter wrote.
