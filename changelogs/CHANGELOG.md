@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.2...v0.20.3-alpha.1) (2026-10-11)
+
+### Performance
+
+* **account:** stop per-request cache churn, cache hot ORM lookups ([fdefcae](https://github.com/smarter-sh/smarter/commit/fdefcae1471d4216a86fbe56955a1d2b68aba99a))
+
 ## [0.20.2](https://github.com/smarter-sh/smarter/compare/v0.20.1...v0.20.2) (2026-10-11)
 
 ### Bug Fixes
