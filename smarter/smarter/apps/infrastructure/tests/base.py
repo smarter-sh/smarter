@@ -14,6 +14,7 @@ from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.providers import configure_provider
 from smarter.apps.infrastructure.providers.memory import InMemoryProvider
 from smarter.apps.infrastructure.services import configure_email, configure_kubernetes
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -30,9 +31,9 @@ class InfrastructureTestBase(SmarterTestBase):
         self.addCleanup(configure_kubernetes, None)
         self.addCleanup(configure_email, None)
 
-    def capture(self, *signals: Signal) -> list[tuple[Signal, dict[str, Any]]]:
+    def capture(self, *signals: Signal) -> list[tuple[Signal, SmarterDictType]]:
         """Record the signals that are sent, with their arguments, until the test ends."""
-        events: list[tuple[Signal, dict[str, Any]]] = []
+        events: list[tuple[Signal, SmarterDictType]] = []
 
         def handler(sender, **kwargs):
             events.append((kwargs.pop("signal"), {"sender": sender, **kwargs}))
@@ -43,6 +44,6 @@ class InfrastructureTestBase(SmarterTestBase):
         return events
 
     @staticmethod
-    def sent(events: list[tuple[Signal, dict[str, Any]]], signal: Signal) -> list[dict[str, Any]]:
+    def sent(events: list[tuple[Signal, SmarterDictType]], signal: Signal) -> list[SmarterDictType]:
         """The arguments of each time that a signal was sent."""
         return [kwargs for sent_signal, kwargs in events if sent_signal is signal]

@@ -18,6 +18,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestType
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
 from .signals import (
@@ -85,7 +86,7 @@ def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request:
 
 @receiver(prompt_config_invoked, dispatch_uid="prompt_config_invoked")
 def handle_chat_config_invoked_(
-    sender, instance: PromptConfigView, request: SmarterRequestType, data: dict, *args, **kwargs
+    sender, instance: PromptConfigView, request: SmarterRequestType, data: SmarterDictType, *args, **kwargs
 ):
     """
     Handle prompt config invoked signal.
@@ -99,7 +100,7 @@ def handle_chat_config_invoked_(
 
 
 @receiver(prompt_started, dispatch_uid="prompt_started")
-def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[dict] = None, **kwargs):
+def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[SmarterDictType] = None, **kwargs):
     """Handle prompt started signal."""
 
     sender_name = get_sender_name(sender)
@@ -113,7 +114,7 @@ def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[
 
 @receiver(chat_request, dispatch_uid="chat_request")
 def handle_chat_completion_request_sent(
-    sender, prompt: Optional[Prompt] = None, iteration: int = 0, data: Optional[dict] = None, **kwargs
+    sender, prompt: Optional[Prompt] = None, iteration: int = 0, data: Optional[SmarterDictType] = None, **kwargs
 ):
     """Handle prompt completion request sent signal."""
 
@@ -141,8 +142,8 @@ def handle_chat_completion_response_received(
     sender,
     prompt: Optional[Prompt] = None,
     iteration: int = 0,
-    request: Optional[Union[ASGIRequest, dict, list]] = None,
-    response: Optional[Union[ChatCompletion, dict, list]] = None,
+    request: Optional[Union[ASGIRequest, SmarterDictType, list]] = None,
+    response: Optional[Union[ChatCompletion, SmarterDictType, list]] = None,
     messages: Optional[list] = None,
     **kwargs,
 ):
@@ -211,8 +212,8 @@ def handle_chat_completion_tool_called(
     plugin: Optional[PluginMeta] = None,
     function_name: Optional[str] = None,
     function_args: Optional[str] = None,
-    request: Optional[Union[dict, list]] = None,
-    response: Optional[Union[dict, list]] = None,
+    request: Optional[Union[SmarterDictType, list]] = None,
+    response: Optional[Union[SmarterDictType, list]] = None,
     **kwargs,
 ):
     """Handle prompt completion tool call signal."""
@@ -234,8 +235,8 @@ def handle_chat_completion_tool_called(
 def handle_chat_response_success(
     sender,
     prompt: Optional[Prompt] = None,
-    request: Optional[Union[ASGIRequest, dict, list]] = None,
-    response: Optional[Union[ChatCompletion, dict, list]] = None,
+    request: Optional[Union[ASGIRequest, SmarterDictType, list]] = None,
+    response: Optional[Union[ChatCompletion, SmarterDictType, list]] = None,
     messages: Optional[list] = None,
     **kwargs,
 ):
@@ -284,10 +285,10 @@ def handle_chat_response_failure(
     sender,
     iteration: int = 0,
     prompt: Optional[Prompt] = None,
-    request_meta_data: Optional[dict] = None,
+    request_meta_data: Optional[SmarterDictType] = None,
     exception: Optional[Exception] = None,
-    first_iteration: Optional[dict] = None,
-    second_iteration: Optional[dict] = None,
+    first_iteration: Optional[SmarterDictType] = None,
+    second_iteration: Optional[SmarterDictType] = None,
     messages: Optional[list] = None,
     stack_trace: Optional[str] = None,
     **kwargs,
@@ -357,7 +358,7 @@ def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
 
 
 @receiver(llm_tool_presented, dispatch_uid="llm_tool_presented")
-def handle_llm_tool_presented(sender, tool: dict, **kwargs):
+def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
     """Handle llm_tool_presented() signal."""
 
     sender_name = sender.__name__
@@ -372,7 +373,7 @@ def handle_llm_tool_presented(sender, tool: dict, **kwargs):
 
 # llm_tool_requested.send(sender=get_current_weather, location=location, unit=unit)
 @receiver(llm_tool_requested, dispatch_uid="llm_tool_requested")
-def handle_tool_requested(sender, tool_call: dict, **kwargs):
+def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
     """Handle get_current_weather() request signal."""
 
     sender_name = sender.__name__
@@ -386,7 +387,7 @@ def handle_tool_requested(sender, tool_call: dict, **kwargs):
 
 
 @receiver(llm_tool_responded, dispatch_uid="llm_tool_responded")
-def handle_llm_tool_responded(sender, tool_call: dict, tool_response: dict, **kwargs):
+def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response: SmarterDictType, **kwargs):
     """Handle get_current_weather() response signal."""
     sender_name = sender.__name__
 

@@ -65,6 +65,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -73,7 +74,7 @@ logger = logging.getSmarterLogger(
 MAX_RESULTS = 1000
 
 
-def compute_spec_to_django_orm(spec: SAMLLMHostComputeSpec) -> dict[str, Any]:
+def compute_spec_to_django_orm(spec: SAMLLMHostComputeSpec) -> SmarterDictType:
     """The LLMHostCompute fields of a spec: the spec itself, and copies of the parts that sizing and node groups use."""
     node = spec.node
     gpu = node.gpu
@@ -168,14 +169,14 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         self._compute = LLMHostCompute.objects.filter(user_profile=self.user_profile, name=self.name).first()
         return self._compute
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """Convert the manifest into a dict of Django ORM LLMHostCompute fields."""
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"Manifest not loaded for {self.kind} broker.", thing=self.kind)
         return {**super().manifest_to_django_orm(), **compute_spec_to_django_orm(self.manifest.spec)}
 
     @staticmethod
-    def status_for(compute: LLMHostCompute) -> dict[str, Any]:
+    def status_for(compute: LLMHostCompute) -> SmarterDictType:
         """The node group's state, as of its last reconcile."""
         return {
             "nodeGroupName": compute.nodegroup_name,
@@ -187,7 +188,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             "lastReconciledAt": compute.last_reconciled_at,
         }
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """Convert the LLMHostCompute into a manifest dict, with its status."""
         if not self.account or not self.user_profile:
             raise SAMBrokerErrorNotReady(

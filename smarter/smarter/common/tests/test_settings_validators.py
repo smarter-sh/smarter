@@ -16,6 +16,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.conf.env import DEFAULT_MISSING_VALUE
 from smarter.common.conf.settings import Settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 #: The exceptions that a validator may raise for an invalid value.
@@ -62,7 +63,7 @@ def field_validators() -> dict[str, list[str]]:
     }
 
 
-def call(validator, value, data: dict):
+def call(validator, value, data: SmarterDictType):
     """Call a validator, with a ValidationInfo whose data is ``data`` if the validator takes one."""
     parameters = [
         p for p in inspect.signature(validator).parameters.values() if p.kind not in (p.VAR_KEYWORD, p.VAR_POSITIONAL)

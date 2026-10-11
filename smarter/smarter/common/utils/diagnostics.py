@@ -1,5 +1,5 @@
 """
-smarter.common.utils.diagnostics
+Smarter.common.utils.diagnostics
 =================================
 
 Module providing diagnostics utility functions for the Smarter framework.
@@ -20,14 +20,17 @@ from typing import Any
 
 import psutil
 
+from smarter.lib.typing import SmarterDictType
 
-def get_diagnostics() -> dict[str, Any]:
+
+def get_diagnostics() -> SmarterDictType:
     """
-    Gathers diagnostics information about the current environment, including
+    Gathers diagnostics information about the current environment, including.
+
     platform details, Python environment, resource usage, and network connections.
 
     :return: A dictionary containing the diagnostics information.
-    :rtype: dict[str, Any]
+    :rtype: SmarterDictType
     """
 
     def get_installed_packages():

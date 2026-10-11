@@ -12,6 +12,7 @@ from smarter.common.helpers.console_helpers import formatted_json, formatted_tex
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .models import (
     ApiConnection,
@@ -80,7 +81,7 @@ def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwar
         )
 
 
-def masked_dict(dic: dict) -> dict:
+def masked_dict(dic: SmarterDictType) -> SmarterDictType:
     """Mask sensitive data in a dictionary."""
     masked = dic.copy()
     if "PASSWORD" in masked:

@@ -21,6 +21,7 @@ from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__)
 cache_prefix = f"{__name__}."
@@ -495,7 +496,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         delta = int(abs((updated - dt).total_seconds()))
         return delta
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> SmarterDictType:
         """
         Serialize the model instance to a JSON-compatible dictionary.
 
@@ -503,7 +504,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         including timestamps and any complex data types, are properly serialized.
 
         :returns: A dictionary representation of the model instance suitable for JSON serialization.
-        :rtype: dict[str, Any]
+        :rtype: SmarterDictType
         """
         try:
             data = model_to_dict(self)

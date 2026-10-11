@@ -35,9 +35,12 @@ from smarter.apps.plugin.manifest.models.websearch_plugin.policy import (
     DomainPolicy,
     url_host,
 )
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from . import safe_http
 
@@ -102,9 +105,9 @@ class SearchResult:
         """The host of the result's URL."""
         return url_host(self.url)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> SmarterDictType:
         """Return the result as a dict for the LLM, omitting empty fields."""
-        retval: dict[str, Any] = {"title": self.title, "url": self.url, "snippet": self.snippet}
+        retval: SmarterDictType = {"title": self.title, "url": self.url, "snippet": self.snippet}
         if self.published:
             retval["published"] = self.published
         return retval
@@ -151,17 +154,36 @@ class SearchProvider(ABC):
 
     name: str = ""
 
-    def search(self, request: SearchRequest, api_key: str) -> list[SearchResult]:
+    def search(
+        self, request: SearchRequest, api_key_secret_id: Optional[int], cache_ttl: int = 0
+    ) -> tuple[list[SearchResult], bool]:
         """
         Search the web.
 
+        The web search API's response, from :py:meth:`request`, is cached for ``cache_ttl``
+        seconds, keyed on the provider, the search, and the api key Secret's id, never on the
+        api key itself. Failed requests are never cached.
+
         :param request: The search.
-        :param api_key: The web search API's api key.
-        :return: The results, which satisfy the request's domain policy.
-        :raises WebsearchError: If the search fails.
+        :param api_key_secret_id: The id of the Secret that holds the web search API's api key.
+        :param cache_ttl: Seconds to cache the API response. 0 disables caching.
+        :return: The results, which satisfy the request's domain policy, and True if the API
+            response was served from the cache.
+        :raises WebsearchError: If the api key is unavailable, or the search fails.
         """
+        cached = True
+
+        @cache_results(timeout=cache_ttl)
+        def get_response(
+            provider: str, request: SearchRequest, api_key_secret_id: Optional[int]
+        ) -> safe_http.SafeResponse:
+            nonlocal cached
+            cached = False
+            # failures raise, so that they are never cached.
+            return self.request(request, api_key_secret_id)
+
         try:
-            response = self.request(request, api_key)
+            response = get_response(self.name, request, api_key_secret_id)
         except safe_http.SafeHttpError as e:
             raise WebsearchError(describe_http_error(self.name, e)) from e
         try:
@@ -170,7 +192,29 @@ class SearchProvider(ABC):
             raise WebsearchError(f"the {self.name} web search api returned an invalid response.") from e
         if not isinstance(data, dict):
             raise WebsearchError(f"the {self.name} web search api returned an invalid response.")
-        return post_filter(self.parse(data), request)
+        return post_filter(self.parse(data), request), cached
+
+    @staticmethod
+    def api_key(api_key_secret_id: Optional[int]) -> str:
+        """
+        Return the web search API's api key, read from its Secret.
+
+        Providers read the api key here, from the Secret's id, so that the api key itself is
+        never passed to :py:meth:`request`, whose arguments become a cache key.
+
+        :param api_key_secret_id: The id of the Secret that holds the api key.
+        :return: The api key.
+        :raises WebsearchError: If the Secret does not exist, or cannot be read.
+        """
+        secret = Secret.objects.filter(pk=api_key_secret_id).first() if api_key_secret_id else None
+        try:
+            api_key = secret.get_secret() if secret else None
+        except SmarterValueError as e:
+            logger.error("SearchProvider.api_key() the api key Secret could not be read: %s", e)
+            api_key = None
+        if not api_key:
+            raise WebsearchError("the web search api key is unavailable.")
+        return api_key
 
     @staticmethod
     def site_operators(policy: DomainPolicy) -> str:
@@ -183,11 +227,18 @@ class SearchProvider(ABC):
         return " ".join(operators)
 
     @abstractmethod
-    def request(self, request: SearchRequest, api_key: str) -> safe_http.SafeResponse:
-        """Make the web search API request."""
+    def request(self, request: SearchRequest, api_key_secret_id: Optional[int]) -> safe_http.SafeResponse:
+        """
+        Make the web search API request.
+
+        :param request: The search.
+        :param api_key_secret_id: The id of the Secret that holds the api key. See :py:meth:`api_key`.
+        :raises WebsearchError: If the api key is unavailable.
+        :raises SafeHttpError: If the request fails.
+        """
 
     @abstractmethod
-    def parse(self, data: dict[str, Any]) -> list[SearchResult]:
+    def parse(self, data: SmarterDictType) -> list[SearchResult]:
         """Parse the web search API response."""
 
 
@@ -202,12 +253,13 @@ class BraveSearchProvider(SearchProvider):
     url = "https://api.search.brave.com/res/v1/web/search"
     freshness = {"day": "pd", "week": "pw", "month": "pm", "year": "py"}
 
-    def request(self, request: SearchRequest, api_key: str) -> safe_http.SafeResponse:
+    def request(self, request: SearchRequest, api_key_secret_id: Optional[int]) -> safe_http.SafeResponse:
+        api_key = self.api_key(api_key_secret_id)
         query = request.query
         operators = self.site_operators(request.policy)
         if operators:
             query = f"{query} {operators}"
-        params: dict[str, Any] = {
+        params: SmarterDictType = {
             "q": query,
             # request extra results, since some may be removed by the domain policy
             "count": min(20, request.max_results * 2),
@@ -227,7 +279,7 @@ class BraveSearchProvider(SearchProvider):
             max_bytes=MAX_RESPONSE_BYTES,
         )
 
-    def parse(self, data: dict[str, Any]) -> list[SearchResult]:
+    def parse(self, data: SmarterDictType) -> list[SearchResult]:
         web = data.get("web") or {}
         results = web.get("results") if isinstance(web, dict) else None
         return [
@@ -257,8 +309,9 @@ class TavilySearchProvider(SearchProvider):
     name = WebsearchProvider.TAVILY.value
     url = "https://api.tavily.com/search"
 
-    def request(self, request: SearchRequest, api_key: str) -> safe_http.SafeResponse:
-        body: dict[str, Any] = {
+    def request(self, request: SearchRequest, api_key_secret_id: Optional[int]) -> safe_http.SafeResponse:
+        api_key = self.api_key(api_key_secret_id)
+        body: SmarterDictType = {
             "query": request.query,
             "max_results": min(20, request.max_results * 2),
             "topic": "general",
@@ -285,7 +338,7 @@ class TavilySearchProvider(SearchProvider):
             max_bytes=MAX_RESPONSE_BYTES,
         )
 
-    def parse(self, data: dict[str, Any]) -> list[SearchResult]:
+    def parse(self, data: SmarterDictType) -> list[SearchResult]:
         return [
             SearchResult(
                 title=clean_text(item.get("title"), MAX_TITLE_LENGTH),

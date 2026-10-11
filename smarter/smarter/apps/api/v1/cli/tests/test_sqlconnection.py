@@ -23,6 +23,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
 
@@ -93,7 +94,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         )
         return sqlconnection
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         # validate the response and status are both good
         self.assertIsInstance(response, dict)
 
@@ -110,7 +111,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertIn(SAMMetadataKeys.DESCRIPTION.value, metadata.keys())
         self.assertIn(SAMMetadataKeys.VERSION.value, metadata.keys())
 
-    def validate_spec(self, data: dict) -> None:
+    def validate_spec(self, data: SmarterDictType) -> None:
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         connection = spec["connection"]

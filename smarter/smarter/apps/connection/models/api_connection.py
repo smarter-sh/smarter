@@ -26,6 +26,7 @@ from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .connection_base import ConnectionBase
 
@@ -186,13 +187,13 @@ class ApiConnection(ConnectionBase):
     def execute_query(
         self,
         endpoint: str,
-        params: Optional[dict] = None,
+        params: Optional[SmarterDictType] = None,
         limit: Optional[int] = None,
         *,
         method: str = SmarterHttpMethods.GET,
         headers: Optional[dict[str, str]] = None,
-        body: Optional[Union[dict[str, Any], list[Any]]] = None,
-    ) -> Union[dict[str, Any], list[Any], bool]:
+        body: Optional[Union[SmarterDictType, list[Any]]] = None,
+    ) -> Union[SmarterDictType, list[Any], bool]:
         """
         Execute the API query and return the results.
 
@@ -219,7 +220,7 @@ class ApiConnection(ConnectionBase):
         elif self.auth_method == "token" and api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
-        request_kwargs: dict[str, Any] = {"headers": headers, "params": params, "timeout": self.timeout}
+        request_kwargs: SmarterDictType = {"headers": headers, "params": params, "timeout": self.timeout}
         if body and method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH):
             request_kwargs["json"] = body
 

@@ -5,7 +5,7 @@ Example Prompt Response
 
   - :doc:`Example Prompt Config <./example-config>`
   - :doc:`Example Prompt Request <./example-request>`
-  - :doc:`Smarter Chat <../../smarter-framework/developer-reference/react-integration/smarter-chat>`
+  - :doc:`The Chat API Contract <../../smarter-framework/smarter-chat/api-contract>`
   - class reference :py:class:`smarter.apps.prompt.views.PromptWorkbenchView`
 
 Example JSON Object

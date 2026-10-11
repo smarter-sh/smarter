@@ -45,6 +45,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -221,7 +222,7 @@ class SAMSecretBroker(AbstractBroker):
             return None
         return self.secret_transformer.secret
 
-    def manifest_to_django_orm(self) -> Optional[dict]:
+    def manifest_to_django_orm(self) -> Optional[SmarterDictType]:
         """
         Convert the Smarter API Secret manifest into a Django ORM model dictionary.
 
@@ -258,7 +259,7 @@ class SAMSecretBroker(AbstractBroker):
         return {**metadata, **config_dump}
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """
         Convert a Django ORM `Secret` model instance into a Pydantic-compatible manifest dictionary.
 
@@ -294,7 +295,7 @@ class SAMSecretBroker(AbstractBroker):
         if not self.secret:
             logger.warning("%s.django_orm_to_manifest_dict() called with no secret", self.formatted_class_name)
             return None
-        secret_dict: dict
+        secret_dict: SmarterDictType
 
         if not isinstance(self.account, Account):
             raise SAMSecretBrokerError(

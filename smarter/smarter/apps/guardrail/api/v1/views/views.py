@@ -43,6 +43,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
@@ -52,7 +53,7 @@ MAX_EVENTS = 100
 """The maximum number of events returned."""
 
 
-def evaluate(guardrail: Guardrail, text: str, stage: str) -> dict[str, Any]:
+def evaluate(guardrail: Guardrail, text: str, stage: str) -> SmarterDictType:
     """
     Dry-run a guardrail on a text, as the user's message (input) or the LLM's reply (output).
 

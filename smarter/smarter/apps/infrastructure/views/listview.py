@@ -22,6 +22,7 @@ from smarter.lib.django.http.shortcuts import SmarterHttpResponseForbidden
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.typing import SmarterDictType
 
 from ..models import InfrastructureResource
 from ..serializers import InfrastructureResourceSerializer
@@ -49,7 +50,7 @@ def summary() -> dict[str, int]:
     )
 
 
-def filter_resources(body: dict[str, Any]) -> QuerySet[InfrastructureResource]:
+def filter_resources(body: SmarterDictType) -> QuerySet[InfrastructureResource]:
     """
     The ledger's resources that match the list's filters, newest first.
 

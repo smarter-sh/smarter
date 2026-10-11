@@ -29,6 +29,7 @@ from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ def get_data_path(filename: str) -> str:
     return os.path.join(DATA_PATH, filename)
 
 
-def get_test_data(filename: str) -> Any:
+def get_test_data(filename: str) -> SmarterDictType:
     """Return the parsed contents of a yaml file in ./data."""
     return get_readonly_yaml_file(get_data_path(filename))
 
@@ -127,7 +128,7 @@ class MCPClientTestBase(TestAccountMixin):
     owned by the account is deleted in tearDownClass().
     """
 
-    mcpclient_yaml: dict
+    mcpclient_yaml: SmarterDictType
     mcpclient: MCPClient
     token_secret: Secret
 

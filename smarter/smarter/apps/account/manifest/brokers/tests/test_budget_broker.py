@@ -29,6 +29,7 @@ from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -89,10 +90,10 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
         return SAMBudgetBroker(request=request, loader=SAMLoader(manifest=text))
 
     @property
-    def kwargs(self) -> dict:
+    def kwargs(self) -> SmarterDictType:
         return {SAMMetadataKeys.NAME.value: self.budget_name}
 
-    def describe(self, broker: SAMBudgetBroker) -> dict:
+    def describe(self, broker: SAMBudgetBroker) -> SmarterDictType:
         response = broker.describe(broker.request, **self.kwargs)  # type: ignore[arg-type]
         return json.loads(response.content.decode("utf-8"))["data"]
 

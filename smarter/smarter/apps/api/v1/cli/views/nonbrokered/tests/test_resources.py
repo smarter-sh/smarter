@@ -15,6 +15,7 @@ from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 logger_prefix = logging.formatted_text(f"{__name__}.TestApiCliV1Resources")
@@ -41,7 +42,7 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
         self.name = self.account.name
         self.path = reverse(self.namespace + ApiV1CliReverseViews.resources, kwargs=None)
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
 
         logger.debug("validate_response(): %s", json.dumps(response))
 

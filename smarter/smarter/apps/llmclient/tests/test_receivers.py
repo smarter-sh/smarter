@@ -9,12 +9,13 @@ import inspect
 from unittest.mock import MagicMock, patch
 
 from smarter.apps.llmclient import receivers
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 TASKS = ("create_llmclient_request", "delete_default_api", "deploy_default_api", "undeploy_default_api")
 
 
-def signal_kwargs() -> dict:
+def signal_kwargs() -> SmarterDictType:
     """The keyword arguments that the llmclient signals send."""
     llmclient = MagicMock(id=1, deployed=False)
     llmclient.name = "test_llmclient"

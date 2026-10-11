@@ -25,7 +25,7 @@ single :class:`~smarter.apps.provider.services.text_completion.contracts.Pipelin
 """
 
 import time
-from typing import Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Optional
 
 from smarter.apps.guardrail.models import (
     Guardrail,
@@ -46,12 +46,16 @@ from smarter.apps.provider.services.text_completion.contracts import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .actions import apply_action
 from .engine import GuardrailEngine
 from .events import record_event, stage_name
 from .strategies.base import StrategyContext
 from .text_extraction import read_segment
+
+if TYPE_CHECKING:
+    from smarter.apps.llmclient.models import LLMClient
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
@@ -98,7 +102,7 @@ class GuardrailPipeline:
         self,
         guardrails: Iterable[Guardrail],
         *,
-        llmclient: Any = None,
+        llmclient: Optional["LLMClient"] = None,
         session_key: Optional[str] = None,
         record_events: bool = True,
     ):
@@ -109,7 +113,7 @@ class GuardrailPipeline:
         self._engine = GuardrailEngine()
 
     @classmethod
-    def for_llmclient(cls, llmclient: Any, session_key: Optional[str] = None) -> "GuardrailPipeline":
+    def for_llmclient(cls, llmclient: "LLMClient", session_key: Optional[str] = None) -> "GuardrailPipeline":
         """Return a pipeline for the guardrails of an LLMClient, as listed in its manifest's ``spec.guardrails``."""
         # pylint: disable=import-outside-toplevel
         from smarter.apps.llmclient.models import LLMClientGuardrails
@@ -120,7 +124,7 @@ class GuardrailPipeline:
         """Return the pipeline's guardrails that run on a stage."""
         return [g for g in self.guardrails if g.runs_on(stage_name(stage))]
 
-    def run_pre(self, request_json: dict[str, Any], *, request_uid: Optional[str] = None) -> PipelineResult:
+    def run_pre(self, request_json: SmarterDictType, *, request_uid: Optional[str] = None) -> PipelineResult:
         """
         Run the input guardrails on the latest user message of a chat completion request.
 
@@ -129,7 +133,7 @@ class GuardrailPipeline:
         """
         return self._run(payload=request_json, stage=GuardrailStage.PRE, request_uid=request_uid)
 
-    def run_post(self, response_json: dict[str, Any], *, request_uid: Optional[str] = None) -> PipelineResult:
+    def run_post(self, response_json: SmarterDictType, *, request_uid: Optional[str] = None) -> PipelineResult:
         """
         Run the output guardrails on the reply of a chat completion response.
 
@@ -145,7 +149,7 @@ class GuardrailPipeline:
         return record_event(llmclient=self.llmclient, session_key=self.session_key, **kwargs)
 
     # pylint: disable=too-many-locals
-    def _run(self, *, payload: dict[str, Any], stage: GuardrailStage, request_uid: Optional[str]) -> PipelineResult:
+    def _run(self, *, payload: SmarterDictType, stage: GuardrailStage, request_uid: Optional[str]) -> PipelineResult:
         start = time.monotonic()
         context = StrategyContext(stage=stage, request_uid=request_uid)
         stage_value = stage_name(stage)

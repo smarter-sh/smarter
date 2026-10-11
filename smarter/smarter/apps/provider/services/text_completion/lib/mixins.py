@@ -24,6 +24,7 @@ from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -111,7 +112,7 @@ class ChatDbMixin(AccountMixin):
         self._chat_tool_call: QuerySet[PromptToolCall] = None  # type: ignore
         self._chat_plugin_usage: Optional[QuerySet[PromptPluginUsage]] = None
         self._chat_history: Optional[QuerySet[PromptHistory]] = None
-        self._message_history: Optional[list[dict]] = None
+        self._message_history: Optional[list[SmarterDictType]] = None
         self._provider_name: Optional[str] = kwargs.get("provider_name", None)
         self._provider: Optional[Provider] = kwargs.get("provider", None)
         self._ready: bool = False
@@ -269,7 +270,7 @@ class ChatDbMixin(AccountMixin):
         return self._chat_history
 
     @property
-    def db_message_history(self) -> Optional[list[dict]]:
+    def db_message_history(self) -> Optional[list[SmarterDictType]]:
         """
         Get the most recently persisted messages in the prompt history.
 

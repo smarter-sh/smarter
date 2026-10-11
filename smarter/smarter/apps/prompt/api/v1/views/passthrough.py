@@ -38,6 +38,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
@@ -155,7 +156,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
 
         try:
-            data: dict[str, Any] = json.loads(request.body.decode("utf-8"))
+            data: SmarterDictType = json.loads(request.body.decode("utf-8"))
         except json.JSONDecodeError as e:
             logger.error("%s JSON decode error: %s. Raw request body: %s", logger_prefix, e, request.body)
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")

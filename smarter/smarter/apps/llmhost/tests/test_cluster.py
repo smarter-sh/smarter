@@ -12,10 +12,11 @@ from smarter.apps.llmhost.services.cluster import (
     get_cluster,
 )
 from smarter.apps.llmhost.services.exceptions import LLMHostClusterError
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-def resource(kind: str, name: str, llmhost: str = "llmhost-1-a") -> dict:
+def resource(kind: str, name: str, llmhost: str = "llmhost-1-a") -> SmarterDictType:
     return {"apiVersion": "v1", "kind": kind, "metadata": {"name": name, "labels": {"smarter.sh/llmhost": llmhost}}}
 
 

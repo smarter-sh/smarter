@@ -36,6 +36,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -349,7 +350,7 @@ class SAMUserBroker(AbstractBroker):
         """
         return UserSerializer
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the Smarter API User manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
 
@@ -398,7 +399,7 @@ class SAMUserBroker(AbstractBroker):
         return retval
 
     @camel_case()
-    def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """
         Convert a Django ORM `User` model instance into a dictionary formatted for Pydantic manifest consumption.
 

@@ -604,7 +604,7 @@ Operational Considerations
     This ensures that all compiled React bundles and ``manifest.json`` metadata are available
     inside the container image at runtime.
 * Externally Managed Packages
-    :doc:`Smarter Chat <react-integration/smarter-chat>`, the React app of the LLMClient
+    :doc:`Smarter Chat <../smarter-chat>`, the React app of the LLMClient
     prompt engineering workbench, is managed in its own repository and published to npm.
     ``make react-install`` clones it into ``smarter/react/packages/smarter-chat``, and
     the GitHub Actions workflows do the same before they build or test, after which it is

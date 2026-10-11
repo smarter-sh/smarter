@@ -20,6 +20,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import API_KEY, BASE_URL, ProxyTestBase, get_data_path, get_test_data
 
@@ -44,11 +45,11 @@ class TestSAMProxyBroker(TestSAMBrokerBaseClass, ProxyTestBase):
     def broker(self) -> SAMProxyBroker:
         return super().broker  # type: ignore
 
-    def fresh_broker(self, manifest: dict) -> SAMProxyBroker:
+    def fresh_broker(self, manifest: SmarterDictType) -> SAMProxyBroker:
         """A new broker for another manifest, without cached state."""
         return SAMProxyBroker(request=self.request, loader=SAMLoader(manifest=json.dumps(manifest)))
 
-    def changed_manifest(self, **spec_changes) -> dict:
+    def changed_manifest(self, **spec_changes) -> SmarterDictType:
         """The test manifest, with parts of its spec replaced.
 
         A None value removes the field.
@@ -61,7 +62,7 @@ class TestSAMProxyBroker(TestSAMBrokerBaseClass, ProxyTestBase):
                 manifest["spec"][key] = value
         return manifest
 
-    def data(self, response) -> dict:
+    def data(self, response) -> SmarterDictType:
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         return json.loads(response.content)["data"]
 

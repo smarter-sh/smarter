@@ -1,6 +1,4 @@
-"""
-Test mixins for the connection module.
-"""
+"""Test mixins for the connection module."""
 
 import os
 from typing import Optional
@@ -21,6 +19,7 @@ from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 from .factories import secret_factory
 
@@ -33,14 +32,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 class ConnectionTextMixinBase(TestAccountMixin):
     """
     A base mixin class for testing connections.
+
     adds account plus an admin and non-admin user to the test case.
     """
 
 
 class AuthenticatedRequestMixin(ConnectionTextMixinBase):
-    """
-    A mixin class that adds an authenticated request to the test case.
-    """
+    """A mixin class that adds an authenticated request to the test case."""
 
     client: Client
     request: HttpRequest
@@ -65,12 +63,14 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
 
 class ApiConnectionTestMixin(ConnectionTextMixinBase):
     """
-    A mixin class that adds ApiConnection class setUpClass and
-    tearDownClass methods."""
+    A mixin class that adds ApiConnection class setUpClass and.
+
+    tearDownClass methods.
+    """
 
     connection_loader: Optional[SAMLoader]
     connection_manifest_path: Optional[str] = None
-    connection_manifest: Optional[dict] = None
+    connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMApiConnection]
     connection_django_model: Optional[ApiConnection] = None
     test_sam_api_connection_logger_prefix = formatted_text(f"{__name__}.ApiConnectionTestMixin()")
@@ -158,13 +158,14 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
 
 class SqlConnectionTestMixin(ConnectionTextMixinBase):
     """
-    A mixin class that adds SqlConnection class setUpClass and
+    A mixin class that adds SqlConnection class setUpClass and.
+
     tearDownClass methods.
     """
 
     connection_loader: Optional[SAMLoader]
     connection_manifest_path: Optional[str] = None
-    connection_manifest: Optional[dict] = None
+    connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMSqlConnection]
     connection_django_model: Optional[SqlConnection] = None
     test_sam_api_connection_logger_prefix = formatted_text(f"{__name__}.SqlConnectionTestMixin()")
@@ -243,7 +244,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         super().tearDownClass()
 
     def test_00_sql_connection_mixin(self):
-        """Test the SqlConnection itself, lest we get ahead of ourselves"""
+        """Test the SqlConnection itself, lest we get ahead of ourselves."""
         self.assertIsInstance(self.connection_django_model, SqlConnection)
         self.assertIsInstance(self.connection_loader, SAMLoader)
         self.assertIsInstance(self.connection_manifest, dict)

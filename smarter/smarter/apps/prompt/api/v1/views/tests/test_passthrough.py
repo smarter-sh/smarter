@@ -17,6 +17,7 @@ from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.typing import SmarterDictType
 
 # api:v1:prompt:passthrough
 namespace = ":".join(
@@ -93,8 +94,8 @@ class TestPassthroughView(TestAccountMixin):
             )
             self.skipTest(f"{label}: the provider failed the request ({error_class}).")
 
-    def get_prompt_data(self, filename: str) -> dict[str, Any]:
-        return cast(dict[str, Any], self.get_readonly_json_file(os.path.join(HERE, "data", filename)))
+    def get_prompt_data(self, filename: str) -> SmarterDictType:
+        return cast(SmarterDictType, self.get_readonly_json_file(os.path.join(HERE, "data", filename)))
 
     def test_passthrough_providers(self):
         """Test that we can create a prompt completion using the passthrough view."""

@@ -28,7 +28,7 @@ search, and a ``fetch`` section to enable fetch. At least one is required.
       allowedDomains: []           # if not empty, only these domains may be searched and read
       blockedDomains: []           # these domains are never searched nor read
       timeout: 15
-      cacheTtl: 900
+      cacheTtl: 3600
 
 .. note::
 
@@ -43,12 +43,12 @@ from typing import ClassVar, Optional
 
 from pydantic import Field, field_validator, model_validator
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 from .const import (
-    DEFAULT_CACHE_TTL,
     DEFAULT_FETCH_CHARACTERS,
     DEFAULT_MAX_RESULTS,
     DEFAULT_TIMEOUT,
@@ -224,7 +224,7 @@ class WebsearchData(SmarterBasePydanticModel):
         description=f"{class_identifier}.timeout[int]: seconds to wait for each web request, 1 to {MAX_TIMEOUT}.",
     )
     cacheTtl: int = Field(
-        default=DEFAULT_CACHE_TTL,
+        default=PluginCacheTtl.WEBSEARCH,
         ge=0,
         le=MAX_CACHE_TTL,
         description=f"{class_identifier}.cacheTtl[int]: seconds to cache search results and web pages. 0 disables caching.",

@@ -62,6 +62,7 @@ from smarter.apps.llmhost.manifest.enum import (
 )
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.lib.typing import SmarterDictType
 
 from .const import (
     DEFAULT_GPU_RESOURCE,
@@ -87,7 +88,7 @@ HF_AND_LOCAL = frozenset(
     [SAMLLMHostModelSource.HUGGINGFACE.value, *SAMLLMHostModelSource.local()],
 )
 
-ENGINE_RULES: dict[str, dict[str, Any]] = {
+ENGINE_RULES: dict[str, SmarterDictType] = {
     # sources: the model sources that the engine can load.
     # tasks: the tasks that the engine can serve.
     # apiKey: whether the engine authenticates requests with an API key.
@@ -467,7 +468,7 @@ class SAMLLMHostResources(LLMHostBaseModel):
     nodeSelector: dict[str, str] = Field(
         default_factory=dict, description=f"{class_identifier}.nodeSelector[dict]: additional node labels."
     )
-    tolerations: list[dict[str, Any]] = Field(
+    tolerations: list[SmarterDictType] = Field(
         default_factory=list,
         description=(
             f"{class_identifier}.tolerations[list]: Kubernetes tolerations. When gpuCount > 0, a toleration of "

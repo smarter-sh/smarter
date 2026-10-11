@@ -48,6 +48,7 @@ from smarter.apps.llmhost.services.renderer import resource_name
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -63,12 +64,12 @@ def get_data_path(filename: str) -> str:
     return os.path.join(DATA_PATH, filename)
 
 
-def get_test_data(filename: str) -> Any:
+def get_test_data(filename: str) -> SmarterDictType:
     """Return the parsed contents of a yaml file in ./data."""
     return copy.deepcopy(get_readonly_yaml_file(get_data_path(filename)))
 
 
-def merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
+def merge(base: SmarterDictType, overrides: SmarterDictType) -> SmarterDictType:
     """Deep merge ``overrides`` into a copy of ``base``.
 
     A None value removes the key.
@@ -84,7 +85,7 @@ def merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
     return retval
 
 
-def spec_data(filename: str = "llmhost.yaml", **overrides) -> dict[str, Any]:
+def spec_data(filename: str = "llmhost.yaml", **overrides) -> SmarterDictType:
     """The spec of a test manifest, with overrides deep merged, e.g. network={"ingress": False}."""
     return merge(get_test_data(filename)["spec"], overrides)
 

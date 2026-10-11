@@ -1,0 +1,56 @@
+# Lambda style results of a prompt, as the provider's handler returns them, before they are
+# serialized: each body is a dict here, and the tests dump it to a JSON string.
+success:
+  isBase64Encoded: false
+  statusCode: 200
+  headers:
+    Content-Type: application/json
+  body:
+    id: chatcmpl-123
+    object: chat.completion
+    choices:
+      - index: 0
+        finish_reason: stop
+        message:
+          role: assistant
+          content: We offer CS210 Artificial Intelligence, for $700.00.
+    usage:
+      prompt_tokens: 10
+      completion_tokens: 12
+      total_tokens: 22
+    metadata:
+      tool_calls: []
+    smarter:
+      first_iteration:
+        request:
+          messages:
+            - role: system
+              content: The secret system prompt.
+      second_iteration: {}
+      plugins:
+        - stackademy_sql
+      tools:
+        - smarter_plugin_0000000016
+      messages:
+        - role: smarter
+          content: Smarter selected the stackademy_sql plugin.
+        - role: assistant
+          content: We offer CS210 Artificial Intelligence, for $700.00.
+failure:
+  isBase64Encoded: false
+  statusCode: 401
+  headers:
+    Content-Type: application/json
+  body:
+    error:
+      status: 401
+      message: Incorrect API key provided.
+    response:
+      id: chatcmpl-error
+      object: chat.completion
+      smarter:
+        first_iteration:
+          request: {}
+        messages:
+          - role: smarter_error
+            content: "401 error: Incorrect API key provided."

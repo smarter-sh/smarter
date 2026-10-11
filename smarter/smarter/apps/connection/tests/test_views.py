@@ -17,6 +17,7 @@ from smarter.apps.connection.caching import (
 from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlConnection
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .mixins import ApiConnectionTestMixin, SqlConnectionTestMixin
 
@@ -37,7 +38,7 @@ class ViewTestMixin:
     def url(self, name: str, **kwargs) -> str:
         return reverse(f"{NAMESPACE}:{name}", kwargs=kwargs or None)
 
-    def post(self, url: str, status: int = HTTPStatus.OK) -> dict:
+    def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """POST to ``url``, assert the response's status, and return its json."""
         response = self.client.post(url)
         self.assertEqual(response.status_code, status, response.content[:500])  # type: ignore[attr-defined]

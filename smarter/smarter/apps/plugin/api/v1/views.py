@@ -34,6 +34,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +208,7 @@ def get_plugin(request, plugin_id):
     return JsonResponse({"error": "Internal plugin error."}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-def create_plugin(request, data: Optional[dict] = None):
+def create_plugin(request, data: Optional[SmarterDictType] = None):
     """Create a plugin from a json representation in the body of the request."""
     try:
         user_profile = UserProfile.get_cached_object(user=request.user)

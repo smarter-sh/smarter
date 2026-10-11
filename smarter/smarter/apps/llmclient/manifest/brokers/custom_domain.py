@@ -54,6 +54,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -126,7 +127,7 @@ class SAMCustomDomainBroker(AbstractBroker):
         ).first()
         return self._custom_domain
 
-    def manifest_to_django_orm(self) -> dict[str, Any]:
+    def manifest_to_django_orm(self) -> SmarterDictType:
         """
         Convert the manifest into a dict of Django ORM LLMClientCustomDomain fields.
 
@@ -138,7 +139,7 @@ class SAMCustomDomainBroker(AbstractBroker):
         retval["domain_name"] = self.manifest.spec.config.domainName
         return retval
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[SmarterDictType]:
         """Convert the CustomDomain into a manifest dict, with its status."""
         if not self.account or not self.user_profile:
             raise SAMBrokerErrorNotReady(

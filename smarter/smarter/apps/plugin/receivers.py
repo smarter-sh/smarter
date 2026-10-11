@@ -11,6 +11,7 @@ from smarter.common.helpers.console_helpers import formatted_json, formatted_tex
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.typing import SmarterDictType
 
 from .models import (
     PluginDataApi,
@@ -111,7 +112,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
     # plugins send their response as ``response``.
-    inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("response", kwargs.get("inquiry_return"))
+    inquiry_return: Optional[Union[SmarterDictType, list, str]] = kwargs.get("response", kwargs.get("inquiry_return"))
 
     try:
         inquiry_return = json.loads(inquiry_return) if isinstance(inquiry_return, str) else inquiry_return
@@ -141,7 +142,7 @@ def handle_plugin_selected(sender, *args, **kwargs):
     input_text: Optional[str] = kwargs.get("input_text")
     plugin: Optional[PluginBase] = kwargs.get("plugin")
     user = kwargs.get("user")
-    messages: list[dict] = kwargs.get("messages", [])
+    messages: list[SmarterDictType] = kwargs.get("messages", [])
     search_term: str = kwargs.get("search_term", "")
     user_id: int = user.id if user else None  # type: ignore
 

@@ -16,6 +16,7 @@ from smarter.apps.vectorstore.api.v1 import views
 from smarter.apps.vectorstore.api.v1.urls import VectorstoreApiV1ReverseViews as Names
 from smarter.apps.vectorstore.models import VectorstoreDocument, VectorstoreMeta
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import DATA_PATH, VectorstoreTestBase
 
@@ -54,7 +55,7 @@ class TestVectorstoreApi(VectorstoreTestBase):
         self.client.force_login(self.admin_user)
         self.addCleanup(self.client.logout)
 
-    def request(self, method: str, path: str, data=None, status: int = HTTPStatus.OK, format="json") -> dict:
+    def request(self, method: str, path: str, data=None, status: int = HTTPStatus.OK, format="json") -> SmarterDictType:
         response = getattr(self.client, method)(path, data=data, format=format)
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content) if response.content else {}

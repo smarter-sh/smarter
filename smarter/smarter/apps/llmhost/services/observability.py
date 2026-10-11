@@ -12,12 +12,16 @@ import datetime
 import os
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal
-from typing import Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Optional
 
 import requests
 
 from smarter.apps.llmhost.const import HEALTH_CHECK_TIMEOUT_SECONDS
 from smarter.apps.llmhost.manifest.enum import SAMLLMHostStatusEnum
+from smarter.lib.typing import SmarterDictType
+
+if TYPE_CHECKING:
+    from smarter.apps.llmhost.models import LLMHost
 
 Status = SAMLLMHostStatusEnum
 
@@ -58,10 +62,10 @@ class LLMHostObservation:
     healthy: Optional[bool] = None
     endpoint: Optional[str] = None
     public_url: Optional[str] = None
-    pods: list[dict[str, Any]] = field(default_factory=list)
+    pods: list[SmarterDictType] = field(default_factory=list)
     checked_at: Optional[datetime.datetime] = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> SmarterDictType:
         """The observation, in camelCase, for JSON responses."""
         data = asdict(self)
         return {
@@ -77,7 +81,7 @@ class LLMHostObservation:
         }
 
 
-def summarize_pod(pod: dict[str, Any]) -> dict[str, Any]:
+def summarize_pod(pod: SmarterDictType) -> SmarterDictType:
     """A pod's name, phase, readiness, restarts, and the reason it is not ready, if any."""
     status = pod.get("status", {}) or {}
     containers = status.get("containerStatuses", []) or []
@@ -105,7 +109,7 @@ def summarize_pod(pod: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _has_error(pod: dict[str, Any]) -> Optional[str]:
+def _has_error(pod: SmarterDictType) -> Optional[str]:
     status = pod.get("status", {}) or {}
     for container in [*(status.get("initContainerStatuses") or []), *(status.get("containerStatuses") or [])]:
         waiting = (container.get("state", {}) or {}).get("waiting") or {}
@@ -114,7 +118,7 @@ def _has_error(pod: dict[str, Any]) -> Optional[str]:
     return None
 
 
-def _unschedulable(pod: dict[str, Any]) -> Optional[str]:
+def _unschedulable(pod: SmarterDictType) -> Optional[str]:
     for condition in (pod.get("status", {}) or {}).get("conditions", []) or []:
         if condition.get("type") == "PodScheduled" and condition.get("status") == "False":
             return f"{condition.get('reason', 'Unschedulable')}: {condition.get('message', '')}".strip(": ")
@@ -122,7 +126,7 @@ def _unschedulable(pod: dict[str, Any]) -> Optional[str]:
 
 
 # pylint: disable=too-many-return-statements
-def interpret(deployment: Optional[dict[str, Any]], pods: list[dict[str, Any]]) -> tuple[str, str, int, int]:
+def interpret(deployment: Optional[SmarterDictType], pods: list[SmarterDictType]) -> tuple[str, str, int, int]:
     """
     Map an LLMHost's Deployment and pods to its status.
 
@@ -189,7 +193,7 @@ class HealthProber:
             return False
 
 
-def build_report(llmhosts: Iterable[Any]) -> dict[str, Any]:
+def build_report(llmhosts: Iterable["LLMHost"]) -> SmarterDictType:
     """
     Summarize LLMHosts: their count by status and engine, the GPUs they use, and their cost.
 

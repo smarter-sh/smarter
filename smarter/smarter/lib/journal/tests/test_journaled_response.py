@@ -128,3 +128,28 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
         self.assertIn("errorClass", data["error"])
         self.assertEqual(str(data["error"]["status"]), str(HTTPStatus.UNAUTHORIZED))
         mock_logger.error.assert_called()
+
+    @patch("smarter.lib.journal.http.logger")
+    def test_error_response_without_stack_trace(self, mock_logger):
+        """Test that include_stack_trace=False logs the stack trace, but leaves it out of the response."""
+        mock_request = Mock()
+        mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.META = {}
+        mock_request.GET = {}
+        mock_request.POST = {}
+        mock_request.COOKIES = {}
+        mock_request.headers = {}
+        resp = SmarterJournaledJsonErrorResponse(
+            request=mock_request,
+            e=Exception("fail"),
+            thing="thing",
+            command="command",
+            status=HTTPStatus.NOT_FOUND,
+            stack_trace="trace",
+            description="Not found.",
+            include_stack_trace=False,
+        )
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertNotIn("stacktrace", data["error"])
+        self.assertEqual(data["error"]["description"], "Not found.")
+        self.assertIn("trace", str(mock_logger.error.call_args))

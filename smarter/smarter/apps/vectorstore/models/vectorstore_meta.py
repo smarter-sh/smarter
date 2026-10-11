@@ -22,6 +22,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
 
@@ -161,7 +162,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
         return self.status in (VectorstoreStatus.PROVISIONING, VectorstoreStatus.READY)
 
     @property
-    def maintenance(self) -> dict[str, Any]:
+    def maintenance(self) -> SmarterDictType:
         """The manifest's spec.maintenance."""
         return (self.spec or {}).get("maintenance") or {}
 

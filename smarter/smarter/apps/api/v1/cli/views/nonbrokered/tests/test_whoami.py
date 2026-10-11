@@ -13,6 +13,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
@@ -31,7 +32,7 @@ class TestApiCliV1Whoami(ApiV1CliTestBase):
     Account.
     """
 
-    def validate_response(self, response: dict) -> None:
+    def validate_response(self, response: SmarterDictType) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertEqual(response[SmarterJournalApiResponseKeys.METADATA][SmarterJournalApiResponseKeys.THING], "None")

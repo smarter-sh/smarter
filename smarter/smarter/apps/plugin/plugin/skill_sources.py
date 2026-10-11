@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import quote
 
+from smarter.apps.plugin.const import PluginCacheTtl
 from smarter.apps.plugin.manifest.models.skill_plugin.document import (
     MAX_RESOURCE_LENGTH,
     MAX_RESOURCES,
@@ -53,6 +54,7 @@ from smarter.apps.plugin.manifest.models.skill_plugin.source import (
     parse_source_url,
 )
 from smarter.lib import json, logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from . import safe_http
@@ -232,9 +234,15 @@ def _retrieve_resources(
     return resources
 
 
+@cache_results(timeout=PluginCacheTtl.SKILL)
 def retrieve_skill(url: str) -> RetrievedSkill:
     """
     Retrieve a skill and its bundled files from a remote source.
+
+    Retrieved skills are cached for :attr:`PluginCacheTtl.SKILL` seconds, keyed on the URL, so that
+    applying the same skill for many users downloads it once. Failures raise, and so are never
+    cached. Applying a SkillPlugin manifest invalidates its skill first, with
+    ``retrieve_skill.invalidate(url)``, so that an account admin always gets the current skill.
 
     :param url: A skill source URL. See :py:func:`parse_source_url`.
     :return: The retrieved skill.

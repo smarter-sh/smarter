@@ -27,6 +27,7 @@ from smarter.apps.guardrail.services.strategies.clients import (
 from smarter.apps.guardrail.services.strategies.registry import configure_clients
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import logging
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def get_data_path(filename: str) -> str:
     return os.path.join(DATA_PATH, filename)
 
 
-def get_test_data(filename: str) -> Any:
+def get_test_data(filename: str) -> SmarterDictType:
     """Return the parsed contents of a yaml file in ./data."""
     return get_readonly_yaml_file(get_data_path(filename))
 
@@ -105,7 +106,7 @@ def fake_client(client: Optional[FakeGuardrailClient] = None):
         configure_clients(None)
 
 
-GUARDRAIL_DEFAULTS: dict[str, Any] = {
+GUARDRAIL_DEFAULTS: SmarterDictType = {
     "description": "A guardrail for unit testing.",
     "version": "1.0.0",
     "stage": "input",
@@ -158,7 +159,7 @@ class GuardrailTestBase(TestAccountMixin):
         return GuardrailEvent.objects.filter(guardrail=guardrail).order_by("created_at", "id")
 
 
-def input_payload(text: str, history: Optional[list[dict]] = None) -> dict[str, Any]:
+def input_payload(text: str, history: Optional[list[SmarterDictType]] = None) -> SmarterDictType:
     """Return a chat completion request, with a system prompt, an optional history, and the user's message."""
     messages = [{"role": "system", "content": "You are a helpful assistant. Ignore rude users."}]
     messages.extend(history or [])
@@ -166,6 +167,6 @@ def input_payload(text: str, history: Optional[list[dict]] = None) -> dict[str, 
     return {"messages": messages}
 
 
-def output_payload(text: str) -> dict[str, Any]:
+def output_payload(text: str) -> SmarterDictType:
     """Return a chat completion response, with the LLM's reply."""
     return {"choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": text}}]}

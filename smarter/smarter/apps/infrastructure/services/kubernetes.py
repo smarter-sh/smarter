@@ -30,6 +30,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from ..const import BILLABLE_KUBERNETES_KINDS, InfrastructureServiceNames
 from ..exceptions import InfrastructureConfigurationError, KubernetesServiceError
@@ -109,10 +110,10 @@ class KubernetesService(InfrastructureService):
         """
 
     @abstractmethod
-    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[dict]:
+    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
         """Return a resource, or None if it does not exist or the cluster is unavailable."""
 
-    def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], dict]:
+    def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], SmarterDictType]:
         """
         Return several resources at once.
 
@@ -122,7 +123,7 @@ class KubernetesService(InfrastructureService):
         :param namespace: The namespace.
         :returns: The resources that exist, keyed by their (kind, name).
         """
-        retval: dict[tuple[str, str], dict] = {}
+        retval: dict[tuple[str, str], SmarterDictType] = {}
         for kind, name in resources:
             resource = self.get_resource(kind, name, namespace)
             if resource is not None:
@@ -130,10 +131,10 @@ class KubernetesService(InfrastructureService):
         return retval
 
     @abstractmethod
-    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
+    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
         """Return the resources of a kind, optionally those that match a label selector."""
 
-    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[dict]]:
+    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[SmarterDictType]]:
         """
         Return every resource of a kind, for the inventory.
 
@@ -193,7 +194,7 @@ class KubernetesService(InfrastructureService):
         """
         return self._certificate_ready(self.get_resource("certificate", name, namespace), name, namespace)
 
-    def _certificate_ready(self, certificate: Optional[dict], name: str, namespace: str) -> bool:
+    def _certificate_ready(self, certificate: Optional[SmarterDictType], name: str, namespace: str) -> bool:
         """Whether a cert-manager Certificate exists, and its Ready condition is True."""
         if certificate is None:
             return False
@@ -279,7 +280,7 @@ class KubectlKubernetesService(KubernetesService):
         self.allow_in_tests = allow_in_tests
         self._configured = False
         self._namespace_verified = False
-        self._kubeconfig: Optional[dict] = None
+        self._kubeconfig: Optional[SmarterDictType] = None
         self._token: Optional[str] = None
         self._token_expires: float = 0.0
 
@@ -323,7 +324,7 @@ class KubectlKubernetesService(KubernetesService):
         return os.path.join(smarter_settings.data_directory, ".kube", "config")
 
     @property
-    def kubeconfig(self) -> dict:
+    def kubeconfig(self) -> SmarterDictType:
         """The platform's kubeconfig file."""
         if self._kubeconfig is None:
             self._kubeconfig = get_readonly_yaml_file(self.kubeconfig_path)
@@ -360,7 +361,7 @@ class KubectlKubernetesService(KubernetesService):
             command += ["--token", token]
         return subprocess.run(command, input=stdin, capture_output=True, text=True, check=False)  # nosec B603 B607
 
-    def _kubectl_json(self, *args: str) -> Optional[Any]:
+    def _kubectl_json(self, *args: str) -> Optional[SmarterDictType]:
         """Run kubectl with ``-o json``, and return its output, or None if it fails or is empty."""
         result = self._kubectl(*args, "-o", "json")
         if result.returncode != 0:
@@ -412,12 +413,12 @@ class KubectlKubernetesService(KubernetesService):
         self.send(resource_applied, kinds=manifest_kinds(manifest))
         return None
 
-    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[dict]:
+    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
         if not self.ready:
             return None
         return self._kubectl_json("get", kind, name, "-n", namespace, "--ignore-not-found")
 
-    def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], dict]:
+    def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], SmarterDictType]:
         """
         Return several resources with one ``kubectl get``.
 
@@ -448,7 +449,7 @@ class KubectlKubernetesService(KubernetesService):
         }
         return {resource: found[resource] for resource in resources if resource in found}
 
-    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[dict]:
+    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
         if not self.ready:
             return []
         args = ["get", kind, "-n", namespace]
@@ -457,7 +458,7 @@ class KubectlKubernetesService(KubernetesService):
         output = self._kubectl_json(*args)
         return (output or {}).get("items", [])
 
-    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[dict]]:
+    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[SmarterDictType]]:
         if not self.ready:
             return None
         args = ["get", kind] + (["-n", namespace] if namespace else [])
