@@ -36,9 +36,10 @@ inside the `smarter-app` container.
    kubeconfig points at the real EKS cluster, and its AWS and Route53
    credentials are live. Fake or mock every Kubernetes, DNS, ACM, and AWS call.
    See `smarter-infrastructure-safety`.
-3. **Run the tests yourself.** Sync your changes into the containers and run
-   the suite. Never ask the user to re-run it. See `smarter-python-testing` and
-   `smarter-docker-environment`.
+3. **Run the tests yourself.** Get your changes into the containers (`make build
+&& make run`) and run the test modules you touched. Never ask the user to
+   re-run them. Leave the full suite to the user unless they ask. See
+   `smarter-python-testing` and `smarter-docker-environment`.
 4. **Don't build the Sphinx docs.** The build takes about 20 minutes. Check
    `:doc:` targets by file existence only. See `smarter-sphinx-docs`.
 5. **The pre-commit hooks are the lint standard**, not ruff and not a generic
@@ -50,6 +51,9 @@ inside the `smarter-app` container.
    for 600 seconds or longer, use `from smarter.lib.cache import cache_results`.
    Never hand-roll `cache.get()`/`cache.set()` with `django.core.cache`. See
    [Caching](#caching).
+8. **Model structured data with Pydantic, not raw JSON.** Any sizable JSON that
+   code builds, returns or reads gets a Pydantic model. No `list[Any]` or
+   `dict[str, Any]` stand-ins. See [Pydantic over JSON](#pydantic-over-json).
 
 ## Pattern-first workflow
 
@@ -119,6 +123,40 @@ and the `reset_cache` management command import `django.core.cache`.
   `smarter.lib.cache.lazy_cache`, never `django.core.cache`.
 - In tests, `SmarterTestBase` clears the cache. To drop one entry, call the
   decorated function's `.invalidate()` with the same arguments.
+
+## Pydantic over JSON
+
+Smarter prefers Pydantic models to wrangling large pieces of JSON: nested
+`dict`s that are built key by key, renamed by string search, or read with
+chains of `.get()`. The decision, and the reasons for it, are
+[ADR-031](../../docs/source/adr/031-pydantic-over-json.rst). The SAM manifests (`smarter.lib.manifest.models`) and the
+Smarter Chat api contract (`smarter.apps.prompt.contract.models`) are the
+reference implementations.
+
+- **Build the response from the model**, then dump it
+  (`model.model_dump(mode="json")`). Don't assemble a dict and validate it
+  afterwards, and don't merely document it.
+- **No `list[Any]` or `dict[str, Any]`.** A list holds a named model. A value
+  that really is arbitrary JSON, such as a tool's result, is `pydantic.JsonValue`.
+  It is exactly JSON, unlike `Any`.
+- **Serialized Django ORM rows are models of the row**: exactly its fields, with
+  `extra="forbid"`, built by a `from_model(row)` classmethod from the instance,
+  not from a DRF serializer's `ReturnDict`. A foreign key is the related row's
+  id. A field with `choices` is a `Literal`, plus a test that the `Literal`
+  matches the model's choices. See `PromptChatApiOrmModel` and its subclasses.
+- **Third-party shapes** (OpenAI messages, completions, tool calls) are modeled
+  with the fields that the code reads. Allow extra fields only where providers
+  add their own, and say so in the docstring.
+- **Transformations are methods** of the model, such as
+  `PromptChatApiConfig.public()` and `.to_v1()`, not string-replacing helpers
+  that run over dumped dicts.
+- **When a model's JSON leaves the repository**, for example to a React app or
+  the npm package, publish its JSON Schema
+  (`pydantic.json_schema.models_json_schema`), generate the client's types from
+  it, and test that the committed schema is current. See
+  `smarter.apps.prompt.contract.schema` and `make chat-contract`.
+- **Before tightening a type**, validate it against real data: the rows in the
+  local database, and a real response, not only the fixtures.
 
 ## Which skill to load
 

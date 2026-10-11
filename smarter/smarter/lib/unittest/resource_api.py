@@ -107,9 +107,12 @@ class ResourceApiTestMixin:
         self.assertFalse(self.model.objects.filter(pk=self.resource.pk).exists())  # type: ignore[attr-defined]
 
     def test_default_api_get_and_options(self):
-        """Test that the default api refuses a GET, and answers an OPTIONS with its CORS headers."""
+        """Test that the default api refuses a GET, and answers an OPTIONS with its allowed methods.
+
+        CORS preflight requests are answered by the CORS middleware, not the view.
+        """
         url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)  # type: ignore[attr-defined]
         self.assertEqual(self.api_client.get(url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)  # type: ignore[attr-defined]
         response = self.api_client.options(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
-        self.assertIn("POST", response["Access-Control-Allow-Methods"])  # type: ignore[attr-defined]
+        self.assertIn("POST", response["Allow"])  # type: ignore[attr-defined]
