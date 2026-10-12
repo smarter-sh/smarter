@@ -42,7 +42,7 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
 
         return self.get_response(request)
 
-    async def __acall__(self, request: HttpRequest) -> HttpResponse:
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 

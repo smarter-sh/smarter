@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestAccount(SmarterTestBase):
-    """Test Account model"""
+    """Test Account model."""
 
     logger_prefix = logging.formatted_text(f"{__name__}.TestAccount()")
 
@@ -78,6 +78,23 @@ class TestAccount(SmarterTestBase):
         self.assertEqual(account_to_update.account_number, account.account_number)
 
         account.delete()
+
+    def test_save_invalidates_cached_account(self):
+        """Saving an account invalidates its cached copy, which UserProfile.cached_account reads."""
+        account = Account.objects.create(
+            name=self.hash_suffix + "_cache", company_name=self.company_name, phone_number="1234567890"
+        )
+        self.addCleanup(account.delete)
+        self.assertEqual(Account.get_cached_object(pk=account.pk).phone_number, "1234567890")
+
+        # a queryset update bypasses save(), so the cached copy is still read.
+        Account.objects.filter(pk=account.pk).update(phone_number="0987654321")
+        self.assertEqual(Account.get_cached_object(pk=account.pk).phone_number, "1234567890")
+
+        account.refresh_from_db()
+        account.save()
+        self.assertEqual(Account.get_cached_object(pk=account.pk).phone_number, "0987654321")
+        self.assertEqual(Account.get_cached_object(account_number=account.account_number).phone_number, "0987654321")
 
     def test_account_with_profile(self):
         """Test that we can create an account and associate a user_profile."""

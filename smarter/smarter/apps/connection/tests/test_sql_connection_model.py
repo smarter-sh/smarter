@@ -47,6 +47,34 @@ class TestSqlConnectionModel(SmarterTestBase):
         connection.close()
         connection.close()
 
+    def test_context_manager_closes_the_connection(self):
+        """Test that the ``with`` statement closes the connection on exit, also when the block raises."""
+        with sqlite_connection() as connection:
+            self.assertIsNotNone(connection.connection)
+        self.assertIsNone(connection._connection)
+        with self.assertRaises(RuntimeError):
+            with sqlite_connection() as connection:
+                self.assertIsNotNone(connection.connection)
+                raise RuntimeError("boom")
+        self.assertIsNone(connection._connection)
+
+    def test_test_connection_closes_its_connection(self):
+        """Test that test_connection() closes the connection it opens, and logs a failure to close it."""
+        database = MagicMock()
+        connection = sqlite_connection()
+        with patch.object(SqlConnection, "get_connection", return_value=database):
+            self.assertTrue(connection.test_connection())
+        database.close.assert_called_once()
+        database.close.side_effect = RuntimeError("boom")
+        with (
+            patch.object(SqlConnection, "get_connection", return_value=database),
+            patch("smarter.apps.connection.models.sql_connection.logger") as logger,
+        ):
+            self.assertTrue(connection.test_connection())
+        logger.error.assert_called_once()
+        with patch.object(SqlConnection, "get_connection", return_value=None):
+            self.assertFalse(connection.test_connection())
+
     def test_tcpip(self):
         connection = sqlite_connection(authentication_method=DBMSAuthenticationMethods.TCPIP.value)
         self.assertTrue(connection.test_connection())

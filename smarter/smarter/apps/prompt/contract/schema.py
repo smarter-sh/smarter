@@ -7,16 +7,16 @@ which it generates its TypeScript types, and against which it validates its test
 """
 
 import json
-from typing import Any
 
 from pydantic.json_schema import models_json_schema
 
+from smarter.common.conf import smarter_settings
 from smarter.lib.typing import SmarterDictType
 
 from .const import CHAT_CONTRACT_V2, SCHEMA_PATH
 from .models import CONTRACT_MODELS
 
-SCHEMA_ID = "https://smarter.sh/schemas/chat-contract.schema.json"
+SCHEMA_ID = f"https://{smarter_settings.root_domain}/schemas/chat-contract.schema.json"
 
 
 def chat_contract_schema() -> SmarterDictType:

@@ -51,7 +51,6 @@ enabling seamless integration with a variety of large language model (LLM) backe
    This is the main entry point for consumers needing OpenAI-compatible prompt completion handling and passthrough.
 """
 
-from functools import cached_property
 from typing import Any, List, Optional, Union
 
 from django.core.handlers.asgi import ASGIRequest
@@ -63,7 +62,7 @@ from smarter.apps.account.models import User, UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.clients import OpenAIPassthroughClient
-from smarter.apps.provider.models import Provider
+from smarter.apps.provider.models import Provider, get_providers
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
     OpenAISmarterClient,
 )
@@ -143,19 +142,21 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         """
         return self._client_type
 
-    @cached_property
+    @property
     def default_handler_name(self) -> str:
         """
         Returns the name of the platform-wide default provider.
 
-        If no default provider is found, it raises a SmarterValueError.
+        Read from the cached list of active providers, so that a change of default provider
+        applies within seconds, without a restart. If no default provider is found, it raises
+        a SmarterValueError.
 
         :return: The name of the default provider.
         :rtype: str
         :raises SmarterValueError: If no default provider is found.
         """
 
-        provider = Provider.objects.filter(is_default=True, is_active=True).first()  # type: ignore
+        provider = next((provider for provider in get_providers() if provider.is_default), None)
         if not provider:
             raise SmarterValueError("Default provider not found")
         return provider.name
@@ -303,15 +304,17 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
 
         return get_handler
 
-    @cached_property
+    @property
     def all(self) -> List[str]:
         """
         Returns a list of all provider names.
 
+        Read from the cached list of active providers.
+
         :return: A list of all active provider names.
         :rtype: List[str]
         """
-        return list(Provider.objects.filter(is_active=True).values_list("name", flat=True))  # type: ignore
+        return [provider.name for provider in get_providers()]
 
     def handler(
         self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs

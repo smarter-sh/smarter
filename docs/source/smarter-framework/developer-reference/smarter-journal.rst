@@ -16,3 +16,7 @@ Journal Technical References
    smarter-journal/model
    smarter-journal/response
    smarter-journal/response-error
+   smarter-journal/contract
+   smarter-journal/serializers
+   smarter-journal/api
+   smarter-journal/signals
