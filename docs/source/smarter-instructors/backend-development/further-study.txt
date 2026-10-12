@@ -1,0 +1,17 @@
+- **Official tutorials:** the `Django tutorial
+  <https://docs.djangoproject.com/en/stable/intro/tutorial01/>`__, the `Django REST Framework
+  tutorial <https://www.django-rest-framework.org/tutorial/quickstart/>`__, the `Pydantic
+  documentation <https://docs.pydantic.dev/>`__, and the `Celery first steps
+  <https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html>`__.
+- **Podcasts:** `Django Chat <https://djangochat.com/>`__ with Will Vincent and Carlton Gibson,
+  `Talk Python To Me <https://talkpython.fm/>`__, and `The Real Python Podcast
+  <https://realpython.com/podcasts/rpp/>`__.
+- **YouTube:** conference talks on the `DjangoCon US <https://www.youtube.com/@DjangoConUS>`__,
+  `DjangoCon Europe <https://www.youtube.com/@djangoconeurope>`__ and `PyCon US
+  <https://www.youtube.com/@PyConUS>`__ channels. Search for talks on the Django ORM, query
+  optimization and testing.
+- **Online:** `Real Python <https://realpython.com/>`__ tutorials on Django, Celery and typing, and
+  the free online edition of `Architecture Patterns with Python <https://www.cosmicpython.com/>`__.
+- **Community:** the `Django Forum <https://forum.djangoproject.com/>`__, and the Django project's
+  `contributing guide <https://docs.djangoproject.com/en/stable/internals/contributing/>`__ for
+  students who want to contribute to Django itself.

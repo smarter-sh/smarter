@@ -1,0 +1,18 @@
+- **Free books:** *Software Engineering at Google* (Winters, Manshreck and Wright, O'Reilly, 2020),
+  free at `abseil.io/resources/swe-book <https://abseil.io/resources/swe-book>`__, especially the
+  chapters on testing and code review, and Harry Percival's *Obey the Testing Goat* at
+  `obeythetestinggoat.com <https://www.obeythetestinggoat.com/>`__.
+- **Standards:** `Conventional Commits <https://www.conventionalcommits.org/>`__, `Semantic
+  Versioning <https://semver.org/>`__, and the `pre-commit <https://pre-commit.com/>`__ framework's
+  documentation.
+- **Research:** the annual `DORA State of DevOps reports <https://dora.dev/research/>`__, the
+  evidence behind the four key delivery metrics.
+- **YouTube:** Dave Farley's `Modern Software Engineering
+  <https://www.youtube.com/@ModernSoftwareEngineeringYT>`__ channel on continuous delivery and
+  testing, and the PyCon US talks on testing on the `PyCon US <https://www.youtube.com/@PyConUS>`__
+  channel.
+- **Podcasts:** `Test & Code <https://testandcode.com/>`__ by Brian Okken (its archive is a library
+  of Python testing topics), and `Software Engineering Radio <https://se-radio.net/>`__.
+- **Writing:** the articles on test doubles, continuous integration and refactoring at
+  `martinfowler.com <https://martinfowler.com/>`__, including Ham Vocke's `The Practical Test
+  Pyramid <https://martinfowler.com/articles/practical-test-pyramid.html>`__.

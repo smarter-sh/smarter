@@ -1,0 +1,18 @@
+- **Frameworks and law:** the NIST `AI Risk Management Framework
+  <https://www.nist.gov/itl/ai-risk-management-framework>`__ (AI RMF 1.0) and its Generative AI
+  Profile, the EU `Artificial Intelligence Act <https://artificialintelligenceact.eu/>`__, ISO/IEC
+  42001:2023 on AI management systems, and the `OECD AI Principles
+  <https://oecd.ai/en/ai-principles>`__.
+- **Security references:** the `OWASP Top 10 for LLM Applications
+  <https://genai.owasp.org/llm-top-10/>`__ and MITRE `ATLAS <https://atlas.mitre.org/>`__, a catalog
+  of attacks on AI systems.
+- **Reports:** the annual `AI Index <https://hai.stanford.edu/ai-index>`__ from Stanford HAI, for
+  data on adoption, incidents and regulation, and the `AI Incident Database
+  <https://incidentdatabase.ai/>`__.
+- **Podcasts:** `Your Undivided Attention <https://www.humanetech.com/podcast>`__ from the Center
+  for Humane Technology, and `Hard Fork <https://www.nytimes.com/column/hard-fork>`__ for weekly
+  news on technology and policy.
+- **Writing:** the `AI Snake Oil <https://www.aisnakeoil.com/>`__ newsletter by Arvind Narayanan and
+  Sayash Kapoor, on telling real capabilities from hype.
+- **YouTube:** Joy Buolamwini's TED talk *How I'm fighting bias in algorithms*, and the talks on the
+  `Stanford HAI <https://www.youtube.com/@stanfordhai>`__ channel.

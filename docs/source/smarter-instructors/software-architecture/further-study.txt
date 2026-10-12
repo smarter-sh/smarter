@@ -1,0 +1,13 @@
+- **Methods:** Simon Brown's `C4 model <https://c4model.com/>`__ for diagrams, the `ADR community
+  site <https://adr.github.io/>`__, and Michael Nygard's original post, `Documenting Architecture
+  Decisions <https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions>`__ (2011).
+- **Principles:** `The Twelve-Factor App <https://12factor.net/>`__, and Martin Fowler's writing on
+  architecture, microservices and evolutionary design at `martinfowler.com
+  <https://martinfowler.com/architecture/>`__.
+- **Podcasts:** `Software Engineering Radio <https://se-radio.net/>`__ and the `InfoQ Podcast
+  <https://www.infoq.com/podcasts/>`__, both with frequent architecture interviews.
+- **YouTube:** the `GOTO Conferences <https://www.youtube.com/@GOTO->`__ channel, Mark Richards's
+  `Software Architecture Monday <https://www.developertoarchitect.com/lessons/>`__ lessons, and
+  Simon Brown's talks on the C4 model.
+- **Case studies:** *The Architecture of Open Source Applications* (free at `aosabook.org
+  <https://aosabook.org/>`__), in which the developers of well-known systems explain their designs.
