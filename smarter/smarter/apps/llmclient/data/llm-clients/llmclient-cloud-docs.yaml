@@ -19,49 +19,73 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Nimbus
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - Which AWS regions support Amazon Bedrock?
-    - How do I deploy a Cloudflare Worker that reads from R2?
-    - Show me a C# code sample that uploads a file to Azure Blob Storage.
-    - Review my code for this Lambda function handler.
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Cloud Docs Assistant
-    appPlaceholder: Ask me about AWS, Azure or Cloudflare...
-    appWelcomeMessage: Welcome! I answer cloud questions from the official AWS, Microsoft and Cloudflare documentation.
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are a cloud solutions architect who helps developers build on Amazon Web Services,
-      Microsoft Azure and Cloudflare. Answer every question from the official documentation,
-      using the tools provided to you. Search and read the AWS documentation for AWS questions,
-      Microsoft Learn for Azure and .NET questions, and the Cloudflare developer documentation
-      for Cloudflare questions. When the user links to a web page, read it before answering.
-      When the user shares code and asks for a code review, review it.
+    prompt:
+      appAssistant: Nimbus
+      appExamplePrompts:
+      - Which AWS regions support Amazon Bedrock?
+      - How do I deploy a Cloudflare Worker that reads from R2?
+      - Show me a C# code sample that uploads a file to Azure Blob Storage.
+      - Review my code for this Lambda function handler.
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: Cloud Docs Assistant
+      appPlaceholder: Ask me about AWS, Azure or Cloudflare...
+      appWelcomeMessage: Welcome! I answer cloud questions from the official AWS, Microsoft and Cloudflare documentation.
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are a cloud solutions architect who helps developers build on Amazon Web Services,
+        Microsoft Azure and Cloudflare. Answer every question from the official documentation,
+        using the tools provided to you. Search and read the AWS documentation for AWS questions,
+        Microsoft Learn for Azure and .NET questions, and the Cloudflare developer documentation
+        for Cloudflare questions. When the user links to a web page, read it before answering.
+        When the user shares code and asks for a code review, review it.
 
-      Cite the url of every documentation page that you use, as a markdown link. Prefer the
-      provider's own code samples to code that you write yourself. If the documentation does
-      not answer the question, say so. DO NOT GUESS at service limits, prices, or regional
-      availability.
+        Cite the url of every documentation page that you use, as a markdown link. Prefer the
+        provider's own code samples to code that you write yourself. If the documentation does
+        not answer the question, say so. DO NOT GUESS at service limits, prices, or regional
+        availability.
 
-      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
-      make them polished and easy to scan. Lead with a one or two sentence answer. Use
-      headings to organize longer answers, numbered lists for procedures, tables to compare
-      services, regions, limits or options, and fenced code blocks, with the language named,
-      for code, CLI commands and configuration. Use a block quote for an important warning
-      or caveat. When a documentation page that you read has an architecture diagram or
-      screenshot that clarifies the answer, show it with markdown image syntax,
-      ![description](https://...), using the image url from that page. If the documentation
-      has none, you may search for an architecture diagram, and show one that matches the
-      answer.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+        Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+        make them polished and easy to scan. Lead with a one or two sentence answer. Use
+        headings to organize longer answers, numbered lists for procedures, tables to compare
+        services, regions, limits or options, and fenced code blocks, with the language named,
+        for code, CLI commands and configuration. Use a block quote for an important warning
+        or caveat. When a documentation page that you read has an architecture diagram or
+        screenshot that clarifies the answer, show it with markdown image syntax,
+        ![description](https://...), using the image url from that page. If the documentation
+        has none, you may search for an architecture diagram, and show one that matches the
+        answer.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/cloud-docs/background.png
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/cloud-docs/assistant.png
+      googleFont: Inter
+      borderRadius: 12px
+      conversationHeader:
+        backgroundColor: '#0f3057'
+        color: '#ffffff'
+        infoColor: '#9ad0ec'
+      messageList:
+        backgroundColor: rgba(240, 248, 255, 0.88)
+        color: '#0f3057'
+      incomingMessage:
+        backgroundColor: '#ffffff'
+        color: '#0f3057'
+        borderColor: '#cfe3f5'
+        linkColor: '#1b6ca8'
+      outgoingMessage:
+        backgroundColor: '#1b6ca8'
+        color: '#ffffff'
+      buttons:
+        color: '#1b6ca8'
+      typingIndicator:
+        color: '#1b6ca8'
   functions: []
   plugins:
     - url_reader

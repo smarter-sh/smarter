@@ -1,7 +1,7 @@
 # Invalid LLMClient manifests, and the response that /api/v1/cli/apply/ must return for each.
 #
 # Each case changes llmclient-apply-errors-base.yaml in one way:
-#   path + value:  set the value at the dotted path, e.g. spec.config.defaultTemperature
+#   path + value:  set the value at the dotted path, e.g. spec.config.prompt.defaultTemperature
 #                  (repeat: N sets the value repeated N times, for strings that are too long)
 #   path + delete: remove the key at the dotted path
 #   body:          post this text instead of a manifest
@@ -10,50 +10,50 @@
 
 # Pydantic validation errors in the spec
 - name: temperature_below_range
-  path: spec.config.defaultTemperature
+  path: spec.config.prompt.defaultTemperature
   value: -0.5
   status: 400
-  expect: ["config.defaultTemperature", "greater than or equal to 0", "-0.5"]
+  expect: ["prompt.defaultTemperature", "greater than or equal to 0", "-0.5"]
 - name: temperature_above_range
-  path: spec.config.defaultTemperature
+  path: spec.config.prompt.defaultTemperature
   value: 2.5
   status: 400
-  expect: ["config.defaultTemperature", "less than or equal to 1", "2.5"]
+  expect: ["prompt.defaultTemperature", "less than or equal to 1", "2.5"]
 - name: temperature_not_a_number
-  path: spec.config.defaultTemperature
+  path: spec.config.prompt.defaultTemperature
   value: hot
   status: 400
-  expect: ["config.defaultTemperature", "valid number", "'hot'"]
+  expect: ["prompt.defaultTemperature", "valid number", "'hot'"]
 - name: max_tokens_zero
-  path: spec.config.defaultMaxTokens
+  path: spec.config.prompt.defaultMaxTokens
   value: 0
   status: 400
-  expect: ["config.defaultMaxTokens", "greater than 0"]
+  expect: ["prompt.defaultMaxTokens", "greater than 0"]
 - name: max_tokens_negative
-  path: spec.config.defaultMaxTokens
+  path: spec.config.prompt.defaultMaxTokens
   value: -1
   status: 400
-  expect: ["config.defaultMaxTokens", "greater than 0"]
+  expect: ["prompt.defaultMaxTokens", "greater than 0"]
 - name: max_tokens_not_an_integer
-  path: spec.config.defaultMaxTokens
+  path: spec.config.prompt.defaultMaxTokens
   value: lots
   status: 400
-  expect: ["config.defaultMaxTokens", "valid integer"]
+  expect: ["prompt.defaultMaxTokens", "valid integer"]
 - name: max_tokens_fractional
-  path: spec.config.defaultMaxTokens
+  path: spec.config.prompt.defaultMaxTokens
   value: 12.5
   status: 400
-  expect: ["config.defaultMaxTokens", "fractional part"]
+  expect: ["prompt.defaultMaxTokens", "fractional part"]
 - name: deployed_not_a_boolean
-  path: spec.config.deployed
+  path: spec.config.prompt.deployed
   value: maybe
   status: 400
-  expect: ["config.deployed", "valid boolean"]
+  expect: ["prompt.deployed", "valid boolean"]
 - name: example_prompts_not_a_list
-  path: spec.config.appExamplePrompts
+  path: spec.config.prompt.appExamplePrompts
   value: not a list
   status: 400
-  expect: ["config.appExamplePrompts", "valid list"]
+  expect: ["prompt.appExamplePrompts", "valid list"]
 - name: plugins_not_a_list
   path: spec.plugins
   value: smarter_project_websearch
@@ -64,18 +64,33 @@
   delete: true
   status: 400
   expect: ["config", "Field required"]
+- name: missing_prompt
+  path: spec.config.prompt
+  delete: true
+  status: 400
+  expect: ["prompt", "Field required"]
+- name: style_color_not_a_color
+  path: spec.config.styles.conversationHeader
+  value: {backgroundColor: "url(https://example.com/x.png)"}
+  status: 400
+  expect: ["conversationHeader.backgroundColor", "is not valid"]
+- name: style_size_not_a_size
+  path: spec.config.styles.fontSize
+  value: huge
+  status: 400
+  expect: ["fontSize", "'huge' is not valid"]
 - name: custom_domain_incomplete
-  path: spec.config.customDomain
+  path: spec.config.prompt.customDomain
   value: {domain_name: example.com}
   status: 400
-  expect: ["config.customDomain.aws_hosted_zone_id", "Field required"]
+  expect: ["prompt.customDomain.aws_hosted_zone_id", "Field required"]
 
 - name: system_role_too_long
-  path: spec.config.defaultSystemRole
+  path: spec.config.prompt.defaultSystemRole
   value: x
   repeat: 2049
   status: 400
-  expect: ["config.defaultSystemRole", "at most 2048 characters"]
+  expect: ["prompt.defaultSystemRole", "at most 2048 characters"]
 
 # keys that the manifest does not define, e.g. misspellings, which must not be silently ignored
 - name: unknown_config_key
@@ -83,6 +98,21 @@
   value: 0.5
   status: 400
   expect: ["keys that it does not define", "spec.config.defaultTemperatura"]
+- name: unknown_style_key
+  path: spec.config.styles.conversationHeader
+  value: {bgColor: "#ffffff"}
+  status: 400
+  expect: ["spec.config.styles.conversationHeader.bgColor"]
+- name: config_before_prompt_and_styles
+  path: spec.config.appName
+  value: Example
+  status: 400
+  expect: ["spec.config.appName", "spec.config.prompt.appName"]
+- name: logo_before_prompt_and_styles
+  path: spec.config.appLogoUrl
+  value: https://example.com/logo.png
+  status: 400
+  expect: ["spec.config.appLogoUrl", "spec.config.styles.appLogoUrl"]
 - name: unknown_status_key_in_config
   path: spec.config.dnsVerificationStatus
   value: Verified
@@ -104,10 +134,10 @@
   status: 400
   expect: ["keys that it does not define", "specs"]
 - name: unknown_nested_key
-  path: spec.config.customDomain
+  path: spec.config.prompt.customDomain
   value: {aws_hosted_zone_id: Z123, domain_name: example.com, ttl: 300}
   status: 400
-  expect: ["spec.config.customDomain.ttl"]
+  expect: ["spec.config.prompt.customDomain.ttl"]
 
 # Pydantic validation errors in the metadata, and the manifest's structure
 - name: missing_name
@@ -148,36 +178,46 @@
 
 # Django model validation errors
 - name: provider_unknown
-  path: spec.config.provider
+  path: spec.config.prompt.provider
   value: notaprovider
   status: 400
   expect: ["provider", "notaprovider is not a valid provider", "openai"]
 - name: provider_wrong_case
-  path: spec.config.provider
+  path: spec.config.prompt.provider
   value: OpenAI
   status: 400
   expect: ["provider", "OpenAI is not a valid provider"]
 - name: app_name_too_long
-  path: spec.config.appName
+  path: spec.config.prompt.appName
   value: n
   repeat: 300
   status: 400
   expect: ["app_name", "at most 255 characters"]
 - name: info_url_not_a_url
-  path: spec.config.appInfoUrl
+  path: spec.config.prompt.appInfoUrl
   value: not a url
   status: 400
   expect: ["app_info_url", "Enter a valid URL"]
 - name: logo_url_not_a_url
-  path: spec.config.appLogoUrl
+  path: spec.config.styles.appLogoUrl
   value: ftp//broken
   status: 400
-  expect: ["app_logo_url", "Enter a valid URL"]
+  expect: ["appLogoUrl", "'ftp//broken' is not valid"]
+- name: logo_url_unavailable
+  path: spec.config.styles.appLogoUrl
+  value: https://cdn.smarter.sh/images/this-image-does-not-exist.png
+  status: 400
+  expect: ["appLogoUrl", "is not available", "HTTP 403"]
+- name: logo_url_is_a_web_page
+  path: spec.config.styles.appLogoUrl
+  value: https://smarter.sh/
+  status: 400
+  expect: ["appLogoUrl", "not an image"]
 - name: subdomain_set
-  path: spec.config.subdomain
+  path: spec.config.prompt.subdomain
   value: my-subdomain
   status: 400
-  expect: ["spec.config.subdomain cannot be set by apply"]
+  expect: ["spec.config.prompt.subdomain cannot be set by apply"]
 
 # references to resources that do not exist
 - name: plugin_not_found

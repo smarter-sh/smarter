@@ -16,6 +16,11 @@ Pydantic Models
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: smarter.apps.llmclient.manifest.models.llmclient.styles
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: smarter.apps.llmclient.manifest.models.llmclient.status
     :members:
     :undoc-members:

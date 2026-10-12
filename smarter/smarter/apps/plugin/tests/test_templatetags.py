@@ -16,6 +16,7 @@ from django.test import override_settings
 
 from smarter.apps.plugin.templatetags import react_plugin_list
 from smarter.lib import logging
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
     SmarterReactTemplateTagManager,
 )
@@ -61,18 +62,18 @@ class TestReactPluginListTemplateTag(SmarterTestBase):
     def test_tag(self):
         """Test that the tag returns the manager's JS and CSS assets."""
         assets = react_plugin_list.plugin_list_react_assets()
-        self.assertEqual(set(assets.keys()), {"js", "css"})
-        self.assertIsInstance(assets["js"], list)
-        self.assertIsInstance(assets["css"], list)
+        self.assertIsInstance(assets, ReactAppAssets)
+        self.assertIsInstance(assets.js, list)
+        self.assertIsInstance(assets.css, list)
         self.assertEqual(assets, react_plugin_list.templatetag_manager.reactapp_build_assets)
 
     def test_build_assets(self):
         """Test that the example manifest's entry point, and every dependency, is collected."""
         assets = self.manager().reactapp_build_assets
         for file in ("assets/index.js", "assets/rolldown-runtime.js", "assets/xterm.js"):
-            self.assertTrue(any(js.endswith(file) for js in assets["js"]), file)
+            self.assertTrue(any(js.endswith(file) for js in assets.js), file)
         for file in ("assets/index-DvLY75bJ.css", "assets/xterm-TdnZ7DQy.css"):
-            self.assertTrue(any(css.endswith(file) for css in assets["css"]), file)
+            self.assertTrue(any(css.endswith(file) for css in assets.css), file)
 
     def test_template(self):
         """Test the tag in a template."""
@@ -80,4 +81,4 @@ class TestReactPluginListTemplateTag(SmarterTestBase):
             "{% load react_plugin_list %}{% plugin_list_react_assets as assets %}{{ assets.js|length }}"
         )
         rendered = template.render(Context({}))
-        self.assertEqual(rendered, str(len(react_plugin_list.plugin_list_react_assets()["js"])))
+        self.assertEqual(rendered, str(len(react_plugin_list.plugin_list_react_assets().js)))

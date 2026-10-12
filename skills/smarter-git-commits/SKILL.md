@@ -38,8 +38,12 @@ git commit --author="Claude <noreply@anthropic.com>" \
 
 - Use one `-m` per paragraph. git joins them with blank lines.
 - No heredoc, no `-F`, and no `git add` in the same block.
-- Avoid backticks and `$` inside the double-quoted messages, or escape them.
-  The shell would otherwise run or expand them.
+- Avoid backticks, `$` and `!` inside the double-quoted messages. The shell
+  would otherwise run or expand them. The user's shell is zsh, where a `!` in
+  double quotes is history expansion: `"... !important ..."` aborts the whole
+  command with `zsh: event not found: important`, and the commit isn't made.
+  Reword instead (e.g. "important declarations"); escaping `!` with a backslash
+  leaves the backslash in the message.
 - When the user asks for the `git add` too, write it as a separate code block.
   List the paths explicitly. Leave out files that don't belong to the change
   (for example, untracked work for another task).

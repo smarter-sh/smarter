@@ -1,11 +1,9 @@
-"""
-Django template tags for the Prompt Passthrough app.
-"""
+"""Django template tags for the Prompt Passthrough app."""
 
 from django import template
 
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
-    AssetDict,
     SmarterReactTemplateTagManager,
 )
 
@@ -15,6 +13,7 @@ register = template.Library()
 templatetag_manager = SmarterReactTemplateTagManager(app_name="@smarter/prompt-passthrough", templatetag_name=__name__)
 """
 Manages integration of Vite-built React assets into Django templates.
+
 Expects to find a Vite-generated manifest.json in the file path
 static/react/@smarter/prompt-passthrough/.
 
@@ -33,14 +32,14 @@ Example manifest.json structure:
                 ]
         }
             }
-
 """
 
 
 @register.simple_tag
-def prompt_passthrough_react_assets() -> AssetDict:
+def prompt_passthrough_react_assets() -> ReactAppAssets:
     """
-    Load CSS and JS files for a React app entry point
+    Load CSS and JS files for a React app entry point.
+
     based on its manifest.json.
 
     Example output::
@@ -58,6 +57,5 @@ def prompt_passthrough_react_assets() -> AssetDict:
                     "assets/xterm-kHJ-D0s7.css"
                 ]
             }
-
     """
     return templatetag_manager.reactapp_build_assets

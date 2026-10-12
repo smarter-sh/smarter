@@ -73,9 +73,8 @@ PUBLIC_LLMCLIENT_FIELDS = (
     "app_example_prompts",
     "app_placeholder",
     "app_info_url",
-    "app_background_image_url",
-    "app_logo_url",
     "app_file_attachment",
+    "styles",
     "url_llmclient",
 )
 """

@@ -12,6 +12,7 @@ from django.utils.crypto import get_random_string
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.templatetags import react_manifest_editor
 from smarter.apps.guardrail.models import Guardrail
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -27,11 +28,11 @@ class TestReactManifestEditorTemplateTag(SmarterTestBase):
         """Test that the assets tag returns the app's JS and CSS assets, in a template."""
         self.assertEqual(react_manifest_editor.templatetag_manager.app_name, "@smarter/manifest-editor")
         assets = react_manifest_editor.manifest_editor_react_assets()
-        self.assertEqual(set(assets.keys()), {"js", "css"})
+        self.assertIsInstance(assets, ReactAppAssets)
         template = Template(
             "{% load react_manifest_editor %}{% manifest_editor_react_assets as assets %}{{ assets.js|length }}"
         )
-        self.assertEqual(template.render(Context({})), str(len(assets["js"])))
+        self.assertEqual(template.render(Context({})), str(len(assets.js)))
 
     def test_context(self):
         """Test that the context tag returns the root element's settings, and the cli api urls."""
