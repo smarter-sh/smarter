@@ -264,6 +264,13 @@ class TestProxyForwarder(ProxyTestBase):
         forwarder = ProxyForwarder(proxy, self.non_admin_user_profile)
         return forwarder.forward(method=method, path=path, query_string=query, headers=CALLER_HEADERS, body=body)
 
+    def test_repr(self):
+        """Test that the forwarder's repr names its Proxy and user profile."""
+        proxy = MagicMock()
+        proxy.name = "my_proxy"
+        forwarder = ProxyForwarder(proxy, self.non_admin_user_profile)
+        self.assertEqual(repr(forwarder), f"<ProxyForwarder proxy=my_proxy user_profile={self.non_admin_user_profile}>")
+
     def connect(self, signal) -> MagicMock:
         receiver = MagicMock()
         signal.connect(receiver, weak=False)

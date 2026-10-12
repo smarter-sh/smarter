@@ -105,6 +105,9 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         self._embeddings = embeddings
         self._backend = backend
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} vectorstore={self.vectorstore.name}>"
+
     @property
     def backend(self) -> SmarterVectorstoreBackend:
         if self._backend is None:

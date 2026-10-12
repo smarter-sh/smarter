@@ -171,12 +171,11 @@ def default_client_for(guardrail: Guardrail) -> GuardrailClient:
     :raises GuardrailConfigError: If the Provider does not exist, or has no API key.
     """
     # pylint: disable=import-outside-toplevel
-    from smarter.apps.provider.models import Provider
+    from smarter.apps.provider.models import get_cached_active_provider_for_user
 
     name = guardrail.settings.get("provider") or DEFAULT_PROVIDER
     user = guardrail.user_profile.user if guardrail.user_profile_id else None  # type: ignore[attr-defined]
-    queryset = Provider.objects.filter(name=name, is_active=True)
-    provider = queryset.with_read_permission_for(user).first() if user else None  # type: ignore[attr-defined]
+    provider = get_cached_active_provider_for_user(name, user.username) if user else None
     if provider is None:
         raise GuardrailConfigError(f"Guardrail '{guardrail.name}': the LLM provider '{name}' was not found.")
     api_key = provider.api_key.get_secret() if provider.api_key else None

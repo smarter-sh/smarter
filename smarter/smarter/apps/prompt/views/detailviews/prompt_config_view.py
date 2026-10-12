@@ -604,7 +604,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         )
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return-value]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.llmclient) if self.llmclient else "PromptConfigView"
 
     # pylint: disable=unused-argument

@@ -64,33 +64,6 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
         pass
 
 
-@receiver(post_save, sender=User)
-def user_post_save(sender: User, instance: User, created, **kwargs):
-    """
-    Signal receiver for created/saved of User model.
-
-    Assumed to be called on all logins since Django's
-    default behavior is to update the last_login field on
-    each login, which triggers a save.
-    """
-    from smarter.apps.dashboard.context_processors import cache_invalidations
-
-    logger.debug(
-        "%s User post_save: %s, created: %s",
-        formatted_text(f"{module_prefix}.user_post_save()"),
-        instance,
-        created,
-    )
-    try:
-        user_profile = UserProfile.get_cached_object(user=instance)
-        cache_invalidations(user_profile=user_profile)
-    except UserProfile.DoesNotExist:
-        pass
-    except UserProfile.MultipleObjectsReturned:
-        # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
-        pass
-
-
 @receiver(post_delete, sender=User)
 def user_post_delete(sender: User, instance: User, **kwargs):
     """Signal receiver for deleted of User model."""

@@ -8,6 +8,8 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..http import SmarterJournaledJsonErrorResponse, SmarterJournaledJsonResponse
 
+JOURNAL_KEY = "a" * 64
+
 
 class TestSmarterJournaledJsonResponse(SmarterTestBase):
     """Test the SmarterJournaledJsonResponse class."""
@@ -26,7 +28,7 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request.COOKIES = {}
         mock_request.headers = {}
         mock_journal = Mock()
-        mock_journal.key = "journal-key"
+        mock_journal.key = JOURNAL_KEY
         mock_samjournal.objects.create.return_value = mock_journal
 
         data = {}
@@ -40,7 +42,7 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.CREATED)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", data)
-        self.assertEqual(data["metadata"]["key"], "journal-key")
+        self.assertEqual(data["metadata"]["key"], JOURNAL_KEY)
 
     @patch("smarter.lib.journal.http.waffle")
     @patch("smarter.lib.journal.http.SAMJournal")
@@ -55,7 +57,7 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request.COOKIES = {}
         mock_request.headers = {}
         mock_journal = Mock()
-        mock_journal.key = "journal-key"
+        mock_journal.key = JOURNAL_KEY
         mock_samjournal.objects.create.return_value = mock_journal
 
         data = {}
@@ -69,7 +71,7 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.OK)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", data)
-        self.assertEqual(data["metadata"]["key"], "journal-key")
+        self.assertEqual(data["metadata"]["key"], JOURNAL_KEY)
 
     @patch("smarter.lib.journal.http.waffle")
     def test_response_waffle_inactive(self, mock_waffle):

@@ -229,7 +229,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
         logger.debug("%s for %s", formatted_text(f"{__name__}.get_cached_vectorstores_for_user()"), user)
         return get_cached_vectorstores_for_user_id(user_id=user.id)  # type: ignore
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} ({self.backend}, {self.hosting})"
 
 
