@@ -1,9 +1,19 @@
 Prompt Engineering: Two-Week Online Course
 ==========================================
 
-A two-week online course in prompt engineering, with six 30-minute recorded lectures and a
-90-minute live session each week, for students who need no programming experience. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
+A two-week online course in prompt engineering, for students who need no programming experience.
+Students build, test and brand an AI assistant by editing a YAML manifest. Everything students build
+is a Smarter :doc:`LLMClient </smarter-resources/smarter-llmclient>` manifest, the same YAML that
+runs in production, and they start from the nineteen built-in LLMClients that ship with every
+installation: the one-line `simple
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+assistant, and `customer_support
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
+a complete support agent with a persona, refusals, a skill, a tool and four guardrails. The prompt
+engineering :doc:`workbench </smarter-framework/smarter-chat>` shows every request sent to the
+model, every tool call and every plugin selected, beside the chat, so students see the effect of
+each edit at once. There are six 30-minute recorded lectures and a 90-minute live session each week.
+See :doc:`../course-formats` for the format, the grading scale and the course policies, and
 :doc:`../prompt-engineering` for an overview of the subject.
 
 At a Glance
@@ -47,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -80,11 +92,13 @@ Schedule
        every request.
    * - 2
      - Lecture 5 (30 min)
-     - **Knowledge and tools.** Grounding with :doc:`Static </smarter-resources/plugin/plugin/static>`
-       and :doc:`Skill </smarter-resources/plugin/plugin/skill>` plugins, and acting with
-       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` and
-       :doc:`API </smarter-resources/plugin/plugin/api>` plugins. How a plugin's description
-       decides when the model calls it.
+     - **Knowledge and tools.** Grounding with :doc:`Static
+       </smarter-resources/plugin/plugin/static>` and :doc:`Skill
+       </smarter-resources/plugin/plugin/skill>` plugins, and acting with :doc:`Websearch
+       </smarter-resources/plugin/plugin/websearch>` and :doc:`API
+       </smarter-resources/plugin/plugin/api>` plugins. Smarter offers a plugin only when the prompt
+       matches one of its ``searchTerms``, and the model then decides, from the plugin's
+       description, whether to call it.
    * - 2
      - Lecture 6 (30 min)
      - **When prompts are not enough.** Prompt injection and jailbreaks. Why a
@@ -98,6 +112,11 @@ Schedule
 
 Assignments 1 and 2 are due before Live session 2. Assignment 3 and the capstone are due at the
 start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

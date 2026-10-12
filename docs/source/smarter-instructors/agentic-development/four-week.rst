@@ -1,12 +1,19 @@
 Agentic Software Development: Four-Week Online Course
 =====================================================
 
-A four-week online course on developing software with coding agents such as
-`Claude Code <https://claude.com/claude-code>`__, taught on Smarter, a code base shaped for agents,
-with twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers how
-agents work, week 2 delegation and review, week 3 instructions, skills and automation, and week 4
-safety, measurement and responsibility. See :doc:`../course-formats` for the format, the grading
-scale and the course policies, and :doc:`../agentic-development` for an overview of the subject.
+A four-week online course on developing software with coding agents such as `Claude Code
+<https://claude.com/claude-code>`__, taught on a real production code base. Smarter is a code base
+shaped for agents: nearly all of its new code is now designed, written and tested by agents working
+from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the sixteen
+`Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__ in ``skills/``, and its
+git history shows it: since late September 2026, most commits have been authored by Claude. Its
+:doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>` was built by Claude Code in
+a live class demonstration, from the request to a `merged pull request
+<https://github.com/smarter-sh/smarter/pull/775>`__ with tests and documentation. There are twelve
+30-minute recorded lectures and a 90-minute live session each week. Week 1 covers how agents work,
+week 2 delegation and review, week 3 instructions, skills and automation, and week 4 safety,
+measurement and responsibility. See :doc:`../course-formats` for the format, the grading scale and
+the course policies, and :doc:`../agentic-development` for an overview of the subject.
 
 At a Glance
 -----------
@@ -52,6 +59,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -69,7 +78,9 @@ Schedule
    * - 1
      - Lecture 3
      - **Agent-friendly code bases.** Consistent structure, tests that run, and documented
-       patterns, using Smarter as the example.
+       patterns, using Smarter as the example: the identical layout of the ``guardrail`` and
+       ``secret`` apps, more than five thousand unit tests, the pre-commit hooks, typed aliases in
+       ``lib/typing.py``, and logs that name the code that wrote them.
    * - 1
      - Live session 1
      - Setup triage, then a first delegated task, live. Start Assignment 1.
@@ -90,11 +101,15 @@ Schedule
      - Review of Assignment 1. A live review of an agent's pull request. Start Assignment 2.
    * - 3
      - Lecture 7
-     - **Instructions.** ``CLAUDE.md``: what belongs in it and what does not.
+     - **Instructions.** ``CLAUDE.md``: what belongs in it and what does not, read line by line
+       against Smarter's eight hard rules.
    * - 3
      - Lecture 8
      - **Skills.** Agent Skills, their triggers, and how Smarter's skills grew from repeated
-       mistakes.
+       mistakes, such as the caching rules added by `commit eeb7a7a19
+       <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__.
+       The same format as a product feature: the
+       :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>`.
    * - 3
      - Lecture 9
      - **Automation.** Hooks, subagents, and running agents in CI.
@@ -109,7 +124,8 @@ Schedule
    * - 4
      - Lecture 11
      - **Measuring productivity.** What studies show, why self-reports mislead, and how to
-       measure your own.
+       measure your own. Smarter's own history as data: ``git shortlog`` and ``git log
+       --shortstat`` before and after agents began authoring commits.
    * - 4
      - Lecture 12
      - **Responsibility.** Authorship, attribution, licenses, open source contributions, and the
@@ -122,6 +138,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -366,7 +387,9 @@ Recommended Texts
   Productivity* (2025), in week 4.
 - **Reference:** John Ousterhout, *A Philosophy of Software Design* (2nd edition, Yaknyam Press,
   2021), on the design qualities that help human and agent readers alike.
-- **In the repository:** ``CLAUDE.md``, ``skills/README.md`` and each skill's ``SKILL.md``.
+- **In the repository:** `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
+  `skills/README.md <https://github.com/smarter-sh/smarter/blob/main/skills/README.md>`__ and each
+  skill's ``SKILL.md``.
 
 Further Study
 -------------

@@ -1,0 +1,111 @@
+Every lecture, lab and assignment in this course rests on the files below. The web console's
+apps are in `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, under
+``smarter/react/``, and the chat interface is in its own repository,
+`github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__, which
+``make react-install`` clones into the workspace. Every reference is to the ``main`` branch, so
+that students can open each one during class.
+
+The Workspace
+~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - One app per page
+     - An npm workspace of twenty-four packages: a list page for each resource, the dashboard,
+       a manifest editor, a drop zone, a terminal emulator, the chat, and the shared
+       ``@smarter/common``. React 19, TypeScript 6 and Vite 8.
+     - `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__,
+       `smarter/react/package.json <https://github.com/smarter-sh/smarter/blob/main/smarter/react/package.json>`__
+   * - A list page, taken apart
+     - ``smarter-guardrail-list``: an entry point, an ``App``, ``ListView``, ``CardView``,
+       ``Toolbar`` and ``StatusBar`` components, typed API objects, and MSW mocks with fixtures.
+       Every list page has the same shape.
+     - `smarter-guardrail-list/src/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list/src>`__
+   * - Shared code
+     - A sortable header, a tabbed list view, a loading indicator, ``fetchDjangoUrl`` (which
+       sends the session cookie and the CSRF token), modal dialogs and the ``SessionContext``
+       type that every app receives from Django.
+     - `smarter-common/src/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-common/src>`__,
+       `lib/django.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-common/src/lib/django.tsx>`__,
+       `lib/Types.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-common/src/lib/Types.tsx>`__
+   * - Styling
+     - The console uses the Keen Bootstrap theme, by decision. :doc:`ADR 026 </adr/026-keen>`,
+       :doc:`ADR 019 </adr/019-react>`.
+     - `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+
+Quality Tools
+~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Tool
+     - How Smarter uses it
+     - Where to look
+   * - Storybook
+     - One shared configuration, with Mock Service Worker in the browser. ``make react-storybook
+       APP=smarter-guardrail-list`` opens one app's stories.
+     - `smarter/react/storybook/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/storybook>`__,
+       `App.stories.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/App.stories.tsx>`__
+   * - Vitest and Testing Library
+     - About 150 test files, and every story rendered as a test too, so a story that breaks is a
+       failing test. ``make react-test`` writes a coverage report.
+     - `vitest.shared.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/vitest.shared.ts>`__,
+       `smarter/react/test/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/test>`__,
+       `App.test.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/App.test.tsx>`__
+   * - ESLint and Prettier
+     - One configuration for the whole workspace, with accessibility (``jsx-a11y``) and Testing
+       Library rules, and no warnings allowed. ``make react-lint`` also type-checks.
+     - `eslint.config.js <https://github.com/smarter-sh/smarter/blob/main/smarter/react/eslint.config.js>`__
+   * - Continuous integration
+     - The ``react`` job checks formatting, lint and types, and runs the tests, as the make
+       targets do.
+     - `test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__
+   * - Conventions for agents and people
+     - Story and test conventions, MSW mocks, and the pitfalls the workspace has hit, such as
+       silent file-load failures and ``NODE_ENV=production``.
+     - `smarter-react-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-react-testing/SKILL.md>`__,
+       `smarter/react/README.md <https://github.com/smarter-sh/smarter/blob/main/smarter/react/README.md>`__
+
+Build, Integration and the Chat
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Django hosts each app
+     - A Django template renders a root element with data attributes, and a template tag reads
+       the Vite build's ``manifest.json``, validated by Pydantic models, to insert the app's
+       scripts and styles. :doc:`/smarter-framework/developer-reference/react-integration`.
+     - `smarter_react_templatetag_manager.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py>`__,
+       `guardrail/templatetags/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/templatetags>`__
+   * - The chat component
+     - Built on the chatscope UI kit, with Markdown, KaTeX math and Mermaid diagrams, a Console
+       panel, and Server-Sent Events for a prompt's progress and the server's log.
+     - `smarter-chat: src/components/ <https://github.com/smarter-sh/smarter-chat/tree/main/src/components>`__,
+       `src/lib/api.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/api.ts>`__,
+       `src/lib/logStream.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/logStream.ts>`__
+   * - Types from the server
+     - The chat API's TypeScript types are generated from a JSON Schema that Django exports from
+       Pydantic models, so the two sides cannot drift silently.
+       :doc:`/smarter-framework/smarter-chat/api-contract`.
+     - `contract/chat-contract.schema.json <https://github.com/smarter-sh/smarter-chat/blob/main/contract/chat-contract.schema.json>`__,
+       `src/contract.gen.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__
+   * - Branding from a manifest
+     - An LLMClient's ``spec.config.styles`` becomes CSS custom properties in the chat.
+       :doc:`/smarter-resources/llmclient/styles`.
+     - `src/lib/styles.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/styles.ts>`__
+   * - Embedding
+     - The chat is published to npm as ``@smarter.sh/ui-chat``, for any page that wants to embed
+       a deployed LLMClient. :doc:`/smarter-framework/smarter-chat/embedding`.
+     - `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__

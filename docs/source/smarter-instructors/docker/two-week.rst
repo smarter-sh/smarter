@@ -1,11 +1,18 @@
 Docker for Software Development: Two-Week Online Course
 =======================================================
 
-A two-week online course on Docker, taught on Smarter's multi-container application, with six
-30-minute recorded lectures and a 90-minute live session each week. Week 1 covers images and the
-Dockerfile, and week 2 covers Compose, configuration and production images. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../docker` for an overview of the subject.
+A two-week online course on Docker, taught on Smarter's multi-container application. The `Dockerfile
+<https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__ has twelve stages, from a slim
+Python 3.14 base to a non-root user whose files are made read-only outside development, and
+`docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__ runs six
+services: the Django web server, two Celery workers on separate queues, the Celery scheduler,
+MariaDB and Redis. The same image plays four roles, the ``docker-*`` targets in the `Makefile
+<https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ wrap every step, and the same image
+runs in production on Kubernetes, so nothing students learn is a classroom simplification. The files
+also have real flaws to find, such as unpinned base images. There are six 30-minute recorded
+lectures and a 90-minute live session each week. Week 1 covers images and the Dockerfile, and week 2
+covers Compose, configuration and production images. See :doc:`../course-formats` for the format,
+the grading scale and the course policies, and :doc:`../docker` for an overview of the subject.
 
 At a Glance
 -----------
@@ -48,6 +55,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -89,6 +98,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -294,7 +308,8 @@ Recommended Texts
   chapters on images, containers and containerizing an app. Week 2: the chapters on Compose,
   networking, volumes and security.
 - **Required:** `The Twelve-Factor App <https://12factor.net/>`__, in week 2.
-- **Reference:** Docker's `building best practices <https://docs.docker.com/build/building/best-practices/>`__.
+- **Reference:** Docker's `building best practices
+  <https://docs.docker.com/build/building/best-practices/>`__.
 - **Smarter documentation:** :doc:`/smarter-framework/technologies/docker`,
   :doc:`/adr/002-docker` and :doc:`/adr/004-12-factor`.
 

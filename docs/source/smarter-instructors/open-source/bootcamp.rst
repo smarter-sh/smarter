@@ -3,10 +3,19 @@ Open Source Participation: Classroom Bootcamp
 
 An eight-hour classroom bootcamp on participating in open source, using Smarter, which is developed
 in public with issues, discussions, pull requests, code review, conventional commits and automated
-releases. Students learn how a project works, make a first documentation contribution during the
-day, and leave with a code or documentation contribution under way. See :doc:`../course-formats`
-for the standard bootcamp day, the grading scale and the course policies, and
-:doc:`../open-source` for an overview of the subject.
+releases. Smarter is licensed under the `AGPL-3.0
+<https://github.com/smarter-sh/smarter/blob/main/LICENSE>`__, has twenty-two contributors and more
+than five hundred automated releases, checks every commit message with `commitlint
+<https://github.com/smarter-sh/smarter/blob/main/commitlint.config.js>`__, versions itself with
+`semantic-release <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__ on
+``main``, ``next``, ``beta`` and ``alpha``, and publishes its rules in `CONTRIBUTING.md
+<https://github.com/smarter-sh/smarter/blob/main/CONTRIBUTING.md>`__, `CODE_OF_CONDUCT.md
+<https://github.com/smarter-sh/smarter/blob/main/CODE_OF_CONDUCT.md>`__ and `SECURITY.md
+<https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__. A merged pull request is a public,
+verifiable piece of work for a student's portfolio. Students learn how a project works, make a first
+documentation contribution during the day, and leave with a code or documentation contribution under
+way. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the course
+policies, and :doc:`../open-source` for an overview of the subject.
 
 At a Glance
 -----------
@@ -56,6 +65,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -70,10 +81,11 @@ Schedule
        discussions, pull requests and releases.
    * - 2
      - 45
-     - **Lab 1: Read the rules.** Read Smarter's :doc:`contributing guide </smarter-framework/guides/contributing>`,
-       :doc:`code of conduct </smarter-framework/guides/code-of-conduct>`,
-       :doc:`developer guidelines </smarter-framework/guides/developer-guidelines>` and
-       ``SECURITY.md``, and answer questions about how to contribute. Produces Assignment 1.
+     - **Lab 1: Read the rules.** Read Smarter's :doc:`contributing guide
+       </smarter-framework/guides/contributing>`, :doc:`code of conduct
+       </smarter-framework/guides/code-of-conduct>`, :doc:`developer guidelines
+       </smarter-framework/guides/developer-guidelines>` and ``SECURITY.md``, and answer questions
+       about how to contribute. Produces Assignment 1.
    * - 3
      - 45
      - **Lecture 2: Licenses.** Copyright, permissive and copyleft licenses, the AGPL and network
@@ -107,10 +119,17 @@ Schedule
    * - 10
      - 45
      - **Lecture 6: Beyond the first pull request.** Security reports, triaging issues, helping
-       in discussions, becoming a maintainer, and open source on a résumé.
+       in discussions, becoming a maintainer, and open source on a résumé. Project health, read
+       from Smarter's own ``CODEOWNERS``: what a single maintainer means for a project, and how
+       contributors change that.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose an issue and post their proposed approach in it.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -309,7 +328,8 @@ on a reader, and open a pull request upstream.
 Recommended Texts
 -----------------
 
-- **Pre-reading:** GitHub's `How to Contribute to Open Source <https://opensource.guide/how-to-contribute/>`__.
+- **Pre-reading:** GitHub's `How to Contribute to Open Source
+  <https://opensource.guide/how-to-contribute/>`__.
 - **Reference:** Karl Fogel, *Producing Open Source Software* (2nd edition, O'Reilly, 2017; free
   at `producingoss.com <https://producingoss.com/>`__).
 - **Smarter documentation:** :doc:`/smarter-framework/guides/contributing`,

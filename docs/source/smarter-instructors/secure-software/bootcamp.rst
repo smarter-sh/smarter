@@ -4,8 +4,17 @@ Writing Secure Software: Classroom Bootcamp
 An eight-hour classroom bootcamp on securing web applications and AI systems, using Smarter as the
 case study. Students attack an AI application with prompt injection, defend it with deterministic
 controls, map its defenses to the OWASP Top 10 lists, and study how it handles secrets and outbound
-requests. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the
-course policies, and :doc:`../secure-software` for an overview of the subject.
+requests. Smarter assumes that a model will eventually try to do something it should not, and
+defends with deterministic controls rather than instructions: `guardrails
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+on both the prompt and the reply, a single `hardened function
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+for every outbound request to a user-supplied URL, credentials kept in encrypted `Secrets
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__ that the
+model never sees, and parameterized queries and tool allow lists for least privilege. Every defense
+is in code that students can read and test. See :doc:`../course-formats` for the standard bootcamp
+day, the grading scale and the course policies, and :doc:`../secure-software` for an overview of the
+subject.
 
 At a Glance
 -----------
@@ -56,6 +65,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -81,8 +92,9 @@ Schedule
        deterministic controls, and their limits.
    * - 4
      - 45
-     - **Lab 2: Blue team.** Teams add guardrails (prompt injection, secrets leak, script injection)
-       to their LLMClient, and the attackers try again. Produces Assignment 2.
+     - **Lab 2: Blue team.** Teams add the built-in guardrails ``prompt_injection_llm_judge_input``,
+       ``secrets_leak_output`` and ``script_injection_output`` to their LLMClient, and the
+       attackers try again. Produces Assignment 2.
    * - 5
      - 45
      - **Lecture 3: Secrets.** How Smarter stores provider and plugin credentials as encrypted
@@ -115,6 +127,11 @@ Schedule
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and scope it with the instructor.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -330,9 +347,9 @@ Recommended Texts
 - **Reference:** Steve Wilson, *The Developer's Playbook for Large Language Model Security*
   (O'Reilly, 2024).
 - **Reference:** Tanya Janca, *Alice and Bob Learn Application Security* (Wiley, 2020).
-- **Smarter documentation:** :doc:`/smarter-platform/security`, :doc:`/smarter-platform/security-faq`,
-  :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-secret` and
-  :doc:`/adr/016-security`.
+- **Smarter documentation:** :doc:`/smarter-platform/security`,
+  :doc:`/smarter-platform/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
+  :doc:`/smarter-resources/smarter-secret` and :doc:`/adr/016-security`.
 
 Further Study
 -------------

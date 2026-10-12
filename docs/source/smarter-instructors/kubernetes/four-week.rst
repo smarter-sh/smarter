@@ -1,8 +1,19 @@
 Kubernetes: Four-Week Online Course
 ===================================
 
-A four-week online course on running applications at scale with Kubernetes, taught on Smarter's
-Helm chart and on Smarter's own use of the Kubernetes API, with twelve 30-minute recorded lectures
+A four-week online course on running applications at scale with Kubernetes, taught on Smarter's Helm
+chart and on Smarter's own use of the Kubernetes API. Smarter's `Helm chart
+<https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__ is the one that runs it in
+production: four Deployments from the same image as Docker Compose, liveness, readiness and startup
+probes, `autoscalers
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__ that
+scale the web server from 3 to 25 pods, an init Job, a backup CronJob, Bitnami subcharts for the
+database, Redis and monitoring, and `values
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ validated by a
+`JSON Schema
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.schema.json>`__. Smarter
+also manages Kubernetes itself, creating an ingress for each deployed LLMClient and a Deployment,
+Service and GPU node group for each self-hosted model. There are twelve 30-minute recorded lectures
 and a 90-minute live session each week. Week 1 covers core objects, week 2 Helm and configuration,
 week 3 scaling and networking, and week 4 operations and applications that manage the cluster
 themselves. See :doc:`../course-formats` for the format, the grading scale and the course policies,
@@ -55,6 +66,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -96,7 +109,8 @@ Schedule
      - **Networking.** Services, Ingress, cluster DNS, and certificates.
    * - 3
      - Lecture 9
-     - **Network policies.** Default deny, allow rules, and blocking the metadata address.
+     - **Network policies.** Default deny, allow rules, and blocking the metadata address, read
+       against the Calico policies in ``smarter-infrastructure``'s ``network_policy.tf``.
    * - 3
      - Live session 3
      - Review of Assignment 2. Load testing and autoscaling, live. Capstone proposals discussed.
@@ -107,10 +121,11 @@ Schedule
        Loki subcharts, and :doc:`/smarter-framework/smarter-on-kubernetes/operations`.
    * - 4
      - Lecture 11
-     - **Applications that manage Kubernetes.** How Smarter
-       :doc:`deploys LLMClients </smarter-framework/smarter-on-kubernetes/llmclient-deploy>` with
-       their own ingress, and serves models with :doc:`LLMHost </smarter-resources/smarter-llmhost>`,
-       through the Kubernetes service layer in ``smarter/smarter/apps/infrastructure/``.
+     - **Applications that manage Kubernetes.** How Smarter :doc:`deploys LLMClients
+       </smarter-framework/smarter-on-kubernetes/llmclient-deploy>` with their own ingress, and
+       serves models with :doc:`LLMHost </smarter-resources/smarter-llmhost>`, through the
+       Kubernetes service layer in ``smarter/smarter/apps/infrastructure/``, and how an LLMHost's
+       resources are rendered by a pure function so that they can be previewed.
    * - 4
      - Lecture 12
      - **Managed clusters and cost.** EKS and its peers, node groups, autoscaling nodes, and the
@@ -123,6 +138,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

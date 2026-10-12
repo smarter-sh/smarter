@@ -2,11 +2,20 @@ Software Quality: Four-Week Online Course
 =========================================
 
 A four-week online course on software quality and quality assurance, taught on Smarter's complete
-quality process, with twelve 30-minute recorded lectures and a 90-minute live session each week.
-Week 1 covers unit testing, week 2 test doubles, integration and front end tests, week 3 static
-checks and code review, and week 4 CI, releases and measuring quality. See :doc:`../course-formats`
-for the format, the grading scale and the course policies, and :doc:`../software-quality` for an
-overview of the subject.
+quality process. The process is all in the repository: more than five thousand Python unit tests and
+about 150 React test files, `SmarterTestBase
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__
+and shared test mixins, an in-memory cloud provider for test doubles, a `test runner
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/runner.py>`__ that
+skips tests needing real infrastructure, `pre-commit hooks
+<https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__ as the lint standard,
+Codecov flags for each suite, commitlint, semantic-release, and a `test workflow
+<https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__ that reproduces the
+developer setup in CI. There are twelve 30-minute recorded lectures and a 90-minute live session
+each week. Week 1 covers unit testing, week 2 test doubles, integration and front end tests, week 3
+static checks and code review, and week 4 CI, releases and measuring quality. See
+:doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../software-quality` for an overview of the subject.
 
 At a Glance
 -----------
@@ -48,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -76,8 +87,8 @@ Schedule
        infrastructure provider.
    * - 2
      - Lecture 5
-     - **Integration tests.** API tests, database state, Celery tasks, and the ``infrastructure``
-       test tag.
+     - **Integration tests.** API tests, database state, Celery tasks that are not eager in tests,
+       and the ``infrastructure`` test tag in Smarter's custom test runner.
    * - 2
      - Lecture 6
      - **Front end tests.** Vitest, Testing Library, Storybook stories and MSW in the React
@@ -121,6 +132,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

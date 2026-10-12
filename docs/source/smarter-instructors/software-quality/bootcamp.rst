@@ -4,9 +4,18 @@ Software Quality: Classroom Bootcamp
 An eight-hour classroom bootcamp on software quality and quality assurance, taught on a complete
 quality process that already works: Smarter's thousands of unit tests, per-app coverage targets,
 pre-commit hooks for formatting, linting, spelling and security, conventional commits, automated
-semantic releases, and GitHub Actions. Students measure, extend and test that process. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../software-quality` for an overview of the subject.
+semantic releases, and GitHub Actions. The process is all in the repository: more than five thousand
+Python unit tests and about 150 React test files, `SmarterTestBase
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__
+and shared test mixins, an in-memory cloud provider for test doubles, a `test runner
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/runner.py>`__ that
+skips tests needing real infrastructure, `pre-commit hooks
+<https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__ as the lint standard,
+Codecov flags for each suite, commitlint, semantic-release, and a `test workflow
+<https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__ that reproduces the
+developer setup in CI. Students measure, extend and test that process. See :doc:`../course-formats`
+for the standard bootcamp day, the grading scale and the course policies, and
+:doc:`../software-quality` for an overview of the subject.
 
 At a Glance
 -----------
@@ -48,6 +57,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -91,14 +102,15 @@ Schedule
        Produces Assignment 3.
    * - 8
      - 45
-     - **Lecture 5: CI and releases.** The ``test.yml`` workflow, conventional commits and
-       commitlint, semantic versioning, and automated releases with semantic-release.
+     - **Lecture 5: CI and releases.** The ``test.yml`` workflow, its two jobs and caches, and why
+       it has no cloud credentials, conventional commits and commitlint, semantic versioning, and
+       automated releases with semantic-release.
        :doc:`/smarter-framework/developer-reference/devops/ci-cd` and
        :doc:`/smarter-framework/guides/semantic-versioning`.
    * - 9
      - 45
-     - **Lab 4: CI on your fork.** Enable GitHub Actions on your fork and get the test workflow
-       running. Ungraded.
+     - **Lab 4: CI on your fork.** Enable GitHub Actions on your fork, add a ``push`` trigger to
+       ``test.yml`` (which upstream runs by hand), and get the test workflow running. Ungraded.
    * - 10
      - 45
      - **Lecture 6: Beyond the tests.** Code review, mutation testing, flaky tests, testing code
@@ -106,6 +118,11 @@ Schedule
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and a target module or workflow.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

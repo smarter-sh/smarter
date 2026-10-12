@@ -3,9 +3,18 @@ Prompt Engineering: Classroom Bootcamp
 
 An eight-hour classroom bootcamp in prompt engineering, for students who need no programming
 experience. Students build, test and brand an AI assistant by editing a YAML manifest, and leave
-with a working application that they designed for a real audience. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../prompt-engineering` for an overview of the subject.
+with a working application that they designed for a real audience. Everything students build is a
+Smarter :doc:`LLMClient </smarter-resources/smarter-llmclient>` manifest, the same YAML that runs in
+production, and they start from the nineteen built-in LLMClients that ship with every installation:
+the one-line `simple
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+assistant, and `customer_support
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
+a complete support agent with a persona, refusals, a skill, a tool and four guardrails. The prompt
+engineering :doc:`workbench </smarter-framework/smarter-chat>` shows every request sent to the
+model, every tool call and every plugin selected, beside the chat, so students see the effect of
+each edit at once. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and
+the course policies, and :doc:`../prompt-engineering` for an overview of the subject.
 
 At a Glance
 -----------
@@ -52,6 +61,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -68,14 +79,16 @@ Schedule
    * - 2
      - 45
      - **Lab 1: Your first assistant.** Copy the built-in ``simple`` LLMClient's manifest, rename
-       it, rewrite its ``defaultSystemRole``, and apply it in the web console. Produces
-       Assignment 1.
+       it, rewrite its ``spec.config.prompt.defaultSystemRole``, and apply it in the web console.
+       Produces Assignment 1.
    * - 3
      - 45
-     - **Lecture 2: Anatomy of a good system prompt.** Persona, audience, task, constraints,
-       output format and refusals. Examples, delimiters and step-by-step instructions. Why
-       positive instructions usually work better than prohibitions. Walk through the built-in
-       ``customer_support`` LLMClient's system prompt line by line.
+     - **Lecture 2: Anatomy of a good system prompt.** Persona, audience, task, constraints, output
+       format and refusals. Examples, delimiters and step-by-step instructions. Why positive
+       instructions usually work better than prohibitions. Walk through the built-in
+       `customer_support
+       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__
+       LLMClient's system prompt line by line.
    * - 4
      - 45
      - **Lab 2: Test before you trust.** Write a test sheet of ten prompts that the assistant
@@ -89,11 +102,12 @@ Schedule
    * - 6
      - 45
      - **Lecture 4: Knowledge and tools.** Why models make things up, and how to ground them.
-       :doc:`Static </smarter-resources/plugin/plugin/static>` and
-       :doc:`Skill </smarter-resources/plugin/plugin/skill>` plugins for knowledge;
-       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` and
-       :doc:`API </smarter-resources/plugin/plugin/api>` plugins for action. How a plugin's
-       description decides when the model calls it.
+       :doc:`Static </smarter-resources/plugin/plugin/static>` and :doc:`Skill
+       </smarter-resources/plugin/plugin/skill>` plugins for knowledge; :doc:`Websearch
+       </smarter-resources/plugin/plugin/websearch>` and :doc:`API
+       </smarter-resources/plugin/plugin/api>` plugins for action. Two decisions decide whether a
+       tool is used: Smarter offers a plugin only when the prompt matches one of its
+       ``searchTerms``, and the model then calls it or not, guided by the plugin's description.
    * - 7
      - 45
      - **Lab 3: Experiments.** Run the test sheet at temperature 0 and 1, and on two models, and
@@ -120,6 +134,11 @@ Schedule
      - 30
      - **Capstone kickoff.** Students choose a capstone and a client, and sketch the assistant's
        job, audience and test plan with the instructor's feedback.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

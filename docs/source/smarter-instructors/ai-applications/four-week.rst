@@ -1,11 +1,23 @@
 Building AI Applications: Four-Week Online Course
 =================================================
 
-A four-week online course on the architecture of AI applications, with twelve 30-minute recorded
-lectures and a 90-minute live session each week. Week 1 covers the building blocks, week 2
-knowledge, week 3 action, and week 4 orchestration and production. See :doc:`../course-formats`
-for the format, the grading scale and the course policies, and :doc:`../ai-applications` for an
-overview of the subject.
+A four-week online course on the architecture of AI applications: retrieval, tool calling,
+structured data, MCP servers and multi-agent workflows, each a resource declared in a YAML manifest.
+Students work on the resources that ship with every Smarter installation: `nineteen built-in
+LLMClients
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+from the bare ``simple`` assistant to ``research_analyst``, which searches the web through an `Exa
+MCP server
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/exa.yaml>`__,
+reads pages and PDFs, and checks its citations with guardrails; `twenty-five MCP clients
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
+for services such as GitHub, Notion and Stripe; `Vectorstores
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__
+on Qdrant and Pinecone; and an :doc:`Orchestrator </smarter-resources/smarter-orchestrator>` with
+six coordination strategies. There are twelve 30-minute recorded lectures and a 90-minute live
+session each week. Week 1 covers the building blocks, week 2 knowledge, week 3 action, and week 4
+orchestration and production. See :doc:`../course-formats` for the format, the grading scale and the
+course policies, and :doc:`../ai-applications` for an overview of the subject.
 
 At a Glance
 -----------
@@ -53,6 +65,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -85,17 +99,23 @@ Schedule
        quality separately from answer quality.
    * - 2
      - Lecture 6
-     - **Structured data.** Text-to-SQL with a :doc:`SQL Plugin </smarter-resources/plugin/plugin/sql>`,
-       read-only connections, credentials in :doc:`Secrets </smarter-resources/smarter-secret>`,
-       and checking generated queries.
+     - **Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL Plugin
+       </smarter-resources/plugin/plugin/sql>` runs a fixed, parameterized query that the model can
+       only fill in (`stackademy_sql
+       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__),
+       and a SkillPlugin teaches the model a schema so that it writes SQL for a person to review
+       (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
+       with a read-only database user, its password in a :doc:`Secret
+       </smarter-resources/smarter-secret>`, and how wrong answers still happen.
    * - 2
      - Live session 2
      - Review of Assignment 1. Diagnose retrieval failures as a class. Start Assignment 2.
    * - 3
      - Lecture 7
      - **Tools.** Function calling, :doc:`API </smarter-resources/plugin/plugin/api>` and
-       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` plugins, and tool
-       descriptions.
+       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` plugins. Plugin selection by
+       search terms decides which tools Smarter offers, and their descriptions steer which ones
+       the model calls (:doc:`/smarter-resources/plugin/nlp`).
    * - 3
      - Lecture 8
      - **MCP.** The `Model Context Protocol <https://modelcontextprotocol.io/>`__ and
@@ -104,7 +124,8 @@ Schedule
    * - 3
      - Lecture 9
      - **Tool safety.** What a tool can do if the model is tricked. Prompt injection through
-       retrieved content, least privilege, and :doc:`Guardrails </smarter-resources/smarter-guardrail>`.
+       retrieved content, least privilege, and :doc:`Guardrails
+       </smarter-resources/smarter-guardrail>`.
    * - 3
      - Live session 3
      - Review of Assignment 2. Students attack each other's tool-using assistants with injected
@@ -128,6 +149,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -208,8 +234,8 @@ Students build an assistant over the sample database, check ten answers against 
 write a risk review of what could go wrong if managers relied on it, with mitigations they
 implement.
 
-**Turn in:** manifests, the questions, answers, generated SQL and checks, and a two-page risk
-review.
+**Turn in:** manifests, the questions, answers, the SQL behind each one and checks, and a two-page
+risk review.
 
 .. list-table::
    :header-rows: 1

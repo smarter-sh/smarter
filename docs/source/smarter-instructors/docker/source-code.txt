@@ -1,0 +1,125 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+unless another repository is named, so that students can open each one during class.
+
+The Image
+~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Twelve build stages
+     - ``linux_base`` (Python 3.14 on Debian trixie slim), ``system_packages``, ``kubectl``,
+       ``mariadb_connector``, ``aws_cli``, ``user_setup``, ``venv``, ``application``,
+       ``permissions``, ``data``, ``collect_assets`` and ``serve_application``, each building on
+       the last, so that a code change rebuilds only the final stages.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
+   * - A non-root user
+     - The application runs as ``smarter_user``, in a virtual environment in that user's home
+       directory. Outside local development, the ``permissions`` stage makes the application's
+       files read-only (mode 400) and its directories 500, so a compromised process cannot
+       rewrite the code.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
+       (``user_setup``, ``permissions``)
+   * - Build arguments
+     - ``ENVIRONMENT`` and ``DOCKER_COLLECT_STATIC_FILES`` change what is built:
+       ``make build`` skips collecting static assets, so a rebuild takes seconds, and
+       ``make react-build`` collects the React apps as well.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__
+       (``docker-build``, ``docker-build-for-react``)
+   * - Data baked into the image
+     - The WordNet corpus for plugin selection by synonym is downloaded at build time, so the
+       running container never needs to fetch it.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__ (``venv``)
+   * - What stays out
+     - Caches, coverage reports, ``node_modules`` and other files that would bloat the build
+       context or leak into the image.
+     - `.dockerignore <https://github.com/smarter-sh/smarter/blob/main/.dockerignore>`__
+   * - Something to question
+     - The image ``EXPOSE``\ s port 8000, but uvicorn listens on 9357. ``EXPOSE`` is only
+       documentation, which is exactly why a mismatch goes unnoticed.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
+       (``serve_application``)
+
+Compose and the Makefile
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Six services
+     - ``smarter-mariadb``, ``smarter-redis``, ``smarter-app`` (uvicorn, restarted by watchmedo
+       when a Python file changes), ``smarter-worker`` and ``smarter-worker-infrastructure`` (two
+       Celery workers on separate queues) and ``smarter-beat`` (the Celery scheduler).
+     - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
+   * - One image, four roles
+     - The web server, both workers and the scheduler run the same ``smarter`` image with
+       different commands. :doc:`ADR 004 </adr/004-12-factor>`.
+     - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
+       (``command:``)
+   * - Following a request
+     - The web server answers a chat message, and hands its charge, its history and its tool
+       calls to Celery tasks, which the worker writes to the database. ``docker logs`` on both
+       containers shows each half.
+     - `text_completion/lib/mixins.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/mixins.py>`__,
+       `account/tasks.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/tasks.py>`__
+   * - Health and start order
+     - Health checks on the workers and the scheduler, and ``depends_on`` between services.
+     - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
+   * - No bind mount
+     - The source is copied into the image, not mounted, so the containers run exactly what was
+       built. The trade-off: every edit needs a rebuild or a copy, which is what the sync scripts
+       are for.
+     - `sync-changed-files.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/scripts/sync-changed-files.sh>`__,
+       `smarter-docker-environment/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/SKILL.md>`__
+   * - First start
+     - ``make docker-init`` starts the services, waits for MariaDB, creates the database, loads
+       a sample database, migrates, and initializes the platform with its built-in resources.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``docker-init``),
+       `scripts/smarter_test_db.sql <https://github.com/smarter-sh/smarter/blob/main/scripts/smarter_test_db.sql>`__
+   * - Configuration
+     - Every setting comes from the environment, through ``.env``, and is validated at start-up.
+     - `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__,
+       `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__
+   * - Something to question
+     - ``mariadb:latest`` and ``redis:latest`` are not pinned to a version, so two students can
+       run different databases from the same file.
+     - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
+
+Beyond the Laptop
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - A second Compose file
+     - The Quick Start runs a prebuilt image from Docker Hub with its own, smaller Compose file,
+       which uses MySQL rather than MariaDB and has no infrastructure worker. Comparing the two
+       is a lesson in development and production parity.
+     - `smarter-deploy: docker-compose.yml <https://github.com/smarter-sh/smarter-deploy/blob/main/docker-compose.yml>`__
+   * - Images in CI
+     - GitHub Actions builds the image for ``linux/amd64`` and ``linux/arm64`` with Buildx, and
+       pushes it to Amazon ECR, whose native vulnerability scanning the workflow switches on.
+       :doc:`/smarter-framework/developer-reference/devops/build`.
+     - `build.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/build.yml>`__
+   * - Signed artifacts
+     - The Helm chart is signed with cosign when it is released, and its public key is published
+       for verification on Artifact Hub.
+     - `helmChartRelease.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/helmChartRelease.yml>`__,
+       `sigstore/ <https://github.com/smarter-sh/smarter/tree/main/sigstore>`__
+   * - The same image on Kubernetes
+     - The Helm chart runs the same image as four Deployments, one for each role.
+       :doc:`../kubernetes`.
+     - `helm/charts/smarter/templates/ <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/templates>`__

@@ -2,8 +2,17 @@ Software Quality: Two-Week Online Course
 ========================================
 
 A two-week online course on software quality and quality assurance, taught on Smarter's complete
-quality process, with six 30-minute recorded lectures and a 90-minute live session each week. Week
-1 covers testing and coverage, and week 2 covers automated checks, CI and releases. See
+quality process. The process is all in the repository: more than five thousand Python unit tests and
+about 150 React test files, `SmarterTestBase
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__
+and shared test mixins, an in-memory cloud provider for test doubles, a `test runner
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/runner.py>`__ that
+skips tests needing real infrastructure, `pre-commit hooks
+<https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__ as the lint standard,
+Codecov flags for each suite, commitlint, semantic-release, and a `test workflow
+<https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__ that reproduces the
+developer setup in CI. There are six 30-minute recorded lectures and a 90-minute live session each
+week. Week 1 covers testing and coverage, and week 2 covers automated checks, CI and releases. See
 :doc:`../course-formats` for the format, the grading scale and the course policies, and
 :doc:`../software-quality` for an overview of the subject.
 
@@ -47,6 +56,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -87,6 +98,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

@@ -1,12 +1,25 @@
 Self-Hosting Open Models: Four-Week Online Course
 =================================================
 
-A four-week online course on serving open models with Smarter's
-:doc:`LLMHost </smarter-resources/smarter-llmhost>`, with twelve 30-minute recorded lectures and a
-90-minute live session each week. Week 1 covers open models and how inference works, week 2
-serving models with LLMHost, week 3 performance and quantization, and week 4 applications,
-operations and economics. See :doc:`../course-formats` for the format, the grading scale and the
-course policies, and :doc:`../self-hosted-models` for an overview of the subject.
+A four-week online course on serving open models with Smarter's :doc:`LLMHost
+</smarter-resources/smarter-llmhost>`, which runs them on Kubernetes and adds the GPU or CPU nodes
+they need. Smarter ships with `twenty-four ready-to-apply model manifests
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__ and
+`seven compute profiles
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+priced per hour, supports seven `inference engines
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/engines.py>`__,
+renders each model's Kubernetes resources with a `pure function
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/renderer.py>`__
+that can be previewed, and creates and removes EKS `node groups
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
+of GPU nodes as models need them. A self-hosted model is registered as a Provider and used by an
+LLMClient exactly like a commercial one, and its hours are charged like any other cost, so the
+comparison is fair. There are twelve 30-minute recorded lectures and a 90-minute live session each
+week. Week 1 covers open models and how inference works, week 2 serving models with LLMHost, week 3
+performance and quantization, and week 4 applications, operations and economics. See
+:doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../self-hosted-models` for an overview of the subject.
 
 At a Glance
 -----------
@@ -23,8 +36,9 @@ At a Glance
      - 3 hours of instruction and 4 to 6 hours of assignments each week.
    * - **Cost**
      - Around a dollar an hour for each L4 GPU node while it runs. Budget for about 40 GPU-hours for
-       a class of twenty, with a ``llmhost-compute`` :doc:`Budget </smarter-resources/smarter-budget>`
-       as a cap.
+       a class of twenty, with a ``llmhost-compute`` :doc:`Budget
+       </smarter-resources/smarter-budget>` to stop new launches at a limit. It does not remove
+       nodes that are already running.
 
 .. warning::
 
@@ -58,6 +72,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -82,7 +98,8 @@ Schedule
    * - 2
      - Lecture 4
      - **LLMHost.** The manifest (``model``, ``engine``, ``compute``, ``resources``, ``network``,
-       ``storage``) and the built-in examples.
+       ``storage``, ``scaling`` and ``healthCheck``), the built-in examples, and finding new models
+       in the Hugging Face Hub with Smarter's model discovery.
    * - 2
      - Lecture 5
      - **Compute.** LLMHostCompute node groups, how Smarter adds and removes nodes, GPUs, and
@@ -128,6 +145,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -274,8 +296,8 @@ Students choose one, propose it before Live session 3, and present it in Live se
 Capstone A: A Self-Hosting Business Case with Benchmarks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Learning objective.** Produce an evidence-based recommendation on self-hosting for an organization,
-from benchmarks to a three-year cost model.
+**Learning objective.** Produce an evidence-based recommendation on self-hosting for an
+organization, from benchmarks to a three-year cost model.
 
 Students choose a workload and an organization, select and tune a self-hosted model on LLMHost,
 compare it with two commercial models on quality (thirty tasks), latency under load and cost, and

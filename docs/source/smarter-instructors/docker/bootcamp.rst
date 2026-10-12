@@ -3,9 +3,17 @@ Docker for Software Development: Classroom Bootcamp
 
 An eight-hour classroom bootcamp on Docker, taught on a realistic multi-container application:
 Smarter's Django web server, Celery workers and scheduler, MariaDB and Redis, built from one
-Dockerfile and run with one Compose file. Students read, run, debug and improve it. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../docker` for an overview of the subject.
+Dockerfile and run with one Compose file. The `Dockerfile
+<https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__ has twelve stages, from a slim
+Python 3.14 base to a non-root user whose files are made read-only outside development, and
+`docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__ runs six
+services: the Django web server, two Celery workers on separate queues, the Celery scheduler,
+MariaDB and Redis. The same image plays four roles, the ``docker-*`` targets in the `Makefile
+<https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ wrap every step, and the same image
+runs in production on Kubernetes, so nothing students learn is a classroom simplification. The files
+also have real flaws to find, such as unpinned base images. Students read, run, debug and improve
+it. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the course
+policies, and :doc:`../docker` for an overview of the subject.
 
 At a Glance
 -----------
@@ -52,6 +60,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -72,8 +82,9 @@ Schedule
    * - 3
      - 45
      - **Lecture 2: The Dockerfile.** Instructions, the build cache, multi-stage builds, and a walk
-       through Smarter's ``Dockerfile`` stage by stage: base image, system packages, tools, a
-       non-root user, a virtual environment, the application and its static assets.
+       through Smarter's ``Dockerfile`` stage by stage: base image, system packages, ``kubectl``,
+       the MariaDB connector and the AWS CLI, a non-root user, a virtual environment, the
+       application, hardened permissions, built-in data, and static assets.
    * - 4
      - 45
      - **Lab 2: Annotate the Dockerfile.** Annotate every stage and instruction: what it does,
@@ -82,7 +93,7 @@ Schedule
      - 45
      - **Lecture 3: Compose.** Services, networks, volumes, environment files, health checks and
        dependencies, through Smarter's ``docker-compose.yml``. How the ``docker-*`` targets in the
-       ``Makefile`` wrap it.
+       ``Makefile`` wrap it, and what ``make docker-init`` does on first start.
    * - 6
      - 45
      - **Lecture 4: One image, many roles.** Why the web server, the workers and the scheduler run
@@ -105,11 +116,17 @@ Schedule
    * - 10
      - 45
      - **Lecture 6: From Compose to production.** Development versus production images, the lack
-       of a bind mount in Smarter's setup and its trade-offs, registries, and why Kubernetes comes
-       next.
+       of a bind mount in Smarter's setup and its trade-offs, the Quick Start's own Compose file in
+       `smarter-deploy <https://github.com/smarter-sh/smarter-deploy>`__, multi-architecture builds
+       and registries, and why Kubernetes comes next.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and plan it.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

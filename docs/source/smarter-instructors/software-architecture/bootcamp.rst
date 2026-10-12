@@ -4,9 +4,14 @@ Software Architecture: Classroom Bootcamp
 An eight-hour classroom bootcamp on software architecture, taught on a large system that records
 why it is built the way it is: Smarter's thirty-one :doc:`Architecture Decision Records </adr>`,
 on topics from the choice of Django and Kubernetes to caching, task queues and API versioning.
-Students diagram the system, check decisions against the code, argue the alternatives, and write an
-ADR of their own. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and
-the course policies, and :doc:`../software-architecture` for an overview of the subject.
+The course is organized around the principles that working architects share as a vocabulary,
+above all `The Twelve-Factor App <https://12factor.net/>`__, and alongside it infrastructure as
+code, horizontal scalability, zero trust, extensibility and explicit data models. Smarter adopts
+each of these, in code that students can open and read, and :doc:`ADR 004 </adr/004-12-factor>`
+makes the twelve factors binding on every pull request. Students diagram the system, check its
+decisions and principles against the code, argue the alternatives, and write ADRs of their own.
+See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the course
+policies, and :doc:`../software-architecture` for an overview of the subject.
 
 At a Glance
 -----------
@@ -31,10 +36,13 @@ By the end of the bootcamp, students can:
 1. Explain what architecture is: the decisions that are expensive to change, and the quality
    attributes that drive them.
 2. Describe a large system at several levels with the C4 model.
-3. Read an Architecture Decision Record, find the code that implements it, and judge whether they
+3. Explain each of the twelve factors, and judge from the code whether a system follows it.
+4. Recognize infrastructure as code, horizontal scalability, zero trust, extensibility and
+   explicit data models in a real codebase, and say what each costs.
+5. Read an Architecture Decision Record, find the code that implements it, and judge whether they
    still agree.
-4. Analyze the trade-offs of a decision, including the alternatives that were not chosen.
-5. Write an ADR for a decision of their own.
+6. Analyze the trade-offs of a decision, including the alternatives that were not chosen, and
+   record a decision of their own as an ADR.
 
 Technical Prerequisites
 -----------------------
@@ -48,6 +56,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The file references in the lectures are listed in full under `Principles in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -59,8 +69,9 @@ Schedule
      - 45
      - **Lecture 1: What architecture is.** Decisions that are hard to reverse, quality attributes
        (scalability, security, maintainability, cost), trade-offs, and the role of the architect.
-       A first look at Smarter: browser, CLI, API, workers, database, cache, model providers and
-       Kubernetes.
+       Principles as a shared vocabulary: the twelve factors, infrastructure as code, horizontal
+       scalability, zero trust, extensibility and data models. A first look at Smarter: browser,
+       CLI, API, workers, database, cache, model providers and Kubernetes.
    * - 2
      - 45
      - **Lab 1: Draw it.** In pairs, draw Smarter's C4 context and container diagrams, from the
@@ -69,7 +80,8 @@ Schedule
      - 45
      - **Lecture 2: Architecture Decision Records.** Why record decisions, Nygard's format, and a
        guided reading of :doc:`ADR 001 on Django </adr/001-django>`,
-       :doc:`ADR 005 on manifests </adr/005-manifests>` and
+       :doc:`ADR 004 on the twelve-factor app </adr/004-12-factor>` (an ADR that adopts a whole
+       methodology), :doc:`ADR 005 on manifests </adr/005-manifests>` and
        :doc:`ADR 024 on the broker model </adr/024-broker-model>`.
    * - 4
      - 45
@@ -77,37 +89,65 @@ Schedule
        it, and judges whether the code still matches the decision. Produces Assignment 2.
    * - 5
      - 45
-     - **Lecture 3: Styles and patterns.** Monolith, modular monolith and microservices; layered
-       architecture; asynchronous work with queues; the
-       :doc:`broker model </smarter-framework/smarter-broker-model>` as a pattern that turns
-       declarative manifests into database rows.
+     - **Lecture 3: The twelve-factor app.** Heroku's methodology, factor by factor, each shown in
+       Smarter's code: one codebase with a settings module per environment; config in the
+       environment, validated by a Pydantic ``Settings`` class; MariaDB, Redis, S3 and SMTP as
+       attached resources; a multi-stage Dockerfile and separate build, release and deploy
+       workflows; stateless processes with sessions in the cache; port binding with uvicorn; web,
+       worker, infrastructure worker and beat as separate process types; health and readiness
+       probes; one image from laptop to production; logs to standard output; and admin work as
+       ``manage.py`` commands and a Kubernetes Job. Smarter's own
+       :doc:`twelve-factor guide </smarter-framework/guides/12-factor-app>` is read critically: a
+       claim is only as good as the code behind it.
    * - 6
      - 45
-     - **Lecture 4: Cross-cutting decisions.** Caching (:doc:`ADR 018 </adr/018-caching>`), task
-       queues (:doc:`ADR 030 </adr/030-task-queues>`), API versioning
-       (:doc:`ADR 023 </adr/023-api-versioning>`), feature flags
-       (:doc:`ADR 022 </adr/022-feature-flags>`) and Pydantic contracts
-       (:doc:`ADR 031 </adr/031-pydantic-over-json>`).
+     - **Lecture 4: Styles, patterns and extensibility.** Monolith, modular monolith (one Django
+       app per resource family) and microservices; layered architecture; ports and adapters, in
+       the infrastructure service layer that hides AWS behind
+       ``infrastructure.dns``, ``.certificates``, ``.kubernetes`` and ``.email`` and swaps in an
+       in-memory provider for tests; the
+       :doc:`broker model </smarter-framework/smarter-broker-model>` and its registry of kinds;
+       extension points for new plugin types and new LLM providers. Data models: Django models
+       for storage, Pydantic models for manifests and contracts
+       (:doc:`ADR 031 </adr/031-pydantic-over-json>`), and the ownership base class that makes
+       every resource belong to an account.
    * - 7
      - 45
-     - **Lab 3: Argue the opposite.** Teams take one ADR and argue for the alternative: what would
-       Smarter look like, and what would it have cost? A short debate follows. Produces
-       Assignment 3.
+     - **Lab 3: Twelve-factor audit.** Each pair audits four of the twelve factors against the
+       code, with file and line references, and the class assembles a scorecard for the whole
+       system. Produces Assignment 3.
    * - 8
      - 45
-     - **Lecture 5: Architecture for the cloud and for AI.** The twelve-factor app
-       (:doc:`/smarter-framework/guides/12-factor-app`), Kubernetes, and the architecture of AI
-       applications: tools, guardrails, and the decision to treat the model as untrusted.
+     - **Lecture 5: Architecture for the cloud and for AI.** Infrastructure as code: Terraform for
+       the AWS foundation, a Helm chart for the platform, and Smarter itself as a declarative
+       system that turns YAML manifests into DNS records, certificates and Kubernetes ingresses.
+       Horizontal scalability: stateless pods, Horizontal Pod Autoscalers, a shared Redis cache
+       (:doc:`ADR 018 </adr/018-caching>`) and Celery queues
+       (:doc:`ADR 030 </adr/030-task-queues>`). Zero trust: every API call authenticated, every
+       query filtered by owner, secrets encrypted at rest, network policies between pods,
+       server-side request forgery blocked, and the model itself treated as untrusted, with
+       guardrails on its input and output. Where Smarter stops short of full zero trust, and why.
    * - 9
      - 45
-     - **Lab 4: Draft an ADR.** Draft an ADR for a decision in a project of your own. Ungraded.
+     - **Lab 4: Argue the opposite.** Teams take one ADR or principle and argue for the
+       alternative: what would Smarter look like without it, and what would that have cost? A
+       short debate follows, and each team drafts the losing side as an ADR. Ungraded.
    * - 10
      - 45
-     - **Lecture 6: Evolving architecture.** Technical debt, fitness functions, migrations, and
-       how architecture changes when coding agents write much of the code.
+     - **Lecture 6: Evolving architecture.** Technical debt, migrations, API versioning
+       (:doc:`ADR 023 </adr/023-api-versioning>`), feature flags
+       (:doc:`ADR 022 </adr/022-feature-flags>`), fitness functions in CI (tests, coverage and
+       pre-commit hooks), the audit journal as a record of change, and how architecture changes
+       when coding agents write much of the code and the conventions live in ``CLAUDE.md`` and
+       ``skills/``.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and its scope.
+
+Principles in the Source Code
+-----------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -178,12 +218,18 @@ and where it has drifted.
      - Update the code, or update the ADR.
      - None.
 
-Assignment 3: The Road Not Taken
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Assignment 3: Twelve-Factor Audit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Teams argue for the alternative to one ADR, and write up the case on both sides.
+Pairs audit four of the twelve factors against the code. For each factor they state what the
+factor requires, find where Smarter meets it or falls short, and give a verdict: follows,
+partly follows, or does not follow. At least one verdict must test a claim in Smarter's own
+:doc:`twelve-factor guide </smarter-framework/guides/12-factor-app>` against the code. The
+instructor assigns factors so that the class covers all twelve, and the pairs' findings are
+combined into a scorecard for the whole system.
 
-**Turn in:** a two-page position paper per team.
+**Turn in:** a one-page table (factor, evidence with file and line references, verdict) and a
+half page on the most important gap found.
 
 .. list-table::
    :header-rows: 1
@@ -193,22 +239,23 @@ Teams argue for the alternative to one ADR, and write up the case on both sides.
      - Pts
      - Exemplary
      - Developing
-   * - Alternative design
-     - 6
-     - Concrete: what would change in the system.
-     - Vague ("use microservices").
-   * - Trade-offs
+   * - Understanding
+     - 5
+     - Each factor's requirement stated accurately, in the pair's own words.
+     - Copied or misstated.
+   * - Evidence
      - 7
-     - Costs and benefits on several quality attributes.
-     - Benefits only.
-   * - Fairness
-     - 4
-     - Acknowledges why the original decision was made.
-     - Dismisses it.
-   * - Writing
+     - Files, settings and manifests cited for every verdict.
+     - Verdicts without references.
+   * - Judgment
+     - 5
+     - Verdicts that distinguish the letter of a factor from its intent, including the guide's
+       claims.
+     - Accepts the documentation at face value.
+   * - Gap analysis
      - 3
-     - Clear and concise.
-     - Disorganized.
+     - The most important gap, its risk and a remedy.
+     - None.
 
 Capstone Projects
 -----------------
@@ -219,16 +266,19 @@ Capstone A: An Architecture Review of Smarter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Learning objective.** Carry out an architecture review of a real system against stated quality
-attributes, and make evidence-based recommendations.
+attributes and established principles, and make evidence-based recommendations.
 
-Students choose two quality attributes (for example scalability and maintainability) and review
-Smarter against them, using the ADRs, the code and the deployment configuration. They identify
+Students choose two quality attributes (for example scalability and security) and review Smarter
+against them, using the ADRs, the code and the deployment configuration. They complete the
+class's twelve-factor scorecard, and assess one of the principles in
+`Beyond the Twelve Factors`_ (for example how far Smarter goes toward zero trust). They identify
 risks and sensitivity points, and recommend changes.
 
 **What students turn in:**
 
 - An architecture review document (five to seven pages) with C4 diagrams.
 - Quality attribute scenarios ("when X happens, the system should Y within Z").
+- A complete twelve-factor scorecard, with code references.
 - A ranked list of risks, and at least one recommendation written as a draft ADR.
 
 **How it is graded (100 points):**
@@ -242,19 +292,23 @@ risks and sensitivity points, and recommend changes.
      - Exemplary
      - Developing
    * - Scenarios
-     - 20
+     - 15
      - Specific, measurable quality attribute scenarios.
      - Vague goals.
    * - Analysis
      - 25
      - Traces each scenario through the architecture, with evidence.
      - Opinions.
+   * - Principles
+     - 15
+     - Scorecard and principle assessment backed by code, not by the documentation alone.
+     - Restates the documentation.
    * - Risks
-     - 20
+     - 15
      - Ranked, with likelihood and impact.
      - Unranked.
    * - Recommendations
-     - 20
+     - 15
      - Realistic, with a draft ADR.
      - Generic.
    * - Writing and diagrams
@@ -265,18 +319,20 @@ risks and sensitivity points, and recommend changes.
 Capstone B: An Architecture for a New Feature
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Learning objective.** Design a significant feature that fits an existing architecture, and record
-the decisions it requires.
+**Learning objective.** Design a significant feature that fits an existing architecture and its
+principles, and record the decisions it requires.
 
 Students design a feature Smarter does not have, for example per-team model routing rules, a
 scheduled report resource, or multi-region deployment. They place it in the existing architecture,
-identify the decisions it needs, and write ADRs for the two most important.
+show that it keeps to the twelve factors and to Smarter's other principles (stateless processes,
+the infrastructure facade, owned resources, a declarative manifest), identify the decisions it
+needs, and write ADRs for the two most important.
 
 **What students turn in:**
 
 - A design document with C4 container and component diagrams.
 - Two ADRs in the format of :doc:`/adr`.
-- A list of the existing ADRs the design depends on, and how it respects them.
+- A list of the existing ADRs and principles the design depends on, and how it respects them.
 
 **How it is graded (100 points):**
 
@@ -290,7 +346,8 @@ identify the decisions it needs, and write ADRs for the two most important.
      - Developing
    * - Fit
      - 25
-     - Uses existing patterns (brokers, manifests, tasks) where they apply.
+     - Uses existing patterns (brokers, manifests, tasks, the infrastructure facade) where they
+       apply, and keeps to the twelve factors.
      - Ignores the existing architecture.
    * - Design
      - 20
@@ -300,7 +357,7 @@ identify the decisions it needs, and write ADRs for the two most important.
      - 25
      - Real decisions, alternatives and consequences.
      - Descriptions, not decisions.
-   * - Dependencies on existing ADRs
+   * - Dependencies on existing ADRs and principles
      - 15
      - Correctly identified and respected.
      - Not considered.
@@ -312,13 +369,17 @@ identify the decisions it needs, and write ADRs for the two most important.
 Recommended Texts
 -----------------
 
-- **Pre-reading:** Michael Nygard, `Documenting Architecture Decisions
+- **Pre-reading:** Adam Wiggins, `The Twelve-Factor App <https://12factor.net/>`__ (all twelve
+  short chapters), Michael Nygard, `Documenting Architecture Decisions
   <https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions>`__ (2011), and
   :doc:`ADR 000 </adr/000-intro>`.
 - **Reference:** Mark Richards and Neal Ford, *Fundamentals of Software Architecture* (2nd edition,
   O'Reilly, 2025).
-- **Smarter documentation:** :doc:`/adr`, :doc:`/smarter-framework/smarter-broker-model` and
-  :doc:`/smarter-framework/guides/12-factor-app`.
+- **Zero trust:** NIST, `SP 800-207, Zero Trust Architecture
+  <https://csrc.nist.gov/pubs/sp/800/207/final>`__ (2020).
+- **Smarter documentation:** :doc:`/adr`, :doc:`/smarter-framework/smarter-broker-model`,
+  :doc:`/smarter-framework/guides/12-factor-app`, :doc:`/smarter-platform/cloud-infrastructure`
+  and :doc:`/smarter-framework/smarter-on-kubernetes`.
 
 Further Study
 -------------
