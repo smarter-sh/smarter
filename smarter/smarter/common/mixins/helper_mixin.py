@@ -432,29 +432,27 @@ class SmarterHelperMixin:
 
     def get_readonly_csv_file(self, file_path: str):
         """
-        Retrieves a read-only file object for a CSV file.
+        Reads a CSV file and returns its contents as a list of dictionaries, one per row.
 
-        This method opens the specified CSV file in read-only mode and returns a file object that can be used to read its contents.
-        It ensures that the file is not modified during the reading process.
+        The file is opened read-only, so reading it never modifies it.
 
-        :param file_path: The path to the CSV file to open.
+        :param file_path: The path to the CSV file to read.
         :type file_path: str
-        :return: A read-only file object for the specified CSV file.
-        :rtype: file
+        :return: The rows of the CSV file, one dictionary per row, keyed by the column headers.
+        :rtype: list[dict]
         """
         return utils_get_readonly_csv_file(file_path)
 
     def get_readonly_yaml_file(self, file_path: str):
         """
-        Retrieves a read-only file object for a YAML file.
+        Reads a YAML file and returns its contents as a dictionary.
 
-        This method opens the specified YAML file in read-only mode and returns a file object that can be used to read its contents.
-        It ensures that the file is not modified during the reading process.
+        The file is opened read-only, so reading it never modifies it.
 
-        :param file_path: The path to the YAML file to open.
+        :param file_path: The path to the YAML file to read.
         :type file_path: str
-        :return: A read-only file object for the specified YAML file.
-        :rtype: file
+        :return: The contents of the YAML file, parsed into a dictionary.
+        :rtype: dict
         """
         return utils_get_readonly_yaml_file(file_path)
 

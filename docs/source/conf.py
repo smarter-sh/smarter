@@ -202,6 +202,21 @@ def resolve_builtins_exactly(app, doctree):  # pylint: disable=unused-argument
             node.attributes.pop("refspecific", None)
 
 
+###############################################################################
+# sphinxcontrib_django appends the pretty-printed value of every dict, list,
+# tuple or set module constant to its docstring as a JavaScript code block,
+# ignoring ":meta hide-value:". Remove that block when the constant asks for
+# its value to be hidden, e.g. a dict of compiled regular expressions, whose
+# value Pygments cannot lex and which leaks function memory addresses.
+###############################################################################
+def honor_hide_value(app, what, name, obj, options, lines):  # pylint: disable=unused-argument,too-many-arguments
+    """Drop sphinxcontrib_django's value block from data marked ``:meta hide-value:``."""
+    if what == "data" and ":meta hide-value:" in lines and ".. code-block:: JavaScript" in lines:
+        del lines[lines.index(".. code-block:: JavaScript") :]
+
+
 def setup(app):
     """Register this configuration's Sphinx event handlers."""
     app.connect("doctree-read", resolve_builtins_exactly)
+    # sphinxcontrib_django's handler runs at the default priority, 500.
+    app.connect("autodoc-process-docstring", honor_hide_value, priority=600)

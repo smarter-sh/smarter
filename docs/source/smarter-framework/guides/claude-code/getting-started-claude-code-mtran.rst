@@ -158,24 +158,33 @@ working example — adjust values to match your NAPL environment:
        Claude-powered CoPilot for NAPL custom programming.
      version: 1.0.0
    spec:
-     # ---- LLM provider settings ----
-     defaultProvider: anthropic
-     defaultModel: claude-sonnet-4-5-20250929
-     defaultTemperature: 0.2
-     defaultMaxTokens: 4096
+     config:
+       prompt:
+         # ---- LLM provider settings ----
+         provider: anthropic
+         defaultModel: claude-sonnet-4-5-20250929
+         defaultTemperature: 0.2
+         defaultMaxTokens: 4096
 
-     # ---- Appearance (optional) ----
-     appName: NAPL CoPilot
-     appWelcomeMessage: >-
-       Welcome to the NAPL Claude CoPilot.
-       Ask me anything about our codebase.
-     appExamplePrompts:
-       - "Refactor the billing module to use async I/O."
-       - "Write unit tests for the outage-report parser."
-       - "Explain the legacy VB6 COM bridge in plain English."
+         # ---- The chat's words ----
+         appName: NAPL CoPilot
+         appWelcomeMessage: >-
+           Welcome to the NAPL Claude CoPilot.
+           Ask me anything about our codebase.
+         appExamplePrompts:
+           - "Refactor the billing module to use async I/O."
+           - "Write unit tests for the outage-report parser."
+           - "Explain the legacy VB6 COM bridge in plain English."
 
-     # ---- State ----
-     state: deployed
+         # ---- State ----
+         deployed: true
+
+       # ---- Appearance (optional) ----
+       styles:
+         googleFont: Inter
+         conversationHeader:
+           backgroundColor: "#0b3d91"
+           color: "#ffffff"
 
 .. important::
 

@@ -106,9 +106,9 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         with self.assertRaises(ValidationError):
             self.broker.manifest.metadata.tags = []
 
-        # test any field in spec.config
+        # test any field in spec.config.prompt
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.appAssistant = "New Assistant Name"
+            self.broker.manifest.spec.config.prompt.appAssistant = "New Assistant Name"
 
         # test any field in status
         if self.broker.manifest.status:
@@ -289,84 +289,80 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
             f"LLMClient name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, llmclient: {self.broker.llmclient.name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.subdomain,
+            self.broker.manifest.spec.config.prompt.subdomain,
             self.broker.llmclient.subdomain,
-            f"LLMClient subdomain does not match manifest subdomain. manifest: {self.broker.manifest.spec.config.subdomain}, llmclient: {self.broker.llmclient.subdomain}",
+            f"LLMClient subdomain does not match manifest subdomain. manifest: {self.broker.manifest.spec.config.prompt.subdomain}, llmclient: {self.broker.llmclient.subdomain}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.customDomain,
+            self.broker.manifest.spec.config.prompt.customDomain,
             self.broker.llmclient.custom_domain,
-            f"LLMClient customDomain does not match manifest customDomain. manifest: {self.broker.manifest.spec.config.customDomain}, llmclient: {self.broker.llmclient.custom_domain}",
+            f"LLMClient customDomain does not match manifest customDomain. manifest: {self.broker.manifest.spec.config.prompt.customDomain}, llmclient: {self.broker.llmclient.custom_domain}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.provider,
+            self.broker.manifest.spec.config.prompt.provider,
             self.broker.llmclient.provider,
-            f"LLMClient provider does not match manifest provider. manifest: {self.broker.manifest.spec.config.provider}, llmclient: {self.broker.llmclient.provider}",
+            f"LLMClient provider does not match manifest provider. manifest: {self.broker.manifest.spec.config.prompt.provider}, llmclient: {self.broker.llmclient.provider}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.defaultModel,
+            self.broker.manifest.spec.config.prompt.defaultModel,
             self.broker.llmclient.default_model,
-            f"LLMClient defaultModel does not match manifest defaultModel. manifest: {self.broker.manifest.spec.config.defaultModel}, llmclient: {self.broker.llmclient.default_model}",
+            f"LLMClient defaultModel does not match manifest defaultModel. manifest: {self.broker.manifest.spec.config.prompt.defaultModel}, llmclient: {self.broker.llmclient.default_model}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.defaultSystemRole,
+            self.broker.manifest.spec.config.prompt.defaultSystemRole,
             self.broker.llmclient.default_system_role,
-            f"LLMClient defaultSystemRole does not match manifest defaultSystemRole. manifest: {self.broker.manifest.spec.config.defaultSystemRole}, llmclient: {self.broker.llmclient.default_system_role}",
+            f"LLMClient defaultSystemRole does not match manifest defaultSystemRole. manifest: {self.broker.manifest.spec.config.prompt.defaultSystemRole}, llmclient: {self.broker.llmclient.default_system_role}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.defaultTemperature,
+            self.broker.manifest.spec.config.prompt.defaultTemperature,
             self.broker.llmclient.default_temperature,
-            f"LLMClient defaultTemperature does not match manifest defaultTemperature. manifest: {self.broker.manifest.spec.config.defaultTemperature}, llmclient: {self.broker.llmclient.default_temperature}",
+            f"LLMClient defaultTemperature does not match manifest defaultTemperature. manifest: {self.broker.manifest.spec.config.prompt.defaultTemperature}, llmclient: {self.broker.llmclient.default_temperature}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.defaultMaxTokens,
+            self.broker.manifest.spec.config.prompt.defaultMaxTokens,
             self.broker.llmclient.default_max_tokens,
-            f"LLMClient defaultMaxTokens does not match manifest defaultMaxTokens. manifest: {self.broker.manifest.spec.config.defaultMaxTokens}, llmclient: {self.broker.llmclient.default_max_tokens}",
+            f"LLMClient defaultMaxTokens does not match manifest defaultMaxTokens. manifest: {self.broker.manifest.spec.config.prompt.defaultMaxTokens}, llmclient: {self.broker.llmclient.default_max_tokens}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appName,
+            self.broker.manifest.spec.config.prompt.appName,
             self.broker.llmclient.app_name,
-            f"LLMClient appName does not match manifest appName. manifest: {self.broker.manifest.spec.config.appName}, llmclient: {self.broker.llmclient.app_name}",
+            f"LLMClient appName does not match manifest appName. manifest: {self.broker.manifest.spec.config.prompt.appName}, llmclient: {self.broker.llmclient.app_name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appAssistant,
+            self.broker.manifest.spec.config.prompt.appAssistant,
             self.broker.llmclient.app_assistant,
-            f"LLMClient appAssistant does not match manifest appAssistant. manifest: {self.broker.manifest.spec.config.appAssistant}, llmclient: {self.broker.llmclient.app_assistant}",
+            f"LLMClient appAssistant does not match manifest appAssistant. manifest: {self.broker.manifest.spec.config.prompt.appAssistant}, llmclient: {self.broker.llmclient.app_assistant}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appWelcomeMessage,
+            self.broker.manifest.spec.config.prompt.appWelcomeMessage,
             self.broker.llmclient.app_welcome_message,
-            f"LLMClient appWelcomeMessage does not match manifest appWelcomeMessage. manifest: {self.broker.manifest.spec.config.appWelcomeMessage}, llmclient: {self.broker.llmclient.app_welcome_message}",
+            f"LLMClient appWelcomeMessage does not match manifest appWelcomeMessage. manifest: {self.broker.manifest.spec.config.prompt.appWelcomeMessage}, llmclient: {self.broker.llmclient.app_welcome_message}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appExamplePrompts,
+            self.broker.manifest.spec.config.prompt.appExamplePrompts,
             self.broker.llmclient.app_example_prompts,
-            f"LLMClient appExamplePrompts does not match manifest appExamplePrompts. manifest: {self.broker.manifest.spec.config.appExamplePrompts}, llmclient: {self.broker.llmclient.app_example_prompts}",
+            f"LLMClient appExamplePrompts does not match manifest appExamplePrompts. manifest: {self.broker.manifest.spec.config.prompt.appExamplePrompts}, llmclient: {self.broker.llmclient.app_example_prompts}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appPlaceholder,
+            self.broker.manifest.spec.config.prompt.appPlaceholder,
             self.broker.llmclient.app_placeholder,
-            f"LLMClient appPlaceholder does not match manifest appPlaceholder. manifest: {self.broker.manifest.spec.config.appPlaceholder}, llmclient: {self.broker.llmclient.app_placeholder}",
+            f"LLMClient appPlaceholder does not match manifest appPlaceholder. manifest: {self.broker.manifest.spec.config.prompt.appPlaceholder}, llmclient: {self.broker.llmclient.app_placeholder}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appInfoUrl,
+            self.broker.manifest.spec.config.prompt.appInfoUrl,
             self.broker.llmclient.app_info_url,
-            f"LLMClient appInfoUrl does not match manifest appInfoUrl. manifest: {self.broker.manifest.spec.config.appInfoUrl}, llmclient: {self.broker.llmclient.app_info_url}",
+            f"LLMClient appInfoUrl does not match manifest appInfoUrl. manifest: {self.broker.manifest.spec.config.prompt.appInfoUrl}, llmclient: {self.broker.llmclient.app_info_url}",
+        )
+        manifest_styles = self.broker.manifest.spec.config.styles
+        self.assertEqual(
+            manifest_styles.model_dump(mode="json", exclude_none=True) if manifest_styles else {},
+            self.broker.llmclient.styles,
+            f"LLMClient styles do not match manifest styles. manifest: {manifest_styles}, llmclient: {self.broker.llmclient.styles}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.appBackgroundImageUrl,
-            self.broker.llmclient.app_background_image_url,
-            f"LLMClient appBackgroundImageUrl does not match manifest appBackgroundImageUrl. manifest: {self.broker.manifest.spec.config.appBackgroundImageUrl}, llmclient: {self.broker.llmclient.app_background_image_url}",
-        )
-        self.assertEqual(
-            self.broker.manifest.spec.config.appLogoUrl,
-            self.broker.llmclient.app_logo_url,
-            f"LLMClient appLogoUrl does not match manifest appLogoUrl. manifest: {self.broker.manifest.spec.config.appLogoUrl}, llmclient: {self.broker.llmclient.app_logo_url}",
-        )
-        self.assertEqual(
-            self.broker.manifest.spec.config.appFileAttachment,
+            self.broker.manifest.spec.config.prompt.appFileAttachment,
             self.broker.llmclient.app_file_attachment,
-            f"LLMClient appFileAttachment does not match manifest appFileAttachment. manifest: {self.broker.manifest.spec.config.appFileAttachment}, llmclient: {self.broker.llmclient.app_file_attachment}",
+            f"LLMClient appFileAttachment does not match manifest appFileAttachment. manifest: {self.broker.manifest.spec.config.prompt.appFileAttachment}, llmclient: {self.broker.llmclient.app_file_attachment}",
         )
         self.assertEqual(self.broker.llmclient.allowed_origins, ["https://www.example.com", "http://localhost:5173"])
 
@@ -375,8 +371,22 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.broker.apply(self.request, **self.kwargs)
         manifest = json.loads(self.broker.describe(self.request, **self.kwargs).content)["data"]
         self.assertEqual(
-            manifest["spec"]["config"]["allowedOrigins"], ["https://www.example.com", "http://localhost:5173"]
+            manifest["spec"]["config"]["prompt"]["allowedOrigins"], ["https://www.example.com", "http://localhost:5173"]
         )
+
+    def test_describe_round_trips_styles(self):
+        """Test that describe returns the styles that apply saved, with their camelCase keys."""
+        self.broker.apply(self.request, **self.kwargs)
+        manifest = json.loads(self.broker.describe(self.request, **self.kwargs).content)["data"]
+        styles = manifest["spec"]["config"]["styles"]
+        self.assertEqual(styles["appLogoUrl"], "https://cdn.smarter.sh/images/logo/smarter-crop.png")
+        self.assertEqual(styles["googleFont"], "Fredoka")
+        self.assertEqual(styles["conversationHeader"]["backgroundColor"], "#1b1f3b")
+        self.assertEqual(
+            styles["outgoingMessage"],
+            {"backgroundColor": "tomato", "color": "#fff", "borderColor": None, "linkColor": None},
+        )
+        self.assertNotIn("appLogoUrl", manifest["spec"]["config"]["prompt"])
 
     def test_describe(self):
         """
@@ -407,6 +417,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
         self.assertTrue(self.broker.llmclient.deployed)
+        self.assertEqual(json.loads(response.content)["metadata"]["command"], "deploy")
 
     def test_undeploy(self):
         """
@@ -420,6 +431,8 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
         self.assertFalse(self.broker.llmclient.deployed)
+        # journaled as an undeploy, not a deploy.
+        self.assertEqual(json.loads(response.content)["metadata"]["command"], "undeploy")
 
     def test_chat_not_implemented(self):
         """Test prompt method raises not implemented."""
@@ -457,25 +470,25 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         # Modify the manifest to have an invalid timezone
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"
+            self.broker.manifest.spec.config.prompt.timezone = "Invalid/Timezone"
 
     def test_invalid_currency(self):
         """Test that applying a manifest with an invalid currency raises an error."""
         # Modify the manifest to have an invalid currency
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.currency = "INVALID"
+            self.broker.manifest.spec.config.prompt.currency = "INVALID"
 
     def test_invalid_language(self):
         """Test that applying a manifest with an invalid language raises an error."""
         # Modify the manifest to have an invalid language
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.language = "xx-XX"
+            self.broker.manifest.spec.config.prompt.language = "xx-XX"
 
     def test_invalid_country(self):
         """Test that applying a manifest with an invalid country raises an error."""
         # Modify the manifest to have an invalid country
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.country = "XX"
+            self.broker.manifest.spec.config.prompt.country = "XX"

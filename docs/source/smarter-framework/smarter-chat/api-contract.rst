@@ -216,7 +216,7 @@ Preflight ``OPTIONS`` requests, and the CORS headers of the responses, come from
 ``django-cors-headers``), with credentials allowed. An origin is allowed if:
 
 - the platform's settings allow it (``CORS_ALLOWED_ORIGINS``, ``CORS_ALLOWED_ORIGIN_REGEXES``), or
-- the LLMClient whose api the request calls lists it in ``spec.config.allowedOrigins``, in its
+- the LLMClient whose api the request calls lists it in ``spec.config.prompt.allowedOrigins``, in its
   manifest. :mod:`smarter.apps.llmclient.cors` applies these, through ``django-cors-headers``'
   ``check_request_enabled`` signal, for the configuration and prompt apis only: ``/``,
   ``/config/`` and ``/prompt/`` on a deployed LLMClient's own host, and

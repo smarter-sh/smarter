@@ -8,8 +8,8 @@ the build clones into smarter/react/packages/smarter-chat. It is also published 
 
 from django import template
 
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
-    AssetDict,
     SmarterReactTemplateTagManager,
 )
 
@@ -60,7 +60,7 @@ Example manifest.json structure:
 
 
 @register.simple_tag
-def smarter_chat_react_assets() -> AssetDict:
+def smarter_chat_react_assets() -> ReactAppAssets:
     """
     Load CSS and JS files for a React app entry point.
 
