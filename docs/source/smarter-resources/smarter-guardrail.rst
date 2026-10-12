@@ -64,8 +64,9 @@ first, and otherwise to a Guardrail shared with them, such as a built-in one.
       name: support_assistant
     spec:
       config:
-        provider: openai
-        defaultModel: gpt-6-luna
+        prompt:
+          provider: openai
+          defaultModel: gpt-6-luna
       guardrails:
         - pii_redaction_input
         - prompt_injection_keyword_input

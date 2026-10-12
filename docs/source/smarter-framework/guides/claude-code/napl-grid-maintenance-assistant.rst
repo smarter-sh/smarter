@@ -229,28 +229,29 @@ Create a file named ``napl-grid-assistant-llmclient.yaml``:
        - smarter.sh/napl/purpose: Field technician grid maintenance assistant
    spec:
      config:
-       provider: anthropic
-       defaultModel: claude-sonnet-4-6
-       defaultTemperature: 0.3
-       defaultMaxTokens: 2048
-       defaultSystemRole: >
-         You are the NAPL Grid Maintenance Assistant, an expert in Northern Aurora
-         Power & Light grid infrastructure. You help field technicians retrieve
-         equipment maintenance history, identify anomalies, and draft work orders.
-         When an equipment ID is provided, always query the napl_equipment_history
-         plugin to retrieve live data. Do not guess or fabricate equipment records.
-         Respond concisely and flag safety-critical findings clearly.
-       appName: NAPL Grid Maintenance Assistant
-       appAssistant: GridBot
-       appWelcomeMessage: >
-         Welcome to the NAPL Grid Maintenance Assistant. Provide an equipment ID
-         to retrieve maintenance history, or describe what you need help with.
-       appExamplePrompts:
-         - "What's the maintenance history on transformer T-447?"
-         - "Has circuit breaker CB-112 had any anomalies in the last 6 months?"
-         - "Draft a work order for a routine inspection of T-447."
-         - "Which equipment in Substation 7 is overdue for maintenance?"
-       appPlaceholder: "Enter an equipment ID or describe your maintenance query..."
+       prompt:
+         provider: anthropic
+         defaultModel: claude-sonnet-4-6
+         defaultTemperature: 0.3
+         defaultMaxTokens: 2048
+         defaultSystemRole: >
+           You are the NAPL Grid Maintenance Assistant, an expert in Northern Aurora
+           Power & Light grid infrastructure. You help field technicians retrieve
+           equipment maintenance history, identify anomalies, and draft work orders.
+           When an equipment ID is provided, always query the napl_equipment_history
+           plugin to retrieve live data. Do not guess or fabricate equipment records.
+           Respond concisely and flag safety-critical findings clearly.
+         appName: NAPL Grid Maintenance Assistant
+         appAssistant: GridBot
+         appWelcomeMessage: >
+           Welcome to the NAPL Grid Maintenance Assistant. Provide an equipment ID
+           to retrieve maintenance history, or describe what you need help with.
+         appExamplePrompts:
+           - "What's the maintenance history on transformer T-447?"
+           - "Has circuit breaker CB-112 had any anomalies in the last 6 months?"
+           - "Draft a work order for a routine inspection of T-447."
+           - "Which equipment in Substation 7 is overdue for maintenance?"
+         appPlaceholder: "Enter an equipment ID or describe your maintenance query..."
      plugins:
        - napl_equipment_history
      functions: []

@@ -80,8 +80,7 @@ class Command(SmarterCommand):
         ]
         llmclient.app_placeholder = "Ask me anything..."
         llmclient.app_info_url = "https://smarter.sh"
-        llmclient.app_background_image_url = None
-        llmclient.app_logo_url = "https://cdn.smarter.sh/images/logo/smarter-crop.png"
+        llmclient.styles = {"appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png"}
         llmclient.save()
 
         for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):

@@ -52,7 +52,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.keys import unknown_keys
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.manifest.models import AbstractSAMBase, client_manifest_validation
 from smarter.lib.typing import SmarterDictType
 
 from .error_classes import (
@@ -1740,7 +1740,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: list[SmarterDictType]
         """
         try:
-            cls._pydantic_model.model_validate(manifest)
+            with client_manifest_validation():
+                cls._pydantic_model.model_validate(manifest)
         except ValidationError as e:
             return [
                 {"loc": [str(part) for part in error["loc"]], "message": error["msg"], "type": error["type"]}

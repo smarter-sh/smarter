@@ -79,7 +79,7 @@ def _example_value(schema: SmarterDictType, defs: SmarterDictType, name: str) ->
 
 def chat_contract_example() -> SmarterDictType:
     """
-    An example of each of :data:`~.models.CONTRACT_MODELS`, by the model's name.
+    An example of each of :data:`~smarter.apps.prompt.contract.models.CONTRACT_MODELS`, by the model's name.
 
     :returns: The examples.
     :rtype: SmarterDictType

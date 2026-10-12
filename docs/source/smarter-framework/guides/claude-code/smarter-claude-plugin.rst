@@ -355,10 +355,11 @@ A **LLMClient** in Smarter is a deployable resource that wraps an LLM provider b
 
 Each LLMClient manifest specifies:
 
-- **defaultProvider** — The registered provider name (``"claude"`` in this tutorial).
-- **defaultModel** — The specific model version (e.g., ``claude-code-1-0``).
-- **System prompt** — Optional instructions prepended to every conversation.
+- **provider** — The registered provider name (``"claude"`` in this tutorial), in ``spec.config.prompt``.
+- **defaultModel** — The specific model version (e.g., ``claude-code-1-0``), in ``spec.config.prompt``.
+- **System prompt** — Optional instructions prepended to every conversation, ``spec.config.prompt.defaultSystemRole``.
 - **Plugins** — Optional extensions that augment the LLMClient's capabilities.
+- **Styles** — The optional look of its chat, ``spec.config.styles``. See :doc:`Styling Your LLMClient's Chat <../../../smarter-resources/llmclient/styles>`.
 
 The LLMClient is the end-to-end unit of deployment: it is what you test against in the Sandbox, embed in a web page, and call from ``curl`` or Postman to validate Claude responses.
 
@@ -869,14 +870,15 @@ Edit ``napl-claude-poc.yml`` with the following key fields:
      name: napl-claude-poc
      namespace: default
    spec:
-     defaultModel: claude-sonnet-4-6
-     defaultProvider: anthropic
-     appName: "NAPL Claude PoC"
-     appDescription: "Proof-of-concept LLMClient backed by Claude on Smarter."
-     appExamplePrompts:
-       - "Explain recursion in one sentence."
-       - "What is a transformer model?"
-       - "Summarise the concept of zero-trust security."
+     config:
+       prompt:
+         defaultModel: claude-sonnet-4-6
+         provider: anthropic
+         appName: "NAPL Claude PoC"
+         appExamplePrompts:
+           - "Explain recursion in one sentence."
+           - "What is a transformer model?"
+           - "Summarise the concept of zero-trust security."
      # plugins:   <-- omit for this PoC
 
 **4 — Deploy**

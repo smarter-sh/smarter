@@ -71,12 +71,21 @@ which is then always in production mode.*
 The **Sandbox mode / Production mode** button shows and hides the backend's own messages in the
 thread: the system prompt, tool results, Smarter's notes, for example about the plugins it selected
 and the tokens it charged, and the prompt's progress. In production mode, the thread is the
-conversation as the LLMClient's users see it.
+conversation as the LLMClient's users see it, and the Console and the button that shows and hides
+it are hidden too. Switching back to sandbox mode restores the Console as you left it.
 
 The Console's Server Logs tab follows the mode: in sandbox mode it streams every log record, DEBUG
 included, and in production mode only the records at the platform's log level
 (``smarter_settings.log_level``) and above. Switching modes reconnects the stream, which replays
 the recent history at the new level.
+
+Sandbox mode also adds a **Docs** button to the toolbar. It opens a dialog of links to the
+technical references, on two tabs. The **Prompt Engineer** tab, which is selected when the dialog
+opens, is for those who build LLMClients in the sandbox: this Smarter Chat documentation and the
+LLMClient, Plugin, Guardrail and Budget references. The **Software Engineer** tab is for those who
+build the applications that host them: the
+`@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ npm package, the chat
+api, and the React integration guide. The links open in a new tab.
 
 
 How Messages Are Rendered

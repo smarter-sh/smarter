@@ -172,8 +172,12 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                     {renderDetailRow("App Example Prompts", llmclient.appExamplePrompts, "str[]")}
                     {renderDetailRow("App Placeholder", llmclient.appPlaceholder)}
                     {renderDetailRow("App Info URL", llmclient.appInfoUrl, "url")}
-                    {renderDetailRow("App Background Image URL", llmclient.appBackgroundImageUrl, "url")}
-                    {renderDetailRow("App Logo URL", llmclient.appLogoUrl, "url")}
+                    {renderDetailRow(
+                      "App Background Image URL",
+                      llmclient.styles?.appBackgroundImageUrl ?? null,
+                      "url",
+                    )}
+                    {renderDetailRow("App Logo URL", llmclient.styles?.appLogoUrl ?? null, "url")}
                     {renderDetailRow("App File Attachment", llmclient.appFileAttachment, "bool")}
                     {renderDetailRow("DNS Status", llmclient.dnsVerificationStatus)}
                     {renderDetailRow("TLS Certificate Issuance Status", llmclient.tlsCertificateIssuanceStatus)}

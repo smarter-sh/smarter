@@ -271,6 +271,50 @@ class PromptChatApiEnvelope(PromptChatApiModel):
 # ------------------------------------------------------------------------------
 
 
+class PromptChatApiStyleSection(PromptChatApiModel):
+    """
+    A section of the LLMClient's styles: the colors of one of chatscope's components.
+
+    A section has only the settings that its component has, in the manifest's
+    ``spec.config.styles``. See :mod:`smarter.apps.llmclient.manifest.models.llmclient.styles`.
+    """
+
+    background_color: Optional[str] = None
+    color: Optional[str] = None
+    border_color: Optional[str] = None
+    info_color: Optional[str] = None
+    link_color: Optional[str] = None
+    editor_background_color: Optional[str] = None
+    placeholder_color: Optional[str] = None
+
+
+class PromptChatApiStyles(PromptChatApiModel):
+    """
+    The look of the LLMClient's chat: its manifest's ``spec.config.styles``, with snake_case keys.
+
+    Smarter Chat applies it as css custom properties. Every setting is optional, and one that is
+    left out keeps the chat's default.
+    """
+
+    app_logo_url: Optional[str] = None
+    app_background_image_url: Optional[str] = None
+    app_background_image_size: Optional[Literal["cover", "contain", "auto"]] = None
+    assistant_avatar_url: Optional[str] = None
+    user_avatar_url: Optional[str] = None
+    font_family: Optional[str] = None
+    google_font: Optional[str] = None
+    font_size: Optional[str] = None
+    border_radius: Optional[str] = None
+    main_container: Optional[PromptChatApiStyleSection] = None
+    conversation_header: Optional[PromptChatApiStyleSection] = None
+    message_list: Optional[PromptChatApiStyleSection] = None
+    incoming_message: Optional[PromptChatApiStyleSection] = None
+    outgoing_message: Optional[PromptChatApiStyleSection] = None
+    message_input: Optional[PromptChatApiStyleSection] = None
+    buttons: Optional[PromptChatApiStyleSection] = None
+    typing_indicator: Optional[PromptChatApiStyleSection] = None
+
+
 class PromptChatApiLLMClientBase(PromptChatApiModel):
     """The LLMClient fields of the configuration that Smarter Chat reads."""
 
@@ -288,6 +332,9 @@ class PromptChatApiLLMClientBase(PromptChatApiModel):
     app_placeholder: Optional[str] = None
     app_info_url: Optional[str] = None
     app_file_attachment: Optional[bool] = None
+    styles: Optional[PromptChatApiStyles] = Field(
+        None, description="The look of the chat: the manifest's spec.config.styles, with snake_case keys."
+    )
 
 
 class PromptChatApiLLMClient(PromptChatApiLLMClientBase):
@@ -956,6 +1003,8 @@ __all__ = [
     "PromptChatApiPromptResult",
     "PromptChatApiListMetaData",
     "PromptChatApiSmarterCompletionV1",
+    "PromptChatApiStyles",
+    "PromptChatApiStyleSection",
     "PromptChatApiAudioPart",
     "PromptChatApiChoice",
     "PromptChatApiCompletion",

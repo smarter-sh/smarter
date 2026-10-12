@@ -2,8 +2,8 @@
 
 from django import template
 
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
-    AssetDict,
     SmarterReactTemplateTagManager,
 )
 
@@ -22,6 +22,6 @@ static/react/@smarter/llmhost-compute-list/. See react_llmhost_list for an examp
 
 
 @register.simple_tag
-def llmhost_compute_list_react_assets() -> AssetDict:
+def llmhost_compute_list_react_assets() -> ReactAppAssets:
     """Load CSS and JS files for a React app entry point based on its manifest.json."""
     return templatetag_manager.reactapp_build_assets

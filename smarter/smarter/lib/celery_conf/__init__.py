@@ -12,11 +12,3 @@ APP.config_from_object("django.conf:settings", namespace="CELERY")
 APP.autodiscover_tasks()
 
 APP.conf.broker_connection_retry_on_startup = True
-
-try:
-    with APP.connection() as conn:
-        conn.ensure_connection(max_retries=3)
-    print("Successfully connected to celery broker url: ", APP.conf.broker_url)
-# pylint: disable=broad-except
-except Exception as e:
-    print(e)

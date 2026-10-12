@@ -8,7 +8,7 @@ Use the manage.py command to create new Accounts:
 .. code-block:: bash
 
    python manage.py create_user \
-     --account-number "####-####-####" \
+     --account_number "####-####-####" \
      --username "newuser" \
      --email "newuser@example.com" \
      --first_name "New" \

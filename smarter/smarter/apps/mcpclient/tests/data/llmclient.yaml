@@ -10,23 +10,25 @@ metadata:
     - test
 spec:
   config:
-    deployed: false
-    provider: openai
-    defaultModel: gpt-6-luna
-    defaultTemperature: 1.0
-    defaultMaxTokens: 512
-    defaultSystemRole: You are a helpful assistant.
-    appName: Test MCPClient LLMClient
-    appAssistant: Tatiana
-    appWelcomeMessage: Welcome!
-    appExamplePrompts:
-      - "What is the weather in New York?"
-    appPlaceholder: "Ask me anything..."
-    appInfoUrl: https://smarter.sh
-    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
-    appLogoUrl: https://smarter.sh/assets/img/logo.png
-    appFileAttachment: false
-    subdomain: null
-    customDomain: null
+    prompt:
+      deployed: false
+      provider: openai
+      defaultModel: gpt-6-luna
+      defaultTemperature: 1.0
+      defaultMaxTokens: 512
+      defaultSystemRole: You are a helpful assistant.
+      appName: Test MCPClient LLMClient
+      appAssistant: Tatiana
+      appWelcomeMessage: Welcome!
+      appExamplePrompts:
+        - "What is the weather in New York?"
+      appPlaceholder: "Ask me anything..."
+      appInfoUrl: https://smarter.sh
+      appFileAttachment: false
+      subdomain: null
+      customDomain: null
+    styles:
+      appBackgroundImageUrl: https://cdn.smarter.sh/cms/img/graydots.png
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
   mcpClients:
     - test_mcpclient
