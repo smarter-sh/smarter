@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.21.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.21.0-alpha.1...v0.21.0-alpha.2) (2026-10-12)
+
+### Bug Fixes
+
+* **llmclient:** journal undeploy, document smarter on kubernetes ([194071f](https://github.com/smarter-sh/smarter/commit/194071f552250a454b360b9598c37cd5c346abc7))
+
 ## [0.21.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.5...v0.21.0-alpha.1) (2026-10-12)
 
 ### Features
