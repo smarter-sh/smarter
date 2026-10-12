@@ -417,6 +417,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
         self.assertTrue(self.broker.llmclient.deployed)
+        self.assertEqual(json.loads(response.content)["metadata"]["command"], "deploy")
 
     def test_undeploy(self):
         """
@@ -430,6 +431,8 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
         self.assertFalse(self.broker.llmclient.deployed)
+        # journaled as an undeploy, not a deploy.
+        self.assertEqual(json.loads(response.content)["metadata"]["command"], "undeploy")
 
     def test_chat_not_implemented(self):
         """Test prompt method raises not implemented."""
