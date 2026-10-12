@@ -1,0 +1,15 @@
+- **Official documentation:** the `Django <https://docs.djangoproject.com/>`__ and `Django REST
+  Framework <https://www.django-rest-framework.org/>`__ documentation, `react.dev
+  <https://react.dev/learn>`__, the `Vite backend integration guide
+  <https://vite.dev/guide/backend-integration>`__, and `JSON Schema
+  <https://json-schema.org/learn>`__.
+- **Reference:** MDN's guides to `HTTP <https://developer.mozilla.org/en-US/docs/Web/HTTP>`__, `CORS
+  <https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS>`__ and `cookies
+  <https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies>`__.
+- **Podcasts:** `Django Chat <https://djangochat.com/>`__, `Syntax <https://syntax.fm/>`__, and
+  `Talk Python To Me <https://talkpython.fm/>`__.
+- **YouTube:** the `DjangoCon US <https://www.youtube.com/@DjangoConUS>`__ channel, which has
+  several talks on combining Django with modern JavaScript front ends, and `Fireship
+  <https://www.youtube.com/@Fireship>`__.
+- **Online:** `TestDriven.io <https://testdriven.io/blog/>`__ tutorials on Django with React, and
+  `Real Python <https://realpython.com/>`__.

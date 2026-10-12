@@ -1,0 +1,15 @@
+- **Price and performance data:** `Artificial Analysis <https://artificialanalysis.ai/>`__, which
+  compares models on quality, speed and price, and the providers' own pricing pages.
+- **Cloud cost management:** the `FinOps Foundation <https://www.finops.org/>`__, its framework, and
+  its working group material on the cost of AI.
+- **Reports:** the annual `AI Index <https://hai.stanford.edu/ai-index>`__ from Stanford HAI, with
+  chapters on the economy and on the cost of training and running models.
+- **Podcasts:** `Exponential View <https://www.exponentialview.co/>`__ with Azeem Azhar, on
+  technology and the economy, `Odd Lots <https://www.bloomberg.com/oddlots>`__ from Bloomberg, which
+  regularly covers AI and the data center build-out, and the `a16z Podcast
+  <https://a16z.com/podcasts/>`__.
+- **Writing:** Ethan Mollick's `One Useful Thing <https://www.oneusefulthing.org/>`__ on AI and
+  productivity at work, and Benedict Evans's `newsletter and presentations
+  <https://www.ben-evans.com/>`__ on technology markets.
+- **YouTube:** talks by Ajay Agrawal, Joshua Gans and Avi Goldfarb on the economics of prediction,
+  and Daron Acemoglu's lectures on automation and inequality.

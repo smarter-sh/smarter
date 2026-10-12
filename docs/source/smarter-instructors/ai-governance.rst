@@ -23,5 +23,16 @@ the budget examples in ``smarter/smarter/apps/account/data/example-manifests/bud
 - Pick one answer from the journal and trace it back through the guardrail checks, tool calls and
   model that produced it. Discuss what an auditor or a regulator would want to see.
 
+**Course plans.** Three complete, ready-to-teach plans, each with a schedule, graded assignments
+and rubrics, two capstone projects, recommended texts, further study and technical prerequisites.
+See :doc:`course-formats` for what the formats have in common.
+
+.. toctree::
+   :maxdepth: 1
+
+   Classroom bootcamp: 8 hours <ai-governance/bootcamp>
+   Two-week online course: 6 hours <ai-governance/two-week>
+   Four-week online course: 12 hours <ai-governance/four-week>
+
 See the :doc:`Smarter Instructor Guide </smarter-instructor>` to install Smarter and set up
 a class.

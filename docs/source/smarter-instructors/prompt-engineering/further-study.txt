@@ -1,0 +1,16 @@
+- **Online guides:** Anthropic's `prompt engineering documentation
+  <https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview>`__, OpenAI's
+  `prompt engineering guide <https://platform.openai.com/docs/guides/prompt-engineering>`__, and the
+  community `Prompt Engineering Guide <https://www.promptingguide.ai/>`__ from DAIR.AI, which
+  catalogs techniques with links to the research papers behind them.
+- **YouTube:** Andrej Karpathy's *Intro to Large Language Models* and *Deep Dive into LLMs like
+  ChatGPT* on his `channel <https://www.youtube.com/@AndrejKarpathy>`__, the clearest explanations
+  of what a model actually does with a prompt. The neural networks series on `3Blue1Brown
+  <https://www.youtube.com/@3blue1brown>`__, for the mathematics, visually.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, for practitioners building with
+  models, and `Practical AI <https://practicalai.fm/>`__, for a broader audience.
+- **Writing:** Simon Willison's `weblog <https://simonwillison.net/>`__, which tests new models and
+  prompting techniques as they appear, and Ethan Mollick's `One Useful Thing
+  <https://www.oneusefulthing.org/>`__, on using AI well at work and in teaching.
+- **Practice:** `Gandalf <https://gandalf.lakera.ai/>`__, a game in which you prompt a model into
+  revealing a password, is a memorable lesson in why instructions alone do not control a model.
