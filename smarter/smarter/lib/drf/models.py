@@ -404,5 +404,5 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         else:
             return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate, taggit=False)  # type: ignore
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

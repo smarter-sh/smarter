@@ -102,6 +102,35 @@ class WaffleSwitchedLoggerWrapper:
         if self.should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
             self._logger.critical(msg, *args, **kwargs)
 
+    def exception(self, msg: Any, *args, exc_info=True, **kwargs):
+        if self.should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
+            self._logger.exception(msg, *args, exc_info=exc_info, **kwargs)
+
+    def log(self, level: int, msg: Any, *args, **kwargs):
+        if self.should_log(level) or level >= self.REQUIRED_LOG_LEVEL:
+            self._logger.log(level, msg, *args, **kwargs)
+
+    def __getattr__(self, name: str) -> Any:
+        """
+        Delegate everything that the wrapper does not define, e.g. ``isEnabledFor()``,.
+
+        ``name`` or ``handlers``, to the wrapped logger, so the wrapper can stand in for it.
+
+        The logging methods are defined above, so that the condition always applies to them.
+
+        :param name: The attribute name.
+        :type name: str
+        :return: The wrapped logger's attribute.
+        :raises AttributeError: If neither the wrapper nor the wrapped logger has the attribute.
+        """
+        if name == "_logger":
+            # not yet set, e.g. during copy or unpickling. avoid infinite recursion.
+            raise AttributeError(name)
+        return getattr(self._logger, name)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} logger={self._logger.name}>"
+
     def set_condition(self, condition_func: Callable):
         """Update the condition function."""
         self._condition_func = condition_func

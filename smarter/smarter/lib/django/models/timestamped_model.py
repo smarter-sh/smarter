@@ -634,10 +634,10 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         return _get_all_models()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={getattr(self, 'id', None)} created_at={self.created_at} updated_at={self.updated_at}>"
 
 

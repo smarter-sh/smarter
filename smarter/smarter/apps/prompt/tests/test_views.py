@@ -200,8 +200,12 @@ class TestPromptSessionAndConfigView(TestAccountMixin):
         self.assertIs(session.prompt, session.chat_helper.prompt)
         self.assertIn(session_key, str(session))
         self.assertEqual(repr(session), str(session))
+        self.assertTrue(str(session).startswith(f"SmarterPromptSession[{id(session)}]"))
         self.assertEqual(session, session)
         self.assertNotEqual(session, session_key)
+        self.assertIs(session.__eq__(session_key), NotImplemented)
+        self.assertEqual(hash(session), hash(session_key))
+        self.assertEqual(len({session, session}), 1)
         self.assertIn("SmarterPromptSession", session.formatted_class_name)
         self.assertEqual(
             session.clean_url("https://example.com/workbench/config/?a=1"), "https://example.com/workbench"
