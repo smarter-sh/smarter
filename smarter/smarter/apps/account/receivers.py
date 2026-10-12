@@ -162,6 +162,10 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         return
     get_cached_user_for_user_id(invalidate=True, user_id=instance.id)  # type: ignore[attr-defined]
     get_cached_user_for_username(invalidate=True, username=instance.username)
+    if created:
+        # A new User has no UserProfiles yet. Refreshing get_cached_objects() now would cache an
+        # empty list, which would hide the UserProfile that is created next.
+        return
     # The cached UserProfiles carry a copy of the User, e.g. is_staff, and cache_invalidations()
     # only refreshes the one cached by pk, so refresh the ones cached by user and by user and account.
     UserProfile.get_cached_objects(invalidate=True, user=instance)
@@ -191,6 +195,8 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
         instance,
         created,
     )
+    # The user's cached list of UserProfiles, used by every permission queryset, changes with this one.
+    UserProfile.get_cached_objects(invalidate=True, user=instance.user)
 
 
 @receiver(post_delete, sender=UserProfile)
@@ -202,6 +208,12 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
         instance,
         instance.id,  # type: ignore
     )
+    try:
+        user = instance.user
+    except User.DoesNotExist:
+        # Deleted together with its User, whose cached profiles nobody can look up any more.
+        return
+    UserProfile.get_cached_objects(invalidate=True, user=user)
 
 
 @receiver(post_save, sender=Account)
