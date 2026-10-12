@@ -11,6 +11,7 @@ Test :mod:`smarter.apps.mcpclient.templatetags.react_mcpclient_list`.
 from django.template import Context, Template
 
 from smarter.apps.mcpclient.templatetags import react_mcpclient_list
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
     SmarterReactTemplateTagManager,
 )
@@ -36,5 +37,5 @@ class TestReactMCPClientListTemplateTag(SmarterTestBase):
         name = self.tag_name()
         template = Template(f"{{% load react_mcpclient_list %}}{{% {name} as assets %}}{{{{ assets.js|length }}}}")
         assets = react_mcpclient_list.templatetag_manager.reactapp_build_assets
-        self.assertEqual(set(assets.keys()), {"js", "css"})
-        self.assertEqual(template.render(Context({})), str(len(assets["js"])))
+        self.assertIsInstance(assets, ReactAppAssets)
+        self.assertEqual(template.render(Context({})), str(len(assets.js)))
