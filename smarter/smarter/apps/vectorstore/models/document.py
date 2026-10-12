@@ -88,7 +88,7 @@ class VectorstoreDocument(TimestampedModel):
     def chunk_ids(self, count: int = 0) -> list[str]:
         return [self.chunk_id(i) for i in range(count or self.chunk_count)]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.vectorstore.name}: {self.name} ({self.status})"
 
 

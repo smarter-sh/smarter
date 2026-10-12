@@ -18,7 +18,7 @@ import re
 import uuid
 from datetime import datetime
 from functools import cached_property
-from typing import Any, Optional, Union
+from typing import Optional, Union
 from unittest.mock import MagicMock
 from urllib.parse import ParseResult, urlparse
 
@@ -261,16 +261,18 @@ class SmarterRequestMixin(AccountMixin):
 
     def __str__(self) -> str:
         """
-        String representation of the SmarterRequestMixin instance.
+        String representation of the instance, naming its concrete class.
 
         :return: A string describing the instance.
         :rtype: str
         """
-        return f"{self.formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
+        return (
+            f"{self.__class__.__name__}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
+        )
 
     def __repr__(self) -> str:
         """
-        Official string representation of the SmarterRequestMixin instance.
+        Developer representation of the instance, which is the same as :meth:`__str__`.
 
         :return: A string representation suitable for debugging.
         :rtype: str
@@ -310,65 +312,19 @@ class SmarterRequestMixin(AccountMixin):
             )
         )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
-        Equality comparison for SmarterRequestMixin instances.
+        Equality comparison for SmarterRequestMixin instances, by url and user_profile.
 
         :param other: Another object to compare.
-        :return: True if the instances are equal, False otherwise.
+        :type other: object
+        :return: True if the instances are equal, or ``NotImplemented`` if
+            ``other`` is not a :class:`SmarterRequestMixin`.
         :rtype: bool
         """
         if not isinstance(other, SmarterRequestMixin):
-            return False
+            return NotImplemented
         return self.url == other.url and self.user_profile == other.user_profile
-
-    def __lt__(self, other: Any) -> bool:
-        """
-        Less-than comparison for SmarterRequestMixin instances.
-
-        :param other: Another object to compare.
-        :return: True if the instance is less than the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, SmarterRequestMixin):
-            return NotImplemented
-        return (self.url, self.user_profile) < (other.url, other.user_profile)
-
-    def __le__(self, other: Any) -> bool:
-        """
-        Less-than-or-equal comparison for SmarterRequestMixin instances.
-
-        :param other: Another object to compare.
-        :return: True if the instance is less than or equal to the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, SmarterRequestMixin):
-            return NotImplemented
-        return (self.url, self.user_profile) <= (other.url, other.user_profile)
-
-    def __gt__(self, other: Any) -> bool:
-        """
-        Greater-than comparison for SmarterRequestMixin instances.
-
-        :param other: Another object to compare.
-        :return: True if the instance is greater than the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, SmarterRequestMixin):
-            return NotImplemented
-        return (self.url, self.user_profile) > (other.url, other.user_profile)
-
-    def __ge__(self, other: Any) -> bool:
-        """
-        Greater-than-or-equal comparison for SmarterRequestMixin instances.
-
-        :param other: Another object to compare.
-        :return: True if the instance is greater than or equal to the other, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, SmarterRequestMixin):
-            return NotImplemented
-        return (self.url, self.user_profile) >= (other.url, other.user_profile)
 
     def setup(self, *args, request: Optional[HttpRequest] = None, user: Optional[UserType] = None, **kwargs):
         """

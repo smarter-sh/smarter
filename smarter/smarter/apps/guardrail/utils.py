@@ -4,7 +4,7 @@ import io
 import os
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 import yaml
 from django.core.management import call_command
@@ -67,6 +67,9 @@ class GuardrailExample:
         self._filename = filename
         self._filepath = filepath
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} filename={self.filename} name={self.name}>"
+
     @property
     def filename(self) -> Optional[str]:
         """Return the name of the guardrail manifest."""
@@ -87,7 +90,7 @@ class GuardrailExample:
         try:
             retval = self._json["metadata"]["name"] if isinstance(self._json, dict) else None
         except KeyError:
-            logger.warning("GuardrailExample: %d is malformed and has no metadata.name", self.filename)
+            logger.warning("GuardrailExample: %s is malformed and has no metadata.name", self.filename)
             retval = self.convert_filename()
         return retval
 
@@ -158,6 +161,14 @@ class GuardrailExamples:
             if file.endswith(".yaml"):
                 guardrail_example = GuardrailExample(filepath=self.GUARDRAILS_PATH, filename=file)
                 self._guardrail_examples.append(guardrail_example)
+
+    def __len__(self) -> int:
+        """Return the number of guardrail examples."""
+        return len(self._guardrail_examples)
+
+    def __iter__(self) -> Iterator[GuardrailExample]:
+        """Iterate over the guardrail examples."""
+        return iter(self._guardrail_examples)
 
     def count(self) -> int:
         """Return the number of guardrails."""

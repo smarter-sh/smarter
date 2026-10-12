@@ -6,7 +6,6 @@ from typing import Optional, Union
 
 from django.http import HttpRequest, JsonResponse
 
-from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request
@@ -20,14 +19,15 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.typing import SmarterDictType
 
-from .enum import (
-    SCLIResponseMetadata,
-    SmarterJournalApiResponseErrorKeys,
-    SmarterJournalApiResponseKeys,
-    SmarterJournalCliCommands,
-    SmarterJournalThings,
+from .contract.models import (
+    SAMJournalApiEnvelope,
+    SAMJournalApiErrorBody,
+    SAMJournalApiErrorResponse,
+    SAMJournalApiMetadata,
 )
+from .enum import SmarterJournalCliCommands, SmarterJournalThings
 from .models import SAMJournal
+from .signals import journal_entry_created, journal_entry_failed
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     :class:`django.http.JsonResponse` for inherited response behavior.
     :func:`smarter.common.utils.hash_factory` for key generation.
     :mod:`smarter.lib.django.http.serializers` for request serialization.
+    :class:`smarter.lib.journal.contract.models.SAMJournalApiEnvelope`, the contract of the ``api`` and ``metadata`` keys.
     """
 
     # pylint: disable=too-many-arguments
@@ -85,12 +86,9 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         if not isinstance(data, (dict, list)):
             # wrap any other data, e.g. a string, before adding the api version and metadata to it.
             data = {"response": data}
+        envelope = SAMJournalApiEnvelope.build(command=command, thing=thing)
         if isinstance(data, dict):
-            data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
-            data[SmarterJournalApiResponseKeys.METADATA] = {
-                SCLIResponseMetadata.COMMAND: str(command),
-                SmarterJournalApiResponseKeys.THING: str(thing),
-            }
+            data.update(envelope.dump())
 
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
 
@@ -157,26 +155,30 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                     response=serializable_data,
                     status_code=status,
                 )
+                journal_entry_created.send(sender=self.__class__, journal=journal)
                 if isinstance(data, dict):
                     # add the journal's key to the metadata, which keeps its command and thing.
-                    data[SmarterJournalApiResponseKeys.METADATA][SCLIResponseMetadata.KEY] = journal.key
+                    envelope.metadata = SAMJournalApiMetadata(
+                        command=envelope.metadata.command, thing=envelope.metadata.thing, key=journal.key
+                    )
+                    data.update(envelope.dump())
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error(
-                    "%s user=%s, thing=%s, command=%s, status=%s\nrequest=%s\nresponse: %s",
-                    logger_prefix,
-                    user,
-                    thing,
-                    command,
-                    status,
-                    request,
-                    serializable_data,
+                # logged by smarter.lib.journal.receivers.journal_entry_failed_receiver().
+                journal_entry_failed.send(
+                    sender=self.__class__,
+                    user=user,
+                    thing=str(thing),
+                    command=str(command),
+                    status=status,
+                    request=request,
+                    response=serializable_data,
+                    error=e,
                 )
-                logger.error("%s could not create journal entry: %s", logger_prefix, e)
 
         # Only pass allowed kwargs to JsonResponse
         allowed_kwargs = {}
-        allowed_keys = {"content_type", "status", "status", "headers", "reason"}
+        allowed_keys = {"content_type", "status", "headers", "reason"}
         for k in list(kwargs.keys()):
             if k in allowed_keys:
                 allowed_kwargs[k] = kwargs.pop(k)
@@ -276,23 +278,23 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             if isinstance(e, dict) and hasattr(e, "__context__")
             else "thing=" + str(thing) + ", command=" + str(command)
         )
-        data = {}
-        data[SmarterJournalApiResponseKeys.ERROR] = {
-            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: error_class,
-            SmarterJournalApiResponseErrorKeys.STACK_TRACE: stack_trace,
-            SmarterJournalApiResponseErrorKeys.DESCRIPTION: description,
-            SmarterJournalApiResponseErrorKeys.STATUS: status,
-            SmarterJournalApiResponseErrorKeys.ARGS: args,
-            SmarterJournalApiResponseErrorKeys.CAUSE: cause,
-            SmarterJournalApiResponseErrorKeys.CONTEXT: context,
-            SmarterJournalApiResponseErrorKeys.THING: str(thing),
-            SmarterJournalApiResponseErrorKeys.COMMAND: str(command),
-        }
+        error_response = SAMJournalApiErrorResponse(
+            error=SAMJournalApiErrorBody(
+                errorClass=error_class,
+                stacktrace=stack_trace,
+                description=description if description is None else str(description),
+                status=status,
+                args=json.loads(json.dumps(args, cls=SmarterJSONEncoder)),
+                cause=cause,
+                context=context,
+                thing=str(thing),
+                command=str(command),
+            )
+        )
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
-        logger.error("%s %s", logger_prefix, formatted_json(data))
-        if not include_stack_trace:
-            # logged above, but never sent to the client.
-            data[SmarterJournalApiResponseKeys.ERROR].pop(SmarterJournalApiResponseErrorKeys.STACK_TRACE)
+        logger.error("%s %s", logger_prefix, formatted_json(error_response.dump()))
+        # the stack trace is logged above, but, when include_stack_trace is False, never sent to the client.
+        data = error_response.dump(include_stack_trace=include_stack_trace)
 
         super().__init__(
             request=request,

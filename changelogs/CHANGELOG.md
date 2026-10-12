@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.3-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.4...v0.20.3-alpha.5) (2026-10-12)
+
+### Bug Fixes
+
+* **account:** stop caching an empty profile list for new users ([6c44094](https://github.com/smarter-sh/smarter/commit/6c4409409f1e9156e910027a7023684b365fd288))
+
+## [0.20.3-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.3...v0.20.3-alpha.4) (2026-10-11)
+
+### Bug Fixes
+
+* **account:** refresh cached UserProfiles when their User is saved ([e1ae6bd](https://github.com/smarter-sh/smarter/commit/e1ae6bd6c19f42ca5abe41fd936e3579e5d05dfd))
+
+## [0.20.3-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.2...v0.20.3-alpha.3) (2026-10-11)
+
+### Bug Fixes
+
+* make dunder methods consistent and add missing ones ([1a68c85](https://github.com/smarter-sh/smarter/commit/1a68c854064de0f97ac57412bc764fd4c66cf0b5))
+
+## [0.20.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.20.3-alpha.1...v0.20.3-alpha.2) (2026-10-11)
+
+### Bug Fixes
+
+* **journal:** shore up mvp with contract, api and signals ([d7422f4](https://github.com/smarter-sh/smarter/commit/d7422f41d5fbfaee7337c0675bbdaf1766df8b5a))
+
+## [0.20.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.2...v0.20.3-alpha.1) (2026-10-11)
+
+### Performance
+
+* **account:** stop per-request cache churn, cache hot ORM lookups ([fdefcae](https://github.com/smarter-sh/smarter/commit/fdefcae1471d4216a86fbe56955a1d2b68aba99a))
+
 ## [0.20.2](https://github.com/smarter-sh/smarter/compare/v0.20.1...v0.20.2) (2026-10-11)
 
 ### Bug Fixes

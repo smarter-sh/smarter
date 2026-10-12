@@ -11,17 +11,29 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
 )
-from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache as cache
-from smarter.lib.django import waffle
+from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
 
-VERIFIED_DOMAINS_CACHE_KEY = "LLMClientCustomDomain_llmclient_verified_custom_domains"
+@cache_results()
+def get_cached_verified_domains() -> list[str]:
+    """
+    Return the domain names of all verified custom domains.
+
+    :meth:`LLMClientCustomDomain.set_verification_status` invalidates it.
+
+    :returns: The verified domain names.
+    :rtype: list[str]
+    """
+    return list(
+        LLMClientCustomDomain.objects.filter(
+            verification_status=LLMClientCustomDomain.VerificationStatusChoices.VERIFIED
+        ).values_list("domain_name", flat=True)
+    )
 
 
 def custom_domain_name(domain_name: str) -> str:
@@ -169,32 +181,17 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
             verified_at=self.verified_at,
             verification_message=self.verification_message,
         )
-        cache.delete(VERIFIED_DOMAINS_CACHE_KEY)
+        get_cached_verified_domains.invalidate()  # type: ignore[attr-defined]
 
     @classmethod
-    def get_verified_domains(cls):
+    def get_verified_domains(cls) -> list[str]:
         """
-        Get all verified custom domains from cache or database.
+        Get all verified custom domains, from the cache or the database.
 
         :returns: List of verified domain names.
         :rtype: List[str]
         """
-        # Try to get the list from cache
-        cache_key = VERIFIED_DOMAINS_CACHE_KEY
-        verified_domains = cache.get(cache_key)
-
-        # If the list is not in cache, fetch it from the database
-        if not verified_domains:
-            verified_domains = list(
-                cls.objects.filter(verification_status=cls.VerificationStatusChoices.VERIFIED).values_list(
-                    "domain_name", flat=True
-                )
-            )
-            cache.set(key=cache_key, value=verified_domains, timeout=smarter_settings.cache_expiration)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.debug("get_verified_domains() caching %s", cache_key)
-
-        return verified_domains
+        return get_cached_verified_domains()
 
     def save(self, *args, **kwargs):
         """
@@ -212,7 +209,7 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
                 self.name = custom_domain_name(self.domain_name)
         super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.domain_name) if self.domain_name else "undefined"
 
 

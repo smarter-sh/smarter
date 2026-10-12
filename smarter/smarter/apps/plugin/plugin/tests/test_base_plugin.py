@@ -211,10 +211,12 @@ class TestPluginBase(PluginTestBase):
     # PluginBase: dunder methods
     # =========================================================================
     def test_base_str_and_repr(self):
-        """Test that __str__ and __repr__ include the name and kind."""
+        """Test that __str__ and __repr__ name the concrete plugin class, the name and kind, without ANSI codes."""
         for plugin in (self.sql_plugin, self.api_plugin):
+            self.assertTrue(str(plugin).startswith(f"{plugin.__class__.__name__}[{id(plugin)}]"))
             self.assertIn(str(plugin.name), str(plugin))
             self.assertIn(plugin.kind, str(plugin))
+            self.assertNotIn("\x1b", str(plugin))
             self.assertEqual(str(plugin), repr(plugin))
 
     def test_base_bool(self):
@@ -235,6 +237,7 @@ class TestPluginBase(PluginTestBase):
         """Test that a plugin is not equal to a non-plugin."""
         self.assertNotEqual(self.sql_plugin, "not a plugin")
         self.assertNotEqual(self.sql_plugin, None)
+        self.assertIs(self.sql_plugin.__eq__("not a plugin"), NotImplemented)
 
     def test_base_hash(self):
         """Test that equal plugins hash identically and deduplicate in a set."""
@@ -243,35 +246,14 @@ class TestPluginBase(PluginTestBase):
         self.assertEqual(hash(plugin_a), hash(plugin_b))
         self.assertEqual(len({plugin_a, plugin_b, self.api_plugin}), 2)
 
-    def test_base_ordering(self):
-        """Test that the rich comparison operators are mutually consistent."""
-        low, high = sorted([self.sql_plugin, self.api_plugin])
-        self.assertTrue(low < high)
-        self.assertTrue(low <= high)
-        self.assertTrue(high > low)
-        self.assertTrue(high >= low)
-        self.assertFalse(high < low)
-        self.assertFalse(low > high)
-
-    def test_base_ordering_equal_plugins(self):
-        """Test the comparison operators on two instances of the same plugin."""
-        plugin_a = self.load_sql_plugin()
-        plugin_b = self.load_sql_plugin()
-        self.assertFalse(plugin_a < plugin_b)
-        self.assertTrue(plugin_a <= plugin_b)
-        self.assertFalse(plugin_a > plugin_b)
-        self.assertTrue(plugin_a >= plugin_b)
-
-    def test_base_ordering_other_type(self):
-        """Test that ordering against a non-plugin raises TypeError."""
-        with self.assertRaises(TypeError):
-            _ = self.sql_plugin < 1  # type: ignore[operator]
-        with self.assertRaises(TypeError):
-            _ = self.sql_plugin <= 1  # type: ignore[operator]
-        with self.assertRaises(TypeError):
-            _ = self.sql_plugin > 1  # type: ignore[operator]
-        with self.assertRaises(TypeError):
-            _ = self.sql_plugin >= 1  # type: ignore[operator]
+    def test_base_has_no_ordering(self):
+        """Test that plugins have no order, whether against a plugin or anything else."""
+        for other in (self.api_plugin, 1):
+            with self.subTest(other=other):
+                with self.assertRaises(TypeError):
+                    _ = self.sql_plugin < other  # type: ignore[operator]
+                with self.assertRaises(TypeError):
+                    _ = self.sql_plugin >= other  # type: ignore[operator]
 
     # =========================================================================
     # PluginBase: properties

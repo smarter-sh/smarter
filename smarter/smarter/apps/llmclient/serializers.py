@@ -247,7 +247,7 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
         return LLMClientFunctionsSerializer(qs, many=True).data
 
     def get_plugins(self, obj: LLMClient):
-        qs = LLMClientPlugin.objects.filter(llmclient=obj)
+        qs = LLMClientPlugin.objects.filter(llmclient=obj).select_related("plugin_meta")
         return LLMClientPluginMiniSerializer(qs, many=True).data
 
     def get_custom_domains(self, obj: LLMClient):

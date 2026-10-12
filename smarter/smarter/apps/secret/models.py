@@ -183,8 +183,10 @@ class Secret(MetaDataWithOwnershipModel):
         """
         try:
             if update_last_accessed:
+                # a queryset update, rather than save(): reading a secret is not an edit, so it
+                # neither sends secret_edited nor invalidates and reloads the secret's cached objects.
                 self.last_accessed = timezone.now()
-                self.save(update_fields=["last_accessed"])
+                Secret.objects.filter(pk=self.pk).update(last_accessed=self.last_accessed)
             secret_accessed.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
             fernet = self.get_fernet()
             if self.encrypted_value:
@@ -214,7 +216,7 @@ class Secret(MetaDataWithOwnershipModel):
         expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
         return timezone.now() > expiration
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name) or "no name" + " - " + str(self.user_profile) or "no user profile"
 
     @classmethod

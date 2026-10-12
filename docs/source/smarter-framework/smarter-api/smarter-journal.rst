@@ -181,7 +181,12 @@ view's data:
      }
    }
 
-The keys of the ``error`` object are defined by
+The envelope, the ``error`` object and a journal entry are Pydantic models,
+the journal's API contract, in :mod:`smarter.lib.journal.contract.models`.
+Responses are built from those models, and their JSON Schema is committed as
+``smarter/lib/journal/contract/journal-contract.schema.json``, which
+``manage.py export_journal_contract_schema`` regenerates. The keys of the
+``error`` object are also listed in
 :class:`~smarter.lib.journal.enum.SmarterJournalApiResponseErrorKeys`. How
 exceptions map to status codes is described in :doc:`error-handling`.
 
@@ -192,7 +197,8 @@ Writing the entry is part of building the response, but it cannot make the
 response fail. If the entry can't be saved, for example because a value can't
 be serialized or the database is unavailable, Smarter logs the error, with the
 user, resource kind, command, status and response, and returns the response to
-the client without a ``key``. A response with the journal enabled but no
+the client without a ``key``. It also sends the ``journal_entry_failed``
+signal, whose receiver writes that log. A response with the journal enabled but no
 ``key`` in its metadata is the sign that an entry is missing. Monitor the
 application logs for ``could not create journal entry`` if your compliance
 requirements need every request to be recorded.
@@ -200,16 +206,50 @@ requirements need every request to be recorded.
 Reading the Journal
 -------------------
 
-Smarter has no API endpoint for reading the journal, by design: it is an audit
-record for administrators, not data for applications. Staff users read it in
-the Django admin console under **Smarter Journal**, where entries are listed
-newest first with their date, user, resource kind, command and status code, and
-can be sorted by those columns. Each entry opens to show its full request and
-response documents.
+The journal is an audit record for administrators, not data for applications.
+Only superusers can read it, in one of three ways.
 
-Because entries are ordinary database rows, they can also be queried directly
-for an audit, by ``key``, by ``user`` or by a ``created_at`` range, which are
-the fields the table indexes.
+**The Django admin console.** Staff users read it under **Smarter Journal**,
+where entries are listed newest first with their date, user, resource kind,
+command and status code, and can be sorted by those columns. Each entry opens
+to show its full request and response documents.
+
+**The journal API.** Superusers can read it at ``/api/v1/journal/``, with a
+web console session or an API key:
+
+- ``GET /api/v1/journal/`` returns one page of entries, newest first, without
+  their request and response documents. The optional query parameters
+  ``page``, ``page_size`` (up to 100), ``search`` (matches an entry's key,
+  resource kind or command) and ``ordering`` (``createdAt``, ``user``,
+  ``thing``, ``command`` or ``statusCode``, with a leading ``-`` for
+  descending order) are those of every Smarter list API.
+- ``GET /api/v1/journal/<key>/`` returns one entry, with its request and
+  response documents.
+
+Both also accept ``POST``. A user who isn't a superuser is refused. Each read
+sends a signal, ``journal_entry_accessed`` or ``journal_entries_listed``, so
+that reads of the journal can themselves be audited.
+
+.. code-block:: json
+
+   {
+     "objects": [
+       {
+         "key": "0d4c2f1e...  (64 characters)",
+         "createdAt": "2026-10-11T22:46:00.123456Z",
+         "user": "admin",
+         "thing": "Guardrail",
+         "command": "apply",
+         "statusCode": 200
+       }
+     ],
+     "pagination": {"page": 1, "pageSize": 25, "numPages": 1, "count": 1, "search": "", "ordering": "",
+                    "sortFields": ["command", "createdAt", "statusCode", "thing", "user"]}
+   }
+
+**The database.** Because entries are ordinary database rows, they can also be
+queried directly for an audit, by ``key``, by ``user`` or by a ``created_at``
+range, which are the fields the table indexes.
 
 Storage and Retention
 ---------------------
@@ -239,8 +279,9 @@ The journal is a complete record, and it should be protected like one.
 - **It contains credentials.** The ``request`` document copies the request's
   headers and cookies as Django received them. That includes the
   ``Authorization`` header, which carries the caller's API key, and the web
-  console's session and CSRF cookies. Restrict who can read the journal and
-  its archives, encrypt them at rest, and treat a leak of the journal as a
+  console's session and CSRF cookies. This is why the journal API is limited
+  to superusers, and why its list never includes the documents. Restrict who
+  can read the journal and its archives, encrypt them at rest, and treat a leak of the journal as a
   leak of every API key in it.
 - **It contains user content.** Prompt responses and completions can hold
   personal or confidential information. Your privacy obligations, such as
@@ -257,7 +298,7 @@ Technical Reference
 -------------------
 
 - :doc:`../developer-reference/smarter-journal`: the journal's enumerations,
-  model, and response classes.
+  model, response classes, API contract, serializers, API views and signals.
 - :doc:`../../smarter-platform/smarter-journal`: enabling the journal, and how
   it differs from Django and application logs.
 - :doc:`error-handling`: how CLI views turn exceptions into journaled error

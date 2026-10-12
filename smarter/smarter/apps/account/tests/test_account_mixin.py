@@ -244,17 +244,19 @@ class TestAccountMixin(SmarterTestBase):
         self.assertIsNone(instance.account_number)
 
     def test_dunder_str(self):
-        """Test __str__()."""
-        instance = AccountMixin(user=self.mortal_user, account=self.account)
-        s = repr(instance)
-        self.assertIsInstance(s, str)
-        s = str(instance)
+        """Test that __str__() names the concrete class, without ANSI color codes."""
+
+        class _Subclass(AccountMixin):
+            pass
+
+        instance = _Subclass(user=self.mortal_user, account=self.account)
+        self.assertEqual(str(instance), f"_Subclass[{id(instance)}](user_profile={instance.user_profile})")
+        self.assertNotIn("\x1b", str(instance))
 
     def test_dunder_repr(self):
-        """Test __repr__()."""
+        """Test that __repr__() is __str__()."""
         instance = AccountMixin(user=self.mortal_user, account=self.account)
-        r = repr(instance)
-        self.assertIsInstance(r, str)
+        self.assertEqual(repr(instance), str(instance))
 
     def test_dunder_bool(self):
         """Test __bool__()."""
@@ -277,29 +279,15 @@ class TestAccountMixin(SmarterTestBase):
         self.assertNotEqual(instance1, instance3)
         self.assertNotEqual(instance1, object())
 
-    def test_dunder_lt_le_gt_ge(self):
-        """Test __lt__(), __le__(), __gt__(), __ge__()."""
+    def test_no_ordering(self):
+        """Test that AccountMixin defines no order."""
         instance1 = AccountMixin(user=self.mortal_user, account=self.account)
         instance2 = AccountMixin(user=self.other_user, account=self.other_account)
-        # Ensure __lt__ and __gt__ are consistent with user_profile string comparison
-        if str(instance1.user_profile) < str(instance2.user_profile):
-            self.assertLess(instance1, instance2)
-            self.assertLessEqual(instance1, instance2)
-            self.assertGreater(instance2, instance1)
-            self.assertGreaterEqual(instance2, instance1)
-        elif str(instance1.user_profile) > str(instance2.user_profile):
-            self.assertGreater(instance1, instance2)
-            self.assertGreaterEqual(instance1, instance2)
-            self.assertLess(instance2, instance1)
-            self.assertLessEqual(instance2, instance1)
-        else:
-            self.assertEqual(instance1, instance2)
-            self.assertLessEqual(instance1, instance2)
-            self.assertGreaterEqual(instance1, instance2)
-        # None user_profile handling
-        instance_none = AccountMixin()
-        self.assertTrue(instance_none < instance1 or instance_none == instance1)
-        self.assertFalse(instance1 < instance_none)
+        for method in ("__lt__", "__le__", "__gt__", "__ge__"):
+            with self.subTest(method=method):
+                self.assertIs(getattr(instance1, method)(instance2), NotImplemented)
+        with self.assertRaises(TypeError):
+            instance1 < instance2  # pylint: disable=pointless-statement
 
 
 class _BrokenUserProfile:
