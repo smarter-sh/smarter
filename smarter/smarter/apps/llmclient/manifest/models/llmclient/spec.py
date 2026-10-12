@@ -7,6 +7,9 @@ from typing import ClassVar, List, Optional
 from pydantic import Field, field_validator
 
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
+from smarter.apps.llmclient.manifest.models.llmclient.styles import (
+    SAMLLMClientSpecConfigStyles,
+)
 from smarter.common.conf import settings_defaults
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
@@ -34,10 +37,15 @@ class SAMLLMClientCustomDomain(AbstractSAMSpecBase):
     )
 
 
-class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
-    """Smarter API LLMClient Manifest LLMClient.spec.config."""
+class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
+    """
+    Smarter API LLMClient Manifest LLMClient.spec.config.prompt.
 
-    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
+    What the LLMClient is and does: its LLM provider, model and system prompt, the text of its chat
+    (its name, welcome message, example prompts and placeholder), and where it is published.
+    """
+
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration.prompt"
 
     subdomain: Optional[str] = Field(
         None,
@@ -104,14 +112,6 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
         None,
         description=f"{class_identifier}.app_info_url[str]. Optional. The custom info URL of the llmclient. This is a user control button located on the right-hand side of the header of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
-    appBackgroundImageUrl: Optional[str] = Field(
-        None,
-        description=f"{class_identifier}.app_background_image_url[str]. Optional. The image URL for the background image of the prompt window in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
-    )
-    appLogoUrl: Optional[str] = Field(
-        None,
-        description=f"{class_identifier}.app_logo_url[str]. Optional. The URL for the llmclient logo. This is future use and is anticipated to be used for meta presentation of this llmclient in UI collections.",
-    )
     appFileAttachment: Optional[bool] = Field(
         False,
         description=f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the llmclient supports file attachments. Defaults to False. When set to True, a file attachment button will be displayed in the prompt input box of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
@@ -149,6 +149,37 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
             if normalized not in origins:
                 origins.append(normalized)
         return origins
+
+
+class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
+    """
+    Smarter API LLMClient Manifest LLMClient.spec.config.
+
+    ``prompt``, which is required, configures the LLMClient, and ``styles``, which is optional, the
+    look of its chat.
+
+    Manifests written before the split have their settings directly in ``spec.config``. Apply
+    rejects them, with an error that says where each setting belongs now. See
+    :meth:`smarter.apps.llmclient.manifest.brokers.llmclient.SAMLLMClientBroker.raise_for_unknown_keys`.
+    """
+
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
+
+    prompt: SAMLLMClientSpecConfigPrompt = Field(
+        ...,
+        description=(
+            f"{class_identifier}.prompt[object]. Required. The LLMClient's LLM provider, model and system prompt, "
+            "the text of its chat, and where it is published."
+        ),
+    )
+    styles: Optional[SAMLLMClientSpecConfigStyles] = Field(
+        None,
+        description=(
+            f"{class_identifier}.styles[object]. Optional. The look of the LLMClient's chat, in the Smarter "
+            "workbench and on every page that embeds it: its logo, background image, fonts and colors. See "
+            "https://docs.smarter.sh/en/latest/smarter-resources/llmclient/styles.html"
+        ),
+    )
 
 
 class SAMLLMClientSpec(AbstractSAMSpecBase):

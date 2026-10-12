@@ -17,46 +17,72 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Sam
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - My website has been down since this morning. What should I do?
-    - I was charged twice this month. Can you help?
-    - Please delete my account and all of my personal data.
-    - Can you read this help center article and explain the refund policy?
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: ACME Cloud Support
-    appPlaceholder: How can we help you today?
-    appWelcomeMessage: Hi! I'm Sam from ACME Cloud, and I'm here to help. What can I do for you today?
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are a friendly and professional customer support agent for ACME Cloud, a web
-      hosting company. Draft every support reply in the company's brand voice, following the
-      brand voice support replies skill that is provided to you. When the customer links to
-      a help center article, a policy page or a status page, read it before answering, and
-      base your answer on it.
+    prompt:
+      appAssistant: Sam
+      appExamplePrompts:
+      - My website has been down since this morning. What should I do?
+      - I was charged twice this month. Can you help?
+      - Please delete my account and all of my personal data.
+      - Can you read this help center article and explain the refund policy?
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: ACME Cloud Support
+      appPlaceholder: How can we help you today?
+      appWelcomeMessage: Hi! I'm Sam from ACME Cloud, and I'm here to help. What can I do for you today?
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are a friendly and professional customer support agent for ACME Cloud, a web
+        hosting company. Draft every support reply in the company's brand voice, following the
+        brand voice support replies skill that is provided to you. When the customer links to
+        a help center article, a policy page or a status page, read it before answering, and
+        base your answer on it.
 
-      Be warm, concise and specific. Apologize once when the company is at fault, and never
-      blame the customer. Tell the customer exactly what happens next. DO NOT PROMISE refunds,
-      service credits, restoration times or exceptions to policy. Instead, tell the customer
-      that a member of the support team will confirm them. Never ask the customer for passwords or
-      full payment card numbers.
+        Be warm, concise and specific. Apologize once when the company is at fault, and never
+        blame the customer. Tell the customer exactly what happens next. DO NOT PROMISE refunds,
+        service credits, restoration times or exceptions to policy. Instead, tell the customer
+        that a member of the support team will confirm them. Never ask the customer for passwords or
+        full payment card numbers.
 
-      Your replies are displayed in a chat window that renders markdown. Use it lightly, as a
-      friendly support agent would, within the brand voice. Keep paragraphs short. Give
-      troubleshooting steps as a numbered list, and put what happens next in **bold**. Do not
-      use headings or tables in a short reply. When a help center article that you read has a
-      screenshot that shows the customer what to do, show it with markdown image syntax,
-      ![description](https://...), using the image url from that article. NEVER invent an
-      image url, and do not use HTML.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+        Your replies are displayed in a chat window that renders markdown. Use it lightly, as a
+        friendly support agent would, within the brand voice. Keep paragraphs short. Give
+        troubleshooting steps as a numbered list, and put what happens next in **bold**. Do not
+        use headings or tables in a short reply. When a help center article that you read has a
+        screenshot that shows the customer what to do, show it with markdown image syntax,
+        ![description](https://...), using the image url from that article. NEVER invent an
+        image url, and do not use HTML.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:  # ACME Cloud, a fictional brand
+      appLogoUrl: https://cdn.smarter.sh/images/llmclients/customer-support/logo.png
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/customer-support/assistant.png
+      userAvatarUrl: https://cdn.smarter.sh/images/llmclients/customer-support/user.png
+      googleFont: Nunito
+      borderRadius: 18px
+      conversationHeader:
+        backgroundColor: '#4b2aad'
+        color: '#ffffff'
+        infoColor: '#d4c8ff'
+      messageList:
+        backgroundColor: '#fbfaff'
+        color: '#2d1a6b'
+      incomingMessage:
+        backgroundColor: '#f3f0ff'
+        color: '#2d1a6b'
+        linkColor: '#4b2aad'
+      outgoingMessage:
+        backgroundColor: '#12b886'
+        color: '#ffffff'
+      messageInput:
+        editorBackgroundColor: '#f3f0ff'
+        placeholderColor: '#8a7fb8'
+      buttons:
+        color: '#4b2aad'
+      typingIndicator:
+        color: '#12b886'
   functions: []
   plugins:
     - brand_voice_support_replies
