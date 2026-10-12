@@ -87,9 +87,10 @@ Usage
     version: 1.0.0
   spec:
     config:
-      provider: openai
-      defaultModel: gpt-4-turbo
-      defaultSystemRole: You are a helpful assistant.
+      prompt:
+        provider: openai
+        defaultModel: gpt-4-turbo
+        defaultSystemRole: You are a helpful assistant.
     plugins:
       - stackademy_sql
 

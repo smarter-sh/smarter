@@ -17,28 +17,51 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Oscar
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - Write a Python function that generates the Fibonacci sequence.
-    - Summarize the book "The Great Gatsby" in 100 words or less.
-    - Provide a technical definition for the term "machine learning."
-    - Show me cat pics.
-    appFileAttachment: false
-    appInfoUrl: https://platform.openai.com/
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: OpenAI ChatGPT 4
-    appPlaceholder: Ask me anything...
-    appWelcomeMessage: Welcome to ChatGPT 4!
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are a helpful llmclient.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+    prompt:
+      appAssistant: Oscar
+      appExamplePrompts:
+      - Write a Python function that generates the Fibonacci sequence.
+      - Summarize the book "The Great Gatsby" in 100 words or less.
+      - Provide a technical definition for the term "machine learning."
+      - Show me cat pics.
+      appFileAttachment: false
+      appInfoUrl: https://platform.openai.com/
+      appName: OpenAI ChatGPT 4
+      appPlaceholder: Ask me anything...
+      appWelcomeMessage: Welcome to ChatGPT 4!
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are a helpful llmclient.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      googleFont: Inter
+      borderRadius: 24px
+      conversationHeader:
+        backgroundColor: '#000000'
+        color: '#ffffff'
+        infoColor: '#b4b4b4'
+      messageList:
+        backgroundColor: '#ffffff'
+        color: '#0d0d0d'
+      incomingMessage:
+        backgroundColor: '#ffffff'
+        color: '#0d0d0d'
+      outgoingMessage:
+        backgroundColor: '#f4f4f4'
+        color: '#0d0d0d'
+      messageInput:
+        editorBackgroundColor: '#f4f4f4'
+        placeholderColor: '#8f8f8f'
+      buttons:
+        color: '#0d0d0d'
+      typingIndicator:
+        color: '#10a37f'
   functions: []
   plugins:
     - image_search

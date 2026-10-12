@@ -17,9 +17,8 @@ from smarter.lib.typing import SmarterDictType
 
 class SmarterHttpResponse(HttpResponse):
     """
-    SmarterHttpResponse(request, error_message=None, status_code=200, template_file="200.html", *args, **kwargs).
-
     A generic HTTP response class for Smarter applications, extending Django's ``HttpResponse``.
+
     This class is designed to render a specified template with a customizable error message and HTTP status code.
     It is intended to standardize error handling and response rendering across Smarter Django views.
 
@@ -88,9 +87,8 @@ class SmarterHttpErrorResponse(SmarterHttpResponse):
 
 class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseBadRequest(request, error_message=None, *args, **kwargs).
-
     Specialized HTTP 400 (Bad Request) response for Smarter Django applications.
+
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     a "Bad Request" response, rendering the ``400.html`` template with a customizable error message.
 
@@ -145,9 +143,8 @@ class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
 
 class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseForbidden(request, error_message=None, *args, **kwargs).
-
     Specialized HTTP 403 (Forbidden) response for Smarter Django applications.
+
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     a "Forbidden" response, rendering the ``403.html`` template with a customizable error message.
 
@@ -202,9 +199,8 @@ class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
 
 class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseNotFound(request, error_message=None, *args, **kwargs).
-
     Specialized HTTP 404 (Not Found) response for Smarter Django applications.
+
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     a "Not Found" response, rendering the ``404.html`` template with a customizable error message.
 
@@ -260,9 +256,8 @@ class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
 
 class SmarterHttpResponseServerError(SmarterHttpErrorResponse):
     """
-    SmarterHttpResponseServerError(request, error_message=None, *args, **kwargs).
-
     Specialized HTTP 500 (Internal Server Error) response for Smarter Django applications.
+
     This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     an "Internal Server Error" response, rendering the ``500.html`` template with a customizable error message.
 

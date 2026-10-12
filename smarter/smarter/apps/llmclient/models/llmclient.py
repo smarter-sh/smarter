@@ -230,17 +230,21 @@ class LLMClient(MetaDataWithOwnershipModel):
     #: Example: "https://smarter.sh"
     app_info_url = models.URLField(default="https://smarter.sh", blank=True, null=True)
 
-    #: The LLMClient UI configuration fields. URL to the app background image in the Smarter React LLMClient component.
-    #: Example: "https://cdn.smarter.sh/prompt-ui/background.png"
-    app_background_image_url = models.URLField(blank=True, null=True)
-
-    #: The LLMClient UI configuration fields. URL to the app logo image in the Smarter React LLMClient component.
-    #: Example: "https://cdn.smarter.sh/prompt-ui/logo.png"
-    app_logo_url = models.URLField(blank=True, null=True)
-
     #: The LLMClient UI configuration fields. Enables or disables file attachment feature in the Smarter React LLMClient component.
     #: Example: True
     app_file_attachment = models.BooleanField(default=False, blank=True, null=True)
+
+    #: The look of the LLMClient's chat: its manifest's ``spec.config.styles``, validated by
+    #: :class:`~smarter.apps.llmclient.manifest.models.llmclient.styles.SAMLLMClientSpecConfigStyles`,
+    #: with its camelCase keys, and without the settings that the manifest leaves out.
+    #: Example: {"appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+    #: "conversationHeader": {"backgroundColor": "#1b1f3b"}}
+    styles = models.JSONField(
+        default=dict,
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
 
     #: The origins of the web pages that may call the LLMClient from a browser, with the @smarter.sh/ui-chat
     #: React component, in addition to those that the platform's CORS settings allow. See

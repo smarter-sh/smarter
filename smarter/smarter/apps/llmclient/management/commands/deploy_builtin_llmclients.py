@@ -144,7 +144,7 @@ class Command(SmarterCommand):
         - check the response
         - get the llmclient by name
 
-        The manifest is applied with ``spec.config.deployed`` set to true, rather than applied as it
+        The manifest is applied with ``spec.config.prompt.deployed`` set to true, rather than applied as it
         is and then deployed. A built-in manifest is not deployed, so applying it would undeploy an
         llmclient that is deployed, whose undeploy task destroys its A record, only for the deploy that
         follows to create it again. Resolvers that query the domain in between cache the NXDOMAIN for
@@ -159,7 +159,7 @@ class Command(SmarterCommand):
         )
 
         manifest_data = copy.deepcopy(SAMLoader(file_path=filespec).json_data or {})
-        manifest_data.setdefault("spec", {}).setdefault("config", {})["deployed"] = True
+        manifest_data.setdefault("spec", {}).setdefault("config", {}).setdefault("prompt", {})["deployed"] = True
         manifest = SAMLoader(manifest=manifest_data)
         if not self.apply_manifest(manifest, filespec):
             return False

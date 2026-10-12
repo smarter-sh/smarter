@@ -318,6 +318,7 @@ MCPClient, and four guardrails, and it contains no code.
    smarter-platform
    smarter-resources
    smarter-framework
+   smarter-instructor
    adr
    contributors
 
