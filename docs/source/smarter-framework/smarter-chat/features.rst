@@ -71,7 +71,8 @@ which is then always in production mode.*
 The **Sandbox mode / Production mode** button shows and hides the backend's own messages in the
 thread: the system prompt, tool results, Smarter's notes, for example about the plugins it selected
 and the tokens it charged, and the prompt's progress. In production mode, the thread is the
-conversation as the LLMClient's users see it.
+conversation as the LLMClient's users see it, and the Console and the button that shows and hides
+it are hidden too. Switching back to sandbox mode restores the Console as you left it.
 
 The Console's Server Logs tab follows the mode: in sandbox mode it streams every log record, DEBUG
 included, and in production mode only the records at the platform's log level

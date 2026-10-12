@@ -44,6 +44,7 @@ tools, SDKs, and supporting technologies.
    smarter-framework/smarter-chat
    smarter-framework/smarter-cli
    smarter-framework/smarter-manifests
+   smarter-framework/smarter-on-kubernetes
    smarter-framework/vs-code-extension
    smarter-framework/developer-reference
    smarter-framework/technologies

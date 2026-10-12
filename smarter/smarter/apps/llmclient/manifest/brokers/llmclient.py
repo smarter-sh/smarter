@@ -1300,7 +1300,7 @@ class SAMLLMClientBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.deploy.__name__
+        command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
