@@ -39,11 +39,12 @@ tools, SDKs, and supporting technologies.
 
    smarter-framework/getting-started
    smarter-framework/guides
-   smarter-framework/smarter-manifests
-   smarter-framework/smarter-broker-model
    smarter-framework/smarter-api
+   smarter-framework/smarter-broker-model
+   smarter-framework/smarter-chat
    smarter-framework/smarter-cli
+   smarter-framework/smarter-manifests
+   smarter-framework/smarter-on-kubernetes
    smarter-framework/vs-code-extension
    smarter-framework/developer-reference
-   smarter-framework/smarter-chat
    smarter-framework/technologies

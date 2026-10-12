@@ -5,6 +5,16 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 
 # Smarter Docker Environment
 
+> **Read first: the host shell is zsh, and zsh does not word-split.** > `FILES=$(git diff --name-only); for f in $FILES; do docker cp "$f" ...; done`
+> runs **once**, with every path joined into one "file name". `docker cp` fails,
+> silently if its stderr is discarded, the containers keep the old code, and the
+> tests "fail again for no reason". Agents have rediscovered this in session after
+> session. Don't hand-write the loop: run
+> [scripts/sync-changed-files.sh](scripts/sync-changed-files.sh), which copies
+> exactly the files git lists as changed or new. If you must loop, use
+> `while read -r f; do ...; done < file` or `xargs`, and never discard
+> `docker cp`'s errors.
+
 ## The containers
 
 | Container                          | Role                                                                            |
@@ -64,10 +74,19 @@ docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.
 `make react-build` instead (see `smarter-django-react`).
 
 **When a rebuild isn't possible**, e.g. while the user is running the stack
-themselves, [scripts/sync-to-containers.sh](scripts/sync-to-containers.sh)
-copies the files whose md5 differs into every app container, fixes their
-ownership, restarts them, and waits for the dev server. Give it subpaths:
-comparing all of `smarter/smarter` takes many minutes.
+themselves, [scripts/sync-changed-files.sh](scripts/sync-changed-files.sh)
+copies the files that git lists as changed or new into every app container,
+fixes their ownership, restarts smarter-app, and waits for the dev server. It
+takes seconds.
+
+```console
+skills/smarter-docker-environment/scripts/sync-changed-files.sh
+```
+
+[scripts/sync-to-containers.sh](scripts/sync-to-containers.sh) instead compares
+every file's md5, which also catches containers that drifted from the host's
+committed files, but takes many minutes over all of `smarter/smarter` (long
+enough to look hung). Give it subpaths, and run it in the background:
 
 ```console
 skills/smarter-docker-environment/scripts/sync-to-containers.sh apps/llmclient lib/unittest
@@ -103,8 +122,8 @@ docker cp smarter-app:/home/smarter_user/smarter/smarter/apps/widget/migrations/
 
 - Never name a variable `path` in zsh: it is tied to `$PATH`, and assigning it
   breaks every command that follows ("command not found: curl").
-- An unquoted `$FILES` is **not** word-split in zsh. Loop with
-  `while read -r f; do ...; done <<< "$FILES"`, or pipe to `xargs`.
+- An unquoted `$FILES` is **not** word-split in zsh (see the top of this page).
+  Loop with `while read -r f; do ...; done <<< "$FILES"`, or pipe to `xargs`.
 - Use absolute paths, or paths from the repository root. A wrong relative `cd`
   silently runs a command against the wrong tree.
 

@@ -129,26 +129,27 @@ The following example shows the intended shape of an Anthropic llmclient manifes
    spec:
      apiKey: null
      config:
-       appAssistant: Claude
-       appBackgroundImageUrl: null
-       appExamplePrompts:
-         - Write a Python function that generates the Fibonacci sequence.
-         - Summarize a technical document in 100 words or less.
-         - Provide a technical definition for the term "machine learning."
-       appFileAttachment: false
-       appInfoUrl: https://www.anthropic.com/
-       appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
-       appName: Anthropic Claude
-       appPlaceholder: Ask me anything...
-       appWelcomeMessage: Welcome to Claude!
-       customDomain: null
-       defaultMaxTokens: 4096
-       defaultModel: claude-3-5-sonnet
-       defaultSystemRole: You are a helpful llmclient.
-       defaultTemperature: 0.5
-       deployed: true
-       provider: anthropic
-       subdomain: null
+       prompt:
+         appAssistant: Claude
+         appExamplePrompts:
+           - Write a Python function that generates the Fibonacci sequence.
+           - Summarize a technical document in 100 words or less.
+           - Provide a technical definition for the term "machine learning."
+         appFileAttachment: false
+         appInfoUrl: https://www.anthropic.com/
+         appName: Anthropic Claude
+         appPlaceholder: Ask me anything...
+         appWelcomeMessage: Welcome to Claude!
+         customDomain: null
+         defaultMaxTokens: 4096
+         defaultModel: claude-3-5-sonnet
+         defaultSystemRole: You are a helpful llmclient.
+         defaultTemperature: 0.5
+         deployed: true
+         provider: anthropic
+         subdomain: null
+       styles:
+         appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
      functions: []
      plugins: []
 

@@ -80,7 +80,8 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
     def validate_spec(self, data: SmarterDictType) -> None:
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
-        config = spec["config"]
+        self.assertIn("styles", spec["config"])
+        config = spec["config"]["prompt"]
         config_fields = [
             "subdomain",
             "customDomain",
@@ -95,8 +96,6 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
             "appExamplePrompts",
             "appPlaceholder",
             "appInfoUrl",
-            "appBackgroundImageUrl",
-            "appLogoUrl",
             "appFileAttachment",
         ]
         for field in config_fields:
@@ -135,10 +134,12 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.llmclient.description)
         self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.llmclient.version)
 
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["deployed"], self.llmclient.deployed)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appName"], self.llmclient.app_name)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appAssistant"], self.llmclient.app_assistant)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appWelcomeMessage"], self.llmclient.app_welcome_message)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["deployed"], self.llmclient.deployed)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appName"], self.llmclient.app_name)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appAssistant"], self.llmclient.app_assistant)
+        self.assertEqual(
+            data[SAMKeys.SPEC.value]["config"]["prompt"]["appWelcomeMessage"], self.llmclient.app_welcome_message
+        )
 
     def test_apply(self) -> None:
         """Test apply command."""
@@ -158,20 +159,24 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         data = response[SmarterJournalApiResponseKeys.DATA]
         data[SAMKeys.SPEC.value] = {
             "config": {
-                "deployed": True,
-                "defaultModel": "gpt-2",
-                "defaultSystemRole": "You are a helpful assistant.",
-                "defaultTemperature": 1.0,
-                "defaultMaxTokens": 100,
-                "appName": "newName",
-                "appAssistant": "newAssistant",
-                "appWelcomeMessage": "newWelcomeMessage",
-                "appExamplePrompts": ["newExamplePrompts"],
-                "appPlaceholder": "newPlaceholder",
-                "appInfoUrl": "http://new.com",
-                "appBackgroundImageUrl": "http://new-background.com",
-                "appLogoUrl": "http://new-logo.com",
-                "appFileAttachment": False,
+                "prompt": {
+                    "deployed": True,
+                    "defaultModel": "gpt-2",
+                    "defaultSystemRole": "You are a helpful assistant.",
+                    "defaultTemperature": 1.0,
+                    "defaultMaxTokens": 100,
+                    "appName": "newName",
+                    "appAssistant": "newAssistant",
+                    "appWelcomeMessage": "newWelcomeMessage",
+                    "appExamplePrompts": ["newExamplePrompts"],
+                    "appPlaceholder": "newPlaceholder",
+                    "appInfoUrl": "http://new.com",
+                    "appFileAttachment": False,
+                },
+                "styles": {
+                    "appBackgroundImageUrl": "https://cdn.smarter.sh/cms/img/graydots.png",
+                    "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+                },
             }
         }
         data[SAMKeys.METADATA.value]["description"] = "new description"
@@ -196,16 +201,22 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["deployed"], True)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appName"], "newName")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appAssistant"], "newAssistant")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appWelcomeMessage"], "newWelcomeMessage")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appExamplePrompts"], ["newExamplePrompts"])
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appPlaceholder"], "newPlaceholder")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appInfoUrl"], "http://new.com")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appBackgroundImageUrl"], "http://new-background.com")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appLogoUrl"], "http://new-logo.com")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appFileAttachment"], False)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["deployed"], True)
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appName"], "newName")
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appAssistant"], "newAssistant")
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appWelcomeMessage"], "newWelcomeMessage")
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appExamplePrompts"], ["newExamplePrompts"])
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appPlaceholder"], "newPlaceholder")
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appInfoUrl"], "http://new.com")
+        self.assertEqual(
+            data[SAMKeys.SPEC.value]["config"]["styles"]["appBackgroundImageUrl"],
+            "https://cdn.smarter.sh/cms/img/graydots.png",
+        )
+        self.assertEqual(
+            data[SAMKeys.SPEC.value]["config"]["styles"]["appLogoUrl"],
+            "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        )
+        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["prompt"]["appFileAttachment"], False)
 
     def test_get(self) -> None:
         """Test get command."""

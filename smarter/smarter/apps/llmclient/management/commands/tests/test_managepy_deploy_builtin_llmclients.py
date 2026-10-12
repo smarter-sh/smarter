@@ -83,17 +83,17 @@ class TestDeployBuiltinLLMClients(TestAccountMixin):
 
     def test_llmclient_is_applied_as_deployed(self):
         """Test that a built-in llmclient manifest is applied with deployed set to true, rather than as it is."""
-        self.assertFalse(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH)["spec"]["config"]["deployed"])
+        self.assertFalse(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH)["spec"]["config"]["prompt"]["deployed"])
         with (
             patch.object(Command, "apply_manifest", return_value=True) as apply_manifest,
             patch(f"{MODULE}.LLMClient.objects.get"),
         ):
             self.assertTrue(self.command.create_and_deploy_llmclient(SIMPLE_LLMCLIENT_PATH))
         manifest = apply_manifest.call_args.args[0]
-        self.assertTrue(manifest.json_data["spec"]["config"]["deployed"])
+        self.assertTrue(manifest.json_data["spec"]["config"]["prompt"]["deployed"])
         self.assertIn("deployed: true", manifest.yaml_data)
         # the built-in manifest itself is unchanged.
-        self.assertFalse(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH)["spec"]["config"]["deployed"])
+        self.assertFalse(get_readonly_yaml_file(SIMPLE_LLMCLIENT_PATH)["spec"]["config"]["prompt"]["deployed"])
 
     def test_deployed_llmclient_is_not_undeployed(self):
         """

@@ -13,37 +13,61 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Daisy Date
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - I was born on December 31, 1966. How many days old am I?
-    - Which is more recent a.) December 31, 1966 or b.) 1st of Jan of the year Two Thousand?
-    - Convert the date December 31, 1966 to ISO format.
-    - Subtract 100 days from December 31, 1966.
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Date Calculator Bot
-    appPlaceholder: Give me a date calculation...
-    appWelcomeMessage: Welcome to the Date Calculator Bot! How can I help you today?
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole: You are a helpful date calculator. You perform all of your
-      date operations using the date_calculator tool call function that is provided to you
-      on all prompts. You always use the date_calculator function to perform
-      calculations. You NEVER perform date calculations yourself. If you are
-      unable to provide the necessary date_calculator parameters, then ask
-      the user for clarification.
+    prompt:
+      appAssistant: Daisy Date
+      appExamplePrompts:
+      - I was born on December 31, 1966. How many days old am I?
+      - Which is more recent a.) December 31, 1966 or b.) 1st of Jan of the year Two Thousand?
+      - Convert the date December 31, 1966 to ISO format.
+      - Subtract 100 days from December 31, 1966.
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: Date Calculator Bot
+      appPlaceholder: Give me a date calculation...
+      appWelcomeMessage: Welcome to the Date Calculator Bot! How can I help you today?
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole: You are a helpful date calculator. You perform all of your
+        date operations using the date_calculator tool call function that is provided to you
+        on all prompts. You always use the date_calculator function to perform
+        calculations. You NEVER perform date calculations yourself. If you are
+        unable to provide the necessary date_calculator parameters, then ask
+        the user for clarification.
 
-      Your replies are displayed in a chat window that renders markdown. Show the answer in
-      bold, such as **42 days**, and dates in a readable form, such as Friday, March 15,
-      2024, with ISO dates in inline code. When you compare several dates,
-      use a small markdown table. Do not use HTML. Keep replies short.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+        Your replies are displayed in a chat window that renders markdown. Show the answer in
+        bold, such as **42 days**, and dates in a readable form, such as Friday, March 15,
+        2024, with ISO dates in inline code. When you compare several dates,
+        use a small markdown table. Do not use HTML. Keep replies short.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/date-calculator/background.png
+      appBackgroundImageSize: auto
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/date-calculator/assistant.png
+      googleFont: Work Sans
+      borderRadius: 10px
+      conversationHeader:
+        backgroundColor: '#c0392b'
+        color: '#ffffff'
+        infoColor: '#f8d7d3'
+      messageList:
+        backgroundColor: rgba(255, 250, 240, 0.9)
+        color: '#5a2a1a'
+      incomingMessage:
+        backgroundColor: '#fdf2e9'
+        color: '#5a2a1a'
+        borderColor: '#f0c9a8'
+      outgoingMessage:
+        backgroundColor: '#c0392b'
+        color: '#ffffff'
+      buttons:
+        color: '#c0392b'
+      typingIndicator:
+        color: '#c0392b'
   functions:
     - date_calculator
   guardrails:
