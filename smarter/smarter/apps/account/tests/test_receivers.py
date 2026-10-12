@@ -59,3 +59,26 @@ class TestUserPostSave(TestAccountMixin):
         self.assertTrue(UserProfile.get_cached_object(user=self.user).user.is_staff)
         self.assertTrue(UserProfile.get_cached_object(user=self.user, account=self.account).user.is_staff)
         self.assertTrue(UserProfile.get_cached_objects(user=self.user)[0].user.is_staff)
+
+
+class TestUserProfileReceivers(TestAccountMixin):
+    """Test that saving or deleting a UserProfile refreshes its User's cached list of UserProfiles."""
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(username=f"test_profile_receivers_{self.hash_suffix}", password="12345")
+        self.addCleanup(self.user.delete)
+
+    def test_new_user_does_not_cache_an_empty_list(self):
+        """A UserProfile created after its User appears in the cached list, which permission querysets read."""
+        user_profile = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)
+        self.addCleanup(user_profile.delete)
+        self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [user_profile])
+
+    def test_save_and_delete_refresh_the_cached_list(self):
+        """The cached list follows UserProfiles that are created and deleted after it was cached."""
+        self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [])
+        user_profile = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)
+        self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [user_profile])
+        user_profile.delete()
+        self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [])
