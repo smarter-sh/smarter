@@ -57,9 +57,9 @@ spec:
       provider: openai
       subdomain: null
     styles:  # ACME Cloud, a fictional brand
-      # appLogoUrl: https://cdn.smarter.sh/images/llmclients/customer-support/logo.png  # coming soon: upload, then uncomment
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/customer-support/assistant.png  # coming soon: upload, then uncomment
-      # userAvatarUrl: https://cdn.smarter.sh/images/llmclients/customer-support/user.png  # coming soon: upload, then uncomment
+      appLogoUrl: https://cdn.smarter.sh/images/llmclients/customer-support/logo.png
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/customer-support/assistant.png
+      userAvatarUrl: https://cdn.smarter.sh/images/llmclients/customer-support/user.png
       googleFont: Nunito
       borderRadius: 18px
       conversationHeader:

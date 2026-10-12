@@ -57,9 +57,9 @@ spec:
       provider: openai
       subdomain: null
     styles:  # Stackademy's colors
-      # appLogoUrl: https://cdn.smarter.sh/images/llmclients/stackademy/logo.png  # coming soon: upload, then uncomment
-      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/data-analyst/background.png  # coming soon: upload, then uncomment
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/data-analyst/assistant.png  # coming soon: upload, then uncomment
+      appLogoUrl: https://cdn.smarter.sh/images/llmclients/stackademy/logo.png
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/data-analyst/background.jpg
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/data-analyst/assistant.png
       googleFont: IBM Plex Sans
       borderRadius: 10px
       conversationHeader:

@@ -62,7 +62,7 @@ spec:
     styles:
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
       appBackgroundImageUrl: https://cdn.smarter.sh/cms/img/graydots.png
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/repo-explorer/assistant.png  # coming soon: upload, then uncomment
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/repo-explorer/assistant.png
       googleFont: Inter
       borderRadius: 8px
       conversationHeader:
