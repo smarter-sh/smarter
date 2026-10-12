@@ -170,6 +170,89 @@
         "id": 0,
         "name": "name",
         "provider": "provider",
+        "styles": {
+          "app_background_image_size": "cover",
+          "app_background_image_url": "app_background_image_url",
+          "app_logo_url": "app_logo_url",
+          "assistant_avatar_url": "assistant_avatar_url",
+          "border_radius": "border_radius",
+          "buttons": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "conversation_header": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "font_family": "font_family",
+          "font_size": "font_size",
+          "google_font": "google_font",
+          "incoming_message": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "main_container": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "message_input": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "message_list": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "outgoing_message": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "typing_indicator": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "user_avatar_url": "user_avatar_url"
+        },
         "url_llmclient": "url_llmclient",
         "version": "version"
       },
@@ -238,6 +321,89 @@
         "id": 0,
         "name": "name",
         "provider": "provider",
+        "styles": {
+          "app_background_image_size": "cover",
+          "app_background_image_url": "app_background_image_url",
+          "app_logo_url": "app_logo_url",
+          "assistant_avatar_url": "assistant_avatar_url",
+          "border_radius": "border_radius",
+          "buttons": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "conversation_header": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "font_family": "font_family",
+          "font_size": "font_size",
+          "google_font": "google_font",
+          "incoming_message": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "main_container": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "message_input": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "message_list": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "outgoing_message": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "typing_indicator": {
+            "background_color": "background_color",
+            "border_color": "border_color",
+            "color": "color",
+            "editor_background_color": "editor_background_color",
+            "info_color": "info_color",
+            "link_color": "link_color",
+            "placeholder_color": "placeholder_color"
+          },
+          "user_avatar_url": "user_avatar_url"
+        },
         "url_chatbot": "url_chatbot",
         "version": "version"
       },

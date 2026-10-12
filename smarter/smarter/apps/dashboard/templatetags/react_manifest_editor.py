@@ -11,8 +11,8 @@ from django import template
 from django.conf import settings
 from django.urls import reverse
 
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
-    AssetDict,
     SmarterReactTemplateTagManager,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
@@ -33,7 +33,7 @@ static/react/@smarter/manifest-editor/.
 
 
 @register.simple_tag
-def manifest_editor_react_assets() -> AssetDict:
+def manifest_editor_react_assets() -> ReactAppAssets:
     """Load CSS and JS files for a React app entry point based on its manifest.json."""
     return templatetag_manager.reactapp_build_assets
 

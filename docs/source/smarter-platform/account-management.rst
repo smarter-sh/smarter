@@ -17,7 +17,7 @@ Use the manage.py command to create new Accounts:
 
 .. code-block:: bash
 
-   python manage.py create_account --company_name "My Organization" --account-number "####-####-####"
+   python manage.py create_account --company_name "My Organization" --account_number "####-####-####"
 
 .. note::
 

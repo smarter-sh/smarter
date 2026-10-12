@@ -9,35 +9,49 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Elle
-    appBackgroundImageUrl: https://example.com/background-image.jpg
-    appExamplePrompts:
-      - What is the weather in New York?
-      - Tell me a joke
-      - what's the current price of Apple stock?
-      - How many days ago was 29-Feb-1972?
-    allowedOrigins:
-      - https://www.example.com
-      - http://localhost:5173
-    appFileAttachment: false
-    appInfoUrl: https://example.com
-    appLogoUrl: https://example.com/logo.png
-    appName: Example LLMClient
-    appPlaceholder: Ask me anything...
-    appWelcomeMessage: Welcome to the Example LLMClient! How can I help you today?
-    customDomain: null
-    defaultMaxTokens: 2048
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are a helpful llmclient. When given the opportunity to utilize
-      function calling, you should always do so. This will allow you to provide the
-      best possible responses to the user. If you are unable to provide a response,
-      you should prompt the user for more information. If you are still unable to
-      provide a response, you should inform the user that you are unable to help them
-      at this time.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+    prompt:
+      appAssistant: Elle
+      appExamplePrompts:
+        - What is the weather in New York?
+        - Tell me a joke
+        - what's the current price of Apple stock?
+        - How many days ago was 29-Feb-1972?
+      allowedOrigins:
+        - https://www.example.com
+        - http://localhost:5173
+      appFileAttachment: false
+      appInfoUrl: https://example.com
+      appName: Example LLMClient
+      appPlaceholder: Ask me anything...
+      appWelcomeMessage: Welcome to the Example LLMClient! How can I help you today?
+      customDomain: null
+      defaultMaxTokens: 2048
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are a helpful llmclient. When given the opportunity to utilize
+        function calling, you should always do so. This will allow you to provide the
+        best possible responses to the user. If you are unable to provide a response,
+        you should prompt the user for more information. If you are still unable to
+        provide a response, you should inform the user that you are unable to help them
+        at this time.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appBackgroundImageUrl: https://cdn.smarter.sh/cms/img/graydots.png
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      appBackgroundImageSize: contain
+      googleFont: Fredoka
+      fontSize: 15px
+      borderRadius: 18px
+      conversationHeader:
+        backgroundColor: "#1b1f3b"
+        color: "#ffffff"
+      incomingMessage:
+        backgroundColor: rgba(255, 255, 255, 0.9)
+      outgoingMessage:
+        backgroundColor: tomato
+        color: "#fff"
   functions: null
   plugins: null

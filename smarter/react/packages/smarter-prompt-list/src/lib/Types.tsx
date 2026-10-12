@@ -79,14 +79,22 @@ export type LLMClient = {
   appExamplePrompts: string[];
   appPlaceholder: string;
   appInfoUrl: string;
-  appBackgroundImageUrl: string | null;
-  appLogoUrl: string | null;
   appFileAttachment: boolean;
+  styles: LLMClientStyles | null; // the manifest's spec.config.styles, with its camelCase keys
   dnsVerificationStatus: string;
   tlsCertificateIssuanceStatus: string;
   subdomain: string | null;
   customDomain: string | null;
 };
+
+/** The look of an LLMClient's chat: its manifest's spec.config.styles. Only the settings it has are present. */
+export interface LLMClientStyles {
+  appLogoUrl?: string | null;
+  appBackgroundImageUrl?: string | null;
+  googleFont?: string | null;
+  fontFamily?: string | null;
+  [setting: string]: unknown;
+}
 
 // ----------------------------------------------------------------------------
 // Component Props Interfaces

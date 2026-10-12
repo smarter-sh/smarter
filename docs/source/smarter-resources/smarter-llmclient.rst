@@ -56,20 +56,53 @@ Web Pages That Embed It
 A deployed LLMClient can be the chat backend of any web page, with
 :doc:`Smarter Chat <../smarter-framework/smarter-chat>`, the ``@smarter.sh/ui-chat`` React component.
 The page calls the LLMClient from the browser, so its origin must be allowed, in
-``spec.config.allowedOrigins``:
+``spec.config.prompt.allowedOrigins``:
 
 .. code-block:: yaml
 
   spec:
     config:
-      allowedOrigins:
-        - https://www.example.com
-        - http://localhost:5173
+      prompt:
+        allowedOrigins:
+          - https://www.example.com
+          - http://localhost:5173
 
 Each origin is a scheme, a host and an optional port, without a path or a wildcard. If the LLMClient
 has an api key, the page must send one; without api keys, the LLMClient is public, and its prompts
 are charged to its owner. See
 :doc:`Embedding Smarter Chat <../smarter-framework/smarter-chat/embedding>`.
+
+Styling the Chat
+----------------
+
+An LLMClient's manifest splits ``spec.config`` in two. ``prompt``, which is required, is what the
+LLMClient is: its LLM provider, model and system prompt, and the words of its chat. ``styles``, which is
+optional, is how its chat looks, in the workbench and on every page that embeds it: its logo, avatars,
+background image, font and colors.
+
+.. code-block:: yaml
+
+  spec:
+    config:
+      prompt:
+        appName: Stackademy
+        appAssistant: Stanley
+      styles:
+        appLogoUrl: https://cdn.example.com/stackademy/logo.png
+        googleFont: Nunito
+        conversationHeader:
+          backgroundColor: "#14213d"
+          color: "#ffffff"
+        outgoingMessage:
+          backgroundColor: "#fca311"
+
+No CSS or web development is needed. :doc:`Styling Your LLMClient's Chat <llmclient/styles>` explains
+every setting, with a crash course in colors, sizes, fonts and images, and a case study.
+
+.. toctree::
+   :maxdepth: 1
+
+   llmclient/styles
 
 Example Manifest
 ----------------

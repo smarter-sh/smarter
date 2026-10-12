@@ -726,7 +726,7 @@ class TestImageSearchPlugin(PluginTestBase):
         weather = get_readonly_yaml_file(os.path.join(LLMCLIENTS_PATH, "llmclient-weather.yaml"))
         self.assertIn("get_current_weather", weather["spec"]["functions"])
         self.assertIn("image_search", weather["spec"]["plugins"])
-        system_role = weather["spec"]["config"]["defaultSystemRole"]
+        system_role = weather["spec"]["config"]["prompt"]["defaultSystemRole"]
         self.assertIn(f'description begins "{WEATHER_IMAGE_SEARCH_DESCRIPTION}"', system_role)
 
         data = copy.deepcopy(get_readonly_yaml_file(os.path.join(SAMPLE_PLUGINS_PATH, "image-search.yaml")))

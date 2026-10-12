@@ -170,6 +170,18 @@
           "default": null,
           "title": "Provider"
         },
+        "styles": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyles"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The look of the chat: the manifest's spec.config.styles, with snake_case keys."
+        },
         "url_chatbot": {
           "description": "The url of the LLMClient's prompt api.",
           "title": "Url Chatbot",
@@ -1156,6 +1168,18 @@
           ],
           "default": null,
           "title": "Provider"
+        },
+        "styles": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyles"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The look of the chat: the manifest's spec.config.styles, with snake_case keys."
         },
         "url_llmclient": {
           "description": "The url of the LLMClient's prompt api.",
@@ -2566,6 +2590,307 @@
         }
       },
       "title": "PromptChatApiSmarterCompletionV1",
+      "type": "object"
+    },
+    "PromptChatApiStyleSection": {
+      "additionalProperties": true,
+      "description": "A section of the LLMClient's styles: the colors of one of chatscope's components.\n\nA section has only the settings that its component has, in the manifest's\n``spec.config.styles``. See :mod:`smarter.apps.llmclient.manifest.models.llmclient.styles`.",
+      "properties": {
+        "background_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Background Color"
+        },
+        "border_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Border Color"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "editor_background_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Editor Background Color"
+        },
+        "info_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Info Color"
+        },
+        "link_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Link Color"
+        },
+        "placeholder_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Placeholder Color"
+        }
+      },
+      "title": "PromptChatApiStyleSection",
+      "type": "object"
+    },
+    "PromptChatApiStyles": {
+      "additionalProperties": true,
+      "description": "The look of the LLMClient's chat: its manifest's ``spec.config.styles``, with snake_case keys.\n\nSmarter Chat applies it as css custom properties. Every setting is optional, and one that is\nleft out keeps the chat's default.",
+      "properties": {
+        "app_background_image_size": {
+          "anyOf": [
+            {
+              "enum": [
+                "cover",
+                "contain",
+                "auto"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Background Image Size"
+        },
+        "app_background_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Background Image Url"
+        },
+        "app_logo_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "App Logo Url"
+        },
+        "assistant_avatar_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assistant Avatar Url"
+        },
+        "border_radius": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Border Radius"
+        },
+        "buttons": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "conversation_header": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "font_family": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Font Family"
+        },
+        "font_size": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Font Size"
+        },
+        "google_font": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Google Font"
+        },
+        "incoming_message": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "main_container": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "message_input": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "message_list": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "outgoing_message": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "typing_indicator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptChatApiStyleSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "user_avatar_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "User Avatar Url"
+        }
+      },
+      "title": "PromptChatApiStyles",
       "type": "object"
     },
     "PromptChatApiTextPart": {
