@@ -5,8 +5,10 @@ import datetime
 import decimal
 import re
 import uuid
+from contextlib import contextmanager
+from contextvars import ContextVar
 from logging import getLogger
-from typing import List, Optional, Union
+from typing import Iterator, List, Optional, Union
 
 from django.utils.text import slugify
 from pydantic import (
@@ -35,6 +37,47 @@ from smarter.lib.typing import SmarterDictType
 
 logger = getLogger(__name__)
 logger_prefix = formatted_text(__name__)
+
+_CLIENT_MANIFEST: ContextVar[bool] = ContextVar("smarter_client_manifest", default=False)
+
+
+@contextmanager
+def client_manifest_validation() -> Iterator[None]:
+    """
+    Validate, inside this context, a manifest that a client sent, e.g. to apply or validate it.
+
+    Brokers validate a client's manifest inside it. Models that they build from the database are
+    validated outside of it. Validators that check something outside of the manifest, such as that a
+    url is available, run only inside it (see :func:`is_client_manifest`), so that describing a
+    resource never depends on the network.
+
+    A context variable is used rather than Pydantic's validation context, because
+    :class:`SmarterBasePydanticModel` overrides ``__init__``, through which Pydantic validates nested
+    models without the validation context.
+
+    Example:
+
+    .. code-block:: python
+
+        with client_manifest_validation():
+            spec = SAMLLMClientSpec(**manifest["spec"])
+    """
+    token = _CLIENT_MANIFEST.set(True)
+    try:
+        yield
+    finally:
+        _CLIENT_MANIFEST.reset(token)
+
+
+def is_client_manifest() -> bool:
+    """
+    Whether the manifest that is being validated is one that a client sent.
+
+    :returns: True inside :func:`client_manifest_validation`.
+    :rtype: bool
+    """
+    return _CLIENT_MANIFEST.get()
+
 
 VALID_ANNOTATION_VALUE_TYPES_SET = (
     str,

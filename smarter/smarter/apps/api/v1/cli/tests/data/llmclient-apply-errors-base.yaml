@@ -12,23 +12,25 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Smarter
-    appExamplePrompts:
-      - Tell me about Smarter
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Apply Error Test
-    appPlaceholder: Ask me anything...
-    appWelcomeMessage: Welcome!
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-4o-mini
-    defaultSystemRole: You are a helpful assistant.
-    defaultTemperature: 0.5
-    deployed: false
-    provider: openai
-    subdomain: null
+    prompt:
+      appAssistant: Smarter
+      appExamplePrompts:
+        - Tell me about Smarter
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: Apply Error Test
+      appPlaceholder: Ask me anything...
+      appWelcomeMessage: Welcome!
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-4o-mini
+      defaultSystemRole: You are a helpful assistant.
+      defaultTemperature: 0.5
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
   functions: []
   plugins: []
   mcpClients: []

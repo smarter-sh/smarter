@@ -60,11 +60,18 @@ in the repository.
 ```console
 curl -s -X POST -H "Authorization: Token $KEY" http://localhost:9357/api/v1/cli/get/CustomDomain/
 curl -s -X POST -H "Authorization: Token $KEY" "http://localhost:9357/api/v1/cli/describe/CustomDomain/?name=example_com"
-curl -s -X POST -H "Authorization: Token $KEY" --data-binary @smarter/smarter/apps/llmclient/data/custom-domains/example-com.yaml \
+curl -s -X POST -H "Authorization: Token $KEY" -H "Content-Type: application/x-yaml" \
+  --data-binary @smarter/smarter/apps/llmclient/data/custom-domains/example-com.yaml \
   http://localhost:9357/api/v1/cli/apply/
 ```
 
 Use `--data-binary` (not `-d`) for manifests, so the YAML's newlines survive.
+
+**Always send `-H "Content-Type: application/x-yaml"` with a manifest.** Without
+it, curl sends `application/x-www-form-urlencoded`, Django parses the body as a
+form, and the view sees no manifest: apply answers `Could not find broker for
+None manifest`, and validate says `kind must be one of: ...`, for a manifest
+that is perfectly valid.
 
 Make sure smarter-app is running your current code first (see
 `smarter-docker-environment`).

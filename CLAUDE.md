@@ -70,8 +70,12 @@ Services in `docker-compose.yml`: `smarter-app` (Django dev server on
   background and wait for the dev server), which updates every container from the
   host's tree. `skills/smarter-docker-environment/scripts/sync-to-containers.sh`
   copies individual files, when a rebuild isn't possible.
-- When you copy files instead, copy them into the workers too: Celery tasks run
-  there, and `.delay()` is not eager in tests.
+- When you copy files instead, use
+  `skills/smarter-docker-environment/scripts/sync-changed-files.sh`. Don't
+  hand-write a `for f in $FILES` loop: the host shell is zsh, which doesn't
+  word-split, so the loop copies nothing and the containers keep the old code.
+  The script also copies into the workers: Celery tasks run there, and
+  `.delay()` is not eager in tests.
 - `docker cp dir target` nests into `target/dir` when the target exists, and
   leaves files owned by root. Chown them to `smarter_user`.
 - Several `docker cp`s in a row can kill the dev server. After syncing,
