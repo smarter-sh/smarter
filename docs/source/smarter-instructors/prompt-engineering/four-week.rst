@@ -1,11 +1,21 @@
 Prompt Engineering: Four-Week Online Course
 ===========================================
 
-A four-week online course in prompt engineering, with twelve 30-minute recorded lectures and a
-90-minute live session each week, for students who need no programming experience. The extra time,
-compared with the two-week course, goes to evaluation, retrieval and multi-step workflows. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../prompt-engineering` for an overview of the subject.
+A four-week online course in prompt engineering, for students who need no programming experience.
+Students build, evaluate and brand an AI assistant by editing a YAML manifest. Everything students
+build is a Smarter :doc:`LLMClient </smarter-resources/smarter-llmclient>` manifest, the same YAML
+that runs in production, and they start from the nineteen built-in LLMClients that ship with every
+installation: the one-line `simple
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+assistant, and `customer_support
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
+a complete support agent with a persona, refusals, a skill, a tool and four guardrails. The prompt
+engineering :doc:`workbench </smarter-framework/smarter-chat>` shows every request sent to the
+model, every tool call and every plugin selected, beside the chat, so students see the effect of
+each edit at once. There are twelve 30-minute recorded lectures and a 90-minute live session each
+week. The extra time, compared with the two-week course, goes to evaluation, retrieval and
+multi-step workflows. See :doc:`../course-formats` for the format, the grading scale and the course
+policies, and :doc:`../prompt-engineering` for an overview of the subject.
 
 At a Glance
 -----------
@@ -55,6 +65,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -109,9 +121,11 @@ Schedule
        with citations.
    * - 3
      - Lecture 9
-     - **Tools.** :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` and
-       :doc:`API </smarter-resources/plugin/plugin/api>` plugins, and how a plugin's description
-       decides when the model calls it. Reading tool calls in the Console.
+     - **Tools.** :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` and :doc:`API
+       </smarter-resources/plugin/plugin/api>` plugins. Smarter offers a plugin only when the prompt
+       matches one of its ``searchTerms`` (exactly, with a typo, or as a synonym), and the model
+       then decides, from the plugin's description, whether to call it. Reading plugin selection and
+       tool calls in the Console.
    * - 3
      - Live session 3
      - Review of Assignment 2. Students debug tool calls that do not happen, using the Console.
@@ -138,6 +152,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4, three days before Live session 4. The capstone proposal (one paragraph) is due before Live
 session 3, and the capstone at the start of Live session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

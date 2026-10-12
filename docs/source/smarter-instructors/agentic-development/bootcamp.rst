@@ -1,13 +1,19 @@
 Agentic Software Development: Classroom Bootcamp
 ================================================
 
-An eight-hour classroom bootcamp on developing software with coding agents such as
-`Claude Code <https://claude.com/claude-code>`__, taught on a real code base that has been shaped
-for agents: Smarter, where nearly all new code is designed, written and tested by agents working
-from ``CLAUDE.md`` and the Agent Skills in ``skills/``. Students delegate real tasks, review the
-results as they would a colleague's, and write the instructions that make agents effective. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../agentic-development` for an overview of the subject.
+An eight-hour classroom bootcamp on developing software with coding agents such as `Claude Code
+<https://claude.com/claude-code>`__, taught on a real production code base. Smarter is a code base
+shaped for agents: nearly all of its new code is now designed, written and tested by agents working
+from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the sixteen
+`Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__ in ``skills/``, and its
+git history shows it: since late September 2026, most commits have been authored by Claude. Its
+:doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>` was built by Claude Code in
+a live class demonstration, from the request to a `merged pull request
+<https://github.com/smarter-sh/smarter/pull/775>`__ with tests and documentation. Students read the
+instructions that make this work, delegate real tasks in their own fork, review the results as they
+would a colleague's, and write a skill of their own. See :doc:`../course-formats` for the standard
+bootcamp day, the grading scale and the course policies, and :doc:`../agentic-development` for an
+overview of the subject.
 
 At a Glance
 -----------
@@ -51,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -65,13 +73,18 @@ Schedule
        base matters more than the prompt.
    * - 2
      - 45
-     - **Lab 1: Read the instructions.** Read ``CLAUDE.md``, ``skills/README.md`` and two
-       ``SKILL.md`` files, and list what they tell an agent to do and never do, and why. Produces
+     - **Lab 1: Read the instructions.** Read ``CLAUDE.md``, ``skills/README.md``,
+       ``skills/smarter-development/SKILL.md`` and one narrower skill, such as
+       ``smarter-infrastructure-safety`` or ``smarter-docker-environment``, and list what they
+       tell an agent to do and never do, and why. Produces
        Assignment 1.
    * - 3
      - 45
      - **Lecture 2: How you ask.** Outcomes, not steps; giving the evidence for narrow problems;
-       saying what "done" means; and the pattern-first workflow.
+       saying what "done" means; and the pattern-first workflow. A walk through the body of the
+       `ImageSearchPlugin commit
+       <https://github.com/smarter-sh/smarter/commit/1da6bccc3847f0d06e1b801496cbb838cffb0dab>`__ as
+       an example of a broad, well-bounded task done end to end.
        :doc:`/smarter-framework/developer-reference/agentic-development`.
    * - 4
      - 45
@@ -85,7 +98,11 @@ Schedule
    * - 6
      - 45
      - **Lecture 4: Skills.** How Agent Skills work, when they load, what belongs in a skill and
-       what belongs in the code, and how Smarter's skills grew from repeated mistakes.
+       what belongs in the code, and how Smarter's skills grew from repeated mistakes: the
+       caching rules added by `commit eeb7a7a19
+       <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__,
+       the zsh word-splitting trap behind ``sync-changed-files.sh``, and the same format reused
+       as a product feature in the :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>`.
    * - 7
      - 45
      - **Lab 3: With and without.** Give the same task to the agent twice, once with the skills
@@ -107,6 +124,11 @@ Schedule
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and write its acceptance criteria.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -320,7 +342,9 @@ Recommended Texts
   <https://www.anthropic.com/engineering/building-effective-agents>`__.
 - **Reference:** Gene Kim and Steve Yegge, *Vibe Coding* (IT Revolution, 2025), on building
   production software with agents.
-- **In the repository:** ``CLAUDE.md``, ``skills/README.md`` and each skill's ``SKILL.md``.
+- **In the repository:** `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
+  `skills/README.md <https://github.com/smarter-sh/smarter/blob/main/skills/README.md>`__ and each
+  skill's ``SKILL.md``.
 
 Further Study
 -------------

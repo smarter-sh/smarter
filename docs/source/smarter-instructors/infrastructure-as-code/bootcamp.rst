@@ -4,10 +4,19 @@ Cloud Infrastructure as Code: Classroom Bootcamp
 An eight-hour classroom bootcamp on infrastructure as code with Terraform and Terragrunt, taught on
 the `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ repository,
 which builds Smarter's complete AWS environment: the network, the Kubernetes cluster, ingress,
-certificates and the application's resources. Students read a real production configuration,
-plan it, estimate its cost, and write a module of their own. See :doc:`../course-formats` for the
-standard bootcamp day, the grading scale and the course policies, and
-:doc:`../infrastructure-as-code` for an overview of the subject.
+certificates and the application's resources. It is a real production configuration, not a teaching
+example: an EKS cluster on Spot capacity with the Cluster Autoscaler and roles for service accounts,
+Calico `network policies
+<https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__,
+Traefik and cert-manager as Helm releases, and a `root configuration
+<https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`__ that refuses
+to run against the wrong AWS account. Smarter itself goes on to manage infrastructure at run time,
+through a `service layer
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__
+that creates DNS records, certificates, ingresses and GPU node groups, with an in-memory provider in
+tests. Students read a real production configuration, plan it, estimate its cost, and write a module
+of their own. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the
+course policies, and :doc:`../infrastructure-as-code` for an overview of the subject.
 
 At a Glance
 -----------
@@ -59,6 +68,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -94,8 +105,10 @@ Schedule
    * - 6
      - 45
      - **Lecture 4: Security by design.** Why the cluster sits on a private network, public and
-       private subnets, NAT, security groups, network policies, IAM roles for service accounts,
-       and least privilege. :doc:`/smarter-platform/cloud-infrastructure`.
+       private subnets, NAT, security groups, Calico network policies with default-deny ingress, IAM
+       roles for service accounts, ``allowed_account_ids``, least privilege, and the repository's
+       own unencrypted remote state as a finding to fix.
+       :doc:`/smarter-platform/cloud-infrastructure`.
    * - 7
      - 45
      - **Lab 3: Plan and price.** Run ``terraform plan`` (or ``terragrunt plan``) for the ``vpc``
@@ -118,6 +131,11 @@ Schedule
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and plan it.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -329,7 +347,8 @@ Recommended Texts
   <https://developer.hashicorp.com/terraform/tutorials/aws-get-started>`__ tutorial.
 - **Reference:** Yevgeniy Brikman, *Terraform: Up & Running* (3rd edition, O'Reilly, 2022).
 - **Smarter documentation:** :doc:`/smarter-platform/cloud-infrastructure`,
-  :doc:`/smarter-framework/technologies/aws` and :doc:`/smarter-framework/technologies/infrastructure`.
+  :doc:`/smarter-framework/technologies/aws` and
+  :doc:`/smarter-framework/technologies/infrastructure`.
 
 Further Study
 -------------

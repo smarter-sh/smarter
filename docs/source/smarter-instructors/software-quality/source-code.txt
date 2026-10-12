@@ -1,0 +1,110 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+so that students can open each one during class. Python paths are under ``smarter/smarter/``.
+
+Tests
+~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The Python suite
+     - More than five thousand unit tests in about 460 modules, one test module per source
+       module, with test data as YAML. :doc:`ADR 013 </adr/013-testing>`.
+     - `guardrail/tests/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/tests>`__,
+       `guardrail/tests/data/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/tests/data>`__
+   * - Base classes
+     - ``SmarterTestBase``, which has no transaction rollback, so fixtures are built once in
+       ``setUpClass`` and every test deletes what it creates, and mixins that test any resource's
+       broker, API and views the same way.
+     - `lib/unittest/base_classes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__,
+       `lib/unittest/resource_views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/resource_views.py>`__,
+       `lib/unittest/broker_branches.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/broker_branches.py>`__
+   * - Test doubles
+     - An in-memory cloud provider that replaces Route53, Certificate Manager, Kubernetes and
+       email in tests, behind the same interface as the real one.
+     - `infrastructure/providers/memory.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__
+   * - Tests that are skipped on purpose
+     - A custom test runner skips tests tagged ``infrastructure``, which deploy to a real cluster
+       and wait up to 40 minutes for a certificate, unless they are asked for.
+     - `lib/unittest/runner.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/runner.py>`__
+   * - The front end suite
+     - About 150 Vitest and Testing Library test files, with every Storybook story rendered as a
+       test, and MSW mocks of the API.
+     - `smarter/react/vitest.shared.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/vitest.shared.ts>`__,
+       `smarter/react/test/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/test>`__
+   * - The traps, written down
+     - What goes wrong in Smarter's tests and why, from cleanup without rollback to Celery tasks
+       that are not eager.
+     - `smarter-python-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-python-testing/SKILL.md>`__,
+       `smarter-react-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-react-testing/SKILL.md>`__
+
+Coverage and Checks
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Coverage
+     - ``make coverage`` runs the suite under coverage.py in the container. The target is at least
+       90% for each Django app, 95% where that takes moderate effort, and Codecov reports Python
+       and React coverage under separate flags.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``coverage``),
+       `codecov.yml <https://github.com/smarter-sh/smarter/blob/main/codecov.yml>`__
+   * - Pre-commit hooks
+     - black, isort, flake8, autoflake, pyupgrade, pydocstringformatter, bandit, codespell,
+       Prettier and ESLint, file checks, secret detection and commitlint, the authoritative lint
+       standard. :doc:`ADR 028 </adr/028-code-quality>`.
+     - `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__,
+       `smarter-code-quality/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-code-quality/SKILL.md>`__
+   * - Types
+     - Type annotations everywhere, typed aliases instead of ``Any``, and Pydantic models for
+       structured data.
+     - `lib/typing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/typing.py>`__,
+       `mypy.ini <https://github.com/smarter-sh/smarter/blob/main/mypy.ini>`__
+   * - Documentation checks
+     - Docstrings formatted by a hook and published by Sphinx autodoc, and a script that checks
+       links and autodoc targets in seconds rather than building the documentation.
+       :doc:`ADR 029 </adr/029-docstrings>`.
+     - `check-docs.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-sphinx-docs/scripts/check-docs.sh>`__,
+       `docs/source/lint.py <https://github.com/smarter-sh/smarter/blob/main/docs/source/lint.py>`__
+
+CI and Releases
+~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The test workflow
+     - Two jobs: ``react`` checks format, lint and types and runs Vitest, and ``python`` builds the
+       development environment step by step, with caches, and runs the suite in the container.
+       It deliberately has no cloud credentials. It is started by hand, so a fork that wants it
+       as an autograder adds a ``push`` or ``pull_request`` trigger.
+       :doc:`/smarter-framework/developer-reference/devops/test`.
+     - `test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__
+   * - Build, release and deploy
+     - Separate workflows build the image, release the Helm chart, deploy, and keep the
+       pre-commit hooks up to date. :doc:`/smarter-framework/developer-reference/devops/ci-cd`.
+     - `.github/workflows/ <https://github.com/smarter-sh/smarter/tree/main/.github/workflows>`__
+   * - Conventional commits and releases
+     - commitlint checks every message, and semantic-release turns them into versions on
+       ``main``, ``next``, ``beta`` and ``alpha``, with changelogs.
+       :doc:`/smarter-framework/guides/semantic-versioning`.
+     - `commitlint.config.js <https://github.com/smarter-sh/smarter/blob/main/commitlint.config.js>`__,
+       `release.config.js <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__
+   * - Quality when agents write the code
+     - The definition of done that every coding agent works to: a pattern followed, tests run in
+       the container, hooks passing, and docs updated.
+     - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__

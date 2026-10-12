@@ -2,10 +2,21 @@ Kubernetes: Two-Week Online Course
 ==================================
 
 A two-week online course on running applications at scale with Kubernetes, taught by installing
-Smarter's Helm chart on a local cluster, with six 30-minute recorded lectures and a 90-minute live
-session each week. Week 1 covers Kubernetes objects and Helm, and week 2 covers scaling,
-networking and operations. See :doc:`../course-formats` for the format, the grading scale and the
-course policies, and :doc:`../kubernetes` for an overview of the subject.
+Smarter's Helm chart on a local cluster. Smarter's `Helm chart
+<https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__ is the one that runs it in
+production: four Deployments from the same image as Docker Compose, liveness, readiness and startup
+probes, `autoscalers
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__ that
+scale the web server from 3 to 25 pods, an init Job, a backup CronJob, Bitnami subcharts for the
+database, Redis and monitoring, and `values
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ validated by a
+`JSON Schema
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.schema.json>`__. Smarter
+also manages Kubernetes itself, creating an ingress for each deployed LLMClient and a Deployment,
+Service and GPU node group for each self-hosted model. There are six 30-minute recorded lectures and
+a 90-minute live session each week. Week 1 covers Kubernetes objects and Helm, and week 2 covers
+scaling, networking and operations. See :doc:`../course-formats` for the format, the grading scale
+and the course policies, and :doc:`../kubernetes` for an overview of the subject.
 
 At a Glance
 -----------
@@ -52,6 +63,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -68,7 +81,8 @@ Schedule
      - **Core objects.** Pods, Deployments, ReplicaSets, Services, ConfigMaps, Secrets and Jobs.
    * - 1
      - Lecture 3 (30 min)
-     - **Helm.** Charts, templates, values, releases and subcharts, through ``helm/charts/smarter/``.
+     - **Helm.** Charts, templates, values, releases and subcharts, through
+       ``helm/charts/smarter/``.
    * - 1
      - Live session 1 (90 min)
      - Cluster triage, then a live install of the Smarter chart. Pairs map Compose services to
@@ -80,7 +94,8 @@ Schedule
    * - 2
      - Lecture 5 (30 min)
      - **Networking.** Services, Ingress, cluster DNS, network policies, and the metadata address.
-       How Smarter :doc:`deploys an LLMClient </smarter-framework/smarter-on-kubernetes/llmclient-deploy>`.
+       How Smarter :doc:`deploys an LLMClient
+       </smarter-framework/smarter-on-kubernetes/llmclient-deploy>`.
    * - 2
      - Lecture 6 (30 min)
      - **Operations.** Logs, events, upgrades, backups and managed clusters
@@ -91,6 +106,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

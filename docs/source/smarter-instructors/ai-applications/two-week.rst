@@ -1,11 +1,22 @@
 Building AI Applications: Two-Week Online Course
 ================================================
 
-A two-week online course on the architecture of AI applications, with six 30-minute recorded
-lectures and a 90-minute live session each week. Week 1 covers knowledge (retrieval and structured
-data), and week 2 covers action (tools, MCP and orchestration). See :doc:`../course-formats` for
-the format, the grading scale and the course policies, and :doc:`../ai-applications` for an
-overview of the subject.
+A two-week online course on the architecture of AI applications: retrieval, tool calling, structured
+data, MCP servers and multi-agent workflows, each a resource declared in a YAML manifest. Students
+work on the resources that ship with every Smarter installation: `nineteen built-in LLMClients
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+from the bare ``simple`` assistant to ``research_analyst``, which searches the web through an `Exa
+MCP server
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/exa.yaml>`__,
+reads pages and PDFs, and checks its citations with guardrails; `twenty-five MCP clients
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
+for services such as GitHub, Notion and Stripe; `Vectorstores
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__
+on Qdrant and Pinecone; and an :doc:`Orchestrator </smarter-resources/smarter-orchestrator>` with
+six coordination strategies. There are six 30-minute recorded lectures and a 90-minute live session
+each week. Week 1 covers knowledge (retrieval and structured data), and week 2 covers action (tools,
+MCP and orchestration). See :doc:`../course-formats` for the format, the grading scale and the
+course policies, and :doc:`../ai-applications` for an overview of the subject.
 
 At a Glance
 -----------
@@ -45,11 +56,13 @@ Technical Prerequisites
 - **Required:** a general idea of what a database table and a web API are.
 - **Helpful:** experience writing system prompts, from the
   :doc:`Prompt Engineering <../prompt-engineering>` course or elsewhere, a GitHub account, and
-  basic SQL for reading generated queries.
+  basic SQL for reading queries.
 - **Not needed:** programming.
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -68,8 +81,14 @@ Schedule
        Building a :doc:`Vectorstore </smarter-resources/smarter-vectorstore>`.
    * - 1
      - Lecture 3 (30 min)
-     - **Structured data.** Text-to-SQL with a :doc:`SQL Plugin </smarter-resources/plugin/plugin/sql>`,
-       read-only connections, and checking generated queries. The ``data_analyst`` LLMClient.
+     - **Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL Plugin
+       </smarter-resources/plugin/plugin/sql>` runs a fixed, parameterized query that the model can
+       only fill in (`stackademy_sql
+       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__),
+       and a SkillPlugin teaches the model a schema so that it writes SQL for a person to review
+       (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
+       with a read-only database user, its password in a :doc:`Secret
+       </smarter-resources/smarter-secret>`, and how wrong answers still happen.
    * - 1
      - Live session 1 (90 min)
      - Live build of a teaching assistant over a syllabus. In groups, students find questions that
@@ -77,8 +96,9 @@ Schedule
    * - 2
      - Lecture 4 (30 min)
      - **Tools.** Function calling, :doc:`API </smarter-resources/plugin/plugin/api>` and
-       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` plugins, and how tool
-       descriptions steer the model.
+       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` plugins. Plugin selection by
+       search terms decides which tools Smarter offers, and their descriptions steer which ones
+       the model calls (:doc:`/smarter-resources/plugin/nlp`).
    * - 2
      - Lecture 5 (30 min)
      - **MCP.** The `Model Context Protocol <https://modelcontextprotocol.io/>`__, its servers and
@@ -95,6 +115,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -137,9 +162,10 @@ Assignment 2: Data Assistant
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Students build an assistant over the sample database, ask eight business questions, and check
-each answer and generated query against the true figure.
+each answer, and the SQL behind it, against the true figure.
 
-**Turn in:** the manifests, the questions, answers, generated SQL, and a short failure analysis.
+**Turn in:** the manifests, the questions, answers, the SQL behind each one, and a short failure
+analysis.
 
 .. list-table::
    :header-rows: 1

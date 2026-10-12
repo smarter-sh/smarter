@@ -3,9 +3,19 @@ AI Governance and Responsible AI: Classroom Bootcamp
 
 An eight-hour classroom bootcamp that turns AI governance from principles into practice. Students
 write an AI policy, then enforce as much of it as they can with guardrails, budgets and access
-controls, and audit the results in Smarter's journal. No programming is needed. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../ai-governance` for an overview of the subject.
+controls, and audit the results in Smarter's journal. No programming is needed. In Smarter, every
+control is a short YAML manifest that a non-programmer can read and change: `eighteen built-in
+guardrails
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+from personal data redaction to the escalation of GDPR and CCPA privacy requests to a person; `seven
+example budgets
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+such as a monthly allowance for each student; and per-account ownership of every resource. Every
+intervention is recorded as a `guardrail event
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__,
+and every prompt, tool call and change to a resource is kept, so students can audit what happened,
+not what was intended. See :doc:`../course-formats` for the standard bootcamp day, the grading scale
+and the course policies, and :doc:`../ai-governance` for an overview of the subject.
 
 At a Glance
 -----------
@@ -50,6 +60,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -84,7 +96,8 @@ Schedule
        expression, detector, moderation, semantic similarity, LLM judge), enforce and monitor
        modes, and actions (block, redact, flag, escalate, transform). A tour
        of the built-in guardrails: personal data, secrets, regulated advice, off-topic, invented
-       citations, self-harm.
+       citations, self-harm, and ``data_subject_request_input``, which escalates privacy requests
+       to a person because the law sets a deadline for answering them.
    * - 6
      - 45
      - **Lecture 4: Money and access.** :doc:`Budgets </smarter-resources/smarter-budget>` per
@@ -98,10 +111,11 @@ Schedule
        you cannot. Produces Assignment 3.
    * - 8
      - 45
-     - **Lecture 5: Audit and accountability.** The :doc:`journal </smarter-platform/smarter-journal>`
-       and :doc:`Prompt </smarter-resources/smarter-prompt>` records: who asked what, which model
-       answered, which tools ran and which guardrails intervened. What a regulator, an auditor
-       or a court would ask for. Privacy of the audit trail itself.
+     - **Lecture 5: Audit and accountability.** The :doc:`journal
+       </smarter-platform/smarter-journal>` and :doc:`Prompt </smarter-resources/smarter-prompt>`
+       records: who asked what, which model answered, which tools ran and which guardrails
+       intervened, with each guardrail event's severity, rationale and review status. What a
+       regulator, an auditor or a court would ask for. Privacy of the audit trail itself.
    * - 9
      - 45
      - **Lab 4: Audit an answer.** Pick one answer from the journal, and reconstruct the chain of
@@ -115,6 +129,11 @@ Schedule
      - 30
      - **Capstone kickoff.** Students choose a capstone and an organization, and outline their
        approach with the instructor's feedback.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

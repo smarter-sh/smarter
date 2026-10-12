@@ -1,12 +1,23 @@
 AI Governance and Responsible AI: Four-Week Online Course
 =========================================================
 
-A four-week online course that turns AI governance from principles into practice, with twelve
-30-minute recorded lectures and a 90-minute live session each week. Week 1 covers frameworks and
-risk, week 2 technical controls, week 3 money, access and accountability, and week 4 the parts of
-governance that software cannot do. No programming is needed. See :doc:`../course-formats` for the
-format, the grading scale and the course policies, and :doc:`../ai-governance` for an overview of
-the subject.
+A four-week online course that turns AI governance from principles into practice. Students build a
+risk register, enforce policy with guardrails, budgets and access controls, measure those controls,
+and audit the results. In Smarter, every control is a short YAML manifest that a non-programmer can
+read and change: `eighteen built-in guardrails
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+from personal data redaction to the escalation of GDPR and CCPA privacy requests to a person; `seven
+example budgets
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+such as a monthly allowance for each student; and per-account ownership of every resource. Every
+intervention is recorded as a `guardrail event
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__,
+and every prompt, tool call and change to a resource is kept, so students can audit what happened,
+not what was intended. There are twelve 30-minute recorded lectures and a 90-minute live session
+each week. Week 1 covers frameworks and risk, week 2 technical controls, week 3 money, access and
+accountability, and week 4 the parts of governance that software cannot do. No programming is
+needed. See :doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../ai-governance` for an overview of the subject.
 
 At a Glance
 -----------
@@ -53,6 +64,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -86,7 +99,8 @@ Schedule
    * - 2
      - Lecture 6
      - **Measuring controls.** False positives and false negatives, monitor mode before enforce
-       mode, and choosing thresholds.
+       mode (a monitored guardrail records what it would have done), and choosing thresholds
+       from the severity and confidence of guardrail events.
    * - 2
      - Live session 2
      - Review of Assignment 1. Red team exercise against a classmate's assistant. Start
@@ -97,9 +111,9 @@ Schedule
        :doc:`cost accounting </smarter-platform/cost-accounting>` as controls.
    * - 3
      - Lecture 8
-     - **Access and data.** Accounts, roles, API keys, :doc:`Secrets </smarter-resources/smarter-secret>`,
-       personal data, and data residency with self-hosted models through
-       :doc:`LLMHost </smarter-resources/smarter-llmhost>`.
+     - **Access and data.** Accounts, roles, API keys, :doc:`Secrets
+       </smarter-resources/smarter-secret>`, personal data, and data residency with self-hosted
+       models through :doc:`LLMHost </smarter-resources/smarter-llmhost>`.
    * - 3
      - Lecture 9
      - **Audit.** The :doc:`journal </smarter-platform/smarter-journal>` and
@@ -129,6 +143,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

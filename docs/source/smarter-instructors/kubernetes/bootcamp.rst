@@ -4,8 +4,20 @@ Kubernetes: Classroom Bootcamp
 An eight-hour classroom bootcamp on running applications at scale with Kubernetes, taught by
 installing Smarter's Helm chart on a local cluster. Students start from the Docker Compose services
 they already know, and add only what Kubernetes brings: scheduling, scaling, ingress, secrets and
-network policies. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and
-the course policies, and :doc:`../kubernetes` for an overview of the subject.
+network policies. Smarter's `Helm chart
+<https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__ is the one that runs it in
+production: four Deployments from the same image as Docker Compose, liveness, readiness and startup
+probes, `autoscalers
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__ that
+scale the web server from 3 to 25 pods, an init Job, a backup CronJob, Bitnami subcharts for the
+database, Redis and monitoring, and `values
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ validated by a
+`JSON Schema
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.schema.json>`__. Smarter
+also manages Kubernetes itself, creating an ingress for each deployed LLMClient and a Deployment,
+Service and GPU node group for each self-hosted model. See :doc:`../course-formats` for the standard
+bootcamp day, the grading scale and the course policies, and :doc:`../kubernetes` for an overview of
+the subject.
 
 At a Glance
 -----------
@@ -54,6 +66,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -109,11 +123,17 @@ Schedule
    * - 10
      - 45
      - **Lecture 6: Operating a cluster.** Logs, events, ``kubectl describe``, upgrades, backups
-       (the chart's backup Job), managed clusters in the cloud, and what they cost.
+       (the chart's backup CronJob to S3), the bastion pod, managed clusters in the cloud with
+       Spot node groups and the Cluster Autoscaler, and what they cost.
        :doc:`/smarter-framework/smarter-on-kubernetes/operations`.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and plan it.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -320,7 +340,8 @@ Job, and an autoscaler, modeled on Smarter's chart.
 Recommended Texts
 -----------------
 
-- **Pre-reading:** the `Kubernetes Basics tutorial <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__.
+- **Pre-reading:** the `Kubernetes Basics tutorial
+  <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__.
 - **Reference:** Brendan Burns, Joe Beda, Kelsey Hightower and Lachlan Evenson, *Kubernetes: Up and
   Running* (3rd edition, O'Reilly, 2022).
 - **Smarter documentation:** :doc:`/smarter-framework/smarter-on-kubernetes`,

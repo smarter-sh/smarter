@@ -1,0 +1,100 @@
+Every lecture, lab and assignment in this course measures costs with the records, prices and
+manifests below. Students see the records in the web console and the dashboard. The files are on
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+for instructors and for students who want to see how a cost is computed. Python paths are under
+``smarter/smarter/``.
+
+Measuring Cost
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The charge
+     - One record for each model call, plugin call or tool call, and for each hour of
+       self-hosted compute: the account, the user, the session, the provider, the model, the
+       prompt, completion and total tokens, and the cost in USD. A charge is created for every
+       resource that took part, so the same request is seen by the user's, the application's
+       and the account's budgets. :doc:`/smarter-platform/cost-accounting`.
+     - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__
+   * - Prices
+     - A price is USD per million tokens, markup included, for each combination of charge type,
+       provider and model. A model without a price costs nothing, so the instructor loads the
+       prices of the class's models before Lab 1, as shown in
+       :doc:`/smarter-platform/cost-accounting`.
+     - `account/models/llm_prices.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/llm_prices.py>`__
+       (``cost_of()``)
+   * - Totals for a period
+     - Charges are aggregated by hour, and summed for any resource and time range, which is what
+       a budget compares with its limits.
+     - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__
+       (``AggregatedCharges``, ``get_actuals()``)
+   * - The dashboard
+     - Charts of charges and budgets in the web console, served by the dashboard's API.
+     - `dashboard/views/views/api/charges.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/views/views/api/charges.py>`__,
+       `budgets.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/views/views/api/budgets.py>`__
+
+Comparing Models and Hosting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Changing the model
+     - An LLMClient's ``provider`` and ``defaultModel`` are two lines of its manifest, so the
+       same tasks run on another provider's model with no other change.
+     - `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+   * - Providers
+     - Each LLM provider that Smarter can call is a Provider resource, and new providers that
+       speak the OpenAI protocol are added with a manifest.
+       :doc:`/smarter-resources/smarter-provider`.
+     - `apps/provider/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/provider>`__
+   * - The price of a GPU node
+     - Seven built-in compute profiles, from small CPU nodes to eight H100s, each with its AWS
+       on-demand price per hour, from which self-hosted models are charged hourly.
+     - `llmhost/data/compute/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__,
+       `gpu-l4-1x.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/data/compute/gpu-l4-1x.yaml>`__
+   * - Open models
+     - Twenty-four built-in LLMHost manifests for Llama, Gemma, Qwen, Mistral, Phi, DeepSeek and
+       gpt-oss models, and embedding models, to price against per-token APIs.
+       :doc:`/smarter-resources/smarter-llmhost`.
+     - `llmhost/data/llmhost/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__
+   * - Platform infrastructure
+     - The cluster, nodes, load balancer, database and other AWS services that a shared Smarter
+       instance needs, all declared in Terraform, so each fixed cost can be traced to a resource.
+     - `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__,
+       `aws/terraform/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform>`__
+
+Controlling Spending
+~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Budgets
+     - Limits in dollars or tokens, per hour, day, week or month and in total, for an account, a
+       user, an application, a provider, a proxy or a self-hosted compute profile, that block or
+       warn. :doc:`/smarter-resources/smarter-budget`.
+     - `account/manifest/models/budget/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/manifest/models/budget/spec.py>`__
+   * - Seven budget policies
+     - A student allowance ($10 a month, $100 in total), an account-wide monthly cap, a provider
+       limited to $200 a day, a six-month project budget, a GPU budget of $500 a month, a
+       warn-only budget on a proxy, and a token throttle for each user.
+     - `account/data/example-manifests/budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+   * - Warnings and limits
+     - A ``budget_warning`` signal at the warning threshold, once per period, and a
+       ``budget_exceeded`` signal and a lock when a limit is reached.
+     - `account/signals.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/signals.py>`__,
+       `account/models/budget.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/budget.py>`__

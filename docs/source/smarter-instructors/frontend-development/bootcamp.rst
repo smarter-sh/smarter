@@ -2,10 +2,17 @@ Front End Development: Classroom Bootcamp
 =========================================
 
 An eight-hour classroom bootcamp on front end development with React, TypeScript, Vite and
-Bootstrap, taught on the pages of Smarter's web console. Students study components in Storybook,
-add a feature to a list page with a test, and embed a chat in a page of their own. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../frontend-development` for an overview of the subject.
+Bootstrap, taught on the pages of Smarter's web console. The console is an npm workspace of
+`twenty-four React apps <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__,
+one per page, with shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and
+styled with the Keen Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker,
+ESLint and Prettier are already set up, with about 150 test files and every story run as a test.
+Each app is hosted by a Django template, and the chat interface, `@smarter.sh/ui-chat
+<https://github.com/smarter-sh/smarter-chat>`__, is published to npm with TypeScript types generated
+from the server's Pydantic contract. Students study components in Storybook, add a feature to a list
+page with a test, and embed a chat in a page of their own. See :doc:`../course-formats` for the
+standard bootcamp day, the grading scale and the course policies, and :doc:`../frontend-development`
+for an overview of the subject.
 
 At a Glance
 -----------
@@ -48,6 +55,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -97,16 +106,23 @@ Schedule
    * - 9
      - 45
      - **Lab 4: Embed a chat.** Create a plain Vite app and embed a deployed LLMClient with the
-       `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ package. Ungraded.
+       `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ package.
+       Ungraded.
    * - 10
      - 45
      - **Lecture 6: Quality and performance.** ESLint and Prettier, bundle size, rendering
-       performance, and a tour of the ``smarter-chat`` package: streaming, markdown and
-       accessibility.
+       performance, and a tour of the ``smarter-chat`` package: the chatscope UI kit,
+       Markdown with math and diagrams, Server-Sent Events for a prompt's progress, branding from
+       ``spec.config.styles``, and accessibility.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone, create a branch, and sketch their
        component tree.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

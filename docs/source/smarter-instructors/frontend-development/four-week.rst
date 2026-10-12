@@ -2,11 +2,18 @@ Front End Development: Four-Week Online Course
 ==============================================
 
 A four-week online course on front end development with React, TypeScript, Vite and Bootstrap,
-taught on the pages of Smarter's web console, with twelve 30-minute recorded lectures and a
-90-minute live session each week. Week 1 covers React and TypeScript, week 2 components and
-styling, week 3 data and testing, and week 4 build, integration and the chat interface. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../frontend-development` for an overview of the subject.
+taught on the pages of Smarter's web console. The console is an npm workspace of `twenty-four React
+apps <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__, one per page, with
+shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and styled with the Keen
+Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker, ESLint and Prettier are
+already set up, with about 150 test files and every story run as a test. Each app is hosted by a
+Django template, and the chat interface, `@smarter.sh/ui-chat
+<https://github.com/smarter-sh/smarter-chat>`__, is published to npm with TypeScript types generated
+from the server's Pydantic contract. There are twelve 30-minute recorded lectures and a 90-minute
+live session each week. Week 1 covers React and TypeScript, week 2 components and styling, week 3
+data and testing, and week 4 build, integration and the chat interface. See :doc:`../course-formats`
+for the format, the grading scale and the course policies, and :doc:`../frontend-development` for an
+overview of the subject.
 
 At a Glance
 -----------
@@ -50,6 +57,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -108,8 +117,10 @@ Schedule
        (:doc:`/smarter-framework/developer-reference/react-integration`).
    * - 4
      - Lecture 12
-     - **The chat interface.** A tour of ``smarter-chat``: streaming responses, markdown, the API
-       contract, and embedding with `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__.
+     - **The chat interface.** A tour of ``smarter-chat``: Server-Sent Events for a prompt's
+       progress, Markdown with math and diagrams, branding from ``spec.config.styles``, the API
+       contract and its generated types, and embedding with `@smarter.sh/ui-chat
+       <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__.
    * - 4
      - Live session 4
      - Capstone demonstrations (about 6 minutes each, with 2 minutes of code review questions),
@@ -118,6 +129,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

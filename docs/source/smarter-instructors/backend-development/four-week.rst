@@ -2,12 +2,24 @@ Backend Development: Four-Week Online Course
 ============================================
 
 A four-week online course on backend development with Python, Django, Django REST Framework and
-Pydantic, taught on Smarter's code base, with twelve 30-minute recorded lectures and a 90-minute
-live session each week. Week 1 covers Django and the ORM, week 2 the API layer, week 3 manifests,
-models and testing, and week 4 background work, caching and performance. The course ends with a
-new feature, or a new resource kind, delivered as a pull request. See :doc:`../course-formats` for
-the format, the grading scale and the course policies, and :doc:`../backend-development` for an
-overview of the subject.
+Pydantic, taught on Smarter's code base. Smarter is a large Django project, with eighteen apps in
+`smarter/smarter/apps/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps>`__
+that share one deliberately rigid layout, more than five thousand unit tests, and patterns that
+tutorial projects never reach: a `broker layer
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__
+that turns YAML manifests into database rows, Pydantic models for every manifest and contract, a
+Pydantic `Settings
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__ class,
+Celery workers and a `beat schedule
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__, and
+caching with `@cache_results
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__. The
+``guardrail`` app, the newest and cleanest, is the reference that the course reads and changes.
+There are twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers
+Django and the ORM, week 2 the API layer, week 3 manifests, models and testing, and week 4
+background work, caching and performance. The course ends with a new feature, or a new resource
+kind, delivered as a pull request. See :doc:`../course-formats` for the format, the grading scale
+and the course policies, and :doc:`../backend-development` for an overview of the subject.
 
 At a Glance
 -----------
@@ -56,6 +68,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -66,7 +80,7 @@ Schedule
    * - 1
      - Lecture 1
      - **Installing Smarter from source.** What each container does, the ``Makefile``, and how to
-       get code changes into the containers.
+       get code changes into containers that have no bind mount (``make build && make run``).
    * - 1
      - Lecture 2
      - **Django in one picture.** Projects, apps, settings, URLs, middleware, views, models and the
@@ -90,7 +104,8 @@ Schedule
      - Lecture 6
      - **Errors, versioning and documentation.** Smarter's
        :doc:`error format </smarter-framework/smarter-api/error-handling>`,
-       :doc:`API versioning </adr/023-api-versioning>`, rate limiting and Swagger.
+       :doc:`API versioning </adr/023-api-versioning>`, the absence of DRF throttling and what
+       Smarter uses instead, and Swagger.
    * - 2
      - Live session 2
      - Review of Assignment 1. Live trace of an ``apply`` request with a debugger. Start
@@ -116,8 +131,9 @@ Schedule
      - **Management commands.** ``SmarterCommand``, arguments, exit codes, and built-in data.
    * - 4
      - Lecture 11
-     - **Background work.** Celery tasks, the beat scheduler, retries, and why tasks must be
-       idempotent. :doc:`ADR 030 </adr/030-task-queues>`.
+     - **Background work.** Celery tasks, named queues, the beat schedule in
+       ``workers/celerybeat.py``, retries, and why tasks must be idempotent.
+       :doc:`ADR 030 </adr/030-task-queues>`.
    * - 4
      - Lecture 12
      - **Caching and performance.** Redis, ``@cache_results``, what to cache and what never to
@@ -130,6 +146,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -382,8 +403,8 @@ Recommended Texts
   2020), and Luciano Ramalho, *Fluent Python* (2nd edition, O'Reilly, 2022).
 - **Smarter documentation:** :doc:`/smarter-framework/smarter-broker-model`,
   :doc:`/smarter-framework/smarter-api`, :doc:`/smarter-framework/technologies/pydantic`,
-  :doc:`/smarter-framework/guides/developer-feature-checklist`, :doc:`/smarter-framework/getting-started`,
-  and the :doc:`Architecture Decision Records </adr>`.
+  :doc:`/smarter-framework/guides/developer-feature-checklist`,
+  :doc:`/smarter-framework/getting-started`, and the :doc:`Architecture Decision Records </adr>`.
 
 Further Study
 -------------

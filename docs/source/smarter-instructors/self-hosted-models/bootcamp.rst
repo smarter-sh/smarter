@@ -4,10 +4,22 @@ Self-Hosting Open Models: Classroom Bootcamp
 An eight-hour classroom bootcamp on serving open models, such as Llama, Qwen, Gemma, Mistral and
 gpt-oss, with Smarter's :doc:`LLMHost </smarter-resources/smarter-llmhost>`, which runs them on
 Kubernetes with vLLM, SGLang, TGI, llama.cpp or Ollama and adds the GPU or CPU nodes they need.
-Students serve models, compare inference engines, and put a self-hosted model beside a commercial
-one in the same application. See :doc:`../course-formats` for the standard bootcamp day, the
-grading scale and the course policies, and :doc:`../self-hosted-models` for an overview of the
-subject.
+Smarter ships with `twenty-four ready-to-apply model manifests
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__ and
+`seven compute profiles
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+priced per hour, supports seven `inference engines
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/engines.py>`__,
+renders each model's Kubernetes resources with a `pure function
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/renderer.py>`__
+that can be previewed, and creates and removes EKS `node groups
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
+of GPU nodes as models need them. A self-hosted model is registered as a Provider and used by an
+LLMClient exactly like a commercial one, and its hours are charged like any other cost, so the
+comparison is fair. Students serve models, compare inference engines, and put a self-hosted model
+beside a commercial one in the same application. See :doc:`../course-formats` for the standard
+bootcamp day, the grading scale and the course policies, and :doc:`../self-hosted-models` for an
+overview of the subject.
 
 At a Glance
 -----------
@@ -24,9 +36,10 @@ At a Glance
        laptop for the local labs.
    * - **Cost**
      - The GPU nodes dominate: around a dollar an hour for each L4 node while it runs. Plan for two
-       or three nodes for about four hours, and undeploy every LLMHost at the end of the day. Cap
+       or three nodes for about four hours, and undeploy every LLMHost at the end of the day. Limit
        spending with an LLMHost compute :doc:`Budget </smarter-resources/smarter-budget>` (the
-       built-in ``llmhost-compute`` example).
+       built-in ``llmhost-compute`` example), which stops new launches at its limit but does not
+       remove nodes that are already running.
 
 .. warning::
 
@@ -63,6 +76,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -96,10 +111,12 @@ Schedule
        and GPTQ; what quality you lose; CPU inference. Choosing a model size for a GPU.
    * - 6
      - 45
-     - **Lecture 4: Inside LLMHost.** The manifest's ``model``, ``engine``, ``compute`` and
-       ``resources`` sections, the built-in LLMHostCompute node groups, how Smarter adds and removes
-       nodes, health checks, API keys as :doc:`Secrets </smarter-resources/smarter-secret>`, and
-       registering the endpoint as a :doc:`Provider </smarter-resources/smarter-provider>`.
+     - **Lecture 4: Inside LLMHost.** The manifest's ``model``, ``engine``, ``compute``,
+       ``resources``, ``storage``, ``network``, ``scaling`` and ``healthCheck`` sections, the
+       lifecycle from ``provisioning`` to ``active``, the built-in LLMHostCompute node groups, how
+       Smarter adds and removes nodes, health checks, API keys as :doc:`Secrets
+       </smarter-resources/smarter-secret>`, and registering the endpoint as a :doc:`Provider
+       </smarter-resources/smarter-provider>`.
    * - 7
      - 45
      - **Lab 3: Engine bake-off.** In teams, serve the same small model with two inference engines
@@ -121,6 +138,11 @@ Schedule
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone. The instructor undeploys every LLMHost.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

@@ -1,11 +1,19 @@
 Docker for Software Development: Four-Week Online Course
 ========================================================
 
-A four-week online course on Docker, taught on Smarter's multi-container application, with twelve
-30-minute recorded lectures and a 90-minute live session each week. Week 1 covers containers and
-images, week 2 the Dockerfile, week 3 Compose and configuration, and week 4 security, CI and the
-path to production. See :doc:`../course-formats` for the format, the grading scale and the course
-policies, and :doc:`../docker` for an overview of the subject.
+A four-week online course on Docker, taught on Smarter's multi-container application. The
+`Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__ has twelve stages, from
+a slim Python 3.14 base to a non-root user whose files are made read-only outside development, and
+`docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__ runs six
+services: the Django web server, two Celery workers on separate queues, the Celery scheduler,
+MariaDB and Redis. The same image plays four roles, the ``docker-*`` targets in the `Makefile
+<https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ wrap every step, and the same image
+runs in production on Kubernetes, so nothing students learn is a classroom simplification. The files
+also have real flaws to find, such as unpinned base images. There are twelve 30-minute recorded
+lectures and a 90-minute live session each week. Week 1 covers containers and images, week 2 the
+Dockerfile, week 3 Compose and configuration, and week 4 security, CI and the path to production.
+See :doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../docker` for an overview of the subject.
 
 At a Glance
 -----------
@@ -49,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -74,7 +84,8 @@ Schedule
      - **Dockerfile basics.** Instructions, context, the build cache and layer ordering.
    * - 2
      - Lecture 5
-     - **Multi-stage builds.** Build and runtime stages, and Smarter's ``Dockerfile`` stage by stage.
+     - **Multi-stage builds.** Build and runtime stages, and Smarter's ``Dockerfile`` stage by
+       stage.
    * - 2
      - Lecture 6
      - **Users and permissions.** Running as non-root, file ownership, and the ``docker cp``
@@ -104,7 +115,9 @@ Schedule
    * - 4
      - Lecture 11
      - **Images in CI.** Building, testing and publishing images with GitHub Actions, and Smarter's
-       :doc:`build pipeline </smarter-framework/developer-reference/devops/build>`.
+       :doc:`build pipeline </smarter-framework/developer-reference/devops/build>`: Buildx for
+       ``linux/amd64`` and ``linux/arm64``, Amazon ECR with native scanning, and a Helm chart
+       signed with cosign.
    * - 4
      - Lecture 12
      - **Toward production.** Registries, development versus production images, and what
@@ -117,6 +130,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

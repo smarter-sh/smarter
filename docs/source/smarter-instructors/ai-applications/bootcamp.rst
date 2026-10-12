@@ -2,10 +2,21 @@ Building AI Applications: Classroom Bootcamp
 ============================================
 
 An eight-hour classroom bootcamp on the architecture of AI applications: retrieval, tool calling,
-structured data, MCP servers and multi-agent workflows. Every component is a resource declared in
-a YAML manifest, so the bootcamp covers the whole landscape without teaching a programming
-language. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the
-course policies, and :doc:`../ai-applications` for an overview of the subject.
+structured data, MCP servers and multi-agent workflows. Every component is a resource declared in a
+YAML manifest, so the bootcamp covers the whole landscape without teaching a programming language.
+Students work on the resources that ship with every Smarter installation: `nineteen built-in
+LLMClients
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+from the bare ``simple`` assistant to ``research_analyst``, which searches the web through an `Exa
+MCP server
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/exa.yaml>`__,
+reads pages and PDFs, and checks its citations with guardrails; `twenty-five MCP clients
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
+for services such as GitHub, Notion and Stripe; `Vectorstores
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__
+on Qdrant and Pinecone; and an :doc:`Orchestrator </smarter-resources/smarter-orchestrator>` with
+six coordination strategies. See :doc:`../course-formats` for the standard bootcamp day, the grading
+scale and the course policies, and :doc:`../ai-applications` for an overview of the subject.
 
 At a Glance
 -----------
@@ -51,6 +62,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -60,9 +73,9 @@ Schedule
      - Content
    * - 1
      - 45
-     - **Lecture 1: Anatomy of an AI application.** The model, the system prompt, knowledge,
-       tools, guardrails and orchestration, and how each appears as a Smarter resource. A tour of
-       the built-in ``simple``, ``customer_support`` and ``research_analyst`` LLMClients, from a bare
+     - **Lecture 1: Anatomy of an AI application.** The model, the system prompt, knowledge, tools,
+       guardrails and orchestration, and how each appears as a Smarter resource. A tour of the
+       built-in ``simple``, ``customer_support`` and ``research_analyst`` LLMClients, from a bare
        model to a complete application.
    * - 2
      - 45
@@ -81,16 +94,21 @@ Schedule
        Assignment 2.
    * - 5
      - 45
-     - **Lecture 3: Structured data.** Text-to-SQL with a :doc:`SQL Plugin </smarter-resources/plugin/plugin/sql>`
-       and a :doc:`Connection </smarter-resources/smarter-connection>`. Read-only access, why the
-       model never sees the database password, and how wrong answers happen. The built-in
-       ``data_analyst`` LLMClient as a worked example.
+     - **Lecture 3: Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL
+       Plugin </smarter-resources/plugin/plugin/sql>` runs a fixed, parameterized query that the
+       model can only fill in (`stackademy_sql
+       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__),
+       and a SkillPlugin teaches the model a schema so that it writes SQL for a person to review
+       (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
+       with a read-only database user, its password in a :doc:`Secret
+       </smarter-resources/smarter-secret>`, and how wrong answers still happen.
    * - 6
      - 45
-     - **Lecture 4: Tools and MCP.** Function calling, :doc:`API </smarter-resources/plugin/plugin/api>`
-       and :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` plugins, and the
-       `Model Context Protocol <https://modelcontextprotocol.io/>`__.
-       :doc:`MCP clients </smarter-resources/smarter-mcpclient>` in Smarter.
+     - **Lecture 4: Tools and MCP.** Function calling, :doc:`API
+       </smarter-resources/plugin/plugin/api>` and :doc:`Websearch
+       </smarter-resources/plugin/plugin/websearch>` plugins, and the `Model Context Protocol
+       <https://modelcontextprotocol.io/>`__. :doc:`MCP clients
+       </smarter-resources/smarter-mcpclient>` in Smarter.
    * - 7
      - 45
      - **Lab 3: A data assistant.** Build an assistant that answers five business questions in
@@ -99,8 +117,8 @@ Schedule
    * - 8
      - 45
      - **Lecture 5: Orchestration.** Workflows and agents, routing, and when several specialized
-       assistants beat one general one. The :doc:`Orchestrator </smarter-resources/smarter-orchestrator>`
-       resource.
+       assistants beat one general one. The :doc:`Orchestrator
+       </smarter-resources/smarter-orchestrator>` resource.
    * - 9
      - 45
      - **Lab 4: One assistant or several?** Build a two-step workflow (for example research, then
@@ -114,6 +132,11 @@ Schedule
      - 30
      - **Capstone kickoff.** Students choose a capstone, sketch its architecture diagram and get
        feedback.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -191,7 +214,7 @@ Assignment 3: Data Assistant
 Students build an assistant over the sample database, ask it five business questions in plain
 English, and check each answer against the true figure, which the instructor provides.
 
-**Turn in:** the manifests, the questions, the assistant's answers and generated SQL from the
+**Turn in:** the manifests, the questions, the assistant's answers and the tool calls from the
 Console, and the check against the true figures.
 
 .. list-table::
@@ -212,7 +235,7 @@ Console, and the check against the true figures.
      - Answers accepted without checking.
    * - Failure analysis
      - 5
-     - Wrong answers are explained from the generated SQL.
+     - Wrong answers are explained from the SQL and the tool call's parameters.
      - Wrong answers noted but not explained.
    * - Improvement
      - 4

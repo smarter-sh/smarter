@@ -1,11 +1,22 @@
 AI Governance and Responsible AI: Two-Week Online Course
 ========================================================
 
-A two-week online course that turns AI governance from principles into practice, with six 30-minute
-recorded lectures and a 90-minute live session each week. Week 1 covers risk and control, and week
-2 covers money, access and accountability. No programming is needed. See :doc:`../course-formats`
-for the format, the grading scale and the course policies, and :doc:`../ai-governance` for an
-overview of the subject.
+A two-week online course that turns AI governance from principles into practice. Students write an
+AI policy, then enforce as much of it as they can with guardrails, budgets and access controls, and
+audit the results. In Smarter, every control is a short YAML manifest that a non-programmer can read
+and change: `eighteen built-in guardrails
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+from personal data redaction to the escalation of GDPR and CCPA privacy requests to a person; `seven
+example budgets
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+such as a monthly allowance for each student; and per-account ownership of every resource. Every
+intervention is recorded as a `guardrail event
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__,
+and every prompt, tool call and change to a resource is kept, so students can audit what happened,
+not what was intended. There are six 30-minute recorded lectures and a 90-minute live session each
+week. Week 1 covers risk and control, and week 2 covers money, access and accountability. No
+programming is needed. See :doc:`../course-formats` for the format, the grading scale and the course
+policies, and :doc:`../ai-governance` for an overview of the subject.
 
 At a Glance
 -----------
@@ -48,6 +59,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -93,6 +106,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

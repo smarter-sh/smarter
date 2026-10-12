@@ -1,0 +1,139 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+or of `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ where
+named, so that students can open each one during class. Python paths are under
+``smarter/smarter/``.
+
+Defending an AI Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Defense
+     - What Smarter does
+     - Where to look
+   * - Guardrails on input
+     - Built-in guardrails for prompt injection by keyword and by LLM judge, semantic jailbreak
+       detection, code injection, and redaction of personal data and secrets before the model
+       sees them.
+     - `prompt-injection-llm-judge-input.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/prompt-injection-llm-judge-input.yaml>`__,
+       `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+   * - Guardrails on output
+     - The model's reply is checked too, because the model is untrusted: leaked secrets and
+       personal data, script injection, invented citations and regulated advice.
+     - `secrets-leak-output.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/secrets-leak-output.yaml>`__,
+       `script-injection-output.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/script-injection-output.yaml>`__
+   * - Detectors
+     - Deterministic detectors for credit cards (with the Luhn check), US social security
+       numbers, email addresses, phone numbers, IP addresses, IBANs, AWS access keys, private
+       keys, API keys, JWTs and password assignments.
+     - `guardrail/services/strategies/detectors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/detectors.py>`__
+   * - The pipeline
+     - Guardrails run in order, at each stage, and every intervention is recorded with its
+       rationale. :doc:`/smarter-resources/smarter-guardrail`.
+     - `guardrail/services/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/pipeline.py>`__,
+       `guardrail/models/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__
+   * - Least privilege for tools
+     - A SQL Plugin runs only a fixed, parameterized query, and an MCP client offers only the
+       tools on its allow list, such as the read-only tools of GitHub's server.
+     - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__,
+       `mcpclients/github.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/github.yaml>`__
+
+Secrets and Outbound Requests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Defense
+     - What Smarter does
+     - Where to look
+   * - Secrets at rest
+     - Encrypted with Fernet, with a key that is itself a setting held as a Pydantic
+       ``SecretStr``, so it is never printed.
+     - `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
+       `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__
+   * - Credentials out of prompts
+     - An API Plugin reaches its API through a Connection whose key is a Secret, and Smarter
+       adds it to the request, so the model never sees it. A Proxy keeps provider keys on the
+       server, and callers use revocable Smarter keys instead.
+     - `connection/models/api_connection.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/connection/models/api_connection.py>`__,
+       `apps/proxy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy>`__
+   * - Server-side request forgery
+     - One hardened function for every request to a user-supplied URL: https only, port 443,
+       every resolved address public, no credentials in URLs, every redirect re-validated,
+       bounded responses and timeouts. Its docstring states the remaining DNS rebinding window
+       honestly.
+     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+   * - MCP servers
+     - The same checks on every request to an MCP server, and no stdio transport, which would
+       run a command on the Smarter server.
+     - `mcpclient/connection.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/connection.py>`__
+   * - Never cache a security check
+     - The rule that ``validate_public_url()`` must resolve DNS fresh before every request, and
+       why caching it would widen the rebinding window to the cache lifetime.
+     - `smarter-development/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-development/SKILL.md>`__
+
+Classic Web Security
+~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Defense
+     - What Smarter does
+     - Where to look
+   * - Authentication
+     - API keys of which only a hash is stored, compared in constant time, and refused once
+       deactivated.
+     - `lib/drf/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/models.py>`__,
+       `lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`__
+   * - Object-level authorization
+     - Every resource belongs to an account and a user, and querysets are filtered by owner.
+     - `account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__
+   * - Probing and scanning
+     - Middleware that blocks requests for sensitive files and common attack paths, and throttles
+       unauthenticated clients that generate many 404s.
+     - `lib/django/middleware/sensitive_files.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/sensitive_files.py>`__,
+       `lib/django/middleware/excessive_404.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/excessive_404.py>`__
+   * - CSRF and CORS
+     - Django's CSRF protection for the console, and CORS for an embedded chat limited to the
+       origins listed in its LLMClient's manifest.
+     - `lib/django/middleware/csrf.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/csrf.py>`__,
+       `llmclient/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/cors.py>`__
+   * - Infrastructure
+     - A non-root container with read-only application files, Calico network policies with
+       default-deny ingress, and a private network for the cluster.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__,
+       `smarter-infrastructure: network_policy.tf <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__
+
+Secure Development
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Practice
+     - What Smarter does
+     - Where to look
+   * - Static analysis and secret scanning
+     - ``bandit`` at medium severity and above, ``detect-private-key`` and
+       ``detect-aws-credentials`` on every commit. :doc:`ADR 016 </adr/016-security>`.
+     - `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__
+   * - Dependencies
+     - Dependabot updates, and image scanning in Amazon ECR.
+     - `.github/dependabot.yml <https://github.com/smarter-sh/smarter/blob/main/.github/dependabot.yml>`__,
+       `build.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/build.yml>`__
+   * - Tests that cannot touch production
+     - The development containers hold live cloud credentials, so every cloud call in tests is
+       faked, and tests that need real infrastructure are tagged and skipped.
+     - `smarter-infrastructure-safety/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-infrastructure-safety/SKILL.md>`__
+   * - Disclosure
+     - A private address for vulnerability reports, and a policy that only the latest version is
+       supported. :doc:`/smarter-platform/security-faq`.
+     - `SECURITY.md <https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__

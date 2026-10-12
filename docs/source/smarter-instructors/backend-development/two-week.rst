@@ -2,10 +2,23 @@ Backend Development: Two-Week Online Course
 ===========================================
 
 A two-week online course on backend development with Python, Django, Django REST Framework and
-Pydantic, taught on Smarter's code base, with six 30-minute recorded lectures and a 90-minute live
-session each week. Week 1 covers Django and its API layer, and week 2 covers manifests, models,
-testing and background work. See :doc:`../course-formats` for the format, the grading scale and
-the course policies, and :doc:`../backend-development` for an overview of the subject.
+Pydantic, taught on Smarter's code base. Smarter is a large Django project, with eighteen apps in
+`smarter/smarter/apps/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps>`__
+that share one deliberately rigid layout, more than five thousand unit tests, and patterns that
+tutorial projects never reach: a `broker layer
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__
+that turns YAML manifests into database rows, Pydantic models for every manifest and contract, a
+Pydantic `Settings
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__ class,
+Celery workers and a `beat schedule
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__, and
+caching with `@cache_results
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__. The
+``guardrail`` app, the newest and cleanest, is the reference that the course reads and changes.
+There are six 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers
+Django and its API layer, and week 2 covers manifests, models, testing and background work. See
+:doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../backend-development` for an overview of the subject.
 
 At a Glance
 -----------
@@ -52,6 +65,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -94,6 +109,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

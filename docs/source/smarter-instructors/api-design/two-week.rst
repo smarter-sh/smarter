@@ -2,10 +2,18 @@ API Design and Integration: Two-Week Online Course
 ==================================================
 
 A two-week online course on designing and consuming REST APIs, taught on Smarter's API from both
-sides, with six 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers
-consuming an API, and week 2 covers designing, evolving and operating one. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../api-design` for an overview of the subject.
+sides. Smarter's API has sixteen commands under `/api/v1/cli/
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__ that
+apply, describe and delete every resource from a YAML manifest, resource-style endpoints for the web
+console, API keys of which only a hash is stored, one error format for every failure, and Swagger
+and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
+<https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
+<https://github.com/smarter-sh/smarter-chat>`__ npm package, whose types are generated from the chat
+API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
+has drifted from the API it calls. There are six 30-minute recorded lectures and a 90-minute live
+session each week. Week 1 covers consuming an API, and week 2 covers designing, evolving and
+operating one. See :doc:`../course-formats` for the format, the grading scale and the course
+policies, and :doc:`../api-design` for an overview of the subject.
 
 At a Glance
 -----------
@@ -46,6 +54,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -79,7 +89,8 @@ Schedule
        :doc:`ADR 023 </adr/023-api-versioning>`.
    * - 2
      - Lecture 6 (30 min)
-     - **Operating an API.** Rate limiting, logging, chat and streaming APIs, OpenAI-compatible
+     - **Operating an API.** Rate limiting, and why Smarter relies on Budgets and middleware
+       instead of DRF throttling, logging, chat and streaming APIs, OpenAI-compatible
        :doc:`Proxies </smarter-resources/smarter-proxy>`, and the OWASP API Security Top 10.
    * - 2
      - Live session 2 (90 min)
@@ -87,6 +98,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
