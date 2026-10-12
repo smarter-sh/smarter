@@ -413,6 +413,9 @@ class ProxyForwarder:
         self.proxy = proxy
         self.user_profile = user_profile
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} proxy={self.proxy.name} user_profile={self.user_profile}>"
+
     def api_key(self) -> str:
         """
         The provider's API key, from the Proxy's Secret.

@@ -23,5 +23,5 @@ class PromptPluginUsage(TimestampedModel):
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
     input_text = models.TextField(blank=True, null=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.prompt.id} - {self.plugin.name}"  # type: ignore[return]

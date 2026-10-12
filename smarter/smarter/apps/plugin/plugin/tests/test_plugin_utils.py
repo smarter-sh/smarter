@@ -30,6 +30,15 @@ class TestPlugins(SmarterTestBase):
         self.assertEqual(plugins.data, [{"name": "ready"}])
         not_ready.to_json.assert_not_called()
 
+    def test_len_iter_and_repr_include_every_loaded_plugin(self):
+        ready, not_ready = MagicMock(ready=True), MagicMock(ready=False)
+        plugins = Plugins.__new__(Plugins)
+        plugins.plugins = [ready, not_ready]
+        plugins.user_profile = None
+        self.assertEqual(len(plugins), 2)
+        self.assertEqual(list(plugins), [ready, not_ready])
+        self.assertEqual(repr(plugins), "<Plugins user_profile=None count=2>")
+
 
 class TestPluginExample(SmarterTestBase):
     """Test PluginExample loaded from a yaml file."""
@@ -47,6 +56,7 @@ class TestPluginExample(SmarterTestBase):
         self.assertEqual(example.name, "SamplePlugin")
         self.assertEqual(example.to_json(), {"metadata": {"name": "SamplePlugin"}})
         self.assertIn("SamplePlugin", example.to_yaml())
+        self.assertEqual(repr(example), "<PluginExample filename=my-sample_plugin.yaml name=SamplePlugin>")
 
     def test_name_falls_back_to_the_filename(self):
         example = self.example("spec: {}\n")

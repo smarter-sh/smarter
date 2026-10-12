@@ -274,7 +274,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         choices=TlsCertificateIssuanceStatusChoices.choices,
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.url if self.url else "undefined"
 
     @property

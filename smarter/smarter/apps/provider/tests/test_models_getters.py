@@ -14,6 +14,7 @@ from smarter.apps.provider.models import (
     ProviderModelVerificationTypes,
     ProviderVerification,
     ProviderVerificationTypes,
+    get_cached_active_provider_for_user,
     get_model_for_provider,
     get_models_for_provider,
     get_provider,
@@ -106,6 +107,22 @@ class TestProviderGetters(ProviderTestBase):
         with patch("smarter.apps.provider.models.get_provider", return_value=provider):
             with self.assertRaises(SmarterBusinessRuleViolation):
                 get_model_for_provider(provider_name=f"{self.name}_inactive")
+
+    def test_get_cached_active_provider_for_user(self):
+        """The user's active provider is returned by name, and an unknown name or user returns None."""
+        username = self.admin_user.username
+        self.assertEqual(get_cached_active_provider_for_user(self.name, username).pk, self.provider.pk)
+        self.assertIsNone(get_cached_active_provider_for_user(f"no_such_provider_{self.hash_suffix}", username))
+        self.assertIsNone(get_cached_active_provider_for_user(self.name, f"no_such_user_{self.hash_suffix}"))
+
+    def test_get_cached_active_provider_for_user_is_cached(self):
+        """The provider is cached, so a change reaches it only after invalidation."""
+        username = self.admin_user.username
+        self.assertIsNotNone(get_cached_active_provider_for_user(self.name, username))
+        Provider.objects.filter(pk=self.provider.pk).update(is_active=False)
+        self.assertIsNotNone(get_cached_active_provider_for_user(self.name, username))
+        get_cached_active_provider_for_user.invalidate(self.name, username)  # type: ignore[attr-defined]
+        self.assertIsNone(get_cached_active_provider_for_user(self.name, username))
 
 
 class TestVerificationValidity(ProviderTestBase):

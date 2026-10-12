@@ -276,12 +276,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self.log_abstract_broker_state()
         logger.debug("%s.__init__() is complete.", self.abstract_broker_logger_prefix)
 
-    def __str__(self):
-        """Returns the string representation of the broker, expresssed as.
+    def __str__(self) -> str:
+        """
+        Returns the string representation of the broker, naming its concrete class.
 
-        "{apiVersion} {kind} Broker".
-
-        example: "smarter.sh/v1 LLMClient Broker"
+        example: ``SAMLLMClientBroker[id=140234](name=my-llmclient, user_profile=Acme-jane@acme.com)``
 
         :return: The string representation of the broker.
         :rtype: str
@@ -289,15 +288,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         user_profile = self.user_profile or "Anonymous"
         name = self._name or "Unknown"
 
-        return (
-            f"{self.formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
-        )
+        return f"{self.__class__.__name__}[id={id(self)}](name={name}, user_profile={user_profile})"
 
     def __repr__(self) -> str:
         """
-        Returns the JSON representation of the broker.
+        Returns the developer representation of the broker, which is the same as :meth:`__str__`.
 
-        :return: The JSON representation of the broker.
+        :return: The developer representation of the broker.
         :rtype: str
         """
         return self.__str__()
@@ -326,64 +323,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         :param other: The other broker to compare.
         :type other: object
-        :return: True if the brokers are equal, False otherwise.
+        :return: True if the brokers are equal, or ``NotImplemented`` if
+            ``other`` is not an :class:`AbstractBroker`.
         :rtype: bool
         """
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, AbstractBroker):
             return NotImplemented
         return self.account == other.account and self.kind == other.kind and self.name == other.name
-
-    def __lt__(self, other: object) -> bool:
-        """
-        Less than comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is less than the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) < (other.account, other.kind, other.name)
-
-    def __le__(self, other: object) -> bool:
-        """
-        Less than or equal comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is less than or equal to the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) <= (other.account, other.kind, other.name)
-
-    def __gt__(self, other: object) -> bool:
-        """
-        Greater than comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is greater than the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) > (other.account, other.kind, other.name)
-
-    def __ge__(self, other: object) -> bool:
-        """
-        Greater than or equal comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is greater than or equal to the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) >= (other.account, other.kind, other.name)
 
     ###########################################################################
     # Class Instance Properties
