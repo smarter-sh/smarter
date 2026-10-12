@@ -1,7 +1,10 @@
 """Test the create_smarter_admin management command, with a new superuser in the platform's account."""
 
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 
+from smarter.apps.account import utils as account_utils
 from smarter.apps.account.models import UserProfile
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.drf.models import SmarterAuthToken
@@ -32,3 +35,16 @@ class TestCreateSmarterAdmin(CommandTestBase):
         self.run_command("create_smarter_admin", username=username)
         self.run_command("create_smarter_admin", username=username)
         self.assertEqual(SmarterAuthToken.objects.filter(user__username=username).count(), 1)
+
+    def test_create_platform_admin_on_a_new_database(self):
+        """Test creating the platform's admin user when it doesn't exist yet, as make init does."""
+        username = self.unique("test_smarter_admin")
+        self.addCleanup(User.objects.filter(username=username).delete)
+        self.addCleanup(SmarterAuthToken.objects.filter(user__username=username).delete)
+        with (
+            patch.object(account_utils, "SMARTER_ADMIN_USERNAME", username),
+            patch.object(account_utils.smarter_cached_objects, "_admin_user", None),
+        ):
+            self.run_command("create_smarter_admin", username=username)
+            self.assertEqual(account_utils.smarter_cached_objects.admin_user.username, username)
+        self.assertTrue(User.objects.get(username=username).is_superuser)
