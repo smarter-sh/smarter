@@ -1,0 +1,123 @@
+Every lecture, lab and assignment in this course rests on the files below, in two repositories:
+`smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__, the Terraform
+and Terragrunt that build Smarter's AWS environment, and
+`smarter <https://github.com/smarter-sh/smarter>`__, the application that manages infrastructure
+of its own at run time. Every reference is to the ``main`` branch, so that students can open each
+one during class.
+
+The Terraform Stack
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Module
+     - What it creates
+     - Where to look
+   * - ``vpc``
+     - The network: public and private subnets, NAT and routing, and the Route53 zone that the
+       platform uses.
+     - `aws/terraform/vpc/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform/vpc>`__
+   * - ``kubernetes``
+     - An EKS cluster built with the community ``terraform-aws-modules/eks`` module, with roles for
+       service accounts (IRSA), managed node groups on Spot capacity that scale from 0 to 15
+       nodes, the Cluster Autoscaler, the CoreDNS, VPC CNI and EBS CSI add-ons, and persistent
+       storage.
+     - `aws/terraform/kubernetes/main.tf <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/main.tf>`__,
+       `config/cluster-autoscaler.yaml.tpl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/config/cluster-autoscaler.yaml.tpl>`__
+   * - Network policies
+     - With ``enable_enhanced_security`` on, Calico as the network policy engine, default-deny
+       ingress for MariaDB, Redis and the application, and egress from the application limited
+       to the database ports.
+     - `aws/terraform/kubernetes/network_policy.tf <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__
+   * - ``kubernetes_ingress`` and ``kubernetes_cert_manager``
+     - Traefik as the ingress controller, its DNS records, and cert-manager for TLS
+       certificates, each installed as a Helm release from a values template.
+     - `aws/terraform/kubernetes_ingress/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform/kubernetes_ingress>`__,
+       `aws/terraform/kubernetes_cert_manager/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform/kubernetes_cert_manager>`__
+   * - ``kubernetes_descheduler``
+     - The descheduler, which moves pods to rebalance the cluster's nodes.
+     - `aws/terraform/kubernetes_descheduler/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform/kubernetes_descheduler>`__
+   * - ``smarter``
+     - Each environment's own resources: certificates, CloudFront, an ECR repository, IAM, S3,
+       SES for email, Route53 records, a bastion host, Kubernetes secrets and ingresses.
+     - `aws/terraform/smarter/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform/smarter>`__
+
+Terragrunt and Environments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - How it is done
+     - Where to look
+   * - The root configuration
+     - Generates the AWS provider with ``allowed_account_ids``, a guard that refuses to run
+       against any other account, and the remote state: an S3 bucket per account and a DynamoDB
+       lock table.
+     - `aws/terragrunt.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`__
+   * - Shared values
+     - Region, domain, cluster name and tags, each read from the environment with a default.
+     - `aws/global.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/global.hcl>`__,
+       `.env.example <https://github.com/smarter-sh/smarter-infrastructure/blob/main/.env.example>`__
+   * - The shared stack
+     - The cluster's version, node group sizes, and the AMD64 and Graviton instance types, once
+       for every environment.
+     - `aws/stack/stack.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/stack/stack.hcl>`__,
+       `aws/stack/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/stack>`__
+   * - Environments
+     - ``alpha``, ``local`` and ``prod``, each a short ``terragrunt.hcl`` that points at the
+       ``smarter`` module and merges the shared values.
+     - `aws/environments/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/environments>`__
+   * - Something to question
+     - The remote state sets ``encrypt = false``, and a comment in the root configuration marks
+       a known naming problem as a ``FIX NOTE``. Real code has debts, and finding them is part
+       of reading it.
+     - `aws/terragrunt.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`__
+   * - A guide
+     - A getting-started guide for Terraform, written for this repository.
+     - `doc/TERRAFORM_GETTING_STARTED_GUIDE.md <https://github.com/smarter-sh/smarter-infrastructure/blob/main/doc/TERRAFORM_GETTING_STARTED_GUIDE.md>`__
+
+Infrastructure Inside the Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python paths are under ``smarter/smarter/`` in the ``smarter`` repository.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - One facade
+     - All DNS, certificate, Kubernetes and email work goes through ``infrastructure.dns``,
+       ``.certificates``, ``.kubernetes`` and ``.email``. The application never calls the AWS
+       SDK directly. :doc:`/smarter-framework/technologies/infrastructure`.
+     - `infrastructure/services/__init__.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__,
+       `infrastructure/services/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/infrastructure/services>`__
+   * - Providers
+     - Route53 and Certificate Manager in production, and an in-memory provider that tests use
+       instead, behind one ``CloudProvider`` interface that another cloud could implement.
+     - `infrastructure/providers/aws/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/infrastructure/providers/aws>`__,
+       `providers/memory.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__,
+       `providers/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/base.py>`__
+   * - Declarative at run time
+     - Deploying an LLMClient creates its DNS record, certificate and Kubernetes ingress from a
+       template, in Celery tasks.
+     - `llmclient/k8s/ingress.yaml.tpl <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/k8s/ingress.yaml.tpl>`__,
+       `llmclient/tasks/deploy_default_api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/tasks/deploy_default_api.py>`__
+   * - Node groups on demand
+     - Serving a self-hosted model creates an EKS managed node group of the right GPU or CPU
+       nodes, starting at zero, and removes nodes safely.
+     - `llmhost/services/nodegroups.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
+   * - An inventory
+     - Every cloud resource that the platform created or found, and whether it still exists.
+     - `infrastructure/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/models.py>`__
+   * - Safety rules
+     - Why tests fake every cloud call, and the tag that keeps tests that touch real
+       infrastructure from running by default.
+     - `smarter-infrastructure-safety/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-infrastructure-safety/SKILL.md>`__

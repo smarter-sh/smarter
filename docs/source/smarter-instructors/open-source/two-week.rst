@@ -1,11 +1,21 @@
 Open Source Participation: Two-Week Online Course
 =================================================
 
-A two-week online course on participating in open source, using Smarter, with six 30-minute
-recorded lectures and a 90-minute live session each week. Week 1 covers how projects work and the
-first contribution, and week 2 covers code contributions, review and community. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../open-source` for an overview of the subject.
+A two-week online course on participating in open source, using Smarter, which is developed in
+public with issues, discussions, pull requests, code review, conventional commits and automated
+releases. Smarter is licensed under the `AGPL-3.0
+<https://github.com/smarter-sh/smarter/blob/main/LICENSE>`__, has twenty-two contributors and more
+than five hundred automated releases, checks every commit message with `commitlint
+<https://github.com/smarter-sh/smarter/blob/main/commitlint.config.js>`__, versions itself with
+`semantic-release <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__ on
+``main``, ``next``, ``beta`` and ``alpha``, and publishes its rules in `CONTRIBUTING.md
+<https://github.com/smarter-sh/smarter/blob/main/CONTRIBUTING.md>`__, `CODE_OF_CONDUCT.md
+<https://github.com/smarter-sh/smarter/blob/main/CODE_OF_CONDUCT.md>`__ and `SECURITY.md
+<https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__. A merged pull request is a public,
+verifiable piece of work for a student's portfolio. There are six 30-minute recorded lectures and a
+90-minute live session each week. Week 1 covers how projects work and the first contribution, and
+week 2 covers code contributions, review and community. See :doc:`../course-formats` for the format,
+the grading scale and the course policies, and :doc:`../open-source` for an overview of the subject.
 
 At a Glance
 -----------
@@ -52,6 +62,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -68,8 +80,9 @@ Schedule
      - **Licenses.** Permissive and copyleft licenses, the AGPL, and compatibility.
    * - 1
      - Lecture 3 (30 min)
-     - **The first contribution.** Reading the rules (:doc:`/smarter-framework/guides/contributing`),
-       finding documentation problems, and the pull request workflow.
+     - **The first contribution.** Reading the rules
+       (:doc:`/smarter-framework/guides/contributing`), finding documentation problems, and the pull
+       request workflow.
    * - 1
      - Live session 1 (90 min)
      - Live walkthrough of a documentation pull request, from fork to review. Students start
@@ -91,6 +104,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

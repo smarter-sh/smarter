@@ -1,0 +1,137 @@
+Every lecture, lab and assignment in this course works with the manifests and files below. The
+manifests ship with every Smarter installation, so students can open them in the web console, or
+read them on the ``main`` branch of
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__. No programming is
+needed to read them. The Python files are listed for instructors and curious students. Python
+paths are under ``smarter/smarter/``.
+
+Applications to Take Apart
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Application
+     - What it shows
+     - Where to look
+   * - ``simple``
+     - A bare model: a one-line system prompt and nothing else. The baseline for every
+       comparison.
+     - `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+   * - ``customer_support``
+     - A complete application: a persona, a skill for on-brand replies, a plugin that reads web
+       pages, and four input guardrails for abuse, self-harm, prompt injection and jailbreaks.
+     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__
+   * - ``research_analyst``
+     - Web search through the Exa MCP server, page and PDF readers, an image search, and output
+       guardrails that catch fabricated citations and regulated advice.
+     - `llmclient-research-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-research-analyst.yaml>`__
+   * - ``data_analyst``
+     - A SkillPlugin that teaches the model a data warehouse's schema and house rules, so that it
+       writes SQL for a person to review, with DeepWiki through MCP for SQL documentation.
+     - `llmclient-data-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-data-analyst.yaml>`__,
+       `skill-sql-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/skill-sql-analyst.yaml>`__
+   * - Stackademy
+     - A fictional university's course catalog, served two ways: by a SQL Plugin over a database,
+       and by an API Plugin over a REST API, each with its own LLMClient.
+     - `plugin/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/stackademy>`__
+
+Knowledge and Data
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Vector databases
+     - Qdrant, self-hosted on Smarter's own Kubernetes cluster or in Qdrant Cloud, and Pinecone,
+       each declared in a manifest. Smarter creates the database, extracts text from PDFs,
+       Markdown, CSV, HTML and other formats, splits it into chunks, embeds and loads it, and
+       takes snapshots on a schedule. :doc:`/smarter-resources/smarter-vectorstore`.
+     - `vectorstore/data/vectorstores/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__,
+       `vectorstore/backends/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/backends>`__,
+       `vectorstore/extract.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/vectorstore/extract.py>`__
+   * - Retrieval strategies
+     - A Vectorsearch names a Vectorstore and how to query it: similarity, similarity with a
+       score threshold, or maximal marginal relevance, how many results, and metadata filters.
+       :doc:`/smarter-resources/smarter-vectorsearch`.
+     - `vectorstore/service.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/vectorstore/service.py>`__
+       (``search()``)
+   * - A parameterized query
+     - A SQL Plugin runs a fixed query written by a person. The model can only supply its
+       parameters, with types, descriptions and allowed values, so it never writes SQL that
+       runs. :doc:`/smarter-resources/plugin/plugin/sql`.
+     - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__,
+       `plugin/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/sql.py>`__
+   * - Connections and credentials
+     - A Connection names the database or API, and its password is the name of a Secret, so
+       neither the model nor the plugin's author ever sees it.
+       :doc:`/smarter-resources/smarter-connection`.
+     - `connection/data/sample-connections/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/connection/data/sample-connections>`__
+
+Action and Orchestration
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Plugin selection
+     - Smarter offers a plugin's tool to the model only when the prompt matches one of its search
+       terms, exactly, with a typo or as a synonym. The model then decides, from the tool's
+       description, whether to call it. :doc:`/smarter-resources/plugin/nlp`.
+     - `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+       (``selected()``)
+   * - Twenty sample plugins
+     - Static, Skill, Websearch and ImageSearch plugins, ready to attach to an LLMClient.
+     - `plugin/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/sample-plugins>`__
+   * - MCP clients
+     - Twenty-five ready-made MCP clients, for GitHub, Notion, Linear, Stripe, Hugging Face,
+       Microsoft Learn and others. Each states its transport, its credentials (a Secret) and the
+       tools the model may use, such as only the read-only ``get_*``, ``list_*`` and
+       ``search_*`` tools of GitHub's server. :doc:`/smarter-resources/smarter-mcpclient`.
+     - `mcpclient/data/mcpclients/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__,
+       `github.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/github.yaml>`__
+   * - Safe connections to MCP servers
+     - Only the HTTP and SSE transports are allowed, never stdio, which would run a command on
+       the server, and every endpoint must resolve to a public address.
+     - `mcpclient/connection.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/connection.py>`__
+   * - Orchestration
+     - An Orchestrator coordinates several LLMClients with one of six strategies (sequential,
+       parallel, supervisor, router, voting and debate), gives each a role (planner, executor,
+       critic, router, summarizer or tool caller), and records every run and step.
+       :doc:`/smarter-resources/smarter-orchestrator`.
+     - `orchestrator/enum.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/orchestrator/enum.py>`__,
+       `orchestrator/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/orchestrator/models>`__
+
+Production
+~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Guardrails
+     - Eighteen built-in guardrails, run as a pipeline on the prompt before the model sees it
+       and on the reply before the user does. :doc:`/smarter-resources/smarter-guardrail`.
+     - `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+       `guardrail/services/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/pipeline.py>`__
+   * - Cost and budgets
+     - Every request is charged, with its tokens, to the user, the application and the account,
+       and Budgets cap the spending. :doc:`/smarter-platform/cost-accounting`.
+     - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__,
+       `budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+   * - The record of every conversation
+     - Each prompt, answer, tool call and plugin selection is stored, and shown in the
+       workbench's Console. :doc:`/smarter-platform/smarter-journal`.
+     - `prompt/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/models>`__

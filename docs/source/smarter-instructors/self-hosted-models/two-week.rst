@@ -1,12 +1,25 @@
 Self-Hosting Open Models: Two-Week Online Course
 ================================================
 
-A two-week online course on serving open models with Smarter's
-:doc:`LLMHost </smarter-resources/smarter-llmhost>`, with six 30-minute recorded lectures and a
-90-minute live session each week. Week 1 covers how inference works and serving a model, and week 2
-covers performance, comparison with commercial models, and the economics of self-hosting. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../self-hosted-models` for an overview of the subject.
+A two-week online course on serving open models with Smarter's :doc:`LLMHost
+</smarter-resources/smarter-llmhost>`, which runs them on Kubernetes and adds the GPU or CPU nodes
+they need. Smarter ships with `twenty-four ready-to-apply model manifests
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__ and
+`seven compute profiles
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+priced per hour, supports seven `inference engines
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/engines.py>`__,
+renders each model's Kubernetes resources with a `pure function
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/renderer.py>`__
+that can be previewed, and creates and removes EKS `node groups
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
+of GPU nodes as models need them. A self-hosted model is registered as a Provider and used by an
+LLMClient exactly like a commercial one, and its hours are charged like any other cost, so the
+comparison is fair. There are six 30-minute recorded lectures and a 90-minute live session each
+week. Week 1 covers how inference works and serving a model, and week 2 covers performance,
+comparison with commercial models, and the economics of self-hosting. See :doc:`../course-formats`
+for the format, the grading scale and the course policies, and :doc:`../self-hosted-models` for an
+overview of the subject.
 
 At a Glance
 -----------
@@ -22,9 +35,10 @@ At a Glance
    * - **Workload**
      - 3 hours of instruction and 4 to 6 hours of assignments each week.
    * - **Cost**
-     - Around a dollar an hour for each L4 GPU node while it runs. Budget for about 20 GPU-hours
-       for a class of twenty, with a ``llmhost-compute`` :doc:`Budget </smarter-resources/smarter-budget>`
-       as a cap.
+     - Around a dollar an hour for each L4 GPU node while it runs. Budget for about 20 GPU-hours for
+       a class of twenty, with a ``llmhost-compute`` :doc:`Budget
+       </smarter-resources/smarter-budget>` to stop new launches at a limit. It does not remove
+       nodes that are already running.
 
 .. warning::
 
@@ -54,6 +68,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -95,6 +111,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

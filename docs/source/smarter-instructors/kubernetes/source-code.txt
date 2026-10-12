@@ -1,0 +1,116 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+or of `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ where
+named, so that students can open each one during class.
+
+The Helm Chart
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The chart
+     - ``helm/charts/smarter``, published on Artifact Hub and signed with cosign, with Bitnami
+       subcharts for MySQL, MariaDB, Redis, Grafana and Prometheus, and Loki, each switched on
+       or off in the values.
+     - `Chart.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/Chart.yaml>`__,
+       `README.md <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/README.md>`__
+   * - Values, validated
+     - Every setting has a default in ``values.yaml``, and a JSON Schema rejects a values file
+       with a wrong key or type before anything is installed. ``database.type`` chooses MySQL,
+       MariaDB or an external database.
+     - `values.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__,
+       `values.schema.json <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.schema.json>`__
+   * - Four Deployments, and a bastion
+     - The web server, the worker, the infrastructure worker and the scheduler: the same image
+       as in Docker Compose, with different commands. A fifth, a bastion pod, gives operators a
+       shell inside the cluster.
+     - `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+       `deployment-worker.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-worker.yaml>`__,
+       `deployment-worker-infrastructure.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-worker-infrastructure.yaml>`__,
+       `deployment-beat.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-beat.yaml>`__,
+       `deployment-bastion.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-bastion.yaml>`__
+   * - Probes
+     - Liveness on ``/healthz/``, readiness on ``/readiness/``, and a startup probe, so a slow
+       start is not mistaken for a failure.
+     - `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+       `urls/console.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/urls/console.py>`__
+   * - Autoscaling
+     - Horizontal Pod Autoscalers for the web server and the worker, from 3 to 25 web pods at
+       75% CPU by default.
+     - `hpa-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__,
+       `hpa-worker.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-worker.yaml>`__
+   * - Jobs
+     - A post-install and post-upgrade Job that creates the database and its user, migrates and
+       initializes the platform, and a CronJob that backs the database up to S3 on a schedule.
+     - `job-init.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/job-init.yaml>`__,
+       `job-mysql-backup.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/job-mysql-backup.yaml>`__
+   * - Configuration
+     - ConfigMaps for the database, the sample database, the backup script, the bastion's setup
+       and its welcome banner, a Secret for the image registry, and environment variables for
+       everything else.
+     - `templates/ <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/templates>`__
+   * - Releasing the chart
+     - A workflow packages, signs and publishes the chart.
+     - `helmChartRelease.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/helmChartRelease.yml>`__
+
+The Cluster in Production
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - EKS and its nodes
+     - Managed node groups on Spot capacity that scale from 0 to 15 nodes, and the Cluster
+       Autoscaler, which adds nodes when pods cannot be scheduled.
+     - `smarter-infrastructure: aws/terraform/kubernetes/main.tf <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/main.tf>`__
+   * - Network policies
+     - Calico, default-deny ingress for the database, Redis and the application, and egress
+       limited to the database ports.
+     - `smarter-infrastructure: network_policy.tf <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__
+   * - Ingress and certificates
+     - Traefik and cert-manager, installed as Helm releases.
+     - `smarter-infrastructure: aws/terraform/kubernetes_ingress/ <https://github.com/smarter-sh/smarter-infrastructure/tree/main/aws/terraform/kubernetes_ingress>`__
+
+An Application That Manages Kubernetes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python paths are under ``smarter/smarter/``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The Kubernetes service
+     - One interface for applying and deleting manifests, implemented with ``kubectl`` and the
+       cloud's kubeconfig, and replaced by a fake in tests.
+     - `infrastructure/services/kubernetes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/kubernetes.py>`__
+   * - An ingress per LLMClient
+     - Deploying an LLMClient renders an Ingress from a template, with its own host name and
+       certificate, in a Celery task. :doc:`/smarter-framework/smarter-on-kubernetes/llmclient-deploy`.
+     - `llmclient/k8s/ingress.yaml.tpl <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/k8s/ingress.yaml.tpl>`__,
+       `llmclient/tasks/deploy_default_api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/tasks/deploy_default_api.py>`__
+   * - Workloads for self-hosted models
+     - An LLMHost becomes a PersistentVolumeClaim for the model, a Secret, a Deployment of the
+       inference server, a Service and an optional Ingress, rendered by a pure function so that
+       the plan can be previewed and tested. :doc:`/smarter-resources/smarter-llmhost`.
+     - `llmhost/services/renderer.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/renderer.py>`__
+   * - Nodes on demand
+     - EKS managed node groups of GPU or CPU nodes, created at zero nodes, scaled up for a model,
+       and scaled down by terminating a chosen idle node.
+     - `llmhost/services/nodegroups.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
+   * - Self-hosted vector databases
+     - A Qdrant Vectorstore can run on the platform's own cluster, created, watched and destroyed
+       by Smarter.
+     - `vectorstore/kubernetes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/vectorstore/kubernetes.py>`__

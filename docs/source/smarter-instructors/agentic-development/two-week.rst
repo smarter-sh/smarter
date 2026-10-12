@@ -1,12 +1,19 @@
 Agentic Software Development: Two-Week Online Course
 ====================================================
 
-A two-week online course on developing software with coding agents such as
-`Claude Code <https://claude.com/claude-code>`__, taught on Smarter, a code base shaped for agents,
-with six 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers how
-agents work and how to delegate and review, and week 2 covers instructions, safety and
-responsibility. See :doc:`../course-formats` for the format, the grading scale and the course
-policies, and :doc:`../agentic-development` for an overview of the subject.
+A two-week online course on developing software with coding agents such as `Claude Code
+<https://claude.com/claude-code>`__, taught on a real production code base. Smarter is a code base
+shaped for agents: nearly all of its new code is now designed, written and tested by agents working
+from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the sixteen
+`Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__ in ``skills/``, and its
+git history shows it: since late September 2026, most commits have been authored by Claude. Its
+:doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>` was built by Claude Code in
+a live class demonstration, from the request to a `merged pull request
+<https://github.com/smarter-sh/smarter/pull/775>`__ with tests and documentation. There are six
+30-minute recorded lectures and a 90-minute live session each week. Week 1 covers how agents work
+and how to delegate and review, and week 2 covers instructions, safety and responsibility. See
+:doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../agentic-development` for an overview of the subject.
 
 At a Glance
 -----------
@@ -50,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -74,11 +83,16 @@ Schedule
        delegate one of their own. Start Assignment 1.
    * - 2
      - Lecture 4 (30 min)
-     - **Instructions and skills.** ``CLAUDE.md``, Agent Skills, and how Smarter's skills grew.
+     - **Instructions and skills.** ``CLAUDE.md``, Agent Skills, and how Smarter's skills grew
+       from repeated mistakes, such as the caching rules added by `commit eeb7a7a19
+       <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__.
+       The same format as a product feature: the
+       :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>`.
    * - 2
      - Lecture 5 (30 min)
-     - **Safety.** Permissions, sandboxes, live credentials, secrets and prompt injection through
-       files.
+     - **Safety.** Permissions, sandboxes, live credentials (and why Smarter's
+       ``smarter-infrastructure-safety`` skill fakes every cloud call in tests), secrets and prompt
+       injection through files.
    * - 2
      - Lecture 6 (30 min)
      - **Responsibility.** Authorship, attribution, licenses, and the changing developer role.
@@ -88,6 +102,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -293,7 +312,9 @@ Recommended Texts
 - **Required:** Gene Kim and Steve Yegge, *Vibe Coding* (IT Revolution, 2025), in weeks 1 and 2.
 - **Reference:** the `Claude Code documentation <https://code.claude.com/docs>`__ on memory, skills,
   hooks and permissions.
-- **In the repository:** ``CLAUDE.md``, ``skills/README.md`` and each skill's ``SKILL.md``.
+- **In the repository:** `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
+  `skills/README.md <https://github.com/smarter-sh/smarter/blob/main/skills/README.md>`__ and each
+  skill's ``SKILL.md``.
 
 Further Study
 -------------

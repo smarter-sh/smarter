@@ -2,11 +2,19 @@ Writing Secure Software: Four-Week Online Course
 ================================================
 
 A four-week online course on securing web applications and AI systems, using Smarter as the case
-study, with twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1
-covers classic web security, week 2 attacks on AI applications, week 3 secrets, outbound requests
-and infrastructure, and week 4 secure development and disclosure. See :doc:`../course-formats` for
-the format, the grading scale and the course policies, and :doc:`../secure-software` for an
-overview of the subject.
+study. Smarter assumes that a model will eventually try to do something it should not, and defends
+with deterministic controls rather than instructions: `guardrails
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+on both the prompt and the reply, a single `hardened function
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+for every outbound request to a user-supplied URL, credentials kept in encrypted `Secrets
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__ that the
+model never sees, and parameterized queries and tool allow lists for least privilege. Every defense
+is in code that students can read and test. There are twelve 30-minute recorded lectures and a
+90-minute live session each week. Week 1 covers classic web security, week 2 attacks on AI
+applications, week 3 secrets, outbound requests and infrastructure, and week 4 secure development
+and disclosure. See :doc:`../course-formats` for the format, the grading scale and the course
+policies, and :doc:`../secure-software` for an overview of the subject.
 
 At a Glance
 -----------
@@ -56,6 +64,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -72,8 +82,8 @@ Schedule
        templates defend against them.
    * - 1
      - Lecture 3
-     - **Authentication and access control.** Sessions, CSRF, API keys, broken object-level
-       authorization, and account scoping in Smarter.
+     - **Authentication and access control.** Sessions, CSRF, hashed API keys, broken
+       object-level authorization, and account scoping in Smarter's ownership base model.
    * - 1
      - Live session 1
      - Live exercises from PortSwigger's Web Security Academy, then a look at Smarter's defenses
@@ -103,8 +113,9 @@ Schedule
        ``smarter/smarter/apps/plugin/plugin/safe_http.py``.
    * - 3
      - Lecture 9
-     - **Infrastructure security.** Containers as non-root users, Kubernetes network policies,
-       private networks, and cloud identity.
+     - **Infrastructure security.** Containers as non-root users with read-only application
+       files, Calico network policies with default-deny ingress, private networks, cloud identity,
+       and middleware that blocks scanners.
    * - 3
      - Live session 3
      - Review of Assignment 2. A guided code review of ``safe_http.py``. Capstone proposals
@@ -128,6 +139,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -379,9 +395,10 @@ Recommended Texts
 - **Required:** the OWASP Top 10 lists and the `OWASP Cheat Sheet Series
   <https://cheatsheetseries.owasp.org/>`__ (SSRF, secrets management, Django), throughout.
 - **Reference:** Corey Ball, *Hacking APIs* (No Starch Press, 2022).
-- **Smarter documentation:** :doc:`/smarter-platform/security`, :doc:`/smarter-platform/security-faq`,
-  :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-secret`,
-  :doc:`/adr/016-security` and :doc:`/smarter-framework/smarter-on-kubernetes`.
+- **Smarter documentation:** :doc:`/smarter-platform/security`,
+  :doc:`/smarter-platform/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
+  :doc:`/smarter-resources/smarter-secret`, :doc:`/adr/016-security` and
+  :doc:`/smarter-framework/smarter-on-kubernetes`.
 
 Further Study
 -------------

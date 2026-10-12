@@ -1,12 +1,23 @@
 Open Source Participation: Four-Week Online Course
 ==================================================
 
-A four-week online course on participating in open source, using Smarter, with twelve 30-minute
-recorded lectures and a 90-minute live session each week. Week 1 covers how projects work and
-their licenses, week 2 the first contributions, week 3 a substantial contribution and review, and
-week 4 community, security and sustainability. The four weeks give time for a contribution to go
-through real review. See :doc:`../course-formats` for the format, the grading scale and the course
-policies, and :doc:`../open-source` for an overview of the subject.
+A four-week online course on participating in open source, using Smarter, which is developed in
+public with issues, discussions, pull requests, code review, conventional commits and automated
+releases. Smarter is licensed under the `AGPL-3.0
+<https://github.com/smarter-sh/smarter/blob/main/LICENSE>`__, has twenty-two contributors and more
+than five hundred automated releases, checks every commit message with `commitlint
+<https://github.com/smarter-sh/smarter/blob/main/commitlint.config.js>`__, versions itself with
+`semantic-release <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__ on
+``main``, ``next``, ``beta`` and ``alpha``, and publishes its rules in `CONTRIBUTING.md
+<https://github.com/smarter-sh/smarter/blob/main/CONTRIBUTING.md>`__, `CODE_OF_CONDUCT.md
+<https://github.com/smarter-sh/smarter/blob/main/CODE_OF_CONDUCT.md>`__ and `SECURITY.md
+<https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__. A merged pull request is a public,
+verifiable piece of work for a student's portfolio. There are twelve 30-minute recorded lectures and
+a 90-minute live session each week. Week 1 covers how projects work and their licenses, week 2 the
+first contributions, week 3 a substantial contribution and review, and week 4 community, security
+and sustainability. The four weeks give time for a contribution to go through real review. See
+:doc:`../course-formats` for the format, the grading scale and the course policies, and
+:doc:`../open-source` for an overview of the subject.
 
 At a Glance
 -----------
@@ -53,6 +64,8 @@ Technical Prerequisites
 
 Schedule
 --------
+
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
 
 .. list-table::
    :header-rows: 1
@@ -112,7 +125,9 @@ Schedule
        OpenSSF Scorecard.
    * - 4
      - Lecture 11
-     - **Project health.** CHAOSS metrics, bus factor, and choosing projects to depend on.
+     - **Project health.** CHAOSS metrics, bus factor, and choosing projects to depend on,
+       applied to Smarter itself: its contributors, its release history and its
+       ``CODEOWNERS``.
    * - 4
      - Lecture 12
      - **Sustaining contribution.** Triage, helping in discussions, becoming a maintainer, and open
@@ -125,6 +140,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

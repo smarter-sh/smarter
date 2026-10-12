@@ -1,9 +1,16 @@
 Front End Development: Two-Week Online Course
 =============================================
 
-A two-week online course on front end development with React, TypeScript, Vite and Bootstrap,
-taught on the pages of Smarter's web console, with six 30-minute recorded lectures and a 90-minute
-live session each week. Week 1 covers React and components in isolation, and week 2 covers styling,
+A two-week online course on front end development with React, TypeScript, Vite and Bootstrap, taught
+on the pages of Smarter's web console. The console is an npm workspace of `twenty-four React apps
+<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__, one per page, with
+shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and styled with the Keen
+Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker, ESLint and Prettier are
+already set up, with about 150 test files and every story run as a test. Each app is hosted by a
+Django template, and the chat interface, `@smarter.sh/ui-chat
+<https://github.com/smarter-sh/smarter-chat>`__, is published to npm with TypeScript types generated
+from the server's Pydantic contract. There are six 30-minute recorded lectures and a 90-minute live
+session each week. Week 1 covers React and components in isolation, and week 2 covers styling,
 testing and integration. See :doc:`../course-formats` for the format, the grading scale and the
 course policies, and :doc:`../frontend-development` for an overview of the subject.
 
@@ -50,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -89,6 +98,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
