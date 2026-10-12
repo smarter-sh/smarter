@@ -2,8 +2,8 @@
 
 from django import template
 
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
-    AssetDict,
     SmarterReactTemplateTagManager,
 )
 
@@ -58,6 +58,6 @@ Example manifest.json structure:
 
 
 @register.simple_tag
-def vectorsearch_list_react_assets() -> AssetDict:
+def vectorsearch_list_react_assets() -> ReactAppAssets:
     """Load CSS and JS files for a React app entry point based on its manifest.json."""
     return templatetag_manager.reactapp_build_assets
