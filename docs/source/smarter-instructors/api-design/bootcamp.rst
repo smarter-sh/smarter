@@ -1,10 +1,18 @@
 API Design and Integration: Classroom Bootcamp
 ==============================================
 
-An eight-hour classroom bootcamp on designing and consuming REST APIs, taught on Smarter's
-versioned, documented and rate-limited API, from both sides: the server that provides it and the
-clients built on it. Students call the API by hand, write a client, review the API against a style
-guide, and design an improvement that does not break existing clients. See
+An eight-hour classroom bootcamp on designing and consuming REST APIs, taught on Smarter's versioned
+and documented API, from both sides: the server that provides it and the clients built on it.
+Smarter's API has sixteen commands under `/api/v1/cli/
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__ that
+apply, describe and delete every resource from a YAML manifest, resource-style endpoints for the web
+console, API keys of which only a hash is stored, one error format for every failure, and Swagger
+and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
+<https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
+<https://github.com/smarter-sh/smarter-chat>`__ npm package, whose types are generated from the chat
+API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
+has drifted from the API it calls. Students call the API by hand, write a client, review the API
+against a style guide, and design an improvement that does not break existing clients. See
 :doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
 and :doc:`../api-design` for an overview of the subject.
 
@@ -49,6 +57,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -75,13 +85,15 @@ Schedule
    * - 4
      - 45
      - **Lab 2: Make it fail.** Trigger at least five different errors (bad key, missing resource,
-       invalid manifest, wrong method, rate limit) and record each status code and body. Produces
-       Assignment 2.
+       invalid manifest, wrong method, a budget limit) and record each status code and body.
+       Produces Assignment 2.
    * - 5
      - 45
      - **Lecture 3: Writing a client.** Wrapping an API in a small library: configuration,
        authentication, retries, timeouts, pagination and typed responses. A tour of how the Go
-       `smarter-cli <https://github.com/smarter-sh/smarter-cli>`__ calls the API.
+       `smarter-cli <https://github.com/smarter-sh/smarter-cli>`__ calls the API
+       (`cmd/api.go <https://github.com/smarter-sh/smarter-cli/blob/main/cmd/api.go>`__), and of
+       the Python SDK, which still calls LLMClients chatbots.
    * - 6
      - 45
      - **Lecture 4: Chat APIs and streaming.** Smarter's
@@ -103,12 +115,20 @@ Schedule
        Zalando's guidelines, and list where it follows them and where it does not. Ungraded.
    * - 10
      - 45
-     - **Lecture 6: Operating an API.** :doc:`Rate limiting </smarter-framework/smarter-api/rate-limiting>`,
-       :doc:`logging </smarter-framework/smarter-api/logging>`, monitoring, documentation, and the
-       OWASP API Security Top 10.
+     - **Lecture 6: Operating an API.** Rate limiting: DRF's throttling classes
+       (:doc:`/smarter-framework/smarter-api/rate-limiting`), which Smarter does not configure,
+       against what it uses instead: Budgets that limit spending and tokens, and middleware that
+       blocks probing clients. Is that enough?
+       :doc:`Logging </smarter-framework/smarter-api/logging>`, the journal of every request,
+       monitoring, documentation, and the OWASP API Security Top 10.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and outline their design or client.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

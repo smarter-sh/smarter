@@ -2,9 +2,20 @@ Full Stack Development: Four-Week Online Course
 ===============================================
 
 A four-week online course on full stack development with Django and React, taught on Smarter's web
-console, with twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1
-covers architecture and hosting, week 2 the API and authentication, week 3 contracts and testing,
-and week 4 shipping. The course ends with a new console page, delivered end to end. See
+console, where Django hosts each React app and React calls back into Django. Every list page in the
+console is built the same way: a `Django view
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/view.py>`__
+and `template
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+render a root element with the session's details as data attributes, a template tag reads Vite's
+build manifest, and the React app calls back into `session-authenticated views
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/api.py>`__
+to list, clone, rename and delete. The chat goes further, with a `Pydantic contract
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/models.py>`__
+that is exported as a JSON Schema and turned into TypeScript types, so both sides of the stack share
+one definition. There are twelve 30-minute recorded lectures and a 90-minute live session each week.
+Week 1 covers architecture and hosting, week 2 the API and authentication, week 3 contracts and
+testing, and week 4 shipping. The course ends with a new console page, delivered end to end. See
 :doc:`../course-formats` for the format, the grading scale and the course policies, and
 :doc:`../full-stack-development` for an overview of the subject.
 
@@ -49,6 +60,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -78,7 +91,7 @@ Schedule
    * - 2
      - Lecture 5
      - **Authentication across the stack.** Sessions, CSRF, cookies and ``SameSite``, API keys,
-       and CORS for embedded apps.
+       and CORS for embedded apps, limited to each LLMClient's ``allowedOrigins``.
    * - 2
      - Lecture 6
      - **The list page API contract.** List, clone, rename and delete; ``fetchDjangoUrl`` and
@@ -92,7 +105,8 @@ Schedule
        (:doc:`/smarter-framework/smarter-chat/api-contract`).
    * - 3
      - Lecture 8
-     - **Testing the back end.** Django API tests, scoping tests, and fixtures.
+     - **Testing the back end.** Django API tests, scoping tests, fixtures, and the shared
+       ``ResourceViewsTestMixin`` that tests every list page's views.
    * - 3
      - Lecture 9
      - **Testing the front end.** Vitest, Testing Library and MSW, and keeping mocks honest.
@@ -120,6 +134,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

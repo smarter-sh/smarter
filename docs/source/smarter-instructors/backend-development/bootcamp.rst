@@ -2,10 +2,22 @@ Backend Development: Classroom Bootcamp
 =======================================
 
 An eight-hour classroom bootcamp on backend development with Python, Django, Django REST Framework
-and Pydantic, taught on Smarter's code base. Students trace a request through a large, production
-Django project, add a field to a resource end to end, and write a management command, with tests.
-See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the course
-policies, and :doc:`../backend-development` for an overview of the subject.
+and Pydantic, taught on Smarter's code base. Smarter is a large Django project, with eighteen apps
+in `smarter/smarter/apps/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps>`__
+that share one deliberately rigid layout, more than five thousand unit tests, and patterns that
+tutorial projects never reach: a `broker layer
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__
+that turns YAML manifests into database rows, Pydantic models for every manifest and contract, a
+Pydantic `Settings
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__ class,
+Celery workers and a `beat schedule
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__, and
+caching with `@cache_results
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__. The
+``guardrail`` app, the newest and cleanest, is the reference that the labs read and change. Students
+trace a request through it, add a field to a resource end to end, and write a management command,
+with tests. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the
+course policies, and :doc:`../backend-development` for an overview of the subject.
 
 At a Glance
 -----------
@@ -56,6 +68,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -92,7 +106,9 @@ Schedule
    * - 6
      - 45
      - **Lecture 4: Models and migrations.** Fields, relationships, ``Meta`` options, and how
-       migrations work. Adding a field to a resource: the checklist of files it touches.
+       migrations work. Adding a field to a resource: the checklist of files it touches, and why
+       Smarter adds a new migration, rather than regenerating ``0001_initial.py``, for an app that
+       holds production data.
    * - 7
      - 45
      - **Lab 3: Add a field.** Add an optional field to the Guardrail manifest, through the
@@ -116,6 +132,11 @@ Schedule
      - 30
      - **Capstone kickoff.** Students choose a capstone, create a branch, and write a plan of the
        files they will change.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -322,8 +343,9 @@ days. It follows the existing commands in ``smarter/smarter/apps/account/managem
 Recommended Texts
 -----------------
 
-- **Pre-reading:** the official `Django tutorial <https://docs.djangoproject.com/en/stable/intro/tutorial01/>`__,
-  parts 1 to 4, for students who have never used Django.
+- **Pre-reading:** the official `Django tutorial
+  <https://docs.djangoproject.com/en/stable/intro/tutorial01/>`__, parts 1 to 4, for students who
+  have never used Django.
 - **Reference:** William S. Vincent, *Django for APIs* (latest edition, self-published), for Django
   REST Framework.
 - **Reference:** Daniel Feldroy and Audrey Feldroy, *Two Scoops of Django 3.x* (Two Scoops Press,

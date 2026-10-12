@@ -2,11 +2,21 @@ Cloud Infrastructure as Code: Two-Week Online Course
 ====================================================
 
 A two-week online course on infrastructure as code with Terraform and Terragrunt, taught on the
-`smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ repository, with
-six 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers Terraform and
-reading a real stack, and week 2 covers environments, security, cost and teamwork. See
-:doc:`../course-formats` for the format, the grading scale and the course policies, and
-:doc:`../infrastructure-as-code` for an overview of the subject.
+`smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ repository, which
+builds Smarter's complete AWS environment. It is a real production configuration, not a teaching
+example: an EKS cluster on Spot capacity with the Cluster Autoscaler and roles for service accounts,
+Calico `network policies
+<https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__,
+Traefik and cert-manager as Helm releases, and a `root configuration
+<https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`__ that refuses
+to run against the wrong AWS account. Smarter itself goes on to manage infrastructure at run time,
+through a `service layer
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__
+that creates DNS records, certificates, ingresses and GPU node groups, with an in-memory provider in
+tests. There are six 30-minute recorded lectures and a 90-minute live session each week. Week 1
+covers Terraform and reading a real stack, and week 2 covers environments, security, cost and
+teamwork. See :doc:`../course-formats` for the format, the grading scale and the course policies,
+and :doc:`../infrastructure-as-code` for an overview of the subject.
 
 At a Glance
 -----------
@@ -55,6 +65,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -94,6 +106,11 @@ Schedule
 
 Assignment 1 is due at the end of week 1, Assignment 2 in the middle of week 2, and Assignment 3
 and the capstone at the start of Live session 2.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------
@@ -303,7 +320,8 @@ Recommended Texts
 - **Required:** the security and cost optimization pillars of the `AWS Well-Architected Framework
   <https://aws.amazon.com/architecture/well-architected/>`__, in week 2.
 - **Smarter documentation:** :doc:`/smarter-platform/cloud-infrastructure`,
-  :doc:`/smarter-framework/technologies/aws` and :doc:`/smarter-framework/technologies/infrastructure`.
+  :doc:`/smarter-framework/technologies/aws` and
+  :doc:`/smarter-framework/technologies/infrastructure`.
 
 Further Study
 -------------

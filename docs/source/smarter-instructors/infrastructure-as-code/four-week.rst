@@ -2,10 +2,20 @@ Cloud Infrastructure as Code: Four-Week Online Course
 =====================================================
 
 A four-week online course on infrastructure as code with Terraform and Terragrunt, taught on the
-`smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ repository, with
-twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers Terraform
-fundamentals, week 2 modules and environments, week 3 networking, Kubernetes and security, and
-week 4 testing, CI, cost and infrastructure managed by the application itself. See
+`smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ repository, which
+builds Smarter's complete AWS environment. It is a real production configuration, not a teaching
+example: an EKS cluster on Spot capacity with the Cluster Autoscaler and roles for service accounts,
+Calico `network policies
+<https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__,
+Traefik and cert-manager as Helm releases, and a `root configuration
+<https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`__ that refuses
+to run against the wrong AWS account. Smarter itself goes on to manage infrastructure at run time,
+through a `service layer
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__
+that creates DNS records, certificates, ingresses and GPU node groups, with an in-memory provider in
+tests. There are twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1
+covers Terraform fundamentals, week 2 modules and environments, week 3 networking, Kubernetes and
+security, and week 4 testing, CI, cost and infrastructure managed by the application itself. See
 :doc:`../course-formats` for the format, the grading scale and the course policies, and
 :doc:`../infrastructure-as-code` for an overview of the subject.
 
@@ -61,6 +71,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -100,8 +112,9 @@ Schedule
        ``vpc`` module.
    * - 3
      - Lecture 8
-     - **Kubernetes on AWS.** EKS, node groups, add-ons, persistent storage and network policies,
-       in the ``kubernetes`` module; ingress and certificates in ``kubernetes_ingress`` and
+     - **Kubernetes on AWS.** EKS, Spot node groups that scale from zero, the Cluster
+       Autoscaler, add-ons, persistent storage and Calico network policies, in the ``kubernetes``
+       module; ingress and certificates in ``kubernetes_ingress`` and
        ``kubernetes_cert_manager``.
    * - 3
      - Lecture 9
@@ -122,8 +135,9 @@ Schedule
    * - 4
      - Lecture 12
      - **Infrastructure inside the application.** Smarter's infrastructure service layer
-       (``smarter/smarter/apps/infrastructure/``): DNS, certificates and Kubernetes managed at
-       run time, an AWS provider in production and an in-memory provider in tests.
+       (``smarter/smarter/apps/infrastructure/``): DNS, certificates, Kubernetes ingresses and EKS
+       node groups for self-hosted models managed at run time, an AWS provider in production and
+       an in-memory provider in tests.
    * - 4
      - Live session 4
      - Capstone presentations (about 6 minutes each, with 2 minutes of questions), and a course
@@ -132,6 +146,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

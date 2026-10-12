@@ -3,9 +3,19 @@ The Economics of AI: Classroom Bootcamp
 
 An eight-hour classroom bootcamp on what AI applications really cost, and what they are worth.
 Students measure the cost of real requests in Smarter, compare models on cost and quality, build a
-business case, and design a budget policy that Smarter enforces. No programming is needed. See
-:doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
-and :doc:`../ai-economics` for an overview of the subject.
+business case, and design a budget policy that Smarter enforces. No programming is needed. Smarter
+records every model call as a `charge
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__,
+with its tokens and its cost in USD, against the user, the application and the account that made it,
+priced from a table of `prices per million tokens
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/llm_prices.py>`__.
+Self-hosted GPU nodes are charged by the hour from the `price of each compute profile
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__, and
+`Budget manifests
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+turn spending limits into enforced controls, so students measure real costs and test real policies
+rather than estimate them. See :doc:`../course-formats` for the standard bootcamp day, the grading
+scale and the course policies, and :doc:`../ai-economics` for an overview of the subject.
 
 At a Glance
 -----------
@@ -51,6 +61,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 8 8 84
@@ -67,7 +79,8 @@ Schedule
      - 45
      - **Lab 1: Price a conversation.** Hold three conversations of different lengths, read their
        tokens and costs in Smarter's records, and rebuild the costs in a spreadsheet from the
-       price list. Produces Assignment 1.
+       price list. The instructor loads the providers' prices into Smarter beforehand: a model
+       without a price is recorded with its tokens, at no cost. Produces Assignment 1.
    * - 3
      - 45
      - **Lecture 2: Quality costs money, sometimes.** Model tiers, reasoning models, tools and
@@ -96,7 +109,8 @@ Schedule
      - **Lecture 5: Controlling spending.** :doc:`Budgets </smarter-resources/smarter-budget>` on
        users, applications, accounts and providers; warnings and hard limits;
        :doc:`cost accounting </smarter-platform/cost-accounting>` and chargeback to departments.
-       The built-in budget examples.
+       The seven built-in budget examples, from a student allowance to
+       a GPU budget.
    * - 9
      - 45
      - **Lab 4: Hit the limit.** Apply a small budget to yourself, use it up, and see what happens.
@@ -109,6 +123,11 @@ Schedule
      - 30
      - **Capstone kickoff.** Students choose a capstone and a company, and sketch their model with
        the instructor's feedback.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

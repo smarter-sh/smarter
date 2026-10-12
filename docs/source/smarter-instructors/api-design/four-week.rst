@@ -2,10 +2,18 @@ API Design and Integration: Four-Week Online Course
 ===================================================
 
 A four-week online course on designing and consuming REST APIs, taught on Smarter's API from both
-sides, with twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1
-covers consuming an API, week 2 building clients, week 3 the server side, and week 4 evolving,
-securing and operating an API. See :doc:`../course-formats` for the format, the grading scale and
-the course policies, and :doc:`../api-design` for an overview of the subject.
+sides. Smarter's API has sixteen commands under `/api/v1/cli/
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__ that
+apply, describe and delete every resource from a YAML manifest, resource-style endpoints for the web
+console, API keys of which only a hash is stored, one error format for every failure, and Swagger
+and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
+<https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
+<https://github.com/smarter-sh/smarter-chat>`__ npm package, whose types are generated from the chat
+API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
+has drifted from the API it calls. There are twelve 30-minute recorded lectures and a 90-minute live
+session each week. Week 1 covers consuming an API, week 2 building clients, week 3 the server side,
+and week 4 evolving, securing and operating an API. See :doc:`../course-formats` for the format, the
+grading scale and the course policies, and :doc:`../api-design` for an overview of the subject.
 
 At a Glance
 -----------
@@ -50,6 +58,8 @@ Technical Prerequisites
 Schedule
 --------
 
+The files that the lectures refer to are listed in full under `Smarter in the Source Code`_.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 18 72
@@ -91,7 +101,9 @@ Schedule
    * - 3
      - Lecture 7
      - **Inside the server.** How Smarter's API is built with Django REST Framework: URLs, views,
-       authentication classes and brokers.
+       authentication classes and brokers, and the three styles side by side: command-style
+       ``/api/v1/cli/``, resource-style ``/api/v1/guardrails/``, and the console's
+       ``react-integration/api/``.
    * - 3
      - Lecture 8
      - **Contracts.** Pydantic request and response models, OpenAPI generation, and contract tests.
@@ -113,8 +125,11 @@ Schedule
        data exposure, mass assignment and rate limiting.
    * - 4
      - Lecture 12
-     - **Operating an API.** :doc:`Rate limiting </smarter-framework/smarter-api/rate-limiting>`,
-       :doc:`logging </smarter-framework/smarter-api/logging>`, monitoring and service level
+     - **Operating an API.** Rate limiting: DRF's throttling classes
+       (:doc:`/smarter-framework/smarter-api/rate-limiting`), which Smarter does not configure,
+       against what it uses instead: Budgets that limit spending and tokens, and middleware that
+       blocks probing clients. Is that enough?
+       :doc:`Logging </smarter-framework/smarter-api/logging>`, monitoring and service level
        objectives.
    * - 4
      - Live session 4
@@ -124,6 +139,11 @@ Schedule
 Assignments 1 to 3 are due before the next live session. Assignment 4 is due in the middle of week
 4. The capstone proposal is due before Live session 3, and the capstone at the start of Live
 session 4.
+
+Smarter in the Source Code
+--------------------------
+
+.. include:: source-code.txt
 
 Graded Assignments
 ------------------

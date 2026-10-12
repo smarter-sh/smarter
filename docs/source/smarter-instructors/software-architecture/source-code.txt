@@ -1,0 +1,166 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+so that students can open each one during class. Python paths are under ``smarter/smarter/``.
+
+The Twelve Factors
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Factor
+     - How Smarter follows it
+     - Where to look
+   * - I. Codebase
+     - One repository, deployed as local, alpha, beta, next and production. Each environment is a
+       settings module that inherits from ``base.py``, not a branch or a fork. The Helm chart
+       lives in the same repository.
+     - `settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__,
+       `helm/charts/smarter <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__
+   * - II. Dependencies
+     - Pinned Python requirements per purpose, an npm workspace for the React apps, and a Docker
+       image that installs them into an isolated virtual environment.
+       :doc:`ADR 015 </adr/015-dependency-management>`.
+     - `smarter/requirements/ <https://github.com/smarter-sh/smarter/tree/main/smarter/requirements>`__,
+       `package.json <https://github.com/smarter-sh/smarter/blob/main/smarter/react/package.json>`__,
+       `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
+   * - III. Config
+     - Every setting is read from the environment, then validated and typed by a Pydantic
+       ``Settings`` class. Placeholders such as ``SET-ME-PLEASE`` count as missing.
+       :doc:`ADR 007 </adr/007-settings>`.
+     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+       `common/conf/env.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/env.py>`__,
+       `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__
+   * - IV. Backing services
+     - MariaDB, Redis, S3 and SMTP are attached by URL and credentials. File storage switches
+       between S3 and the local file system by configuration alone. Email is reached through the
+       infrastructure service layer.
+     - `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+       (``DATABASES``, ``CACHES``, ``STORAGES``),
+       `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
+   * - V. Build, release, run
+     - A multi-stage Dockerfile builds one image. Separate GitHub Actions workflows build it,
+       release the Helm chart and deploy it, and semantic-release versions it.
+       :doc:`ADR 014 </adr/014-ci-cd>`, :doc:`ADR 020 </adr/020-semantic-versioning>`.
+     - `.github/workflows/ <https://github.com/smarter-sh/smarter/tree/main/.github/workflows>`__,
+       `release.config.js <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__,
+       `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__
+   * - VI. Processes
+     - Web processes keep no state between requests: sessions are stored in the Redis cache
+       (``SESSION_ENGINE``), and uploaded files in S3.
+     - `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+       (``SESSION_ENGINE``, ``STORAGES``)
+   * - VII. Port binding
+     - The app serves itself with uvicorn on a configured port. Nothing is injected into a
+       separate web server.
+     - `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+       `asgi.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/asgi.py>`__
+   * - VIII. Concurrency
+     - Four process types (web, worker, infrastructure worker, beat), each its own Kubernetes
+       Deployment, and the web and worker types scaled out by autoscalers. Infrastructure tasks
+       have their own Celery queue. :doc:`ADR 009 </adr/009-async-tasks>`.
+     - `helm templates <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/templates>`__
+       (``deployment-*.yaml``, ``hpa-*.yaml``),
+       `workers/celery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celery.py>`__
+   * - IX. Disposability
+     - Liveness and readiness probes on ``/healthz/`` and ``/readiness/``, and a graceful
+       shutdown timeout on uvicorn, let Kubernetes replace pods freely.
+     - `urls/console.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/urls/console.py>`__,
+       `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__
+   * - X. Dev/prod parity
+     - The same image, the same MariaDB and Redis, and the same Celery workers run under Docker
+       Compose and under Kubernetes. Tests replace the cloud with an in-memory provider: a
+       deliberate break in parity, worth discussing.
+     - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__,
+       `infrastructure/providers/memory.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__
+   * - XI. Logs
+     - Logs go to standard output as a stream. Verbose logging is switched on per subsystem with
+       feature flags, not by editing code. :doc:`ADR 011 </adr/011-logging>`.
+     - `lib/logging/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/logging>`__,
+       `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+       (``LOGGING``)
+   * - XII. Admin processes
+     - Setup and maintenance run as ``manage.py`` commands in the same image, locally or as a
+       Kubernetes Job. :doc:`ADR 010 </adr/010-management-commands>`.
+     - `initialize_platform.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/management/commands/initialize_platform.py>`__,
+       `job-init.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/job-init.yaml>`__
+
+Beyond the Twelve Factors
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Principle
+     - How Smarter follows it
+     - Where to look
+   * - Infrastructure as code
+     - Terraform and Terragrunt create the AWS foundation, and a Helm chart, validated by a JSON
+       schema, deploys the platform. Smarter is itself declarative: a YAML manifest states what
+       should exist, and deploying an LLMClient creates its DNS record, certificate and Kubernetes
+       ingress from a template. :doc:`ADR 005 </adr/005-manifests>`,
+       :doc:`/smarter-platform/cloud-infrastructure`.
+     - `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__,
+       `values.schema.json <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.schema.json>`__,
+       `llmclient/k8s/ingress.yaml.tpl <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/k8s/ingress.yaml.tpl>`__,
+       `llmclient/tasks/deploy_default_api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/tasks/deploy_default_api.py>`__
+   * - Horizontal scalability
+     - Stateless web pods behind Horizontal Pod Autoscalers, shared state in Redis and MariaDB, and
+       slow work moved to Celery workers that scale on their own.
+       :doc:`ADR 018 </adr/018-caching>`, :doc:`ADR 030 </adr/030-task-queues>`.
+     - `hpa-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__,
+       `hpa-worker.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-worker.yaml>`__,
+       `lib/cache/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/cache>`__
+   * - Zero trust
+     - No request is trusted for where it comes from. API keys are hashed and checked on every
+       call, querysets are filtered by owner, secrets are encrypted with Fernet, middleware blocks
+       probing and brute force, pods talk only where the network policies of
+       ``smarter-infrastructure`` allow, and plugin HTTP calls refuse private addresses. The
+       model's output is untrusted too: guardrails check both the prompt and the reply.
+       :doc:`ADR 016 </adr/016-security>`, :doc:`/smarter-resources/smarter-guardrail`.
+     - `lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`__,
+       `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
+       `lib/django/middleware/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/middleware>`__,
+       `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__,
+       `guardrail/services/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/pipeline.py>`__
+   * - Extensibility
+     - New resource kinds register a broker. New plugin types subclass ``PluginBase``. New LLM
+       providers that speak the OpenAI protocol are added with a Provider manifest, not code. New
+       clouds implement the ``CloudProvider`` interface. :doc:`ADR 024 </adr/024-broker-model>`,
+       :doc:`/smarter-platform/adding-an-llm-provider`.
+     - `api/v1/cli/brokers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__,
+       `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__,
+       `infrastructure/providers/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/base.py>`__
+   * - Ports and adapters
+     - All DNS, certificate, Kubernetes and email work goes through one facade, and the
+       provider behind it is chosen by configuration. The application never calls the AWS SDK
+       directly.
+     - `infrastructure/services/__init__.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__,
+       `infrastructure/providers/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/infrastructure/providers>`__
+   * - Data models and contracts
+     - Two kinds of model with two jobs: Django models for what is stored, and Pydantic models for
+       what crosses a boundary (manifests, settings, API contracts). An abstract base adds
+       ownership and permission-aware querysets to every resource.
+       :doc:`ADR 017 </adr/017-database>`, :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - `account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__,
+       `lib/manifest/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/manifest>`__,
+       `plugin/manifest/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/manifest/models>`__
+   * - Multi-tenancy
+     - Every resource belongs to an account and a user, and every query is scoped by them.
+       :doc:`/smarter-platform/account-management`.
+     - `account/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/models>`__
+   * - Auditability
+     - Every command sent through the API or CLI (apply, describe, delete, deploy and the rest) is
+       written to a journal with its request, response and user.
+       :doc:`/smarter-platform/smarter-journal`.
+     - `lib/journal/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/models.py>`__
+   * - API first
+     - The CLI and the web console are clients of the same versioned REST API.
+       :doc:`ADR 006 </adr/006-rest-api>`, :doc:`ADR 023 </adr/023-api-versioning>`.
+     - `api/v1/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/api/v1>`__
+   * - Feature flags
+     - Behavior and diagnostics are switched at run time with Django Waffle, without a
+       deployment. :doc:`ADR 022 </adr/022-feature-flags>`.
+     - `lib/django/waffle/switches.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/switches.py>`__
