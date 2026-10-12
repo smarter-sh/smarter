@@ -77,6 +77,13 @@ class ManageCommandAddBuiltinMCPClientsTestCase(TestAccountMixin):
             self.assertIsInstance(example.to_json(), dict)
             self.assertTrue(example.to_yaml())
 
+    def test_examples_collection_protocol(self):
+        """MCPClientExamples has a length and iterates over its examples, which have a repr."""
+        self.assertEqual(len(self.examples), self.examples.count())
+        self.assertEqual(list(self.examples), self.examples.mcpclients)
+        example = self.examples.mcpclients[0]
+        self.assertEqual(repr(example), f"<MCPClientExample filename={example.filename} name={example.name}>")
+
     def test_example_credentials(self):
         """Credentials is the Secret name in spec.config.credentials, or None."""
         by_name = {example.name: example for example in self.examples.mcpclients}

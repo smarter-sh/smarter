@@ -35,6 +35,12 @@ class TestPluginUtils(TestAccountMixin):
     # -------------------------------------------------------------------------
     # get_plugin_examples_by_name()
     # -------------------------------------------------------------------------
+    def test_plugin_examples_collection_protocol(self):
+        """Test that PluginExamples has a length and iterates over its examples."""
+        examples = PluginExamples()
+        self.assertEqual(len(examples), len(self.example_files))
+        self.assertEqual(list(examples), examples.plugins)
+
     def test_get_plugin_examples_by_name(self):
         """Test that get_plugin_examples_by_name() returns the name of every example."""
         names = get_plugin_examples_by_name()

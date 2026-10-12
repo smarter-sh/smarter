@@ -10,7 +10,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.views.views.api import my_resources
 from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
@@ -87,15 +87,22 @@ class TestDashboardApiViews(TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_my_resources_are_the_users_own(self):
-        """Test that each user's counts are their own."""
+        """Test that each user's counts are their own.
+
+        The other user is not a superuser, because a superuser may read every LLMClient.
+        """
         self.clear_cache()
         llmclient = LLMClient.objects.create(
             name=f"test_dashboard_api_{self.hash_suffix}", user_profile=self.user_profile
         )
         self.addCleanup(llmclient.delete)
         mine = self.my_resources()
-        other_admin_user, _, _ = admin_user_factory()
-        self.client.force_login(other_admin_user)
+        other_user, other_account, other_user_profile = mortal_user_factory()
+        # addCleanup runs last in, first out.
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
+        self.addCleanup(other_user_profile.delete)
+        self.client.force_login(other_user)
         theirs = self.my_resources()
         self.assertNotEqual(mine["llmclients_qty"], theirs["llmclients_qty"])
 

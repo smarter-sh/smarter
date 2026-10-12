@@ -79,7 +79,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.user_profile) + " " + str(self.name) or ""
 
     def save(self, *args, **kwargs):

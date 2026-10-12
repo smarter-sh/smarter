@@ -17,7 +17,10 @@ from smarter.apps.prompt.tasks import (
     create_prompt_plugin_usage,
     create_prompt_tool_call_history,
 )
-from smarter.apps.provider.models import Provider
+from smarter.apps.provider.models import (
+    Provider,
+    get_cached_active_provider_for_user,
+)
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
@@ -263,9 +266,8 @@ class ChatDbMixin(AccountMixin):
         if self._chat_history is None and self.prompt is not None:
             self._chat_history = PromptHistory.objects.filter(prompt=self.prompt)
             logger.debug(
-                "%s.prompt_history property loaded prompt history queryset with %d records.",
+                "%s.prompt_history property loaded prompt history queryset.",
                 self.formatted_class_name,
-                self._chat_history.count(),
             )
         return self._chat_history
 
@@ -337,9 +339,8 @@ class ChatDbMixin(AccountMixin):
         if self._chat_tool_call is None and self.prompt is not None:
             self._chat_tool_call = PromptToolCall.objects.filter(prompt=self.prompt)
             logger.debug(
-                "%s.db_chat_tool_call() loaded prompt tool call queryset with %d records.",
+                "%s.db_chat_tool_call() loaded prompt tool call queryset.",
                 self.formatted_class_name,
-                self._chat_tool_call.count(),
             )
             return self._chat_tool_call
         return PromptToolCall.objects.none()
@@ -370,9 +371,8 @@ class ChatDbMixin(AccountMixin):
         if self._chat_plugin_usage is None and self.prompt is not None:
             self._chat_plugin_usage = PromptPluginUsage.objects.filter(prompt=self.prompt)
             logger.debug(
-                "%s.db_chat_plugin_usage() loaded prompt plugin usage queryset with %d records.",
+                "%s.db_chat_plugin_usage() loaded prompt plugin usage queryset.",
                 self.formatted_class_name,
-                self._chat_plugin_usage.count(),
             )
             return self._chat_plugin_usage
         return PromptPluginUsage.objects.none()
@@ -423,7 +423,7 @@ class ChatDbMixin(AccountMixin):
                 print(provider_instance.name)
         """
         if self._provider is None and self._provider_name is not None:
-            self._provider = Provider.objects.filter(is_active=True, name=self._provider_name).with_read_permission_for(self.user_profile.user).first()  # type: ignore
+            self._provider = get_cached_active_provider_for_user(self._provider_name, self.user_profile.user.username)  # type: ignore[union-attr]
             if self._provider:
                 logger.debug(
                     "%s.provider property loaded provider '%s' for user %s.",

@@ -69,7 +69,7 @@ class LLMClientPlugin(TimestampedModel):
     #: The metadata for the plugin associated with the LLMClient.
     plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         try:
             url = self.llmclient.url if self.llmclient else "undefined llmclient"
             plugin_name = self.plugin_meta.name if self.plugin_meta else "undefined plugin"
@@ -177,7 +177,7 @@ class LLMClientPlugin(TimestampedModel):
         """
         if not llmclient:
             return []
-        llmclient_plugins = cls.objects.filter(llmclient=llmclient)
+        llmclient_plugins = cls.objects.filter(llmclient=llmclient).select_related("plugin_meta")
         admin_user = UserProfile.admin_for_account(llmclient.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("LLMClientPlugin.plugin() failed to find admin user for llmclient account")

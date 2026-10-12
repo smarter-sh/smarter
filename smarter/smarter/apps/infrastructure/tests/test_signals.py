@@ -63,6 +63,7 @@ class TestInfrastructureService(InfrastructureTestBase):
         with self.assertRaises(InfrastructureNotReadyError):
             FakeService(ready=False).require_ready()
         self.assertEqual(str(FakeService()), "test.fake")
+        self.assertEqual(repr(FakeService()), "<FakeService provider=test service=fake>")
 
     def test_connection_state(self):
         events = self.capture(infrastructure_connected, infrastructure_connection_failed)

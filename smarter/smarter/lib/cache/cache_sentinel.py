@@ -1,5 +1,5 @@
 """
-smarter.lib.cache.cache_sentinel
+Smarter.lib.cache.cache_sentinel
 ================================
 
 This module defines sentinel objects for robust cache state management in the
@@ -71,10 +71,10 @@ class CacheSentinel:
     def __init__(self, name):
         self.name = name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<CacheSentinel: {hashlib.sha256(pickle.dumps(self.name)).hexdigest()[:32]}>"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
 

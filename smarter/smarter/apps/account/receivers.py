@@ -30,7 +30,11 @@ from .signals import (
     new_charge_created,
     new_user_created,
 )
-from .utils import get_cached_default_account
+from .utils import (
+    get_cached_default_account,
+    get_cached_user_for_user_id,
+    get_cached_user_for_username,
+)
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
@@ -139,9 +143,10 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     """
     Signal receiver for created/saved of User model.
 
-    Assumed to be called on all logins since Django's
-    default behavior is to update the last_login field on
-    each login, which triggers a save.
+    Invalidates the user's cached resources, except when the save only updated
+    ``last_login``. Django saves ``last_login`` on each login, and
+    SmarterTokenAuthenticationMiddleware logs the user in on every api request,
+    so invalidating then would empty the user's caches on every request.
     """
     # pylint: disable=C0415
     from smarter.apps.dashboard.context_processors import cache_invalidations
@@ -152,8 +157,21 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         instance,
         created,
     )
-    user_profiles = UserProfile.objects.filter(user=instance)
+    update_fields = kwargs.get("update_fields")
+    if update_fields and set(update_fields) == {"last_login"}:
+        return
+    get_cached_user_for_user_id(invalidate=True, user_id=instance.id)  # type: ignore[attr-defined]
+    get_cached_user_for_username(invalidate=True, username=instance.username)
+    if created:
+        # A new User has no UserProfiles yet. Refreshing get_cached_objects() now would cache an
+        # empty list, which would hide the UserProfile that is created next.
+        return
+    # The cached UserProfiles carry a copy of the User, e.g. is_staff, and cache_invalidations()
+    # only refreshes the one cached by pk, so refresh the ones cached by user and by user and account.
+    UserProfile.get_cached_objects(invalidate=True, user=instance)
+    user_profiles = UserProfile.objects.filter(user=instance).select_related("account")
     for user_profile in user_profiles:
+        UserProfile.get_cached_object(invalidate=True, user=instance, account=user_profile.account)
         cache_invalidations(user_profile=user_profile)
 
 
@@ -177,6 +195,8 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
         instance,
         created,
     )
+    # The user's cached list of UserProfiles, used by every permission queryset, changes with this one.
+    UserProfile.get_cached_objects(invalidate=True, user=instance.user)
 
 
 @receiver(post_delete, sender=UserProfile)
@@ -188,6 +208,12 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
         instance,
         instance.id,  # type: ignore
     )
+    try:
+        user = instance.user
+    except User.DoesNotExist:
+        # Deleted together with its User, whose cached profiles nobody can look up any more.
+        return
+    UserProfile.get_cached_objects(invalidate=True, user=user)
 
 
 @receiver(post_save, sender=Account)

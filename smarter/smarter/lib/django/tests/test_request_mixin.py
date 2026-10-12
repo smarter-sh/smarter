@@ -1241,17 +1241,26 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.assertIn("llmclient_id", json_dump)
             self.assertIn("llmclient_name", json_dump)
 
-    def test_ordering(self):
-        """Test that request mixins are ordered by url, and can't be compared with anything else."""
+    def test_request_mixins_are_not_ordered(self):
+        """Request mixins compare for equality by url and user_profile, but have no order."""
         first = SmarterRequestMixin(self.wsgi_request_factory().get("/a/"))
         second = SmarterRequestMixin(self.wsgi_request_factory().get("/b/"))
-        self.assertTrue(first < second)
-        self.assertTrue(first <= second)
-        self.assertTrue(second > first)
-        self.assertTrue(second >= first)
-        for method in (first.__lt__, first.__le__, first.__gt__, first.__ge__):
-            with self.subTest(method=method.__name__):
-                self.assertIs(method("not a request mixin"), NotImplemented)
+        with self.assertRaises(TypeError):
+            first < second  # pylint: disable=pointless-statement
+        self.assertNotEqual(first, second)
+        self.assertEqual(hash(first), hash((first.url, first.user_profile)))
+        self.assertIs(first.__eq__("not a request mixin"), NotImplemented)
+
+    def test_str_names_the_concrete_class(self):
+        """Str() names the subclass, not SmarterRequestMixin, without ANSI color codes."""
+
+        class _Subclass(SmarterRequestMixin):
+            pass
+
+        srm = _Subclass(self.wsgi_request_factory().get("/"))
+        self.assertTrue(str(srm).startswith(f"{_Subclass.__name__}[{id(srm)}]"))
+        self.assertNotIn("\x1b", str(srm))
+        self.assertEqual(repr(srm), str(srm))
 
     def test_bool_is_false_when_readiness_fails(self):
         srm = SmarterRequestMixin(self.wsgi_request_factory().get("/"))
