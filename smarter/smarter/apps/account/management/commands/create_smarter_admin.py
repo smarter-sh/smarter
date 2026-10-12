@@ -82,7 +82,11 @@ class Command(SmarterCommand):
         if created:
             self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
 
-        user, created = User.objects.get_or_create(username=username)
+        # Create the user as a superuser: the User post_save receiver looks up the admin user,
+        # which must be a superuser, as soon as the row is inserted.
+        user, created = User.objects.get_or_create(
+            username=username, defaults={"is_superuser": True, "is_staff": True, "is_active": True}
+        )
         user.email = email
         user.is_superuser = True
         user.is_staff = True
