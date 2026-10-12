@@ -20,5 +20,16 @@ pages, ``smarter-common`` holds the shared code, and ``smarter-chat`` is the cha
 - Embed a deployed LLMClient in a page of their own with the
   `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ npm package.
 
+**Course plans.** Three complete, ready-to-teach plans, each with a schedule, graded assignments
+and rubrics, two capstone projects, recommended texts, further study and technical prerequisites.
+See :doc:`course-formats` for what the formats have in common.
+
+.. toctree::
+   :maxdepth: 1
+
+   Classroom bootcamp: 8 hours <frontend-development/bootcamp>
+   Two-week online course: 6 hours <frontend-development/two-week>
+   Four-week online course: 12 hours <frontend-development/four-week>
+
 See the :doc:`Smarter Instructor Guide </smarter-instructor>` to install Smarter and set up
 a class.

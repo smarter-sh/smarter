@@ -26,5 +26,16 @@ and the ``bandit``, ``detect-private-key`` and ``detect-aws-credentials`` hooks 
 - Write a responsible disclosure report for a weakness that they find, and discuss how open source
   projects handle security reports.
 
+**Course plans.** Three complete, ready-to-teach plans, each with a schedule, graded assignments
+and rubrics, two capstone projects, recommended texts, further study and technical prerequisites.
+See :doc:`course-formats` for what the formats have in common.
+
+.. toctree::
+   :maxdepth: 1
+
+   Classroom bootcamp: 8 hours <secure-software/bootcamp>
+   Two-week online course: 6 hours <secure-software/two-week>
+   Four-week online course: 12 hours <secure-software/four-week>
+
 See the :doc:`Smarter Instructor Guide </smarter-instructor>` to install Smarter and set up
 a class.

@@ -1,0 +1,15 @@
+- **Free guides:** GitHub's `Open Source Guides <https://opensource.guide/>`__, Karl Fogel's
+  *Producing Open Source Software* (free at `producingoss.com <https://producingoss.com/>`__), and
+  Scott Chacon and Ben Straub's *Pro Git* (free at `git-scm.com/book <https://git-scm.com/book>`__).
+- **Licensing:** `choosealicense.com <https://choosealicense.com/>`__, the `Open Source Initiative
+  <https://opensource.org/licenses>`__'s list of approved licenses, and the Free Software
+  Foundation's `explanation of the AGPL <https://www.gnu.org/licenses/why-affero-gpl.html>`__.
+- **Project health:** `CHAOSS <https://chaoss.community/>`__ metrics for community health, and the
+  OpenSSF `Scorecard <https://scorecard.dev/>`__ for supply chain security practices.
+- **Podcasts:** `The Changelog <https://changelog.com/podcast>`__, the long-running podcast about
+  open source software and the people who make it, and `FLOSS Weekly
+  <https://hackaday.com/category/podcasts/floss-weekly/>`__.
+- **YouTube:** talks from `FOSDEM <https://fosdem.org/>`__ (recordings on its website) and the
+  `Linux Foundation <https://www.youtube.com/@LinuxfoundationOrg>`__ channel.
+- **Finding a first issue:** the ``good first issue`` label on GitHub, and `Up For Grabs
+  <https://up-for-grabs.net/>`__.

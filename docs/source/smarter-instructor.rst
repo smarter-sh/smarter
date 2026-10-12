@@ -316,9 +316,11 @@ Teaching Domains
 ----------------
 
 Each of the pages below is an example course. It says why Smarter suits the subject, where to look
-in the code base and the documentation, and suggests exercises. They are starting points: pick,
-combine and adapt the ones that fit your students. Paths are relative to the root of the
-`smarter <https://github.com/smarter-sh/smarter>`__ repository.
+in the code base and the documentation, and suggests exercises. Each also has three complete course
+plans, for a one-day classroom bootcamp, a two-week online course and a four-week online course,
+with schedules, graded assignments and rubrics, capstone projects and reading lists. They are
+starting points: pick, combine and adapt the ones that fit your students. Paths are relative to the
+root of the `smarter <https://github.com/smarter-sh/smarter>`__ repository.
 
 .. list-table::
    :header-rows: 1
@@ -386,6 +388,7 @@ combine and adapt the ones that fit your students. Paths are relative to the roo
    :maxdepth: 1
    :caption: Example Courses
 
+   smarter-instructors/course-formats
    smarter-instructors/prompt-engineering
    smarter-instructors/ai-applications
    smarter-instructors/ai-governance
@@ -411,6 +414,12 @@ Planning a Course
 
 Sample Formats
 ~~~~~~~~~~~~~~
+
+Every example course comes with turnkey plans in three formats: an eight-hour classroom bootcamp of
+45-minute lectures and labs, a two-week online course with six hours of instruction, and a
+four-week online course with twelve. Each online format pairs 30-minute recorded lectures with a
+weekly 90-minute live session. :doc:`smarter-instructors/course-formats` explains the formats, the
+grading scale and the course policies that the plans share. Other formats work well too:
 
 - **A half-day workshop.** Run a shared instance. Students log in, chat with the built-in
   LLMClients, copy one manifest, change its system prompt and model, add a plugin and a guardrail,
