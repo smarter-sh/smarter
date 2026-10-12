@@ -17,29 +17,31 @@ metadata:
     - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
 spec:
   config:
-    deployed: false
-    provider: openai
-    defaultModel: gpt-6-luna
-    defaultSystemRole: >
-      You are a helpful assistant. When given the opportunity to utilize
-      function calling, you should always do so. This will allow you to
-      provide the best possible responses to the user.
-    defaultTemperature: 1.0
-    defaultMaxTokens: 512
-    appName: Test LLMClient
-    appAssistant: Tatiana
-    appWelcomeMessage: Welcome to Test LLMClient! How can I help you today?
-    appExamplePrompts:
-      - "What is the weather in New York?"
-      - "Tell me a joke"
-      - "What is the capital of France?"
-    appPlaceholder: "Ask me anything..."
-    appInfoUrl: https://smarter.sh
-    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
-    appLogoUrl: https://smarter.sh/assets/img/logo.png
-    appFileAttachment: false
-    subdomain: null
-    customDomain: null
+    prompt:
+      deployed: false
+      provider: openai
+      defaultModel: gpt-6-luna
+      defaultSystemRole: >
+        You are a helpful assistant. When given the opportunity to utilize
+        function calling, you should always do so. This will allow you to
+        provide the best possible responses to the user.
+      defaultTemperature: 1.0
+      defaultMaxTokens: 512
+      appName: Test LLMClient
+      appAssistant: Tatiana
+      appWelcomeMessage: Welcome to Test LLMClient! How can I help you today?
+      appExamplePrompts:
+        - "What is the weather in New York?"
+        - "Tell me a joke"
+        - "What is the capital of France?"
+      appPlaceholder: "Ask me anything..."
+      appInfoUrl: https://smarter.sh
+      appFileAttachment: false
+      subdomain: null
+      customDomain: null
+    styles:
+      appBackgroundImageUrl: https://cdn.smarter.sh/cms/img/graydots.png
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
   plugins:
     - example_configuration
     - everlasting_gobstopper

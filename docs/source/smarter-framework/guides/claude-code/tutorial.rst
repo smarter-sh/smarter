@@ -114,14 +114,15 @@ Create ``web-coding-assistant.yaml``:
      tags: ["coding", "web"]
    spec:
      config:
-       provider: "Claude"
-       defaultModel: "claude-3-5-sonnet-20241022"
-       defaultSystemRole: |
-         You are an expert full-stack web developer specializing in clean, modern single-file HTML applications.
-         Always use Tailwind CSS. Output ONLY the complete, valid HTML file when asked.
-         Never add explanations outside the HTML.
-       temperature: 0.1
-       maxTokens: 16384
+       prompt:
+         provider: "Claude"
+         defaultModel: "claude-3-5-sonnet-20241022"
+         defaultSystemRole: |
+           You are an expert full-stack web developer specializing in clean, modern single-file HTML applications.
+           Always use Tailwind CSS. Output ONLY the complete, valid HTML file when asked.
+           Never add explanations outside the HTML.
+         temperature: 0.1
+         maxTokens: 16384
      plugins: []
 
 Apply the llmclient:

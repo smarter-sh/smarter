@@ -87,9 +87,11 @@ class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
 
         # a manifest that fails validation changes nothing
         llmclient = LLMClient.objects.get(user_profile=self.user_profile, name=self.name)
-        self.assertEqual(llmclient.default_temperature, self.base_manifest["spec"]["config"]["defaultTemperature"])
-        self.assertEqual(llmclient.provider, self.base_manifest["spec"]["config"]["provider"])
-        self.assertEqual(llmclient.app_name, self.base_manifest["spec"]["config"]["appName"])
+        self.assertEqual(
+            llmclient.default_temperature, self.base_manifest["spec"]["config"]["prompt"]["defaultTemperature"]
+        )
+        self.assertEqual(llmclient.provider, self.base_manifest["spec"]["config"]["prompt"]["provider"])
+        self.assertEqual(llmclient.app_name, self.base_manifest["spec"]["config"]["prompt"]["appName"])
 
     def test_name_that_is_not_snake_case(self):
         """Test that a name is stored in snake_case, and that applying the manifest again updates it."""

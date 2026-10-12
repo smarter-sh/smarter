@@ -40,6 +40,8 @@ Where to Start
      - Read
    * - Anyone who wants to know what the chat does
      - :doc:`Features <smarter-chat/features>`
+   * - A prompt engineer who wants the chat to wear a brand: logo, colors, fonts, background
+     - :doc:`Styling Your LLMClient's Chat <../smarter-resources/llmclient/styles>`
    * - Adding a Smarter chatbot to your own website or application
      - :doc:`Embedding Smarter Chat <smarter-chat/embedding>`, then the
        `README <https://github.com/smarter-sh/smarter-chat#readme>`__ for a quick reference
