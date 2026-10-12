@@ -33,10 +33,5 @@ spec:
       deployed: false
       provider: openai
       subdomain: null
-    styles:
-      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      outgoingMessage:
-        backgroundColor: '#f15a29'
-        color: '#ffffff'
   functions: []
   plugins: []

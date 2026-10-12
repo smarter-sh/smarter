@@ -45,9 +45,9 @@ spec:
       subdomain: null
     styles:
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/date-calculator/background.png  # coming soon: upload, then uncomment
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/date-calculator/background.png
       appBackgroundImageSize: auto
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/date-calculator/assistant.png  # coming soon: upload, then uncomment
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/date-calculator/assistant.png
       googleFont: Work Sans
       borderRadius: 10px
       conversationHeader:

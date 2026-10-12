@@ -45,9 +45,9 @@ spec:
       subdomain: null
     styles:
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/calculator/background.png  # coming soon: upload, then uncomment
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/calculator/background.svg
       appBackgroundImageSize: auto
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/calculator/assistant.png  # coming soon: upload, then uncomment
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/calculator/assistant.png
       googleFont: Space Mono
       fontSize: 15px
       borderRadius: 6px

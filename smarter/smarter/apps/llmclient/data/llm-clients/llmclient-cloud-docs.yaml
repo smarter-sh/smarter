@@ -63,8 +63,8 @@ spec:
       subdomain: null
     styles:
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/cloud-docs/background.png  # coming soon: upload, then uncomment
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/cloud-docs/assistant.png  # coming soon: upload, then uncomment
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/cloud-docs/background.png
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/cloud-docs/assistant.png
       googleFont: Inter
       borderRadius: 12px
       conversationHeader:

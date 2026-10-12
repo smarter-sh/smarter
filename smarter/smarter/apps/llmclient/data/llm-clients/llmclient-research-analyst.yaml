@@ -58,8 +58,8 @@ spec:
       subdomain: null
     styles:  # a reading room
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/research-analyst/background.png  # coming soon: upload, then uncomment
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/research-analyst/assistant.png  # coming soon: upload, then uncomment
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/research-analyst/background.jpg
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/research-analyst/assistant.png
       googleFont: Merriweather
       fontSize: 15px
       borderRadius: 8px

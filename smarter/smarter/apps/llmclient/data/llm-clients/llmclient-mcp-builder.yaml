@@ -59,7 +59,7 @@ spec:
       subdomain: null
     styles:  # a dark editor theme
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/mcp-builder/assistant.png  # coming soon: upload, then uncomment
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/mcp-builder/assistant.png
       googleFont: JetBrains Mono
       fontSize: 14px
       borderRadius: 6px

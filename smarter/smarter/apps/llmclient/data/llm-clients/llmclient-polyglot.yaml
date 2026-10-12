@@ -61,9 +61,9 @@ spec:
       subdomain: null
     styles:
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/polyglot/background.png  # coming soon: upload, then uncomment
+      appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/polyglot/background.png
       appBackgroundImageSize: auto
-      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/polyglot/assistant.png  # coming soon: upload, then uncomment
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/polyglot/assistant.png
       googleFont: Fira Sans
       borderRadius: 12px
       conversationHeader:
