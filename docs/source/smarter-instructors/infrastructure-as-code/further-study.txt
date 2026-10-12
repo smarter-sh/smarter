@@ -1,0 +1,20 @@
+- **Official tutorials:** HashiCorp's `Terraform tutorials
+  <https://developer.hashicorp.com/terraform/tutorials>`__, the `Terragrunt documentation
+  <https://terragrunt.gruntwork.io/docs/>`__, and `OpenTofu <https://opentofu.org/docs/>`__, the
+  open source fork of Terraform.
+- **Architecture guidance:** the `AWS Well-Architected Framework
+  <https://aws.amazon.com/architecture/well-architected/>`__, especially its security and cost
+  optimization pillars, and the `Amazon EKS Best Practices Guide
+  <https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html>`__.
+- **Tools:** `Infracost <https://www.infracost.io/>`__ for cost estimates from a plan, `Checkov
+  <https://www.checkov.io/>`__ and `tflint <https://github.com/terraform-linters/tflint>`__ for
+  static analysis, and `terraform-docs <https://terraform-docs.io/>`__ for module documentation.
+- **Podcasts:** `Screaming in the Cloud
+  <https://www.lastweekinaws.com/podcast/screaming-in-the-cloud/>`__ with Corey Quinn, on cloud
+  economics and architecture, and the `AWS Podcast
+  <https://aws.amazon.com/podcasts/aws-podcast/>`__.
+- **YouTube:** HashiConf talks on the `HashiCorp <https://www.youtube.com/@HashiCorp>`__ channel,
+  and AWS re:Invent sessions on the `AWS Events <https://www.youtube.com/@AWSEventsChannel>`__
+  channel.
+- **Writing:** the `Last Week in AWS <https://www.lastweekinaws.com/>`__ newsletter, and the
+  `Gruntwork blog <https://blog.gruntwork.io/>`__ on Terraform and Terragrunt in practice.
