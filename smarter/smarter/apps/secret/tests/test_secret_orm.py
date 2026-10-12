@@ -7,6 +7,7 @@ from django.utils.timezone import now
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
+from smarter.apps.secret.signals import secret_edited
 from smarter.common.exceptions import SmarterValueError
 
 
@@ -81,6 +82,28 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
         self.assertIsNotNone(secret.last_accessed)
 
         secret.delete()
+
+    def test_get_secret_is_not_an_edit(self):
+        """Reading a secret records last_accessed in the database, without sending secret_edited."""
+        secret = Secret.objects.create(
+            user_profile=self.user_profile,
+            name="testGetSecretNotAnEdit" + self.hash_suffix,
+            encrypted_value=Secret.encrypt("value" + self.hash_suffix),
+        )
+        self.addCleanup(secret.delete)
+        edits = []
+
+        def receiver(**kwargs):
+            edits.append(kwargs)
+
+        secret_edited.connect(receiver, weak=False)
+        self.addCleanup(secret_edited.disconnect, receiver)
+
+        self.assertEqual(secret.get_secret(), "value" + self.hash_suffix)
+        self.assertEqual(edits, [])
+        stored = Secret.objects.get(pk=secret.pk).last_accessed
+        self.assertIsNotNone(stored)
+        self.assertLess(abs(stored - secret.last_accessed), timedelta(seconds=1))
 
     def test_secret_encryption_and_decryption(self):
         """Test that encryption and decryption work as expected."""

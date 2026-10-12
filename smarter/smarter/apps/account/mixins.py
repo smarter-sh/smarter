@@ -220,20 +220,20 @@ class AccountMixin(SmarterHelperMixin):
 
         self._am_log_ready_status()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Returns a string representation of the class.
+        Returns a string representation of the instance, naming its concrete class.
 
-        :return: String representation of the class.
+        :return: String representation of the instance.
         :rtype: str
         """
-        return f"{logging.formatted_text(AccountMixin.__name__)}[{id(self)}](user_profile={self.user_profile})"
+        return f"{self.__class__.__name__}[{id(self)}](user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
-        Returns a JSON representation of the class.
+        Returns the developer representation of the instance, which is the same as :meth:`__str__`.
 
-        :return: JSON representation of the class.
+        :return: Developer representation of the instance.
         :rtype: str
         """
         return self.__str__()
@@ -256,78 +256,19 @@ class AccountMixin(SmarterHelperMixin):
         """
         return hash(self.user_profile)
 
-    def __eq__(self, value: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
-        Returns True if the user_profile is the same.
+        Returns True if both instances have the same user_profile.
 
-        :param value: The value to compare to.
-        :type value: object
-        :return: True if the user_profile is the same.
+        :param other: The object to compare to.
+        :type other: object
+        :return: True if the user_profile is the same, or ``NotImplemented`` if
+            ``other`` is not an :class:`AccountMixin`.
         :rtype: bool
         """
-        return isinstance(value, AccountMixin) and self.user_profile == value.user_profile
-
-    def __lt__(self, value: object) -> bool:
-        """
-        Returns True if the user_profile is less than the other user_profile.
-
-        :param value: The value to compare to.
-        :type value: object
-        :return: True if the user_profile is less than the other user_profile.
-        :rtype: bool
-        """
-        if not isinstance(value, AccountMixin):
+        if not isinstance(other, AccountMixin):
             return NotImplemented
-        # Compare by user_profile id if both exist, else handle None
-        self_profile = self.user_profile
-        other_profile = value.user_profile
-        if self_profile is None and other_profile is None:
-            return False
-        if self_profile is None:
-            return True  # None is considered less than any profile
-        if other_profile is None:
-            return False
-
-        return str(self_profile) < str(other_profile)
-
-    def __le__(self, value: object) -> bool:
-        """
-        Returns True if the user_profile is less than or equal to the other user_profile.
-
-        :param value: The value to compare to.
-        :type value: object
-        :return: True if the user_profile is less than or equal to the other user_profile.
-        :rtype: bool
-        """
-        if not isinstance(value, AccountMixin):
-            return NotImplemented
-        return self == value or self < value
-
-    def __gt__(self, value: object) -> bool:
-        """
-        Returns True if the user_profile is greater than the other user_profile.
-
-        :param value: The value to compare to.
-        :type value: object
-        :return: True if the user_profile is greater than the other user_profile.
-        :rtype: bool
-        """
-        if not isinstance(value, AccountMixin):
-            return NotImplemented
-        return not self <= value
-
-    def __ge__(self, value: object) -> bool:
-        """
-        Returns True if the user_profile is greater than or equal to the other user_profile.
-
-        :param value: The value to compare to.
-        :type value: object
-        :return: True if the user_profile is greater than or equal to the other user_profile
-        :rtype: bool
-        """
-        if not isinstance(value, AccountMixin):
-            return NotImplemented
-        return not self < value
+        return self.user_profile == other.user_profile
 
     def init(self, *args, **kwargs) -> None:
         """

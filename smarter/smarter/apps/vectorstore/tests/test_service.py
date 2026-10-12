@@ -29,6 +29,13 @@ TEXT = PAGE_BREAK.join(
 class TestVectorstoreService(VectorstoreTestBase):
     """Test the lifecycle, documents, search and maintenance of a vectorstore."""
 
+    def test_repr(self):
+        """Test that the service and its backend name their vectorstore in their repr."""
+        service = self.service(self.new_vectorstore("test_service_repr"))
+        name = service.vectorstore.name
+        self.assertEqual(repr(service), f"<VectorstoreService vectorstore={name}>")
+        self.assertEqual(repr(service.backend), f"<{service.backend.__class__.__name__} vectorstore={name}>")
+
     def test_deploy_self_hosted(self):
         """Test that deploy applies the server, generates its API key, and creates the collection once it is ready."""
         service = self.service(self.new_vectorstore("test_service_deploy"))

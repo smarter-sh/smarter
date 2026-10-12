@@ -36,7 +36,7 @@ class PromptHistory(TimestampedModel):
         encoder=json.SmarterJSONEncoder,
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.prompt.id}"  # type: ignore[return]
 
     @property

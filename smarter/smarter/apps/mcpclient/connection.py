@@ -255,6 +255,9 @@ class MCPServerConnection:
     def __init__(self, mcpclient: MCPClient):
         self.mcpclient = mcpclient
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} mcpclient={self.mcpclient.name}>"
+
     @property
     def formatted_class_name(self) -> str:
         """The class name, for logging."""

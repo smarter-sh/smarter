@@ -37,10 +37,35 @@ from django.db import models
 
 # our stuff
 from smarter.lib import logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
+
+
+@cache_results()
+def get_cached_price(charge_type: str, provider: str, model: str) -> Optional[Decimal]:
+    """
+    Return the price, in USD per million tokens, of a charge type, provider and model, or None.
+
+    Every charge is priced, so the price is cached. :class:`LLMPrices` invalidates it when
+    a price is saved or deleted.
+
+    :param charge_type: The charge type.
+    :type charge_type: str
+    :param provider: The provider's name, lowercased, since providers match case-insensitively.
+    :type provider: str
+    :param model: The model's name.
+    :type model: str
+    :returns: The price, or None if there is none.
+    :rtype: Optional[Decimal]
+    """
+    return (
+        LLMPrices.objects.filter(charge_type=charge_type, provider__iexact=provider, model=model)
+        .values_list("price", flat=True)
+        .first()
+    )
 
 
 class LLMPrices(TimestampedModel):
@@ -82,8 +107,19 @@ class LLMPrices(TimestampedModel):
     class Meta:
         unique_together = ("charge_type", "provider", "model")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.charge_type} - {self.provider} - {self.model} - {self.price}"
+
+    def save(self, *args, **kwargs):
+        """Save the price, and invalidate its cached value."""
+        super().save(*args, **kwargs)
+        get_cached_price.invalidate(self.charge_type, self.provider.lower(), self.model)  # type: ignore[attr-defined]
+
+    def delete(self, *args, **kwargs):
+        """Delete the price, and invalidate its cached value."""
+        retval = super().delete(*args, **kwargs)
+        get_cached_price.invalidate(self.charge_type, self.provider.lower(), self.model)  # type: ignore[attr-defined]
+        return retval
 
     @classmethod
     def cost_of(
@@ -97,11 +133,7 @@ class LLMPrices(TimestampedModel):
         """
         if not (charge_type and provider and model and total_tokens):
             return Decimal("0")
-        price = (
-            cls.objects.filter(charge_type=charge_type, provider__iexact=provider, model=model)
-            .values_list("price", flat=True)
-            .first()
-        )
+        price = get_cached_price(charge_type, provider.lower(), model)
         if price is None:
             return Decimal("0")
         return (Decimal(total_tokens) * price / Decimal(1000000)).quantize(Decimal("0.00000001"))

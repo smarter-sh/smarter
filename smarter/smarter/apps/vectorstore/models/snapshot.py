@@ -40,7 +40,7 @@ class VectorstoreSnapshot(TimestampedModel):
     vector_count = models.BigIntegerField(null=True, blank=True, help_text="At the time of the snapshot.")
     scheduled = models.BooleanField(default=True, help_text="Taken by Celery Beat, rather than on request.")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.vectorstore.name}: {self.name} ({self.status})"
 
 

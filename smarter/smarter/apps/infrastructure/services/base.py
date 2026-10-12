@@ -111,6 +111,9 @@ class InfrastructureService(ABC, SmarterHelperMixin):
     def __str__(self) -> str:
         return f"{self.provider_name}.{self.service_name}"
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} provider={self.provider_name} service={self.service_name}>"
+
     @property
     @abstractmethod
     def ready(self) -> bool:
