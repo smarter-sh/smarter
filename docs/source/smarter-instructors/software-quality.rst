@@ -6,11 +6,9 @@ there, a CI tutorial on a project with three tests. Students rarely see a comple
 that already works on a large codebase, or learn what each layer catches and what slips through.
 Smarter has one, and every layer is in the repository:
 
-- **Tests at scale.** More than five thousand Python unit tests in about 460 modules, one per
-  source module, built on
-  `SmarterTestBase <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__
-  and shared mixins that test every resource's broker, API and views the same way, plus about 150
-  React test files in which every Storybook story is rendered as a test.
+- **Tests at scale.** More than **seven thousand** unit tests across Python and React, built on
+  time-test code infrastructure like `SmarterTestBase <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__
+  and shared mixins that test every resource's broker, API and views the same way.
 - **Test doubles that protect production.** The development containers hold live cloud
   credentials, so an `in-memory provider
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__
