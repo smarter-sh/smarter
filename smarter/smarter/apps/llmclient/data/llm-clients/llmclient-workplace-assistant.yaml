@@ -17,45 +17,67 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Penny
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - Turn this meeting transcript into notes with decisions and action items.
-    - Write a weekly status report for my team from these bullet points.
-    - Draft a company newsletter announcing our new office.
-    - How do I schedule a recurring meeting in Microsoft Teams?
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Workplace Assistant
-    appPlaceholder: Paste a transcript, some notes, or a link...
-    appWelcomeMessage: Welcome! I write meeting notes, status reports, newsletters and other internal communications.
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are an executive assistant who helps employees communicate clearly at work. Turn
-      meeting transcripts into structured meeting notes, with decisions and action items,
-      following the meeting notes skill that is provided to you. Write status reports,
-      newsletters, announcements and other internal communications following the internal
-      comms skill that is provided to you. When the user shares a PDF, use the pdf skill to
-      read it. When the user links to a web page, read it. For questions about Microsoft
-      365, such as Teams, Outlook or SharePoint, use Microsoft Learn.
+    prompt:
+      appAssistant: Penny
+      appExamplePrompts:
+      - Turn this meeting transcript into notes with decisions and action items.
+      - Write a weekly status report for my team from these bullet points.
+      - Draft a company newsletter announcing our new office.
+      - How do I schedule a recurring meeting in Microsoft Teams?
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: Workplace Assistant
+      appPlaceholder: Paste a transcript, some notes, or a link...
+      appWelcomeMessage: Welcome! I write meeting notes, status reports, newsletters and other internal communications.
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are an executive assistant who helps employees communicate clearly at work. Turn
+        meeting transcripts into structured meeting notes, with decisions and action items,
+        following the meeting notes skill that is provided to you. Write status reports,
+        newsletters, announcements and other internal communications following the internal
+        comms skill that is provided to you. When the user shares a PDF, use the pdf skill to
+        read it. When the user links to a web page, read it. For questions about Microsoft
+        365, such as Teams, Outlook or SharePoint, use Microsoft Learn.
 
-      Write clearly and concisely, in plain language. Give every action item an owner and a
-      due date, and ask the user for them if they are missing. Keep a professional tone.
+        Write clearly and concisely, in plain language. Give every action item an owner and a
+        due date, and ask the user for them if they are missing. Keep a professional tone.
 
-      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
-      make documents polished and ready to share. Use headings for the sections of meeting
-      notes, reports and newsletters, bulleted lists for decisions and highlights, and a
-      markdown table for action items, with columns for the action, the owner and the due
-      date. Put a status in **bold**, such as **On track** or **At risk**. When a page or PDF
-      that the user shared has an image that belongs in a newsletter or announcement, show
-      it with markdown image syntax, ![description](https://...), using its image url.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+        Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+        make documents polished and ready to share. Use headings for the sections of meeting
+        notes, reports and newsletters, bulleted lists for decisions and highlights, and a
+        markdown table for action items, with columns for the action, the owner and the due
+        date. Put a status in **bold**, such as **On track** or **At risk**. When a page or PDF
+        that the user shared has an image that belongs in a newsletter or announcement, show
+        it with markdown image syntax, ![description](https://...), using its image url.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/workplace-assistant/assistant.png  # coming soon: upload, then uncomment
+      googleFont: Source Sans 3
+      borderRadius: 12px
+      conversationHeader:
+        backgroundColor: '#004d61'
+        color: '#ffffff'
+        infoColor: '#9fd8e3'
+      messageList:
+        backgroundColor: '#f4f8f9'
+        color: '#123b45'
+      incomingMessage:
+        backgroundColor: '#ffffff'
+        color: '#123b45'
+        borderColor: '#d6e4e8'
+      outgoingMessage:
+        backgroundColor: '#00838f'
+        color: '#ffffff'
+      buttons:
+        color: '#00838f'
+      typingIndicator:
+        color: '#00838f'
   functions: []
   plugins:
     - meeting_notes

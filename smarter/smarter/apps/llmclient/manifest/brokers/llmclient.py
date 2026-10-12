@@ -23,8 +23,14 @@ from smarter.apps.llmclient.manifest.models.llmclient.model import SAMLLMClient
 from smarter.apps.llmclient.manifest.models.llmclient.spec import (
     SAMLLMClientSpec,
     SAMLLMClientSpecConfig,
+    SAMLLMClientSpecConfigPrompt,
 )
 from smarter.apps.llmclient.manifest.models.llmclient.status import SAMLLMClientStatus
+from smarter.apps.llmclient.manifest.models.llmclient.styles import (
+    SAMLLMClientSpecConfigStyles,
+    SAMLLMClientStylesConversationHeader,
+    SAMLLMClientStylesMessage,
+)
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
@@ -58,6 +64,8 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import client_manifest_validation
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(
@@ -129,6 +137,35 @@ class SAMLLMClientBroker(AbstractBroker):
         super().__init__(*args, **kwargs)
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         logger.info(msg)
+
+    def raise_for_unknown_keys(self, manifest) -> None:
+        """
+        Raise a validation error if the manifest has keys that it does not define.
+
+        ``spec.config`` is split into ``prompt`` and ``styles``. A manifest that was written before the
+        split has its settings directly in ``spec.config``, and the error says where each belongs now,
+        e.g. ``spec.config.appName`` in ``spec.config.prompt.appName``.
+
+        :param manifest: The manifest, as the client sent it.
+        :raises SAMValidationError: If the manifest has keys that it does not define.
+        """
+        spec = manifest.get(SAMKeys.SPEC.value) if isinstance(manifest, dict) else None
+        config = spec.get("config") if isinstance(spec, dict) else None
+        if isinstance(config, dict):
+            moved = []
+            for key in config:
+                if key in SAMLLMClientSpecConfig.model_fields:
+                    continue
+                if key in SAMLLMClientSpecConfigPrompt.model_fields:
+                    moved.append(f"spec.config.{key} to spec.config.prompt.{key}")
+                elif key in SAMLLMClientSpecConfigStyles.model_fields:
+                    moved.append(f"spec.config.{key} to spec.config.styles.{key}")
+            if moved:
+                raise SAMValidationError(
+                    f"The {self.kind} manifest's spec.config is split into prompt, which is required, and "
+                    f"styles, which is optional. Move {', '.join(moved)}."
+                )
+        super().raise_for_unknown_keys(manifest)
 
     @property
     def SerializerClass(self) -> Type[LLMClientSerializer]:
@@ -344,8 +381,10 @@ class SAMLLMClientBroker(AbstractBroker):
         Convert the Smarter API LLMClient manifest into a dictionary suitable for creating or updating a Django ORM LLMClient model.
 
         This method extracts all relevant configuration, metadata, and versioning information from the loaded manifest
-        and transforms it into a dictionary format compatible with Django ORM operations. The manifest's configuration
-        is first dumped and converted from camelCase to snake_case to match Django's field naming conventions.
+        and transforms it into a dictionary format compatible with Django ORM operations. The manifest's
+        ``spec.config.prompt`` is first dumped and converted from camelCase to snake_case to match Django's field
+        naming conventions. Its ``spec.config.styles`` is stored as is, with its camelCase keys and without the
+        settings that it leaves out, in the ``styles`` field.
 
         The resulting dictionary includes the account, name, description, and version fields from the manifest metadata,
         as well as all configuration fields from the manifest specification. This dictionary can be used to instantiate
@@ -366,7 +405,7 @@ class SAMLLMClientBroker(AbstractBroker):
             )
         metadata = super().manifest_to_django_orm()
 
-        original_config = self.manifest.spec.config.model_dump()
+        original_config = self.manifest.spec.config.prompt.model_dump()
         config_dump = self.to_snake_case(original_config)
         if not isinstance(config_dump, dict):
             raise SAMLLMClientBrokerError(
@@ -378,6 +417,8 @@ class SAMLLMClientBroker(AbstractBroker):
         for key, value in original_config.items():
             if isinstance(value, list):
                 config_dump[str(self.to_snake_case(key))] = value
+        styles = self.manifest.spec.config.styles
+        config_dump["styles"] = styles.model_dump(mode="json", exclude_none=True) if styles else {}
         retval = {
             **metadata,
             **config_dump,
@@ -473,7 +514,11 @@ class SAMLLMClientBroker(AbstractBroker):
             tags=self.llmclient.tags_list,
             annotations=self.llmclient.annotations if isinstance(self.llmclient.annotations, list) else [],
         )
-        spec_config = SAMLLMClientSpecConfig(**llmclient_dict)
+        styles = llmclient_dict.pop("styles", None)
+        spec_config = SAMLLMClientSpecConfig(
+            prompt=SAMLLMClientSpecConfigPrompt(**llmclient_dict),
+            styles=SAMLLMClientSpecConfigStyles(**styles) if styles else None,
+        )
         spec = SAMLLMClientSpec(
             config=spec_config,
             plugins=plugin_names,
@@ -600,12 +645,15 @@ class SAMLLMClientBroker(AbstractBroker):
                 self.kind,
                 self.loader.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown"),
             )
-            self._manifest = SAMLLMClient(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMLLMClientMetadata(**self.loader.manifest_metadata),
-                spec=SAMLLMClientSpec(**self.loader.manifest_spec),
-            )
+            # validated as a client's manifest, so that, e.g., the styles' image urls are checked to
+            # be available. See smarter.lib.manifest.models.client_manifest_validation.
+            with client_manifest_validation():
+                self._manifest = SAMLLMClient(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMLLMClientMetadata(**self.loader.manifest_metadata),
+                    spec=SAMLLMClientSpec(**self.loader.manifest_spec),
+                )
             return self._manifest
         if self._llmclient:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
@@ -718,7 +766,7 @@ class SAMLLMClientBroker(AbstractBroker):
                 {"hash": "sha256:abc123def456"},
             ],
         )
-        config = SAMLLMClientSpecConfig(
+        prompt = SAMLLMClientSpecConfigPrompt(
             subdomain=None,
             customDomain=None,
             deployed=False,
@@ -737,10 +785,21 @@ class SAMLLMClientBroker(AbstractBroker):
             ],
             appPlaceholder="Type your message here...",
             appInfoUrl="https://example.com/info",
-            appBackgroundImageUrl="https://cdn.smarter.sh/prompt-ui/background.png",
-            appLogoUrl="https://cdn.smarter.sh/prompt-ui/logo.png",
             appFileAttachment=False,
         )
+        styles = SAMLLMClientSpecConfigStyles(
+            appLogoUrl="https://cdn.smarter.sh/images/logo/smarter-crop.png",
+            appBackgroundImageUrl="https://cdn.smarter.sh/prompt-ui/background.png",
+            appBackgroundImageSize="cover",
+            googleFont="Inter",
+            borderRadius="14px",
+            conversationHeader=SAMLLMClientStylesConversationHeader(
+                backgroundColor="#1b1f3b", color="#ffffff", infoColor="#c0c4e0"
+            ),
+            incomingMessage=SAMLLMClientStylesMessage(backgroundColor="#eef1ff", color="#1b1f3b"),
+            outgoingMessage=SAMLLMClientStylesMessage(backgroundColor="#ff5733", color="#ffffff"),
+        )
+        config = SAMLLMClientSpecConfig(prompt=prompt, styles=styles)
 
         spec = SAMLLMClientSpec(
             config=config,
@@ -884,7 +943,7 @@ class SAMLLMClientBroker(AbstractBroker):
                 for field, manifest_key in (("subdomain", "subdomain"), ("custom_domain", "customDomain")):
                     if data.pop(field, None) is not None:
                         raise SmarterValueError(
-                            f"spec.config.{manifest_key} cannot be set by apply, because it is assigned when "
+                            f"spec.config.prompt.{manifest_key} cannot be set by apply, because it is assigned when "
                             f"the {self.kind} is deployed. Remove it from the manifest, or set it to null."
                         )
                 for key, value in data.items():

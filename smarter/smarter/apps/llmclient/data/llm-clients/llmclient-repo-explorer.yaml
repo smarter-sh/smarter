@@ -17,49 +17,73 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Octo
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - How does request routing work in the django/django repository?
-    - What is the architecture of facebook/react?
-    - Where is authentication handled in the smarter-sh/smarter repository?
-    - Review my code for this pull request diff.
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Open Source Repo Explorer
-    appPlaceholder: Ask me about any public GitHub repository, as owner/repo...
-    appWelcomeMessage: Welcome! Name a public GitHub repository, and ask me how it works.
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are a staff software engineer who helps developers understand open source code.
-      Users ask about public GitHub repositories, which they name as owner/repo. Use DeepWiki
-      for architecture and design questions, and GitMCP to search a repository's code and
-      documentation for specifics. When the user links to a web page, such as an issue or a
-      pull request, read it before answering. When the user shares code and asks for a code
-      review, review it.
+    prompt:
+      appAssistant: Octo
+      appExamplePrompts:
+      - How does request routing work in the django/django repository?
+      - What is the architecture of facebook/react?
+      - Where is authentication handled in the smarter-sh/smarter repository?
+      - Review my code for this pull request diff.
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: Open Source Repo Explorer
+      appPlaceholder: Ask me about any public GitHub repository, as owner/repo...
+      appWelcomeMessage: Welcome! Name a public GitHub repository, and ask me how it works.
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are a staff software engineer who helps developers understand open source code.
+        Users ask about public GitHub repositories, which they name as owner/repo. Use DeepWiki
+        for architecture and design questions, and GitMCP to search a repository's code and
+        documentation for specifics. When the user links to a web page, such as an issue or a
+        pull request, read it before answering. When the user shares code and asks for a code
+        review, review it.
 
-      Name the files, classes and functions that your answer is based on, and link to them.
-      If the user does not name a repository, ask which one. If the tools do not answer the
-      question, say so. DO NOT INVENT file names or APIs.
+        Name the files, classes and functions that your answer is based on, and link to them.
+        If the user does not name a repository, ask which one. If the tools do not answer the
+        question, say so. DO NOT INVENT file names or APIs.
 
-      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
-      make them polished and easy to scan. Lead with a short overview, then use headings for
-      each part of the answer. Write file paths, classes and functions in inline code, and
-      link them to their files on GitHub. Use a table to summarize a repository's main
-      components and their responsibilities, numbered lists to trace a request or data flow
-      step by step, and fenced code blocks, with the language named, for short code excerpts.
-      When a repository's README or documentation has an architecture diagram or logo that
-      clarifies the answer, show it with markdown image syntax, ![description](https://...),
-      using the image url that your tools returned. To illustrate a well known architecture
-      or pattern, such as MVC or a message queue, you may search for a diagram of it.
+        Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+        make them polished and easy to scan. Lead with a short overview, then use headings for
+        each part of the answer. Write file paths, classes and functions in inline code, and
+        link them to their files on GitHub. Use a table to summarize a repository's main
+        components and their responsibilities, numbered lists to trace a request or data flow
+        step by step, and fenced code blocks, with the language named, for short code excerpts.
+        When a repository's README or documentation has an architecture diagram or logo that
+        clarifies the answer, show it with markdown image syntax, ![description](https://...),
+        using the image url that your tools returned. To illustrate a well known architecture
+        or pattern, such as MVC or a message queue, you may search for a diagram of it.
 
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      appBackgroundImageUrl: https://cdn.smarter.sh/cms/img/graydots.png
+      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/repo-explorer/assistant.png  # coming soon: upload, then uncomment
+      googleFont: Inter
+      borderRadius: 8px
+      conversationHeader:
+        backgroundColor: '#24292f'
+        color: '#ffffff'
+        infoColor: '#8c959f'
+      messageList:
+        backgroundColor: rgba(255, 255, 255, 0.85)
+        color: '#1f2328'
+      incomingMessage:
+        backgroundColor: '#f6f8fa'
+        color: '#1f2328'
+        borderColor: '#d0d7de'
+        linkColor: '#0969da'
+      outgoingMessage:
+        backgroundColor: '#2da44e'
+        color: '#ffffff'
+      buttons:
+        color: '#2da44e'
+      typingIndicator:
+        color: '#0969da'
   functions: []
   plugins:
     - url_reader

@@ -17,27 +17,47 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Llama
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - Write a Python function that generates the Fibonacci sequence.
-    - Summarize the book "The Great Gatsby" in 100 words or less.
-    - Provide a technical definition for the term "machine learning."
-    appFileAttachment: false
-    appInfoUrl: https://developers.meta.com/ai/
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: MetaAI Llama 3.1
-    appPlaceholder: Ask me anything...
-    appWelcomeMessage: Welcome to Llama 3.1!
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: llama3.1-8b
-    defaultSystemRole:
-      You are a helpful llmclient.
-    defaultTemperature: 0.5
-    deployed: false
-    provider: metaai
-    subdomain: null
+    prompt:
+      appAssistant: Llama
+      appExamplePrompts:
+      - Write a Python function that generates the Fibonacci sequence.
+      - Summarize the book "The Great Gatsby" in 100 words or less.
+      - Provide a technical definition for the term "machine learning."
+      appFileAttachment: false
+      appInfoUrl: https://developers.meta.com/ai/
+      appName: MetaAI Llama 3.1
+      appPlaceholder: Ask me anything...
+      appWelcomeMessage: Welcome to Llama 3.1!
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: llama3.1-8b
+      defaultSystemRole:
+        You are a helpful llmclient.
+      defaultTemperature: 0.5
+      deployed: false
+      provider: metaai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      googleFont: Inter
+      borderRadius: 18px
+      conversationHeader:
+        backgroundColor: '#0866ff'
+        color: '#ffffff'
+        infoColor: '#cfe0ff'
+      messageList:
+        backgroundColor: '#ffffff'
+        color: '#050505'
+      incomingMessage:
+        backgroundColor: '#f0f2f5'
+        color: '#050505'
+      outgoingMessage:
+        backgroundColor: '#0866ff'
+        color: '#ffffff'
+      buttons:
+        color: '#0866ff'
+      typingIndicator:
+        color: '#0866ff'
   functions:
     - get_current_weather
   plugins: []

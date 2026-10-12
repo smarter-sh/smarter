@@ -15,29 +15,57 @@ metadata:
     - smarter.sh/llm-client/stackademy-api/backward-compatibility: true
 spec:
   config:
-    deployed: false
-    provider: openai
-    defaultModel: gpt-6-luna
-    defaultSystemRole: >
-      You are a helpful assistant. When given the opportunity to utilize
-      function calling, you should always do so. This will allow you to
-      provide the best possible responses to the user.
-    defaultTemperature: 1.0
-    defaultMaxTokens: 512
-    appName: Stackademy
-    appAssistant: Stanley
-    appWelcomeMessage: Welcome to Stackademy! How can I help you today?
-    appExamplePrompts:
-      - "Do you offer any courses on AI?"
-      - "My budget is $1,000. What courses can I take?"
-      - "What is the capital of France?"
-    appPlaceholder: "Ask me anything about Stackademy courses..."
-    appInfoUrl: https://smarter.sh
-    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
-    appLogoUrl: https://smarter.sh/assets/img/logo.png
-    appFileAttachment: false
-    subdomain: null
-    customDomain: null
+    prompt:
+      deployed: false
+      provider: openai
+      defaultModel: gpt-6-luna
+      defaultSystemRole: >
+        You are a helpful assistant. When given the opportunity to utilize
+        function calling, you should always do so. This will allow you to
+        provide the best possible responses to the user.
+      defaultTemperature: 1.0
+      defaultMaxTokens: 512
+      appName: Stackademy
+      appAssistant: Stanley
+      appWelcomeMessage: Welcome to Stackademy! How can I help you today?
+      appExamplePrompts:
+        - "Do you offer any courses on AI?"
+        - "My budget is $1,000. What courses can I take?"
+        - "What is the capital of France?"
+      appPlaceholder: "Ask me anything about Stackademy courses..."
+      appInfoUrl: https://smarter.sh
+      appFileAttachment: false
+      subdomain: null
+      customDomain: null
+    styles:  # Stackademy's colors
+      # appLogoUrl: https://cdn.smarter.sh/images/llmclients/stackademy/logo.png  # coming soon: upload, then uncomment
+      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/stackademy/background.png  # coming soon: upload, then uncomment
+      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/stackademy/assistant.png  # coming soon: upload, then uncomment
+      googleFont: Nunito
+      fontSize: 15px
+      borderRadius: 16px
+      conversationHeader:
+        backgroundColor: '#14213d'
+        color: '#ffffff'
+        infoColor: '#fca311'
+      messageList:
+        backgroundColor: rgba(255, 255, 255, 0.85)
+        color: '#14213d'
+      incomingMessage:
+        backgroundColor: '#e5e5e5'
+        color: '#14213d'
+        linkColor: '#0b57d0'
+      outgoingMessage:
+        backgroundColor: '#fca311'
+        color: '#14213d'
+      messageInput:
+        backgroundColor: '#ffffff'
+        editorBackgroundColor: '#f1f1f1'
+        placeholderColor: '#6c757d'
+      buttons:
+        color: '#fca311'
+      typingIndicator:
+        color: '#fca311'
   plugins:
     - stackademy_api
   functions: []

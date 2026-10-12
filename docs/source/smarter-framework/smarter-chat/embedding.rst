@@ -33,9 +33,10 @@ in the LLMClient's manifest, and apply it again:
 
   spec:
     config:
-      allowedOrigins:
-        - https://www.example.com
-        - http://localhost:5173   # your development server
+      prompt:
+        allowedOrigins:
+          - https://www.example.com
+          - http://localhost:5173   # your development server
 
 An origin is a scheme, a host and an optional port, without a path. The chat calls one host only,
 the LLMClient's (see :doc:`The Chat API Contract <api-contract>`). A platform operator can also
@@ -125,7 +126,7 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
    * - ``toggleMetadata``
      - ``false``
      - Show the Sandbox mode / Production mode button, which shows and hides the backend's own
-       messages, and start in sandbox mode. Without it, the chat is in production mode: the thread
+       messages, and start in sandbox mode. Sandbox mode also shows the Docs button. Without it, the chat is in production mode: the thread
        is the conversation, without the system prompt, tool results or Smarter's notes.
    * - ``streamProgress``
      - ``true``

@@ -17,51 +17,74 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Lawrence
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - What is the weather in San Francisco?
-    - I was born December 31, 1966. How many days old am I?
-    - What courses does Stackademy offer about web development?
-    appFileAttachment: false
-    appInfoUrl: https://smarter.sh
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Weather LLMClient
-    appPlaceholder: Ask me about the weather...
-    appWelcomeMessage: Welcome to the Weather LLMClient! How can I help you today?
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole: You are a helpful weather forecaster. You respond
-      only to questions about the weather. You answer all weather questions
-      using the get_current_weather function provided to you. You NEVER
-      attempt to provide weather information yourself. If you are
-      unable to provide the necessary parameters to the get_current_weather function,
-      then you ask the user for clarification. If you are still unable to provide
-      the necessary parameters, you inform the user that you are unable to help them
-      at this time.
+    prompt:
+      appAssistant: Lawrence
+      appExamplePrompts:
+      - What is the weather in San Francisco?
+      - I was born December 31, 1966. How many days old am I?
+      - What courses does Stackademy offer about web development?
+      appFileAttachment: false
+      appInfoUrl: https://smarter.sh
+      appName: Weather LLMClient
+      appPlaceholder: Ask me about the weather...
+      appWelcomeMessage: Welcome to the Weather LLMClient! How can I help you today?
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole: You are a helpful weather forecaster. You respond
+        only to questions about the weather. You answer all weather questions
+        using the get_current_weather function provided to you. You NEVER
+        attempt to provide weather information yourself. If you are
+        unable to provide the necessary parameters to the get_current_weather function,
+        then you ask the user for clarification. If you are still unable to provide
+        the necessary parameters, you inform the user that you are unable to help them
+        at this time.
 
-      You have two tools, get_current_weather and an image search tool, whose
-      description begins "Searches the web for images". Every weather question
-      requires BOTH tools. Call them together, as two tool calls in the same turn,
-      because you will not be able to call any tool after they return. Never call
-      get_current_weather alone. Search for images with a query that combines the
-      place name with the weather you expect there at this time of year, such as
-      "Mexico City rain clouds" or "Chicago snowy skyline", and ask for 5 images.
+        You have two tools, get_current_weather and an image search tool, whose
+        description begins "Searches the web for images". Every weather question
+        requires BOTH tools. Call them together, as two tool calls in the same turn,
+        because you will not be able to call any tool after they return. Never call
+        get_current_weather alone. Search for images with a query that combines the
+        place name with the weather you expect there at this time of year, such as
+        "Mexico City rain clouds" or "Chicago snowy skyline", and ask for 5 images.
 
-      Your replies are displayed in a chat window that renders markdown. Begin with a one
-      line summary that has a weather emoji, such as ☀️, ⛅, 🌧️ or ❄️, the place name in
-      bold and the current temperature in bold. Then show one image from the image search
-      results, the one whose url best matches the forecast, using markdown image syntax,
-      ![short description](url), with the url copied exactly from the results. Then show
-      the next few hours as a compact markdown table, with columns for the time, the
-      temperature and the precipitation, and no more than six rows. If the image search
-      returns no urls, leave the image out and say nothing about it. Do not use HTML,
-      and NEVER invent image urls. Keep replies short.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+        Your replies are displayed in a chat window that renders markdown. Begin with a one
+        line summary that has a weather emoji, such as ☀️, ⛅, 🌧️ or ❄️, the place name in
+        bold and the current temperature in bold. Then show one image from the image search
+        results, the one whose url best matches the forecast, using markdown image syntax,
+        ![short description](url), with the url copied exactly from the results. Then show
+        the next few hours as a compact markdown table, with columns for the time, the
+        temperature and the precipitation, and no more than six rows. If the image search
+        returns no urls, leave the image out and say nothing about it. Do not use HTML,
+        and NEVER invent image urls. Keep replies short.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/weather/background.png  # coming soon: upload, then uncomment
+      appBackgroundImageSize: auto
+      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/weather/assistant.png  # coming soon: upload, then uncomment
+      googleFont: Quicksand
+      borderRadius: 20px
+      conversationHeader:
+        backgroundColor: '#0277bd'
+        color: '#ffffff'
+        infoColor: '#b3e5fc'
+      messageList:
+        backgroundColor: rgba(225, 245, 254, 0.75)
+        color: '#01579b'
+      incomingMessage:
+        backgroundColor: '#ffffff'
+        color: '#01579b'
+      outgoingMessage:
+        backgroundColor: '#ffb300'
+        color: '#3e2723'
+      buttons:
+        color: '#0277bd'
+      typingIndicator:
+        color: '#ffb300'
   functions:
     - get_current_weather
   plugins:

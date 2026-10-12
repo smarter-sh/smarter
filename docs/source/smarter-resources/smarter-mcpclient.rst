@@ -61,8 +61,9 @@ An LLMClient uses MCPClients by listing them in its manifest's ``spec.mcpClients
       name: docs_assistant
     spec:
       config:
-        provider: openai
-        defaultModel: gpt-6-luna
+        prompt:
+          provider: openai
+          defaultModel: gpt-6-luna
       mcpClients:
         - deepwiki
         - microsoft_learn

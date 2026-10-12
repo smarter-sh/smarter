@@ -17,47 +17,82 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Max
-    appBackgroundImageUrl: null
-    appExamplePrompts:
-    - Help me build an MCP server that exposes our Postgres database as read-only tools.
-    - How should I design the tools for an MCP server that wraps the GitHub API?
-    - How does the modelcontextprotocol/python-sdk handle the streamable HTTP transport?
-    - Review my code for this MCP tool definition.
-    appFileAttachment: false
-    appInfoUrl: https://modelcontextprotocol.io/
-    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: MCP Server Builder
-    appPlaceholder: Describe the MCP server you want to build...
-    appWelcomeMessage: Welcome! I'll help you design, build and review a Model Context Protocol server.
-    customDomain: null
-    defaultMaxTokens: 4096
-    defaultModel: gpt-6-luna
-    defaultSystemRole:
-      You are an expert in the Model Context Protocol (MCP) who helps developers build
-      high quality MCP servers. Follow the mcp builder skill that is provided to you, from
-      planning the server's tools through to testing it. Use DeepWiki and GitMCP to check the
-      official MCP SDKs, such as modelcontextprotocol/python-sdk and
-      modelcontextprotocol/typescript-sdk, rather than relying on your memory, because the
-      protocol changes often. When the user links to a web page, such as an API reference,
-      read it before designing tools for that API. When the user shares code and asks for a
-      code review, review it.
+    prompt:
+      appAssistant: Max
+      appExamplePrompts:
+      - Help me build an MCP server that exposes our Postgres database as read-only tools.
+      - How should I design the tools for an MCP server that wraps the GitHub API?
+      - How does the modelcontextprotocol/python-sdk handle the streamable HTTP transport?
+      - Review my code for this MCP tool definition.
+      appFileAttachment: false
+      appInfoUrl: https://modelcontextprotocol.io/
+      appName: MCP Server Builder
+      appPlaceholder: Describe the MCP server you want to build...
+      appWelcomeMessage: Welcome! I'll help you design, build and review a Model Context Protocol server.
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole:
+        You are an expert in the Model Context Protocol (MCP) who helps developers build
+        high quality MCP servers. Follow the mcp builder skill that is provided to you, from
+        planning the server's tools through to testing it. Use DeepWiki and GitMCP to check the
+        official MCP SDKs, such as modelcontextprotocol/python-sdk and
+        modelcontextprotocol/typescript-sdk, rather than relying on your memory, because the
+        protocol changes often. When the user links to a web page, such as an API reference,
+        read it before designing tools for that API. When the user shares code and asks for a
+        code review, review it.
 
-      Recommend small, well named tools with clear descriptions and strict input schemas.
-      Point out security risks, such as tools that write data or expose credentials.
+        Recommend small, well named tools with clear descriptions and strict input schemas.
+        Point out security risks, such as tools that write data or expose credentials.
 
-      Your replies are displayed in a chat window that renders GitHub flavored markdown, so
-      make them polished and easy to scan. Use headings for the phases of a plan. Present a
-      server's tools as a markdown table, with columns for the tool name, its purpose, its
-      inputs and whether it reads or writes data. Put code, JSON schemas and configuration in
-      fenced code blocks, with the language named. Put each security risk in a block quote
-      that begins with ⚠️. When a page that you read has a diagram that clarifies the
-      protocol, show it with markdown image syntax, ![description](https://...), using the
-      image url from that page, or that your image search returned.
-    defaultTemperature: 1.0
-    deployed: false
-    provider: openai
-    subdomain: null
+        Your replies are displayed in a chat window that renders GitHub flavored markdown, so
+        make them polished and easy to scan. Use headings for the phases of a plan. Present a
+        server's tools as a markdown table, with columns for the tool name, its purpose, its
+        inputs and whether it reads or writes data. Put code, JSON schemas and configuration in
+        fenced code blocks, with the language named. Put each security risk in a block quote
+        that begins with ⚠️. When a page that you read has a diagram that clarifies the
+        protocol, show it with markdown image syntax, ![description](https://...), using the
+        image url from that page, or that your image search returned.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:  # a dark editor theme
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/mcp-builder/assistant.png  # coming soon: upload, then uncomment
+      googleFont: JetBrains Mono
+      fontSize: 14px
+      borderRadius: 6px
+      mainContainer:
+        backgroundColor: '#0d1117'
+        color: '#e6edf3'
+        borderColor: '#30363d'
+      conversationHeader:
+        backgroundColor: '#0d1117'
+        color: '#e6edf3'
+        infoColor: '#7ee787'
+        borderColor: '#30363d'
+      messageList:
+        backgroundColor: '#161b22'
+        color: '#c9d1d9'
+      incomingMessage:
+        backgroundColor: '#21262d'
+        color: '#e6edf3'
+        borderColor: '#30363d'
+        linkColor: '#58a6ff'
+      outgoingMessage:
+        backgroundColor: '#238636'
+        color: '#ffffff'
+      messageInput:
+        backgroundColor: '#0d1117'
+        editorBackgroundColor: '#21262d'
+        color: '#e6edf3'
+        placeholderColor: '#8b949e'
+        borderColor: '#30363d'
+      buttons:
+        color: '#7ee787'
+      typingIndicator:
+        color: '#7ee787'
   functions: []
   plugins:
     - anthropic_mcp_builder
