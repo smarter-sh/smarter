@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.4...v0.20.5-alpha.1) (2026-10-12)
+
+### Bug Fixes
+
+* **prompt:** pin contract schema ids to smarter.sh, not root_domain ([b3ea974](https://github.com/smarter-sh/smarter/commit/b3ea9743e28c8de30ae824833ec23f3bbd5523ef))
+
 ## [0.20.4](https://github.com/smarter-sh/smarter/compare/v0.20.3...v0.20.4) (2026-10-12)
 
 ### Bug Fixes
