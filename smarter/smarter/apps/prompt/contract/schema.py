@@ -10,13 +10,13 @@ import json
 
 from pydantic.json_schema import models_json_schema
 
-from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 from smarter.lib.typing import SmarterDictType
 
 from .const import CHAT_CONTRACT_V2, SCHEMA_PATH
 from .models import CONTRACT_MODELS
 
-SCHEMA_ID = f"https://{smarter_settings.root_domain}/schemas/chat-contract.schema.json"
+SCHEMA_ID = f"{SMARTER_PROJECT_WEBSITE_URL}/schemas/chat-contract.schema.json"
 
 
 def chat_contract_schema() -> SmarterDictType:
