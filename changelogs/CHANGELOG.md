@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.20.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.20.3...v0.20.4-alpha.1) (2026-10-12)
+
+### Bug Fixes
+
+* **account:** create the platform admin as a superuser in one insert ([4a73fe2](https://github.com/smarter-sh/smarter/commit/4a73fe248ba902bf5fcb3794a7d7e78467ffee03))
+
 ## [0.20.3](https://github.com/smarter-sh/smarter/compare/v0.20.2...v0.20.3) (2026-10-12)
 
 ### Bug Fixes
