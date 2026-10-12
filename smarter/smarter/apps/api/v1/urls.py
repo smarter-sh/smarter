@@ -9,6 +9,7 @@ delegates route handling to app-specific URL modules.
 - ``accounts/``: User account management endpoints.
 - ``llmclients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
+- ``journal/``: Smarter Journal entries (superusers only).
 - ``connections/``: External connection integration endpoints.
 - ``plugins/``: Plugin management endpoints.
 - ``prompts/``: Prompt and interaction endpoints.
@@ -60,6 +61,8 @@ from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
+from smarter.lib.journal.api.v1 import urls as journal_urls
+from smarter.lib.journal.const import namespace as journal_namespace
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
@@ -82,6 +85,7 @@ urlpatterns = [
     path("cli/", include(cli_urls, namespace=cli_namespace)),
     path("connections/", include(connection_urls, namespace=connnection_namespace)),
     path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
+    path("journal/", include(journal_urls, namespace=journal_namespace)),
     path("orchestrators/", include(orchestrator_urls, namespace=orchestrator_namespace)),
     path("plugins/", include(plugin_urls, namespace=plugin_namespace)),
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),

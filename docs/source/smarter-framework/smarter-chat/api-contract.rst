@@ -27,6 +27,9 @@ The contract is code, in :mod:`smarter.apps.prompt.contract`:
    * - :mod:`~smarter.apps.prompt.contract.schema`
      - The JSON Schema of the models, which ``manage.py export_chat_contract_schema`` writes to
        ``chat-contract.schema.json``, beside them.
+   * - :mod:`~smarter.apps.prompt.contract.example`
+     - An example JSON of each model, generated from the schema, which ``manage.py
+       export_chat_contract_example`` writes to ``chat-contract.example.json``, beside them.
 
 The models are used, not just documented:
 
@@ -34,13 +37,13 @@ The models are used, not just documented:
   and every configuration response is derived from it, by its methods.
 - The prompt api builds its version 2 result as a :class:`~smarter.apps.prompt.contract.models.PromptChatApiPromptResult`.
 - Tests validate the views' real responses, in both versions, against the models, and fail if
-  ``chat-contract.schema.json`` is out of date.
+  ``chat-contract.schema.json`` or ``chat-contract.example.json`` is out of date.
 - Smarter Chat keeps a copy of the schema, in ``contract/chat-contract.schema.json``, generates its
   TypeScript types from it (``src/contract.gen.ts``), and validates its test fixtures against it
   (``src/contract.test.ts``), so its tests can't pass against responses that the backend never sends.
 
-After changing a model, run ``make chat-contract``, which regenerates the schema in the
-``smarter-app`` container, copies it into Smarter Chat, and regenerates the TypeScript types. Commit
+After changing a model, run ``make chat-contract``, which regenerates the schema and the examples in
+the ``smarter-app`` container, copies it into Smarter Chat, and regenerates the TypeScript types. Commit
 both repositories.
 
 .. literalinclude:: ../../../../smarter/smarter/apps/prompt/contract/chat-contract.schema.json

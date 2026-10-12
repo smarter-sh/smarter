@@ -29,6 +29,14 @@ class TestGuardrailUtils(GuardrailTestBase):
         self.assertIn("pii_redaction_input", names)
         self.assertIn("prompt_injection_llm_judge_input", names)
 
+    def test_examples_collection_protocol(self):
+        """Test that GuardrailExamples has a length and iterates over its examples, which have a repr."""
+        examples = GuardrailExamples()
+        self.assertEqual(len(examples), examples.count())
+        self.assertEqual(list(examples), examples.guardrails)
+        example = examples.guardrails[0]
+        self.assertEqual(repr(example), f"<GuardrailExample filename={example.filename} name={example.name}>")
+
     def test_add_builtin_guardrails(self):
         """Test that add_builtin_guardrails applies every built-in manifest for the user."""
         with mock.patch("smarter.apps.guardrail.utils.call_command") as command:

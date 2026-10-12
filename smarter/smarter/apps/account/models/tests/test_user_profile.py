@@ -3,8 +3,10 @@
 
 import pytest
 from django.contrib.auth.models import User
+from django.db import connection
 from django.db.models import Count
 from django.db.utils import IntegrityError
+from django.test.utils import CaptureQueriesContext
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.apps.account.models.user_profile import (
@@ -50,6 +52,16 @@ class TestUserProfile(TestAccountMixin):
         Verifies that the property returns the associated Account instance and utilizes caching as expected.
         """
         self.assertEqual(self.user_profile.cached_account, self.account)
+
+    def test_cached_user_and_account_read_the_cache(self):
+        """A profile whose user and account are not loaded reads them from the cache, without a query."""
+        UserProfile.get_cached_object(pk=self.user_profile.pk).cached_user  # warm the caches
+        self.user_profile.cached_account  # pylint: disable=pointless-statement
+        profile = UserProfile.objects.get(pk=self.user_profile.pk)
+        with CaptureQueriesContext(connection) as ctx:
+            self.assertEqual(profile.cached_user.pk, self.user_profile.user.pk)
+            self.assertEqual(profile.cached_account.pk, self.account.pk)
+        self.assertEqual(len(ctx.captured_queries), 0, [q["sql"] for q in ctx.captured_queries])
 
     def test_add_to_account_contacts(self):
         """
@@ -137,10 +149,13 @@ class TestUserProfile(TestAccountMixin):
         """
         Test the `__repr__` method.
 
-        Ensures that the repr of the UserProfile instance matches its string representation.
+        Ensures that the repr of the UserProfile instance identifies its row, user and account.
         """
-        self.assertIsInstance(repr(self.user_profile), str)
-        self.assertGreater(len(repr(self.user_profile)), 0)
+        self.assertEqual(
+            repr(self.user_profile),
+            f"<UserProfile pk={self.user_profile.pk} user_id={self.user_profile.user_id} "  # type: ignore[attr-defined]
+            f"account_id={self.user_profile.account_id}>",  # type: ignore[attr-defined]
+        )
 
     def test_queryset_with_read_permission_for_superuser(self):
         qs = SmarterBaseQuerySetWithPermissions(UserProfile)

@@ -57,7 +57,7 @@ class PromptToolCall(TimestampedModel):
         """
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return]
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.plugin:
             name = f"{self.prompt.id} - {self.plugin.name}"  # type: ignore[return]
         else:

@@ -4,7 +4,7 @@ import io
 import os
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 import yaml
 from django.core.management import call_command
@@ -57,6 +57,9 @@ class MCPClientExample:
 
         self._filename = filename
         self._filepath = filepath
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} filename={self.filename} name={self.name}>"
 
     @property
     def filename(self) -> Optional[str]:
@@ -155,6 +158,14 @@ class MCPClientExamples:
             if file.endswith(".yaml"):
                 mcpclient_example = MCPClientExample(filepath=self.MCPCLIENTS_PATH, filename=file)
                 self._mcpclient_examples.append(mcpclient_example)
+
+    def __len__(self) -> int:
+        """Return the number of MCPClient examples."""
+        return len(self._mcpclient_examples)
+
+    def __iter__(self) -> Iterator[MCPClientExample]:
+        """Iterate over the MCPClient examples."""
+        return iter(self._mcpclient_examples)
 
     def count(self) -> int:
         """Return the number of MCPClients."""

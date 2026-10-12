@@ -367,10 +367,10 @@ class SAMLoader(SmarterHelperMixin):
         logger.debug("%s.__init__() - %r", super().formatted_class_name, self)
         self.log_loader_state()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.formatted_class_name}[{id(self)}](kind={self.kind}, name={self.name}, source={self.source})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     # -------------------------------------------------------------------------

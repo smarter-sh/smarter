@@ -120,16 +120,46 @@ class SmarterPromptSession(SmarterHelperMixin):
 
         prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
-    def __str__(self):
-        return (
-            f"{SmarterPromptSession.__name__}[{id(self)}](llmclient={self.llmclient}, session_key={self.session_key})"
-        )
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the session, naming its concrete class.
 
-    def __repr__(self):
+        :return: String representation of the session.
+        :rtype: str
+        """
+        return f"{self.__class__.__name__}[{id(self)}](llmclient={self.llmclient}, session_key={self.session_key})"
+
+    def __repr__(self) -> str:
+        """
+        Returns the developer representation of the session, which is the same as :meth:`__str__`.
+
+        :return: Developer representation of the session.
+        :rtype: str
+        """
         return self.__str__()
 
-    def __eq__(self, value: object) -> bool:
-        return isinstance(value, SmarterPromptSession) and self.session_key == value.session_key
+    def __hash__(self) -> int:
+        """
+        Returns the hash of the session key, consistent with :meth:`__eq__`.
+
+        :return: Hash of the session key.
+        :rtype: int
+        """
+        return hash(self.session_key)
+
+    def __eq__(self, other: object) -> bool:
+        """
+        Two sessions are equal when they have the same session key.
+
+        :param other: The object to compare to.
+        :type other: object
+        :return: True if the session keys are equal, or ``NotImplemented`` if
+            ``other`` is not a :class:`SmarterPromptSession`.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterPromptSession):
+            return NotImplemented
+        return self.session_key == other.session_key
 
     @property
     def session_key(self) -> str:

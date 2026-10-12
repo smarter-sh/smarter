@@ -202,31 +202,25 @@ class TestAbstractBrokerClass(TestAccountMixin):
         broker2.name_cached_property_setter("other_name")
         self.assertFalse(self.broker == broker2)
 
-    def test_lt_le_gt_ge(self):
+    def test_brokers_are_not_ordered(self):
+        """Brokers compare for equality, but have no order."""
         if not self.broker:
             self.fail("Broker is not initialized")
-        if not self.broker.name:
-            raise ValueError("Broker name is not set")
-        if not self.broker.request:
-            raise ValueError("Broker request is not set")
-
         broker2 = SAMTestBroker(
             self.broker.request,
             manifest=self.good_manifest_dict,
             kind=SmarterJournalThings.STATIC_PLUGIN.value,
         )
-        broker2.name_cached_property_setter(self.broker.name)
-        broker2.kind_setter(self.broker.kind)
+        with self.assertRaises(TypeError):
+            self.broker < broker2  # pylint: disable=pointless-statement
 
-        # Equal
-        self.assertFalse(self.broker < broker2)
-        self.assertTrue(self.broker <= broker2)
-        self.assertFalse(self.broker > broker2)
-        self.assertTrue(self.broker >= broker2)
-        # Change name to make broker2 greater
-        broker2.name_cached_property_setter("zzz_name")
-        self.assertTrue(self.broker < broker2)
-        self.assertTrue(broker2 > self.broker)
+    def test_str_names_the_concrete_class(self):
+        """Str() names the broker's own class, without ANSI color codes."""
+        if not self.broker:
+            self.fail("Broker is not initialized")
+        self.assertTrue(str(self.broker).startswith(f"{SAMTestBroker.__name__}[id="))
+        self.assertNotIn("\x1b", str(self.broker))
+        self.assertEqual(repr(self.broker), str(self.broker))
 
     def test_model_class(self) -> None:
         # 255
@@ -463,12 +457,11 @@ class TestAbstractBrokerClass(TestAccountMixin):
         request.user = self.non_admin_user
         return SAMTestBroker(request, manifest=self.good_manifest_dict, kind=SmarterJournalThings.STATIC_PLUGIN.value)
 
-    def test_comparisons_with_another_type(self):
-        """Comparing a broker with anything but a broker of its class isn't implemented."""
+    def test_equality_with_another_type(self):
+        """Comparing a broker with anything but a broker isn't implemented."""
         broker = self.make_broker()
-        for method in (broker.__lt__, broker.__le__, broker.__gt__, broker.__ge__):
-            with self.subTest(method=method.__name__):
-                self.assertIs(method("not a broker"), NotImplemented)
+        self.assertIs(broker.__eq__("not a broker"), NotImplemented)
+        self.assertNotEqual(broker, "not a broker")
 
     def test_uri_with_query_params_and_created(self):
         broker = self.make_broker("/path/?a=1")
