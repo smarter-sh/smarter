@@ -1,0 +1,180 @@
+---
+name: smarter-api-contract
+description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the cli api's OpenAPI document (openapi.json) - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a cli route or its response, when a test says the contract is out of date, or when adding a kind or a cli command. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a new cli route, the design decisions in openapi.py, and the downstream SDKs.
+---
+
+# The Smarter API Contract
+
+`smarter/smarter/apps/api/v1/contract/` publishes the api as files that clients
+in any language generate code from. It is **generated, never edited by hand**,
+from the platform's own Pydantic models, and committed, so that it is versioned
+with the code and a breaking change shows up in a pull request's diff.
+
+| File or module            | What it is                                                                                                | Generated from                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `sam/<Kind>.schema.json`  | One JSON Schema per SAM kind. Exactly the `data` of `POST /api/v1/cli/json-schema/<Kind>/`                | The kind's SAM model: `Brokers.get_broker(kind)._pydantic_model.model_json_schema()`             |
+| `sam/<Kind>.example.json` | One example manifest per kind, without its read-only `status`                                             | The broker's `example_manifest()`, rendered in-process by the cli's public example-manifest view |
+| `openapi.json`            | OpenAPI 3.1 document of every `/api/v1/cli/` route                                                        | `openapi.py`, from the SAM models, the journal and chat contracts, and `models.py`               |
+| `sam.py`                  | Builds and writes the schemas and examples                                                                |                                                                                                  |
+| `models.py`               | `CliApi*`: the `data` of cli responses that aren't manifests. `OpenApi*`: the document itself             |                                                                                                  |
+| `openapi.py`              | Assembles the document: `cli_schemas()`, `cli_paths()`, `openapi_document()`                              |                                                                                                  |
+| `tests/`                  | Fail when a file is stale, when an example is invalid, or when a real response doesn't match the document |                                                                                                  |
+
+The docs page is `docs/source/smarter-framework/smarter-api/api-contract.rst`.
+
+## When the contract changes
+
+Anything that reaches these files changes the contract:
+
+- a SAM model: a field, its type, default, description, constraint, or a
+  nested model (`smarter/apps/*/manifest/models/**`, `smarter/lib/manifest/**`),
+- a broker's `example_manifest()`,
+- a new, renamed or removed kind (`Brokers._brokers`),
+- the journal contract (`smarter/lib/journal/contract/models.py`) or the chat
+  contract models the document uses (`PromptChatApiConfigResponse`,
+  `PromptChatApiCompletionV1`, `PromptChatApiMessage`, ...),
+- a cli route (`smarter/apps/api/v1/cli/urls.py`), or the shape of a cli
+  view's response,
+- `contract/models.py` or `contract/openapi.py` themselves.
+
+A field description counts too: it's in the schema, and in the SDKs' docstrings.
+
+## Regenerate
+
+The export runs **in the smarter-app container**, which must run your current
+code (see `smarter-docker-environment`):
+
+```console
+make build && make run                                     # in the background; wait for localhost:9357 to answer 302
+make api-contract                                          # export in the container, copy the files back
+skills/smarter-api-contract/scripts/check-contract.sh      # 0: current, 1: stale (lists the files), 2: export failed
+```
+
+`make api-contract` runs `manage.py export_api_contract` in the container, copies
+`openapi.json` back, and replaces the host's `sam/*.json` with the container's,
+so a removed kind's files go away. `check-contract.sh` regenerates into a
+temporary folder and diffs, without writing to the repository: use it to answer
+"is the contract stale?" quickly.
+
+Then run the contract tests:
+
+```console
+docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.api.v1.contract"
+```
+
+They make one real, billable LLM request (the prompt test), which is fine.
+
+## Review the diff before committing
+
+Read `git diff smarter/smarter/apps/api/v1/contract/` as a client would. Classify
+each change:
+
+| Backward compatible                    | Breaking for clients                                           |
+| -------------------------------------- | -------------------------------------------------------------- |
+| A new optional field, or a new kind    | A removed or renamed field, kind or cli operation              |
+| A new cli operation                    | A field that became required, or a narrower type or constraint |
+| A relaxed constraint, a new enum value | A removed enum value, a changed default                        |
+| A changed description                  | A changed response shape, e.g. `data` from object to list      |
+
+Say which it is in the commit body, and name the files. A breaking change also
+needs a note for the SDKs' users (see "Downstream").
+
+Unexpected churn means something is wrong, not that the file needs committing:
+
+- **every example changed**: an example has a timestamp, random value or
+  environment-specific value outside `status`. Fix the broker's example.
+- **`openapi.json` changed but no model did**: a model's import order or name
+  changed. Pydantic disambiguates colliding model names with module paths. Two
+  models with the same class name in different apps produce long, unstable
+  component names. Rename one.
+
+## Rules for example manifests
+
+- **Deterministic.** Only `status` is stripped. Everything else must be the same
+  on every run, in every environment, including the test database: no
+  `datetime.now()`, no random ids, no values read from the developer's database.
+  The platform's built-in account number (`smarter_cached_objects.smarter_account`)
+  is the same everywhere.
+- **Valid.** Each example must be valid under its kind's schema. A test checks it.
+- **Public.** The repository is public. Use placeholders: `example.com`, `sk-xxxx...`,
+  the _name_ of a Secret, never a real key, hostname, email or account number.
+- An example is built for a request, so `sam_example()` renders the cli's
+  public view in-process with `RequestFactory` (host `localhost`). A broker whose
+  example needs an authenticated user won't work there: keep examples free of
+  the requester.
+
+## Adding a kind
+
+Nothing in the contract package needs editing. Register the broker in
+`Brokers._brokers` (see `smarter-sam-resource`), give it an `example_manifest()`,
+run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
+`test_every_kind_has_a_model` and `test_every_kind_is_a_manifest` check the rest.
+
+## Adding or changing a cli route
+
+`test_every_cli_route_is_documented` fails until the route is in the document.
+
+1. **Model the response's `data`** in `contract/models.py`, as a `CliApiModel`
+   (`extra="allow"`), with a docstring and field descriptions. Reuse a chat or
+   journal contract model when one fits. Add it to `CLI_API_MODELS`.
+2. **Build the view's response from the model**:
+   `data = {SmarterJournalApiResponseKeys.DATA: Model(...).model_dump(mode="json")}`,
+   not a dict that is documented elsewhere. See the status, version, whoami,
+   resources and validate views.
+3. **Add the operation** to `cli_paths()` in `openapi.py` with `operation(...)`:
+   an `operationId` (snake case, unique), a summary, a description, a tag, the
+   response schema's name, and its parameters and request body. Add an envelope
+   schema in `cli_schemas()`, e.g.
+   `schemas["CliApiXResponse"] = envelope(ref(CliApiX.__name__), "...")`.
+   A public route gets `security=PUBLIC`, and `test_public_operations` lists it.
+4. **Test a real response** against the document in
+   `tests/test_openapi.py::TestOpenApiResponses` with `self.assertValid(...)`.
+   Patch anything that reaches AWS, Kubernetes or GitHub (see `test_platform`).
+5. Run `make api-contract`, the tests, and update `api-contract.rst`.
+
+Leave a route out only for a real reason, by adding its path and the reason to
+`UNDOCUMENTED_CLI_ROUTES`. It is empty: every cli route is documented.
+
+## Design decisions in openapi.py (don't undo them)
+
+- **OpenAPI 3.1**, because its schemas are exactly JSON Schema 2020-12, which
+  Pydantic generates. Some generators read only 3.0 (oapi-codegen, for Go). Don't
+  downgrade the document for them. Publish a converted copy beside it if one is
+  ever needed.
+- **Each kind's `kind` is a `const` in the document**, added in `cli_schemas()`.
+  The SAM models declare `kind: str`, so without it a manifest matches every
+  branch of `SAMManifest`'s `oneOf`. The standalone `sam/*.schema.json` files
+  stay exactly what the json-schema endpoint returns, without the `const`.
+- **`info.version` is the api's version (`v1`)**, not the platform's, which
+  would make the committed file stale on every release.
+- **No `exclude_none`** when dumping the document. It would also strip the
+  `"default": null` inside schemas. `OpenApiModel` drops its own `None` fields
+  in a wrap serializer instead.
+- **Every error is the `default` response**, the journal's error envelope,
+  because every cli error is journaled the same way.
+- **Prettier must not format these files.** `.pre-commit-config.yaml` excludes
+  `^smarter/` from Prettier. A formatter that rewrote the JSON would make the
+  "up to date" tests fail.
+
+## Downstream
+
+The contract is the source the SDKs generate from:
+
+- **smarter-python** (`../smarter-python`): `make contracts SMARTER_REF=<ref>`
+  copies `sam/*.json` into `tests/data/sam/` and `openapi.json` into
+  `tests/data/contracts/` (`scripts/sync-contracts.sh`, with `git show` at the
+  ref), and `make sam-models` regenerates `smarter/models/sam/`. Its
+  `tests/test_contracts.py::TestOpenApiContract` fails when a cli request of the
+  SDK is not in the document, or the document has an operation that the SDK
+  doesn't call. A new cli operation is SDK work: say so in your summary.
+- **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
+  the same schemas.
+- A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
+
+To check the document with an independent validator, without adding a
+dependency to the platform:
+
+```console
+python3 -m venv /tmp/oav && /tmp/oav/bin/pip -q install openapi-spec-validator
+/tmp/oav/bin/openapi-spec-validator smarter/smarter/apps/api/v1/contract/openapi.json
+```

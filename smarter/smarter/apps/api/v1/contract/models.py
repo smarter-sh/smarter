@@ -9,7 +9,10 @@ described by:
   for the manifests that it accepts and returns,
 - the Smarter Journal api contract (:mod:`smarter.lib.journal.contract.models`), for the envelope
   of every response, and for its errors,
-- the models in this module, for the ``data`` of the commands whose data is not a manifest.
+- the Smarter Chat api contract (:mod:`smarter.apps.prompt.contract.models`), for the chat
+  configuration and the chat completion that the cli's prompt commands return,
+- the models in this module, for the ``data`` of the commands whose data is not a manifest. The
+  views build their responses from them.
 
 :mod:`smarter.apps.api.v1.contract.openapi` assembles them into an OpenAPI document, which is
 modeled here too (``OpenApi...``), so that it is built from models rather than from nested dicts.
@@ -28,6 +31,12 @@ from pydantic import (
     JsonValue,
     SerializerFunctionWrapHandler,
     model_serializer,
+)
+
+from smarter.apps.prompt.contract.models import (
+    PromptChatApiCompletionV1,
+    PromptChatApiJournalMetadata,
+    PromptChatApiMessage,
 )
 
 # ------------------------------------------------------------------------------
@@ -112,11 +121,164 @@ class CliApiResource(CliApiModel):
     Deployable: bool = Field(..., description="Whether the kind's resources can be deployed and undeployed.")
 
 
+class CliApiStatusRedis(CliApiModel):
+    """The Redis server of a ``status`` response, from Redis's INFO command."""
+
+    gcc_version: Optional[str] = None
+    os: Optional[str] = None
+    redis_build_id: Optional[str] = None
+    redis_version: Optional[str] = None
+
+
+class CliApiStatusInfrastructures(CliApiModel):
+    """The infrastructure of a ``status`` response."""
+
+    kubernetes: dict[str, JsonValue] = Field(
+        ...,
+        description="The Kubernetes cluster, as the infrastructure provider describes it, e.g. its version and "
+        "status, or an error if the provider is not ready. Its fields depend on the provider.",
+    )
+    redis: CliApiStatusRedis
+
+
+class CliApiStatusCompute(CliApiModel):
+    """The platform's compute, from Python's platform module."""
+
+    machine: str
+    release: str
+    platform: str
+    processor: str
+    system: str
+    version: str
+
+
+class CliApiStatus(CliApiModel):
+    """The ``data`` of a ``status`` response: the platform's infrastructure and compute."""
+
+    infrastructures: CliApiStatusInfrastructures
+    compute: CliApiStatusCompute
+
+
+class CliApiVersionApi(CliApiModel):
+    """The platform's version, and the versions of its main Python packages."""
+
+    version: str = Field(..., description="The platform's version.")
+    python: dict[str, Optional[str]] = Field(
+        ..., description="The version of Python, and of each of the platform's main packages, by name. Null if unknown."
+    )
+
+
+class CliApiVersionCli(CliApiModel):
+    """The smarter cli's latest version."""
+
+    version: str
+
+
+class CliApiVersion(CliApiModel):
+    """The ``data`` of a ``version`` response."""
+
+    api: CliApiVersionApi
+    cli: CliApiVersionCli
+
+
+class CliApiWhoamiUser(CliApiModel):
+    """The api key's user."""
+
+    id: int
+    username: str
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    email: Optional[str] = None
+    isStaff: bool
+    isSuperuser: bool
+
+
+class CliApiWhoamiAccount(CliApiModel):
+    """The api key's account."""
+
+    id: int
+    hashedId: Optional[str] = None
+    accountNumber: str
+    name: Optional[str] = None
+    description: Optional[str] = None
+    companyName: Optional[str] = None
+    isDefaultAccount: Optional[bool] = None
+    isActive: Optional[bool] = None
+    createdAt: Optional[str] = None
+    updatedAt: Optional[str] = None
+    phoneNumber: Optional[str] = None
+    address1: Optional[str] = None
+    address2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postalCode: Optional[str] = None
+    country: Optional[str] = None
+    language: Optional[str] = None
+    timezone: Optional[str] = None
+    currency: Optional[str] = None
+
+
+class CliApiWhoami(CliApiModel):
+    """The ``data`` of a ``whoami`` response: the api key's user and account, and the platform's environment."""
+
+    user: CliApiWhoamiUser
+    account: CliApiWhoamiAccount
+    environment: str = Field(..., description="The platform's environment, e.g. prod, or local.")
+
+
+class CliApiPromptBody(CliApiModel):
+    """The request body of a ``prompt``."""
+
+    prompt: str = Field(..., description="The user's message.")
+    session_key: Optional[str] = Field(
+        None, description="The chat session to continue. By default, the session that the uid used last."
+    )
+    messages: Optional[list[PromptChatApiMessage]] = Field(
+        None, description="The chat's earlier messages, to which the prompt is added. By default, a new chat."
+    )
+
+
+class CliApiPromptRequest(CliApiModel):
+    """The request that a ``prompt`` sent to the LLMClient."""
+
+    session_key: str
+    messages: list[PromptChatApiMessage]
+
+
+class CliApiPromptLambdaResponse(CliApiModel):
+    """The LLMClient's response to a ``prompt``: the version 1 prompt response, with its body decoded from a JSON string."""
+
+    isBase64Encoded: bool = False
+    statusCode: int
+    headers: dict[str, str] = Field(default_factory=dict)
+    body: PromptChatApiCompletionV1
+
+
+class CliApiPromptChatResponse(CliApiModel):
+    """The LLMClient's journaled response to a ``prompt``."""
+
+    api: str
+    metadata: PromptChatApiJournalMetadata
+    data: CliApiPromptLambdaResponse
+
+
+class CliApiPrompt(CliApiModel):
+    """The ``data`` of a ``prompt`` response: the request that the cli api sent to the LLMClient, and its response."""
+
+    request: CliApiPromptRequest
+    response: CliApiPromptChatResponse
+
+
 CLI_API_MODELS: tuple[type[BaseModel], ...] = (
     CliApiApplied,
     CliApiValidation,
     CliApiGet,
     CliApiResource,
+    CliApiStatus,
+    CliApiVersion,
+    CliApiWhoami,
+    CliApiPromptBody,
+    CliApiPrompt,
 )
 """The models of the cli api's response data whose JSON Schema the OpenAPI document includes.
 
@@ -289,9 +451,24 @@ __all__ = [
     "CliApiGetMetadata",
     "CliApiGetTitle",
     "CliApiModel",
+    "CliApiPrompt",
+    "CliApiPromptBody",
+    "CliApiPromptChatResponse",
+    "CliApiPromptLambdaResponse",
+    "CliApiPromptRequest",
     "CliApiResource",
+    "CliApiStatus",
+    "CliApiStatusCompute",
+    "CliApiStatusInfrastructures",
+    "CliApiStatusRedis",
     "CliApiValidation",
     "CliApiValidationError",
+    "CliApiVersion",
+    "CliApiVersionApi",
+    "CliApiVersionCli",
+    "CliApiWhoami",
+    "CliApiWhoamiAccount",
+    "CliApiWhoamiUser",
     "OpenApiComponents",
     "OpenApiContact",
     "OpenApiDocument",

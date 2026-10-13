@@ -1,0 +1,80 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "SqlPlugin",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/created_by": "smarter_sql_plugin_broker"
+      },
+      {
+        "smarter.sh/plugin": "sql_example"
+      }
+    ],
+    "description": "Get additional information about courses available at Stackademy.",
+    "name": "sql_example",
+    "pluginClass": "sql",
+    "tags": [
+      "db",
+      "sql",
+      "database"
+    ],
+    "version": "0.1.0"
+  },
+  "spec": {
+    "connection": "example_connection",
+    "prompt": {
+      "maxTokens": 2048,
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "systemRole": "You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
+      "temperature": 1.0
+    },
+    "selector": {
+      "directive": "search_terms",
+      "searchTerms": [
+        "smarter",
+        "users",
+        "admin"
+      ]
+    },
+    "sqlData": {
+      "limit": 10,
+      "parameters": [
+        {
+          "default": null,
+          "description": "the maximum cost that a student is willing to pay for a course.",
+          "enum": null,
+          "name": "max_cost",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "default": null,
+          "description": "areas of specialization for courses in the catalogue.",
+          "enum": [
+            "AI",
+            "mobile",
+            "web",
+            "database",
+            "network",
+            "neural networks"
+          ],
+          "name": "description",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "sqlQuery": "SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name FROM courses c LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL)) AND (c.cost <= {max_cost} OR {max_cost} IS NULL) ORDER BY c.prerequisite_id;\n",
+      "testValues": [
+        {
+          "name": "description",
+          "value": "AI"
+        },
+        {
+          "name": "max_cost",
+          "value": "500"
+        }
+      ]
+    }
+  }
+}
