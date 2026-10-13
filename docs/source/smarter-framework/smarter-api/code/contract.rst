@@ -49,5 +49,10 @@ API Contract
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: smarter.apps.vectorstore.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: smarter.lib.drf.views.contract
     :members:

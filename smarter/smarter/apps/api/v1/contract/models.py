@@ -431,6 +431,7 @@ class OpenApiPathItem(OpenApiModel):
 
     get: Optional[OpenApiOperation] = None
     post: Optional[OpenApiOperation] = None
+    delete: Optional[OpenApiOperation] = None
 
 
 class OpenApiSecurityScheme(OpenApiModel):

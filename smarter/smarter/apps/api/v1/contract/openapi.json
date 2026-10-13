@@ -16960,6 +16960,1011 @@
         "title": "VectorsearchSearchType",
         "type": "string"
       },
+      "VectorstoreApiAddText": {
+        "additionalProperties": false,
+        "description": "The JSON request body that adds a text, or the document at a url, to a vectorstore.\n\nFiles are multipart/form-data.",
+        "properties": {
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Metadata to store with each chunk.",
+            "title": "Metadata"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The text's name. Defaults to text.",
+            "title": "Name"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The text.",
+            "title": "Text"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "A public url, whose document is fetched now.",
+            "title": "Url"
+          }
+        },
+        "title": "VectorstoreApiAddText",
+        "type": "object"
+      },
+      "VectorstoreApiDocument": {
+        "additionalProperties": false,
+        "description": "A document of a vectorstore: a :class:`smarter.apps.vectorstore.models.VectorstoreDocument`, without its content.",
+        "properties": {
+          "chunkCount": {
+            "description": "The number of its chunks.",
+            "minimum": 0,
+            "title": "Chunkcount",
+            "type": "integer"
+          },
+          "contentType": {
+            "description": "Its media type, e.g. application/pdf.",
+            "title": "Contenttype",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "hashedId": {
+            "description": "The document's hashed id.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "loadedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When its chunks were loaded.",
+            "title": "Loadedat"
+          },
+          "metadata": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "The metadata stored with each of its chunks.",
+            "title": "Metadata",
+            "type": "object"
+          },
+          "name": {
+            "description": "The document's name, e.g. its file name or url.",
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256": {
+            "description": "The SHA-256 of its content, which finds duplicates.",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "sizeBytes": {
+            "description": "Its size.",
+            "minimum": 0,
+            "title": "Sizebytes",
+            "type": "integer"
+          },
+          "source": {
+            "description": "Where the document came from.",
+            "enum": [
+              "upload",
+              "url",
+              "text",
+              "file"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "description": "Whether its chunks are loaded.",
+            "enum": [
+              "pending",
+              "loading",
+              "loaded",
+              "failed",
+              "deleting"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "statusMessage": {
+            "description": "Its status, for a person.",
+            "title": "Statusmessage",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "source",
+          "contentType",
+          "sha256",
+          "sizeBytes",
+          "metadata",
+          "status",
+          "statusMessage",
+          "chunkCount"
+        ],
+        "title": "VectorstoreApiDocument",
+        "type": "object"
+      },
+      "VectorstoreApiDocumentDeleted": {
+        "additionalProperties": false,
+        "description": "A document that is being removed, with its chunks.",
+        "properties": {
+          "document": {
+            "description": "The document's name.",
+            "title": "Document",
+            "type": "string"
+          },
+          "status": {
+            "description": "deleting.",
+            "enum": [
+              "pending",
+              "loading",
+              "loaded",
+              "failed",
+              "deleting"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "document",
+          "status"
+        ],
+        "title": "VectorstoreApiDocumentDeleted",
+        "type": "object"
+      },
+      "VectorstoreApiDocuments": {
+        "additionalProperties": false,
+        "description": "A vectorstore's documents, newest first.",
+        "properties": {
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiDocument"
+            },
+            "title": "Documents",
+            "type": "array"
+          }
+        },
+        "required": [
+          "documents"
+        ],
+        "title": "VectorstoreApiDocuments",
+        "type": "object"
+      },
+      "VectorstoreApiDocumentsAdded": {
+        "additionalProperties": false,
+        "description": "The documents that a request added, the ones that the vectorstore already had, and whether they're queued.",
+        "properties": {
+          "documents": {
+            "description": "The documents that were added.",
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiDocument"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "duplicates": {
+            "description": "The documents with the same content, already added.",
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiDocument"
+            },
+            "title": "Duplicates",
+            "type": "array"
+          },
+          "message": {
+            "description": "Why the documents are not queued, if they aren't.",
+            "title": "Message",
+            "type": "string"
+          },
+          "queued": {
+            "description": "Whether the new documents are queued to be loaded. Only a ready vectorstore loads them.",
+            "title": "Queued",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "documents",
+          "duplicates",
+          "queued",
+          "message"
+        ],
+        "title": "VectorstoreApiDocumentsAdded",
+        "type": "object"
+      },
+      "VectorstoreApiRestored": {
+        "additionalProperties": false,
+        "description": "A vectorstore whose data was replaced with one of its snapshots.",
+        "properties": {
+          "restored": {
+            "description": "The snapshot's name.",
+            "title": "Restored",
+            "type": "string"
+          },
+          "vectorCount": {
+            "description": "The number of its vectors now.",
+            "title": "Vectorcount",
+            "type": "integer"
+          },
+          "vectorstore": {
+            "description": "The vectorstore's name.",
+            "title": "Vectorstore",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vectorstore",
+          "restored",
+          "vectorCount"
+        ],
+        "title": "VectorstoreApiRestored",
+        "type": "object"
+      },
+      "VectorstoreApiSearch": {
+        "additionalProperties": false,
+        "description": "The request body of a search of a vectorstore.",
+        "properties": {
+          "fetchK": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The number of candidates that mmr chooses among.",
+            "title": "Fetchk"
+          },
+          "filter": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Metadata that every result must match.",
+            "title": "Filter"
+          },
+          "k": {
+            "default": 4,
+            "description": "The number of results, at most 50.",
+            "minimum": 1,
+            "title": "K",
+            "type": "integer"
+          },
+          "lambdaMult": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "mmr's balance of relevance and diversity.",
+            "title": "Lambdamult"
+          },
+          "query": {
+            "description": "The text to find similar chunks of.",
+            "title": "Query",
+            "type": "string"
+          },
+          "scoreThreshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The minimum score of similarity_score_threshold.",
+            "title": "Scorethreshold"
+          },
+          "searchType": {
+            "default": "similarity",
+            "description": "How to search.",
+            "enum": [
+              "similarity",
+              "similarity_score_threshold",
+              "mmr"
+            ],
+            "title": "Searchtype",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "VectorstoreApiSearch",
+        "type": "object"
+      },
+      "VectorstoreApiSearchResult": {
+        "additionalProperties": false,
+        "description": "A chunk that a search found.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The chunk's id in the database.",
+            "title": "Id"
+          },
+          "metadata": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "The chunk's metadata.",
+            "title": "Metadata",
+            "type": "object"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Its similarity to the query.",
+            "title": "Score"
+          },
+          "text": {
+            "description": "The chunk's text.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "metadata"
+        ],
+        "title": "VectorstoreApiSearchResult",
+        "type": "object"
+      },
+      "VectorstoreApiSearchResults": {
+        "additionalProperties": false,
+        "description": "The results of a search of a vectorstore, most similar first.",
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiSearchResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "vectorstore": {
+            "description": "The vectorstore's name.",
+            "title": "Vectorstore",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vectorstore",
+          "results"
+        ],
+        "title": "VectorstoreApiSearchResults",
+        "type": "object"
+      },
+      "VectorstoreApiSnapshot": {
+        "additionalProperties": false,
+        "description": "A snapshot of a vectorstore: a :class:`smarter.apps.vectorstore.models.VectorstoreSnapshot`, a Qdrant snapshot or Pinecone backup.",
+        "properties": {
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When it was taken.",
+            "title": "Createdat"
+          },
+          "hashedId": {
+            "description": "The snapshot's hashed id.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "description": "The snapshot's name in the database.",
+            "title": "Name",
+            "type": "string"
+          },
+          "scheduled": {
+            "description": "Whether maintenance took it, rather than a person.",
+            "title": "Scheduled",
+            "type": "boolean"
+          },
+          "sizeBytes": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Its size, if the database reports it.",
+            "title": "Sizebytes"
+          },
+          "status": {
+            "enum": [
+              "creating",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "statusMessage": {
+            "description": "Its status, for a person.",
+            "title": "Statusmessage",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "vectorCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The number of vectors it holds.",
+            "title": "Vectorcount"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "status",
+          "statusMessage",
+          "scheduled"
+        ],
+        "title": "VectorstoreApiSnapshot",
+        "type": "object"
+      },
+      "VectorstoreApiSnapshots": {
+        "additionalProperties": false,
+        "description": "A vectorstore's snapshots.",
+        "properties": {
+          "snapshots": {
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiSnapshot"
+            },
+            "title": "Snapshots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshots"
+        ],
+        "title": "VectorstoreApiSnapshots",
+        "type": "object"
+      },
+      "VectorstoreApiStatus": {
+        "additionalProperties": false,
+        "description": "A vectorstore's status and statistics, checked now.",
+        "properties": {
+          "message": {
+            "description": "Its status, for a person.",
+            "title": "Message",
+            "type": "string"
+          },
+          "stats": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "The database's statistics.",
+            "title": "Stats",
+            "type": "object"
+          },
+          "status": {
+            "description": "Its deployment's status.",
+            "enum": [
+              "pending",
+              "provisioning",
+              "ready",
+              "stopped",
+              "failed",
+              "deleting"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "vectorCount": {
+            "description": "The number of its vectors.",
+            "title": "Vectorcount",
+            "type": "integer"
+          },
+          "vectorstore": {
+            "description": "The vectorstore's name.",
+            "title": "Vectorstore",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vectorstore",
+          "status",
+          "message",
+          "vectorCount",
+          "stats"
+        ],
+        "title": "VectorstoreApiStatus",
+        "type": "object"
+      },
+      "VectorstoreApiVectorstore": {
+        "additionalProperties": false,
+        "description": "A vectorstore: a :class:`smarter.apps.vectorstore.models.VectorstoreMeta`.\n\nIts related rows are their names.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "apiKeySecret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name of the Secret of its api key, never the key.",
+            "title": "Apikeysecret"
+          },
+          "backend": {
+            "description": "The vector database.",
+            "enum": [
+              "qdrant",
+              "pinecone"
+            ],
+            "title": "Backend",
+            "type": "string"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the vectorstore now: they own it, and nothing uses it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "connection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name of its ApiConnection, if any.",
+            "title": "Connection"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "deletionProtection": {
+            "description": "Whether its index refuses to be deleted.",
+            "title": "Deletionprotection",
+            "type": "boolean"
+          },
+          "deployedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When it was deployed.",
+            "title": "Deployedat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "dimension": {
+            "description": "The dimension of its vectors.",
+            "minimum": 0,
+            "title": "Dimension",
+            "type": "integer"
+          },
+          "documentCount": {
+            "description": "The number of its documents.",
+            "minimum": 0,
+            "title": "Documentcount",
+            "type": "integer"
+          },
+          "embeddingsModel": {
+            "description": "The embeddings model.",
+            "title": "Embeddingsmodel",
+            "type": "string"
+          },
+          "embeddingsProvider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name of its embeddings' Provider.",
+            "title": "Embeddingsprovider"
+          },
+          "endpointUrl": {
+            "description": "The url of its database, once deployed.",
+            "title": "Endpointurl",
+            "type": "string"
+          },
+          "hashedId": {
+            "description": "The vectorstore's hashed id, which its urls use.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "hosting": {
+            "description": "Who runs the database: the platform, or the vendor.",
+            "enum": [
+              "self_hosted",
+              "managed"
+            ],
+            "title": "Hosting",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "indexName": {
+            "description": "The name of its index or collection.",
+            "title": "Indexname",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether LLMClients use the vectorstore.",
+            "title": "Isactive",
+            "type": "boolean"
+          },
+          "lastCheckedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When its status was last checked.",
+            "title": "Lastcheckedat"
+          },
+          "lastMaintenanceAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When its maintenance last ran.",
+            "title": "Lastmaintenanceat"
+          },
+          "lastSnapshotAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When its last snapshot was taken.",
+            "title": "Lastsnapshotat"
+          },
+          "manifestUrl": {
+            "description": "The url of the vectorstore's manifest in the web console.",
+            "title": "Manifesturl",
+            "type": "string"
+          },
+          "metric": {
+            "description": "The distance metric of its index.",
+            "enum": [
+              "cosine",
+              "euclidean",
+              "dotproduct"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "snapshotCount": {
+            "description": "The number of its snapshots.",
+            "minimum": 0,
+            "title": "Snapshotcount",
+            "type": "integer"
+          },
+          "spec": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "The manifest's spec, as it was applied. See SAMVectorstore.",
+            "title": "Spec",
+            "type": "object"
+          },
+          "stats": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "The database's statistics, as of the last check.",
+            "title": "Stats",
+            "type": "object"
+          },
+          "status": {
+            "description": "Its deployment's status.",
+            "enum": [
+              "pending",
+              "provisioning",
+              "ready",
+              "stopped",
+              "failed",
+              "deleting"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "statusMessage": {
+            "description": "Its status, for a person.",
+            "title": "Statusmessage",
+            "type": "string"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The vectorstore's owner."
+          },
+          "vectorCount": {
+            "description": "The number of its vectors, as of the last check.",
+            "title": "Vectorcount",
+            "type": "integer"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "userProfile",
+          "canDelete",
+          "documentCount",
+          "snapshotCount",
+          "manifestUrl",
+          "spec",
+          "backend",
+          "hosting",
+          "isActive",
+          "dimension",
+          "metric",
+          "deletionProtection",
+          "embeddingsModel",
+          "status",
+          "statusMessage",
+          "indexName",
+          "endpointUrl",
+          "vectorCount",
+          "stats"
+        ],
+        "title": "VectorstoreApiVectorstore",
+        "type": "object"
+      },
       "WebsearchData": {
         "description": "Smarter API - WebsearchPlugin.spec.websearchData.",
         "properties": {
@@ -19105,6 +20110,572 @@
           "secrets"
         ]
       }
+    },
+    "/vectorstores/": {
+      "get": {
+        "description": "The vectorstores that the user may read, by name. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "vectorstore_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VectorstoreApiVectorstore"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List vectorstores",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/": {
+      "get": {
+        "description": "A vectorstore that the user may read. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "vectorstore_retrieve",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiVectorstore"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/deploy/": {
+      "post": {
+        "description": "Create the vectorstore's database: a Qdrant server on the platform's Kubernetes cluster, or a Pinecone index. It creates billable infrastructure, and returns before it is ready. Only the vectorstore's owner may call it.",
+        "operationId": "vectorstore_deploy",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiVectorstore"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Deploy a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/documents/": {
+      "get": {
+        "description": "The vectorstore's documents, newest first, without their content. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "vectorstore_documents",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiDocuments"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A vectorstore's documents",
+        "tags": [
+          "vectorstores"
+        ]
+      },
+      "post": {
+        "description": "Add documents, and queue them to be loaded if the vectorstore is ready: a text, the document at a url, or files as multipart/form-data, whose text is extracted now. A document whose content the vectorstore already has is a duplicate, and is not added again. Only the vectorstore's owner may call it.",
+        "operationId": "vectorstore_add_documents",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VectorstoreApiAddText"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "files": {
+                    "description": "The files, e.g. PDFs and Word documents, of at most 50 MiB each.",
+                    "items": {
+                      "contentMediaType": "application/octet-stream",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "metadata": {
+                    "description": "Metadata to store with each chunk, as a JSON object.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "files"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiDocumentsAdded"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Add documents to a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/documents/{document_id}/": {
+      "delete": {
+        "description": "Remove a document and its chunks. They are removed in the background. Only the vectorstore's owner may call it.",
+        "operationId": "vectorstore_delete_document",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The document's id.",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiDocumentDeleted"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Remove a document from a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/search/": {
+      "post": {
+        "description": "Find the chunks most similar to a query. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "vectorstore_search",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VectorstoreApiSearch"
+              }
+            }
+          },
+          "description": "The query, and how to search.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiSearchResults"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Search a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/snapshots/": {
+      "get": {
+        "description": "The vectorstore's snapshots: Qdrant snapshots, or Pinecone backups. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "vectorstore_snapshots",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiSnapshots"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A vectorstore's snapshots",
+        "tags": [
+          "vectorstores"
+        ]
+      },
+      "post": {
+        "description": "Take a snapshot of the vectorstore's data now. Only the vectorstore's owner may call it.",
+        "operationId": "vectorstore_create_snapshot",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiSnapshot"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Snapshot a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/snapshots/{snapshot_id}/restore/": {
+      "post": {
+        "description": "Replace the vectorstore's data with one of its snapshots. Only the vectorstore's owner may call it.",
+        "operationId": "vectorstore_restore",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The snapshot's id.",
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiRestored"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Restore a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/status/": {
+      "get": {
+        "description": "Check a vectorstore's status and statistics now, with its database. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "vectorstore_status",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiStatus"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A vectorstore's status",
+        "tags": [
+          "vectorstores"
+        ]
+      }
+    },
+    "/vectorstores/{id}/undeploy/": {
+      "post": {
+        "description": "Stop serving the vectorstore. A self-hosted server's data is kept. Only the vectorstore's owner may call it.",
+        "operationId": "vectorstore_undeploy",
+        "parameters": [
+          {
+            "description": "The vectorstore's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorstoreApiVectorstore"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Undeploy a vectorstore",
+        "tags": [
+          "vectorstores"
+        ]
+      }
     }
   },
   "security": [
@@ -19160,6 +20731,10 @@
     {
       "description": "The MCPClients' REST reads, their reconnection, and tool calls.",
       "name": "mcpclients"
+    },
+    {
+      "description": "The vectorstores' REST reads, search, documents and maintenance.",
+      "name": "vectorstores"
     }
   ]
 }

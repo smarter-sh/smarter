@@ -190,8 +190,13 @@ This is how the document grows toward everything the SDKs call. The chat api
    Guardrail's events are snake_case): clients already read it.
 5. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.
 6. **Test real responses** of each operation against the document, including
-   a 404 and a 403 (see `test_llmclient_reads()` and `assertValidResponse()`).
-   Use `APIClient` with the headers a real client sends.
+   a 404 and a 403 (see `test_llmclient_reads()`). `OpenApiResponseMixin`, in
+   `smarter.apps.api.v1.contract.tests.mixins`, has `assertValidResponse()` and
+   `assertValid()`. When the family's fakes live with its app, e.g. the
+   vectorstores' in-memory Qdrant and fake Kubernetes, put the test in the
+   app's `contract/tests/test_openapi.py` on the app's test base class, with the
+   mixin. Use `APIClient` with the headers a real client sends. For other
+   success statuses (201, 202) and DELETE, use `rest_operation(status=...)`.
 7. **Watch for secrets in rows.** A foreign key to a `SmarterAuthToken` is its
    digest. Publish its `key_id` instead, as `LLMClientApiKey` does.
 8. Update `api-contract.rst`'s table of covered families, and the SDK: its
