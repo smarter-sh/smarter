@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.8...v0.22.0-alpha.9) (2026-10-13)
+
+### Features
+
+* **api:** cover every api family; serve the contract in the console ([e45b946](https://github.com/smarter-sh/smarter/commit/e45b9464b81c768124d59dec84815d671b578344))
+
 ## [0.22.0-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.7...v0.22.0-alpha.8) (2026-10-13)
 
 ### Features
