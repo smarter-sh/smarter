@@ -1,0 +1,251 @@
+Every lecture, lab and assignment in this course rests on the files and commits below. Every
+reference is to the ``main`` branch of a public repository in
+`github.com/smarter-sh <https://github.com/smarter-sh>`__, so that students can open each one
+during class. Python paths in the ``smarter`` repository are under ``smarter/smarter/``.
+
+Foundations
+~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 1. The full-stack AI application
+     - Django's views and templates host each web console page, a template tag renders a React
+       app's Vite build into it, and the chat window calls the prompt API that the prompt
+       handler answers. Six services in one Compose file, four of them from one image.
+       :doc:`ADR 001 </adr/001-django>`, :doc:`ADR 002 </adr/002-docker>`,
+       :doc:`ADR 019 </adr/019-react>`.
+     - `apps/prompt/views/detailviews/prompt_config_view.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/views/detailviews/prompt_config_view.py>`__,
+       `lib/django/templatetags/smarter_react_templatetag_manager.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py>`__,
+       `smarter-chat <https://github.com/smarter-sh/smarter-chat/tree/main/src>`__,
+       `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__,
+       `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
+   * - 2. Python for AI applications
+     - A calculator tool that parses an expression with ``ast`` and evaluates only the nodes it
+       allows; a date calculator; a weather function with enums and Pydantic models; and the
+       project's type aliases.
+     - `apps/prompt/functions/calculator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/functions/calculator.py>`__,
+       `apps/prompt/functions/date_calculator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/functions/date_calculator.py>`__,
+       `apps/prompt/functions/function_weather/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions/function_weather>`__,
+       `lib/typing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/typing.py>`__
+   * - 3. React for AI applications
+     - Smarter Chat's main component, its API calls, its message helpers and its error
+       boundary.
+     - `smarter-chat: src/components/SmarterChat/Component.tsx <https://github.com/smarter-sh/smarter-chat/blob/main/src/components/SmarterChat/Component.tsx>`__,
+       `src/lib/api.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/api.ts>`__,
+       `src/lib/messages.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/messages.ts>`__,
+       `src/components/ErrorBoundary/Component.tsx <https://github.com/smarter-sh/smarter-chat/blob/main/src/components/ErrorBoundary/Component.tsx>`__
+
+Talking to the LLM
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 4. The openai package
+     - A passthrough client that adapts a request to the provider's current API (OpenAI's
+       reasoning models refuse ``max_tokens``), the SDK's exceptions mapped to HTTP status codes,
+       and a small client that calls embeddings, moderation and chat completions.
+     - `apps/provider/clients.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/clients.py>`__,
+       `apps/provider/services/text_completion/lib/exception_map.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/exception_map.py>`__,
+       `apps/guardrail/services/strategies/clients.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/clients.py>`__
+   * - 5. Pydantic and JSON
+     - An LLM judge that asks for JSON mode and parses the verdict. The chat API's contract:
+       Pydantic models with no ``dict[str, Any]``, ``extra="forbid"`` on models of ORM rows, a
+       committed JSON Schema and a test that it is current.
+       :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+       `Commit 0630dcb55 <https://github.com/smarter-sh/smarter/commit/0630dcb55ff54f81bae9ce3c3b62e55331c2203a>`__
+       made the contract explicit, and its body lists what the implicit one had allowed.
+     - `apps/guardrail/services/strategies/llm_judge_strategy.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/llm_judge_strategy.py>`__,
+       `apps/prompt/contract/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/contract>`__
+       (``models.py``, ``schema.py``, ``chat-contract.schema.json``)
+   * - 6. Keeping secrets secret
+     - Settings typed as ``SecretStr``; ``is_missing_value()``, which treats ``SET-ME-PLEASE``
+       placeholders as unset; Secrets encrypted with Fernet; and a Proxy that adds the
+       provider's key on the server.
+       `Commit 990cab95b <https://github.com/smarter-sh/smarter/commit/990cab95bd8c7286dd7f71a7edd371e374cdc422>`__
+       found that a placeholder key was stored and sent as a real one.
+       `Commit 07a42204c <https://github.com/smarter-sh/smarter/commit/07a42204cdfb8e48f51cdaa92b873f6a7efcb619>`__
+       built the Proxy. :doc:`ADR 007 </adr/007-settings>`, :doc:`ADR 016 </adr/016-security>`.
+     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+       `common/conf/env.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/env.py>`__,
+       `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__,
+       `apps/secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
+       `apps/proxy/services.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/proxy/services.py>`__
+
+The Back End
+~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 7. Django REST Framework for LLM APIs
+     - A ``TokenAuthentication`` subclass for hashed API keys, a YAML parser, a base view for
+       APIs that browsers and API clients both call without a login redirect, and the LLMClient
+       chat API views. :doc:`ADR 006 </adr/006-rest-api>`,
+       :doc:`ADR 023 </adr/023-api-versioning>`.
+     - `lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`__,
+       `lib/drf/parsers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/parsers.py>`__,
+       `lib/django/views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/views.py>`__,
+       `apps/llmclient/api/v1/views/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/api/v1/views/base.py>`__
+   * - 8. An OpenAI-compatible prompt handler
+     - A base class for chat providers, one OpenAI-compatible handler that every provider
+       extends, the protocols that describe them, a passthrough view, and the Proxy, which
+       forwards any request with the provider's key added.
+     - `apps/provider/services/text_completion/lib/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/provider/services/text_completion/lib>`__
+       (``chat_provider_base.py``, ``openai_compatible_chat_provider.py``, ``protocols.py``),
+       `apps/provider/services/text_completion/providers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/providers.py>`__,
+       `apps/prompt/api/v1/views/passthrough.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/api/v1/views/passthrough.py>`__,
+       `apps/proxy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy>`__
+   * - 9. Conversations and multi-step prompts
+     - Prompts and their history saved by a mixin of the handler, a first request and a second
+       request after tool calls, and the Orchestrator's runs and steps for workflows of several
+       LLMClients.
+     - `apps/prompt/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/models>`__
+       (``prompt.py``, ``prompt_history.py``),
+       `apps/provider/services/text_completion/lib/mixins.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/mixins.py>`__,
+       `openai_compatible_chat_provider.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
+       (``prep_first_request()``, ``prep_second_request()``),
+       `apps/orchestrator/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/orchestrator/models>`__,
+       :doc:`/smarter-resources/smarter-orchestrator`
+
+Making the LLM Do Things
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 10. Tool calls
+     - Tool factories that return JSON Schema definitions, the handler's tool call loop, and
+       plugins whose tools query a database or an API.
+       `Commit 5a378b47f <https://github.com/smarter-sh/smarter/commit/5a378b47fc8cae82d60f82875486528d1cce8ac8>`__
+       (item 7) fixed the OpenAI 400 error for a ``tool`` message without its call, and
+       `commit 533f0c54c <https://github.com/smarter-sh/smarter/commit/533f0c54c421293a59bbdd94827d7b3abe83ee30>`__
+       fixed SQL injection through a tool's arguments.
+       :doc:`ADR 008 </adr/008-function-calling>`.
+     - `apps/prompt/functions/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions>`__,
+       `openai_compatible_chat_provider.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
+       (``process_tool_call()``, ``handle_function_provided()``),
+       `apps/provider/services/text_completion/utils.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/utils.py>`__
+       (``pair_tool_messages()``),
+       `apps/plugin/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/sql.py>`__,
+       `apps/plugin/plugin/api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/api.py>`__
+   * - 11. Mutating the system prompt
+     - A plugin that adds its own system prompt when it is selected; a Markdown note added to the
+       copy of the messages that is sent, never to the saved history; and MCP servers'
+       instructions.
+       `Commit c5d2cae9f <https://github.com/smarter-sh/smarter/commit/c5d2cae9f4250d72d0cfdddaf5bae92d60167eaa>`__
+       explains why the note goes into the copy.
+       `Commit 86c0ecdc9 <https://github.com/smarter-sh/smarter/commit/86c0ecdc9c88d3490f1d1e3a88df584a8f9ee77a>`__
+       added MCP servers.
+     - `apps/plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+       (``customize_prompt()``),
+       `openai_compatible_chat_provider.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
+       (``openai_messages``, ``add_markdown_system_prompt()``, ``handle_plugin_selected()``,
+       ``handle_mcp_clients()``),
+       `apps/mcpclient/toolkit.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/toolkit.py>`__
+   * - 12. Retrieval-augmented generation
+     - Embeddings from ``langchain-openai``, documents split with
+       ``langchain-text-splitters``, and Pinecone and Qdrant behind one backend interface.
+     - `apps/vectorstore/service.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/vectorstore/service.py>`__,
+       `apps/vectorstore/embeddings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/vectorstore/embeddings.py>`__,
+       `apps/vectorstore/backends/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/backends>`__,
+       `apps/provider/services/embedding.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/embedding.py>`__,
+       :doc:`/smarter-resources/smarter-vectorstore`
+
+The Front End
+~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 13. Streaming and progress
+     - A prompt runs in a worker thread while an async generator streams its progress as
+       Server-Sent Events, forwarded from signals; the Proxy streams a provider's own SSE
+       response; and the chat component reads a stream.
+     - `apps/prompt/progress.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/progress.py>`__,
+       `apps/prompt/tests/test_progress.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/tests/test_progress.py>`__,
+       `apps/proxy/tests/data/openai-stream.txt <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/proxy/tests/data/openai-stream.txt>`__,
+       `smarter-chat: src/lib/logStream.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/logStream.ts>`__
+   * - 14. Building a chat UI with chatscope
+     - Smarter Chat is built from three open-source packages. Its main component composes
+       chatscope's containers, message list, input and typing indicator. Its styles override
+       chatscope's theme with CSS variables. Its message helpers escape the user's text and render
+       the LLM's Markdown with ``marked`` and ``DOMPurify``, and its Console shows requests and
+       responses with ``react-json-view``.
+       `Commit afb1b5e63 <https://github.com/smarter-sh/smarter-chat/commit/afb1b5e637e97e629b24b50cb98ec0adfb985528>`__
+       applied an LLMClient's colors to chatscope's components.
+     - `smarter-chat: package.json <https://github.com/smarter-sh/smarter-chat/blob/main/package.json>`__,
+       `src/components/SmarterChat/ <https://github.com/smarter-sh/smarter-chat/tree/main/src/components/SmarterChat>`__
+       (``Component.tsx``, ``styles.css``),
+       `src/lib/styles.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/styles.ts>`__,
+       `src/lib/messages.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/messages.ts>`__,
+       `src/components/Console/Component.tsx <https://github.com/smarter-sh/smarter-chat/blob/main/src/components/Console/Component.tsx>`__
+   * - 15. A single-page chat web app
+     - The contract's JSON Schema, copied into the front end's repository and compiled into
+       TypeScript types, and the make target that ties them together.
+       `Commit cd61f2ee7 <https://github.com/smarter-sh/smarter-chat/commit/cd61f2ee783927b203ad5d08164189f1c4c895f8>`__
+       is the front end's half of commit 0630dcb55.
+     - `smarter-chat: contract/chat-contract.schema.json <https://github.com/smarter-sh/smarter-chat/blob/main/contract/chat-contract.schema.json>`__,
+       `scripts/contract-types.mjs <https://github.com/smarter-sh/smarter-chat/blob/main/scripts/contract-types.mjs>`__,
+       `src/contract.gen.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__;
+       `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__
+       (``chat-contract``)
+
+Production
+~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 16. Guardrails, prompt injection and cost
+     - A guardrail pipeline run in priority order before and after the LLM, detectors for
+       personal data and secrets, an LLM judge that treats the judged text as untrusted data, and
+       budgets that refuse a prompt once they are spent.
+       `Commit 329527e8e <https://github.com/smarter-sh/smarter/commit/329527e8e607a9adf830b71518e385f812d1b9f7>`__
+       added guardrails, and
+       `commit ab24142d2 <https://github.com/smarter-sh/smarter/commit/ab24142d299c37a0b0719c9fe80b04d4b5fdda28>`__
+       budgets.
+     - `apps/guardrail/services/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/services>`__
+       (``pipeline.py``, ``strategies/detectors.py``, ``strategies/llm_judge_strategy.py``),
+       :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-budget`
+   * - 17. Testing AI applications
+     - Tests of the prompt handler, a Proxy test base class that installs a fake provider,
+       recorded responses and streams, and Mock Service Worker handlers for Smarter Chat.
+       :doc:`ADR 013 </adr/013-testing>`.
+     - `apps/provider/tests/test_openai_compatible_chat_provider_units.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/tests/test_openai_compatible_chat_provider_units.py>`__,
+       `apps/proxy/tests/base_classes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/proxy/tests/base_classes.py>`__,
+       `apps/proxy/tests/data/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy/tests/data>`__,
+       `smarter-chat: src/mocks/handlers.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/mocks/handlers.ts>`__
+   * - 18. Shipping the whole stack
+     - A multi-stage Dockerfile that ends as a non-root user, a Compose file with health checks,
+       a Makefile that builds and runs it, and the Docker quickstart for running Smarter from
+       published images. :doc:`ADR 002 </adr/002-docker>`, :doc:`ADR 004 </adr/004-12-factor>`.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__,
+       `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__,
+       `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__,
+       `smarter-deploy: docker-compose.yml <https://github.com/smarter-sh/smarter-deploy/blob/main/docker-compose.yml>`__

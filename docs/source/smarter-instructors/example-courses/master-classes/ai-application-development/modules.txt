@@ -1,0 +1,161 @@
+Each module is a 30-minute lecture followed by a lab of about 30 minutes. Labs build one
+application through the whole course, the *course app*: a Django and Django REST Framework back
+end, a React single-page chat app built with Vite, and Redis, in one Docker Compose project in
+the student's own Git repository. Smarter runs beside it, from source, as the reference
+implementation that each lecture reads from and each lab compares against. The file references
+are listed in full under `The Modules in the Source Code`_.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 6 47 47
+
+   * - #
+     - Lecture
+     - Lab
+   * - 1
+     - **The full-stack AI application.** MVC and Django's MVT, and where an AI application's
+       parts fit into them: the model is the conversation and its configuration, the view is a
+       prompt handler that calls the LLM, and the template is often a React app that Django
+       hosts. One chat message's path through Smarter, from the chat window through the prompt
+       API, the handler and the provider, and back. The course's stack in Docker Compose.
+       :doc:`ADR 001 </adr/001-django>`, :doc:`ADR 002 </adr/002-docker>`,
+       :doc:`ADR 019 </adr/019-react>`.
+     - Send a prompt in Smarter's LLMClient workbench and follow it in the Console's tabs. Then
+       scaffold the course app: a Django project and a Vite React app, each with a Dockerfile,
+       in one Compose file with Redis, modeled on Smarter's.
+   * - 2
+     - **Python for AI applications.** The Python an AI back end leans on: type hints and type
+       aliases, enums, dataclasses against Pydantic models, decorators, context managers,
+       generators, ``async`` and ``await``, and evaluating untrusted input safely, as
+       Smarter's calculator tool does with ``ast`` instead of ``eval()``.
+     - Write a typed, documented function with an enum argument and a Pydantic return value,
+       with unit tests, in the course app. It becomes a tool in Module 10.
+   * - 3
+     - **React for AI applications.** Components, props and state; ``useState``, ``useEffect``,
+       ``useRef`` and custom hooks; controlled inputs; ``fetch`` with ``async`` handlers and
+       ``AbortController``; rendering a list of messages; error boundaries; and Vite builds. Read
+       from Smarter Chat, the React app that Smarter's LLMClient workbench is built on.
+     - Build a chat page in the course app's React app: an input, a send button, and a message
+       list that renders an echo endpoint's replies, with a loading state and an error state.
+   * - 4
+     - **The openai package.** The ``OpenAI`` client and its settings (``api_key``,
+       ``base_url``, timeouts and retries); ``chat.completions.create()``; roles and messages;
+       models, temperature and maximum tokens; usage and finish reasons; the SDK's typed
+       responses; its exception classes, mapped to HTTP status codes; and the Chat Completions
+       API against the Responses API.
+     - Write a Django management command that sends a prompt with the ``openai`` package, prints
+       the reply and its token usage, and turns a rate limit, a bad key and a timeout into clear
+       messages.
+   * - 5
+     - **Pydantic and JSON.** Every object the ``openai`` package returns is a Pydantic model:
+       ``model_dump()``, ``model_dump_json()`` and ``model_validate()``. Asking an LLM for JSON
+       with JSON mode and with structured outputs; validating what comes back, with
+       ``extra="forbid"`` and ``pydantic.JsonValue``; JSON Schema from Pydantic models; and
+       Pydantic as the contract of an API. :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - Ask the LLM to classify a support message into a Pydantic model with an enum field, using
+       structured outputs. Feed it a reply that does not validate, and handle the failure.
+   * - 6
+     - **Keeping secrets secret.** Where API keys leak: source code, Git history, logs, error
+       pages, front-end bundles and LLM responses. Twelve-factor configuration;
+       ``pydantic-settings`` with ``SecretStr``; placeholders that count as missing; Fernet
+       encryption at rest; masking keys in logs; and a proxy that adds the provider's key on the
+       server, so that it never reaches the browser. :doc:`ADR 007 </adr/007-settings>`,
+       :doc:`ADR 016 </adr/016-security>`.
+     - Move the course app's OpenAI key into a ``SecretStr`` setting read from ``.env``, add
+       ``.env`` to ``.gitignore``, mask the key in a log line, and show with ``git log -p`` and
+       the browser's network tab that it is nowhere else.
+   * - 7
+     - **Django REST Framework for LLM APIs.** API views and viewsets; authentication classes
+       and hashed API keys; parsers; Pydantic models in place of serializers for the request and
+       the response; one error envelope with matching status codes; and CORS and CSRF for a chat
+       window on another origin. :doc:`ADR 006 </adr/006-rest-api>`,
+       :doc:`ADR 023 </adr/023-api-versioning>`.
+     - Add a ``/api/v1/chat/`` endpoint to the course app that accepts a list of messages,
+       validates it with a Pydantic model, calls the LLM, and returns the reply, authenticated by
+       an API key, with tests.
+   * - 8
+     - **An OpenAI-compatible prompt handler.** Why a back end should speak the OpenAI API: every
+       OpenAI SDK, and most other providers' APIs, can then use it by changing one
+       ``base_url``. The request and response of ``/v1/chat/completions``; one handler class for
+       many providers; a passthrough endpoint; and Smarter's Proxy, which forwards any request,
+       streams included, with the provider's key added.
+     - Add ``/v1/chat/completions`` to the course app, and call it with the official ``openai``
+       package from a script, changing only ``base_url`` and ``api_key``.
+   * - 9
+     - **Conversations and multi-step prompts.** The API is stateless, so the conversation is
+       the message list. Storing history; counting tokens with ``tiktoken`` and trimming to a
+       budget; summarizing old turns; a prompt that takes two or more LLM requests; and
+       orchestrating several LLM calls: sequential hand-offs, routing by intent, and a
+       supervisor with workers.
+     - Store the course app's conversations in a Django model, send the history with each
+       prompt, and trim it to a token budget. Add a two-step prompt that drafts a reply and then
+       checks it.
+   * - 10
+     - **Tool calls.** Tool definitions in JSON Schema; ``tool_choice``; the tool call loop:
+       the LLM asks, the application runs the function, appends a ``tool`` message for each
+       call, and asks again; parallel tool calls; pairing each ``tool`` message with its call;
+       and treating tool arguments as untrusted input. :doc:`ADR 008 </adr/008-function-calling>`.
+     - Turn the Module 2 function into a tool, run the loop in the course app's handler, and log
+       each call and its result.
+   * - 11
+     - **Mutating the system prompt.** The system prompt as configuration; adding instructions,
+       context and rules for one request; changing the copy that is sent rather than the history
+       that is saved; plugins that add to the system prompt when a prompt matches them; MCP
+       servers' instructions; and why text from users and tools must never be trusted as
+       instructions.
+     - Add the signed-in user's name, the date and a formatting rule to the system prompt of
+       each request in the course app, and prove with a test that none of it is saved in the
+       history.
+   * - 12
+     - **Retrieval-augmented generation with LangChain.** Embeddings and similarity; splitting
+       documents with ``langchain-text-splitters``; ``OpenAIEmbeddings`` from
+       ``langchain-openai``; vector stores behind one interface; and adding what was retrieved
+       to the system prompt, with its sources.
+     - Index a folder of Markdown files with LangChain, retrieve the best passages for each
+       prompt, add them to the system prompt, and have the reply cite its sources.
+   * - 13
+     - **Streaming and progress.** Server-Sent Events; ``stream=True`` in the ``openai``
+       package and its chunks; async Django views and ``StreamingHttpResponse``; streaming a
+       prompt's progress (LLM requests, tool calls, plugin calls) while it runs; and reading a
+       stream in the browser.
+     - Stream the course app's replies to its chat page as they are generated, with a progress
+       line for each tool call.
+   * - 14
+     - **Building a chat UI with chatscope.** A chat window from open-source parts:
+       ``@chatscope/chat-ui-kit-react``'s ``MainContainer``, ``ChatContainer``,
+       ``ConversationHeader``, ``MessageList``, ``Message``, ``MessageInput`` and
+       ``TypingIndicator``; theming ``@chatscope/chat-ui-kit-styles`` with CSS variables; the
+       LLM's Markdown rendered with ``marked`` and sanitized with ``DOMPurify``, because the
+       messages are HTML; and a developer panel that shows each request, response and tool call
+       with ``@microlink/react-json-view``. Smarter Chat, which is built from exactly these
+       packages, is the case study.
+     - Replace the Module 3 chat page with one built from chatscope's components, with Markdown
+       replies and a collapsible JSON panel that shows the last request and response.
+   * - 15
+     - **A single-page chat web app.** Single-page app design; one typed contract between the
+       front end and the back end, from Pydantic models to JSON Schema to generated TypeScript
+       types; configuration loaded at startup; sessions, cookies and API keys in a browser;
+       and building and serving the app's static assets.
+     - Generate TypeScript types from the course app's JSON Schema, use them in its React app,
+       and add a test that fails when the back end's contract changes.
+   * - 16
+     - **Guardrails, prompt injection and cost.** Input and output guardrails; regular
+       expressions, detectors for personal data and secrets, moderation, and an LLM judge;
+       direct and indirect prompt injection; token budgets and charges per user; and what a
+       guardrail should do when it fails.
+     - Add an input guardrail to the course app that blocks a prompt containing an API key or a
+       credit card number, and a daily token budget per user.
+   * - 17
+     - **Testing AI applications.** Never calling a paid LLM in a unit test: fake transports,
+       recorded responses and streams, and mocked SDK clients. Testing the tool call loop and
+       the system prompt; Mock Service Worker in the React app; and evaluation sets for the
+       prompts themselves.
+     - Test the course app's tool call loop and stream with recorded responses and no network,
+       then write five evaluation cases for its system prompt.
+   * - 18
+     - **Shipping the whole stack.** Multi-stage Dockerfiles, a non-root user and a small image;
+       settings per environment; the React build collected as static files; health checks;
+       Compose for development and for a server; and Smarter's Docker quickstart.
+       :doc:`ADR 002 </adr/002-docker>`, :doc:`ADR 004 </adr/004-12-factor>`.
+     - Build production images of the course app, run the whole stack with
+       ``docker compose up`` from a clean clone, and write its README's quickstart.

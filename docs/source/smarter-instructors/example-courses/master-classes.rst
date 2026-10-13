@@ -20,9 +20,14 @@ sessions and grade weights, and uses the rubric levels and course policies in
      - Experienced Django developers
      - Python and Django
      - 18 hours, as a three-day classroom course or a six-week online course
+   * - :doc:`master-classes/ai-application-development`
+     - Experienced developers building full-stack AI applications
+     - Python, Django, React and the OpenAI API
+     - 18 hours, as a three-day classroom course or a six-week online course
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    master-classes/django-master-class
+   master-classes/ai-application-development
