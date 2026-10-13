@@ -1,6 +1,7 @@
 """Test Api v1 CLI reources endpoint."""
 
 from http import HTTPStatus
+from unittest import mock
 
 from rest_framework.test import APIClient
 
@@ -176,3 +177,23 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
         headers = {"Authorization": f"Token {self.token_key}"}
         response = client.get(path=self.path, headers=headers)
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def assert_journaled_error(self, response: SmarterDictType, status: int, error_class: str, command: str) -> None:
+        """Assert that an error response is the journal's error envelope, not a bare {"error": "..."}."""
+        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.METADATA]["command"], command)
+        error = response["error"]
+        self.assertIsInstance(error, dict)
+        self.assertEqual(error["errorClass"], error_class)
+        self.assertEqual(error["status"], status)
+
+    def test_resources_error_is_journaled(self) -> None:
+        """An error is returned as a journaled error response, with its status."""
+        path = reverse(self.namespace + ApiV1CliReverseViews.resources, kwargs=None)
+        with mock.patch(
+            "smarter.apps.api.v1.cli.views.nonbrokered.resources.ApiV1CliResourcesApiView.dictionaryize",
+            side_effect=RuntimeError("broken"),
+        ):
+            response, status = self.get_response(path=path)
+        self.assertEqual(status, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assert_journaled_error(response, HTTPStatus.INTERNAL_SERVER_ERROR, "RuntimeError", "resources")

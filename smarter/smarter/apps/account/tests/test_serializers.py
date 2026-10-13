@@ -17,6 +17,7 @@ from ..serializers import (
     AccountSerializer,
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
+    user_can_delete,
 )
 from .mixins import TestAccountMixin
 
@@ -97,6 +98,13 @@ class TestCanDelete(TestAccountMixin):
     def test_can_delete_without_request(self):
         """Test that canDelete is False when the serializer has no request."""
         self.assertIs(GuardrailSerializer(self.guardrail).data["canDelete"], False)
+
+    def test_user_can_delete(self):
+        """Test user_can_delete(), which the serializers and the api contract's models share."""
+        self.assertIs(user_can_delete(self.guardrail, "Guardrail", self.admin_user), True)
+        self.assertIs(user_can_delete(self.guardrail, "Guardrail", None), False)
+        self.assertIs(user_can_delete(self.guardrail, "NotAKind", self.admin_user), False)
+        self.assertIs(user_can_delete(self.guardrail, None, self.admin_user), False)
 
     def test_every_subclass_has_can_delete(self):
         """Test that every subclass of MetaDataWithOwnershipModelSerializer serializes can_delete."""

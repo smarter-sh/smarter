@@ -65,3 +65,13 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200, response)
         self.client.logout()
+
+    def test_user_json_schema_is_the_user_schema(self):
+        """The User page renders the User manifest's schema, not the Secret's."""
+        self.client.force_login(self.non_admin_user)
+        response = self.client.get(reverse(f"{namespace}:{json_schema_name(SAMKinds.USER.value)}"))
+        self.assertEqual(response.status_code, 200, response)
+        content = response.content.decode("utf-8")
+        self.assertIn("SAMUser", content)
+        self.assertNotIn("SAMSecret", content)
+        self.client.logout()

@@ -5,6 +5,7 @@ from http import HTTPStatus
 from drf_yasg.utils import swagger_auto_schema
 
 from smarter.apps.api.v1.cli.brokers import Brokers
+from smarter.apps.api.v1.contract.models import CliApiValidation
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -67,7 +68,12 @@ the invalid value in the manifest, a 'message' and a 'type'.
         message = "Manifest is valid" if not errors else f"Manifest has {len(errors)} error(s)"
         return SmarterJournaledJsonResponse(
             request=request,
-            data={"data": {"valid": not errors, "errors": errors}, "message": message},
+            data={
+                "data": CliApiValidation.model_validate({"valid": not errors, "errors": errors}).model_dump(
+                    mode="json"
+                ),
+                "message": message,
+            },
             thing=Brokers.get_broker_kind(kind) if isinstance(kind, str) else None,
             command=command,
             status=HTTPStatus.OK.value,

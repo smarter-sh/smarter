@@ -910,15 +910,15 @@ Secrets, plugins, orchestrators and vectorsearches: the kinds whose REST api onl
       :returns: The platform's response.
 
 
-   .. py:method:: retrieve(id: 'SmarterIdType') -> 'Plugin'
+   .. py:method:: retrieve(id: 'SmarterIdType') -> 'Manifest'
 
-      One plugin, by its id.
+      One plugin's manifest, by the plugin's id.
 
       The platform serves this only when its ``ALLOW_API_GET`` waffle switch is on. Otherwise it
       answers 405: use :meth:`find` or :meth:`describe` instead.
 
       :param id: The plugin's id.
-      :returns: The plugin.
+      :returns: The plugin's manifest, whose ``kind`` is the plugin's, e.g. ``SqlPlugin``.
 
 
 
@@ -943,6 +943,8 @@ Secrets, plugins, orchestrators and vectorsearches: the kinds whose REST api onl
 
 Accounts, their users, and their contacts: ``/api/v1/accounts/``.
 
+Only superusers may read them: the platform refuses other users with a 403.
+
 Users and accounts are created and changed with manifests (the ``User`` and ``Account`` kinds):
 see :class:`smarter.resources.manifests.Manifests`.
 
@@ -965,6 +967,28 @@ see :class:`smarter.resources.manifests.Manifests`.
 
       :param id: The user's id.
       :returns: The user.
+
+
+
+.. py:class:: UserProfiles
+
+   Bases: :class:`smarter.resources.base.SmarterAPIResource`
+
+   Each user's membership of an account: ``/api/v1/accounts/user-profiles/``.
+
+   .. py:method:: list() -> 'list[UserProfile]'
+
+      The user profiles that the api key's user may read.
+
+      :returns: The user profiles.
+
+
+   .. py:method:: retrieve(id: 'SmarterIdType') -> 'UserProfile'
+
+      A user profile, by id.
+
+      :param id: The user profile's id.
+      :returns: The user profile.
 
 
 
@@ -1008,7 +1032,9 @@ The history of chat sessions, tool calls and plugin uses: ``/api/v1/prompts/hist
 
    Bases: :class:`smarter.resources.base.SmarterAPIResource`
 
-   The chat sessions of the api key's user, and their tool calls and plugin uses.
+   The chat sessions of the api key's user, and their tool calls and plugin uses, newest first.
+
+   An account admin also reads the sessions of their account's users, and a superuser every session.
 
    .. py:method:: sessions() -> 'list[PromptSession]'
 
@@ -1045,6 +1071,14 @@ The history of chat sessions, tool calls and plugin uses: ``/api/v1/prompts/hist
       The plugin uses of the chat sessions.
 
       :returns: The plugin uses.
+
+
+   .. py:method:: plugin_use(id: 'SmarterIdType') -> 'PromptPluginUsage'
+
+      A plugin use, by id.
+
+      :param id: The plugin use's id.
+      :returns: The plugin use.
 
 
 

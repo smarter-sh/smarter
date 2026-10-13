@@ -1,0 +1,551 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMGuardrailMetadata": {
+      "description": "Smarter API Guardrail Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMGuardrailMetadata",
+      "type": "object"
+    },
+    "SAMGuardrailSpec": {
+      "description": "Smarter API Guardrail Manifest Guardrail.spec.",
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SAMGuardrailSpecConfig",
+          "description": "Guardrail.spec.config[object]. The configuration for the Guardrail."
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMGuardrailSpec",
+      "type": "object"
+    },
+    "SAMGuardrailSpecConfig": {
+      "description": "Smarter API Guardrail Manifest Guardrail.spec.config.",
+      "properties": {
+        "action": {
+          "description": "Guardrail.spec.config.action[str]: what the guardrail does when it triggers. One of: ['log', 'flag', 'redact', 'transform', 'block', 'escalate'].",
+          "title": "Action",
+          "type": "string"
+        },
+        "caseSensitive": {
+          "default": false,
+          "description": "Guardrail.spec.config.caseSensitive[bool]: whether the keyword strategy is case sensitive.",
+          "title": "Casesensitive",
+          "type": "boolean"
+        },
+        "categories": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Guardrail.spec.config.categories[list]: the moderation strategy's categories. Empty means all. Any of: ['harassment', 'harassment/threatening', 'hate', 'hate/threatening', 'illicit', 'illicit/violent', 'self-harm', 'self-harm/intent', 'self-harm/instructions', 'sexual', 'sexual/minors', 'violence', 'violence/graphic'].",
+          "title": "Categories"
+        },
+        "category": {
+          "default": "custom",
+          "description": "Guardrail.spec.config.category[str]: the risk the guardrail addresses. One of: ['pii', 'secrets', 'prompt_injection', 'jailbreak', 'toxicity', 'self_harm', 'hallucination', 'off_topic', 'compliance', 'formatting', 'custom'].",
+          "title": "Category",
+          "type": "string"
+        },
+        "detectors": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Guardrail.spec.config.detectors[list]: the detector strategy's detectors. Any of: ['credit_card', 'us_ssn', 'email', 'phone_number', 'ip_address', 'iban', 'aws_access_key', 'private_key', 'api_key', 'jwt', 'password_assignment'].",
+          "title": "Detectors"
+        },
+        "failClosed": {
+          "default": false,
+          "description": "Guardrail.spec.config.failClosed[bool]: if true, block when the check itself fails, e.g. because the LLM provider is unavailable. If false, the failure is recorded, and the prompt continues.",
+          "title": "Failclosed",
+          "type": "boolean"
+        },
+        "flags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Guardrail.spec.config.flags[list]: the regex strategy's flags. Any of: ['IGNORECASE', 'MULTILINE', 'DOTALL'].",
+          "title": "Flags"
+        },
+        "isActive": {
+          "default": true,
+          "description": "Guardrail.spec.config.isActive[bool]: whether the guardrail runs.",
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "judgePrompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.judgePrompt[str]: the llm_judge strategy's prompt, with a {text} placeholder for the text to judge. Any other braces must be doubled, e.g. {{ and }}.",
+          "title": "Judgeprompt"
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Guardrail.spec.config.keywords[list]: the keyword strategy's words and phrases.",
+          "title": "Keywords"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.message[str]: what block returns to the user, instead of the LLM's reply.",
+          "title": "Message"
+        },
+        "mode": {
+          "default": "enforce",
+          "description": "Guardrail.spec.config.mode[str]: enforce, to take the action, or monitor, to only record what the action would have been.",
+          "title": "Mode",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.model[str]: the model of the semantic, moderation and llm_judge strategies.",
+          "title": "Model"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.pattern[str]: the regex strategy's regular expression.",
+          "title": "Pattern"
+        },
+        "priority": {
+          "default": 100,
+          "description": "Guardrail.spec.config.priority[int]: the order in which guardrails run. Lower runs first.",
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.provider[str]: the name of the Smarter LLM Provider that the semantic, moderation and llm_judge strategies call. Defaults to openai.",
+          "title": "Provider"
+        },
+        "referenceTexts": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Guardrail.spec.config.referenceTexts[list]: the semantic strategy's examples of what to detect.",
+          "title": "Referencetexts"
+        },
+        "replacement": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.replacement[str]: what redact and transform replace each match with. Defaults to [REDACTED], which an empty replacement also means. {label} is replaced with what matched, e.g. credit_card. For the regex strategy, transform may refer to groups, e.g. \\1.",
+          "title": "Replacement"
+        },
+        "severity": {
+          "default": 3,
+          "description": "Guardrail.spec.config.severity[int]: from 1 (low) to 5 (critical), for reporting and review.",
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Severity",
+          "type": "integer"
+        },
+        "stage": {
+          "description": "Guardrail.spec.config.stage[str]: when the guardrail runs. One of: ['input', 'output', 'both'].",
+          "title": "Stage",
+          "type": "string"
+        },
+        "strategy": {
+          "description": "Guardrail.spec.config.strategy[str]: how the guardrail detects. One of: ['regex', 'keyword', 'detector', 'semantic', 'moderation', 'llm_judge'].",
+          "title": "Strategy",
+          "type": "string"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.spec.config.threshold[float]: the minimum confidence, from 0 to 1, at which the semantic, moderation and llm_judge strategies trigger. Defaults to 0.8.",
+          "title": "Threshold"
+        },
+        "wholeWord": {
+          "default": true,
+          "description": "Guardrail.spec.config.wholeWord[bool]: whether the keyword strategy matches whole words only.",
+          "title": "Wholeword",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stage",
+        "strategy",
+        "action"
+      ],
+      "title": "SAMGuardrailSpecConfig",
+      "type": "object"
+    },
+    "SAMGuardrailStatus": {
+      "description": "Smarter API Guardrail Manifest - Status class.\n\nRead only. Besides ownership, it reports the guardrail's events of the last 30 days. The\nLLMClients that use it are reported in ``dependencies``.",
+      "properties": {
+        "accountNumber": {
+          "description": "Guardrail.status.account_number: The account owner of this Guardrail. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "blocked": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.status.blocked: how many prompts this Guardrail blocked in the last 30 days. Read only.",
+          "title": "Blocked"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "errors": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.status.errors: how many times this Guardrail failed to run in the last 30 days. Read only.",
+          "title": "Errors"
+        },
+        "lastTriggered": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.status.lastTriggered: when this Guardrail last triggered. Read only.",
+          "title": "Lasttriggered"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "triggered": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guardrail.status.triggered: how many times this Guardrail triggered in the last 30 days. Read only.",
+          "title": "Triggered"
+        },
+        "username": {
+          "description": "Guardrail.status.username: The Smarter user who created this Guardrail. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMGuardrailStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - Guardrail.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMGuardrailMetadata",
+      "description": "Guardrail.metadata[obj]: Required, the Guardrail metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMGuardrailSpec",
+      "description": "Guardrail.spec[obj]: Required, the Guardrail specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMGuardrailStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Guardrail.status[obj]: Optional, Read-only. Stateful status information about the Guardrail."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMGuardrail",
+  "type": "object"
+}
