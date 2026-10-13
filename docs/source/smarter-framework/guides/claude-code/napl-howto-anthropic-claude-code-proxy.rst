@@ -177,9 +177,10 @@ Apply it:
 
 .. important::
 
-   ``baseUrl`` must **not** end in ``/v1/``. Claude Code appends ``/v1/messages`` to its ``ANTHROPIC_BASE_URL``. A Proxy
-   whose ``baseUrl`` is ``https://api.anthropic.com/v1/``, as in Smarter's example Proxy manifest, forwards to
-   ``/v1/v1/messages``, and its ``allowedPaths`` entry ``messages`` would not match ``v1/messages``.
+   ``baseUrl`` must **not** end in ``/v1/``. Claude Code, like the Anthropic SDK, appends ``/v1/messages`` to its base
+   URL, so a ``baseUrl`` of ``https://api.anthropic.com/v1/`` would forward to ``/v1/v1/messages``, and
+   ``allowedPaths`` must list the ``v1/...`` paths. This matches the Anthropic example in
+   :doc:`/smarter-resources/smarter-proxy`.
 
 ``allowedPaths`` is also a control: the Proxy refuses any endpoint that is not listed.
 
