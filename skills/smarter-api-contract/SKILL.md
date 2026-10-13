@@ -197,8 +197,16 @@ This is how the document grows toward everything the SDKs call. The chat api
    app's `contract/tests/test_openapi.py` on the app's test base class, with the
    mixin. Use `APIClient` with the headers a real client sends. For other
    success statuses (201, 202) and DELETE, use `rest_operation(status=...)`.
-7. **Watch for secrets in rows.** A foreign key to a `SmarterAuthToken` is its
-   digest. Publish its `key_id` instead, as `LLMClientApiKey` does.
+7. **Watch for secrets and permissions.** A foreign key to a `SmarterAuthToken`
+   is its digest: publish its `key_id` instead, as `LLMClientApiKey` does. Check
+   that each read filters by `with_read_permission_for(user)`: modeling the
+   plugins found a retrieve that returned any account's plugin. A non-superuser
+   in another account (`mortal_user_factory()`) must get a 404. Never call
+   `factory_account_teardown()` in a test: it deletes every test account,
+   including the class's own.
+   When a service, not the view, builds the response (an LLMHost's report or
+   status), build the model in the service, and keep its function's return
+   type, so its other callers don't change.
 8. Update `api-contract.rst`'s table of covered families, and the SDK: its
    models, its `TestOpenApiContract` calls, and its `TestRecordedResponses`
    fixtures (see "Downstream").

@@ -15,16 +15,30 @@ views do not create or update them:
 - ``GET llmhosts/<hashed_id>/logs/?tail=``: the inference server's recent logs.
 - ``GET llmhosts/<hashed_id>/plan/``: the Kubernetes resources that deploy would apply, without secrets.
 - ``POST llmhosts/<hashed_id>/deploy/`` and ``POST llmhosts/<hashed_id>/undeploy/``.
+
+The responses are built from the models of :mod:`smarter.apps.llmhost.contract.models`, which the
+Smarter api's OpenAPI document publishes. Errors are Django REST framework's ``{"detail": ...}``.
 """
 
 from http import HTTPStatus
 
 from django.db.models import QuerySet
-from django.http import Http404, JsonResponse
+from django.http import Http404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.llmhost.caching import invalidate_all_cached_llmhosts_for_user_profile
+from smarter.apps.llmhost.contract.models import (
+    LLMHostApiCatalogModel,
+    LLMHostApiDiscovery,
+    LLMHostApiDraftManifest,
+    LLMHostApiLLMHost,
+    LLMHostApiLogs,
+    LLMHostApiObservation,
+    LLMHostApiPlan,
+    LLMHostApiStatus,
+    LLMHostApiUndeployed,
+)
 from smarter.apps.llmhost.models import LLMHost
 from smarter.apps.llmhost.serializers import LLMHostSerializer
 from smarter.apps.llmhost.services import (
@@ -35,6 +49,7 @@ from smarter.apps.llmhost.services import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -45,14 +60,27 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 MAX_DISCOVERY_RESULTS = 50
 
 
-def service_error(e: LLMHostServiceError) -> JsonResponse:
-    """A JSON error response: 503 if the cluster or a catalog is unavailable, else 400."""
+def error(message: str, status: int = HTTPStatus.BAD_REQUEST) -> Response:
+    """An error response: Django REST framework's ``{"detail": ...}``, as every error of the REST api."""
+    return Response({"detail": message}, status=status)
+
+
+def service_error(e: LLMHostServiceError) -> Response:
+    """An error response: 503 if the cluster or a catalog is unavailable, else 400."""
     status = (
         HTTPStatus.SERVICE_UNAVAILABLE
         if isinstance(e, (LLMHostClusterError, LLMHostDiscoveryError))
         else HTTPStatus.BAD_REQUEST
     )
-    return JsonResponse({"error": str(e)}, status=status)
+    return error(str(e), status)
+
+
+def host_status(llmhost: LLMHost, observation, status: int = HTTPStatus.OK) -> Response:
+    """The response of a status check or a deployment: the observation, with the LLMHost's name."""
+    response = LLMHostApiStatus(
+        llmhost=llmhost.name, **LLMHostApiObservation.from_observation(observation).model_dump()
+    )
+    return Response(response.model_dump(mode="json"), status=status)
 
 
 class LLMHostViewBase(SmarterAuthenticatedAPIView):
@@ -93,7 +121,8 @@ class LLMHostView(LLMHostViewBase):
 
     def get(self, request: Request, *args, **kwargs):
         """Return an LLMHost that the user may read."""
-        return Response(LLMHostSerializer(self.get_llmhost(request, **kwargs)).data, status=HTTPStatus.OK)
+        llmhost = self.get_llmhost(request, **kwargs)
+        return Response(LLMHostApiLLMHost.from_model(llmhost, request.user).model_dump(mode="json"))
 
     def delete(self, request: Request, *args, **kwargs):
         """Destroy the Kubernetes resources of an LLMHost that the user owns, then delete it."""
@@ -113,7 +142,7 @@ class LLMHostStatusView(LLMHostViewBase):
     def get(self, request: Request, *args, **kwargs):
         llmhost = self.get_llmhost(request, **kwargs)
         observation = self.get_service().observe(llmhost, persist=llmhost.user_profile.user == request.user)
-        return JsonResponse({"llmhost": llmhost.name, **observation.to_dict()})
+        return host_status(llmhost, observation)
 
 
 class LLMHostLogsView(LLMHostViewBase):
@@ -124,12 +153,12 @@ class LLMHostLogsView(LLMHostViewBase):
         try:
             tail = int(request.query_params.get("tail", 200))
         except ValueError:
-            return JsonResponse({"error": "tail must be an integer."}, status=HTTPStatus.BAD_REQUEST)
+            return error("tail must be an integer.")
         try:
             logs = self.get_service().logs(llmhost, tail=tail)
         except LLMHostServiceError as e:
             return service_error(e)
-        return JsonResponse({"llmhost": llmhost.name, "logs": logs})
+        return Response(LLMHostApiLogs(llmhost=llmhost.name, logs=logs).model_dump(mode="json"))
 
 
 class LLMHostPlanView(LLMHostViewBase):
@@ -141,7 +170,7 @@ class LLMHostPlanView(LLMHostViewBase):
             resources = self.get_service().plan(llmhost)
         except LLMHostServiceError as e:
             return service_error(e)
-        return JsonResponse({"llmhost": llmhost.name, "resources": resources})
+        return Response(LLMHostApiPlan(llmhost=llmhost.name, resources=resources).model_dump(mode="json"))
 
 
 class LLMHostDeployView(LLMHostViewBase):
@@ -154,7 +183,7 @@ class LLMHostDeployView(LLMHostViewBase):
         except LLMHostServiceError as e:
             return service_error(e)
         invalidate_all_cached_llmhosts_for_user_profile(llmhost.user_profile)
-        return JsonResponse({"llmhost": llmhost.name, **observation.to_dict()}, status=HTTPStatus.ACCEPTED)
+        return host_status(llmhost, observation, HTTPStatus.ACCEPTED)
 
 
 class LLMHostUndeployView(LLMHostViewBase):
@@ -171,7 +200,10 @@ class LLMHostUndeployView(LLMHostViewBase):
         except LLMHostServiceError as e:
             return service_error(e)
         invalidate_all_cached_llmhosts_for_user_profile(llmhost.user_profile)
-        return JsonResponse({"llmhost": llmhost.name, "status": llmhost.status, "message": llmhost.status_message})
+        response = LLMHostApiUndeployed(
+            llmhost=llmhost.name, status=llmhost.status, message=llmhost.status_message  # type: ignore[arg-type]
+        )
+        return Response(response.model_dump(mode="json"))
 
 
 class LLMHostReportView(SmarterAuthenticatedAPIView):
@@ -181,7 +213,7 @@ class LLMHostReportView(SmarterAuthenticatedAPIView):
         llmhosts = LLMHost.objects.with_ownership_permission_for(user=request.user).select_related(  # type: ignore[attr-defined]
             "user_profile__user"
         )
-        return JsonResponse(LLMHostService().report(llmhosts.order_by("name")))
+        return Response(LLMHostService().report(llmhosts.order_by("name")))
 
 
 class LLMHostDiscoverView(SmarterAuthenticatedAPIView):
@@ -192,7 +224,7 @@ class LLMHostDiscoverView(SmarterAuthenticatedAPIView):
         try:
             limit = max(1, min(int(params.get("limit", 20)), MAX_DISCOVERY_RESULTS))
         except ValueError:
-            return JsonResponse({"error": "limit must be an integer."}, status=HTTPStatus.BAD_REQUEST)
+            return error("limit must be an integer.")
         try:
             models = LLMHostService().search_models(
                 query=params.get("q"),
@@ -202,7 +234,8 @@ class LLMHostDiscoverView(SmarterAuthenticatedAPIView):
             )
         except LLMHostServiceError as e:
             return service_error(e)
-        return JsonResponse({"models": [model.to_dict() for model in models]})
+        response = LLMHostApiDiscovery(models=[LLMHostApiCatalogModel.from_model_info(model) for model in models])
+        return Response(response.model_dump(mode="json"))
 
 
 class LLMHostDiscoverManifestView(SmarterAuthenticatedAPIView):
@@ -212,7 +245,7 @@ class LLMHostDiscoverManifestView(SmarterAuthenticatedAPIView):
         params = request.query_params
         repository = params.get("repository")
         if not repository:
-            return JsonResponse({"error": "repository is required."}, status=HTTPStatus.BAD_REQUEST)
+            return error("repository is required.")
         try:
             manifest = LLMHostService().draft_manifest(
                 repository,
@@ -223,13 +256,18 @@ class LLMHostDiscoverManifestView(SmarterAuthenticatedAPIView):
             )
         except LLMHostServiceError as e:
             return service_error(e)
-        return JsonResponse({"manifest": manifest})
+        return Response(LLMHostApiDraftManifest(manifest=manifest).model_dump(mode="json"))
 
 
-class LLMHostListView(SmarterAuthenticatedListAPIView):
+class LLMHostListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     """The LLMHosts that the user may read."""
 
     serializer_class = LLMHostSerializer
+    contract_model = LLMHostApiLLMHost
+
+    def item(self, row):
+        """An LLMHost of the response, whose ``canDelete`` is the requesting user's."""
+        return LLMHostApiLLMHost.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[LLMHost]:
         return LLMHost.objects.with_read_permission_for(user=self.request.user).order_by("name")  # type: ignore[attr-defined]

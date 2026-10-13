@@ -80,7 +80,42 @@ class SecretApiSecret(AccountApiModel):
         )
 
 
+class SecretApiSecretRef(AccountApiModel):
+    """A Secret, as another resource refers to it, e.g. a Provider's api key: its name, never its value."""
+
+    id: int = Field(..., description="The Secret's primary key.")
+    name: str = Field(..., description="The Secret's name.")
+    manifest_url: Optional[str] = Field(None, description="The url of the Secret's manifest in the web console.")
+    ready: bool = Field(..., description="Whether the Secret has a value that can be decrypted.")
+    can_delete: bool = Field(..., description="Whether the requesting user may delete the Secret now.")
+
+    @classmethod
+    def from_model(cls, secret: "Secret", user: object = None) -> "SecretApiSecretRef":
+        """
+        The contract's reference to a Secret.
+
+        :param secret: The row.
+        :type secret: smarter.apps.secret.models.Secret
+        :param user: The requesting user, for ``can_delete``.
+        :type user: object
+        :returns: The model.
+        :rtype: SecretApiSecretRef
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.secret.manifest.models.secret.const import (
+            MANIFEST_KIND as SECRET_KIND,
+        )
+
+        return cls(
+            id=secret.pk,
+            name=secret.name,
+            manifest_url=secret.manifest_url,
+            ready=secret.ready,
+            can_delete=user_can_delete(secret, SECRET_KIND, user),
+        )
+
+
 SECRET_API_MODELS = (SecretApiSecret,)
 """The models whose JSON Schemas the Smarter api's OpenAPI document includes."""
 
-__all__ = ["SECRET_API_MODELS", "SecretApiSecret"]
+__all__ = ["SECRET_API_MODELS", "SecretApiSecret", "SecretApiSecretRef"]

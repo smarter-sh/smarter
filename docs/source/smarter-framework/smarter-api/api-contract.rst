@@ -46,6 +46,17 @@ against the platform's real responses. It covers:
      - ``GET /api/v1/vectorstores/``, a vectorstore, its status, documents and snapshots, and their
        maintenance: deploy and undeploy, add documents (text, a url, or files as
        ``multipart/form-data``), remove one, search, take a snapshot, and restore one.
+   * - The LLMHosts' REST api
+     - ``GET /api/v1/llmhosts/``, an LLMHost, its status, logs and deployment plan, a report of the
+       user's LLMHosts, model discovery and a drafted manifest, and deploy and undeploy.
+   * - The plugins' REST reads
+     - ``GET /api/v1/plugins/``, the user's plugins' metadata, and ``GET /api/v1/plugins/{plugin_id}/``,
+       a plugin's manifest, which the platform serves only while its ``ALLOW_API_GET`` switch is on.
+   * - The Providers' REST reads
+     - ``GET /api/v1/providers/``, a Provider by name, its models, and one of its models.
+   * - The Proxies' list
+     - ``GET /api/v1/proxy/``. A Proxy's passthrough is its provider's api, which Smarter does not
+       describe.
 
 The other routes of a covered family are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason that it is
@@ -188,25 +199,25 @@ Their responses are built from each app's contract models, e.g.
 :mod:`smarter.apps.plugin.contract.models`. The models describe the JSON that the views returned
 before they were modeled, which clients already read, with two corrections:
 
-- ``canDelete`` is computed for the requesting user, for the LLMClients, Guardrails, Secrets,
-  MCPClients and vectorstores. The
+- ``canDelete`` is computed for the requesting user, for every family. The
   views called their serializers without the request, so it was always false.
 - An LLMClient's api key is its token's public ``key_id``. It was the token's primary key, its digest.
 
 The LLMClients' and Secrets' REST views require an api key of a superuser, and refuse other users with
-a 403. Other users read their resources with the cli api's ``get`` and ``describe``. The Guardrails',
-MCPClients' and vectorstores' views accept any api key, and return only what its user may read; their
-actions that change something require the user to own the resource. Each operation's description says
-which.
+a 403. Other users read their resources with the cli api's ``get`` and ``describe``. The other
+families' views accept any api key, and return only what its user may read; their actions that change
+something require the user to own the resource. Each operation's description says which. The Proxies'
+and vectorstores' routes exist only when the platform enables them (``SMARTER_ENABLE_PROXY``,
+``SMARTER_ENABLE_VECTORSTORE``).
 
-A Guardrail's events keep the snake_case keys that their serializer returned, e.g.
-``guardrail_name``, unlike the rest of the REST api, which is camelCase, because clients already read
-them.
+A Guardrail's events, and a catalog's models in an LLMHost discovery, keep the snake_case keys that
+they had, e.g. ``guardrail_name`` and ``parameter_count``, unlike the rest of the REST api, which is
+camelCase, because clients already read them.
 
 Besides the reads, the document publishes the actions that the SDKs use: a Guardrail's dry run,
 which changes nothing, an MCPClient's reconnection and tool call, and a vectorstore's maintenance. A
 tool runs on the MCP server, and may change what the server manages, so only the MCPClient's owner may
-call it. Deploying a vectorstore creates billable infrastructure. Work that continues in the background
+call it. Deploying a vectorstore or an LLMHost creates billable infrastructure. Work that continues in the background
 answers ``202``, e.g. a deployment, or documents that are queued to be loaded, and a new snapshot
 answers ``201``.
 

@@ -66,19 +66,16 @@ class LLMHostObservation:
     checked_at: Optional[datetime.datetime] = None
 
     def to_dict(self) -> SmarterDictType:
-        """The observation, in camelCase, for JSON responses."""
-        data = asdict(self)
-        return {
-            "status": data["status"],
-            "message": data["message"],
-            "replicas": data["replicas"],
-            "readyReplicas": data["ready_replicas"],
-            "healthy": data["healthy"],
-            "endpoint": data["endpoint"],
-            "publicUrl": data["public_url"],
-            "pods": data["pods"],
-            "checkedAt": self.checked_at.isoformat() if self.checked_at else None,
-        }
+        """
+        The observation, in camelCase, for JSON responses: :class:`~smarter.apps.llmhost.contract.models.LLMHostApiObservation`, dumped.
+
+        :returns: The observation's JSON.
+        :rtype: SmarterDictType
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmhost.contract.models import LLMHostApiObservation
+
+        return LLMHostApiObservation.from_observation(self).model_dump(mode="json")
 
 
 def summarize_pod(pod: SmarterDictType) -> SmarterDictType:
@@ -197,8 +194,19 @@ def build_report(llmhosts: Iterable["LLMHost"]) -> SmarterDictType:
     """
     Summarize LLMHosts: their count by status and engine, the GPUs they use, and their cost.
 
+    The report is built as :class:`~smarter.apps.llmhost.contract.models.LLMHostApiReport`, which the
+    api publishes, and returned as its JSON.
+
     :param llmhosts: LLMHost instances.
+    :returns: The report's JSON.
     """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.llmhost.contract.models import (
+        LLMHostApiReport,
+        LLMHostApiReportHost,
+        LLMHostApiReportTotals,
+    )
+
     hosts = []
     by_status: dict[str, int] = {}
     by_engine: dict[str, int] = {}
@@ -219,41 +227,42 @@ def build_report(llmhosts: Iterable["LLMHost"]) -> SmarterDictType:
         if cost is not None:
             estimated_cost += cost
         hosts.append(
-            {
-                "name": llmhost.name,
-                "owner": llmhost.user_profile.user.username,
-                "status": llmhost.status,
-                "engine": llmhost.inference_engine,
-                "model": llmhost.model_repository,
-                "task": llmhost.model_task,
-                "replicas": llmhost.replicas,
-                "readyReplicas": llmhost.ready_replicas,
-                "compute": compute.name if (compute := getattr(llmhost, "compute", None)) else None,
-                "gpus": host_gpus,
-                "gpuType": llmhost.gpu_type or None,
-                "endpoint": llmhost.endpoint_url or None,
-                "publicUrl": llmhost.public_url or None,
-                "deployedAt": llmhost.deployed_at.isoformat() if llmhost.deployed_at else None,
-                "uptimeHours": llmhost.uptime_hours,
-                "costPerHour": str(host_cost_per_hour) if host_cost_per_hour is not None else None,
-                "estimatedCost": str(cost) if cost is not None else None,
-            }
+            LLMHostApiReportHost(
+                name=llmhost.name,
+                owner=llmhost.user_profile.user.username,
+                status=llmhost.status,
+                engine=llmhost.inference_engine,
+                model=llmhost.model_repository,
+                task=llmhost.model_task,
+                replicas=llmhost.replicas,
+                ready_replicas=llmhost.ready_replicas,
+                compute=compute.name if (compute := getattr(llmhost, "compute", None)) else None,
+                gpus=host_gpus,
+                gpu_type=llmhost.gpu_type or None,
+                endpoint=llmhost.endpoint_url or None,
+                public_url=llmhost.public_url or None,
+                deployed_at=llmhost.deployed_at,
+                uptime_hours=llmhost.uptime_hours,
+                cost_per_hour=str(host_cost_per_hour) if host_cost_per_hour is not None else None,
+                estimated_cost=str(cost) if cost is not None else None,
+            )
         )
     deployed_states = Status.deployed()
-    return {
-        "totals": {
-            "llmhosts": len(hosts),
-            "deployed": sum(count for status, count in by_status.items() if status in deployed_states),
-            "active": by_status.get(Status.ACTIVE.value, 0),
-            "errors": by_status.get(Status.ERROR.value, 0),
-            "gpus": gpus,
-            "costPerHour": str(cost_per_hour),
-            "estimatedCost": str(estimated_cost),
-        },
-        "byStatus": by_status,
-        "byEngine": by_engine,
-        "llmhosts": hosts,
-    }
+    report = LLMHostApiReport(
+        totals=LLMHostApiReportTotals(
+            llmhosts=len(hosts),
+            deployed=sum(count for status, count in by_status.items() if status in deployed_states),
+            active=by_status.get(Status.ACTIVE.value, 0),
+            errors=by_status.get(Status.ERROR.value, 0),
+            gpus=gpus,
+            cost_per_hour=str(cost_per_hour),
+            estimated_cost=str(estimated_cost),
+        ),
+        by_status=by_status,
+        by_engine=by_engine,
+        llmhosts=hosts,
+    )
+    return report.model_dump(mode="json")
 
 
 __all__ = ["HealthProber", "LLMHostObservation", "build_report", "in_cluster", "interpret", "summarize_pod"]
