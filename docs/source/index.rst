@@ -402,12 +402,12 @@ MCPClient, and four guardrails, and it contains no code.
    :maxdepth: 1
    :caption: Teaching and Training
 
-   smarter-instructors/example-courses/index
    smarter-instructor
+   smarter-instructors/example-courses/index
 
 .. toctree::
    :maxdepth: 1
-   :caption: Table of Contents
+   :caption: Smarter Docs
 
    smarter-platform
    smarter-resources
