@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from smarter.apps.account.contract.models import AccountApiUserDetail
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.api.signals import api_request_completed
@@ -103,29 +104,39 @@ def get_user_for_operation(request, user_id: int) -> tuple[User, UserProfile] | 
     return user, user_profile
 
 
+def user_response(user) -> Response:
+    """
+    The response of a user: its :class:`AccountApiUserDetail`.
+
+    :param user: The user.
+    :type user: django.contrib.auth.models.User
+    :returns: The response.
+    :rtype: rest_framework.response.Response
+    """
+    return Response(AccountApiUserDetail.from_model(user).model_dump(mode="json"), status=HTTPStatus.OK.value)
+
+
 # pylint: disable=too-many-return-statements
 def get_user(request, user_id: Optional[int] = None):
-    """Get an account json representation by id."""
+    """Get a user's json representation, an :class:`AccountApiUserDetail`, by id."""
     logger.debug("%s.get_user() - user_id: %s, request: %s", request, user_id, request)
     if user_id is None:
-        serializer = UserSerializer(request.user)
         logger.debug("UserListView.get_queryset() - returning current user: %s", request.user)
-        return Response(serializer.data, status=HTTPStatus.OK.value)
+        return user_response(request.user)
 
     request_user = get_resolved_user(request.user)
     if request_user is None:
         logger.debug("UserListView.get_queryset() - user not found for request: %s", request)
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+        return JsonResponse({"detail": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
     # if the user is a superuser, they can get any user
     if request_user.is_superuser:
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             logger.debug("UserListView.get_queryset() - user not found for id: %s", user_id)
-            return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
-        serializer = UserSerializer(user)
+            return JsonResponse({"detail": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
         logger.debug("UserListView.get_queryset() - returning user for id %s: %s", user_id, user)
-        return Response(serializer.data, status=HTTPStatus.OK.value)
+        return user_response(user)
 
     # if the user is a staff member, they can get users within their own account
     if request_user.is_staff:
@@ -134,18 +145,16 @@ def get_user(request, user_id: Optional[int] = None):
             user = UserProfile.objects.get(account=account, user_id=user_id).user
         except (UserProfile.DoesNotExist, User.DoesNotExist):
             logger.debug("UserListView.get_queryset() - user not found for id: %s", user_id)
-            return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=HTTPStatus.OK)
+            return JsonResponse({"detail": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
+        return user_response(user)
 
     # mere mortals can only get their own account
     if user_id != request.user.id:
         logger.debug("UserListView.get_queryset() - unauthorized access attempt for user id: %s", user_id)
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
+        return JsonResponse({"detail": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
-    serializer = UserSerializer(request.user)
     logger.debug("UserListView.get_queryset() - returning current user: %s", request.user)
-    return Response(serializer.data, status=HTTPStatus.OK.value)
+    return user_response(request.user)
 
 
 def create_user(request: Request):
@@ -300,7 +309,7 @@ class UserView(AccountViewBase):
     def handle_exception(self, exc):
         if isinstance(exc, Http404):
             logger.debug("%s.handle_exception() - Http404: %s", self.formatted_class_name, exc)
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         logger.error("%s.handle_exception() - unhandled exception: %s", self.formatted_class_name, exc)
         return super().handle_exception(exc)
 
@@ -349,14 +358,13 @@ class UserListView(AccountListViewBase):
             return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     def get_list(self, request: Request):
-        """Get a list of all users the requesting user has access to."""
+        """Get a list of all users the requesting user has access to, as :class:`AccountApiUserDetail` models."""
         logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
         queryset = self.get_queryset()
         if isinstance(queryset, Response):
             return queryset
-        serializer = UserSerializer(queryset, many=True)
-        response = Response(serializer.data, status=HTTPStatus.OK.value)
-        return response
+        users = [AccountApiUserDetail.from_model(user).model_dump(mode="json") for user in queryset]
+        return Response(users, status=HTTPStatus.OK.value)
 
     def get(self, request: Request, *args, **kwargs):
         """Handle GET requests to retrieve the list of users."""

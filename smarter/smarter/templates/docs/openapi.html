@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="The Smarter api's OpenAPI 3.1 contract." />
+    <meta name="keywords" content="Smarter, AI, OpenAPI, API, SDK" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Smarter OpenAPI Contract" />
+    <meta property="og:url" content="{{ branding.og_url }}" />
+    <meta property="og:site_name" content="Smarter" />
+    <title>Smarter OpenAPI Contract</title>
+    <link rel="icon" href="{% static 'images/logo/favicon256x256.png' %}" type="image/png" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+    <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/swagger-ui-dist/swagger-ui.css' %}" />
+    <style>
+      .swagger-ui .btn.authorize {
+        color: rgba(255, 87, 51, 0.75);
+        border-color: rgba(255, 87, 51, 0.75);
+      }
+      .openapi-intro {
+        max-width: 1460px;
+        margin: 0 auto;
+        padding: 24px 20px 0 20px;
+      }
+    </style>
+  </head>
+  <body>
+    {% include 'cms/base/header.html' %}
+
+    <div class="openapi-intro">
+      <h1 class="fs-2x text-gray-900 mb-4">Smarter OpenAPI Contract</h1>
+      <p class="fs-5 text-gray-700">
+        The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api, and the REST
+        reads. Generate a client or an SDK from it, in any language. Authorize with an api key, as
+        <code>Token &lt;api key&gt;</code>, to try the operations against this platform.
+      </p>
+      <p class="fs-5">
+        <a href="{% url 'docs:openapi-json' %}" download="openapi.json">Download openapi.json</a>
+        &nbsp;·&nbsp;
+        <a href="{% url 'docs:json_schemas' %}">SAM JSON Schemas</a>
+        &nbsp;·&nbsp;
+        <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-api/api-contract.html" target="_blank"
+          >About the contract</a
+        >
+      </p>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    {% include 'cms/base/footer.html' %}
+
+    <script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-bundle.js' %}"></script>
+    <script>
+      window.addEventListener("load", function () {
+        window.ui = SwaggerUIBundle({
+          url: "{% url 'docs:openapi-json' %}",
+          dom_id: "#swagger-ui",
+          deepLinking: true,
+          persistAuthorization: true,
+          presets: [SwaggerUIBundle.presets.apis],
+          layout: "BaseLayout",
+        });
+      });
+    </script>
+    <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
+    <script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
+  </body>
+</html>

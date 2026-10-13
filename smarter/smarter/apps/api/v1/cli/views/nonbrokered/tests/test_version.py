@@ -1,9 +1,11 @@
 """Test Api v1 CLI non-brokered version command."""
 
 from http import HTTPStatus
+from unittest import mock
 
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import (
@@ -48,3 +50,23 @@ class TestApiCliV1Version(ApiV1CliTestBase):
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
         self.assertEqual(metadata[SCLIResponseMetadata.COMMAND], SmarterJournalCliCommands.VERSION.value)
+
+    def assert_journaled_error(self, response: SmarterDictType, status: int, error_class: str, command: str) -> None:
+        """Assert that an error response is the journal's error envelope, not a bare {"error": "..."}."""
+        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.METADATA]["command"], command)
+        error = response["error"]
+        self.assertIsInstance(error, dict)
+        self.assertEqual(error["errorClass"], error_class)
+        self.assertEqual(error["status"], status)
+
+    def test_version_error_is_journaled(self) -> None:
+        """An error, e.g. GitHub's, is returned as a journaled error response, with its status."""
+        path = reverse(self.namespace + ApiV1CliReverseViews.version, kwargs=None)
+        with mock.patch(
+            "smarter.apps.api.v1.cli.views.nonbrokered.version.ApiV1CliVersionApiView.cli_version",
+            side_effect=APIV1CLIViewError("Failed to get version from GitHub."),
+        ):
+            response, status = self.get_response(path=path)
+        self.assertEqual(status, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assert_journaled_error(response, HTTPStatus.INTERNAL_SERVER_ERROR, "APIV1CLIViewError", "version")
