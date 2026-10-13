@@ -1,0 +1,1213 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMLLMClientCustomDomain": {
+      "description": "Smarter API LLMClient Manifest LLMClient.spec.config.customDomain.",
+      "properties": {
+        "aws_hosted_zone_id": {
+          "description": "LLMClient.spec.configuration.customDomain.aws_hosted_zone_id[str]. Required. The AWS hosted zone ID for this domain name. Example: Z08678681MEAGNEVHT5I8",
+          "title": "Aws Hosted Zone Id",
+          "type": "string"
+        },
+        "domain_name": {
+          "description": "LLMClient.spec.configuration.customDomain.domain_name[str]. Required. The domain name. Example: example.com",
+          "title": "Domain Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "aws_hosted_zone_id",
+        "domain_name"
+      ],
+      "title": "SAMLLMClientCustomDomain",
+      "type": "object"
+    },
+    "SAMLLMClientMetadata": {
+      "description": "Smarter API LLMClient Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMLLMClientMetadata",
+      "type": "object"
+    },
+    "SAMLLMClientSpec": {
+      "description": "Smarter API LLMClient Manifest LLMClient.spec.",
+      "properties": {
+        "apiKey": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.apiKey[str]. Optional. The name of the API key that this llmclient uses for authentication. Example: 'my_api_key'. API keys are only necessary for llmclients that are not public facing. This is the name of the API key that is used to authenticate the llmclient with the Smarter API. API keys are issued by a Smarter platform administrator and are used to authenticate the llmclient with the Smarter API.",
+          "title": "Apikey"
+        },
+        "config": {
+          "$ref": "#/$defs/SAMLLMClientSpecConfig",
+          "description": "LLMClient.spec.config[object]. The configuration for the LLMClient."
+        },
+        "functions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.functions[list]. Optional. The built-in Smarter Functions to add to the LLMClient. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
+          "title": "Functions"
+        },
+        "guardrails": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.guardrails[list]. Optional. The names of the Guardrails that protect the LLMClient's prompts. Example: ['pii_redaction_input', 'prompt_injection_keyword_input']. Each must be a Guardrail that you own, or that is shared with you, such as Smarter's built-in guardrails. Input guardrails run on the user's message before it is sent to the LLM, and output guardrails on the LLM's reply before it is returned to the user, in order of their priority. Experimental.",
+          "title": "Guardrails"
+        },
+        "mcpClients": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.mcpClients[list]. Optional. The names of the MCPClients whose MCP servers' tools the LLMClient offers the LLM. Example: ['deepwiki']. Each must be an MCPClient that you own, or that is shared with you. Experimental.",
+          "title": "Mcpclients"
+        },
+        "plugins": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.searchTerms[list]. Optional. The Plugins to add to the LLMClient. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/plugins/ for more information.",
+          "title": "Plugins"
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMLLMClientSpec",
+      "type": "object"
+    },
+    "SAMLLMClientSpecConfig": {
+      "description": "Smarter API LLMClient Manifest LLMClient.spec.config.\n\n``prompt``, which is required, configures the LLMClient, and ``styles``, which is optional, the\nlook of its chat.\n\nManifests written before the split have their settings directly in ``spec.config``. Apply\nrejects them, with an error that says where each setting belongs now. See\n:meth:`smarter.apps.llmclient.manifest.brokers.llmclient.SAMLLMClientBroker.raise_for_unknown_keys`.",
+      "properties": {
+        "prompt": {
+          "$ref": "#/$defs/SAMLLMClientSpecConfigPrompt",
+          "description": "LLMClient.spec.configuration.prompt[object]. Required. The LLMClient's LLM provider, model and system prompt, the text of its chat, and where it is published."
+        },
+        "styles": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientSpecConfigStyles"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.styles[object]. Optional. The look of the LLMClient's chat, in the Smarter workbench and on every page that embeds it: its logo, background image, fonts and colors. See https://docs.smarter.sh/en/latest/smarter-resources/llmclient/styles.html"
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "SAMLLMClientSpecConfig",
+      "type": "object"
+    },
+    "SAMLLMClientSpecConfigPrompt": {
+      "description": "Smarter API LLMClient Manifest LLMClient.spec.config.prompt.\n\nWhat the LLMClient is and does: its LLM provider, model and system prompt, the text of its chat\n(its name, welcome message, example prompts and placeholder), and where it is published.",
+      "properties": {
+        "allowedOrigins": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "LLMClient.spec.configuration.prompt.allowed_origins[list[str]]. Optional. The origins of the web pages that may call this llmclient from a browser, with the @smarter.sh/ui-chat React component, in addition to those that the Smarter platform allows. An origin is a scheme, a host and an optional port, without a path or a wildcard. Example: ['https://www.example.com', 'http://localhost:5173'].",
+          "title": "Allowedorigins"
+        },
+        "appAssistant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.app_assistant[str]. Optional. The assistant name of the llmclient. Example: 'Joe'. This is the fictitious assistant name that will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appassistant"
+        },
+        "appExamplePrompts": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.app_example_prompts[list]. Optional. A list of example prompts to add to new prompt sessions. These are intended to be brief, and the list is assumed to include only a few examples. Example: ['How do I get a refund?', 'What is the return policy?']. These are intended to help the user to understand the llmclient's capabilities. These will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appexampleprompts"
+        },
+        "appFileAttachment": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "LLMClient.spec.configuration.prompt.app_file_attachment[bool]. Optional. Whether the llmclient supports file attachments. Defaults to False. When set to True, a file attachment button will be displayed in the prompt input box of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appfileattachment"
+        },
+        "appInfoUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.app_info_url[str]. Optional. The custom info URL of the llmclient. This is a user control button located on the right-hand side of the header of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appinfourl"
+        },
+        "appName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.app_name[str]. Optional. The name of the llmclient. Example: 'Sales Support LLMClient'. This is the name that will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appname"
+        },
+        "appPlaceholder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.app_placeholder[str]. Optional. The text placeholder added to the prompt input box for all new prompt sessions. Example: 'ask me anything...'. The place holder will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appplaceholder"
+        },
+        "appWelcomeMessage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.app_welcome_message[str]. Optional. The welcome message of the llmclient. Example: 'Welcome to Smarter's sales support llmclient!' The welcome messages will appear as the first assistant message in each message list from the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
+          "title": "Appwelcomemessage"
+        },
+        "customDomain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientCustomDomain"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.custom_domain[str]. Optional. The custom domain to use for the llmclient. Example: example.com"
+        },
+        "defaultMaxTokens": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.default_max_tokens[int]. Optional. The default max tokens to use for the llmclient. This defaults to 2048.\nThe max tokens is an integer value that controls the maximum number of tokens in the llmclient's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
+          "title": "Defaultmaxtokens"
+        },
+        "defaultModel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.default_model[str]. Optional. The default model to use for the llmclient. This changes routinely and is currently defaults to gpt-6-luna",
+          "title": "Defaultmodel"
+        },
+        "defaultSystemRole": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.default_system_role[str]. Optional. The default system prompt to use for the llmclient. This defaults to the following value:\nYou are a helpful llmclient. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time..\nThe system prompt is the first message in the conversation and is used to set the context for the llmclient. It is important to keep this prompt short, as it is included in the token count for each message. The maximum length of the system prompt is 2048 characters.",
+          "title": "Defaultsystemrole"
+        },
+        "defaultTemperature": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.default_temperature[float]. Optional. The default temperature to use for the llmclient. This defaults to 1.0.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the llmclient's responses. A value of 0 means that the llmclient will always choose the most likely response, while a value of 1 means that the llmclient will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
+          "title": "Defaulttemperature"
+        },
+        "deployed": {
+          "default": false,
+          "description": "LLMClient.spec.configuration.prompt.deployed[bool]. Required. Whether the llmclient is deployed. Deployed means that the llmclient is available for use outside the Smarter Prompt Engineer Workbench. Published llmclients have their own subdomain, Kubernetes ingress, and TLS/SSL certificate.",
+          "title": "Deployed",
+          "type": "boolean"
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.provider[str]. Optional. The provider to use for the llmclient.",
+          "title": "Provider"
+        },
+        "subdomain": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.configuration.prompt.subdomain[str]. Optional. The subdomain to use for the llmclient for published public urls. Example: https://<subdomain>.3141-5926-5359.api.example.com",
+          "title": "Subdomain"
+        }
+      },
+      "title": "SAMLLMClientSpecConfigPrompt",
+      "type": "object"
+    },
+    "SAMLLMClientSpecConfigStyles": {
+      "additionalProperties": false,
+      "description": "Smarter API LLMClient Manifest LLMClient.spec.config.styles.\n\nThe look of Smarter Chat for this LLMClient. Every setting is optional. See the module's docstring.",
+      "properties": {
+        "appBackgroundImageSize": {
+          "anyOf": [
+            {
+              "enum": [
+                "cover",
+                "contain",
+                "auto"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.appBackgroundImageSize[str]. Optional. How the background image fills the conversation: 'cover' (the default) fills it and crops the image's edges, 'contain' shows the whole image, and 'auto' shows the image at its own size, repeated like tiles.",
+          "title": "Appbackgroundimagesize"
+        },
+        "appBackgroundImageUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.appBackgroundImageUrl[str]. Optional. The url of an image that is displayed behind the conversation. Choose a quiet image, so that the messages stay readable, or tint it with a semi-transparent messageList.backgroundColor. Example: 'https://cdn.example.com/images/background.png'.",
+          "title": "Appbackgroundimageurl"
+        },
+        "appLogoUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.appLogoUrl[str]. Optional. The url of the LLMClient's logo, a square image that is displayed in a circle at the left of the chat's header, and on the LLMClient's card in the web console. chatscope's Avatar. Example: 'https://cdn.example.com/images/logo.png'.",
+          "title": "Applogourl"
+        },
+        "assistantAvatarUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.assistantAvatarUrl[str]. Optional. The url of a small square picture, displayed in a circle beside each of the assistant's messages. chatscope's Message Avatar. Example: 'https://cdn.example.com/images/assistant.png'.",
+          "title": "Assistantavatarurl"
+        },
+        "borderRadius": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.borderRadius[str]. Optional. How round the corners of the message bubbles and of the message input box are. '0' is square. chatscope's $default-border-radius. Example: '0.7em' (the default) or '18px'.",
+          "title": "Borderradius"
+        },
+        "buttons": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesButtons"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.buttons[object]. Optional. The chat's buttons."
+        },
+        "conversationHeader": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesConversationHeader"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.conversationHeader[object]. Optional. The bar at the top of the chat."
+        },
+        "fontFamily": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.fontFamily[str]. Optional. The chat's fonts, the first that the visitor's browser has, in order. chatscope's $default-font-family. Example: '\"Fredoka\", system-ui, sans-serif'.",
+          "title": "Fontfamily"
+        },
+        "fontSize": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.fontSize[str]. Optional. The size of the chat's text, of which every other size is a proportion. chatscope's $main-container-font-size. Example: '16px' or '1.1rem'.",
+          "title": "Fontsize"
+        },
+        "googleFont": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.googleFont[str]. Optional. The name of a font from https://fonts.google.com, which the chat downloads. When fontFamily is not set, the chat uses this font. Example: 'Fredoka'.",
+          "title": "Googlefont"
+        },
+        "incomingMessage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesMessage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.incomingMessage[object]. Optional. The assistant's message bubbles, on the left."
+        },
+        "mainContainer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesMainContainer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.mainContainer[object]. Optional. The frame around the whole chat."
+        },
+        "messageInput": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesMessageInput"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageInput[object]. Optional. The box in which the user types."
+        },
+        "messageList": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesMessageList"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageList[object]. Optional. The area that holds the conversation."
+        },
+        "outgoingMessage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesMessage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.outgoingMessage[object]. Optional. The user's message bubbles, on the right."
+        },
+        "typingIndicator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMClientStylesTypingIndicator"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.typingIndicator[object]. Optional. The indicator that the assistant is answering."
+        },
+        "userAvatarUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.userAvatarUrl[str]. Optional. The url of a small square picture, displayed in a circle beside each of the user's messages. chatscope's Message Avatar. Example: 'https://cdn.example.com/images/user.png'.",
+          "title": "Useravatarurl"
+        }
+      },
+      "title": "SAMLLMClientSpecConfigStyles",
+      "type": "object"
+    },
+    "SAMLLMClientStatus": {
+      "description": "Smarter API LLMClient Manifest - Status class.",
+      "properties": {
+        "accountNumber": {
+          "description": "LLMClient.status.account_number: The account owner of this LLMClient. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "customUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "LLMClient.status.customUrl: The custom URL for this LLMClient. Read only.",
+          "title": "Customurl"
+        },
+        "defaultHost": {
+          "description": "LLMClient.status.defaultHost: The default host URL for this LLMClient. Read only.",
+          "title": "Defaulthost",
+          "type": "string"
+        },
+        "defaultUrl": {
+          "description": "LLMClient.status.defaultUrl: The default URL for this LLMClient. Read only.",
+          "title": "Defaulturl",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "deployed": {
+          "description": "LLMClient.status.deployed: Whether this LLMClient is currently deployed. Read only.",
+          "title": "Deployed",
+          "type": "boolean"
+        },
+        "dnsVerificationStatus": {
+          "description": "LLMClient.status.dnsVerificationStatus: The DNS verification status for this LLMClient. Read only.",
+          "title": "Dnsverificationstatus",
+          "type": "string"
+        },
+        "hostname": {
+          "description": "LLMClient.status.hostname: The hostname for this LLMClient. Read only.",
+          "title": "Hostname",
+          "type": "string"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "sandboxHost": {
+          "description": "LLMClient.status.sandboxHost: The sandbox host URL for this LLMClient. Read only.",
+          "title": "Sandboxhost",
+          "type": "string"
+        },
+        "sandboxUrl": {
+          "description": "LLMClient.status.sandboxUrl: The sandbox URL for this LLMClient. Read only.",
+          "title": "Sandboxurl",
+          "type": "string"
+        },
+        "url": {
+          "description": "LLMClient.status.url: The URL for this LLMClient. Read only.",
+          "title": "Url",
+          "type": "string"
+        },
+        "urlChatConfig": {
+          "description": "LLMClient.status.urlChatConfig: The prompt config URL for this LLMClient. Read only.",
+          "title": "Urlchatconfig",
+          "type": "string"
+        },
+        "urlChatapp": {
+          "description": "LLMClient.status.urlChatapp: The chatapp URL for this LLMClient. Read only.",
+          "title": "Urlchatapp",
+          "type": "string"
+        },
+        "urlLLMClient": {
+          "description": "LLMClient.status.urlLLMClient: The llmclient URL for this LLMClient. Read only.",
+          "title": "Urlllmclient",
+          "type": "string"
+        },
+        "username": {
+          "description": "LLMClient.status.username: The Smarter user who created this LLMClient. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username",
+        "deployed",
+        "defaultHost",
+        "defaultUrl",
+        "customUrl",
+        "sandboxHost",
+        "sandboxUrl",
+        "hostname",
+        "url",
+        "urlLLMClient",
+        "urlChatapp",
+        "urlChatConfig",
+        "dnsVerificationStatus"
+      ],
+      "title": "SAMLLMClientStatus",
+      "type": "object"
+    },
+    "SAMLLMClientStylesButtons": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.buttons``: the send and attach buttons, and the header's buttons.\n\nchatscope's ``Button``, class ``.cs-button``.",
+      "properties": {
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.buttons.color[str]. Optional. The color of the buttons' icons. chatscope's $button-color. Example: '#6ea9d7'.",
+          "title": "Color"
+        }
+      },
+      "title": "SAMLLMClientStylesButtons",
+      "type": "object"
+    },
+    "SAMLLMClientStylesConversationHeader": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.conversationHeader``: the bar at the top of the chat.\n\nIt holds the logo, the LLMClient's name, its model, and the buttons. chatscope's\n``ConversationHeader``, class ``.cs-conversation-header``.",
+      "properties": {
+        "backgroundColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.conversationHeader.backgroundColor[str]. Optional. The header's background color. chatscope's $conversation-header-bg-color. Example: '#1b1f3b'.",
+          "title": "Backgroundcolor"
+        },
+        "borderColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.conversationHeader.borderColor[str]. Optional. The color of the line under the header. chatscope's $conversation-header-border-bottom. Example: '#ff5733'.",
+          "title": "Bordercolor"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.conversationHeader.color[str]. Optional. The color of the LLMClient's name. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
+          "title": "Color"
+        },
+        "infoColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.conversationHeader.infoColor[str]. Optional. The color of the line under the name, which names the LLM provider and model. chatscope's $conversation-header-info-color. Example: '#c0c4e0'.",
+          "title": "Infocolor"
+        }
+      },
+      "title": "SAMLLMClientStylesConversationHeader",
+      "type": "object"
+    },
+    "SAMLLMClientStylesMainContainer": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.mainContainer``: the frame around the whole chat.\n\nchatscope's ``MainContainer``, class ``.cs-main-container``.",
+      "properties": {
+        "backgroundColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.mainContainer.backgroundColor[str]. Optional. The color behind the whole chat. chatscope's $main-container-bg-color. Example: '#ffffff'.",
+          "title": "Backgroundcolor"
+        },
+        "borderColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.mainContainer.borderColor[str]. Optional. The color of the line around the chat. chatscope's $main-container-border. Example: '#ff5733'.",
+          "title": "Bordercolor"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.mainContainer.color[str]. Optional. The default text color of the chat. chatscope's $main-container-color. Example: '#212121'.",
+          "title": "Color"
+        }
+      },
+      "title": "SAMLLMClientStylesMainContainer",
+      "type": "object"
+    },
+    "SAMLLMClientStylesMessage": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.incomingMessage`` and ``outgoingMessage``: the message bubbles.\n\nIncoming messages are the assistant's, on the left. Outgoing messages are the user's, on the\nright. chatscope's ``Message``, classes ``.cs-message--incoming`` and ``.cs-message--outgoing``.",
+      "properties": {
+        "backgroundColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.message.backgroundColor[str]. Optional. The bubble's color. chatscope's $message-content-incoming-bg-color and $message-content-outgoing-bg-color. Example: '#c6e3fa'.",
+          "title": "Backgroundcolor"
+        },
+        "borderColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.message.borderColor[str]. Optional. The color of a thin line around the bubble, which has none by default. Example: '#6ea9d7'.",
+          "title": "Bordercolor"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.message.color[str]. Optional. The color of the text in the bubble. chatscope's $message-content-incoming-color and $message-content-outgoing-color. Example: '#212121'.",
+          "title": "Color"
+        },
+        "linkColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.message.linkColor[str]. Optional. The color of links in the bubble. Example: '#0b57d0'.",
+          "title": "Linkcolor"
+        }
+      },
+      "title": "SAMLLMClientStylesMessage",
+      "type": "object"
+    },
+    "SAMLLMClientStylesMessageInput": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.messageInput``: the box at the bottom, in which the user types.\n\nchatscope's ``MessageInput``, class ``.cs-message-input``.",
+      "properties": {
+        "backgroundColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageInput.backgroundColor[str]. Optional. The color of the strip around the box. chatscope's $message-input-bg-color. Example: '#ffffff'.",
+          "title": "Backgroundcolor"
+        },
+        "borderColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageInput.borderColor[str]. Optional. The color of the line above the box. chatscope's $chat-container-message-input-border-top. Example: '#d1dbe3'.",
+          "title": "Bordercolor"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageInput.color[str]. Optional. The color of the text that the user types. chatscope's $message-input-content-editor-color. Example: '#212121'.",
+          "title": "Color"
+        },
+        "editorBackgroundColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageInput.editorBackgroundColor[str]. Optional. The color of the box itself. chatscope's $message-input-content-editor-wrapper-bg-color. Example: '#c6e3fa'.",
+          "title": "Editorbackgroundcolor"
+        },
+        "placeholderColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageInput.placeholderColor[str]. Optional. The color of the placeholder, the hint in the empty box (spec.config.prompt.appPlaceholder). chatscope's $message-input-placeholder-color. Example: '#9e9e9e'.",
+          "title": "Placeholdercolor"
+        }
+      },
+      "title": "SAMLLMClientStylesMessageInput",
+      "type": "object"
+    },
+    "SAMLLMClientStylesMessageList": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.messageList``: the scrolling area that holds the conversation.\n\nIt is painted over ``appBackgroundImageUrl``, so a semi-transparent ``backgroundColor`` tints the\nimage. chatscope's ``MessageList``, class ``.cs-message-list``.",
+      "properties": {
+        "backgroundColor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageList.backgroundColor[str]. Optional. The color of the conversation's background. Over a background image, use a semi-transparent color, such as 'rgba(255, 255, 255, 0.6)', which tints the image. chatscope's $message-list-bg-color. Example: '#f6fbff'.",
+          "title": "Backgroundcolor"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.messageList.color[str]. Optional. The color of text in the conversation outside of the messages, such as the typing indicator's. chatscope's $message-list-color. Example: '#212121'.",
+          "title": "Color"
+        }
+      },
+      "title": "SAMLLMClientStylesMessageList",
+      "type": "object"
+    },
+    "SAMLLMClientStylesTypingIndicator": {
+      "additionalProperties": false,
+      "description": "``spec.config.styles.typingIndicator``: \"Assistant is typing\", and its dots, while the LLM answers.\n\nchatscope's ``TypingIndicator``, class ``.cs-typing-indicator``.",
+      "properties": {
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.styles.typingIndicator.color[str]. Optional. The color of the text and of the animated dots. chatscope's $typing-indicator-text-color and $typing-indicator-dot-bg-color. Example: '#6ea9d7'.",
+          "title": "Color"
+        }
+      },
+      "title": "SAMLLMClientStylesTypingIndicator",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - LLMClient.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMLLMClientMetadata",
+      "description": "LLMClient.metadata[obj]: Required, the LLMClient metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMLLMClientSpec",
+      "description": "LLMClient.spec[obj]: Required, the LLMClient specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMLLMClientStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "LLMClient.status[obj]: Optional, Read-only. Stateful status information about the LLMClient."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMLLMClient",
+  "type": "object"
+}

@@ -1,0 +1,480 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMMCPClientMetadata": {
+      "description": "Smarter API MCPClient Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMMCPClientMetadata",
+      "type": "object"
+    },
+    "SAMMCPClientSpec": {
+      "description": "Smarter API MCPClient Manifest MCPClient.spec.",
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SAMMCPClientSpecConfig",
+          "description": "MCPClient.spec.config[object]. The configuration for the MCPClient."
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMMCPClientSpec",
+      "type": "object"
+    },
+    "SAMMCPClientSpecConfig": {
+      "description": "Smarter API MCPClient Manifest MCPClient.spec.config.",
+      "properties": {
+        "allowedResources": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "MCPClient.spec.config.allowedResources[list]: glob patterns of the resource URIs that the LLM may read, e.g. docs://example.com/* . Empty means none.",
+          "title": "Allowedresources"
+        },
+        "allowedTools": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "MCPClient.spec.config.allowedTools[list]: glob patterns of the tool names to offer the LLM, e.g. search_* . Empty means all of the tools that the server advertises.",
+          "title": "Allowedtools"
+        },
+        "apiKeyHeader": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "X-API-Key",
+          "description": "MCPClient.spec.config.apiKeyHeader[str]: the HTTP header that carries an api_key credential.",
+          "title": "Apikeyheader"
+        },
+        "authType": {
+          "default": "none",
+          "description": "MCPClient.spec.config.authType[str]: how to authenticate with the MCP server. One of: ['none', 'api_key', 'bearer_token', 'oauth2']. oauth2 sends an OAuth access token, obtained elsewhere, as a bearer token.",
+          "title": "Authtype",
+          "type": "string"
+        },
+        "cacheTtl": {
+          "default": 3600,
+          "description": "MCPClient.spec.config.cacheTtl[int]: seconds to cache the MCP server's tools, instructions and capabilities. 0 disables caching.",
+          "maximum": 86400,
+          "minimum": 0,
+          "title": "Cachettl",
+          "type": "integer"
+        },
+        "credentials": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.spec.config.credentials[str]: the name of the Smarter Secret containing the credential. Required unless authType is none.",
+          "title": "Credentials"
+        },
+        "endpointUrl": {
+          "description": "MCPClient.spec.config.endpointUrl[str]: the https URL of the MCP server's endpoint.",
+          "title": "Endpointurl",
+          "type": "string"
+        },
+        "headers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "MCPClient.spec.config.headers[dict]: optional, non-secret HTTP headers to send to the MCP server. Credentials belong in a Smarter Secret, via credentials.",
+          "title": "Headers"
+        },
+        "includeInstructions": {
+          "default": true,
+          "description": "MCPClient.spec.config.includeInstructions[bool]: add the MCP server's instructions to the system prompt.",
+          "title": "Includeinstructions",
+          "type": "boolean"
+        },
+        "isActive": {
+          "default": true,
+          "description": "MCPClient.spec.config.isActive[bool]: whether LLMClients use this MCPClient.",
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "priority": {
+          "default": 100,
+          "description": "MCPClient.spec.config.priority[int]: the order in which an LLMClient's MCPClients are offered to the LLM. Lower runs first.",
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "timeout": {
+          "default": 30,
+          "description": "MCPClient.spec.config.timeout[int]: seconds to wait for the MCP server to connect and respond.",
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Timeout",
+          "type": "integer"
+        },
+        "transport": {
+          "default": "http",
+          "description": "MCPClient.spec.config.transport[str]: the MCP transport. One of: ['http', 'sse']. http is Streamable HTTP, and sse is the legacy HTTP+SSE transport.",
+          "title": "Transport",
+          "type": "string"
+        }
+      },
+      "required": [
+        "endpointUrl"
+      ],
+      "title": "SAMMCPClientSpecConfig",
+      "type": "object"
+    },
+    "SAMMCPClientStatus": {
+      "description": "Smarter API MCPClient Manifest - Status class.\n\nRead only. Besides ownership, it reports the result of the last connection to the MCP server.",
+      "properties": {
+        "accountNumber": {
+          "description": "MCPClient.status.account_number: The account owner of this MCPClient. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "connectionStatus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.connectionStatus: the result of the last connection to the MCP server: unconfigured, connected, disconnected or error. Read only.",
+          "title": "Connectionstatus"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "lastConnected": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.lastConnected: when Smarter last connected to the MCP server. Read only.",
+          "title": "Lastconnected"
+        },
+        "lastError": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.lastError: the error of the last failed connection, if any. Read only.",
+          "title": "Lasterror"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "protocolVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.protocolVersion: the MCP protocol version negotiated with the server. Read only.",
+          "title": "Protocolversion"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "serverName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.serverName: the name that the MCP server reported. Read only.",
+          "title": "Servername"
+        },
+        "serverVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.serverVersion: the version that the MCP server reported. Read only.",
+          "title": "Serverversion"
+        },
+        "tools": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCPClient.status.tools: the names of the MCP server's tools that this MCPClient offers the LLM, as of the last connection. Read only.",
+          "title": "Tools"
+        },
+        "username": {
+          "description": "MCPClient.status.username: The Smarter user who created this MCPClient. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMMCPClientStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - MCPClient.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMMCPClientMetadata",
+      "description": "MCPClient.metadata[obj]: Required, the MCPClient metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMMCPClientSpec",
+      "description": "MCPClient.spec[obj]: Required, the MCPClient specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMMCPClientStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "MCPClient.status[obj]: Optional, Read-only. Stateful status information about the MCPClient."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMMCPClient",
+  "type": "object"
+}
