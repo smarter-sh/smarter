@@ -4,6 +4,10 @@
 - **Principles:** `The Twelve-Factor App <https://12factor.net/>`__, and Martin Fowler's writing on
   architecture, microservices and evolutionary design at `martinfowler.com
   <https://martinfowler.com/architecture/>`__.
+- **Patterns:** Martin Fowler, `GUI Architectures <https://martinfowler.com/eaaDev/uiArchs.html>`__,
+  on Model-View-Controller and its successors, and the Django FAQ's answer to why Django `calls the
+  controller a view
+  <https://docs.djangoproject.com/en/stable/faq/general/#django-appears-to-be-a-mvc-framework-but-you-call-the-controller-the-view-and-the-view-the-template-how-come-you-don-t-use-the-standard-names>`__.
 - **Podcasts:** `Software Engineering Radio <https://se-radio.net/>`__ and the `InfoQ Podcast
   <https://www.infoq.com/podcasts/>`__, both with frequent architecture interviews.
 - **YouTube:** the `GOTO Conferences <https://www.youtube.com/@GOTO->`__ channel, Mark Richards's
