@@ -1,0 +1,380 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMProxyMetadata": {
+      "description": "Smarter API Proxy Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMProxyMetadata",
+      "type": "object"
+    },
+    "SAMProxySpec": {
+      "additionalProperties": false,
+      "description": "Smarter API Proxy Manifest Proxy.spec.",
+      "properties": {
+        "allowedPaths": {
+          "description": "Proxy.spec.allowedPaths[list]: glob patterns of the paths, relative to baseUrl, that callers may use, e.g. chat/completions or models/*. Empty allows every path.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowedpaths",
+          "type": "array"
+        },
+        "apiKey": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Proxy.spec.apiKey[str]: the name of the Secret that contains the provider's API key. It must belong to, or be shared with, the manifest's owner. Defaults to the Provider's API key.",
+          "title": "Apikey"
+        },
+        "auth": {
+          "$ref": "#/$defs/SAMProxySpecAuth",
+          "description": "Proxy.spec.auth[object]: how the provider expects its API key. Defaults to Authorization: Bearer."
+        },
+        "baseUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Proxy.spec.baseUrl[str]: the base URL of the provider's API, e.g. https://api.openai.com/v1/. Defaults to the Provider's base URL.",
+          "title": "Baseurl"
+        },
+        "headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Proxy.spec.headers[dict]: other HTTP headers that are added to every request, e.g. anthropic-version. They replace the caller's headers of the same name.",
+          "title": "Headers",
+          "type": "object"
+        },
+        "isActive": {
+          "default": true,
+          "description": "Proxy.spec.isActive[bool]: inactive Proxy refuse every request.",
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "provider": {
+          "description": "Proxy.spec.provider[str]: the name of the Provider whose API the Proxy forwards to, e.g. openai. It must belong to, or be shared with, the manifest's owner.",
+          "title": "Provider",
+          "type": "string"
+        },
+        "timeout": {
+          "default": 120,
+          "description": "Proxy.spec.timeout[int]: the most seconds to wait for the provider's response.",
+          "maximum": 600,
+          "minimum": 1,
+          "title": "Timeout",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "title": "SAMProxySpec",
+      "type": "object"
+    },
+    "SAMProxySpecAuth": {
+      "additionalProperties": false,
+      "description": "Spec.auth: how the provider expects its API key.",
+      "properties": {
+        "header": {
+          "default": "Authorization",
+          "description": "Proxy.spec.auth.header[str]: the HTTP header in which the provider expects its API key, e.g. Authorization (OpenAI), x-api-key (Anthropic) or x-goog-api-key (Google Gemini).",
+          "title": "Header",
+          "type": "string"
+        },
+        "scheme": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "Bearer",
+          "description": "Proxy.spec.auth.scheme[str]: the prefix of the API key in the header, e.g. Bearer. Empty or null for none, e.g. for x-api-key.",
+          "title": "Scheme"
+        }
+      },
+      "title": "SAMProxySpecAuth",
+      "type": "object"
+    },
+    "SAMProxyStatus": {
+      "description": "Smarter API Proxy Manifest - Status class.\n\nRead only. Besides ownership, it reports where the Proxy is, and where it forwards to.",
+      "properties": {
+        "accountNumber": {
+          "description": "Proxy.status.accountNumber: The account owner of this Proxy. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "apiKeySecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Proxy.status.apiKeySecret: The name of the Secret whose API key is added to requests: spec.apiKey, else the Provider's. None if there is none. Read only.",
+          "title": "Apikeysecret"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "upstreamUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Proxy.status.upstreamUrl: The base URL of the provider's API, to which requests are forwarded: spec.baseUrl, else the Provider's. Read only.",
+          "title": "Upstreamurl"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Proxy.status.url: The URL of the Proxy's passthrough endpoint, to use as the base URL of the provider's SDK. Read only.",
+          "title": "Url"
+        },
+        "username": {
+          "description": "Proxy.status.username: The Smarter user who created this Proxy. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMProxyStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - Proxy.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMProxyMetadata",
+      "description": "Proxy.metadata[obj]: Required, the Proxy metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMProxySpec",
+      "description": "Proxy.spec[obj]: Required, the Proxy specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMProxyStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Proxy.status[obj]: Optional, Read-only. Stateful status information about the Proxy."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMProxy",
+  "type": "object"
+}

@@ -53,25 +53,6 @@ class ManifestSerializer(serializers.Serializer):
     )
 
 
-class ChatConfigSerializer(serializers.Serializer):
-    """Serializer for the prompt configuration in smarter.sh/v1 format."""
-
-    uid = serializers.RegexField(
-        help_text="Client UID",
-        max_length=64,
-        min_length=64,
-        regex=r"^[0-9a-f]{64}$",
-        required=True,
-    )
-    session_key = serializers.RegexField(
-        help_text="Optional session key. If not provided, a new session key will be generated.",
-        max_length=64,
-        min_length=64,
-        regex=r"^[0-9a-f]{64}$",
-        required=False,
-    )
-
-
 class MessageSerializer(serializers.Serializer):
     """Serializer for a message in smarter.sh/v1 format."""
 
@@ -80,10 +61,18 @@ class MessageSerializer(serializers.Serializer):
 
 
 class CliChatSerializer(serializers.Serializer):
-    """Serializer for the prompt in smarter.sh/v1 format."""
+    """The request body of the cli's prompt: smarter.apps.api.v1.contract.models.CliApiPromptBody."""
 
-    session_key = serializers.CharField(help_text="Session key for the prompt session")
-    messages = serializers.ListSerializer(child=MessageSerializer(), help_text="List of prompt messages")
+    prompt = serializers.CharField(help_text="The user's message.")
+    session_key = serializers.CharField(
+        help_text="Optional. The chat session to continue. By default, the session that the uid used last.",
+        required=False,
+    )
+    messages = serializers.ListSerializer(
+        child=MessageSerializer(),
+        help_text="Optional. The chat's earlier messages, to which the prompt is added. By default, a new chat.",
+        required=False,
+    )
 
 
 BUG_REPORT = (
@@ -106,6 +95,28 @@ COMMON_SWAGGER_PARAMETERS = {
     ),
     "name_query_param": openapi.Parameter(
         "name", openapi.IN_QUERY, description="The name of the resource.", type=openapi.TYPE_STRING, required=True
+    ),
+    "llmclient_name": openapi.Parameter(
+        "name", openapi.IN_PATH, description="The LLMClient's name.", type=openapi.TYPE_STRING, required=True
+    ),
+    "uid": openapi.Parameter(
+        "uid",
+        openapi.IN_QUERY,
+        description=(
+            "Required. A unique identifier of the client, e.g. a combination of the machine's MAC address and its "
+            "hostname. The platform caches the client's chat session under it, so that the next prompt continues it."
+        ),
+        type=openapi.TYPE_STRING,
+        required=True,
+    ),
+    "new_session": openapi.Parameter(
+        "new_session",
+        openapi.IN_QUERY,
+        description="Optional. true starts a new chat session, instead of continuing the client's last one.",
+        type=openapi.TYPE_STRING,
+        enum=["true", "false"],
+        default="false",
+        required=False,
     ),
 }
 
@@ -225,7 +236,6 @@ __all__ = [
     "COMMON_SWAGGER_PARAMETERS",
     "BUG_REPORT",
     "ManifestSerializer",
-    "ChatConfigSerializer",
     "CliChatSerializer",
     "SuccessResponseSerializer",
     "json_success_response",

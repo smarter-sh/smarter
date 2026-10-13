@@ -90,6 +90,14 @@ class APIV1CLIViewBadRequestError(APIV1CLIViewError):
         return "Smarter api v1 command-line interface error: bad request"
 
 
+class APIV1CLIViewNotFoundError(APIV1CLIViewError):
+    """Error class for requests for something that does not exist, e.g. the user profile of an api key's user."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter api v1 command-line interface error: not found"
+
+
 # errors that are the client's fault, e.g. an invalid manifest, and that are therefore a 400.
 CLIENT_ERRORS: tuple[Type[BaseException], ...] = (
     PydanticValidationError,
@@ -155,7 +163,7 @@ def http_status_for_exception(e: BaseException) -> int:
         return HTTPStatus.NOT_IMPLEMENTED.value
     if isinstance(e, SAMBrokerErrorNotReady):
         return HTTPStatus.SERVICE_UNAVAILABLE.value
-    if isinstance(e, SAMBrokerErrorNotFound):
+    if isinstance(e, (SAMBrokerErrorNotFound, APIV1CLIViewNotFoundError)):
         return HTTPStatus.NOT_FOUND.value
     if isinstance(e, SAMBrokerReadOnlyError):
         return HTTPStatus.METHOD_NOT_ALLOWED.value

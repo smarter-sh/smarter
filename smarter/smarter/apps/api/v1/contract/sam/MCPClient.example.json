@@ -1,0 +1,41 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "MCPClient",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/mcpclient/documentation": "https://github.com/github/github-mcp-server"
+      }
+    ],
+    "description": "An example MCPClient, for GitHub's MCP server. It offers the LLM the server's read-only tools.",
+    "name": "example_mcpclient",
+    "tags": [
+      "example",
+      "github"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "config": {
+      "allowedResources": [],
+      "allowedTools": [
+        "get_*",
+        "list_*",
+        "search_*"
+      ],
+      "apiKeyHeader": "X-API-Key",
+      "authType": "bearer_token",
+      "cacheTtl": 3600,
+      "credentials": "github_personal_access_token",
+      "endpointUrl": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "X-MCP-Toolsets": "repos,issues,pull_requests"
+      },
+      "includeInstructions": true,
+      "isActive": true,
+      "priority": 100,
+      "timeout": 30,
+      "transport": "http"
+    }
+  }
+}

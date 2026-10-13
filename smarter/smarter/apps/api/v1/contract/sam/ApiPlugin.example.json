@@ -1,0 +1,106 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "ApiPlugin",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/created_by": "smarter_api_plugin_broker"
+      },
+      {
+        "smarter.sh/plugin": "api_example"
+      }
+    ],
+    "description": "Get additional information about courses available at Stackademy.",
+    "name": "api_example",
+    "pluginClass": "api",
+    "tags": [
+      "api",
+      "rest"
+    ],
+    "version": "0.1.0"
+  },
+  "spec": {
+    "apiData": {
+      "body": {},
+      "endpoint": "/stackademy/course-catalogue/",
+      "headers": [
+        {
+          "name": "X-Debug-Request",
+          "value": "true"
+        },
+        {
+          "name": "X-API-Key",
+          "value": "your_api_key_here"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Accept",
+          "value": "application/json"
+        },
+        {
+          "name": "X-Request-ID",
+          "value": "12345"
+        }
+      ],
+      "limit": 100,
+      "method": "GET",
+      "parameters": [
+        {
+          "default": "500.00",
+          "description": "A ceiling on the maximum cost of the course.",
+          "enum": null,
+          "name": "max_cost",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": "Python",
+          "description": "A keyword to search for in the course description.",
+          "enum": null,
+          "name": "description",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "testValues": [
+        {
+          "name": "max_cost",
+          "value": "500.00"
+        },
+        {
+          "name": "description",
+          "value": "Python"
+        }
+      ],
+      "urlParams": [
+        {
+          "key": "max_cost",
+          "value": "500.00"
+        },
+        {
+          "key": "description",
+          "value": "Python"
+        }
+      ]
+    },
+    "connection": "example_connection",
+    "prompt": {
+      "maxTokens": 2048,
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "systemRole": "You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
+      "temperature": 1.0
+    },
+    "selector": {
+      "directive": "search_terms",
+      "searchTerms": [
+        "smarter",
+        "users",
+        "admin"
+      ]
+    }
+  }
+}

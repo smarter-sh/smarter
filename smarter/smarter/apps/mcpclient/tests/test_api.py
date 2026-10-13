@@ -129,8 +129,18 @@ class TestMCPClientApi(MCPClientTestBase):
             MCPServerConnection, "discover", side_effect=SmarterMCPClientConnectionError("server is down")
         ):
             data = self.get(url(Names.tools_by_id, mcpclient_id=self.mcpclient.pk), status=HTTPStatus.BAD_GATEWAY)
-        self.assertIn("server is down", data["error"])
+        self.assertIn("server is down", data["detail"])
         self.assertEqual(data["status"], MCPConnectionStatus.ERROR)
+
+    def test_refresh_unreachable(self):
+        """Test that a failed reconnection is the error, beside the connection status, as a bad gateway."""
+        with mock.patch.object(
+            MCPServerConnection, "discover", side_effect=SmarterMCPClientConnectionError("server is down")
+        ):
+            data = self.post(url(Names.refresh_by_id, mcpclient_id=self.mcpclient.pk), status=HTTPStatus.BAD_GATEWAY)
+        self.assertIn("server is down", data["detail"])
+        self.assertEqual(data["status"], MCPConnectionStatus.ERROR)
+        self.assertEqual(data["name"], self.mcpclient.name)
 
     def test_refresh(self):
         """Test that the refresh view reconnects, and returns the status."""

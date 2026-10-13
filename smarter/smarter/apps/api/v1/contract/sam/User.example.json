@@ -1,0 +1,23 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "User",
+  "metadata": {
+    "annotations": [],
+    "description": "An example Smarter API manifest for a User",
+    "name": "example_user",
+    "tags": [
+      "example"
+    ],
+    "username": "example_user",
+    "version": "1.0.0"
+  },
+  "spec": {
+    "config": {
+      "email": "example.user@example.com",
+      "firstName": "Example",
+      "isActive": true,
+      "isStaff": false,
+      "lastName": "User"
+    }
+  }
+}
