@@ -11,6 +11,11 @@ Its two official clients are the :doc:`Smarter CLI <smarter-cli>`, for people at
 and the :doc:`Smarter Python SDK <smarter-python>`, for Python software that integrates with
 your platform.
 
+The whole API is described by a typed OpenAPI 3.1 document, the
+:doc:`Smarter OpenAPI Contract <smarter-openapi>`, which every platform serves at
+``/docs/openapi.json``, and from which clients in any language can be generated. See
+:doc:`Smarter APIs and SDKs <apis-and-sdks>` for the design that the API and its clients share.
+
 The Smarter Framework supports multiple hosting naming schemes for the Smarter API. For example:
 
 

@@ -177,7 +177,8 @@ This changes who can build AI applications, and how fast:
 - **Sophistication is a list, not a project.** Giving an application web search, a SQL database,
   an MCP server, or a prompt injection guardrail means adding one line to its manifest.
 - **One way to do everything.** There is no resource-specific SDK to learn and no API convention to
-  memorize. If you can write one manifest, you can write them all.
+  memorize. If you can write one manifest, you can write them all, and apply them from the web
+  console, the CLI, the REST API or the Python SDK alike.
 - **Infrastructure as code for AI.** Manifests are versioned, diffed, reviewed in pull requests, and
   deployed from CI/CD, like the rest of your infrastructure.
 
@@ -318,6 +319,37 @@ or CPU nodes that a model needs, removes them when it no longer does, and monito
 LLMClients use a self-hosted model the same way as a commercial one, and your prompts never leave
 your network.
 
+Open to your own software
+-------------------------
+
+Everything that you can do in the :doc:`web console <smarter-platform/smarter-web-console>`, your
+own software can do too. The :doc:`Smarter API <smarter-framework/smarter-api>` applies manifests,
+reads every resource, chats with your LLMClients, and streams their progress, and the official
+clients have no access to the platform that your code doesn't have.
+
+.. code-block:: python
+
+   from smarter import Smarter
+
+   client = Smarter()  # SMARTER_API_KEY, or the smarter cli's ~/.smarter/config.yaml
+
+   client.manifests.apply("my-ai-application.yaml")
+   llmclient = client.llm_clients.find("customer_support")
+   print(client.llm_clients.prompt(llmclient.id, "Where is my order #1234?").text)
+
+- **A published, typed contract.** Every Smarter platform describes its API in an
+  :doc:`OpenAPI 3.1 document <smarter-framework/smarter-openapi>`, with a JSON Schema for every
+  manifest kind, all generated from the same Pydantic models that the platform itself runs on, and
+  tested against its real responses. Generate a client in any language from it.
+- **Official SDKs and tools.** The :doc:`Python SDK <smarter-framework/smarter-python>`
+  (``pip install smarter-api``), the :doc:`CLI <smarter-framework/smarter-cli>`, a
+  `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_,
+  and a :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat
+  to any web page. Each follows the same :doc:`design <smarter-framework/apis-and-sdks>`.
+- **Your existing code, unchanged.** Software written with the OpenAI, Anthropic, or Google SDK
+  calls its provider through a :doc:`Proxy <smarter-resources/smarter-proxy>`, with a Smarter API
+  key in place of the provider's, and gains Smarter's governance and cost accounting.
+
 At a glance
 -----------
 
@@ -331,7 +363,8 @@ At a glance
 
   - A :doc:`proxy server <smarter-resources/smarter-proxy>` that gives secure, governed, auditable access to AI providers and resources, without exposing secrets or the underlying vendor accounts.
   - Build every :doc:`AI resource <smarter-resources>` with declarative :doc:`YAML manifests <smarter-framework/smarter-manifests>`, with no Python programming, much as you would with `Kubernetes <https://kubernetes.io/>`_.
-  - Manage resources with the :doc:`web console <smarter-platform/smarter-web-console>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line interface <smarter-platform/cli>`.
+  - Manage resources with the :doc:`web console <smarter-platform/smarter-web-console>`, the :doc:`REST API <smarter-framework/smarter-api>`, the :doc:`command-line interface <smarter-platform/cli>`, and the :doc:`Python SDK <smarter-framework/smarter-python>`.
+  - An open, typed :doc:`OpenAPI 3.1 contract <smarter-framework/smarter-openapi>`, served by every platform, to generate clients in any language.
   - Built for teams: every resource has an owner, and is shared with everyone in the owner's :doc:`Account <smarter-resources/smarter-account>`.
   - Runs at scale on Kubernetes, with automatic horizontal scaling of application servers and background workers.
   - Built-in :doc:`logging <smarter-framework/developer-reference/smarter-journal>`, :doc:`cost accounting <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>`.
@@ -359,7 +392,7 @@ At a glance
   - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
   - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
-  - A :doc:`Python SDK <smarter-framework/smarter-python>` (``pip install smarter-api``), `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
+  - :doc:`APIs and SDKs <smarter-framework/apis-and-sdks>`: a :doc:`Python SDK <smarter-framework/smarter-python>` (``pip install smarter-api``), `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
 
 
 Usage
