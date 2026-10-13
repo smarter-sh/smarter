@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.2...v0.22.0-alpha.3) (2026-10-13)
+
+### Features
+
+* **api:** add the chat api to the OpenAPI document ([3ba523d](https://github.com/smarter-sh/smarter/commit/3ba523d4e5df312012caa6d6f5fab98eb00f0567))
+* **llmclient:** add the LLMClient REST reads to the api contract ([e7f3cce](https://github.com/smarter-sh/smarter/commit/e7f3cce681a9414b64375e76ccca8f86371f7cb4))
+
 ## [0.22.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.1...v0.22.0-alpha.2) (2026-10-13)
 
 ### Features
