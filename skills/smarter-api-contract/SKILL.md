@@ -160,21 +160,34 @@ This is how the document grows toward everything the SDKs call. The chat api
    backlog is explicit, and nothing new slips in.
 2. **Find the models.** Use the existing contract models when there are some
    (the chat contract, the journal contract). For a REST view that returns a DRF
-   serializer's output, write a Pydantic model of the row, as ADR-031 says: its
-   exact fields, built by a `from_model(row)` classmethod, and a test that its
-   `Literal`s match the model's choices. Validate it against real rows of the
-   local database before tightening a type.
-3. **Build the view's response from the model**, then add the family's
-   models to the components in `model_schemas()` (keep them in a tuple like
-   `CHAT_MODELS`), and its operations in a `<family>_paths()` function, merged
-   into `paths` in `openapi_document()`. Give each operation the family's tag,
-   its real error schema as `default`, and its real parameters, headers included.
-4. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.
-5. **Test real responses** of each operation against the document, including
-   an error. Use `APIClient` with the headers a real client sends (see
-   `chat_post()`).
-6. Update `api-contract.rst`'s table of covered families, and tell the SDK
-   (see "Downstream").
+   serializer's output, write a Pydantic model of the row, as ADR-031 says,
+   in the app's own `contract/models.py` (`smarter.apps.llmclient.contract` is
+   the reference): `extra="forbid"`, camelCase aliases (base it on
+   `AccountApiModel`), built by a `from_model(row)` classmethod, with a test
+   that its `Literal`s match the model's choices. Reuse the shared models:
+   `AccountApiUserProfile` for an owner, `PluginApiPluginMeta` for a plugin,
+   `MetaDataApiAnnotations`, and `user_can_delete()` for `canDelete`.
+3. **Prove the model is the serializer's output** before switching: dump every
+   real row of the local database with both and compare (see
+   `test_*_is_the_serializers_output`). Any difference is either a bug in the
+   model or a bug that the serializer had: say which in the commit. Then
+   **build the view's response from the model**. A list view sets
+   `contract_model` (or overrides `item()`), and `ListViewBase.list()` does the
+   rest. Raise DRF's `NotFound`, not `HttpResponseNotFound`, so errors are JSON.
+4. **Publish the reads only** (`GET`): add the family's models to
+   `model_schemas()` (a tuple like `LLMCLIENT_API_MODELS`), and its operations
+   in a `<family>_paths()` function built with `rest_read()`, merged by
+   `merge_paths()` in `openapi_document()`. The REST writes stay unpublished:
+   clients write through manifests.
+5. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.
+6. **Test real responses** of each operation against the document, including
+   a 404 and a 403 (see `test_llmclient_reads()` and `assertValidResponse()`).
+   Use `APIClient` with the headers a real client sends.
+7. **Watch for secrets in rows.** A foreign key to a `SmarterAuthToken` is its
+   digest. Publish its `key_id` instead, as `LLMClientApiKey` does.
+8. Update `api-contract.rst`'s table of covered families, and the SDK: its
+   models, its `TestOpenApiContract` calls, and its `TestRecordedResponses`
+   fixtures (see "Downstream").
 
 ## Streaming responses
 
@@ -219,6 +232,8 @@ The contract is the source the SDKs generate from:
   SDK to a covered family is not in the document, or the document has an
   operation that the SDK doesn't call. A new operation is SDK work: say so in
   your summary. Extend that test with the SDK's calls of each newly covered family.
+  Its `TestRecordedResponses` validates the SDK's recorded fixtures against the
+  document: add each new fixture to its `FIXTURES`.
 - **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
   the same schemas.
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.

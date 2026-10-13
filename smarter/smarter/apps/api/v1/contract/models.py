@@ -269,6 +269,18 @@ class CliApiPrompt(CliApiModel):
     response: CliApiPromptChatResponse
 
 
+class RestApiErrorResponse(BaseModel):
+    """
+    The body of an error response of the REST api's views: Django REST framework's ``{"detail": ...}``.
+
+    e.g. a 404 for a row that does not exist, or a 403 for a user who may not use the view.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    detail: str = Field(..., description="A human-readable description of the error.")
+
+
 CLI_API_MODELS: tuple[type[BaseModel], ...] = (
     CliApiApplied,
     CliApiValidation,
@@ -279,6 +291,7 @@ CLI_API_MODELS: tuple[type[BaseModel], ...] = (
     CliApiWhoami,
     CliApiPromptBody,
     CliApiPrompt,
+    RestApiErrorResponse,
 )
 """The models of the cli api's response data whose JSON Schema the OpenAPI document includes.
 
@@ -492,4 +505,5 @@ __all__ = [
     "OpenApiServer",
     "OpenApiServerVariable",
     "OpenApiTag",
+    "RestApiErrorResponse",
 ]

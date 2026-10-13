@@ -1,6 +1,69 @@
 {
   "components": {
     "schemas": {
+      "AccountApiAccount": {
+        "additionalProperties": false,
+        "description": "An account, as the owner of a resource: a :class:`smarter.apps.account.models.Account`'s number.",
+        "properties": {
+          "accountNumber": {
+            "description": "Account.account_number, e.g. 1234-5678-9012.",
+            "title": "Accountnumber",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accountNumber"
+        ],
+        "title": "AccountApiAccount",
+        "type": "object"
+      },
+      "AccountApiUser": {
+        "additionalProperties": false,
+        "description": "A user, as the owner of a resource: a :class:`django.contrib.auth.models.User`'s username and email.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "User.email.",
+            "title": "Email"
+          },
+          "username": {
+            "description": "User.username.",
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username"
+        ],
+        "title": "AccountApiUser",
+        "type": "object"
+      },
+      "AccountApiUserProfile": {
+        "additionalProperties": false,
+        "description": "The owner of a resource: a :class:`smarter.apps.account.models.UserProfile`'s user and account.",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountApiAccount"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AccountApiUser"
+          }
+        },
+        "required": [
+          "user",
+          "account"
+        ],
+        "title": "AccountApiUserProfile",
+        "type": "object"
+      },
       "ApiConnection": {
         "description": "Smarter API - generic API Connection class.",
         "properties": {
@@ -1834,6 +1897,989 @@
         "type": "object"
       },
       "JsonValue": {},
+      "LLMClientApiCustomDomain": {
+        "additionalProperties": false,
+        "description": "A custom domain of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientCustomDomain`.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "awsHostedZoneId": {
+            "description": "The id of the domain's DNS zone, empty until it has one.",
+            "title": "Awshostedzoneid",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "domainName": {
+            "description": "The domain, e.g. example.com.",
+            "title": "Domainname",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "description": "The custom domain's owner: the UserProfile's id.",
+            "title": "Userprofile",
+            "type": "integer"
+          },
+          "verificationMessage": {
+            "description": "The result of the last verification, for a person.",
+            "title": "Verificationmessage",
+            "type": "string"
+          },
+          "verificationStatus": {
+            "description": "Whether the platform has verified that it controls the domain's DNS.",
+            "enum": [
+              "Not Verified",
+              "Verifying",
+              "Verified",
+              "Failed"
+            ],
+            "title": "Verificationstatus",
+            "type": "string"
+          },
+          "verifiedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the domain was verified.",
+            "title": "Verifiedat"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "userProfile",
+          "awsHostedZoneId",
+          "domainName",
+          "verificationStatus",
+          "verificationMessage"
+        ],
+        "title": "LLMClientApiCustomDomain",
+        "type": "object"
+      },
+      "LLMClientApiFunction": {
+        "additionalProperties": false,
+        "description": "A built-in function of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`.",
+        "properties": {
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "llmclient": {
+            "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+            "title": "Llmclient",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "enum": [
+                  "get_current_weather",
+                  "date_calculator",
+                  "calculator"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClientFunctions.name.",
+            "title": "Name"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "id",
+          "llmclient"
+        ],
+        "title": "LLMClientApiFunction",
+        "type": "object"
+      },
+      "LLMClientApiKey": {
+        "additionalProperties": false,
+        "description": "An api key of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientAPIKey`.",
+        "properties": {
+          "apiKey": {
+            "description": "LLMClientAPIKey.api_key: the SmarterAuthToken's public key_id. Never the key, nor its digest.",
+            "format": "uuid",
+            "title": "Apikey",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "llmclient": {
+            "description": "LLMClientAPIKey.llmclient: the LLMClient's id.",
+            "title": "Llmclient",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "id",
+          "llmclient",
+          "apiKey"
+        ],
+        "title": "LLMClientApiKey",
+        "type": "object"
+      },
+      "LLMClientApiLLMClient": {
+        "additionalProperties": false,
+        "description": "An LLMClient: a :class:`smarter.apps.llmclient.models.LLMClient`, with its related rows and its urls.\n\nIts ``functions``, ``plugins``, ``custom_domains`` and ``api_keys`` are inline, and its urls and\nhosts are computed, as the LLMClient's properties compute them for the platform that serves the\nrequest.",
+        "properties": {
+          "allowedOrigins": {
+            "description": "LLMClient.allowed_origins: the CORS origins of its pages.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowedorigins",
+            "type": "array"
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "apiKeys": {
+            "description": "The LLMClient's api keys.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiKey"
+            },
+            "title": "Apikeys",
+            "type": "array"
+          },
+          "appAssistant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_assistant: the assistant's name.",
+            "title": "Appassistant"
+          },
+          "appExamplePrompts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_example_prompts.",
+            "title": "Appexampleprompts"
+          },
+          "appFileAttachment": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_file_attachment.",
+            "title": "Appfileattachment"
+          },
+          "appInfoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_info_url.",
+            "title": "Appinfourl"
+          },
+          "appName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_name.",
+            "title": "Appname"
+          },
+          "appPlaceholder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_placeholder.",
+            "title": "Appplaceholder"
+          },
+          "appWelcomeMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.app_welcome_message.",
+            "title": "Appwelcomemessage"
+          },
+          "baseApiDomain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The platform's api domain, e.g. api.example.com.",
+            "title": "Baseapidomain"
+          },
+          "baseDefaultHost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The account's host under the api domain.",
+            "title": "Basedefaulthost"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the LLMClient now: they own it, and nothing depends on it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "customDomain": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.custom_domain: the custom domain's id, if any.",
+            "title": "Customdomain"
+          },
+          "customDomains": {
+            "description": "The LLMClient's custom domain, as a list of none or one.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiCustomDomain"
+            },
+            "title": "Customdomains",
+            "type": "array"
+          },
+          "customHost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLMClient's host on its custom domain, if any.",
+            "title": "Customhost"
+          },
+          "customUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLMClient's url on its custom domain, if any.",
+            "title": "Customurl"
+          },
+          "defaultHost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLMClient's host, once deployed.",
+            "title": "Defaulthost"
+          },
+          "defaultMaxTokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.default_max_tokens.",
+            "title": "Defaultmaxtokens"
+          },
+          "defaultModel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.default_model.",
+            "title": "Defaultmodel"
+          },
+          "defaultSystemRole": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The system prompt of a new chat session, with the current date and time.",
+            "title": "Defaultsystemrole"
+          },
+          "defaultTemperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.default_temperature.",
+            "title": "Defaulttemperature"
+          },
+          "defaultUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLMClient's url, once deployed.",
+            "title": "Defaulturl"
+          },
+          "deployed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.deployed: whether it is served on its own host.",
+            "title": "Deployed"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "dnsVerificationStatus": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Verifying",
+                  "Not Verified",
+                  "Verified",
+                  "Failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.dns_verification_status.",
+            "title": "Dnsverificationstatus"
+          },
+          "functions": {
+            "description": "The LLMClient's built-in functions.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiFunction"
+            },
+            "title": "Functions",
+            "type": "array"
+          },
+          "hashedId": {
+            "description": "The LLMClient's hashed id, e.g. rMTAwMDAwNgx, which its urls use.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "hostname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The host that serves the LLMClient now.",
+            "title": "Hostname"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isAuthenticationRequired": {
+            "description": "Whether prompting the LLMClient requires an api key.",
+            "title": "Isauthenticationrequired",
+            "type": "boolean"
+          },
+          "manifestUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the LLMClient's manifest in the web console.",
+            "title": "Manifesturl"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "plugins": {
+            "description": "The LLMClient's plugins.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiPluginRef"
+            },
+            "title": "Plugins",
+            "type": "array"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.provider: the LLM provider, e.g. openai.",
+            "title": "Provider"
+          },
+          "ready": {
+            "description": "Whether the LLMClient can be prompted.",
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "rfc1034CompliantName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name, as a DNS label.",
+            "title": "Rfc1034Compliantname"
+          },
+          "sandboxHost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The platform's host, which serves undeployed LLMClients.",
+            "title": "Sandboxhost"
+          },
+          "sandboxUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLMClient's page in the web console's workbench.",
+            "title": "Sandboxurl"
+          },
+          "styles": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.styles: the chat's CSS styles.",
+            "title": "Styles"
+          },
+          "subdomain": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.subdomain: the Route53 record's id, if any.",
+            "title": "Subdomain"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "tlsCertificateIssuanceStatus": {
+            "anyOf": [
+              {
+                "enum": [
+                  "No Certificate",
+                  "Requested",
+                  "Issued",
+                  "Failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.tls_certificate_issuance_status.",
+            "title": "Tlscertificateissuancestatus"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url that serves the LLMClient now.",
+            "title": "Url"
+          },
+          "urlChatConfig": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The chat api's configuration url.",
+            "title": "Urlchatconfig"
+          },
+          "urlChatapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLMClient's chat page.",
+            "title": "Urlchatapp"
+          },
+          "urlLlmclient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Where to send prompts: the chat api's prompt url.",
+            "title": "Urlllmclient"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The LLMClient's owner."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "userProfile",
+          "canDelete",
+          "functions",
+          "plugins",
+          "customDomains",
+          "apiKeys",
+          "ready",
+          "isAuthenticationRequired",
+          "allowedOrigins"
+        ],
+        "title": "LLMClientApiLLMClient",
+        "type": "object"
+      },
+      "LLMClientApiPlugin": {
+        "additionalProperties": false,
+        "description": "A plugin of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientPlugin`, with the plugin's metadata.",
+        "properties": {
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "llmclient": {
+            "description": "LLMClientPlugin.llmclient: the LLMClient's id.",
+            "title": "Llmclient",
+            "type": "integer"
+          },
+          "pluginMeta": {
+            "$ref": "#/components/schemas/PluginApiPluginMeta",
+            "description": "LLMClientPlugin.plugin_meta: the plugin."
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "id",
+          "pluginMeta",
+          "llmclient"
+        ],
+        "title": "LLMClientApiPlugin",
+        "type": "object"
+      },
+      "LLMClientApiPluginRef": {
+        "additionalProperties": false,
+        "description": "A plugin of an LLMClient, in the LLMClient's own response: the LLMClientPlugin's id, and the plugin's name.",
+        "properties": {
+          "id": {
+            "description": "LLMClientPlugin.id.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "description": "The plugin's name, PluginMeta.name.",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "LLMClientApiPluginRef",
+        "type": "object"
+      },
       "LLMClientPromptErrorResponse": {
         "anyOf": [
           {
@@ -1931,6 +2977,158 @@
         ],
         "title": "ParameterType",
         "type": "string"
+      },
+      "PluginApiPluginMeta": {
+        "additionalProperties": false,
+        "description": "A plugin's metadata: a :class:`smarter.apps.plugin.models.PluginMeta`.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the plugin now: they own it, and nothing depends on it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "The plugin's SAM kind, e.g. SqlPlugin.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "manifestUrl": {
+            "description": "The url of the plugin's manifest in the web console.",
+            "title": "Manifesturl",
+            "type": "string"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "pluginClass": {
+            "description": "PluginMeta.plugin_class.",
+            "enum": [
+              "api",
+              "skill",
+              "sql",
+              "static",
+              "websearch",
+              "imagesearch"
+            ],
+            "title": "Pluginclass",
+            "type": "string"
+          },
+          "ready": {
+            "description": "Whether the plugin has the data and configuration that it needs.",
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The plugin's owner."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "userProfile",
+          "pluginClass",
+          "manifestUrl",
+          "ready",
+          "kind",
+          "canDelete"
+        ],
+        "title": "PluginApiPluginMeta",
+        "type": "object"
       },
       "PromptChatApiAudioPart": {
         "additionalProperties": true,
@@ -4373,6 +5571,22 @@
           "value"
         ],
         "title": "RequestHeader",
+        "type": "object"
+      },
+      "RestApiErrorResponse": {
+        "additionalProperties": true,
+        "description": "The body of an error response of the REST api's views: Django REST framework's ``{\"detail\": ...}``.\n\ne.g. a 404 for a row that does not exist, or a 403 for a user who may not use the view.",
+        "properties": {
+          "detail": {
+            "description": "A human-readable description of the error.",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "RestApiErrorResponse",
         "type": "object"
       },
       "SAMAccount": {
@@ -14929,6 +16143,183 @@
         ]
       }
     },
+    "/llm-clients/": {
+      "get": {
+        "description": "The LLMClients that the user may read. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMClientApiLLMClient"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List LLMClients",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/": {
+      "get": {
+        "description": "An LLMClient, with its functions, plugins, custom domains, api keys and urls. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_retrieve",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMClientApiLLMClient"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An LLMClient",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/apikeys/": {
+      "get": {
+        "description": "The api keys of an LLMClient: the ids of their SmarterAuthTokens, never the keys. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_apikey_list",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMClientApiKey"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An LLMClient's api keys",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/apikeys/{apikey_id}/": {
+      "get": {
+        "description": "An api key of an LLMClient, by the LLMClientAPIKey's id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_apikey_retrieve",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The LLMClientAPIKey's id.",
+            "in": "path",
+            "name": "apikey_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMClientApiKey"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An api key of an LLMClient",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
     "/llm-clients/{id}/config/": {
       "post": {
         "description": "The configuration of a chat with an LLMClient, and a chat session: a new one, or the one whose key is sent. Its session_key identifies the session in the following prompts, and url_llmclient is where to send them.",
@@ -14999,6 +16390,300 @@
         "summary": "An LLMClient's chat configuration",
         "tags": [
           "chat"
+        ]
+      }
+    },
+    "/llm-clients/{id}/customdomains": {
+      "get": {
+        "description": "The custom domain of an LLMClient, as a list of none or one. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_customdomain_list",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMClientApiCustomDomain"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An LLMClient's custom domains",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/customdomains/{customdomain_id}": {
+      "get": {
+        "description": "A custom domain of an LLMClient, by its id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_customdomain_retrieve",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The LLMClientCustomDomain's id.",
+            "in": "path",
+            "name": "customdomain_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMClientApiCustomDomain"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A custom domain of an LLMClient",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/functions": {
+      "get": {
+        "description": "The built-in functions of an LLMClient. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_function_list",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMClientApiFunction"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An LLMClient's built-in functions",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/functions/{function_id}": {
+      "get": {
+        "description": "A built-in function of an LLMClient, by the LLMClientFunctions' id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_function_retrieve",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The LLMClientFunctions' id.",
+            "in": "path",
+            "name": "function_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMClientApiFunction"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A built-in function of an LLMClient",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/plugins/": {
+      "get": {
+        "description": "The plugins of an LLMClient, each with the plugin's metadata. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_plugin_list",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMClientApiPlugin"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An LLMClient's plugins",
+        "tags": [
+          "llmclients"
+        ]
+      }
+    },
+    "/llm-clients/{id}/plugins/{plugin_id}/": {
+      "get": {
+        "description": "A plugin of an LLMClient, by the LLMClientPlugin's id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_plugin_retrieve",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The LLMClientPlugin's id.",
+            "in": "path",
+            "name": "plugin_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMClientApiPlugin"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A plugin of an LLMClient",
+        "tags": [
+          "llmclients"
         ]
       }
     },
@@ -15137,6 +16822,10 @@
     {
       "description": "Chats with LLMClients.",
       "name": "chat"
+    },
+    {
+      "description": "The LLMClients' REST reads.",
+      "name": "llmclients"
     }
   ]
 }
