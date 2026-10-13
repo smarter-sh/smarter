@@ -7,6 +7,9 @@ on Windows, macOS and Linux. It is separately managed in
 It is a lightweight command-line UI for interacting with the `Smarter
 API <../smarter/smarter/apps/api/v0/cli/>`__.
 
+To use the same API from your own Python code, see the :doc:`Smarter Python SDK <smarter-python>`,
+which also reads the cli's configuration file.
+
 Installation
 ------------
 
