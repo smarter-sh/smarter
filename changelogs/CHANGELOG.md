@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.21.1...v0.22.0-alpha.1) (2026-10-13)
+
+### Features
+
+* **api:** publish the SAM JSON Schemas and a cli api OpenAPI document ([bd8aa0e](https://github.com/smarter-sh/smarter/commit/bd8aa0e24714fabdb223233aa163d987e34800b3))
+
 ## [0.21.1](https://github.com/smarter-sh/smarter/compare/v0.21.0...v0.21.1) (2026-10-13)
 
 ### Bug Fixes
