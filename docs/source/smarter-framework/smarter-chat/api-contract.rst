@@ -316,35 +316,35 @@ Then, in version 2, the model is dumped as is; in version 1,
 .. code-block:: json
    :caption: A version 2 public configuration
 
-  {
-    "data": {
-      "contract": 2,
-      "session_key": "e019a5c1cb2c1cb87992d2d03bccaf44c9d98406b46de5516a4fa03650038ac8",
-      "sandbox_mode": false,
-      "debug_mode": false,
-      "llmclient": {
-        "id": 1,
-        "name": "stackademy_sql",
-        "provider": "openai",
-        "default_model": "gpt-4o-mini",
-        "default_system_role": "You are a helpful assistant. ...",
-        "app_name": "Stackademy",
-        "app_assistant": "Stanley",
-        "app_welcome_message": "Welcome to Stackademy! How can I help you today?",
-        "app_example_prompts": ["Do you offer any courses on AI?"],
-        "app_placeholder": "Ask me anything about Stackademy courses...",
-        "app_file_attachment": false,
-        "deployed": true,
-        "url_llmclient": "https://stackademy-sql.3141-5926-5359.api.example.com/prompt/"
-      },
-      "history": { "chat_history": [] },
-      "meta_data": { "ready": true, "is_deployed": true },
-      "plugins": { "meta_data": { "total_plugins": 1, "plugins_returned": 1 }, "plugins": [] },
-      "functions": { "meta_data": { "total_functions": 0, "functions_returned": 0 }, "functions": [] }
-    },
-    "api": "smarter.sh/v1",
-    "metadata": { "command": "prompt_config", "thing": "PromptConfig" }
-  }
+   {
+     "data": {
+       "contract": 2,
+       "session_key": "e019a5c1cb2c1cb87992d2d03bccaf44c9d98406b46de5516a4fa03650038ac8",
+       "sandbox_mode": false,
+       "debug_mode": false,
+       "llmclient": {
+         "id": 1,
+         "name": "stackademy_sql",
+         "provider": "openai",
+         "default_model": "gpt-4o-mini",
+         "default_system_role": "You are a helpful assistant. ...",
+         "app_name": "Stackademy",
+         "app_assistant": "Stanley",
+         "app_welcome_message": "Welcome to Stackademy! How can I help you today?",
+         "app_example_prompts": ["Do you offer any courses on AI?"],
+         "app_placeholder": "Ask me anything about Stackademy courses...",
+         "app_file_attachment": false,
+         "deployed": true,
+         "url_llmclient": "https://stackademy-sql.3141-5926-5359.api.example.com/prompt/"
+       },
+       "history": { "chat_history": [] },
+       "meta_data": { "ready": true, "is_deployed": true },
+       "plugins": { "meta_data": { "total_plugins": 1, "plugins_returned": 1 }, "plugins": [] },
+       "functions": { "meta_data": { "total_functions": 0, "functions_returned": 0 }, "functions": [] }
+     },
+     "api": "smarter.sh/v1",
+     "metadata": { "command": "prompt_config", "thing": "PromptConfig" }
+   }
 
 No field of the contract is an untyped list. Every list holds a named model, and the few values
 that are stored as arbitrary JSON, such as a tool's result, are
