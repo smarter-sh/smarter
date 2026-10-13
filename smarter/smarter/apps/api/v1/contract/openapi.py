@@ -7,8 +7,8 @@ The document covers the apis that the ``smarter`` cli and the SDKs call, family 
   SAM manifests declare,
 - the chat api (``/api/v1/llm-clients/{id}/config/`` and ``.../prompt/``), to chat with an
   LLMClient, as JSON or as a stream of Server-Sent Events,
-- the REST reads of the resource families, so far the LLMClients', the Guardrails' and the
-  Secrets', whose responses are built from each app's contract models, e.g.
+- the REST reads of the resource families, so far the LLMClients', the Guardrails', the Secrets'
+  and the MCPClients', whose responses are built from each app's contract models, e.g.
   :mod:`smarter.apps.llmclient.contract.models`. Only the reads are published: clients write
   through the cli api's manifests, which the brokers validate.
 
@@ -53,6 +53,14 @@ from smarter.apps.llmclient.contract.models import (
     LLMClientApiKey,
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
+)
+from smarter.apps.mcpclient.contract.models import (
+    MCPCLIENT_API_MODELS,
+    MCPClientApiMCPClient,
+    MCPClientApiStatus,
+    MCPClientApiStatusError,
+    MCPClientApiToolResult,
+    MCPClientApiTools,
 )
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
 from smarter.apps.prompt.contract.models import (
@@ -130,6 +138,7 @@ TAG_CHAT = "chat"
 TAG_LLMCLIENTS = "llmclients"
 TAG_GUARDRAILS = "guardrails"
 TAG_SECRETS = "secrets"
+TAG_MCPCLIENTS = "mcpclients"
 
 SUPERUSER_ONLY = (
     "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
@@ -159,6 +168,7 @@ DOCUMENTED_URLCONFS: dict[str, str] = {
     "/llm-clients/": "smarter.apps.llmclient.api.v1.urls",
     "/guardrails/": "smarter.apps.guardrail.api.v1.urls",
     "/secrets/": "smarter.apps.secret.api.v1.urls",
+    "/mcpclients/": "smarter.apps.mcpclient.api.v1.urls",
 }
 """
 The families of routes that the document covers: each one's path, relative to ``/api/v1``, and its urlconf.
@@ -170,6 +180,7 @@ PATH_PARAMETER_ALIASES: dict[str, str] = {
     "llmclient_id": "id",
     "guardrail_id": "id",
     "secret_id": "id",
+    "mcpclient_id": "id",
     "hashed_id": "id",
 }
 """
@@ -263,6 +274,7 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         *LLMCLIENT_API_MODELS,
         *GUARDRAIL_API_MODELS,
         *SECRET_API_MODELS,
+        *MCPCLIENT_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -317,6 +329,11 @@ def cli_schemas() -> tuple[dict[str, OpenApiSchema], list[str]]:
     schemas["CliApiErrorResponse"] = {
         "description": "A journaled error response.",
         "allOf": [ref(SAMJournalApiEnvelope.__name__), ref(SAMJournalApiErrorResponse.__name__)],
+    }
+    schemas["MCPClientApiErrorResponse"] = {
+        "description": "An error: a failed connection to the MCP server, with the MCPClient's connection status, "
+        "or another error, e.g. a 404 for an MCPClient that the user may not read.",
+        "anyOf": [ref(MCPClientApiStatusError.__name__), ref(RestApiErrorResponse.__name__)],
     }
     schemas["LLMClientPromptErrorResponse"] = {
         "description": "A failed prompt: the prompt's response with its error, whose http status is the LLM "
@@ -1002,6 +1019,112 @@ def secret_paths() -> dict[str, OpenApiPathItem]:
     }
 
 
+def mcpclient_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The MCPClients' REST reads, their reconnection, and the call of a tool, relative to the server's ``/api/v1``.
+
+    :returns: The paths, e.g. ``{"/mcpclients/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    mcpclient_id = id_or_hashed_id("MCPClient")
+    connection_error = json_response(
+        "An error, e.g. 502 for an MCP server that failed, 403 for a user who does not own the MCPClient, or 404 for "
+        "an MCPClient that the user may not read.",
+        "MCPClientApiErrorResponse",
+    )
+    tools = OpenApiOperation(
+        operationId="mcpclient_tools",
+        summary="An MCPClient's tools",
+        description="The tools that the MCPClient offers the LLM, from its server's cached catalog, with its "
+        f"connection status and the server's instructions. {READ_PERMISSION}",
+        tags=[TAG_MCPCLIENTS],
+        parameters=[
+            mcpclient_id,
+            OpenApiParameter(
+                name="refresh",
+                in_="query",
+                description="true reconnects to the MCP server first, rather than reading the cached catalog.",
+                schema_={"type": "string", "enum": ["true", "false"], "default": "false"},
+            ),
+        ],
+        responses={"200": json_response("The tools.", MCPClientApiTools.__name__), "default": connection_error},
+    )
+    refresh = OpenApiOperation(
+        operationId="mcpclient_refresh",
+        summary="Reconnect an MCPClient",
+        description="Reconnect to the MCPClient's server, refresh its catalog, and return its connection status. "
+        "Only the MCPClient's owner may reconnect it.",
+        tags=[TAG_MCPCLIENTS],
+        parameters=[mcpclient_id],
+        responses={
+            "200": json_response("The connection status.", MCPClientApiStatus.__name__),
+            "default": connection_error,
+        },
+    )
+    tool_call = OpenApiOperation(
+        operationId="mcpclient_tool_call",
+        summary="Call an MCPClient's tool",
+        description="Call one of the tools that the MCPClient allows, with the request body as its arguments, and "
+        "return its result as text. The tool runs on the MCP server, and may change what the server manages. Only "
+        "the MCPClient's owner may call its tools.",
+        tags=[TAG_MCPCLIENTS],
+        parameters=[
+            mcpclient_id,
+            OpenApiParameter(
+                name="tool_name", in_="path", required=True, description="The tool's name.", schema_={"type": "string"}
+            ),
+        ],
+        requestBody=OpenApiRequestBody(
+            required=False,
+            content={
+                "application/json": OpenApiMediaType(
+                    schema_={
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": "The tool's arguments, as its input schema describes them.",
+                    }
+                )
+            },
+        ),
+        responses={
+            "200": json_response("The tool's result.", MCPClientApiToolResult.__name__),
+            "default": json_response(
+                "An error, e.g. 403 for a tool that the MCPClient does not allow, or 502 for a failed server.",
+                RestApiErrorResponse.__name__,
+            ),
+        },
+    )
+    return {
+        "/mcpclients/": OpenApiPathItem(
+            get=rest_read(
+                "mcpclient_list",
+                "List MCPClients",
+                "The MCPClients that the user may read, by name.",
+                TAG_MCPCLIENTS,
+                MCPClientApiMCPClient.__name__,
+                many=True,
+                parameters=[],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/mcpclients/{id}/": OpenApiPathItem(
+            get=rest_read(
+                "mcpclient_retrieve",
+                "An MCPClient",
+                "An MCPClient that the user may read. Its credentials are their Secret's name, never its value.",
+                TAG_MCPCLIENTS,
+                MCPClientApiMCPClient.__name__,
+                many=False,
+                parameters=[mcpclient_id],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/mcpclients/{id}/tools/": OpenApiPathItem(get=tools),
+        "/mcpclients/{id}/refresh/": OpenApiPathItem(post=refresh),
+        "/mcpclients/{id}/tools/{tool_name}/": OpenApiPathItem(post=tool_call),
+    }
+
+
 def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
     """
     The paths of several families, with the operations of a path that two families share in one path item.
@@ -1073,8 +1196,13 @@ def openapi_document() -> OpenApiDocument:
             OpenApiTag(name=TAG_LLMCLIENTS, description="The LLMClients' REST reads."),
             OpenApiTag(name=TAG_GUARDRAILS, description="The Guardrails' REST reads, and their dry run."),
             OpenApiTag(name=TAG_SECRETS, description="The Secrets' REST reads: their metadata, never their values."),
+            OpenApiTag(
+                name=TAG_MCPCLIENTS, description="The MCPClients' REST reads, their reconnection, and tool calls."
+            ),
         ],
-        paths=merge_paths(cli_paths(), chat_paths(), llmclient_paths(), guardrail_paths(), secret_paths()),
+        paths=merge_paths(
+            cli_paths(), chat_paths(), llmclient_paths(), guardrail_paths(), secret_paths(), mcpclient_paths()
+        ),
         components=OpenApiComponents(
             schemas=schemas,
             securitySchemes={
@@ -1120,6 +1248,7 @@ __all__ = [
     "guardrail_paths",
     "id_or_hashed_id",
     "llmclient_paths",
+    "mcpclient_paths",
     "secret_paths",
     "merge_paths",
     "rest_read",

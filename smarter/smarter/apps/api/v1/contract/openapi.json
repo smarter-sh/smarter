@@ -3660,6 +3660,850 @@
         ],
         "description": "A failed prompt: the prompt's response with its error, whose http status is the LLM provider's, or, for an error before the prompt runs, e.g. an LLMClient that does not exist, the chat api's error response."
       },
+      "MCPClientApiErrorResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/MCPClientApiStatusError"
+          },
+          {
+            "$ref": "#/components/schemas/RestApiErrorResponse"
+          }
+        ],
+        "description": "An error: a failed connection to the MCP server, with the MCPClient's connection status, or another error, e.g. a 404 for an MCPClient that the user may not read."
+      },
+      "MCPClientApiMCPClient": {
+        "additionalProperties": false,
+        "description": "An MCPClient: a :class:`smarter.apps.mcpclient.models.MCPClient`.\n\nIts credentials are their Secret's name.",
+        "properties": {
+          "allowedResources": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Glob patterns of the resources the LLM may read.",
+            "title": "Allowedresources"
+          },
+          "allowedTools": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Glob patterns of the tools to offer the LLM.",
+            "title": "Allowedtools"
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "apiKeyHeader": {
+            "description": "The http header that carries an api_key credential.",
+            "title": "Apikeyheader",
+            "type": "string"
+          },
+          "authType": {
+            "description": "How to authenticate with the server.",
+            "enum": [
+              "none",
+              "api_key",
+              "oauth2",
+              "bearer_token"
+            ],
+            "title": "Authtype",
+            "type": "string"
+          },
+          "cacheTtl": {
+            "description": "Seconds to cache the server's catalog.",
+            "minimum": 0,
+            "title": "Cachettl",
+            "type": "integer"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the MCPClient now: they own it, and nothing uses it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The command of a stdio server.",
+            "title": "Command"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name of the Secret that holds the credential, never its value.",
+            "title": "Credentials"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "endpointUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the MCP server's endpoint.",
+            "title": "Endpointurl"
+          },
+          "hashedId": {
+            "description": "The MCPClient's hashed id, which its urls use.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Non-secret http headers to send to the server.",
+            "title": "Headers"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "includeInstructions": {
+            "description": "Whether the server's instructions join the system prompt.",
+            "title": "Includeinstructions",
+            "type": "boolean"
+          },
+          "isActive": {
+            "description": "Whether LLMClients use the MCPClient.",
+            "title": "Isactive",
+            "type": "boolean"
+          },
+          "lastConnectedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the platform last connected.",
+            "title": "Lastconnectedat"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The error of the last failed connection.",
+            "title": "Lasterror"
+          },
+          "manifestUrl": {
+            "description": "The url of the MCPClient's manifest in the web console.",
+            "title": "Manifesturl",
+            "type": "string"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "priority": {
+            "description": "The order of an LLMClient's MCPClients. Lower runs first.",
+            "minimum": 0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "protocolVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The MCP protocol version that the server negotiated.",
+            "title": "Protocolversion"
+          },
+          "ready": {
+            "description": "Whether the MCPClient is configured completely.",
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "rfc1034CompliantName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name, as a DNS label.",
+            "title": "Rfc1034Compliantname"
+          },
+          "serverName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name that the server reported.",
+            "title": "Servername"
+          },
+          "serverVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The version that the server reported.",
+            "title": "Serverversion"
+          },
+          "status": {
+            "description": "The result of the last connection.",
+            "enum": [
+              "unconfigured",
+              "connected",
+              "disconnected",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "timeout": {
+            "description": "Seconds to wait for the server.",
+            "minimum": 0,
+            "title": "Timeout",
+            "type": "integer"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The names of the tools offered, as of the last connection.",
+            "title": "Tools"
+          },
+          "transport": {
+            "anyOf": [
+              {
+                "enum": [
+                  "stdio",
+                  "sse",
+                  "http"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The MCP transport.",
+            "title": "Transport"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The MCPClient's owner."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "userProfile",
+          "canDelete",
+          "manifestUrl",
+          "ready",
+          "timeout",
+          "authType",
+          "apiKeyHeader",
+          "includeInstructions",
+          "cacheTtl",
+          "isActive",
+          "status",
+          "priority"
+        ],
+        "title": "MCPClientApiMCPClient",
+        "type": "object"
+      },
+      "MCPClientApiStatus": {
+        "additionalProperties": false,
+        "description": "An MCPClient's connection to its MCP server: the result of the last connection, and what the server reported.",
+        "properties": {
+          "lastConnected": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the platform last connected.",
+            "title": "Lastconnected"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The error of the last failed connection.",
+            "title": "Lasterror"
+          },
+          "name": {
+            "description": "The MCPClient's name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "protocolVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The MCP protocol version that the server negotiated.",
+            "title": "Protocolversion"
+          },
+          "serverName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name that the server reported.",
+            "title": "Servername"
+          },
+          "serverVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The version that the server reported.",
+            "title": "Serverversion"
+          },
+          "status": {
+            "description": "The result of the last connection.",
+            "enum": [
+              "unconfigured",
+              "connected",
+              "disconnected",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tools": {
+            "description": "The names of the tools offered, as of the last connection.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "tools"
+        ],
+        "title": "MCPClientApiStatus",
+        "type": "object"
+      },
+      "MCPClientApiStatusError": {
+        "additionalProperties": false,
+        "description": "A failed connection to an MCP server: the error, beside the MCPClient's connection status.",
+        "properties": {
+          "detail": {
+            "description": "The error, for a person.",
+            "title": "Detail",
+            "type": "string"
+          },
+          "lastConnected": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the platform last connected.",
+            "title": "Lastconnected"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The error of the last failed connection.",
+            "title": "Lasterror"
+          },
+          "name": {
+            "description": "The MCPClient's name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "protocolVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The MCP protocol version that the server negotiated.",
+            "title": "Protocolversion"
+          },
+          "serverName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name that the server reported.",
+            "title": "Servername"
+          },
+          "serverVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The version that the server reported.",
+            "title": "Serverversion"
+          },
+          "status": {
+            "description": "The result of the last connection.",
+            "enum": [
+              "unconfigured",
+              "connected",
+              "disconnected",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tools": {
+            "description": "The names of the tools offered, as of the last connection.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "tools",
+          "detail"
+        ],
+        "title": "MCPClientApiStatusError",
+        "type": "object"
+      },
+      "MCPClientApiTool": {
+        "additionalProperties": false,
+        "description": "A tool that an MCP server offers, and that the MCPClient allows.",
+        "properties": {
+          "description": {
+            "default": "",
+            "description": "What the tool does, for the LLM.",
+            "title": "Description",
+            "type": "string"
+          },
+          "destructive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Whether the server says the tool may destroy data.",
+            "title": "Destructive"
+          },
+          "inputSchema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "The JSON Schema of the tool's arguments.",
+            "title": "Inputschema",
+            "type": "object"
+          },
+          "name": {
+            "description": "The tool's name, which an LLM calls it by.",
+            "title": "Name",
+            "type": "string"
+          },
+          "readOnly": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Whether the server says the tool changes nothing.",
+            "title": "Readonly"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The tool's title, for a person.",
+            "title": "Title"
+          }
+        },
+        "required": [
+          "name",
+          "inputSchema"
+        ],
+        "title": "MCPClientApiTool",
+        "type": "object"
+      },
+      "MCPClientApiToolResult": {
+        "additionalProperties": false,
+        "description": "The result of a call of an MCPClient's tool, as text for an LLM.",
+        "properties": {
+          "content": {
+            "description": "The tool's result, as text. Binary content is described, not included.",
+            "title": "Content",
+            "type": "string"
+          },
+          "isError": {
+            "description": "Whether the tool reported an error.",
+            "title": "Iserror",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "The MCPClient's name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "tool": {
+            "description": "The tool's name.",
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "tool",
+          "isError",
+          "content"
+        ],
+        "title": "MCPClientApiToolResult",
+        "type": "object"
+      },
+      "MCPClientApiTools": {
+        "additionalProperties": false,
+        "description": "An MCPClient's connection status, its server's instructions, and the tools that it offers the LLM.",
+        "properties": {
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The server's instructions for the LLM.",
+            "title": "Instructions"
+          },
+          "lastConnected": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the platform last connected.",
+            "title": "Lastconnected"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The error of the last failed connection.",
+            "title": "Lasterror"
+          },
+          "name": {
+            "description": "The MCPClient's name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "protocolVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The MCP protocol version that the server negotiated.",
+            "title": "Protocolversion"
+          },
+          "serverName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name that the server reported.",
+            "title": "Servername"
+          },
+          "serverVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The version that the server reported.",
+            "title": "Serverversion"
+          },
+          "status": {
+            "description": "The result of the last connection.",
+            "enum": [
+              "unconfigured",
+              "connected",
+              "disconnected",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tools": {
+            "description": "The tools that the MCPClient allows.",
+            "items": {
+              "$ref": "#/components/schemas/MCPClientApiTool"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "tools"
+        ],
+        "title": "MCPClientApiTools",
+        "type": "object"
+      },
       "OrchestrationStrategy": {
         "description": "Coordination pattern the Orchestrator applies across its member LLMClients.\n\nValues must stay aligned with\nsmarter.apps.orchestrator.models.OrchestrationStrategy.",
         "enum": [
@@ -17940,6 +18784,249 @@
         ]
       }
     },
+    "/mcpclients/": {
+      "get": {
+        "description": "The MCPClients that the user may read, by name. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "mcpclient_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MCPClientApiMCPClient"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List MCPClients",
+        "tags": [
+          "mcpclients"
+        ]
+      }
+    },
+    "/mcpclients/{id}/": {
+      "get": {
+        "description": "An MCPClient that the user may read. Its credentials are their Secret's name, never its value. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "mcpclient_retrieve",
+        "parameters": [
+          {
+            "description": "The MCPClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPClientApiMCPClient"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An MCPClient",
+        "tags": [
+          "mcpclients"
+        ]
+      }
+    },
+    "/mcpclients/{id}/refresh/": {
+      "post": {
+        "description": "Reconnect to the MCPClient's server, refresh its catalog, and return its connection status. Only the MCPClient's owner may reconnect it.",
+        "operationId": "mcpclient_refresh",
+        "parameters": [
+          {
+            "description": "The MCPClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPClientApiStatus"
+                }
+              }
+            },
+            "description": "The connection status."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPClientApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 502 for an MCP server that failed, 403 for a user who does not own the MCPClient, or 404 for an MCPClient that the user may not read."
+          }
+        },
+        "summary": "Reconnect an MCPClient",
+        "tags": [
+          "mcpclients"
+        ]
+      }
+    },
+    "/mcpclients/{id}/tools/": {
+      "get": {
+        "description": "The tools that the MCPClient offers the LLM, from its server's cached catalog, with its connection status and the server's instructions. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "mcpclient_tools",
+        "parameters": [
+          {
+            "description": "The MCPClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "true reconnects to the MCP server first, rather than reading the cached catalog.",
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPClientApiTools"
+                }
+              }
+            },
+            "description": "The tools."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPClientApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 502 for an MCP server that failed, 403 for a user who does not own the MCPClient, or 404 for an MCPClient that the user may not read."
+          }
+        },
+        "summary": "An MCPClient's tools",
+        "tags": [
+          "mcpclients"
+        ]
+      }
+    },
+    "/mcpclients/{id}/tools/{tool_name}/": {
+      "post": {
+        "description": "Call one of the tools that the MCPClient allows, with the request body as its arguments, and return its result as text. The tool runs on the MCP server, and may change what the server manages. Only the MCPClient's owner may call its tools.",
+        "operationId": "mcpclient_tool_call",
+        "parameters": [
+          {
+            "description": "The MCPClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The tool's name.",
+            "in": "path",
+            "name": "tool_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "description": "The tool's arguments, as its input schema describes them.",
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPClientApiToolResult"
+                }
+              }
+            },
+            "description": "The tool's result."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 403 for a tool that the MCPClient does not allow, or 502 for a failed server."
+          }
+        },
+        "summary": "Call an MCPClient's tool",
+        "tags": [
+          "mcpclients"
+        ]
+      }
+    },
     "/secrets/": {
       "get": {
         "description": "The Secrets of the user's accounts: their metadata, never their values. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
@@ -18069,6 +19156,10 @@
     {
       "description": "The Secrets' REST reads: their metadata, never their values.",
       "name": "secrets"
+    },
+    {
+      "description": "The MCPClients' REST reads, their reconnection, and tool calls.",
+      "name": "mcpclients"
     }
   ]
 }

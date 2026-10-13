@@ -44,5 +44,10 @@ API Contract
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: smarter.apps.mcpclient.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: smarter.lib.drf.views.contract
     :members:

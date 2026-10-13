@@ -16,6 +16,10 @@ connect to their MCP servers:
 - ``POST mcpclients/<hashed_id>/tools/<tool_name>/``: call a tool, with the JSON request
   body as its arguments. Only the owner may call tools.
 
+The responses are built from the models of :mod:`smarter.apps.mcpclient.contract.models`, which the
+Smarter api's OpenAPI document publishes. Errors are Django REST framework's ``{"detail": ...}``. A
+failed connection to the MCP server adds the MCPClient's connection status beside it.
+
 .. note::
 
     **Experimental.** The MCPClient was designed and coded by Claude Code (Anthropic's
@@ -27,7 +31,7 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.db.models import QuerySet
-from django.http import Http404, JsonResponse
+from django.http import Http404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -37,6 +41,13 @@ from smarter.apps.mcpclient.caching import (
     invalidate_cached_catalog,
 )
 from smarter.apps.mcpclient.connection import MCPServerConnection, is_tool_allowed
+from smarter.apps.mcpclient.contract.models import (
+    MCPClientApiMCPClient,
+    MCPClientApiStatus,
+    MCPClientApiStatusError,
+    MCPClientApiToolResult,
+    MCPClientApiTools,
+)
 from smarter.apps.mcpclient.exceptions import (
     SmarterMCPClientConfigurationError,
     SmarterMCPClientException,
@@ -47,6 +58,7 @@ from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.apps.mcpclient.signals import mcpclient_called
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -56,18 +68,20 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING])
 
 
-def mcpclient_status(mcpclient: MCPClient) -> SmarterDictType:
-    """Return an MCPClient's connection status, as a dict."""
-    return {
-        "name": mcpclient.name,
-        "status": mcpclient.status,
-        "protocolVersion": mcpclient.protocol_version,
-        "serverName": mcpclient.server_name,
-        "serverVersion": mcpclient.server_version,
-        "lastConnected": mcpclient.last_connected_at.isoformat() if mcpclient.last_connected_at else None,
-        "lastError": mcpclient.last_error,
-        "tools": mcpclient.tools or [],
-    }
+def status_error(mcpclient: MCPClient, e: SmarterMCPClientException) -> Response:
+    """
+    The response to a failed connection to an MCPClient's server: the error, beside the MCPClient's connection status.
+
+    :param mcpclient: The MCPClient.
+    :type mcpclient: MCPClient
+    :param e: The error.
+    :type e: SmarterMCPClientException
+    :returns: The response, whose status is :func:`error_status`'s.
+    :rtype: rest_framework.response.Response
+    """
+    status = MCPClientApiStatus.from_model(mcpclient)
+    error = MCPClientApiStatusError(**status.model_dump(), detail=e.message)
+    return Response(error.model_dump(mode="json"), status=error_status(e))
 
 
 def error_status(e: SmarterMCPClientException) -> int:
@@ -124,7 +138,7 @@ class MCPClientView(MCPClientViewBase):
     def get(self, request: Request, *args, **kwargs):
         """Return an MCPClient that the user may read."""
         mcpclient = self.get_mcpclient(request, **kwargs)
-        return Response(MCPClientSerializer(mcpclient).data, status=HTTPStatus.OK)
+        return Response(MCPClientApiMCPClient.from_model(mcpclient, request.user).model_dump(mode="json"))
 
     def delete(self, request: Request, *args, **kwargs):
         """Delete an MCPClient that the user owns."""
@@ -146,20 +160,9 @@ class MCPClientToolsView(MCPClientViewBase):
         try:
             catalog = get_cached_catalog(mcpclient, refresh=refresh)
         except SmarterMCPClientException as e:
-            return JsonResponse({"error": e.message, **mcpclient_status(mcpclient)}, status=error_status(e))
-        tools = [
-            {
-                "name": tool.name,
-                "title": tool.title,
-                "description": tool.description,
-                "inputSchema": tool.input_schema,
-                "readOnly": tool.read_only,
-                "destructive": tool.destructive,
-            }
-            for tool in catalog.tools
-            if is_tool_allowed(mcpclient, tool.name)
-        ]
-        return JsonResponse({**mcpclient_status(mcpclient), "instructions": catalog.instructions, "tools": tools})
+            return status_error(mcpclient, e)
+        tools = [tool for tool in catalog.tools if is_tool_allowed(mcpclient, tool.name)]
+        return Response(MCPClientApiTools.from_catalog(mcpclient, catalog, tools).model_dump(mode="json"))
 
 
 class MCPClientRefreshView(MCPClientViewBase):
@@ -172,8 +175,8 @@ class MCPClientRefreshView(MCPClientViewBase):
         try:
             get_cached_catalog(mcpclient, refresh=True)
         except SmarterMCPClientException as e:
-            return JsonResponse({"error": e.message, **mcpclient_status(mcpclient)}, status=error_status(e))
-        return JsonResponse(mcpclient_status(mcpclient))
+            return status_error(mcpclient, e)
+        return Response(MCPClientApiStatus.from_model(mcpclient).model_dump(mode="json"))
 
 
 class MCPClientToolCallView(MCPClientViewBase):
@@ -190,16 +193,19 @@ class MCPClientToolCallView(MCPClientViewBase):
         try:
             result = MCPServerConnection(mcpclient).call_tool(tool_name, arguments)
         except SmarterMCPClientException as e:
-            return JsonResponse({"error": e.message}, status=error_status(e))
-        return JsonResponse(
-            {"name": mcpclient.name, "tool": tool_name, "isError": result.is_error, "content": result.text}
-        )
+            return Response({"detail": e.message}, status=error_status(e))
+        return Response(MCPClientApiToolResult.from_result(mcpclient, tool_name, result).model_dump(mode="json"))
 
 
-class MCPClientListView(SmarterAuthenticatedListAPIView):
+class MCPClientListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     """The MCPClients that the user may read."""
 
     serializer_class = MCPClientSerializer
+    contract_model = MCPClientApiMCPClient
+
+    def item(self, row):
+        """An MCPClient of the response, whose ``canDelete`` is the requesting user's."""
+        return MCPClientApiMCPClient.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[MCPClient]:
         return MCPClient.objects.with_read_permission_for(user=self.request.user).order_by("name")  # type: ignore[attr-defined]

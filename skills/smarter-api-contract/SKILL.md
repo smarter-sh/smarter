@@ -183,8 +183,9 @@ This is how the document grows toward everything the SDKs call. The chat api
    `merge_paths()` in `openapi_document()`. Pass `rest_read()` the family's
    access note: `SUPERUSER_ONLY` for `SmarterAdmin*` views, `READ_PERMISSION`
    for `SmarterAuthenticated*` ones. The REST writes stay unpublished: clients
-   write through manifests. An action that changes nothing, e.g. a Guardrail's
-   dry run, may be published as a POST.
+   write through manifests. An action that an SDK uses may be published as a
+   POST, e.g. a Guardrail's dry run, or an MCPClient's tool call: say in its
+   description what it changes, and who may call it.
    Keep a response's existing key style, even if it isn't camelCase (a
    Guardrail's events are snake_case): clients already read it.
 5. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.

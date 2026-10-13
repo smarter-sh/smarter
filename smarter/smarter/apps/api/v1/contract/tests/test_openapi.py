@@ -45,6 +45,11 @@ from smarter.apps.llmclient.models import (
     LLMClientFunctions,
     LLMClientPlugin,
 )
+from smarter.apps.mcpclient.caching import invalidate_cached_catalog
+from smarter.apps.mcpclient.connection import MCPServerConnection
+from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
+from smarter.apps.mcpclient.models import MCPClient
+from smarter.apps.mcpclient.tests.base_classes import mock_mcp_server
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.const import PROJECT_ROOT
@@ -323,6 +328,56 @@ class TestOpenApiResponses(ApiV1CliTestBase):
         response = client.get("/api/v1/secrets/")
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content)
         self.assertValidResponse("/secrets/", "get", response.json(), response.status_code)
+
+    def test_mcpclient_reads(self):
+        """The MCPClients' reads, tools, reconnection and tool call, with an in-process MCP server, against the document."""
+        with mock.patch("smarter.apps.mcpclient.receivers.refresh_mcpclient"):
+            mcpclient = MCPClient.objects.create(
+                name=self.name,
+                user_profile=self.user_profile,
+                transport="http",
+                endpoint_url="https://mcp.example.com/mcp",
+                auth_type="none",
+            )
+        self.addCleanup(MCPClient.objects.filter(pk=mcpclient.pk).delete)
+        self.addCleanup(invalidate_cached_catalog, mcpclient)
+        client = APIClient()
+        headers = {"Authorization": f"Token {self.token_key}"}
+
+        with mock_mcp_server():
+            for template, path in {
+                "/mcpclients/": "/mcpclients/",
+                "/mcpclients/{id}/": f"/mcpclients/{mcpclient.hashed_id}/",
+                "/mcpclients/{id}/tools/": f"/mcpclients/{mcpclient.pk}/tools/?refresh=true",
+            }.items():
+                with self.subTest(path=template):
+                    status, body = self.rest_get(path)
+                    self.assertEqual(status, HTTPStatus.OK, body)
+                    self.assertValidResponse(template, "get", body)
+            response = client.post(f"/api/v1/mcpclients/{mcpclient.pk}/refresh/", headers=headers)
+            self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+            self.assertValidResponse("/mcpclients/{id}/refresh/", "post", response.json())
+            response = client.post(
+                f"/api/v1/mcpclients/{mcpclient.hashed_id}/tools/add_numbers/",
+                {"a": 1, "b": 2},
+                format="json",
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+            self.assertValidResponse("/mcpclients/{id}/tools/{tool_name}/", "post", response.json())
+            self.assertEqual(response.json()["content"], "3")
+
+        # a failed connection is the error, beside the connection status.
+        invalidate_cached_catalog(mcpclient)
+        with mock.patch.object(MCPServerConnection, "discover", side_effect=SmarterMCPClientConnectionError("down")):
+            status, body = self.rest_get(f"/mcpclients/{mcpclient.pk}/tools/?refresh=true")
+        self.assertEqual(status, HTTPStatus.BAD_GATEWAY, body)
+        self.assertValidResponse("/mcpclients/{id}/tools/", "get", body, status)
+        self.assertEqual((body["detail"], body["status"]), ("down", "error"))
+
+        status, body = self.rest_get("/mcpclients/999999999/")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND, body)
+        self.assertValidResponse("/mcpclients/{id}/", "get", body, status)
 
     def post(self, path: str, data=None) -> SmarterDictType:
         """POST to the cli, and return the response's body, which must be a success."""
