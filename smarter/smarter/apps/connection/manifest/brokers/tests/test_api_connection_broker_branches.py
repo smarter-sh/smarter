@@ -10,7 +10,7 @@ from smarter.apps.connection.manifest.brokers.api_connection import (
 from smarter.apps.connection.manifest.brokers.connection_base import (
     SAMConnectionBaseBroker,
 )
-from smarter.lib.manifest.broker import SAMBrokerErrorNotReady
+from smarter.lib.manifest.broker import SAMBrokerErrorNotFound, SAMBrokerErrorNotReady
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 
@@ -80,7 +80,7 @@ class TestApiConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
     def test_describe_guards(self):
         broker = self.broker
         with patch.object(SAMApiConnectionBroker, "manifest", new_callable=PropertyMock, return_value=None):
-            with self.assertRaises(SAMBrokerErrorNotReady):
+            with self.assertRaises(SAMBrokerErrorNotFound):
                 broker.describe(self.request)
         manifest = MagicMock()
         manifest.model_dump.side_effect = RuntimeError("bad manifest")

@@ -458,7 +458,7 @@ class SAMMCPClientBroker(AbstractBroker):
                 ) from e
         self._mcpclient = mcpclient
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = SmarterJournalCliCommands(self.prompt.__name__)
@@ -469,7 +469,8 @@ class SAMMCPClientBroker(AbstractBroker):
         command = SmarterJournalCliCommands(self.describe.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
-        if not self.mcpclient:
+        self._mcpclient = self.readable_by_name(MCPClient, self.mcpclient)  # type: ignore[assignment]
+        if not self._mcpclient:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         try:
             data = self.django_orm_to_manifest_dict()

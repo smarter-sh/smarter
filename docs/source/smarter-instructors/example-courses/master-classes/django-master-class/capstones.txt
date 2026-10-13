@@ -1,0 +1,106 @@
+Capstone A: A Live Activity Feed for Smarter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Learning objective.** Build one feature that crosses every layer of a production Django
+platform, following the patterns that the platform already uses.
+
+Students add an ``activity`` Django app to their clone of Smarter. Receivers of signals that
+Smarter already sends record each event in a model that inherits ownership, so that each account
+sees only its own. A cached summary per account is invalidated by the same receivers, and a Beat
+task rolls up yesterday's events. Every new event is published to a Redis channel and streamed to
+a console page by an async view, and the page shows the summary with a template tag of their own.
+An API endpoint returns the feed as a Pydantic model, authenticated by API key. A setting in
+``smarter_settings`` and a Waffle switch turn the feature on.
+
+**What students turn in:**
+
+- A pull request against their fork, with the pre-commit hooks passing and at least 90% coverage
+  of the new app.
+- A one-page design note: the signals chosen, the cache key and its invalidation, and the queue
+  that the task runs on.
+- A six-minute recorded walkthrough, from enabling the switch to an event arriving in the browser.
+
+**How it is graded (100 points):**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 35 35
+
+   * - Criterion
+     - Pts
+     - Exemplary
+     - Developing
+   * - Data and ownership
+     - 20
+     - Model on the ownership base class, with tests that accounts cannot see each other's rows.
+     - Filters by owner by hand in each view.
+   * - Signals, caching and tasks
+     - 20
+     - Cache invalidated by receivers, task routed to the right queue, both tested.
+     - Stale cache, or a task that only runs eagerly.
+   * - Streaming
+     - 15
+     - Async view, Redis channel per account, keepalives and clean shutdown.
+     - Polling, or one channel for everyone.
+   * - API and configuration
+     - 15
+     - Pydantic response, API key authentication, a validated setting and a Waffle switch.
+     - Hand-built JSON, or configuration read from ``os.environ``.
+   * - Quality
+     - 20
+     - Hooks pass, 90% coverage, docstrings, and code that reads like the code around it.
+     - Hooks skipped, or tests that do not clean up.
+   * - Walkthrough
+     - 10
+     - Clear and on time.
+     - Overruns, or the feature does not run.
+
+Capstone B: The Patterns, Brought Home
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Learning objective.** Judge which of the course's patterns a real Django project needs, and
+apply them well.
+
+Students take a Django project of their own, their employer's (with permission), or an open-source
+one, and apply at least six patterns from the course, for example a validated settings class, an
+ownership manager, a middleware, a cached and invalidated query, a Celery Beat task, an async
+streaming view, a Pydantic API contract, a template tag, or pre-commit and coverage in CI. For
+each pattern, a short note compares their implementation with Smarter's and says what they
+changed and why. They also name one pattern they chose not to adopt, and why.
+
+**What students turn in:**
+
+- A pull request or patch series against the project, with tests.
+- A four- to six-page design note, one section per pattern.
+- A six-minute recorded walkthrough.
+
+**How it is graded (100 points):**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 35 35
+
+   * - Criterion
+     - Pts
+     - Exemplary
+     - Developing
+   * - Choice of patterns
+     - 15
+     - Each solves a real problem in the project, and one is rejected with reasons.
+     - Patterns added because the course covered them.
+   * - Implementation
+     - 30
+     - Idiomatic, and consistent with the project's own conventions.
+     - Copied from Smarter without adapting.
+   * - Tests and quality
+     - 20
+     - Tested, linted, and covered.
+     - Untested.
+   * - Design note
+     - 25
+     - Compares with Smarter, with trade-offs.
+     - Describes the code only.
+   * - Walkthrough
+     - 10
+     - Clear and on time.
+     - Overruns.

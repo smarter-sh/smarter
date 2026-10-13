@@ -19,6 +19,7 @@ from smarter.apps.llmclient.manifest.models.llmclient.spec import (
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -448,14 +449,14 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     def test_delete_not_found(self):
         """Test that delete() raises not found for an LLMClient that does not exist."""
         broker = self.not_found_broker()
-        with self.assertRaises(SAMBrokerErrorNotReady):
+        with self.assertRaises(SAMBrokerErrorNotFound):
             broker.delete(self.request, **self.kwargs)
         self.assertFalse(LLMClient.objects.filter(name="no_such_llmclient").exists())
 
     def test_describe_not_found(self):
         """Test that describe() raises not found for an LLMClient that does not exist."""
         broker = self.not_found_broker()
-        with self.assertRaises(SAMBrokerErrorNotReady):
+        with self.assertRaises(SAMBrokerErrorNotFound):
             broker.describe(self.request, **self.kwargs)
         self.assertFalse(LLMClient.objects.filter(name="no_such_llmclient").exists())
 

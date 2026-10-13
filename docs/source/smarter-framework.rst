@@ -16,7 +16,8 @@ platform integration.
 
 The framework combines the :doc:`Smarter Manifest Specification <smarter-framework/smarter-manifests>`,
 the :doc:`Smarter Broker Model <smarter-framework/smarter-broker-model>`, the :doc:`Smarter API <smarter-framework/smarter-api>`,
-and a comprehensive set of developer tools into a cohesive platform
+its clients, the :doc:`Smarter CLI <smarter-framework/smarter-cli>` and the
+:doc:`Smarter Python SDK <smarter-framework/smarter-python>`, and a comprehensive set of developer tools into a cohesive platform
 for managing AI workloads. Together, these components provide consistent workflows for
 creating, versioning, deploying, discovering, and governing AI resources across
 environments.
@@ -43,6 +44,7 @@ tools, SDKs, and supporting technologies.
    smarter-framework/smarter-broker-model
    smarter-framework/smarter-chat
    smarter-framework/smarter-cli
+   smarter-framework/smarter-python
    smarter-framework/smarter-manifests
    smarter-framework/smarter-on-kubernetes
    smarter-framework/vs-code-extension

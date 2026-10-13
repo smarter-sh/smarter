@@ -1,0 +1,116 @@
+Every lecture, lab and assignment in this course follows features through the files below, from
+the database to the browser. Every reference is to the ``main`` branch of
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, or of
+`github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__ where named, so
+that students can open each one during class. Python paths are under ``smarter/smarter/``.
+
+One List Page, Database to Pixel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The guardrail list page is the reference. Every list page in the console is built the same way.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Step
+     - What happens
+     - Where to look
+   * - The model
+     - The ``Guardrail`` Django model, owned by an account and a user.
+     - `guardrail/models/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__
+   * - The sidebar link
+     - The console's navigation, a Django template.
+     - `templates/dashboard/sidebar.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/dashboard/sidebar.html>`__
+   * - The URLs
+     - The page itself, and the ``react-integration/api/`` endpoints that the React app calls to
+       list, clone, rename and delete.
+     - `guardrail/urls.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/urls.py>`__
+   * - The Django view
+     - Builds the page's context: the root element's id, the CSRF and session cookie names, the
+       cookie domain and the API's URL.
+     - `guardrail/views/listview/view.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/view.py>`__
+   * - The template
+     - Renders the root element with those values as data attributes, and the app's scripts and
+       styles.
+     - `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+   * - The template tag
+     - Reads the Vite build's ``manifest.json``, validated by Pydantic models, to find the hashed
+       file names of the app's assets. A missing manifest renders an empty page without an
+       error, and is cached, which is the classic failure of this design.
+     - `guardrail/templatetags/react_guardrail_list.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py>`__,
+       `lib/django/templatetags/smarter_react_contract.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_contract.py>`__
+   * - The React entry point
+     - Reads the data attributes into a ``SessionContext`` and mounts the app on the root
+       element.
+     - `smarter-guardrail-list/src/main.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/main.tsx>`__
+   * - The API call
+     - ``fetchDjangoUrl`` posts to Django with the session cookie and the CSRF token.
+     - `smarter-common/src/lib/django.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-common/src/lib/django.tsx>`__
+   * - The server's answer
+     - Session-authenticated, never-cached views that list the guardrails a user owns or can
+       see, and clone, rename or delete one.
+     - `guardrail/views/listview/api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/api.py>`__
+   * - The pixels
+     - The list and card views, the toolbar and the status bar, with typed API objects.
+     - `smarter-guardrail-list/src/components/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list/src/components>`__,
+       `src/lib/Types.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/lib/Types.tsx>`__
+   * - The pattern, written down
+     - The view, template, template tag, data attributes, ``SessionContext``, the list, clone,
+       rename and delete contract, the Vite build, and the sidebar link, as a checklist.
+     - `smarter-django-react/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-django-react/SKILL.md>`__
+
+A Typed Contract Across the Stack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Step
+     - What happens
+     - Where to look
+   * - Pydantic models
+     - The chat API's requests and responses, defined once on the server.
+     - `prompt/contract/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/models.py>`__
+   * - JSON Schema
+     - Exported by a management command, committed, and tested to be current.
+     - `prompt/contract/schema.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/schema.py>`__,
+       `chat-contract.schema.json <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/chat-contract.schema.json>`__
+   * - Copied to the client
+     - ``make chat-contract`` regenerates the schema and copies it into the chat's repository.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``chat-contract``)
+   * - TypeScript types
+     - Generated from the schema, and tested against example payloads.
+     - `smarter-chat: src/contract.gen.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__
+
+Building, Testing and Shipping
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Builds
+     - ``make react-build`` builds every app with Vite, collects static files and rebuilds the
+       image. ``make build`` alone reuses the old static files, so a new page renders empty.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``react-build``)
+   * - Testing the back end
+     - Shared mixins that test any resource's list, clone, rename and delete views.
+     - `lib/unittest/resource_views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/resource_views.py>`__,
+       `guardrail/tests/test_views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/tests/test_views.py>`__
+   * - Testing the front end
+     - Vitest and Testing Library, with MSW handlers and fixtures that mirror the server's
+       responses.
+     - `smarter-guardrail-list/src/mocks/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list/src/mocks>`__,
+       `src/App.test.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/App.test.tsx>`__
+   * - CI
+     - The ``python`` and ``react`` jobs, run side by side.
+     - `test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__
+   * - Embedded apps
+     - A deployed LLMClient's chat can be embedded on another site, and only the origins listed
+       in its manifest's ``allowedOrigins`` may call it.
+     - `llmclient/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/cors.py>`__

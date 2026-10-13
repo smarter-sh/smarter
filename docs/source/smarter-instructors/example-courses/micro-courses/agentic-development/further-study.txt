@@ -1,0 +1,18 @@
+- **Documentation:** the `Claude Code documentation <https://code.claude.com/docs>`__, including its
+  pages on memory (``CLAUDE.md``), skills, hooks and subagents, and the open `Agent Skills
+  <https://agentskills.io/>`__ format.
+- **Essays:** Anthropic's `Building effective agents
+  <https://www.anthropic.com/engineering/building-effective-agents>`__, and its engineering blog's
+  posts on agentic coding best practices and context engineering.
+- **Research:** METR's study *Measuring the Impact of Early-2025 AI on Experienced Open-Source
+  Developer Productivity* (2025), a randomized trial whose results surprised its authors, and a good
+  starting point for a discussion of how to measure productivity honestly.
+- **YouTube:** Andrej Karpathy's talk *Software Is Changing (Again)* (Y Combinator AI Startup
+  School, 2025), and the talks on coding agents on the `AI Engineer
+  <https://www.youtube.com/@aiDotEngineer>`__ channel.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, and `The Pragmatic Engineer
+  <https://newsletter.pragmaticengineer.com/podcast>`__ podcast and newsletter by Gergely Orosz,
+  which reports on how engineering teams actually use AI.
+- **Writing:** Simon Willison's `weblog <https://simonwillison.net/>`__, which documents his own use
+  of coding agents in detail, and the essays on `blog.smarter.sh <https://blog.smarter.sh>`__ about
+  building Smarter with agents.
