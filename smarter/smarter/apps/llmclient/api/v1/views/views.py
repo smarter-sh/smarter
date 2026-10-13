@@ -37,6 +37,7 @@ from smarter.apps.llmclient.tasks import deploy_custom_api
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
@@ -61,26 +62,16 @@ class ViewBase(SmarterAdminAPIView):
     # which are immutable once set.
 
 
-class ListViewBase(SmarterAdminListAPIView):
+class ListViewBase(ContractListMixin, SmarterAdminListAPIView):
     """
     Base class for all llmclient list views.
 
-    A subclass sets ``contract_model``, the model of
-    :mod:`smarter.apps.llmclient.contract.models` that each row of its response is built with.
+    A subclass sets ``contract_model``, the model of :mod:`smarter.apps.llmclient.contract.models`
+    that each row of its response is built with.
     """
 
     # SmarterRequestMixin sets user, user_profile and account from the request,
     # which are immutable once set.
-
-    contract_model: type
-
-    def item(self, row):
-        """The response's item for a row: its contract model, dumped as JSON."""
-        return self.contract_model.from_model(row).model_dump(mode="json")
-
-    def list(self, request: Request, *args, **kwargs) -> Response:
-        """The rows of :meth:`get_queryset`, each built from :attr:`contract_model`."""
-        return Response([self.item(row) for row in self.get_queryset()], status=HTTPStatus.OK)
 
 
 ###############################################################################

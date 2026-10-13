@@ -171,14 +171,22 @@ This is how the document grows toward everything the SDKs call. The chat api
    real row of the local database with both and compare (see
    `test_*_is_the_serializers_output`). Any difference is either a bug in the
    model or a bug that the serializer had: say which in the commit. Then
-   **build the view's response from the model**. A list view sets
-   `contract_model` (or overrides `item()`), and `ListViewBase.list()` does the
-   rest. Raise DRF's `NotFound`, not `HttpResponseNotFound`, so errors are JSON.
+   **build the view's response from the model**. A list view mixes in
+   `smarter.lib.drf.views.contract.ContractListMixin` and sets `contract_model`
+   (or overrides `item()`, e.g. to pass the request's user for `canDelete`).
+   Raise DRF's exceptions (`NotFound`, `ParseError`), never return
+   `HttpResponseNotFound` or `JsonResponse({"error": ...})`, so every error is
+   `{"detail": ...}`.
 4. **Publish the reads only** (`GET`): add the family's models to
    `model_schemas()` (a tuple like `LLMCLIENT_API_MODELS`), and its operations
    in a `<family>_paths()` function built with `rest_read()`, merged by
-   `merge_paths()` in `openapi_document()`. The REST writes stay unpublished:
-   clients write through manifests.
+   `merge_paths()` in `openapi_document()`. Pass `rest_read()` the family's
+   access note: `SUPERUSER_ONLY` for `SmarterAdmin*` views, `READ_PERMISSION`
+   for `SmarterAuthenticated*` ones. The REST writes stay unpublished: clients
+   write through manifests. An action that changes nothing, e.g. a Guardrail's
+   dry run, may be published as a POST.
+   Keep a response's existing key style, even if it isn't camelCase (a
+   Guardrail's events are snake_case): clients already read it.
 5. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.
 6. **Test real responses** of each operation against the document, including
    a 404 and a 403 (see `test_llmclient_reads()` and `assertValidResponse()`).

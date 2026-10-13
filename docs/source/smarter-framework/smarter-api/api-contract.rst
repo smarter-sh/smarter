@@ -34,6 +34,11 @@ against the platform's real responses. It covers:
    * - The LLMClients' REST reads
      - ``GET /api/v1/llm-clients/``, an LLMClient, and its plugins, api keys, custom domains and
        built-in functions, as lists and one by one.
+   * - The Guardrails' REST reads
+     - ``GET /api/v1/guardrails/``, a Guardrail, its latest events, and ``POST .../evaluate/``, a dry
+       run of a Guardrail on a text.
+   * - The Secrets' REST reads
+     - ``GET /api/v1/secrets/`` and a Secret: their metadata, never their values.
 
 The other routes of a covered family are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason that it is
@@ -176,12 +181,19 @@ Their responses are built from each app's contract models, e.g.
 :mod:`smarter.apps.plugin.contract.models`. The models describe the JSON that the views returned
 before they were modeled, which clients already read, with two corrections:
 
-- ``canDelete`` is computed for the requesting user. The views called their serializers without the
-  request, so it was always false.
+- ``canDelete`` is computed for the requesting user, for the LLMClients, Guardrails and Secrets. The
+  views called their serializers without the request, so it was always false.
 - An LLMClient's api key is its token's public ``key_id``. It was the token's primary key, its digest.
 
-The REST views require an api key of a superuser, and refuse other users with a 403. Other users read
-their resources with the cli api's ``get`` and ``describe``.
+The LLMClients' and Secrets' REST views require an api key of a superuser, and refuse other users with
+a 403. Other users read their resources with the cli api's ``get`` and ``describe``. The Guardrails'
+views accept any api key, and return only the Guardrails that its user may read. Each operation's
+description says which.
+
+A Guardrail's events keep the snake_case keys that their serializer returned, e.g.
+``guardrail_name``, unlike the rest of the REST api, which is camelCase, because clients already read
+them. A Guardrail's dry run is the one action that the document publishes besides the reads: it
+changes nothing.
 
 Errors
 ~~~~~~
