@@ -8,9 +8,11 @@ from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from smarter.apps.vectorsearch.contract.models import VectorsearchApiVectorsearch
 from smarter.apps.vectorsearch.models import (
     Vectorsearch,
 )
@@ -19,6 +21,7 @@ from smarter.apps.vectorsearch.serializers import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
@@ -51,7 +54,10 @@ class ListViewBase(SmarterAdminListAPIView):
 
 
 class VectorsearchView(ViewBase):
-    """Vectorsearch view for smarter api."""
+    """Vectorsearch view for smarter api.
+
+    Its ``GET`` returns a :class:`VectorsearchApiVectorsearch`.
+    """
 
     serializer_class = VectorsearchSerializer
     vectorsearch: Optional[Vectorsearch] = None
@@ -88,9 +94,11 @@ class VectorsearchView(ViewBase):
 
     def get(self, request: Request, vectorsearch_id: Optional[int] = None):
         if self.vectorsearch:
-            serializer = self.serializer_class(self.vectorsearch)
-            return Response(serializer.data, status=HTTPStatus.OK)
-        return HttpResponseNotFound("Vectorsearch not found")
+            return Response(
+                VectorsearchApiVectorsearch.from_model(self.vectorsearch, request.user).model_dump(mode="json"),
+                status=HTTPStatus.OK,
+            )
+        raise NotFound("Vectorsearch not found")
 
     def post(self, request: Request, *args, **kwargs):
         try:
@@ -150,10 +158,16 @@ class VectorsearchView(ViewBase):
         return HttpResponseRedirect(plugins_path)
 
 
-class VectorsearchListView(ListViewBase):
-    """Vectorsearch list view for smarter api."""
+class VectorsearchListView(ContractListMixin, ListViewBase):
+    """Vectorsearch list view for smarter api: :class:`VectorsearchApiVectorsearch` models."""
 
     serializer_class = VectorsearchSerializer
+    contract_model = VectorsearchApiVectorsearch
+
+    def item(self, row):
+        """A Vectorsearch of the response, whose ``canDelete`` is the requesting user's."""
+        return VectorsearchApiVectorsearch.from_model(row, self.request.user).model_dump(mode="json")
+
     vectorsearchs: Optional[QuerySet[Vectorsearch]]
 
     def dispatch(self, request: Request, *args, **kwargs):
@@ -164,4 +178,9 @@ class VectorsearchListView(ListViewBase):
         return response
 
     def get_queryset(self, *args, **kwargs):
-        return Vectorsearch.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
+        return (
+            Vectorsearch.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
+            .select_related("user_profile__user", "user_profile__account")
+            .prefetch_related("tags")
+            .order_by("name")
+        )

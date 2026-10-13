@@ -1,13 +1,19 @@
 """Test :mod:`smarter.lib.journal.contract.models`."""
 
+import json
 from http import HTTPStatus
 from typing import get_args
 
 from pydantic import ValidationError
+from rest_framework.test import APIClient
 
+from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.api.v1.contract.tests.mixins import OpenApiResponseMixin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.contract.models import (
     SAMJournalApiCommand,
+    SAMJournalApiEntry,
+    SAMJournalApiEntrySummary,
     SAMJournalApiEnvelope,
     SAMJournalApiErrorBody,
     SAMJournalApiErrorResponse,
@@ -24,6 +30,10 @@ from smarter.lib.journal.enum import (
     SmarterJournalThings,
 )
 from smarter.lib.journal.models import SAMJournal
+from smarter.lib.journal.serializers import (
+    SAMJournalMiniSerializer,
+    SAMJournalSerializer,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 KEY = "0123456789abcdef" * 4
@@ -162,3 +172,58 @@ class TestOrmModel(SmarterTestBase):
                 SAMJournalApiOrmModel(**{**values, field: value})
         with self.assertRaises(ValidationError):
             SAMJournalApiOrmModel(**values, extra=True)
+
+
+class TestSAMJournalRestApiModels(OpenApiResponseMixin, TestAccountMixin):
+    """Test the journal's REST models against the serializers, and the views' responses against the document."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.journal = SAMJournal.objects.create(
+            user=cls.admin_user,
+            thing=SmarterJournalThings.GUARDRAIL.value,
+            command=SmarterJournalCliCommands.APPLY.value,
+            request={"url": "http://localhost:9357/api/v1/cli/apply/"},
+            response={"data": {"a": 1}},
+            status_code=HTTPStatus.OK,
+        )
+        cls.anonymous = SAMJournal.objects.create(
+            user=None,
+            thing=SmarterJournalThings.GUARDRAIL.value,
+            command=SmarterJournalCliCommands.GET.value,
+            request={},
+            response={},
+            status_code=HTTPStatus.UNAUTHORIZED,
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        SAMJournal.objects.filter(pk__in=[cls.journal.pk, cls.anonymous.pk]).delete()
+        super().tearDownClass()
+
+    def test_models_are_the_serializers_output(self):
+        for journal in (self.journal, self.anonymous):
+            with self.subTest(user=journal.user):
+                self.assertEqual(
+                    SAMJournalApiEntry.from_model(journal).model_dump(mode="json"),
+                    json.loads(json.dumps(SAMJournalSerializer(journal).data)),
+                )
+                self.assertEqual(
+                    SAMJournalApiEntrySummary.from_model(journal).model_dump(mode="json"),
+                    json.loads(json.dumps(SAMJournalMiniSerializer(journal).data)),
+                )
+
+    def test_responses(self):
+        client = APIClient()
+        client.force_login(self.admin_user)
+        response = client.get("/api/v1/journal/", {"search": self.journal.key, "ordering": "-createdAt"})
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertValidResponse("/journal/", "get", response.json())
+        self.assertEqual(response.json()["objects"][0]["key"], self.journal.key)
+        response = client.get(f"/api/v1/journal/{self.journal.key}/")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertValidResponse("/journal/{key}/", "get", response.json())
+        response = client.get(f"/api/v1/journal/{'0' * 64}/")
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertValidResponse("/journal/{key}/", "get", response.json(), HTTPStatus.NOT_FOUND)

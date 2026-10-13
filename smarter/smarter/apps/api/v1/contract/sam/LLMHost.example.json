@@ -1,0 +1,80 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "LLMHost",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/llmhost/purpose": "example"
+      }
+    ],
+    "description": "Meta Llama 3.1 8B Instruct, served by vLLM on one NVIDIA A10G GPU, with tool calling.",
+    "name": "example_llmhost",
+    "tags": [
+      "example",
+      "llama",
+      "vllm"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "compute": "gpu_a10g_1x",
+    "engine": {
+      "apiFormat": "openai_compatible",
+      "args": [
+        "--enable-auto-tool-choice",
+        "--tool-call-parser",
+        "llama3_json"
+      ],
+      "contextLength": 16384,
+      "env": {},
+      "gpuMemoryUtilization": 0.9,
+      "name": "vllm",
+      "trustRemoteCode": false
+    },
+    "healthCheck": {
+      "periodSeconds": 10,
+      "startupTimeoutSeconds": 3600
+    },
+    "model": {
+      "architecture": "llama",
+      "capabilities": {
+        "functionCalling": true,
+        "reasoning": false,
+        "streaming": true,
+        "vision": false
+      },
+      "contextWindow": 131072,
+      "license": "llama3.1",
+      "parameterCount": 8030261248,
+      "quantization": "bf16",
+      "repository": "meta-llama/Llama-3.1-8B-Instruct",
+      "revision": "main",
+      "servedName": "llama-3.1-8b-instruct",
+      "source": "huggingface",
+      "task": "text-generation",
+      "tokenSecret": "huggingface_token"
+    },
+    "network": {
+      "allowUnauthenticated": false,
+      "ingress": false
+    },
+    "resources": {
+      "cpu": "4",
+      "gpuCount": 1,
+      "gpuResource": "nvidia.com/gpu",
+      "memory": "24Gi",
+      "nodeSelector": {},
+      "shmSize": "8Gi",
+      "tolerations": [],
+      "vramRequiredGb": 21
+    },
+    "scaling": {
+      "replicas": 1
+    },
+    "storage": {
+      "accessMode": "ReadWriteOnce",
+      "retain": true,
+      "size": "50Gi"
+    }
+  }
+}

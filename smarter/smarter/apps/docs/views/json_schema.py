@@ -165,7 +165,7 @@ class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):
     """User JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.SECRET)
+    kind = SAMKinds(SAMKinds.USER)
 
 
 class DocsJsonSchemaSecretView(DocsJsonSchemaBaseView):

@@ -30,6 +30,8 @@ from django.core.exceptions import FieldDoesNotExist
 from django.core.paginator import Page, Paginator
 from django.db.models import F, Model, Q, QuerySet
 from django.http import HttpRequest
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 from smarter.lib.typing import SmarterDictType
 
@@ -60,6 +62,32 @@ Each key is a column's name in the list api's response, in camelCase, as the ``o
 parameter names it. Each value is the field that sorts it, in the queryset's lookup syntax, such as
 ``"api_key__name"`` for a related resource's name.
 """
+
+
+class ListViewPagination(BaseModel):
+    """
+    The description of one page of a list api's resources, as :func:`paginate_listview` returns it.
+
+    Its JSON is camelCase, e.g. ``pageSize``.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        alias_generator=to_camel,
+        validate_by_name=True,
+        validate_by_alias=True,
+        serialize_by_alias=True,
+    )
+
+    page: int = Field(..., ge=1, description="The page's number, from 1.")
+    page_size: int = Field(..., ge=1, le=MAX_PAGE_SIZE, description="The most resources that a page has.")
+    num_pages: int = Field(..., ge=1, description="The number of pages.")
+    count: int = Field(..., ge=0, description="The number of resources that match the search, on every page.")
+    search: str = Field("", description="The search, or an empty string.")
+    ordering: str = Field(
+        "", description="The column that sorts the list, e.g. -createdAt, or an empty string for the default order."
+    )
+    sort_fields: list[str] = Field(default_factory=list, description="The columns that the list may be sorted by.")
 
 
 def positive_int(value: Any, default: int, maximum: Optional[int] = None) -> int:
@@ -194,7 +222,7 @@ def paginate_listview(
     :param search_fields: The names of the fields that a search matches.
     :param sort_fields: The columns that the list may be sorted by, and the fields that sort them.
         See :data:`DEFAULT_SORT_FIELDS`.
-    :returns: The page, and its description for the list api's response:
+    :returns: The page, and its description for the list api's response, a dumped :class:`ListViewPagination`:
         ``{"page": 1, "pageSize": 25, "numPages": 3, "count": 61, "search": "", "ordering": "-name",
         "sortFields": ["createdAt", "description", "name", "updatedAt"]}``. ``ordering`` is empty
         when the default order applies, and ``sortFields`` are the columns that the list may be
@@ -206,22 +234,23 @@ def paginate_listview(
     paginator = Paginator(search_queryset(queryset, search, search_fields), page_size)
     # get_page() returns the last page for a page past it, and the first for an invalid one.
     page = paginator.get_page(positive_int(request.GET.get("page"), 1))
-    pagination = {
-        "page": page.number,
-        "pageSize": page_size,
-        "numPages": paginator.num_pages,
-        "count": paginator.count,
-        "search": search,
-        "ordering": ordering,
-        "sortFields": sorted(sortable_fields(queryset, sort_fields)),
-    }
-    return page, pagination
+    pagination = ListViewPagination(
+        page=page.number,
+        page_size=page_size,
+        num_pages=paginator.num_pages,
+        count=paginator.count,
+        search=search,
+        ordering=ordering,
+        sort_fields=sorted(sortable_fields(queryset, sort_fields)),
+    )
+    return page, pagination.model_dump(mode="json")
 
 
 __all__ = [
     "DEFAULT_PAGE_SIZE",
     "DEFAULT_SEARCH_FIELDS",
     "DEFAULT_SORT_FIELDS",
+    "ListViewPagination",
     "MAX_PAGE_SIZE",
     "MAX_SEARCH_LENGTH",
     "has_field",

@@ -1,0 +1,515 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMLLMHostComputeCost": {
+      "additionalProperties": false,
+      "description": "Spec.cost: the price of one node, from which LLMHosts' costs are reported.",
+      "properties": {
+        "currency": {
+          "default": "USD",
+          "description": "LLMHostCompute.spec.cost.currency[str]: e.g. USD.",
+          "title": "Currency",
+          "type": "string"
+        },
+        "perHour": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.spec.cost.perHour[decimal]: the cost per hour of one node, e.g. its on-demand price.",
+          "title": "Perhour"
+        }
+      },
+      "title": "SAMLLMHostComputeCost",
+      "type": "object"
+    },
+    "SAMLLMHostComputeGpu": {
+      "additionalProperties": false,
+      "description": "Spec.node.gpu: the node's GPUs.",
+      "properties": {
+        "count": {
+          "description": "LLMHostCompute.spec.node.gpu.count[int]: the node's GPUs.",
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "memoryGb": {
+          "description": "LLMHostCompute.spec.node.gpu.memoryGb[int]: the memory of one GPU, in GB.",
+          "minimum": 1,
+          "title": "Memorygb",
+          "type": "integer"
+        },
+        "resource": {
+          "default": "nvidia.com/gpu",
+          "description": "LLMHostCompute.spec.node.gpu.resource[str]: the Kubernetes extended resource that advertises the GPUs.",
+          "title": "Resource",
+          "type": "string"
+        },
+        "type": {
+          "description": "LLMHostCompute.spec.node.gpu.type[str]: the GPU model, e.g. L4, A10G, H100-80GB.",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "count",
+        "memoryGb"
+      ],
+      "title": "SAMLLMHostComputeGpu",
+      "type": "object"
+    },
+    "SAMLLMHostComputeMetadata": {
+      "description": "Smarter API LLMHostCompute Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMLLMHostComputeMetadata",
+      "type": "object"
+    },
+    "SAMLLMHostComputeNode": {
+      "additionalProperties": false,
+      "description": "Spec.node: the kind of node.",
+      "properties": {
+        "amiType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.spec.node.amiType[str]: e.g. AL2023_x86_64_NVIDIA. Defaults to the NVIDIA AMI for a GPU node, else the standard AMI.",
+          "title": "Amitype"
+        },
+        "capacityType": {
+          "default": "ON_DEMAND",
+          "description": "LLMHostCompute.spec.node.capacityType[str]: ON_DEMAND or SPOT.",
+          "pattern": "^(ON_DEMAND|SPOT)$",
+          "title": "Capacitytype",
+          "type": "string"
+        },
+        "cpu": {
+          "description": "LLMHostCompute.spec.node.cpu[int]: the node's vCPUs.",
+          "minimum": 1,
+          "title": "Cpu",
+          "type": "integer"
+        },
+        "diskSizeGb": {
+          "default": 100,
+          "description": "LLMHostCompute.spec.node.diskSizeGb[int]: the node's root volume, for container images. Model weights are on the LLMHosts' own volumes.",
+          "minimum": 20,
+          "title": "Disksizegb",
+          "type": "integer"
+        },
+        "gpu": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMLLMHostComputeGpu"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.spec.node.gpu[object]: the node's GPUs. None for a CPU node."
+        },
+        "instanceType": {
+          "description": "LLMHostCompute.spec.node.instanceType[str]: e.g. g6.2xlarge.",
+          "title": "Instancetype",
+          "type": "string"
+        },
+        "memoryGb": {
+          "description": "LLMHostCompute.spec.node.memoryGb[int]: the node's memory, in GiB.",
+          "minimum": 1,
+          "title": "Memorygb",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "instanceType",
+        "cpu",
+        "memoryGb"
+      ],
+      "title": "SAMLLMHostComputeNode",
+      "type": "object"
+    },
+    "SAMLLMHostComputeNodeGroup": {
+      "additionalProperties": false,
+      "description": "Spec.nodeGroup: the node group of the nodes.",
+      "properties": {
+        "maxNodes": {
+          "default": 4,
+          "description": "LLMHostCompute.spec.nodeGroup.maxNodes[int]: the most nodes that Smarter adds to the node group.",
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Maxnodes",
+          "type": "integer"
+        },
+        "subnetIds": {
+          "description": "LLMHostCompute.spec.nodeGroup.subnetIds[list]: the node group's subnets. Defaults to the platform's. One subnet keeps the nodes in one availability zone, with the LLMHosts' model volumes.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Subnetids",
+          "type": "array"
+        }
+      },
+      "title": "SAMLLMHostComputeNodeGroup",
+      "type": "object"
+    },
+    "SAMLLMHostComputeSpec": {
+      "additionalProperties": false,
+      "description": "Smarter API LLMHostCompute Manifest LLMHostCompute.spec.",
+      "properties": {
+        "cost": {
+          "$ref": "#/$defs/SAMLLMHostComputeCost",
+          "description": "LLMHostCompute.spec.cost[object]: for reporting."
+        },
+        "node": {
+          "$ref": "#/$defs/SAMLLMHostComputeNode",
+          "description": "LLMHostCompute.spec.node[object]: the kind of node."
+        },
+        "nodeGroup": {
+          "$ref": "#/$defs/SAMLLMHostComputeNodeGroup",
+          "description": "LLMHostCompute.spec.nodeGroup[object]: the node group of the nodes."
+        }
+      },
+      "required": [
+        "node"
+      ],
+      "title": "SAMLLMHostComputeSpec",
+      "type": "object"
+    },
+    "SAMLLMHostComputeStatus": {
+      "description": "Smarter API LLMHostCompute Manifest - Status class.\n\nRead only. Besides ownership, it reports the node group, as of its most recent reconcile.",
+      "properties": {
+        "accountNumber": {
+          "description": "LLMHostCompute.status.account_number: The account owner of this LLMHostCompute. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "desiredNodes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.desiredNodes: the node group's desired size. Read only.",
+          "title": "Desirednodes"
+        },
+        "lastReconciledAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.lastReconciledAt: when it was last reconciled. Read only.",
+          "title": "Lastreconciledat"
+        },
+        "llmhosts": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.llmhosts: the LLMHosts that run on it. Read only.",
+          "title": "Llmhosts"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.message: the result of the last reconcile. Read only.",
+          "title": "Message"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "nodeGroupName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.nodeGroupName: the cloud's name of the node group. Read only.",
+          "title": "Nodegroupname"
+        },
+        "nodeGroupStatus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.nodeGroupStatus: e.g. absent, CREATING or ACTIVE. Read only.",
+          "title": "Nodegroupstatus"
+        },
+        "readyNodes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHostCompute.status.readyNodes: the nodes that have joined the cluster. Read only.",
+          "title": "Readynodes"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "LLMHostCompute.status.username: The Smarter user who created this LLMHostCompute. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMLLMHostComputeStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - LLMHostCompute.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMLLMHostComputeMetadata",
+      "description": "LLMHostCompute.metadata[obj]: Required, the LLMHostCompute metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMLLMHostComputeSpec",
+      "description": "LLMHostCompute.spec[obj]: Required, the LLMHostCompute specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMLLMHostComputeStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "LLMHostCompute.status[obj]: Optional, Read-only. Stateful status information about the LLMHostCompute."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMLLMHostCompute",
+  "type": "object"
+}
