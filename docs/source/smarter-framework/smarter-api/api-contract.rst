@@ -39,6 +39,9 @@ against the platform's real responses. It covers:
        run of a Guardrail on a text.
    * - The Secrets' REST reads
      - ``GET /api/v1/secrets/`` and a Secret: their metadata, never their values.
+   * - The MCPClients' REST reads
+     - ``GET /api/v1/mcpclients/``, an MCPClient, its tools, ``POST .../refresh/``, which reconnects
+       to its MCP server, and ``POST .../tools/{tool_name}/``, which calls a tool.
 
 The other routes of a covered family are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason that it is
@@ -181,26 +184,31 @@ Their responses are built from each app's contract models, e.g.
 :mod:`smarter.apps.plugin.contract.models`. The models describe the JSON that the views returned
 before they were modeled, which clients already read, with two corrections:
 
-- ``canDelete`` is computed for the requesting user, for the LLMClients, Guardrails and Secrets. The
+- ``canDelete`` is computed for the requesting user, for the LLMClients, Guardrails, Secrets and
+  MCPClients. The
   views called their serializers without the request, so it was always false.
 - An LLMClient's api key is its token's public ``key_id``. It was the token's primary key, its digest.
 
 The LLMClients' and Secrets' REST views require an api key of a superuser, and refuse other users with
 a 403. Other users read their resources with the cli api's ``get`` and ``describe``. The Guardrails'
-views accept any api key, and return only the Guardrails that its user may read. Each operation's
+and MCPClients' views accept any api key, and return only what its user may read. Each operation's
 description says which.
 
 A Guardrail's events keep the snake_case keys that their serializer returned, e.g.
 ``guardrail_name``, unlike the rest of the REST api, which is camelCase, because clients already read
-them. A Guardrail's dry run is the one action that the document publishes besides the reads: it
-changes nothing.
+them.
+
+Besides the reads, the document publishes the actions that the SDKs use: a Guardrail's dry run,
+which changes nothing, and an MCPClient's reconnection and tool call. A tool runs on the MCP server,
+and may change what the server manages, so only the MCPClient's owner may call it.
 
 Errors
 ~~~~~~
 
 The cli api's errors are the journal's error response. The chat api's are the chat contract's
 ``PromptChatApiErrorResponse``. The REST reads' are Django REST framework's ``{"detail": "..."}``,
-``RestApiErrorResponse``. Each operation's ``default`` response names its error's schema.
+``RestApiErrorResponse``. A failed connection to an MCP server adds the MCPClient's connection status
+beside its ``detail``. Each operation's ``default`` response names its error's schema.
 
 The Swagger page
 ~~~~~~~~~~~~~~~~
