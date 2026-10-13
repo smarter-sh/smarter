@@ -54,5 +54,20 @@ API Contract
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: smarter.apps.llmhost.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: smarter.apps.provider.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: smarter.apps.proxy.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: smarter.lib.drf.views.contract
     :members:

@@ -7,8 +7,9 @@ The document covers the apis that the ``smarter`` cli and the SDKs call, family 
   SAM manifests declare,
 - the chat api (``/api/v1/llm-clients/{id}/config/`` and ``.../prompt/``), to chat with an
   LLMClient, as JSON or as a stream of Server-Sent Events,
-- the REST reads of the resource families, so far the LLMClients', the Guardrails', the Secrets',
-  the MCPClients' and the vectorstores', whose responses are built from each app's contract models, e.g.
+- the REST reads of the resource families: the LLMClients', Guardrails', Secrets', MCPClients',
+  vectorstores', LLMHosts', plugins', Providers' and Proxies', whose responses are built from each
+  app's contract models, e.g.
   :mod:`smarter.apps.llmclient.contract.models`. Only the reads are published: clients write
   through the cli api's manifests, which the brokers validate.
 
@@ -54,6 +55,17 @@ from smarter.apps.llmclient.contract.models import (
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
 )
+from smarter.apps.llmhost.contract.models import (
+    LLMHOST_API_MODELS,
+    LLMHostApiDiscovery,
+    LLMHostApiDraftManifest,
+    LLMHostApiLLMHost,
+    LLMHostApiLogs,
+    LLMHostApiPlan,
+    LLMHostApiReport,
+    LLMHostApiStatus,
+    LLMHostApiUndeployed,
+)
 from smarter.apps.mcpclient.contract.models import (
     MCPCLIENT_API_MODELS,
     MCPClientApiMCPClient,
@@ -62,6 +74,7 @@ from smarter.apps.mcpclient.contract.models import (
     MCPClientApiToolResult,
     MCPClientApiTools,
 )
+from smarter.apps.plugin.contract.models import PluginApiPluginMeta
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfigRequest,
@@ -72,6 +85,12 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptRequest,
     PromptChatApiPromptResponse,
 )
+from smarter.apps.provider.contract.models import (
+    PROVIDER_API_MODELS,
+    ProviderApiModel,
+    ProviderApiProvider,
+)
+from smarter.apps.proxy.contract.models import PROXY_API_MODELS, ProxyApiProxies
 from smarter.apps.secret.contract.models import SECRET_API_MODELS, SecretApiSecret
 from smarter.apps.vectorstore.contract.models import (
     VECTORSTORE_API_MODELS,
@@ -154,6 +173,10 @@ TAG_GUARDRAILS = "guardrails"
 TAG_SECRETS = "secrets"
 TAG_MCPCLIENTS = "mcpclients"
 TAG_VECTORSTORES = "vectorstores"
+TAG_LLMHOSTS = "llmhosts"
+TAG_PLUGINS = "plugins"
+TAG_PROVIDERS = "providers"
+TAG_PROXIES = "proxies"
 
 SUPERUSER_ONLY = (
     "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
@@ -185,6 +208,10 @@ DOCUMENTED_URLCONFS: dict[str, str] = {
     "/secrets/": "smarter.apps.secret.api.v1.urls",
     "/mcpclients/": "smarter.apps.mcpclient.api.v1.urls",
     "/vectorstores/": "smarter.apps.vectorstore.api.v1.urls",
+    "/llmhosts/": "smarter.apps.llmhost.api.v1.urls",
+    "/plugins/": "smarter.apps.plugin.api.v1.urls",
+    "/providers/": "smarter.apps.provider.api.v1.urls",
+    "/proxy/": "smarter.apps.proxy.api.v1.urls",
 }
 """
 The families of routes that the document covers: each one's path, relative to ``/api/v1``, and its urlconf.
@@ -198,6 +225,7 @@ PATH_PARAMETER_ALIASES: dict[str, str] = {
     "secret_id": "id",
     "mcpclient_id": "id",
     "vectorstore_id": "id",
+    "llmhost_id": "id",
     "hashed_id": "id",
 }
 """
@@ -208,7 +236,14 @@ A resource's routes take either its numeric id or its hashed id, which the docum
 
 NOT_YET_MODELED = "Not modeled yet. The REST reads of each resource family are the next part of the contract."
 
+WEB_CONSOLE = "A web console action, which clients replace with the cli api's manifests."
+
 UNDOCUMENTED_ROUTES: dict[str, str] = {
+    "/plugins/{plugin_id}/clone/{new_name}": WEB_CONSOLE,
+    "/plugins/add-example-plugins/{user_id}/": WEB_CONSOLE,
+    "/plugins/upload/": WEB_CONSOLE,
+    "/proxy/{name}/": "A Proxy's passthrough, whose requests and responses are its provider's api, not Smarter's.",
+    "/proxy/{name}/{path}": "A Proxy's passthrough, whose requests and responses are its provider's api, not Smarter's.",
     "/llm-clients/{id}/prompt/config/": "A legacy alias of /llm-clients/{id}/config/, for pages that installed an "
     "older Smarter Chat.",
     "/llm-clients/{id}/functions/{function_id}/plugins": "It returns every plugin of the LLMClient, whatever the "
@@ -293,6 +328,9 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         *SECRET_API_MODELS,
         *MCPCLIENT_API_MODELS,
         *VECTORSTORE_API_MODELS,
+        *LLMHOST_API_MODELS,
+        *PROVIDER_API_MODELS,
+        *PROXY_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -1366,6 +1404,303 @@ def vectorstore_paths() -> dict[str, OpenApiPathItem]:
     }
 
 
+def query(name: str, description: str, schema: OpenApiSchema, required: bool = False) -> OpenApiParameter:
+    """
+    A query parameter.
+
+    :param name: The parameter's name.
+    :type name: str
+    :param description: Its description.
+    :type description: str
+    :param schema: Its JSON Schema.
+    :type schema: OpenApiSchema
+    :param required: Whether it is required.
+    :type required: bool
+    :returns: The parameter.
+    :rtype: OpenApiParameter
+    """
+    return OpenApiParameter(name=name, in_="query", required=required, description=description, schema_=schema)
+
+
+def llmhost_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The LLMHosts' REST reads, discovery and deployment, relative to the server's ``/api/v1``.
+
+    :returns: The paths, e.g. ``{"/llmhosts/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    llmhost_id = id_or_hashed_id("LLMHost")
+    tag = TAG_LLMHOSTS
+    owner = "Only the LLMHost's owner may call it."
+
+    def read(operation_id, summary, description, item, parameters, note=READ_PERMISSION, many=False):
+        return rest_read(operation_id, summary, description, tag, item, many=many, parameters=parameters, note=note)
+
+    return {
+        "/llmhosts/": OpenApiPathItem(
+            get=read(
+                "llmhost_list",
+                "List LLMHosts",
+                "The LLMHosts that the user may read, by name.",
+                LLMHostApiLLMHost.__name__,
+                [],
+                many=True,
+            )
+        ),
+        "/llmhosts/report/": OpenApiPathItem(
+            get=read(
+                "llmhost_report",
+                "A report of LLMHosts",
+                "A summary of the LLMHosts that the user owns: their status, GPUs and cost.",
+                LLMHostApiReport.__name__,
+                [],
+            )
+        ),
+        "/llmhosts/discover/": OpenApiPathItem(
+            get=read(
+                "llmhost_discover",
+                "Search a model catalog",
+                "Search a model catalog, most popular first, to choose a model to host.",
+                LLMHostApiDiscovery.__name__,
+                [
+                    query("q", "The text to search for.", {"type": "string"}),
+                    query(
+                        "task",
+                        "Only models of this task.",
+                        {"type": "string", "enum": ["text-generation", "embedding"]},
+                    ),
+                    query(
+                        "catalog",
+                        "The catalog.",
+                        {"type": "string", "enum": ["huggingface", "builtin"], "default": "huggingface"},
+                    ),
+                    query("limit", "The number of models, at most 50.", {"type": "integer", "default": 20}),
+                ],
+            )
+        ),
+        "/llmhosts/discover/manifest/": OpenApiPathItem(
+            get=read(
+                "llmhost_discover_manifest",
+                "Draft an LLMHost manifest",
+                "Draft an LLMHost manifest for a model of a catalog, to review and apply.",
+                LLMHostApiDraftManifest.__name__,
+                [
+                    query("repository", "The model, e.g. meta-llama/Llama-3.1-8B-Instruct.", {"type": "string"}, True),
+                    query("catalog", "The catalog.", {"type": "string", "default": "huggingface"}),
+                    query("engine", "The inference engine, e.g. vllm.", {"type": "string"}),
+                    query("name", "The LLMHost's name.", {"type": "string"}),
+                    query("tokenSecret", "The name of the Secret of a token for gated models.", {"type": "string"}),
+                ],
+            )
+        ),
+        "/llmhosts/{id}/": OpenApiPathItem(
+            get=read(
+                "llmhost_retrieve",
+                "An LLMHost",
+                "An LLMHost that the user may read.",
+                LLMHostApiLLMHost.__name__,
+                [llmhost_id],
+            )
+        ),
+        "/llmhosts/{id}/status/": OpenApiPathItem(
+            get=read(
+                "llmhost_status",
+                "An LLMHost's status",
+                "Check an LLMHost's status now, with its pods and health check.",
+                LLMHostApiStatus.__name__,
+                [llmhost_id],
+            )
+        ),
+        "/llmhosts/{id}/logs/": OpenApiPathItem(
+            get=read(
+                "llmhost_logs",
+                "An LLMHost's logs",
+                "The inference server's recent logs.",
+                LLMHostApiLogs.__name__,
+                [llmhost_id, query("tail", "The number of lines.", {"type": "integer", "default": 200})],
+                note=owner,
+            )
+        ),
+        "/llmhosts/{id}/plan/": OpenApiPathItem(
+            get=read(
+                "llmhost_plan",
+                "An LLMHost's deployment plan",
+                "The Kubernetes resources that a deployment would apply, with secrets redacted.",
+                LLMHostApiPlan.__name__,
+                [llmhost_id],
+                note=owner,
+            )
+        ),
+        "/llmhosts/{id}/deploy/": OpenApiPathItem(
+            post=rest_operation(
+                "llmhost_deploy",
+                "Deploy an LLMHost",
+                "Launch the LLMHost's inference server on the platform's Kubernetes cluster. It creates billable "
+                f"infrastructure, e.g. GPU nodes, and returns before the server is ready. {owner}",
+                tag,
+                LLMHostApiStatus.__name__,
+                parameters=[llmhost_id],
+                status="202",
+            )
+        ),
+        "/llmhosts/{id}/undeploy/": OpenApiPathItem(
+            post=rest_operation(
+                "llmhost_undeploy",
+                "Undeploy an LLMHost",
+                f"Destroy the LLMHost's Kubernetes resources. The LLMHost remains. {owner}",
+                tag,
+                LLMHostApiUndeployed.__name__,
+                parameters=[
+                    llmhost_id,
+                    query(
+                        "purge",
+                        "true also deletes the model volume, and the weights cached on it.",
+                        {"type": "string", "enum": ["true", "false"], "default": "false"},
+                    ),
+                ],
+            )
+        ),
+    }
+
+
+def plugin_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The plugins' REST reads, relative to the server's ``/api/v1``.
+
+    :returns: The paths, e.g. ``{"/plugins/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    return {
+        "/plugins/": OpenApiPathItem(
+            get=rest_read(
+                "plugin_list",
+                "List plugins",
+                "The plugins that the user owns, newest first: their metadata.",
+                TAG_PLUGINS,
+                PluginApiPluginMeta.__name__,
+                many=True,
+                parameters=[],
+                note="Requires an api key.",
+            )
+        ),
+        "/plugins/{plugin_id}/": OpenApiPathItem(
+            get=rest_read(
+                "plugin_retrieve",
+                "A plugin",
+                "A plugin's manifest, if the user may read the plugin. It is served only while the platform's "
+                "ALLOW_API_GET switch is active, and answers 405 otherwise.",
+                TAG_PLUGINS,
+                "SAMManifest",
+                many=False,
+                parameters=[integer_id("plugin_id", "The plugin's id.")],
+                note=READ_PERMISSION,
+            )
+        ),
+    }
+
+
+def provider_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Providers' REST reads, relative to the server's ``/api/v1``.
+
+    A Provider is read by its name.
+
+    :returns: The paths, e.g. ``{"/providers/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    name = OpenApiParameter(
+        name="name",
+        in_="path",
+        required=True,
+        description="The Provider's name, e.g. openai.",
+        schema_={"type": "string"},
+    )
+    model_name = OpenApiParameter(
+        name="model_name",
+        in_="path",
+        required=True,
+        description="The model's name, e.g. gpt-4o.",
+        schema_={"type": "string"},
+    )
+    tag = TAG_PROVIDERS
+    return {
+        "/providers/": OpenApiPathItem(
+            get=rest_read(
+                "provider_list",
+                "List Providers",
+                "The active Providers that the user may read, by name.",
+                tag,
+                ProviderApiProvider.__name__,
+                many=True,
+                parameters=[],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/providers/{name}/": OpenApiPathItem(
+            get=rest_read(
+                "provider_retrieve",
+                "A Provider",
+                "An active Provider that the user may read. The user's own account's wins over another of the same name.",
+                tag,
+                ProviderApiProvider.__name__,
+                many=False,
+                parameters=[name],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/providers/{name}/models/": OpenApiPathItem(
+            get=rest_read(
+                "provider_models",
+                "A Provider's models",
+                "The active models of a Provider, by name.",
+                tag,
+                ProviderApiModel.__name__,
+                many=True,
+                parameters=[name],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/providers/{name}/models/{model_name}/": OpenApiPathItem(
+            get=rest_read(
+                "provider_model",
+                "A Provider's model",
+                "An active model of a Provider.",
+                tag,
+                ProviderApiModel.__name__,
+                many=False,
+                parameters=[name, model_name],
+                note=READ_PERMISSION,
+            )
+        ),
+    }
+
+
+def proxy_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Proxies' list, relative to the server's ``/api/v1``.
+
+    Their passthroughs are the providers' apis.
+
+    :returns: The paths, e.g. ``{"/proxy/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    return {
+        "/proxy/": OpenApiPathItem(
+            get=rest_read(
+                "proxy_list",
+                "List Proxies",
+                "The Proxies that the user may use, with their urls. Send a provider's requests to a Proxy's url, "
+                "with a Smarter api key, and the Proxy forwards them with the provider's.",
+                TAG_PROXIES,
+                ProxyApiProxies.__name__,
+                many=False,
+                parameters=[],
+                note="Requires an api key.",
+            )
+        ),
+    }
+
+
 def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
     """
     The paths of several families, with the operations of a path that two families share in one path item.
@@ -1441,7 +1776,17 @@ def openapi_document() -> OpenApiDocument:
                 name=TAG_MCPCLIENTS, description="The MCPClients' REST reads, their reconnection, and tool calls."
             ),
             OpenApiTag(
-                name=TAG_VECTORSTORES, description="The vectorstores' REST reads, search, documents and maintenance."
+                name=TAG_VECTORSTORES,
+                description="The vectorstores' REST reads, search, documents and maintenance. Served only when the "
+                "platform enables vectorstores (SMARTER_ENABLE_VECTORSTORE).",
+            ),
+            OpenApiTag(name=TAG_LLMHOSTS, description="The LLMHosts' REST reads, model discovery, and deployment."),
+            OpenApiTag(name=TAG_PLUGINS, description="The plugins' REST reads."),
+            OpenApiTag(name=TAG_PROVIDERS, description="The LLM Providers' REST reads, and their models."),
+            OpenApiTag(
+                name=TAG_PROXIES,
+                description="The Proxies that the user may use. Served only when the platform enables Proxies "
+                "(SMARTER_ENABLE_PROXY).",
             ),
         ],
         paths=merge_paths(
@@ -1452,6 +1797,10 @@ def openapi_document() -> OpenApiDocument:
             secret_paths(),
             mcpclient_paths(),
             vectorstore_paths(),
+            llmhost_paths(),
+            plugin_paths(),
+            provider_paths(),
+            proxy_paths(),
         ),
         components=OpenApiComponents(
             schemas=schemas,
@@ -1498,7 +1847,12 @@ __all__ = [
     "guardrail_paths",
     "id_or_hashed_id",
     "llmclient_paths",
+    "llmhost_paths",
     "mcpclient_paths",
+    "plugin_paths",
+    "provider_paths",
+    "proxy_paths",
+    "query",
     "rest_operation",
     "vectorstore_paths",
     "secret_paths",
