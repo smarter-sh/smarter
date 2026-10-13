@@ -20,18 +20,35 @@ load and search them, and maintain them:
 - ``POST vectorstores/<hashed_id>/snapshots/<snapshot_id>/restore/``: restore one.
 
 Reading and searching require read permission. Everything else requires ownership.
+
+The responses are built from the models of :mod:`smarter.apps.vectorstore.contract.models`, which the
+Smarter api's OpenAPI document publishes. Errors are Django REST framework's ``{"detail": ...}``.
 """
 
 from http import HTTPStatus
 from typing import Any
 
 from django.db.models import QuerySet
-from django.http import Http404, JsonResponse
+from django.http import Http404
 from rest_framework.request import Request
+from rest_framework.response import Response
 
 from smarter.apps.plugin.plugin.safe_http import SafeHttpError, fetch
 from smarter.apps.vectorstore.caching import (
     invalidate_all_cached_vectorstores_for_user_profile,
+)
+from smarter.apps.vectorstore.contract.models import (
+    VectorstoreApiDocument,
+    VectorstoreApiDocumentDeleted,
+    VectorstoreApiDocuments,
+    VectorstoreApiDocumentsAdded,
+    VectorstoreApiRestored,
+    VectorstoreApiSearchResult,
+    VectorstoreApiSearchResults,
+    VectorstoreApiSnapshot,
+    VectorstoreApiSnapshots,
+    VectorstoreApiStatus,
+    VectorstoreApiVectorstore,
 )
 from smarter.apps.vectorstore.extract import (
     MAX_DOCUMENT_BYTES,
@@ -45,15 +62,12 @@ from smarter.apps.vectorstore.models import (
     VectorstoreSnapshot,
     VectorstoreStatus,
 )
-from smarter.apps.vectorstore.serializers import (
-    VectorstoreDocumentSerializer,
-    VectorstoreSerializer,
-    VectorstoreSnapshotSerializer,
-)
+from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.exceptions import SmarterException
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -65,8 +79,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 MAX_SEARCH_RESULTS = 50
 
 
-def error(message: str, status: int = HTTPStatus.BAD_REQUEST) -> JsonResponse:
-    return JsonResponse({"error": message}, status=status)
+def error(message: str, status: int = HTTPStatus.BAD_REQUEST) -> Response:
+    """An error response: Django REST framework's ``{"detail": ...}``, as every error of the REST api."""
+    return Response({"detail": message}, status=status)
 
 
 class VectorstoreViewBase(SmarterAuthenticatedAPIView):
@@ -100,10 +115,15 @@ class VectorstoreViewBase(SmarterAuthenticatedAPIView):
         return self.service_class(vectorstore)
 
 
-class VectorstoreListView(SmarterAuthenticatedListAPIView):
+class VectorstoreListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     """The vectorstores that the user may read."""
 
     serializer_class = VectorstoreSerializer
+    contract_model = VectorstoreApiVectorstore
+
+    def item(self, row):
+        """A vectorstore of the response, whose ``canDelete`` is the requesting user's."""
+        return VectorstoreApiVectorstore.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[VectorstoreMeta]:
         return VectorstoreMeta.objects.with_read_permission_for(user=self.request.user).order_by("name")  # type: ignore[attr-defined]
@@ -115,7 +135,8 @@ class VectorstoreView(VectorstoreViewBase):
     serializer_class = VectorstoreSerializer
 
     def get(self, request: Request, *args, **kwargs):
-        return JsonResponse(VectorstoreSerializer(self.get_vectorstore(request, **kwargs)).data)
+        vectorstore = self.get_vectorstore(request, **kwargs)
+        return Response(VectorstoreApiVectorstore.from_model(vectorstore, request.user).model_dump(mode="json"))
 
 
 class VectorstoreStatusView(VectorstoreViewBase):
@@ -124,15 +145,14 @@ class VectorstoreStatusView(VectorstoreViewBase):
     def get(self, request: Request, *args, **kwargs):
         vectorstore = self.get_vectorstore(request, **kwargs)
         status = self.get_service(vectorstore).reconcile()
-        return JsonResponse(
-            {
-                "vectorstore": vectorstore.name,
-                "status": status,
-                "message": vectorstore.status_message,
-                "vectorCount": vectorstore.vector_count,
-                "stats": vectorstore.stats,
-            }
+        response = VectorstoreApiStatus(
+            vectorstore=vectorstore.name,
+            status=status,  # type: ignore[arg-type]
+            message=vectorstore.status_message,
+            vector_count=vectorstore.vector_count,
+            stats=vectorstore.stats,
         )
+        return Response(response.model_dump(mode="json"))
 
 
 class VectorstoreDeployView(VectorstoreViewBase):
@@ -146,7 +166,10 @@ class VectorstoreDeployView(VectorstoreViewBase):
             return error(str(e))
         vectorstore.refresh_from_db()
         invalidate_all_cached_vectorstores_for_user_profile(vectorstore.user_profile)
-        return JsonResponse(VectorstoreSerializer(vectorstore).data, status=HTTPStatus.ACCEPTED)
+        return Response(
+            VectorstoreApiVectorstore.from_model(vectorstore, request.user).model_dump(mode="json"),
+            status=HTTPStatus.ACCEPTED,
+        )
 
 
 class VectorstoreUndeployView(VectorstoreViewBase):
@@ -163,7 +186,7 @@ class VectorstoreUndeployView(VectorstoreViewBase):
             return error(str(e))
         vectorstore.refresh_from_db()
         invalidate_all_cached_vectorstores_for_user_profile(vectorstore.user_profile)
-        return JsonResponse(VectorstoreSerializer(vectorstore).data)
+        return Response(VectorstoreApiVectorstore.from_model(vectorstore, request.user).model_dump(mode="json"))
 
 
 class VectorstoreDocumentsView(VectorstoreViewBase):
@@ -172,7 +195,8 @@ class VectorstoreDocumentsView(VectorstoreViewBase):
     def get(self, request: Request, *args, **kwargs):
         vectorstore = self.get_vectorstore(request, **kwargs)
         documents = vectorstore.documents.order_by("-created_at")  # type: ignore[attr-defined]
-        return JsonResponse({"documents": VectorstoreDocumentSerializer(documents, many=True).data})
+        response = VectorstoreApiDocuments(documents=[VectorstoreApiDocument.from_model(row) for row in documents])
+        return Response(response.model_dump(mode="json"))
 
     def post(self, request: Request, *args, **kwargs):  # pylint: disable=too-many-locals
         """
@@ -205,17 +229,13 @@ class VectorstoreDocumentsView(VectorstoreViewBase):
         if queued:
             for document in added:
                 load_vectorstore_document.delay(document.pk)
-        return JsonResponse(
-            {
-                "documents": VectorstoreDocumentSerializer(added, many=True).data,
-                "duplicates": VectorstoreDocumentSerializer(existing, many=True).data,
-                "queued": queued,
-                "message": (
-                    "" if queued else "The vectorstore is not ready. Its documents are loaded once it is deployed."
-                ),
-            },
-            status=HTTPStatus.ACCEPTED,
+        response = VectorstoreApiDocumentsAdded(
+            documents=[VectorstoreApiDocument.from_model(row) for row in added],
+            duplicates=[VectorstoreApiDocument.from_model(row) for row in existing],
+            queued=queued,
+            message="" if queued else "The vectorstore is not ready. Its documents are loaded once it is deployed.",
         )
+        return Response(response.model_dump(mode="json"), status=HTTPStatus.ACCEPTED)
 
     @staticmethod
     def sources(request: Request):
@@ -246,7 +266,8 @@ class VectorstoreDocumentView(VectorstoreViewBase):
         document.status = VectorstoreDocumentStatus.DELETING
         document.save(update_fields=["status", "updated_at"])
         delete_vectorstore_document.delay(document.pk)
-        return JsonResponse({"document": document.name, "status": document.status}, status=HTTPStatus.ACCEPTED)
+        response = VectorstoreApiDocumentDeleted(document=document.name, status=document.status)  # type: ignore[arg-type]
+        return Response(response.model_dump(mode="json"), status=HTTPStatus.ACCEPTED)
 
 
 class VectorstoreSearchView(VectorstoreViewBase):
@@ -268,12 +289,10 @@ class VectorstoreSearchView(VectorstoreViewBase):
             )
         except (SmarterException, ValueError, TypeError) as e:
             return error(str(e))
-        return JsonResponse(
-            {
-                "vectorstore": vectorstore.name,
-                "results": [{"id": r.id, "text": r.text, "metadata": r.metadata, "score": r.score} for r in results],
-            }
+        response = VectorstoreApiSearchResults(
+            vectorstore=vectorstore.name, results=[VectorstoreApiSearchResult.from_result(result) for result in results]
         )
+        return Response(response.model_dump(mode="json"))
 
 
 class VectorstoreSnapshotsView(VectorstoreViewBase):
@@ -281,9 +300,9 @@ class VectorstoreSnapshotsView(VectorstoreViewBase):
 
     def get(self, request: Request, *args, **kwargs):
         vectorstore = self.get_vectorstore(request, **kwargs)
-        return JsonResponse(
-            {"snapshots": VectorstoreSnapshotSerializer(vectorstore.snapshots.all(), many=True).data}  # type: ignore[attr-defined]
-        )
+        snapshots = vectorstore.snapshots.all()  # type: ignore[attr-defined]
+        response = VectorstoreApiSnapshots(snapshots=[VectorstoreApiSnapshot.from_model(row) for row in snapshots])
+        return Response(response.model_dump(mode="json"))
 
     def post(self, request: Request, *args, **kwargs):
         vectorstore = self.get_vectorstore(request, owner=True, **kwargs)
@@ -291,7 +310,7 @@ class VectorstoreSnapshotsView(VectorstoreViewBase):
             snapshot = self.get_service(vectorstore).snapshot(scheduled=False)
         except SmarterException as e:
             return error(str(e))
-        return JsonResponse(VectorstoreSnapshotSerializer(snapshot).data, status=HTTPStatus.CREATED)
+        return Response(VectorstoreApiSnapshot.from_model(snapshot).model_dump(mode="json"), status=HTTPStatus.CREATED)
 
 
 class VectorstoreRestoreView(VectorstoreViewBase):
@@ -306,6 +325,7 @@ class VectorstoreRestoreView(VectorstoreViewBase):
             self.get_service(vectorstore).restore(snapshot)
         except SmarterException as e:
             return error(str(e))
-        return JsonResponse(
-            {"vectorstore": vectorstore.name, "restored": snapshot.name, "vectorCount": vectorstore.vector_count}
+        response = VectorstoreApiRestored(
+            vectorstore=vectorstore.name, restored=snapshot.name, vector_count=vectorstore.vector_count
         )
+        return Response(response.model_dump(mode="json"))

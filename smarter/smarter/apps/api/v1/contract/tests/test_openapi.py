@@ -16,8 +16,6 @@ from django.core.management import call_command
 from django.urls import URLPattern
 from django.urls.resolvers import RoutePattern
 from jsonschema import Draft202012Validator
-from referencing import Registry, Resource
-from referencing.jsonschema import DRAFT202012
 from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
@@ -37,6 +35,10 @@ from smarter.apps.api.v1.contract.openapi import (
     openapi_json,
 )
 from smarter.apps.api.v1.contract.sam import sam_models
+from smarter.apps.api.v1.contract.tests.mixins import (
+    OpenApiResponseMixin,
+    committed_document,
+)
 from smarter.apps.guardrail.models import Guardrail, GuardrailEvent
 from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.llmclient.models import (
@@ -59,13 +61,6 @@ from smarter.lib.typing import SmarterDictType
 GUARDRAIL_MANIFEST = os.path.join(
     PROJECT_ROOT, "apps", "guardrail", "manifest", "brokers", "tests", "data", "guardrail.yaml"
 )
-DOCUMENT_URI = "urn:smarter:openapi"
-
-
-def committed_document() -> SmarterDictType:
-    """The committed ``openapi.json``."""
-    with open(OPENAPI_PATH, encoding="utf-8") as file:
-        return json.load(file)
 
 
 def refs(value) -> list[str]:
@@ -162,18 +157,10 @@ class TestOpenApiDocument(ApiV1CliTestBase):
             self.assertEqual(len(examples), len(sam_models()))
 
 
-class TestOpenApiResponses(ApiV1CliTestBase):
-    """Test that the cli's real responses are valid under the document's response schemas."""
+class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
+    """Test that the api's real responses are valid under the document's response schemas."""
 
     name = "test_openapi_guardrail"
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        registry = Registry().with_resource(
-            DOCUMENT_URI, Resource.from_contents(committed_document(), default_specification=DRAFT202012)
-        )
-        cls.registry = registry
 
     def setUp(self):
         super().setUp()
@@ -181,28 +168,6 @@ class TestOpenApiResponses(ApiV1CliTestBase):
             self.manifest = yaml.safe_load(file)
         self.manifest["metadata"]["name"] = self.name
         self.addCleanup(Guardrail.objects.filter(name=self.name).delete)
-
-    def assertValid(self, schema_name: str, body: SmarterDictType):
-        """Assert that a response body is valid under one of the document's schemas."""
-        validator = Draft202012Validator(
-            {"$ref": f"{DOCUMENT_URI}#/components/schemas/{schema_name}"}, registry=self.registry
-        )
-        errors = [f"{list(error.absolute_path)}: {error.message[:300]}" for error in validator.iter_errors(body)]
-        self.assertEqual(errors, [], f"{schema_name}: {body}")
-
-    def assertValidResponse(self, path: str, method: str, body, status: int = 200):
-        """Assert that a response body is valid under the schema that the document gives its operation and status."""
-        operation = getattr(openapi_document().paths[path], method)
-        response = operation.responses.get(str(status)) or operation.responses["default"]
-        schema = response.content["application/json"].schema_
-        errors = [
-            f"{list(error.absolute_path)}: {error.message[:300]}"
-            for error in Draft202012Validator(
-                json.loads(json.dumps(schema).replace('"#/components/', f'"{DOCUMENT_URI}#/components/')),
-                registry=self.registry,
-            ).iter_errors(body)
-        ]
-        self.assertEqual(errors, [], f"{method.upper()} {path} {status}: {str(body)[:500]}")
 
     def rest_get(self, path: str) -> tuple[int, object]:
         """GET a REST api path, with the api key of the test's superuser."""

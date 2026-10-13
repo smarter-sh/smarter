@@ -7,8 +7,8 @@ The document covers the apis that the ``smarter`` cli and the SDKs call, family 
   SAM manifests declare,
 - the chat api (``/api/v1/llm-clients/{id}/config/`` and ``.../prompt/``), to chat with an
   LLMClient, as JSON or as a stream of Server-Sent Events,
-- the REST reads of the resource families, so far the LLMClients', the Guardrails', the Secrets'
-  and the MCPClients', whose responses are built from each app's contract models, e.g.
+- the REST reads of the resource families, so far the LLMClients', the Guardrails', the Secrets',
+  the MCPClients' and the vectorstores', whose responses are built from each app's contract models, e.g.
   :mod:`smarter.apps.llmclient.contract.models`. Only the reads are published: clients write
   through the cli api's manifests, which the brokers validate.
 
@@ -73,6 +73,20 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptResponse,
 )
 from smarter.apps.secret.contract.models import SECRET_API_MODELS, SecretApiSecret
+from smarter.apps.vectorstore.contract.models import (
+    VECTORSTORE_API_MODELS,
+    VectorstoreApiAddText,
+    VectorstoreApiDocumentDeleted,
+    VectorstoreApiDocuments,
+    VectorstoreApiDocumentsAdded,
+    VectorstoreApiRestored,
+    VectorstoreApiSearch,
+    VectorstoreApiSearchResults,
+    VectorstoreApiSnapshot,
+    VectorstoreApiSnapshots,
+    VectorstoreApiStatus,
+    VectorstoreApiVectorstore,
+)
 from smarter.common.const import (
     SMARTER_PROJECT_DOCS_URL,
     SMARTER_PROJECT_WEBSITE_URL,
@@ -139,6 +153,7 @@ TAG_LLMCLIENTS = "llmclients"
 TAG_GUARDRAILS = "guardrails"
 TAG_SECRETS = "secrets"
 TAG_MCPCLIENTS = "mcpclients"
+TAG_VECTORSTORES = "vectorstores"
 
 SUPERUSER_ONLY = (
     "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
@@ -169,6 +184,7 @@ DOCUMENTED_URLCONFS: dict[str, str] = {
     "/guardrails/": "smarter.apps.guardrail.api.v1.urls",
     "/secrets/": "smarter.apps.secret.api.v1.urls",
     "/mcpclients/": "smarter.apps.mcpclient.api.v1.urls",
+    "/vectorstores/": "smarter.apps.vectorstore.api.v1.urls",
 }
 """
 The families of routes that the document covers: each one's path, relative to ``/api/v1``, and its urlconf.
@@ -181,6 +197,7 @@ PATH_PARAMETER_ALIASES: dict[str, str] = {
     "guardrail_id": "id",
     "secret_id": "id",
     "mcpclient_id": "id",
+    "vectorstore_id": "id",
     "hashed_id": "id",
 }
 """
@@ -275,6 +292,7 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         *GUARDRAIL_API_MODELS,
         *SECRET_API_MODELS,
         *MCPCLIENT_API_MODELS,
+        *VECTORSTORE_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -1125,6 +1143,229 @@ def mcpclient_paths() -> dict[str, OpenApiPathItem]:
     }
 
 
+def rest_operation(  # pylint: disable=too-many-arguments
+    operation_id: str,
+    summary: str,
+    description: str,
+    tag: str,
+    response: str,
+    *,
+    parameters: list[OpenApiParameter],
+    status: str = "200",
+    request_body: Optional[OpenApiRequestBody] = None,
+) -> OpenApiOperation:
+    """
+    An operation of the REST api, whose success is one of the document's schemas, and whose errors are DRF's.
+
+    :param operation_id: The operation's id, e.g. vectorstore_search.
+    :type operation_id: str
+    :param summary: A one-line summary.
+    :type summary: str
+    :param description: A description, which says who may call it, and what it changes.
+    :type description: str
+    :param tag: The operation's tag.
+    :type tag: str
+    :param response: The successful response's schema, in ``components.schemas``.
+    :type response: str
+    :param parameters: The operation's parameters.
+    :type parameters: list[OpenApiParameter]
+    :param status: The successful response's http status, e.g. 202 for queued work.
+    :type status: str
+    :param request_body: The operation's request body.
+    :type request_body: Optional[OpenApiRequestBody]
+    :returns: The operation.
+    :rtype: OpenApiOperation
+    """
+    return OpenApiOperation(
+        operationId=operation_id,
+        summary=summary,
+        description=description,
+        tags=[tag],
+        parameters=parameters,
+        requestBody=request_body,
+        responses={
+            status: json_response("Success.", response),
+            "default": json_response(
+                "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own.",
+                RestApiErrorResponse.__name__,
+            ),
+        },
+    )
+
+
+def vectorstore_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The vectorstores' REST reads and maintenance, relative to the server's ``/api/v1``.
+
+    Reading and searching need read permission. Everything else needs ownership.
+
+    :returns: The paths, e.g. ``{"/vectorstores/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    vectorstore_id = id_or_hashed_id("vectorstore")
+    tag = TAG_VECTORSTORES
+    owner = "Only the vectorstore's owner may call it."
+    files = {
+        "type": "object",
+        "properties": {
+            "files": {
+                "type": "array",
+                "items": {"type": "string", "contentMediaType": "application/octet-stream"},
+                "description": "The files, e.g. PDFs and Word documents, of at most 50 MiB each.",
+            },
+            "metadata": {"type": "string", "description": "Metadata to store with each chunk, as a JSON object."},
+        },
+        "required": ["files"],
+    }
+    return {
+        "/vectorstores/": OpenApiPathItem(
+            get=rest_read(
+                "vectorstore_list",
+                "List vectorstores",
+                "The vectorstores that the user may read, by name.",
+                tag,
+                VectorstoreApiVectorstore.__name__,
+                many=True,
+                parameters=[],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/vectorstores/{id}/": OpenApiPathItem(
+            get=rest_read(
+                "vectorstore_retrieve",
+                "A vectorstore",
+                "A vectorstore that the user may read.",
+                tag,
+                VectorstoreApiVectorstore.__name__,
+                many=False,
+                parameters=[vectorstore_id],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/vectorstores/{id}/status/": OpenApiPathItem(
+            get=rest_read(
+                "vectorstore_status",
+                "A vectorstore's status",
+                "Check a vectorstore's status and statistics now, with its database.",
+                tag,
+                VectorstoreApiStatus.__name__,
+                many=False,
+                parameters=[vectorstore_id],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/vectorstores/{id}/deploy/": OpenApiPathItem(
+            post=rest_operation(
+                "vectorstore_deploy",
+                "Deploy a vectorstore",
+                "Create the vectorstore's database: a Qdrant server on the platform's Kubernetes cluster, or a "
+                f"Pinecone index. It creates billable infrastructure, and returns before it is ready. {owner}",
+                tag,
+                VectorstoreApiVectorstore.__name__,
+                parameters=[vectorstore_id],
+                status="202",
+            )
+        ),
+        "/vectorstores/{id}/undeploy/": OpenApiPathItem(
+            post=rest_operation(
+                "vectorstore_undeploy",
+                "Undeploy a vectorstore",
+                f"Stop serving the vectorstore. A self-hosted server's data is kept. {owner}",
+                tag,
+                VectorstoreApiVectorstore.__name__,
+                parameters=[vectorstore_id],
+            )
+        ),
+        "/vectorstores/{id}/documents/": OpenApiPathItem(
+            get=rest_read(
+                "vectorstore_documents",
+                "A vectorstore's documents",
+                "The vectorstore's documents, newest first, without their content.",
+                tag,
+                VectorstoreApiDocuments.__name__,
+                many=False,
+                parameters=[vectorstore_id],
+                note=READ_PERMISSION,
+            ),
+            post=rest_operation(
+                "vectorstore_add_documents",
+                "Add documents to a vectorstore",
+                "Add documents, and queue them to be loaded if the vectorstore is ready: a text, the document at a "
+                "url, or files as multipart/form-data, whose text is extracted now. A document whose content the "
+                f"vectorstore already has is a duplicate, and is not added again. {owner}",
+                tag,
+                VectorstoreApiDocumentsAdded.__name__,
+                parameters=[vectorstore_id],
+                status="202",
+                request_body=OpenApiRequestBody(
+                    required=True,
+                    content={
+                        "application/json": OpenApiMediaType(schema_=ref(VectorstoreApiAddText.__name__)),
+                        "multipart/form-data": OpenApiMediaType(schema_=files),
+                    },
+                ),
+            ),
+        ),
+        "/vectorstores/{id}/documents/{document_id}/": OpenApiPathItem(
+            delete=rest_operation(
+                "vectorstore_delete_document",
+                "Remove a document from a vectorstore",
+                f"Remove a document and its chunks. They are removed in the background. {owner}",
+                tag,
+                VectorstoreApiDocumentDeleted.__name__,
+                parameters=[vectorstore_id, integer_id("document_id", "The document's id.")],
+                status="202",
+            )
+        ),
+        "/vectorstores/{id}/search/": OpenApiPathItem(
+            post=rest_operation(
+                "vectorstore_search",
+                "Search a vectorstore",
+                f"Find the chunks most similar to a query. {READ_PERMISSION}",
+                tag,
+                VectorstoreApiSearchResults.__name__,
+                parameters=[vectorstore_id],
+                request_body=OpenApiRequestBody(
+                    required=True,
+                    description="The query, and how to search.",
+                    content={"application/json": OpenApiMediaType(schema_=ref(VectorstoreApiSearch.__name__))},
+                ),
+            )
+        ),
+        "/vectorstores/{id}/snapshots/": OpenApiPathItem(
+            get=rest_read(
+                "vectorstore_snapshots",
+                "A vectorstore's snapshots",
+                "The vectorstore's snapshots: Qdrant snapshots, or Pinecone backups.",
+                tag,
+                VectorstoreApiSnapshots.__name__,
+                many=False,
+                parameters=[vectorstore_id],
+                note=READ_PERMISSION,
+            ),
+            post=rest_operation(
+                "vectorstore_create_snapshot",
+                "Snapshot a vectorstore",
+                f"Take a snapshot of the vectorstore's data now. {owner}",
+                tag,
+                VectorstoreApiSnapshot.__name__,
+                parameters=[vectorstore_id],
+                status="201",
+            ),
+        ),
+        "/vectorstores/{id}/snapshots/{snapshot_id}/restore/": OpenApiPathItem(
+            post=rest_operation(
+                "vectorstore_restore",
+                "Restore a vectorstore",
+                f"Replace the vectorstore's data with one of its snapshots. {owner}",
+                tag,
+                VectorstoreApiRestored.__name__,
+                parameters=[vectorstore_id, integer_id("snapshot_id", "The snapshot's id.")],
+            )
+        ),
+    }
+
+
 def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
     """
     The paths of several families, with the operations of a path that two families share in one path item.
@@ -1139,7 +1380,7 @@ def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathI
     for family in families:
         for path, item in family.items():
             merged = paths.get(path, OpenApiPathItem())
-            for method in ("get", "post"):
+            for method in ("get", "post", "delete"):
                 operation = getattr(item, method)
                 if operation is not None:
                     if getattr(merged, method) is not None:
@@ -1199,9 +1440,18 @@ def openapi_document() -> OpenApiDocument:
             OpenApiTag(
                 name=TAG_MCPCLIENTS, description="The MCPClients' REST reads, their reconnection, and tool calls."
             ),
+            OpenApiTag(
+                name=TAG_VECTORSTORES, description="The vectorstores' REST reads, search, documents and maintenance."
+            ),
         ],
         paths=merge_paths(
-            cli_paths(), chat_paths(), llmclient_paths(), guardrail_paths(), secret_paths(), mcpclient_paths()
+            cli_paths(),
+            chat_paths(),
+            llmclient_paths(),
+            guardrail_paths(),
+            secret_paths(),
+            mcpclient_paths(),
+            vectorstore_paths(),
         ),
         components=OpenApiComponents(
             schemas=schemas,
@@ -1249,6 +1499,8 @@ __all__ = [
     "id_or_hashed_id",
     "llmclient_paths",
     "mcpclient_paths",
+    "rest_operation",
+    "vectorstore_paths",
     "secret_paths",
     "merge_paths",
     "rest_read",
