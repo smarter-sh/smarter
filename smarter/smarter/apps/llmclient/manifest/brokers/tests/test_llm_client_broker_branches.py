@@ -8,7 +8,7 @@ from smarter.apps.llmclient.manifest.brokers.llmclient import (
     SAMLLMClientBrokerError,
 )
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
-from smarter.lib.manifest.broker import SAMBrokerErrorNotReady
+from smarter.lib.manifest.broker import SAMBrokerErrorNotFound, SAMBrokerErrorNotReady
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 LIFECYCLE_COMMANDS = ("describe", "delete", "deploy", "undeploy")
@@ -53,13 +53,13 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
                 getattr(broker, command)(self.request)
 
     def test_lifecycle_commands_need_an_llmclient(self):
-        """Describe, delete, deploy and undeploy aren't ready when the LLMClient doesn't exist."""
+        """Describe, delete, deploy and undeploy answer not found (404) when the LLMClient doesn't exist."""
         broker = self.broker
         self.patch_property("name", "no_such_llmclient")
         self.patch_property("llmclient", None)
         self.patch_method(broker, "verify_no_dependencies")
         for command in LIFECYCLE_COMMANDS:
-            with self.subTest(command=command), self.assertRaises(SAMBrokerErrorNotReady):
+            with self.subTest(command=command), self.assertRaises(SAMBrokerErrorNotFound):
                 getattr(broker, command)(self.request)
 
     def test_lifecycle_command_failures(self):

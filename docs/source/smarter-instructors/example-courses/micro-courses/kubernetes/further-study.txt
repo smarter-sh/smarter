@@ -1,0 +1,15 @@
+- **Official documentation:** the `Kubernetes tutorials <https://kubernetes.io/docs/tutorials/>`__
+  and `concepts <https://kubernetes.io/docs/concepts/>`__, and the `Helm documentation
+  <https://helm.sh/docs/>`__.
+- **Hands-on:** Kelsey Hightower's `Kubernetes the Hard Way
+  <https://github.com/kelseyhightower/kubernetes-the-hard-way>`__, for students who want to build a
+  cluster by hand, and `kind <https://kind.sigs.k8s.io/>`__ and `minikube
+  <https://minikube.sigs.k8s.io/>`__ for local clusters.
+- **Certification:** the Linux Foundation's Certified Kubernetes Application Developer (CKAD) and
+  Administrator (CKA) curricula, which make good study plans even without the exam.
+- **Podcasts:** `The Kubernetes Podcast from Google <https://kubernetespodcast.com/>`__, and `Ship
+  It! <https://changelog.com/shipit>`__ from Changelog (archived, still worth the back catalog).
+- **YouTube:** KubeCon talks on the `CNCF <https://www.youtube.com/@cncf>`__ channel, and `TechWorld
+  with Nana <https://www.youtube.com/@TechWorldwithNana>`__ for introductions.
+- **Writing:** the `Kubernetes blog <https://kubernetes.io/blog/>`__, and Learnk8s's `articles
+  <https://learnk8s.io/blog>`__, which explain internals with diagrams.

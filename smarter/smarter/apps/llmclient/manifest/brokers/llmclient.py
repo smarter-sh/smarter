@@ -1155,7 +1155,7 @@ class SAMLLMClientBroker(AbstractBroker):
 
             # done! return the response. Django will take care of committing the transaction
             self.cache_invalidations()
-            return self.json_response_ok(command=command, data=self.to_json())
+            return self.json_response_ok(command=command, data=self.command_result())
 
     def resolve_guardrail(self, name: str) -> Optional[Guardrail]:
         """
@@ -1227,7 +1227,7 @@ class SAMLLMClientBroker(AbstractBroker):
                 raise SAMLLMClientBrokerError(
                     f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     @memoized_dependencies
     def dependencies(self) -> List[AbstractBroker]:
@@ -1254,7 +1254,7 @@ class SAMLLMClientBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         self.verify_no_dependencies(command)
         if self.llmclient:
             try:
@@ -1273,13 +1273,13 @@ class SAMLLMClientBroker(AbstractBroker):
                 raise SAMLLMClientBrokerError(
                     f"Failed to delete {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.llmclient:
             try:
                 self.llmclient.deployed = True
@@ -1297,13 +1297,13 @@ class SAMLLMClientBroker(AbstractBroker):
                 raise SAMLLMClientBrokerError(
                     f"Failed to deploy {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.llmclient:
             try:
                 self.llmclient.deployed = False
@@ -1321,7 +1321,7 @@ class SAMLLMClientBroker(AbstractBroker):
                 raise SAMLLMClientBrokerError(
                     f"Failed to undeploy {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__

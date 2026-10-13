@@ -17,7 +17,7 @@ urlpatterns = [
     path("<str:name>/", ProviderApiViewSet.as_view(), name="provider_detail"),
     path("<str:name>/models/", ProviderModelsApiViewSet.as_view(), name="provider_models_list"),
     path(
-        "<str:name>/models/<str:model_name>",
+        "<str:name>/models/<str:model_name>/",
         ProviderModelApiViewSet.as_view(),
         name="provider_model_detail",
     ),

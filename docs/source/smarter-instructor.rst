@@ -4,7 +4,9 @@ Smarter Instructor Guide
 This guide is for teachers, professors, bootcamp instructors, workshop leaders and corporate
 trainers who use The Smarter Project in a classroom. It explains how to get Smarter running,
 how to set it up for a class, and how to use it to teach more than a dozen subjects, from prompt
-engineering for non-programmers to Kubernetes for platform engineers.
+engineering for non-programmers to Kubernetes for platform engineers. The courses themselves,
+with complete, ready-to-teach course plans, are in the
+:doc:`Free Course Catalog <smarter-instructors/example-courses/index>`.
 
 Smarter is a good fit for teaching for three reasons:
 
@@ -91,6 +93,18 @@ term:
 Point this out to your students early. It changes how they treat their coursework: a manifest
 written for an assignment can become the AI application that a student club, a part-time employer,
 or a startup actually uses.
+
+Free Course Designs
+--------------------
+
+The :doc:`Free Course Designs <smarter-instructors/example-courses/index>` has 20 complete,
+ready-to-teach course designs, from prompt engineering for non-programmers to
+Kubernetes for platform engineers. Each course design comes with turnkey course plans,
+with schedules, graded assignments and rubrics, capstone projects and reading lists, so
+that an instructor can take a plan, set the dates, and teach it. Paths in the courses
+are relative to the root of the `smarter <https://github.com/smarter-sh/smarter>`__ repository.
+
+
 
 
 Getting Smarter Running
@@ -312,105 +326,15 @@ means that you should:
   models on your own Kubernetes cluster, so that prompts never leave your network.
 
 
-Teaching Domains
-----------------
-
-Each of the pages below is an example course. It says why Smarter suits the subject, where to look
-in the code base and the documentation, and suggests exercises. They are starting points: pick,
-combine and adapt the ones that fit your students. Paths are relative to the root of the
-`smarter <https://github.com/smarter-sh/smarter>`__ repository.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 35 25
-
-   * - Course
-     - Students
-     - Programming
-   * - :doc:`smarter-instructors/prompt-engineering`
-     - Anyone
-     - None
-   * - :doc:`smarter-instructors/ai-applications`
-     - Anyone
-     - None
-   * - :doc:`smarter-instructors/ai-governance`
-     - Policy, ethics, law and business
-     - None
-   * - :doc:`smarter-instructors/ai-economics`
-     - Business and management
-     - None
-   * - :doc:`smarter-instructors/backend-development`
-     - Software developers
-     - Python
-   * - :doc:`smarter-instructors/frontend-development`
-     - Software developers
-     - JavaScript
-   * - :doc:`smarter-instructors/full-stack-development`
-     - Software developers
-     - Python and JavaScript
-   * - :doc:`smarter-instructors/api-design`
-     - Software developers
-     - Any language
-   * - :doc:`smarter-instructors/secure-software`
-     - Developers and security students
-     - Some
-   * - :doc:`smarter-instructors/docker`
-     - Developers and operations
-     - Some
-   * - :doc:`smarter-instructors/kubernetes`
-     - Platform and operations engineers
-     - Some
-   * - :doc:`smarter-instructors/infrastructure-as-code`
-     - Cloud and operations engineers
-     - Terraform
-   * - :doc:`smarter-instructors/self-hosted-models`
-     - Machine learning and operations engineers
-     - Some
-   * - :doc:`smarter-instructors/software-quality`
-     - Software developers
-     - Python or JavaScript
-   * - :doc:`smarter-instructors/sphinx-documentation`
-     - Developers and technical writers
-     - Little
-   * - :doc:`smarter-instructors/software-architecture`
-     - Advanced developers
-     - Reading
-   * - :doc:`smarter-instructors/agentic-development`
-     - Software developers
-     - Python or JavaScript
-   * - :doc:`smarter-instructors/open-source`
-     - Anyone, as a capstone
-     - Any
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Example Courses
-
-   smarter-instructors/prompt-engineering
-   smarter-instructors/ai-applications
-   smarter-instructors/ai-governance
-   smarter-instructors/ai-economics
-   smarter-instructors/backend-development
-   smarter-instructors/frontend-development
-   smarter-instructors/full-stack-development
-   smarter-instructors/api-design
-   smarter-instructors/secure-software
-   smarter-instructors/docker
-   smarter-instructors/kubernetes
-   smarter-instructors/infrastructure-as-code
-   smarter-instructors/self-hosted-models
-   smarter-instructors/software-quality
-   smarter-instructors/sphinx-documentation
-   smarter-instructors/software-architecture
-   smarter-instructors/agentic-development
-   smarter-instructors/open-source
-
-
 Planning a Course
 -----------------
 
 Sample Formats
 ~~~~~~~~~~~~~~
+
+The courses in the :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` come
+with plans for classroom bootcamps and online courses of two to six weeks. Other formats work
+well too:
 
 - **A half-day workshop.** Run a shared instance. Students log in, chat with the built-in
   LLMClients, copy one manifest, change its system prompt and model, add a plugin and a guardrail,

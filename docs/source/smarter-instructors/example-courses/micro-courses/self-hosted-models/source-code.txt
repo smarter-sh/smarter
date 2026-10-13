@@ -1,0 +1,92 @@
+Every lecture, lab and assignment in this course rests on the manifests and files below. Every
+reference is to the ``main`` branch of
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, so that students can
+open each one during class. Python paths are under ``smarter/smarter/``.
+
+Models and Compute
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter has
+     - Where to look
+   * - Twenty-four built-in models
+     - Ready-to-apply LLMHost manifests for Llama 3.1, 3.2 and 3.3, Qwen 2.5 and Qwen 3, Gemma 3,
+       Mistral, Phi-4, DeepSeek R1 distills and gpt-oss, GGUF models for CPU, and embedding models
+       such as BGE-M3 and nomic-embed-text, each with its engine, resources and license.
+     - `llmhost/data/llmhost/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__,
+       `qwen3-0.6b.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/data/llmhost/qwen3-0.6b.yaml>`__
+   * - Seven compute profiles
+     - Node groups from small CPU nodes to one NVIDIA L4, A10G or L40S, four L40S, and eight
+       H100s, each with its instance type, memory and price per hour.
+     - `llmhost/data/compute/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+   * - The manifest, defined
+     - Pydantic models for every section of an LLMHost: ``model`` (source, repository, pinned
+       revision, quantization, capabilities), ``engine``, ``compute``, ``resources``, ``storage``,
+       ``network``, ``scaling`` and ``healthCheck``.
+     - `llmhost/manifest/models/llmhost/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/manifest/models/llmhost/spec.py>`__
+   * - Finding a model
+     - Discovery from the built-in catalog or the Hugging Face Hub, which sizes the pods and
+       drafts a manifest.
+     - `llmhost/services/discovery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/discovery.py>`__
+
+Serving
+~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Seven inference engines
+     - vLLM, Hugging Face TGI, SGLang, llama.cpp, Ollama, Hugging Face TEI for embeddings, and a
+       custom engine, each turning the manifest into the right command, arguments and port.
+     - `llmhost/services/engines.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/engines.py>`__
+   * - Kubernetes resources
+     - A volume for the weights, a Secret, a Deployment of the inference server, a Service and an
+       optional Ingress, rendered by a pure function so that they can be previewed and tested.
+     - `llmhost/services/renderer.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/renderer.py>`__
+   * - Nodes on demand
+     - An EKS managed node group per compute profile, created at zero nodes, scaled up when a
+       model needs a node, and scaled down by terminating a chosen idle node.
+     - `llmhost/services/nodegroups.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
+   * - The lifecycle
+     - ``provisioning`` while a node joins, then ``pending``, ``downloading`` the weights,
+       ``deploying``, and ``active``, or ``degraded``, ``inactive`` or ``error``.
+     - `llmhost/manifest/enum.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/manifest/enum.py>`__
+       (``SAMLLMHostStatusEnum``)
+   * - Health, status and cost
+     - Kubernetes' view of the pods mapped to a status, health probes of the engine's endpoint,
+       and a report of status, GPUs and cost.
+     - `llmhost/services/observability.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/observability.py>`__
+
+Using and Paying for a Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Beside commercial models
+     - A self-hosted endpoint, with its API key Secret, is registered as a Provider, and any
+       LLMClient can then use it in place of a commercial model.
+       :doc:`/smarter-resources/smarter-provider`.
+     - `apps/provider/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/provider>`__,
+       `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+   * - Hourly charges
+     - Celery Beat charges each compute profile's ready nodes every hour, at its price.
+     - `workers/celerybeat.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__
+       (``charge-llmhost-computes``)
+   * - A GPU budget
+     - An example Budget that, once a compute profile's nodes have cost $500 in a month, launches
+       no more LLMHosts on it. Nodes that are already running are not removed, so undeploying is
+       still everyone's job.
+     - `llmhost-compute.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/llmhost-compute.yaml>`__

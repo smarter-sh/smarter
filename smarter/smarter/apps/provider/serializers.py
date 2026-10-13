@@ -98,7 +98,7 @@ class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
         return queryset
 
 
-class ProviderModelSerializer(MetaDataWithOwnershipModelSerializer):
+class ProviderModelSerializer(SmarterCamelCaseSerializer):
     """ProviderModel model serializer."""
 
     provider = ProviderSerializer(read_only=True)

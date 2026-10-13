@@ -645,7 +645,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.prompt() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
@@ -670,7 +670,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 raise SAMSmarterAuthTokenBrokerError(
                     f"{self.kind} {self.smarter_auth_token.name} error: {str(e)}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     @memoized_dependencies
     def dependencies(self) -> List[AbstractBroker]:
@@ -753,7 +753,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 self.name,
             )
 
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def undeploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
@@ -770,7 +770,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 self.smarter_auth_token.refresh_from_db()
         else:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def logs(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.logs() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)

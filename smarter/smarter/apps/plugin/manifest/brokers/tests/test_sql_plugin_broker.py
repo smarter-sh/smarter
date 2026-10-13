@@ -233,6 +233,8 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
             django_orm_tags = set(self.broker.plugin_meta.tags_list) if self.broker.plugin_meta.tags else set()
         elif isinstance(self.broker.plugin_meta.tags, set):
             django_orm_tags = self.broker.plugin_meta.tags
+        elif isinstance(self.broker.plugin_meta.tags, list):
+            django_orm_tags = set(self.broker.plugin_meta.tags)
         else:
             self.fail(f"plugin_meta.tags is of unexpected type: {type(self.broker.plugin_meta.tags)}")
         self.assertEqual(manifest_tags, django_orm_tags)

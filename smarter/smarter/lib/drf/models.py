@@ -21,7 +21,9 @@ from smarter.apps.account.models import (
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import to_snake_case
 from smarter.lib.cache import cache_results
+from smarter.lib.django.validators import SmarterValidator
 
 logger = getLogger(__name__)
 
@@ -119,6 +121,8 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         - API keys can only be created for staff users. Attempting to create a key for a non-staff user
           will raise a `SmarterBusinessRuleViolation`.
         - The `identifier` property returns a masked version of the key digest for display purposes.
+        - Names are stored in snake_case, as every SAM manifest name is, so that ``get`` and
+          ``describe`` report the same name. ``save()`` converts any other name.
 
     .. warning::
 
@@ -259,6 +263,15 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             raise SmarterBusinessRuleViolation("API Keys can only be created for staff users.")
         if self.created is None:
             self.created = timezone.now()
+        if isinstance(self.name, str) and self.name and not SmarterValidator.is_valid_snake_case(self.name):
+            snake_case_name = to_snake_case(self.name)
+            logger.warning(
+                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                formatted_text(self.__class__.__name__),
+                self.name,
+                snake_case_name,
+            )
+            self.name = snake_case_name
         super().save(*args, **kwargs)
 
     def activate(self):

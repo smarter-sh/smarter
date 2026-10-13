@@ -215,13 +215,17 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertEqual(response["metadata"]["thing"], SAMKinds.SECRET.value)
         self.assertIsInstance(response["metadata"], dict)
 
-        data: SmarterDictType = response["data"]
-        self.assertIsInstance(data, dict)
-        self.assertIn("name", data["data"]["metadata"])
-        self.assertIn("description", data["data"]["metadata"])
-        self.assertIn("version", data["data"]["metadata"])
+        # apply returns the Secret's identity, and none of the broker's internals. describe
+        # returns its manifest.
+        self.assertEqual(
+            response["data"],
+            {"apiVersion": SmarterApiVersions.V1, "kind": SAMKinds.SECRET.value, "name": "test_secret"},
+        )
+        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        response, status = self.get_response(path=f"{path}?{urlencode({'name': 'test_secret'})}")
+        self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
 
-        data: SmarterDictType = response["data"]["data"]
+        data: SmarterDictType = response["data"]
         self.assertIsInstance(data, dict)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SECRET.value)

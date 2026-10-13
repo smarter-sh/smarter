@@ -48,6 +48,24 @@ class TestValidators(TestCase):
             with self.subTest(request=request), self.assertRaises(SmarterValueError):
                 validators.validate_messages(request)
 
+    def test_validate_messages_tool_call_without_content(self):
+        """Test that an assistant message that calls tools may omit its content, or set it to null."""
+        tool_calls = [{"id": "call_1", "type": "function", "function": {"name": "f", "arguments": "{}"}}]
+        for message in (
+            {"role": "assistant", "tool_calls": tool_calls},
+            {"role": "assistant", "content": None, "tool_calls": tool_calls},
+        ):
+            with self.subTest(message=message):
+                validators.validate_messages({"messages": [*MESSAGES, message]})
+        for message in (
+            {"role": "assistant"},
+            {"role": "assistant", "tool_calls": []},
+            {"role": "user", "tool_calls": tool_calls},
+            {"role": "tool", "tool_call_id": "call_1"},
+        ):
+            with self.subTest(message=message), self.assertRaises(SmarterValueError):
+                validators.validate_messages({"messages": [message]})
+
     def test_validate_completion_request(self):
         validators.validate_completion_request(
             {"messages": MESSAGES, "model": "m", "temperature": 0.5, "max_completion_tokens": 10}

@@ -143,6 +143,10 @@ def get_request_body(data) -> SmarterDictType:
         validate_object_types(object_type=object_type)
 
     validate_messages(request_body=request_body)
+    # an assistant message that only calls tools may omit its content. The rest of the
+    # pipeline reads every message's content, so it is null, as OpenAI returns it.
+    for message in request_body["messages"]:
+        message.setdefault(OpenAIMessageKeys.MESSAGE_CONTENT_KEY, None)
     return request_body
 
 
