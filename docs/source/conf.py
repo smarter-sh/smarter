@@ -180,6 +180,13 @@ autodoc_type_aliases = {
     "pydantic.types.JsonValue": "JsonValue",
     "JsonValue": "JsonValue",
 }
+# Smarter has no PEP 484 type comments. With this on, documenting an attribute
+# of a Pydantic model, e.g. ListViewPagination.model_config, makes autodoc parse
+# pydantic/main.py and write its annotations, as strings, into
+# BaseModel.__annotations__, which Pydantic keeps empty. Every model with
+# extra="allow" that's defined afterwards then fails to import with
+# "The type annotation for `__pydantic_extra__` must be `dict[str, ...]`".
+autodoc_use_type_comments = False
 
 # sitemap settings
 html_baseurl = f"https://docs.{smarter_settings.root_domain}/"

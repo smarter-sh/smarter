@@ -120,11 +120,13 @@ class SettingsDefaults:
     BRANDING_COUNTRY: str = get_env("BRANDING_COUNTRY", "USA")
     BRANDING_CURRENCY: str = get_env("BRANDING_CURRENCY", "USD")
     BRANDING_TIMEZONE: str = get_env("BRANDING_TIMEZONE", "America/Denver")
-    BRANDING_CONTACT_URL: str = get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/")
+    BRANDING_CONTACT_URL: HttpUrl = HttpUrl(get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/"))
     BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
-    BRANDING_URL_FACEBOOK: str = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com")
-    BRANDING_URL_TWITTER: str = get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry")
-    BRANDING_URL_LINKEDIN: str = get_env("BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/")
+    BRANDING_URL_FACEBOOK: HttpUrl = HttpUrl(get_env("BRANDING_URL_FACEBOOK", "https://facebook.com"))
+    BRANDING_URL_TWITTER: HttpUrl = HttpUrl(get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry"))
+    BRANDING_URL_LINKEDIN: HttpUrl = HttpUrl(
+        get_env("BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/")
+    )
 
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
@@ -220,7 +222,7 @@ class SettingsDefaults:
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: str = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
+    MARKETING_SITE_URL: HttpUrl = HttpUrl(get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}"))
 
     # the user and password that scripts/smarter_test_db.sql creates in the local MariaDB.
     MYSQL_TEST_DATABASE_SECRET_NAME = get_env("MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db")

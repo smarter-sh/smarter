@@ -2877,7 +2877,7 @@ class Settings(BaseSettings):
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME`
+    :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
