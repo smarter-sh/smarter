@@ -84,14 +84,15 @@ it. Smarter gives a training program a real platform to teach on, and a library 
 teach with. Learners build working AI applications from the first hour, on the same software that
 can run them in production afterwards.
 
-**19 free courses, 56 turnkey course plans.** The
+**20 free courses, 58 turnkey course plans.** The
 :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` has 18
 :doc:`micro courses <smarter-instructors/example-courses/micro-courses>`, each in
 :doc:`three formats <smarter-instructors/example-courses/micro-courses/course-formats>`: an eight-hour classroom
 bootcamp, a two-week online course and a four-week online course. Its
 :doc:`master classes <smarter-instructors/example-courses/master-classes>` go deeper: the 18-hour
-:doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>` runs over
-three days in a classroom or six weeks online. The online formats pair 30-minute recorded
+:doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>` and
+:doc:`AI Application Development Master Class <smarter-instructors/example-courses/master-classes/ai-application-development>`
+each run over three days in a classroom or six weeks online. The online formats pair 30-minute recorded
 lectures with a weekly 90-minute live session, so they fit around a working week. Every plan has
 a schedule, graded assignments with rubrics, capstone projects, a reading list and the technical
 prerequisites. A trainer can take a plan, set the dates, and teach it.
@@ -118,6 +119,7 @@ prerequisites. A trainer can take a plan, set the dates, and teach it.
        :doc:`Software Quality <smarter-instructors/example-courses/micro-courses/software-quality>`,
        :doc:`Software Architecture <smarter-instructors/example-courses/micro-courses/software-architecture>`,
        :doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>`,
+       :doc:`AI Application Development Master Class <smarter-instructors/example-courses/master-classes/ai-application-development>`,
        :doc:`Documentation with Sphinx <smarter-instructors/example-courses/micro-courses/sphinx-documentation>`,
        :doc:`Open Source <smarter-instructors/example-courses/micro-courses/open-source>`
    * - **Platform, cloud and machine learning engineers**
@@ -322,7 +324,7 @@ At a glance
 - **Get started** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
 - **Teaching and training** | :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` | :doc:`Instructor Guide <smarter-instructor>` | :doc:`Course formats <smarter-instructors/example-courses/micro-courses/course-formats>`
 
-  - 19 free courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and an 18-hour Django Master Class.
+  - 20 free courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and two 18-hour master classes, on Django and on AI application development.
   - Per-learner budgets, separate accounts for each cohort, and a record of every prompt, on learners' laptops or on one shared Kubernetes instance.
 
 - **Platform**

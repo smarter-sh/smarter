@@ -1,7 +1,7 @@
 Free Course Designs
 ===================
 
-Smarter comes with 19 complete, ready-to-teach course designs, from prompt engineering for
+Smarter comes with 20 complete, ready-to-teach course designs, from prompt engineering for
 non-programmers to Kubernetes for platform engineers. Like Smarter itself, they are free and open
 source, published with Smarter's source code under the same license, with no license fees, no
 seat counts and no sign-up forms. Each course design comes with turnkey course plans, with schedules,
@@ -18,7 +18,8 @@ The course designs come in two kinds:
   a weekly 90-minute live session. :doc:`micro-courses/course-formats` explains the formats, the
   grading scale and the course policies that the plans share.
 - :doc:`master-classes`: longer courses that take experienced practitioners deep into one
-  technology. The :doc:`master-classes/django-master-class` has 18 hours of instruction, as a
+  subject. The :doc:`master-classes/django-master-class` and the
+  :doc:`master-classes/ai-application-development` each have 18 hours of instruction, as a
   three-day classroom course or a six-week online course.
 
 The :doc:`Smarter Instructor Guide </smarter-instructor>` explains how to get Smarter running and
