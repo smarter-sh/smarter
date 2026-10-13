@@ -20,6 +20,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
     SAMBrokerReadOnlyError,
@@ -62,7 +63,7 @@ class PromptSerializer(ModelSerializer):
     # pylint: disable=C0115
     class Meta:
         model = Prompt
-        fields = ["id", SMARTER_CHAT_SESSION_KEY_NAME, "ip_address", "url", "created_at"]
+        fields = ["id", "name", SMARTER_CHAT_SESSION_KEY_NAME, "ip_address", "url", "created_at"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -101,7 +102,7 @@ class SAMPromptBroker(AbstractBroker):
             return self._chat
         # a manifest identifies its chat session by its session key, which is unique. Without one, as
         # for describe, which receives only a name, the user's most recent Prompt of that name is used.
-        prompts = Prompt.objects.filter(user_profile__user=self.user)
+        prompts = Prompt.objects.with_read_permission_for(self.user)  # type: ignore[attr-defined]
         session_key = self.manifest.spec.sessionKey if self.manifest else None
         if session_key:
             self._chat = prompts.filter(session_key=session_key).first()
@@ -257,6 +258,12 @@ class SAMPromptBroker(AbstractBroker):
             param=session_key, param_name=SMARTER_CHAT_SESSION_KEY_NAME, url=self.smarter_build_absolute_uri(request)
         )  # type: ignore
 
+        name = self.clean_cli_param(
+            param=kwargs.get(SAMMetadataKeys.NAME.value, None),
+            param_name="name",
+            url=self.smarter_build_absolute_uri(request),
+        )
+
         data = []
         if session_key:
             chats = Prompt.objects.filter(session_key=session_key).with_read_permission_for(self.user)  # type: ignore
@@ -265,7 +272,10 @@ class SAMPromptBroker(AbstractBroker):
                     f"Multiple Chats found for session_key {session_key}", thing=self.kind, command=command
                 )
         else:
-            chats = Prompt.objects.with_read_permission_for(self.user).order_by("-created_at")[:MAX_RESULTS]  # type: ignore
+            chats = Prompt.objects.with_read_permission_for(self.user)  # type: ignore
+            if name:
+                chats = chats.filter(name=name)
+            chats = chats.order_by("-created_at")[:MAX_RESULTS]
         chats = chats or Prompt.objects.none()
 
         logger.debug("SAMPromptBroker().get() found %s Chats for account %s", chats.count(), self.account)
@@ -316,7 +326,7 @@ class SAMPromptBroker(AbstractBroker):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMPromptBrokerError(f"Failed to describe {self.kind}", thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="Prompt not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     @memoized_dependencies
     def dependencies(self) -> typing.List[AbstractBroker]:
@@ -339,7 +349,7 @@ class SAMPromptBroker(AbstractBroker):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMPromptBrokerError(f"Failed to delete {self.kind}", thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="Prompt not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
@@ -357,4 +367,4 @@ class SAMPromptBroker(AbstractBroker):
         if self.chat_object:
             data = {}
             return self.json_response_ok(command=command, data=data)
-        raise SAMBrokerErrorNotReady(message="Prompt not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)

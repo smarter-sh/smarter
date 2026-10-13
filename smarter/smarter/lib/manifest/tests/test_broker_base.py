@@ -15,6 +15,7 @@ from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker.result import SAMBrokerCommandResult
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
@@ -348,38 +349,23 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self,
         response: SmarterJournaledJsonResponse,
     ) -> bool:
-        """Validate that the response is a SmarterJournaledJsonResponse containing a properly structured SAM manifest dict after an apply operation."""
+        """
+        Validate the response of an apply: the applied resource's api version, kind and name.
 
-        # Validate that the response is a properly
-        # structured SAM manifest dict
+        Apply returns only the resource's identity, never the broker's internals, e.g. its
+        request, authentication or cache key. See :class:`SAMBrokerCommandResult`.
+        """
         response_json: SmarterDictType = json.loads(response.content.decode("utf-8"))
         self.assertIsInstance(response_json, dict)
         data = response_json.get(SCLIResponseGet.DATA.value)
         self.assertIsInstance(
             data, dict, msg=f"Response data is not a dict. response_json: {response_json}, data: {data}"
         )
-        data = data.get(SCLIResponseGet.DATA.value)  # type: ignore
-        self.assertIsInstance(
-            data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}, data: {data}"
+        self.assertEqual(
+            set(data),  # type: ignore[arg-type]
+            set(SAMBrokerCommandResult.model_fields),
+            msg=f"apply returned more than the resource's identity. response_json: {response_json}",
         )
-
-        # Validate that the response is a properly
-        # structured SAM manifest dict
-        self.assertIsNotNone(
-            data.get(SAMKeys.APIVERSION.value),  # type: ignore
-            msg=f"apiVersion missing in manifest dict. response_json: {response_json}, data: {data}",
-        )
-        self.assertIsNotNone(
-            data.get(SAMKeys.KIND.value),  # type: ignore
-            msg=f"kind missing in manifest dict. response_json: {response_json}, data: {data}",
-        )
-        self.assertIsNotNone(
-            data.get(SAMKeys.METADATA.value),  # type: ignore
-            msg=f"metadata missing in manifest dict. response_json: {response_json}, data: {data}",
-        )
-        self.assertIsNotNone(
-            data.get(SAMKeys.SPEC.value),
-            msg=f"spec missing in manifest dict. response_json: {response_json}, data: {data}",
-        )
-
+        self.assertIsNotNone(data.get(SAMKeys.APIVERSION.value), msg=f"apiVersion missing: {response_json}")  # type: ignore
+        self.assertIsNotNone(data.get(SAMKeys.KIND.value), msg=f"kind missing: {response_json}")  # type: ignore
         return True

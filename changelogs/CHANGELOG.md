@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.21.1](https://github.com/smarter-sh/smarter/compare/v0.21.0...v0.21.1) (2026-10-13)
+
+### Bug Fixes
+
+* **api:** repair cli get, describe, apply and the provider api ([04f67ed](https://github.com/smarter-sh/smarter/commit/04f67ed0107b117ae8f5aa7e5eb67be4b57e0c46))
+
 ## [0.21.0](https://github.com/smarter-sh/smarter/compare/v0.20.5...v0.21.0) (2026-10-12)
 
 ### Features

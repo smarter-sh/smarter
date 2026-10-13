@@ -37,6 +37,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
     memoized_dependencies,
@@ -882,13 +883,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value)
-        name = name or self.name
-        if name is None:
-            raise SAMBrokerErrorNotReady(
-                message="Name parameter is required",
-                thing=self.kind,
-                command=command,
-            )
         data = []
 
         # generate a QuerySet of SqlConnection objects that match our search criteria
@@ -1008,7 +1002,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -1094,11 +1088,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             )
 
         if self.manifest is None:
-            raise SAMBrokerErrorNotReady(
-                message="Neither manifest nor connection are set. Cannot describe.",
-                thing=self.kind,
-                command=command,
-            )
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
         model = self.manifest.model_dump()
         return self.json_response_ok(command=command, data=model)
@@ -1175,7 +1165,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

@@ -274,6 +274,11 @@ class PluginBase(ABC, AccountMixin):
             except PluginMeta.DoesNotExist:
                 # a plugin that does not exist yet, for example one that is about to be applied from a manifest
                 self._plugin_meta = None
+            # plugin names are unique per account, not per plugin class: a plugin of another
+            # class with this name is not this plugin.
+            metadata_class = getattr(type(self), "_metadata_class", None)
+            if self._plugin_meta and metadata_class and self._plugin_meta.plugin_class != metadata_class:
+                self._plugin_meta = None
 
         #######################################################################
         # Smarter API Manifest based initialization

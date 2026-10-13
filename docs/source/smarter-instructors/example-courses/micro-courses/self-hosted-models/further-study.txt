@@ -1,0 +1,17 @@
+- **Documentation:** `vLLM <https://docs.vllm.ai/>`__, `SGLang <https://docs.sglang.ai/>`__, Hugging
+  Face `Text Generation Inference <https://huggingface.co/docs/text-generation-inference>`__,
+  `llama.cpp <https://github.com/ggml-org/llama.cpp>`__ and `Ollama <https://ollama.com/>`__.
+- **Courses:** the free `Hugging Face courses <https://huggingface.co/learn>`__, especially the LLM
+  course, and Hugging Face's model cards and licenses, which are worth reading closely.
+- **Papers:** Kwon et al., *Efficient Memory Management for Large Language Model Serving with
+  PagedAttention* (2023), the paper behind vLLM, and the GPTQ and AWQ papers on quantization.
+- **Leaderboards:** `LMArena <https://lmarena.ai/>`__ for human preference rankings, and `Artificial
+  Analysis <https://artificialanalysis.ai/>`__ for speed and price comparisons across open and
+  commercial models.
+- **YouTube:** Andrej Karpathy's *Let's build GPT: from scratch, in code, spelled out* and *Let's
+  reproduce GPT-2* on his `channel <https://www.youtube.com/@AndrejKarpathy>`__, and Umar Jamil's
+  `channel <https://www.youtube.com/@umarjamilai>`__ on transformer internals.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, which regularly covers
+  inference engines and open models, and `Practical AI <https://practicalai.fm/>`__.
+- **Community:** the `r/LocalLLaMA <https://www.reddit.com/r/LocalLLaMA/>`__ community, the most
+  active place to compare open models on real hardware.

@@ -955,7 +955,7 @@ class SAMUserBroker(AbstractBroker):
                 command=command,
             ) from e
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -996,6 +996,8 @@ class SAMUserBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.describe() called", self.formatted_class_name)
 
+        if self.manifest is None:
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if not isinstance(self.manifest, SAMUser):
             raise SAMUserBrokerError(
                 message=f"Manifest must be of type {SAMUser.__name__} to describe, got {type(self.manifest)}: {self.manifest}",

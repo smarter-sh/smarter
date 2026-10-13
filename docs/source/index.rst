@@ -47,6 +47,13 @@ The Smarter Project is an open source, cloud-native :doc:`platform <smarter-plat
 databases, calls your APIs, uses the tools of any MCP server, and defends itself against prompt
 injection and data leaks is described in one short YAML file, and deployed with one command.
 
+Smarter is also a complete **platform for teaching AI**. Companies use it to train and retrain
+their employees, and universities and bootcamps use it to teach their students. The
+:doc:`Free Course Catalog <smarter-instructors/example-courses/index>` includes
+:ref:`19 ready-to-teach courses <ai-training-courses>`, from prompt engineering for
+non-programmers to Kubernetes for platform engineers. Most come as a one-day bootcamp, a
+two-week online course and a four-week online course.
+
 .. admonition:: Quick Start: up and running on your desktop in about 10 minutes
    :class: tip
 
@@ -66,6 +73,83 @@ injection and data leaks is described in one short YAML file, and deployed with 
 
    See the :doc:`Quick Start Guide <smarter-platform/installation/quick-start>` for step-by-step
    instructions with screenshots.
+
+.. _ai-training-courses:
+
+AI training for your whole workforce
+------------------------------------
+
+Most organizations now need nearly every employee to work with AI, and need some of them to build
+it. Smarter gives a training program a real platform to teach on, and a library of courses to
+teach with. Learners build working AI applications from the first hour, on the same software that
+can run them in production afterwards.
+
+**20 free courses, 58 turnkey course plans.** The
+:doc:`Free Course Catalog <smarter-instructors/example-courses/index>` has 18
+:doc:`micro courses <smarter-instructors/example-courses/micro-courses>`, each in
+:doc:`three formats <smarter-instructors/example-courses/micro-courses/course-formats>`: an eight-hour classroom
+bootcamp, a two-week online course and a four-week online course. Its
+:doc:`master classes <smarter-instructors/example-courses/master-classes>` go deeper: the 18-hour
+:doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>` and
+:doc:`AI Application Development Master Class <smarter-instructors/example-courses/master-classes/ai-application-development>`
+each run over three days in a classroom or six weeks online. The online formats pair 30-minute recorded
+lectures with a weekly 90-minute live session, so they fit around a working week. Every plan has
+a schedule, graded assignments with rubrics, capstone projects, a reading list and the technical
+prerequisites. A trainer can take a plan, set the dates, and teach it.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Who is learning
+     - Courses
+   * - **Every employee** (no programming)
+     - :doc:`Prompt Engineering <smarter-instructors/example-courses/micro-courses/prompt-engineering>`,
+       :doc:`AI Applications <smarter-instructors/example-courses/micro-courses/ai-applications>`
+   * - **Leaders, managers, risk and compliance** (no programming)
+     - :doc:`AI Governance <smarter-instructors/example-courses/micro-courses/ai-governance>`,
+       :doc:`AI Economics <smarter-instructors/example-courses/micro-courses/ai-economics>`
+   * - **Software engineers**
+     - :doc:`Agentic Development <smarter-instructors/example-courses/micro-courses/agentic-development>`,
+       :doc:`Backend <smarter-instructors/example-courses/micro-courses/backend-development>`,
+       :doc:`Front End <smarter-instructors/example-courses/micro-courses/frontend-development>`,
+       :doc:`Full Stack <smarter-instructors/example-courses/micro-courses/full-stack-development>`,
+       :doc:`API Design <smarter-instructors/example-courses/micro-courses/api-design>`,
+       :doc:`Secure Software <smarter-instructors/example-courses/micro-courses/secure-software>`,
+       :doc:`Software Quality <smarter-instructors/example-courses/micro-courses/software-quality>`,
+       :doc:`Software Architecture <smarter-instructors/example-courses/micro-courses/software-architecture>`,
+       :doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>`,
+       :doc:`AI Application Development Master Class <smarter-instructors/example-courses/master-classes/ai-application-development>`,
+       :doc:`Documentation with Sphinx <smarter-instructors/example-courses/micro-courses/sphinx-documentation>`,
+       :doc:`Open Source <smarter-instructors/example-courses/micro-courses/open-source>`
+   * - **Platform, cloud and machine learning engineers**
+     - :doc:`Docker <smarter-instructors/example-courses/micro-courses/docker>`,
+       :doc:`Kubernetes <smarter-instructors/example-courses/micro-courses/kubernetes>`,
+       :doc:`Infrastructure as Code <smarter-instructors/example-courses/micro-courses/infrastructure-as-code>`,
+       :doc:`Self-Hosted Models <smarter-instructors/example-courses/micro-courses/self-hosted-models>`
+
+Smarter is built to be run for a group of learners:
+
+- **Run it locally or for everyone at once.** Learners can run Smarter on their own laptops with
+  Docker, or use one shared instance that your team hosts on Kubernetes, which costs around $350
+  USD a month in the cloud. The variable cost per learner is well under a dollar a month, so a
+  shared instance costs about the same for 30 learners as for 300.
+- **No licenses and no seat counts.** Smarter is open source, so every employee can use it, and
+  keep using it after the course ends.
+- **Predictable model spending.** A :doc:`Budget <smarter-resources/smarter-budget>` caps what each
+  learner, cohort or department can spend. Learners never hold your provider API keys.
+- **Cohorts kept apart.** Each cohort, department or team can have its own
+  :doc:`Account <smarter-resources/smarter-account>`, with its own users, resources and budgets.
+- **Training that follows your policies.** :doc:`Guardrails <smarter-resources/smarter-guardrail>`
+  keep personal data and secrets out of prompts. Every prompt is recorded, so trainers can
+  review how a learner reached an answer. With :doc:`LLMHost <smarter-resources/smarter-llmhost>`,
+  courses can use open models on your own cluster, so prompts never leave your network.
+- **From the classroom to production.** The manifests that learners write in class run unchanged
+  on a production cluster. A capstone project can become an application that their team uses.
+
+Browse the :doc:`Free Course Catalog <smarter-instructors/example-courses/index>`, then read the
+:doc:`Smarter Instructor Guide <smarter-instructor>`. It covers installing Smarter, setting up a
+class, and managing cost and privacy.
 
 No code. Just a manifest.
 -------------------------
@@ -238,6 +322,11 @@ At a glance
 -----------
 
 - **Get started** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
+- **Teaching and training** | :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` | :doc:`Instructor Guide <smarter-instructor>` | :doc:`Course formats <smarter-instructors/example-courses/micro-courses/course-formats>`
+
+  - 20 free courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and two 18-hour master classes, on Django and on AI application development.
+  - Per-learner budgets, separate accounts for each cohort, and a record of every prompt, on learners' laptops or on one shared Kubernetes instance.
+
 - **Platform**
 
   - A :doc:`proxy server <smarter-resources/smarter-proxy>` that gives secure, governed, auditable access to AI providers and resources, without exposing secrets or the underlying vendor accounts.
@@ -270,7 +359,7 @@ At a glance
   - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
   - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
-  - `Python SDK <https://pypi.org/project/smarter-api/>`_, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
+  - A :doc:`Python SDK <smarter-framework/smarter-python>` (``pip install smarter-api``), `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
 
 
 Usage
@@ -313,12 +402,18 @@ MCPClient, and four guardrails, and it contains no code.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Table of Contents
+   :caption: Teaching and Training
+
+   smarter-instructor
+   smarter-instructors/example-courses/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Smarter Docs
 
    smarter-platform
    smarter-resources
    smarter-framework
-   smarter-instructor
    adr
    contributors
 

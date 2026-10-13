@@ -1,0 +1,14 @@
+- **Style guides:** Google's `API Design Guide <https://cloud.google.com/apis/design>`__, the
+  `Microsoft REST API Guidelines <https://github.com/microsoft/api-guidelines>`__, and the `Zalando
+  RESTful API Guidelines <https://opensource.zalando.com/restful-api-guidelines/>`__.
+- **Standards:** the `OpenAPI Specification <https://spec.openapis.org/oas/latest.html>`__, `RFC
+  9110 <https://www.rfc-editor.org/rfc/rfc9110>`__ on HTTP semantics, and `RFC 9457
+  <https://www.rfc-editor.org/rfc/rfc9457>`__ on problem details for HTTP APIs.
+- **Security:** the `OWASP API Security Top 10 <https://owasp.org/API-Security/>`__.
+- **Podcasts:** `Software Engineering Radio <https://se-radio.net/>`__, which has many episodes on
+  API design, versioning and gateways.
+- **YouTube:** the `GOTO Conferences <https://www.youtube.com/@GOTO->`__ channel, for talks on API
+  design and evolution, and the `Postman <https://www.youtube.com/@postman>`__ channel for tools.
+- **Online:** the `Postman Learning Center <https://learning.postman.com/>`__, and the API
+  documentation of `Stripe <https://docs.stripe.com/api>`__ and `GitHub
+  <https://docs.github.com/en/rest>`__, which are widely regarded as models of the craft.

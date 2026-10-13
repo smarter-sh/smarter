@@ -1,0 +1,16 @@
+- **Essays:** Anthropic's `Building effective agents
+  <https://www.anthropic.com/engineering/building-effective-agents>`__, the clearest short guide to
+  when a workflow, a single agent or several agents is the right design. Eugene Yan's `writing
+  <https://eugeneyan.com/writing/>`__ on patterns for building LLM systems and products.
+- **Standards:** the `Model Context Protocol <https://modelcontextprotocol.io/>`__ specification and
+  its directory of reference servers.
+- **Courses:** the free short courses at `DeepLearning.AI
+  <https://www.deeplearning.ai/short-courses/>`__ on retrieval, agents, MCP and evaluation, and the
+  `Hugging Face courses <https://huggingface.co/learn>`__ on agents and open models.
+- **YouTube:** Andrej Karpathy's `channel <https://www.youtube.com/@AndrejKarpathy>`__, especially
+  *Intro to Large Language Models*, and the AI Engineer World's Fair talks on the `AI Engineer
+  <https://www.youtube.com/@aiDotEngineer>`__ channel.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, the podcast of the AI
+  engineering community, and `Practical AI <https://practicalai.fm/>`__.
+- **Writing:** Simon Willison's `weblog <https://simonwillison.net/>`__, on tools, agents and prompt
+  injection as they evolve.

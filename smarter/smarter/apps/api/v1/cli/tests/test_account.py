@@ -203,93 +203,6 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         logger.info("2.) apply the modified manifest to update the existing Account")
         response, status = self.get_response(path=path, manifest=manifest)
         logger.info("Modified response: %s, Status: %s", response, status)
-        expected = {
-            "data": {
-                "account": {"accountNumber": "5829-4032-4255"},
-                "api_subdomain": None,
-                "api_token": "****6774",
-                "auth_header": "Token 1ca4****",
-                "cache_key": "6989b75d084613e55b779d27fcca7834ec4fb30ab53ff17ea3b701db39beb571",
-                "llmclient_id": None,
-                "llmclient_name": None,
-                "class_name": "SAMAccountBroker",
-                "data": {
-                    "apiVersion": "smarter.sh/v1",
-                    "kind": "Account",
-                    "metadata": {
-                        "accountNumber": "5829-4032-4255",
-                        "annotations": [
-                            {"smarter.sh/created_by": "admin_user_factory"},
-                            {"smarter.sh/purpose": "testing"},
-                            {"smarter.sh/hash": "7359552cbee2aade"},
-                        ],
-                        "description": "TestAccount_AdminUser_7359552cbee2aade",
-                        "name": "test_account_admin_user_7359552cbee2aade",
-                        "tags": ["test", "account", "mortal"],
-                        "version": "0.0.1",
-                    },
-                    "spec": {
-                        "config": {
-                            "address1": "Avenida Reforma 222",
-                            "address2": "Piso 19",
-                            "city": "CDMX",
-                            "companyName": "test data",
-                            "country": "MX",
-                            "currency": "MXN",
-                            "language": "es-ES",
-                            "phoneNumber": "+1 617 834 6172",
-                            "postalCode": "06600",
-                            "state": "CDMX",
-                            "timezone": "America/Mexico_City",
-                        }
-                    },
-                },
-                "domain": "testserver",
-                "ip_address": "127.0.0.1",
-                "is_llmclient": False,
-                "is_llmclient_cli_api_url": False,
-                "is_llmclient_named_url": False,
-                "is_llmclient_sandbox_url": False,
-                "is_llmclient_smarter_api_url": False,
-                "is_config": False,
-                "is_dashboard": False,
-                "is_default_domain": False,
-                "is_environment_root_domain": False,
-                "is_smarter_api": True,
-                "is_workbench": False,
-                "params": {},
-                "parsed_url": "ParseResult(scheme='http', netloc='testserver', path='/api/v1/cli/apply/', params='', query='', fragment='')",
-                "path": "/api/v1/cli/apply/",
-                "qualified_request": True,
-                "ready": True,
-                "request": True,
-                "root_domain": "testserver",
-                "session_key": "7df6bc82d9cb2035a9a818b620a48ff68c8c08730e56a351d680f807243e921f",
-                "subdomain": None,
-                "timestamp": "2026-01-07T19:07:15.428214",
-                "uid": None,
-                "unique_client_string": "5829-4032-4255.http://testserver/api/v1/cli/apply/.user_agent.127.0.0.1.2026-01-07T19:07:15.428214",
-                "url": "http://testserver/api/v1/cli/apply/",
-                "url_original": "http://testserver/api/v1/cli/apply/",
-                "url_path_parts": ["api", "v1", "cli", "apply"],
-                "user": {
-                    "username": "test_admin_user_7359552cbee2aade",
-                    "email": "test-admin-7359552cbee2aade@mail.com",
-                },
-                "user_agent": "user_agent",
-                "user_profile": {
-                    "user": {
-                        "username": "test_admin_user_7359552cbee2aade",
-                        "email": "test-admin-7359552cbee2aade@mail.com",
-                    },
-                    "account": {"accountNumber": "5829-4032-4255"},
-                },
-            },
-            "message": "Account test_account_admin_user_7359552cbee2aade applied successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Account",
-            "metadata": {"key": "74aff0e7277d1552c32ef89b6f0d5413e1d864068f3ba786117dd5962609faf2"},
-        }
 
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
@@ -301,11 +214,12 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertIn(SmarterJournalApiResponseKeys.THING, response[SmarterJournalApiResponseKeys.METADATA])
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, response.keys())
 
-        # validate the data that we just modified and applied
-        spec = response[SmarterJournalApiResponseKeys.DATA]["data"]["spec"]["config"]
-        for key, value in change_set.items():
-            self.assertIn(key, spec)
-            self.assertEqual(spec[key], value)
+        # apply returns the Account's identity, and none of the broker's internals. describe,
+        # below, returns its data.
+        self.assertEqual(
+            response[SmarterJournalApiResponseKeys.DATA],
+            {"apiVersion": "smarter.sh/v1", "kind": "Account", "name": data[SAMKeys.METADATA.value]["name"]},
+        )
 
         logger.info("3.) re-query and validate that our changes are present when we call describe.")
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
