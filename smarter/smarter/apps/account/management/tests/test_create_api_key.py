@@ -1,5 +1,6 @@
 """Test the create_api_key management command."""
 
+from smarter.common.utils import to_snake_case
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .base import CommandTestBase
@@ -14,7 +15,10 @@ class TestCreateApiKey(CommandTestBase):
         output = self.run_command("create_api_key", username=self.admin_user.username, description="d")
         self.assertIn("API key:", output)
         self.assertTrue(
-            SmarterAuthToken.objects.filter(name=f"{self.account.account_number}.{self.admin_user.username}").exists()
+            # API key names are stored in snake_case.
+            SmarterAuthToken.objects.filter(
+                name=to_snake_case(f"{self.account.account_number}.{self.admin_user.username}")
+            ).exists()
         )
 
     def test_by_account_number(self):

@@ -1,0 +1,17 @@
+- **Official documentation:** Docker's `getting started guide
+  <https://docs.docker.com/get-started/>`__, its `building best practices
+  <https://docs.docker.com/build/building/best-practices/>`__, the `Dockerfile reference
+  <https://docs.docker.com/reference/dockerfile/>`__ and the `Compose file reference
+  <https://docs.docker.com/reference/compose-file/>`__.
+- **Principles:** `The Twelve-Factor App <https://12factor.net/>`__, the short manifesto that most
+  container practice follows.
+- **Tools:** `Hadolint <https://github.com/hadolint/hadolint>`__ for linting Dockerfiles, `dive
+  <https://github.com/wagoodman/dive>`__ for exploring image layers, and `Trivy
+  <https://trivy.dev/>`__ for scanning images for known vulnerabilities.
+- **YouTube:** `TechWorld with Nana <https://www.youtube.com/@TechWorldwithNana>`__, for clear
+  introductions to Docker and the tools around it, and the `Docker
+  <https://www.youtube.com/@DockerIo>`__ channel's DockerCon talks.
+- **Podcasts:** `The Kubernetes Podcast from Google <https://kubernetespodcast.com/>`__, which often
+  covers container runtimes and images, and `Software Engineering Radio <https://se-radio.net/>`__.
+- **Practice:** `Play with Docker <https://labs.play-with-docker.com/>`__, a free browser-based
+  sandbox, for students whose laptops cannot run Docker.

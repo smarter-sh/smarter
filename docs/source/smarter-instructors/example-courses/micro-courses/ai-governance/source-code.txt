@@ -1,0 +1,108 @@
+Every lecture, lab and assignment in this course works with the manifests and files below. The
+manifests ship with every Smarter installation, so students can open them in the web console, or
+read them on the ``main`` branch of
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__. No programming is
+needed to read them: a guardrail or a budget is a short YAML file. The Python files are listed
+for instructors and for students who want to see how a control is enforced. Python paths are
+under ``smarter/smarter/``.
+
+Controls on Every Message
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Control
+     - What Smarter does
+     - Where to look
+   * - Built-in guardrails
+     - Eighteen ready-made policies: personal data (``pii_redaction_input``,
+       ``pii_leak_output``), secrets, prompt injection and jailbreaks, moderation, self-harm,
+       off-topic requests, regulated advice, invented citations, and privacy requests under GDPR
+       and CCPA (``data_subject_request_input``).
+     - `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+   * - The vocabulary of a control
+     - Every guardrail has a stage (input, output or both), a category, a strategy (regular
+       expression, keyword list, built-in detectors, semantic similarity, a moderation model or
+       an LLM judge), an action (log, flag, redact, transform, block or escalate to a human), and
+       a mode: enforce, or monitor, which records what it would have done.
+     - `guardrail/models/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__
+   * - Enforcement in code
+     - Guardrails run as a pipeline on the user's message before the model sees it, and on the
+       model's reply before the user does. A rule in a system prompt is a request. This is
+       enforcement.
+     - `guardrail/services/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/pipeline.py>`__,
+       `guardrail/services/strategies/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/services/strategies>`__
+   * - A governed application
+     - The ``customer_support`` LLMClient: a support agent with guardrails for abuse, self-harm,
+       prompt injection and jailbreaks. ``research_analyst`` adds output guardrails for invented
+       citations and regulated advice.
+     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
+       `llmclient-research-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-research-analyst.yaml>`__
+
+Money and Access
+~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Control
+     - What Smarter does
+     - Where to look
+   * - Budgets
+     - A limit in dollars or tokens, per hour, day, week or month, with an absolute cap, a
+       warning threshold, and an action (block or warn), attached to an account, a user, an
+       application, a provider, a proxy or a self-hosted model.
+     - `budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+       `account/manifest/models/budget/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/manifest/models/budget/spec.py>`__
+   * - Seven example policies
+     - A monthly allowance for each student, an account-wide cap, a daily limit on a provider,
+       an hourly token throttle per user, a project budget, a warn-only budget on a proxy, and a
+       limit on self-hosted compute.
+     - `student-monthly-allowance.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/student-monthly-allowance.yaml>`__,
+       `account-monthly-cap.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/account-monthly-cap.yaml>`__
+   * - Cost accounting
+     - Every model call is a charge with its tokens and cost, attributed to the user, the
+       application and the account. :doc:`/smarter-platform/cost-accounting`.
+     - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__
+   * - Ownership
+     - Every resource belongs to an account and a user, and every query is filtered by them, so
+       one department cannot see another's applications.
+     - `account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__
+   * - Secrets
+     - Provider keys, database passwords and tokens are encrypted at rest, and referred to by
+       name, so a manifest, a prompt or a model never contains them.
+       :doc:`/smarter-resources/smarter-secret`.
+     - `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__
+   * - Keeping data in the network
+     - Open models served on the organization's own cluster, so prompts never leave it.
+       :doc:`/smarter-resources/smarter-llmhost`.
+     - `apps/llmhost/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost>`__
+
+Audit and Accountability
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Record
+     - What Smarter keeps
+     - Where to look
+   * - Guardrail events
+     - Every intervention: which guardrail, on which application and session, at which stage,
+       what it did, its severity and confidence, an excerpt, the rationale, and whether a person
+       has reviewed it.
+     - `guardrail/models/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__
+       (``GuardrailEvent``)
+   * - Conversations
+     - Each prompt and answer, every tool call and every plugin that was selected, by user and
+       application. :doc:`/smarter-resources/smarter-prompt`.
+     - `prompt/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/models>`__
+   * - Changes to resources
+     - Every command sent through the API or the CLI (apply, describe, delete, deploy and the
+       rest), with its request, its response and its user.
+       :doc:`/smarter-platform/smarter-journal`.
+     - `lib/journal/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/models.py>`__

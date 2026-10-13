@@ -478,7 +478,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         if reload_documents:
             self.reload_documents(vectorstore)
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     @staticmethod
     def reload_documents(vectorstore: VectorstoreMeta) -> int:

@@ -166,7 +166,11 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
         orm_instance = MagicMock(spec=PluginDataBase)
         not_found = PluginDataBase.DoesNotExist
         with (
-            patch.object(PluginMeta.objects, "get", return_value=self.plugin_meta()),
+            patch.object(
+                SAMPluginBaseBroker,
+                "plugin_meta_queryset",
+                return_value=MagicMock(get=MagicMock(return_value=self.plugin_meta())),
+            ),
             patch.object(PluginDataBase.objects, "get", side_effect=[not_found, not_found, orm_instance]),
         ):
             broker.orm_instance  # pylint: disable=pointless-statement
@@ -291,7 +295,11 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
         plugin = MagicMock()
         plugin.name = "broken"
         with (
-            patch(f"{MODULE}.PluginMeta.objects.filter", return_value=MagicMock(__iter__=lambda s: iter([plugin]))),
+            patch.object(
+                SAMPluginBaseBroker,
+                "plugin_meta_queryset",
+                return_value=MagicMock(filter=MagicMock(return_value=MagicMock(__iter__=lambda s: iter([plugin])))),
+            ),
             patch(f"{MODULE}.PluginSerializer", side_effect=[MagicMock(), RuntimeError("bad")]),
             patch.object(SAMStaticPluginBroker, "get_model_titles", return_value=[]),
         ):

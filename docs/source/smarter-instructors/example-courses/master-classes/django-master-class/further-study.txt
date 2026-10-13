@@ -1,0 +1,24 @@
+- **Django's own documentation:** the topic guides on `middleware
+  <https://docs.djangoproject.com/en/stable/topics/http/middleware/>`__, `signals
+  <https://docs.djangoproject.com/en/stable/topics/signals/>`__, `asynchronous support
+  <https://docs.djangoproject.com/en/stable/topics/async/>`__, `applications and ready()
+  <https://docs.djangoproject.com/en/stable/ref/applications/>`__, `managers
+  <https://docs.djangoproject.com/en/stable/topics/db/managers/>`__, `customizing authentication
+  <https://docs.djangoproject.com/en/stable/topics/auth/customizing/>`__ and `custom template tags
+  <https://docs.djangoproject.com/en/stable/howto/custom-template-tags/>`__.
+- **Libraries used in this course:** `Celery <https://docs.celeryq.dev/>`__, `Django Channels
+  <https://channels.readthedocs.io/>`__, `django-hosts <https://django-hosts.readthedocs.io/>`__,
+  `django-waffle <https://waffle.readthedocs.io/>`__, `Python Social Auth
+  <https://python-social-auth.readthedocs.io/>`__, `Django REST Framework
+  <https://www.django-rest-framework.org/>`__, `Pydantic <https://docs.pydantic.dev/>`__, and
+  Redis `publish-subscribe <https://redis.io/docs/latest/develop/interact/pubsub/>`__.
+- **Style guides:** the `HackSoft Django Styleguide
+  <https://github.com/HackSoftware/Django-Styleguide>`__, on where business logic belongs in a
+  large Django project.
+- **Blogs:** Adam Johnson's `blog <https://adamj.eu/tech/>`__, on Django internals, testing and
+  tooling.
+- **Podcasts:** `Django Chat <https://djangochat.com/>`__, with Will Vincent and Carlton Gibson.
+- **YouTube:** the `DjangoCon US <https://www.youtube.com/@DjangoConUS>`__ talk archive, and
+  the recorded talks of DjangoCon Europe.
+- **Community:** the `Django Forum <https://forum.djangoproject.com/>`__, where Django's
+  developers answer questions about its internals.

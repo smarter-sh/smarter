@@ -740,7 +740,7 @@ class SAMSecretBroker(AbstractBroker):
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
             self.cache_invalidations()
-            return self.json_response_ok(command=command, data=self.to_json())
+            return self.json_response_ok(command=command, data=self.command_result())
         try:
             raise SAMBrokerErrorNotReady(f"Secret {self.name} not ready", thing=self.kind, command=command)
         except SAMBrokerErrorNotReady as err:
