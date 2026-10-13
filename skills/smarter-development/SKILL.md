@@ -154,6 +154,11 @@ reference implementations.
 - **Transformations are methods** of the model, such as
   `PromptChatApiConfig.public()` and `.to_v1()`, not string-replacing helpers
   that run over dumped dicts.
+- **The Python SDK mirrors the contracts.** smarter-python
+  (`../smarter-python`) copies the chat and journal contracts' committed JSON
+  Schemas and examples, and generates its SAM models from each kind's JSON
+  Schema. A change to a contract or a manifest model is a change to the SDK's
+  api too: say so in your summary.
 - **When a model's JSON leaves the repository**, for example to a React app or
   the npm package, publish its JSON Schema
   (`pydantic.json_schema.models_json_schema`), generate the client's types from
