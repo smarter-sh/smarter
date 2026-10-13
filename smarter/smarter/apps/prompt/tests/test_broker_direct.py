@@ -17,7 +17,11 @@ from smarter.apps.prompt.manifest.models.prompt.model import SAMPrompt
 from smarter.apps.prompt.models import Prompt
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json
-from smarter.lib.manifest.broker import SAMBrokerErrorNotReady, SAMBrokerReadOnlyError
+from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotReady,
+    SAMBrokerReadOnlyError,
+)
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -90,8 +94,8 @@ class TestSAMPromptBrokerDirect(TestSAMBrokerBaseClass):
         self.assertEqual(items[0]["id"], str(prompt.id))
 
     def test_describe(self):
-        """Test that describe() returns the Prompt's manifest, and refuses when there is none."""
-        with self.assertRaises(SAMBrokerErrorNotReady):
+        """Test that describe() returns the Prompt's manifest, and answers not found when there is none."""
+        with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.describe(self.request)
 
         self.create_prompt()

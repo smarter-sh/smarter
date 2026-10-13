@@ -11,7 +11,11 @@ import os
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib.manifest.broker import SAMBrokerError, SAMBrokerErrorNotReady
+from smarter.lib.manifest.broker import (
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -59,12 +63,12 @@ class BrokerBranchesTestMixin:
                 getattr(self.broker, command)(self.request)
 
     def test_describe_and_delete_need_the_resource(self):
-        """Describe and delete aren't ready when the resource doesn't exist."""
+        """Describe and delete answer not found (404) when the resource doesn't exist."""
         self.patch_property("name", "no_such_resource")
         self.patch_property(self.resource_property, None)
         self.patch_method("verify_no_dependencies")
         for command in ("describe", "delete"):
-            with self.subTest(command=command), self.assertRaises(SAMBrokerErrorNotReady):  # type: ignore[attr-defined]
+            with self.subTest(command=command), self.assertRaises(SAMBrokerErrorNotFound):  # type: ignore[attr-defined]
                 getattr(self.broker, command)(self.request)
 
     def test_describe_and_delete_failures(self):

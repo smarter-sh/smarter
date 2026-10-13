@@ -47,6 +47,26 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         with self.assertRaises(Exception):
             self.auth_token.save()
 
+    def test_save_converts_name_to_snake_case(self):
+        """Test that a name is stored in snake_case, as get and describe both report it."""
+        self.auth_token.name = "Smarter-Admin Key"
+        self.auth_token.save()
+        self.auth_token.refresh_from_db()
+        self.assertEqual(self.auth_token.name, "smarter_admin_key")
+
+    def test_migration_converts_existing_names(self):
+        """Test that the 0004 data migration converts the names that were saved before save() did."""
+        # pylint: disable=import-outside-toplevel
+        from importlib import import_module
+
+        from django.apps import apps
+
+        migration = import_module("smarter.lib.drf.migrations.0004_smarterauthtoken_snake_case_names")
+        SmarterAuthToken.objects.filter(pk=self.auth_token.pk).update(name="legacy-key-name")
+        migration.forward(apps, None)
+        self.auth_token.refresh_from_db()
+        self.assertEqual(self.auth_token.name, "legacy_key_name")
+
     def test_save_sets_created(self):
         self.auth_token.user.is_staff = True
         self.assertIsInstance(self.auth_token.created, datetime)

@@ -64,5 +64,8 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         )
         if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
-        response = self.broker.get(request=request, kwargs=kwargs)
+        # the get criteria, e.g. ?name=..., are the url's query parameters. Brokers read them
+        # from their keyword arguments.
+        params = {key: self.params.get(key) for key in self.params} if self.params else {}
+        response = self.broker.get(request, *args, **{**kwargs, **params})
         return response
