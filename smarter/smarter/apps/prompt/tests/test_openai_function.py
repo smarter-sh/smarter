@@ -277,13 +277,14 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         chat_histories = Prompt.objects.filter().first()
         self.assertIsNotNone(chat_histories)
 
-        # test url api endpoint for prompt history
+        # test url api endpoint for prompt history: the chat session, by its id
         prompt = PromptHistory.objects.filter(prompt=self.prompt).order_by("-id").first()
         self.assertIsNotNone(prompt)
-        url = reverse("api:v1:prompt:chathistory", kwargs={"pk": prompt.id})
+        url = reverse("api:v1:prompt:chathistory", kwargs={"pk": self.prompt.id})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["session_key"], self.prompt.session_key)
 
         # give celery time to process the prompt completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second

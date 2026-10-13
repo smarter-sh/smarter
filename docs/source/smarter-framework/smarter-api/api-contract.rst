@@ -202,16 +202,27 @@ before they were modeled, which clients already read, with two corrections:
 - ``canDelete`` is computed for the requesting user, for every family. The
   views called their serializers without the request, so it was always false.
 - An LLMClient's api key is its token's public ``key_id``. It was the token's primary key, its digest.
+- A chat session is read by the session's id, like the list's rows. It was a different row's id, a
+  PromptHistory's.
 
-The LLMClients' and Secrets' REST views require an api key of a superuser, and refuse other users with
-a 403. Other users read their resources with the cli api's ``get`` and ``describe``. The other
-families' views accept any api key, and return only what its user may read; their actions that change
-something require the user to own the resource. Each operation's description says which. The Proxies'
+The LLMClients', Secrets', accounts' and :doc:`journal's <smarter-journal>` REST views require an api
+key of a superuser, and refuse other users with a 403. Other users read their resources with the cli
+api's ``get`` and ``describe``. The other families' views accept any api key, and return only what its
+user may read; their actions that change something require the user to own the resource. Each
+operation's description says which.
+
+The accounts' reads (``/accounts/``) return the accounts, users, user profiles (each user's membership
+of an account) and account contacts. The prompt history (``/prompts/history/``) returns the chat
+sessions, newest first, and the tool calls and plugin usage of each. A session holds a user's
+conversation, so the history includes only the sessions whose user the requesting user may manage:
+their own, their account's users' for an account admin, and every one for a superuser. The journal's
+list is paged: ``page``, ``page_size``, ``search`` and ``ordering`` select the page, and its
+``pagination`` describes it. The Proxies'
 and vectorstores' routes exist only when the platform enables them (``SMARTER_ENABLE_PROXY``,
 ``SMARTER_ENABLE_VECTORSTORE``).
 
-A Guardrail's events, and a catalog's models in an LLMHost discovery, keep the snake_case keys that
-they had, e.g. ``guardrail_name`` and ``parameter_count``, unlike the rest of the REST api, which is
+A Guardrail's events, the prompt history, and a catalog's models in an LLMHost discovery, keep the
+snake_case keys that they had, e.g. ``guardrail_name``, ``session_key`` and ``parameter_count``, unlike the rest of the REST api, which is
 camelCase, because clients already read them.
 
 Besides the reads, the document publishes the actions that the SDKs use: a Guardrail's dry run,

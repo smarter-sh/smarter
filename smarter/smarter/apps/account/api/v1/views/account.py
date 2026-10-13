@@ -8,19 +8,21 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import (
     HttpResponseBadRequest,
-    HttpResponseForbidden,
     HttpResponseNotFound,
     HttpResponseRedirect,
     HttpResponseServerError,
 )
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from smarter.apps.account.contract.models import AccountApiAccountDetail
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.typing import SmarterDictType
 
 from .base import AccountListViewBase, AccountViewBase
@@ -29,7 +31,10 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 
 class AccountView(AccountViewBase):
-    """Account view for smarter api."""
+    """Account view for smarter api.
+
+    Its ``GET`` returns an :class:`AccountApiAccountDetail`.
+    """
 
     def get(self, request: Request, account_id: int):
         logger.debug("%s.get() called with account_id: %s", self.formatted_class_name, account_id)
@@ -37,10 +42,9 @@ class AccountView(AccountViewBase):
             account = get_object_or_404(Account, pk=account_id)
         else:
             if not isinstance(self.user_profile, UserProfile):
-                return HttpResponseForbidden("User profile not found")
+                raise PermissionDenied("User profile not found")
             account = self.user_profile.account
-        serializer = self.serializer_class(account)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(AccountApiAccountDetail.from_model(account).model_dump(mode="json"), status=HTTPStatus.OK)
 
     # pylint: disable=W0613
     def post(self, request: Request, account_id: Optional[int] = None):
@@ -131,8 +135,10 @@ class AccountView(AccountViewBase):
         return HttpResponseRedirect("/")
 
 
-class AccountListView(AccountListViewBase):
-    """Account list view for smarter api."""
+class AccountListView(ContractListMixin, AccountListViewBase):
+    """Account list view for smarter api: :class:`AccountApiAccountDetail` models."""
+
+    contract_model = AccountApiAccountDetail
 
     def get_queryset(self):
         logger.debug("%s.get_queryset() called", self.formatted_class_name)
