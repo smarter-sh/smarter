@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 
 import yaml
 from django.core.management import call_command
-from django.urls import URLPattern
+from django.urls import URLPattern, URLResolver
 from django.urls.resolvers import RoutePattern
 from jsonschema import Draft202012Validator
 from rest_framework.test import APIClient
@@ -29,6 +29,7 @@ from smarter.apps.api.v1.contract.openapi import (
     DOCUMENTED_URLCONFS,
     PATH_PARAMETER_ALIASES,
     UNDOCUMENTED_ROUTES,
+    UNDOCUMENTED_URLCONFS,
     llmclient_paths,
     merge_paths,
     openapi_document,
@@ -132,6 +133,24 @@ class TestOpenApiDocument(ApiV1CliTestBase):
             with self.subTest(undocumented=path):
                 self.assertIn(path, routes, f"{path} is listed as undocumented, but there is no such route.")
                 self.assertNotIn(path, paths, f"{path} is documented, so remove it from UNDOCUMENTED_ROUTES.")
+
+    def test_every_family_is_covered(self):
+        """A new family of routes under /api/v1 must be documented, or added to UNDOCUMENTED_URLCONFS."""
+        families = {
+            f"/{pattern.pattern}"
+            for pattern in importlib.import_module("smarter.apps.api.v1.urls").urlpatterns
+            if isinstance(pattern, URLResolver)
+        }
+        for family in families:
+            with self.subTest(family=family):
+                self.assertTrue(
+                    family in DOCUMENTED_URLCONFS or family in UNDOCUMENTED_URLCONFS,
+                    f"{family} is neither documented nor in UNDOCUMENTED_URLCONFS.",
+                )
+        for family in UNDOCUMENTED_URLCONFS:
+            with self.subTest(undocumented=family):
+                self.assertIn(family, families)
+                self.assertNotIn(family, DOCUMENTED_URLCONFS)
 
     def test_merge_paths(self):
         """Families merge into one document, and an operation that two families define is refused."""

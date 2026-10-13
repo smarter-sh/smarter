@@ -15,8 +15,8 @@ model, the :doc:`journal's <smarter-journal>` response envelope, the
 :doc:`chat contract <../smarter-chat/api-contract>`, or a route that the document covers, read this
 page first.
 
-The document grows one family of routes at a time, each one typed by Pydantic models and tested
-against the platform's real responses. It covers:
+The document covers every family of routes of ``/api/v1``, each one typed by Pydantic models and
+tested against the platform's real responses:
 
 .. list-table::
    :header-rows: 1
@@ -57,11 +57,29 @@ against the platform's real responses. It covers:
    * - The Proxies' list
      - ``GET /api/v1/proxy/``. A Proxy's passthrough is its provider's api, which Smarter does not
        describe.
+   * - The accounts' REST reads
+     - ``GET /api/v1/accounts/``, an account, and the users, user profiles and account contacts, as
+       lists and one by one.
+   * - The prompt history
+     - ``GET /api/v1/prompts/history/prompt/``, the chat sessions, their ``tool-calls/`` and their
+       ``plugin-usage/``, as lists and one by one.
+   * - The Smarter Journal
+     - ``GET /api/v1/journal/``, one page of the journal's entries, and an entry by its key.
+   * - The Orchestrators' and Vectorsearches' REST reads
+     - ``GET /api/v1/orchestrators/`` and ``GET /api/v1/vectorsearches/``, and one by its id or hashed
+       id.
 
-The other routes of a covered family are listed in
-:data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason that it is
-left out. Until a family is covered, a client reads its resources from the REST api's own views,
-described only by the live Swagger page, untyped.
+The few routes that the document leaves out are listed in
+:data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason: web console
+actions, whose clients use manifests instead, passthroughs to LLM providers' own apis, and routes
+that aren't implemented yet. The families that it leaves out, only the views that the platform's
+unit tests call, are listed in :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
+
+Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with Swagger
+UI at ``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The
+served document lists the platform's own ``/api/v1`` as its first server, so that the page's *Try
+it out* sends requests to the platform that you are reading it on. Authorize with an api key, as
+``Token <api key>``.
 
 
 Where the Contract Lives
@@ -111,7 +129,9 @@ The tests make the contract hard to break by accident. They fail when:
   event of a streamed prompt, and an error). The prompt tests make real, billable LLM requests,
 - a route of a covered family, a urlconf in
   :data:`~smarter.apps.api.v1.contract.openapi.DOCUMENTED_URLCONFS`, is neither in the document
-  nor listed, with a reason, in :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`.
+  nor listed, with a reason, in :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`,
+- a family of routes that ``/api/v1`` mounts is neither covered nor listed, with a reason, in
+  :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 
 
 What the Document Describes
@@ -244,19 +264,21 @@ The Swagger page
 ~~~~~~~~~~~~~~~~
 
 The live Swagger and Redoc pages (``/docs/swagger/`` and ``/docs/redoc/``) are a different thing.
-drf-yasg generates them from the views, in OpenAPI 2, for every api of the platform, but with
-untyped request and response bodies. Generate clients from ``openapi.json`` instead.
+drf-yasg generates them from the views, in OpenAPI 2, for every api of the platform, including the
+REST writes, but with untyped request and response bodies. The *OpenAPI Contract* page
+(``/docs/openapi/``) renders the typed document. Generate clients from ``openapi.json``.
 
 
 Generating a Client
 -------------------
 
-Any OpenAPI 3.1 or JSON Schema 2020-12 tool can read the contract. For example, the TypeScript
-types of the whole cli api:
+Any OpenAPI 3.1 or JSON Schema 2020-12 tool can read the contract, from a checkout or from a
+running platform. For example, the TypeScript types of the whole api:
 
 .. code-block:: console
 
    npx openapi-typescript smarter/smarter/apps/api/v1/contract/openapi.json -o smarter.d.ts
+   npx openapi-typescript https://platform.example.com/docs/openapi.json -o smarter.d.ts
 
 The Python SDK copies the contract from a checkout of the platform, at a commit or a release tag
 (``make contracts SMARTER_REF=v0.20.0``), and generates its manifest models from the SAM schemas

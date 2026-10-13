@@ -81,6 +81,10 @@ from smarter.apps.mcpclient.contract.models import (
     MCPClientApiToolResult,
     MCPClientApiTools,
 )
+from smarter.apps.orchestrator.contract.models import (
+    ORCHESTRATOR_API_MODELS,
+    OrchestratorApiOrchestrator,
+)
 from smarter.apps.plugin.contract.models import PluginApiPluginMeta
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
 from smarter.apps.prompt.contract.history import (
@@ -105,6 +109,10 @@ from smarter.apps.provider.contract.models import (
 )
 from smarter.apps.proxy.contract.models import PROXY_API_MODELS, ProxyApiProxies
 from smarter.apps.secret.contract.models import SECRET_API_MODELS, SecretApiSecret
+from smarter.apps.vectorsearch.contract.models import (
+    VECTORSEARCH_API_MODELS,
+    VectorsearchApiVectorsearch,
+)
 from smarter.apps.vectorstore.contract.models import (
     VECTORSTORE_API_MODELS,
     VectorstoreApiAddText,
@@ -198,6 +206,8 @@ TAG_PROXIES = "proxies"
 TAG_ACCOUNTS = "accounts"
 TAG_HISTORY = "history"
 TAG_JOURNAL = "journal"
+TAG_ORCHESTRATORS = "orchestrators"
+TAG_VECTORSEARCHES = "vectorsearches"
 
 SUPERUSER_ONLY = (
     "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
@@ -236,11 +246,23 @@ DOCUMENTED_URLCONFS: dict[str, str] = {
     "/accounts/": "smarter.apps.account.api.v1.urls",
     "/prompts/": "smarter.apps.prompt.api.v1.urls",
     "/journal/": "smarter.lib.journal.api.v1.urls",
+    "/orchestrators/": "smarter.apps.orchestrator.api.v1.urls",
+    "/vectorsearches/": "smarter.apps.vectorsearch.api.v1.urls",
+    "/connections/": "smarter.apps.connection.api.v1.urls",
 }
 """
 The families of routes that the document covers: each one's path, relative to ``/api/v1``, and its urlconf.
 
 Every route of these urlconfs must be in the document, or in :data:`UNDOCUMENTED_ROUTES`.
+"""
+
+UNDOCUMENTED_URLCONFS: dict[str, str] = {
+    "/tests/": "Views that only the platform's own unit tests call.",
+}
+"""
+The families of routes under ``/api/v1`` that the document leaves out, and why.
+
+Every family that ``smarter.apps.api.v1.urls`` mounts must be in :data:`DOCUMENTED_URLCONFS` or here.
 """
 
 PATH_PARAMETER_ALIASES: dict[str, str] = {
@@ -250,6 +272,8 @@ PATH_PARAMETER_ALIASES: dict[str, str] = {
     "mcpclient_id": "id",
     "vectorstore_id": "id",
     "llmhost_id": "id",
+    "orchestrator_id": "id",
+    "vectorsearch_id": "id",
     "hashed_id": "id",
     "pk": "id",
 }
@@ -277,6 +301,10 @@ UNDOCUMENTED_ROUTES: dict[str, str] = {
     "responses are the provider's, not Smarter's.",
     "/prompts/passthrough/{provider_name}/": "A passthrough to an LLM provider's api, whose requests and responses "
     "are the provider's, not Smarter's.",
+    "/orchestrators/{id}/orchestrator/": "Running an Orchestrator is not implemented yet: the route has no POST "
+    "handler, and answers 405.",
+    "/vectorsearches/{id}/vectorsearch/": "Running a Vectorsearch is not implemented yet: the route has no POST "
+    "handler, and answers 405.",
     "/llm-clients/{id}/functions/{function_id}/plugins": "It returns every plugin of the LLMClient, whatever the "
     "function, because it is routed to LLMClientPluginListView. Not published until it is fixed or removed.",
 }
@@ -365,6 +393,8 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         *ACCOUNT_API_MODELS,
         *PROMPT_HISTORY_API_MODELS,
         *JOURNAL_API_MODELS,
+        *ORCHESTRATOR_API_MODELS,
+        *VECTORSEARCH_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -1952,6 +1982,77 @@ def journal_paths() -> dict[str, OpenApiPathItem]:
     }
 
 
+def superuser_list_and_retrieve(resource: str, path: str, tag: str, item: str) -> dict[str, OpenApiPathItem]:
+    """
+    A family's REST list and retrieve, whose views only superusers may call.
+
+    :param resource: The resource's name, e.g. Orchestrator.
+    :type resource: str
+    :param path: The family's path, e.g. /orchestrators/.
+    :type path: str
+    :param tag: The operations' tag.
+    :type tag: str
+    :param item: The schema of a row, in ``components.schemas``.
+    :type item: str
+    :returns: The paths.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    plural = tag.lower()
+    singular = resource.lower()
+    return {
+        path: OpenApiPathItem(
+            get=rest_read(
+                f"{singular}_list",
+                f"List {plural}",
+                f"The {resource}s that the user may read, by name.",
+                tag,
+                item,
+                many=True,
+                parameters=[],
+            )
+        ),
+        f"{path}{{id}}/": OpenApiPathItem(
+            get=rest_read(
+                f"{singular}_retrieve",
+                f"{'An' if resource[0] in 'AEIOU' else 'A'} {resource}",
+                f"{'An' if resource[0] in 'AEIOU' else 'A'} {resource}, by its id or hashed id.",
+                tag,
+                item,
+                many=False,
+                parameters=[id_or_hashed_id(resource)],
+            )
+        ),
+    }
+
+
+def orchestrator_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Orchestrators' REST reads, relative to the server's ``/api/v1``.
+
+    Only superusers may call them.
+
+    :returns: The paths, e.g. ``{"/orchestrators/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    return superuser_list_and_retrieve(
+        "Orchestrator", "/orchestrators/", TAG_ORCHESTRATORS, OrchestratorApiOrchestrator.__name__
+    )
+
+
+def vectorsearch_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Vectorsearches' REST reads, relative to the server's ``/api/v1``.
+
+    Only superusers may call them.
+
+    :returns: The paths, e.g. ``{"/vectorsearches/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    return superuser_list_and_retrieve(
+        "Vectorsearch", "/vectorsearches/", TAG_VECTORSEARCHES, VectorsearchApiVectorsearch.__name__
+    )
+
+
 def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
     """
     The paths of several families, with the operations of a path that two families share in one path item.
@@ -2045,6 +2146,8 @@ def openapi_document() -> OpenApiDocument:
                 name=TAG_JOURNAL,
                 description="The Smarter Journal: a record of every request to the cli api. For superusers.",
             ),
+            OpenApiTag(name=TAG_ORCHESTRATORS, description="The Orchestrators' REST reads. For superusers."),
+            OpenApiTag(name=TAG_VECTORSEARCHES, description="The Vectorsearches' REST reads. For superusers."),
         ],
         paths=merge_paths(
             cli_paths(),
@@ -2061,6 +2164,8 @@ def openapi_document() -> OpenApiDocument:
             account_paths(),
             history_paths(),
             journal_paths(),
+            orchestrator_paths(),
+            vectorsearch_paths(),
         ),
         components=OpenApiComponents(
             schemas=schemas,
@@ -2103,6 +2208,7 @@ __all__ = [
     "DOCUMENTED_URLCONFS",
     "PATH_PARAMETER_ALIASES",
     "UNDOCUMENTED_ROUTES",
+    "UNDOCUMENTED_URLCONFS",
     "chat_paths",
     "guardrail_paths",
     "id_or_hashed_id",
