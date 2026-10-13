@@ -16,8 +16,8 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 from ..base import APIV1CLIViewError
 from ..swagger import (
+    COMMON_SWAGGER_PARAMETERS,
     COMMON_SWAGGER_RESPONSES,
-    ChatConfigSerializer,
     openai_success_response,
 )
 from .prompt import CACHE_EXPIRATION, ApiV1CliPromptBaseApiView
@@ -61,19 +61,28 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
 
     @swagger_auto_schema(
         operation_description="""
-Api v1 post method for prompt config view. Returns the configuration
-dict used to configure the React prompt component.
+Returns the configuration of a chat with an LLMClient, and its session: the Smarter Chat api contract's
+version 2 configuration response. This is a non-brokered operation.
 
-The client must send `uid` and optionally `session_key` as form data (`application/x-www-form-urlencoded`).
+The platform caches the session's key under the client's uid for 24 hours, so that the client's next prompt
+continues the same chat, unless new_session is true.
 
-The client making the HTTP request to this endpoint is expected to be the Smarter CLI, emulating the Smarter Prompt React component, which is written in Golang and available on Windows, macOS, and Linux.
+Url parameters:
+- name: the LLMClient's name. It must belong to, or be shared with, the api key's account.
 
-The response from this endpoint is a JSON object.
+Query parameters:
+- uid: required. A unique identifier of the client, e.g. a combination of the machine's MAC address and its hostname.
+- new_session: optional. true starts a new chat session. The default is false.
 
-This is a Non-brokered operation.
+The request has no body. See the cli api's OpenAPI document,
+smarter/smarter/apps/api/v1/contract/openapi.json, operation prompt_config.
 """,
         responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Config generated successfully")},
-        request_body=ChatConfigSerializer,
+        manual_parameters=[
+            COMMON_SWAGGER_PARAMETERS["llmclient_name"],
+            COMMON_SWAGGER_PARAMETERS["uid"],
+            COMMON_SWAGGER_PARAMETERS["new_session"],
+        ],
     )
     @csrf_exempt
     def post(self, request: "HttpRequest", name: str, *args, **kwargs):
@@ -83,12 +92,12 @@ This is a Non-brokered operation.
             "%s.post() called for prompt %s with %s, args %s, kwargs %s",
             self.formatted_class_name,
             name,
-            request.POST,
+            request.GET,
             args,
             kwargs,
         )
 
-        uid: Optional[str] = request.POST.get("uid")
+        uid: Optional[str] = self.uid
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         logger.debug(
             "%s.post() view for prompt %s and client %s and session_key %s request user %s self.user %s account %s",

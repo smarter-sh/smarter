@@ -5,6 +5,8 @@ import os
 import re
 import tempfile
 from http import HTTPStatus
+from unittest import mock
+from urllib.parse import urlencode
 
 import yaml
 from django.core.management import call_command
@@ -15,7 +17,11 @@ from referencing.jsonschema import DRAFT202012
 
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import urlpatterns as cli_urlpatterns
-from smarter.apps.api.v1.contract.const import OPENAPI_PATH, SAM_SCHEMA_SUFFIX
+from smarter.apps.api.v1.contract.const import (
+    OPENAPI_PATH,
+    SAM_EXAMPLE_SUFFIX,
+    SAM_SCHEMA_SUFFIX,
+)
 from smarter.apps.api.v1.contract.models import OpenApiDocument
 from smarter.apps.api.v1.contract.openapi import (
     UNDOCUMENTED_CLI_ROUTES,
@@ -24,6 +30,7 @@ from smarter.apps.api.v1.contract.openapi import (
 )
 from smarter.apps.api.v1.contract.sam import sam_models
 from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.llmclient.models import LLMClient
 from smarter.common.const import PROJECT_ROOT
 from smarter.lib.typing import SmarterDictType
 
@@ -112,6 +119,8 @@ class TestOpenApiDocument(ApiV1CliTestBase):
                 self.assertEqual(file.read(), openapi_json())
             schemas = [name for name in os.listdir(directory) if name.endswith(SAM_SCHEMA_SUFFIX)]
             self.assertEqual(len(schemas), len(sam_models()))
+            examples = [name for name in os.listdir(directory) if name.endswith(SAM_EXAMPLE_SUFFIX)]
+            self.assertEqual(len(examples), len(sam_models()))
 
 
 class TestOpenApiResponses(ApiV1CliTestBase):
@@ -174,10 +183,35 @@ class TestOpenApiResponses(ApiV1CliTestBase):
                 self.assertValid("CliApiJsonSchemaResponse", self.post(f"json-schema/{kind}/"))
 
     def test_platform(self):
-        """Version, whoami and resources.
+        """Status, version, whoami and resources, without the cloud infrastructure or GitHub."""
+        with mock.patch(
+            "smarter.apps.api.v1.cli.views.nonbrokered.status.ApiV1CliStatusApiView.get_kubernetes_info",
+            return_value={"status": "ACTIVE", "version": "1.36"},
+        ):
+            self.assertValid("CliApiStatusResponse", self.post("status/"))
+        with mock.patch(
+            "smarter.apps.api.v1.cli.views.nonbrokered.version.ApiV1CliVersionApiView.cli_version",
+            return_value="0.4.0",
+        ):
+            self.assertValid("CliApiVersionResponse", self.post("version/"))
+        self.assertValid("CliApiWhoamiResponse", self.post("whoami/"))
+        body = self.post("resources/")
+        self.assertValid("CliApiResourcesResponse", body)
+        self.assertEqual(body["metadata"]["command"], "resources")
 
-        status is left out: it queries the cloud infrastructure.
-        """
-        self.assertValid("CliApiObjectResponse", self.post("version/"))
-        self.assertValid("CliApiObjectResponse", self.post("whoami/"))
-        self.assertValid("CliApiResourcesResponse", self.post("resources/"))
+    def test_chat(self):
+        """Prompt/config and prompt, with a real LLM call."""
+        llmclient = LLMClient.objects.create(
+            name=self.name,
+            user_profile=self.user_profile,
+            description="Test LLMClient",
+            version="1.0.0",
+            app_name="Smarter",
+            app_assistant="Smarty Pants",
+            app_welcome_message="Welcome to Smarter!",
+        )
+        self.addCleanup(llmclient.delete)
+        query = urlencode({"uid": f"{self.name}_uid", "new_session": "true"})
+        self.assertValid("PromptChatApiConfigResponse", self.post(f"prompt/config/{self.name}/?{query}"))
+        body = self.post(f"prompt/{self.name}/?{query}", {"prompt": "Say hello in two words."})
+        self.assertValid("CliApiPromptResponse", body)

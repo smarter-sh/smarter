@@ -92,6 +92,10 @@ summary:
 12. **Tests**: a broker test, view tests via `ResourceViewsTestMixin`, model and
     serializer tests, and a `tests/data/<kind>.yaml` manifest. See
     `smarter-python-testing`.
+13. **Api contract**: `make api-contract`, which adds `sam/<Kind>.schema.json`
+    and `sam/<Kind>.example.json` and updates `openapi.json`. Commit them. The
+    same applies whenever an existing kind's manifest model or example changes.
+    See `smarter-api-contract`.
 
 ## Broker conventions
 

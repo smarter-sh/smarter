@@ -15,6 +15,15 @@ SAM_SCHEMA_DIR = os.path.join(HERE, "sam")
 SAM_SCHEMA_SUFFIX = ".schema.json"
 """The suffix of a SAM JSON Schema's file name, after its kind."""
 
+SAM_EXAMPLE_SUFFIX = ".example.json"
+"""The suffix of a SAM example manifest's file name, after its kind."""
+
+SAM_EXAMPLE_HOST = "localhost"
+"""The host of the in-process request that renders an example manifest.
+
+Every environment allows it.
+"""
+
 OPENAPI_PATH = os.path.join(HERE, "openapi.json")
 """The OpenAPI document of the cli api, generated from :mod:`smarter.apps.api.v1.contract.openapi`."""
 

@@ -41,12 +41,14 @@ Three things are copied from the platform, and each has a command that refreshes
 
    * - Command
      - What it refreshes
-   * - ``make sam-models``
-     - The SAM models, generated from a running platform's JSON Schemas, and the schemas and
-       example manifests that their tests use.
    * - ``make contracts``
-     - The chat and journal contracts' JSON Schemas and examples, from a checkout of the platform
-       beside the SDK (``../smarter``).
+     - The platform's :doc:`api contract <../smarter-api/api-contract>`, from a checkout of the
+       platform beside the SDK (``../smarter``): the JSON Schema and example manifest of every SAM
+       kind, the cli api's OpenAPI document, and the chat and journal contracts' JSON Schemas and
+       examples. ``SMARTER_REF=<ref>`` reads them at a commit or tag, e.g. ``origin/main``.
+   * - ``make sam-models``
+     - ``make contracts``, then the SAM models, generated from the SAM JSON Schemas. No running
+       platform is needed.
    * - ``python scripts/generate_reference.py``
      - The SDK's :doc:`API reference <reference>` pages in the platform's documentation.
 

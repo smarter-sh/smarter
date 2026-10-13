@@ -2,13 +2,17 @@
 """Smarter API command-line interface 'apply' view."""
 
 import platform
-import traceback
 from http import HTTPStatus
 
-from django.http import JsonResponse
 from django_redis import get_redis_connection
 
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
+from smarter.apps.api.v1.contract.models import (
+    CliApiStatus,
+    CliApiStatusCompute,
+    CliApiStatusInfrastructures,
+    CliApiStatusRedis,
+)
 from smarter.apps.infrastructure.exceptions import SmarterInfrastructureError
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
@@ -72,38 +76,27 @@ class ApiV1CliStatusApiView(CliBaseApiView):
 
         logger.debug("%s.status() called", self.formatted_class_name)
 
-        try:
-            data = {
-                SmarterJournalApiResponseKeys.DATA: {
-                    "infrastructures": {
-                        "kubernetes": self.get_kubernetes_info(),
-                        "redis": self.get_redis_info(),
-                    },
-                    "compute": {
-                        "machine": platform.machine(),
-                        "release": platform.release(),
-                        "platform": platform.platform(aliased=True),
-                        "processor": platform.processor(),
-                        "system": platform.system(),
-                        "version": platform.version(),
-                    },
-                },
-            }
-            return SmarterJournaledJsonResponse(
-                self.request,
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.STATUS),
-                data=data,
-                status=HTTPStatus.OK.value,
-            )
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(
-                data={
-                    "error": str(e),
-                    "trace": traceback.format_exc(),
-                },
-                status=HTTPStatus.BAD_REQUEST.value,
-            )
+        status = CliApiStatus(
+            infrastructures=CliApiStatusInfrastructures(
+                kubernetes=self.get_kubernetes_info(),
+                redis=CliApiStatusRedis(**self.get_redis_info()),
+            ),
+            compute=CliApiStatusCompute(
+                machine=platform.machine(),
+                release=platform.release(),
+                platform=platform.platform(aliased=True),
+                processor=platform.processor(),
+                system=platform.system(),
+                version=platform.version(),
+            ),
+        )
+        data = {SmarterJournalApiResponseKeys.DATA: status.model_dump(mode="json")}
+        return SmarterJournaledJsonResponse(
+            self.request,
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.STATUS),
+            data=data,
+            status=HTTPStatus.OK.value,
+        )
 
     def post(self, request):
         """ApiV1CliStatusApiView post view."""

@@ -7,6 +7,8 @@ describe, validate and delete the resources that SAM manifests declare. Its docu
 - the SAM models of every kind (:func:`smarter.apps.api.v1.contract.sam.sam_models`),
 - the Smarter Journal api contract (:mod:`smarter.lib.journal.contract.models`), the envelope and
   the errors of every response,
+- the Smarter Chat api contract (:mod:`smarter.apps.prompt.contract.models`), the chat
+  configuration and completion of the prompt commands,
 - the models of the other commands' data (:mod:`smarter.apps.api.v1.contract.models`),
 
 so a change to any of them changes the document. ``manage.py export_api_contract`` writes it to
@@ -24,6 +26,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
+from smarter.apps.prompt.contract.models import PromptChatApiConfigResponse
 from smarter.common.const import (
     SMARTER_PROJECT_DOCS_URL,
     SMARTER_PROJECT_WEBSITE_URL,
@@ -45,8 +48,13 @@ from .models import (
     CLI_API_MODELS,
     CliApiApplied,
     CliApiGet,
+    CliApiPrompt,
+    CliApiPromptBody,
     CliApiResource,
+    CliApiStatus,
     CliApiValidation,
+    CliApiVersion,
+    CliApiWhoami,
     OpenApiComponents,
     OpenApiContact,
     OpenApiDocument,
@@ -79,11 +87,14 @@ TAG_MANIFESTS = "manifests"
 TAG_DEPLOYMENT = "deployment"
 TAG_PLATFORM = "platform"
 
-UNDOCUMENTED_CLI_ROUTES: dict[str, str] = {
-    "/cli/prompt/{name}/": "A chat prompt. See the Smarter Chat api contract, chat-contract.schema.json.",
-    "/cli/prompt/config/{name}/": "A chat's configuration. See the Smarter Chat api contract, chat-contract.schema.json.",
-}
-"""The paths of the cli routes that the document leaves out, and why."""
+TAG_CHAT = "chat"
+
+UNDOCUMENTED_CLI_ROUTES: dict[str, str] = {}
+"""
+The paths of the cli routes that the document leaves out, and why, e.g. ``{"/cli/x/{name}/": "Internal."}``.
+
+Every cli route is documented, so it is empty.
+"""
 
 
 def ref(name: str) -> OpenApiSchema:
@@ -156,6 +167,7 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         *kinds.values(),
         SAMJournalApiEnvelope,
         SAMJournalApiErrorResponse,
+        PromptChatApiConfigResponse,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -192,7 +204,6 @@ def cli_schemas() -> tuple[dict[str, OpenApiSchema], list[str]]:
         "description": f"A JSON Schema ({JSON_SCHEMA_DIALECT}).",
         "additionalProperties": True,
     }
-    schemas["JsonObject"] = {"type": "object", "additionalProperties": True}
     schemas["CliApiApplyResponse"] = envelope(ref(CliApiApplied.__name__), "The response of apply.")
     schemas["CliApiValidateResponse"] = envelope(ref(CliApiValidation.__name__), "The response of validate.")
     schemas["CliApiGetResponse"] = envelope(ref(CliApiGet.__name__), "The response of get.")
@@ -201,9 +212,10 @@ def cli_schemas() -> tuple[dict[str, OpenApiSchema], list[str]]:
     )
     schemas["CliApiJsonSchemaResponse"] = envelope(ref("JsonSchema"), "The response of json-schema.")
     schemas["CliApiMessageResponse"] = envelope(None, "A response that has only a message, e.g. delete's.")
-    schemas["CliApiObjectResponse"] = envelope(
-        ref("JsonObject"), "A response whose data is an object that the document does not model further."
-    )
+    schemas["CliApiStatusResponse"] = envelope(ref(CliApiStatus.__name__), "The response of status.")
+    schemas["CliApiVersionResponse"] = envelope(ref(CliApiVersion.__name__), "The response of version.")
+    schemas["CliApiWhoamiResponse"] = envelope(ref(CliApiWhoami.__name__), "The response of whoami.")
+    schemas["CliApiPromptResponse"] = envelope(ref(CliApiPrompt.__name__), "The response of prompt.")
     schemas["CliApiResourcesResponse"] = envelope(
         {"type": "array", "items": ref(CliApiResource.__name__)}, "The response of resources."
     )
@@ -236,6 +248,37 @@ NAME_FILTER_PARAMETER = OpenApiParameter(
     required=False,
     description="Only the resource with this name. Other query parameters are passed to the kind's broker as criteria.",
     schema_={"type": "string"},
+)
+
+LLMCLIENT_PARAMETER = OpenApiParameter(
+    name="name",
+    in_="path",
+    required=True,
+    description="The LLMClient's name.",
+    schema_={"type": "string"},
+)
+
+UID_PARAMETER = OpenApiParameter(
+    name="uid",
+    in_="query",
+    required=True,
+    description="A unique identifier of the client, e.g. a machine id. The platform caches the client's chat "
+    "session under it, so that a later prompt continues the same chat.",
+    schema_={"type": "string"},
+)
+
+NEW_SESSION_PARAMETER = OpenApiParameter(
+    name="new_session",
+    in_="query",
+    required=False,
+    description="true starts a new chat session, rather than continuing the client's last one.",
+    schema_={"type": "string", "enum": ["true", "false"], "default": "false"},
+)
+
+PROMPT_BODY = OpenApiRequestBody(
+    description="The user's message.",
+    required=True,
+    content={"application/json": OpenApiMediaType(schema_=ref(CliApiPromptBody.__name__))},
 )
 
 MANIFEST_BODY = OpenApiRequestBody(
@@ -398,17 +441,37 @@ def cli_paths() -> dict[str, OpenApiPathItem]:
             "Platform status",
             "The status of the platform's infrastructure and compute.",
             TAG_PLATFORM,
-            "CliApiObjectResponse",
+            "CliApiStatusResponse",
         ),
         "/cli/version/": operation(
             "version",
             "Versions",
-            "The versions of the platform and its packages.",
+            "The versions of the platform and its packages, and the smarter cli's latest version.",
             TAG_PLATFORM,
-            "CliApiObjectResponse",
+            "CliApiVersionResponse",
         ),
         "/cli/whoami/": operation(
-            "whoami", "Who am I", "The api key's user and account.", TAG_PLATFORM, "CliApiObjectResponse"
+            "whoami", "Who am I", "The api key's user and account.", TAG_PLATFORM, "CliApiWhoamiResponse"
+        ),
+        "/cli/prompt/{name}/": operation(
+            "prompt",
+            "Prompt an LLMClient",
+            "Send a message to an LLMClient, and return its chat completion. The chat session is cached under the "
+            "uid, so that the next prompt continues it. The completion is the Smarter Chat api contract's version 1 "
+            "completion, decoded from the JSON string of its body.",
+            TAG_CHAT,
+            "CliApiPromptResponse",
+            parameters=[LLMCLIENT_PARAMETER, UID_PARAMETER, NEW_SESSION_PARAMETER],
+            request_body=PROMPT_BODY,
+        ),
+        "/cli/prompt/config/{name}/": operation(
+            "prompt_config",
+            "An LLMClient's chat configuration",
+            "The configuration of a chat with an LLMClient, and its session, as the Smarter Chat api contract's "
+            "version 2 configuration response.",
+            TAG_CHAT,
+            PromptChatApiConfigResponse.__name__,
+            parameters=[LLMCLIENT_PARAMETER, UID_PARAMETER, NEW_SESSION_PARAMETER],
         ),
         "/cli/resources/": operation(
             "resources",
@@ -434,7 +497,7 @@ def openapi_document() -> OpenApiDocument:
         info=OpenApiInfo(
             title="Smarter cli api",
             version=API_VERSION,
-            summary="Apply, get, describe, validate and delete the resources that SAM manifests declare.",
+            summary="Apply, get, describe, validate and delete the resources that SAM manifests declare, and chat.",
             description=(
                 "The api of the smarter cli and of the Smarter SDKs. Every response is journaled: its body "
                 "has the journal's api and metadata, beside the command's data or message, or an error. "
@@ -462,6 +525,7 @@ def openapi_document() -> OpenApiDocument:
             OpenApiTag(name=TAG_MANIFESTS, description="Resources, and the manifests that declare them."),
             OpenApiTag(name=TAG_DEPLOYMENT, description="Deployable resources, e.g. LLMClients."),
             OpenApiTag(name=TAG_PLATFORM, description="The platform, and the api key's user."),
+            OpenApiTag(name=TAG_CHAT, description="Chats with LLMClients."),
         ],
         paths=cli_paths(),
         components=OpenApiComponents(
