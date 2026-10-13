@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.22.0-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.6...v0.22.0-alpha.7) (2026-10-13)
+
+### Features
+
+* **api:** add LLMHost, plugin, Provider, Proxy apis to the contract ([7aaf832](https://github.com/smarter-sh/smarter/commit/7aaf832dcaebe5c72f24dfb4af70167299a04c3b))
+
 ## [0.22.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.5...v0.22.0-alpha.6) (2026-10-13)
 
 ### Features
