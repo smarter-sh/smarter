@@ -404,7 +404,7 @@ chat-contract: react-smarter-chat
 	cd $(SMARTER_CHAT_DIR) && npm run contract:types
 
 # Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
-# container: the SAM JSON Schemas (one per kind) and the cli api's OpenAPI document, which the
+# container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
 # journal contract or the cli api, and commit the files.
 API_CONTRACT_DIR := smarter/apps/api/v1/contract
@@ -494,7 +494,7 @@ help:
 	@echo 'react-test             - Run the unit tests of all React apps, with a coverage report'
 	@echo 'react-lint             - Check the formatting, lint and types of all React apps'
 	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
-	@echo 'api-contract           - Regenerate the SAM JSON Schemas and the cli api OpenAPI document'
+	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
 	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'

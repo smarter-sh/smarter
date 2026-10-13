@@ -375,6 +375,12 @@ class OpenApiMediaType(OpenApiModel):
     """The schema of a request's or response's body, in one media type."""
 
     schema_: OpenApiSchema = Field(..., alias="schema")
+    x_smarter_events: Optional[dict[str, OpenApiSchema]] = Field(
+        None,
+        alias="x-smarter-events",
+        description="For text/event-stream: the schema of each event's data, by the event's name. OpenAPI 3.1 has "
+        "no field for it, so it is an extension.",
+    )
 
 
 class OpenApiRequestBody(OpenApiModel):

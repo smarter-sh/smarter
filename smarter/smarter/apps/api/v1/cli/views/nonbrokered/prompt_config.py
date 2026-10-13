@@ -74,7 +74,7 @@ Query parameters:
 - uid: required. A unique identifier of the client, e.g. a combination of the machine's MAC address and its hostname.
 - new_session: optional. true starts a new chat session. The default is false.
 
-The request has no body. See the cli api's OpenAPI document,
+The request has no body. See the Smarter api's OpenAPI document,
 smarter/smarter/apps/api/v1/contract/openapi.json, operation prompt_config.
 """,
         responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Config generated successfully")},

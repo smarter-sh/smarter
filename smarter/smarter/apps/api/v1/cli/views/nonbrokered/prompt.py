@@ -581,7 +581,7 @@ Request body, as JSON (Content-Type: application/json):
 - messages: optional. The chat's earlier messages, to which the prompt is added. By default, a new chat.
 
 The response's data has the request that the platform sent to the LLMClient, and the LLMClient's response,
-whose body is decoded from a JSON string. See the cli api's OpenAPI document,
+whose body is decoded from a JSON string. See the Smarter api's OpenAPI document,
 smarter/smarter/apps/api/v1/contract/openapi.json, operation prompt.
 """,
         responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Prompt generated successfully")},

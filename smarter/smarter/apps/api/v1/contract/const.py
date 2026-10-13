@@ -1,4 +1,4 @@
-"""Constants of the Smarter api contract: the SAM JSON Schemas, and the OpenAPI document of the cli api."""
+"""Constants of the Smarter api contract: the SAM JSON Schemas, and the OpenAPI document of the Smarter api."""
 
 import os
 
@@ -25,7 +25,7 @@ Every environment allows it.
 """
 
 OPENAPI_PATH = os.path.join(HERE, "openapi.json")
-"""The OpenAPI document of the cli api, generated from :mod:`smarter.apps.api.v1.contract.openapi`."""
+"""The OpenAPI document of the Smarter api, generated from :mod:`smarter.apps.api.v1.contract.openapi`."""
 
 OPENAPI_VERSION = "3.1.0"
 """The version of the OpenAPI Specification that the document follows.

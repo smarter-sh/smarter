@@ -1834,6 +1834,17 @@
         "type": "object"
       },
       "JsonValue": {},
+      "LLMClientPromptErrorResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/PromptChatApiPromptResponse"
+          },
+          {
+            "$ref": "#/components/schemas/PromptChatApiErrorResponse"
+          }
+        ],
+        "description": "A failed prompt: the prompt's response with its error, whose http status is the LLM provider's, or, for an error before the prompt runs, e.g. an LLMClient that does not exist, the chat api's error response."
+      },
       "OrchestrationStrategy": {
         "description": "Coordination pattern the Orchestrator applies across its member LLMClients.\n\nValues must stay aligned with\nsmarter.apps.orchestrator.models.OrchestrationStrategy.",
         "enum": [
@@ -1941,6 +1952,140 @@
         "title": "PromptChatApiAudioPart",
         "type": "object"
       },
+      "PromptChatApiChoice": {
+        "additionalProperties": true,
+        "description": "A choice of a chat completion.",
+        "properties": {
+          "finish_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "e.g. stop, length or tool_calls.",
+            "title": "Finish Reason"
+          },
+          "index": {
+            "default": 0,
+            "title": "Index",
+            "type": "integer"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiMessage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "PromptChatApiChoice",
+        "type": "object"
+      },
+      "PromptChatApiCompletion": {
+        "description": "The LLM's chat completion, in the format of the OpenAI api, with only these fields.\n\nSmarter's own additions, ``smarter`` and ``metadata``, are not part of it: the messages, plugins and\ntools are in :class:`PromptChatApiPromptResult`, and ``metadata``, which describes the tool calls\nwith their plugins' owners, is returned only to the cli.",
+        "properties": {
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/PromptChatApiChoice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Created"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Model"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Object"
+          },
+          "service_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Service Tier"
+          },
+          "system_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "System Fingerprint"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiUsage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "PromptChatApiCompletion",
+        "type": "object"
+      },
       "PromptChatApiCompletionV1": {
         "additionalProperties": true,
         "deprecated": true,
@@ -2018,6 +2163,27 @@
         "title": "PromptChatApiConfig",
         "type": "object"
       },
+      "PromptChatApiConfigRequest": {
+        "additionalProperties": true,
+        "description": "The configuration api's request body.",
+        "properties": {
+          "session_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The chat session's key, or empty for a new session.",
+            "title": "Session Key"
+          }
+        },
+        "title": "PromptChatApiConfigRequest",
+        "type": "object"
+      },
       "PromptChatApiConfigResponse": {
         "additionalProperties": true,
         "description": "The configuration api's response, version 2.",
@@ -2040,6 +2206,71 @@
           "data"
         ],
         "title": "PromptChatApiConfigResponse",
+        "type": "object"
+      },
+      "PromptChatApiErrorBody": {
+        "additionalProperties": true,
+        "description": "The error of a failed request: the same shape for every error of the configuration and prompt apis.",
+        "properties": {
+          "description": {
+            "description": "A human-readable description, which Smarter Chat displays.",
+            "title": "Description",
+            "type": "string"
+          },
+          "errorClass": {
+            "description": "The name of the error's class, e.g. NotFound or LLMProviderError.",
+            "title": "Errorclass",
+            "type": "string"
+          },
+          "status": {
+            "description": "The http status.",
+            "title": "Status",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorClass",
+          "description",
+          "status"
+        ],
+        "title": "PromptChatApiErrorBody",
+        "type": "object"
+      },
+      "PromptChatApiErrorResponse": {
+        "additionalProperties": true,
+        "description": "The body of an error response of the configuration or prompt apis, in both versions of the contract.",
+        "properties": {
+          "api": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Api"
+          },
+          "error": {
+            "$ref": "#/components/schemas/PromptChatApiErrorBody"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiJournalMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "PromptChatApiErrorResponse",
         "type": "object"
       },
       "PromptChatApiFilePart": {
@@ -2731,6 +2962,40 @@
         "title": "PromptChatApiLLMClientRequest",
         "type": "object"
       },
+      "PromptChatApiLambdaResponseV1": {
+        "additionalProperties": true,
+        "deprecated": true,
+        "description": "A prompt's result, version 1: an AWS Lambda style response, whose body is a JSON string.",
+        "properties": {
+          "body": {
+            "description": "A PromptChatApiCompletionV1, or a PromptChatApiFailureV1, as a JSON string.",
+            "title": "Body",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "object"
+          },
+          "isBase64Encoded": {
+            "default": false,
+            "title": "Isbase64Encoded",
+            "type": "boolean"
+          },
+          "statusCode": {
+            "title": "Statuscode",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "statusCode",
+          "body"
+        ],
+        "title": "PromptChatApiLambdaResponseV1",
+        "type": "object"
+      },
       "PromptChatApiListMetaData": {
         "additionalProperties": true,
         "description": "The counts of a list of the LLMClient's plugins or functions.",
@@ -3174,6 +3439,68 @@
         "title": "PromptChatApiPluginSelection",
         "type": "object"
       },
+      "PromptChatApiProgressEvent": {
+        "additionalProperties": true,
+        "description": "The data of a ``progress`` event: a step of a running prompt.",
+        "properties": {
+          "message": {
+            "description": "A short sentence, which Smarter Chat displays as is.",
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "llm_request",
+              "tool_requested",
+              "tool_responded",
+              "plugin_called",
+              "mcp_tool_called",
+              "mcp_tool_responded",
+              "mcp_tool_failed"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "message"
+        ],
+        "title": "PromptChatApiProgressEvent",
+        "type": "object"
+      },
+      "PromptChatApiProgressResult": {
+        "additionalProperties": true,
+        "description": "The data of the final ``result`` event.",
+        "properties": {
+          "response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiPromptResponse"
+              },
+              {
+                "$ref": "#/components/schemas/PromptChatApiPromptResponseV1"
+              },
+              {
+                "$ref": "#/components/schemas/PromptChatApiErrorResponse"
+              }
+            ],
+            "description": "Exactly the JSON of a non-streaming response.",
+            "title": "Response"
+          },
+          "status": {
+            "description": "The prompt's http status.",
+            "title": "Status",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "response"
+        ],
+        "title": "PromptChatApiProgressResult",
+        "type": "object"
+      },
       "PromptChatApiPromptPluginUsage": {
         "additionalProperties": false,
         "description": "A plugin that the chat session used: a :class:`smarter.apps.prompt.models.PromptPluginUsage`.",
@@ -3271,6 +3598,124 @@
           "messages"
         ],
         "title": "PromptChatApiPromptRequest",
+        "type": "object"
+      },
+      "PromptChatApiPromptResponse": {
+        "additionalProperties": true,
+        "description": "The prompt api's response, version 2.\n\nA failed prompt has ``error`` too, and its http status is the LLM provider's. Its ``data.messages``\ninclude a ``smarter_error`` message, which is also saved in the session's history.",
+        "properties": {
+          "api": {
+            "description": "The api version, e.g. \"smarter.sh/v1\".",
+            "title": "Api",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PromptChatApiPromptResult"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/PromptChatApiJournalMetadata",
+            "description": "The journal's command and thing."
+          }
+        },
+        "required": [
+          "api",
+          "data"
+        ],
+        "title": "PromptChatApiPromptResponse",
+        "type": "object"
+      },
+      "PromptChatApiPromptResponseV1": {
+        "additionalProperties": true,
+        "deprecated": true,
+        "description": "The prompt api's response, version 1.",
+        "properties": {
+          "api": {
+            "description": "The api version, e.g. \"smarter.sh/v1\".",
+            "title": "Api",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PromptChatApiLambdaResponseV1"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/PromptChatApiJournalMetadata",
+            "description": "The journal's command and thing."
+          }
+        },
+        "required": [
+          "api",
+          "data"
+        ],
+        "title": "PromptChatApiPromptResponseV1",
+        "type": "object"
+      },
+      "PromptChatApiPromptResult": {
+        "additionalProperties": true,
+        "description": "The result of a prompt, version 2.",
+        "properties": {
+          "completion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiCompletion"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The LLM's chat completion, in the format of the OpenAI api: its choices and usage."
+          },
+          "contract": {
+            "const": 2,
+            "default": 2,
+            "title": "Contract",
+            "type": "integer"
+          },
+          "messages": {
+            "description": "The messages that the prompt added to the chat thread, in order.",
+            "items": {
+              "$ref": "#/components/schemas/PromptChatApiMessage"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "plugins": {
+            "description": "The plugins that Smarter selected.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Plugins",
+            "type": "array"
+          },
+          "status": {
+            "description": "The prompt's http status: 200, or the LLM provider's error status.",
+            "title": "Status",
+            "type": "integer"
+          },
+          "tools": {
+            "description": "The functions that the LLM could call.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "PromptChatApiPromptResult",
         "type": "object"
       },
       "PromptChatApiPromptToolCall": {
@@ -3761,6 +4206,50 @@
         "title": "PromptChatApiTextPart",
         "type": "object"
       },
+      "PromptChatApiTokenDetails": {
+        "additionalProperties": true,
+        "description": "The breakdown of a completion's tokens.",
+        "properties": {
+          "audio_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Audio Tokens"
+          },
+          "cached_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cached Tokens"
+          },
+          "reasoning_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reasoning Tokens"
+          }
+        },
+        "title": "PromptChatApiTokenDetails",
+        "type": "object"
+      },
       "PromptChatApiToolCall": {
         "additionalProperties": true,
         "description": "A tool call of an assistant message, in the format of the OpenAI chat completion api.",
@@ -3784,6 +4273,72 @@
           "function"
         ],
         "title": "PromptChatApiToolCall",
+        "type": "object"
+      },
+      "PromptChatApiUsage": {
+        "additionalProperties": true,
+        "description": "A chat completion's token usage.",
+        "properties": {
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completion Tokens"
+          },
+          "completion_tokens_details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiTokenDetails"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Prompt Tokens"
+          },
+          "prompt_tokens_details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptChatApiTokenDetails"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total Tokens"
+          }
+        },
+        "title": "PromptChatApiUsage",
         "type": "object"
       },
       "RequestHeader": {
@@ -13587,13 +14142,13 @@
       "name": "The Smarter Project",
       "url": "https://smarter.sh"
     },
-    "description": "The api of the smarter cli and of the Smarter SDKs. Every response is journaled: its body has the journal's api and metadata, beside the command's data or message, or an error. Generated from the platform's Pydantic models by smarter.apps.api.v1.contract.openapi; do not edit. See https://docs.smarter.sh.",
+    "description": "The api of the smarter cli and of the Smarter SDKs. Every response is journaled: its body has the journal's api and metadata, beside the command's data or message, or an error. The chat api's requests and responses are the Smarter Chat api contract's, version 2. Generated from the platform's Pydantic models by smarter.apps.api.v1.contract.openapi; do not edit. See https://docs.smarter.sh.",
     "license": {
       "name": "AGPL-3.0",
       "url": "https://www.gnu.org/licenses/agpl-3.0.html"
     },
-    "summary": "Apply, get, describe, validate and delete the resources that SAM manifests declare, and chat.",
-    "title": "Smarter cli api",
+    "summary": "Apply, get, describe, validate and delete the resources that SAM manifests declare, and chat with LLMClients.",
+    "title": "Smarter api",
     "version": "v1"
   },
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
@@ -14371,6 +14926,176 @@
         "summary": "Who am I",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/llm-clients/{id}/config/": {
+      "post": {
+        "description": "The configuration of a chat with an LLMClient, and a chat session: a new one, or the one whose key is sent. Its session_key identifies the session in the following prompts, and url_llmclient is where to send them.",
+        "operationId": "llmclient_config",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The chat session's key. The platform looks for it in this parameter, then in the request body, a header and a cookie, in that order.",
+            "in": "query",
+            "name": "session_key",
+            "required": false,
+            "schema": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma-separated list of the client's capabilities. chat-contract-v2 asks for version 2 of the Smarter Chat api contract, which this document describes, and which is also the default. chat-contract-v1 asks for the deprecated version 1.",
+            "in": "header",
+            "name": "X-Smarter-Capabilities",
+            "required": false,
+            "schema": {
+              "default": "chat-contract-v2",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptChatApiConfigRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptChatApiConfigResponse"
+                }
+              }
+            },
+            "description": "The configuration."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptChatApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for an LLMClient that does not exist, or that the user may not read."
+          }
+        },
+        "summary": "An LLMClient's chat configuration",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/llm-clients/{id}/prompt/": {
+      "post": {
+        "description": "Run a prompt: the platform selects plugins, calls the LLM, runs the tools that the LLM calls, and applies the Guardrails, then returns the messages that the prompt added to the chat. Prompts are billed by the LLM provider. A streaming client receives progress events while the prompt runs, then the result, whose status is the prompt's http status.",
+        "operationId": "llmclient_prompt",
+        "parameters": [
+          {
+            "description": "The LLMClient's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The chat session's key. The platform looks for it in this parameter, then in the request body, a header and a cookie, in that order.",
+            "in": "query",
+            "name": "session_key",
+            "required": false,
+            "schema": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma-separated list of the client's capabilities. chat-contract-v2 asks for version 2 of the Smarter Chat api contract, which this document describes, and which is also the default. chat-contract-v1 asks for the deprecated version 1.",
+            "in": "header",
+            "name": "X-Smarter-Capabilities",
+            "required": false,
+            "schema": {
+              "default": "chat-contract-v2",
+              "type": "string"
+            }
+          },
+          {
+            "description": "text/event-stream streams the prompt's progress as Server-Sent Events. Otherwise, the response is the prompt's JSON.",
+            "in": "header",
+            "name": "Accept",
+            "required": false,
+            "schema": {
+              "default": "application/json",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptChatApiPromptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptChatApiPromptResponse"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "description": "Server-Sent Events: retry, then a progress event per step, keepalive comments while the prompt waits, and a result event, last. Each event's data is JSON.",
+                  "type": "string"
+                },
+                "x-smarter-events": {
+                  "progress": {
+                    "$ref": "#/components/schemas/PromptChatApiProgressEvent"
+                  },
+                  "result": {
+                    "$ref": "#/components/schemas/PromptChatApiProgressResult"
+                  }
+                }
+              }
+            },
+            "description": "The prompt's result, as JSON, or as a stream of Server-Sent Events."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMClientPromptErrorResponse"
+                }
+              }
+            },
+            "description": "An error."
+          }
+        },
+        "summary": "Prompt an LLMClient",
+        "tags": [
+          "chat"
         ]
       }
     }
