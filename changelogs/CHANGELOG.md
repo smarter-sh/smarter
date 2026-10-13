@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.3...v0.22.0-alpha.4) (2026-10-13)
+
+### Features
+
+* **api:** add the Guardrail and Secret REST reads to the api contract ([3a47c4e](https://github.com/smarter-sh/smarter/commit/3a47c4ec59d61dd7a60987f33d77bf659ca3ebfc))
+
 ## [0.22.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.2...v0.22.0-alpha.3) (2026-10-13)
 
 ### Features
