@@ -179,15 +179,14 @@ retval = {
         },
     ],
     "api": "smarter.sh/v1",
-    "metadata": {"command": "version", "thing": "None"},
+    "metadata": {"command": "resources", "thing": "None"},
 }
 """
 
 from http import HTTPStatus
 
-from django.http import JsonResponse
-
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
+from smarter.apps.api.v1.contract.models import CliApiResource
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -204,14 +203,15 @@ class ApiV1CliResourcesApiView(CliBaseApiView):
 
         sam_kind_singular = SAMKinds.str_to_kind(sam_kind)
         sam_kind_plural = SAMKinds.plural(sam_kind_singular)
-        return {
-            "Singular": sam_kind_singular,
-            "Plural": sam_kind_plural,
-            "APIKind": sam_kind_singular,
-            "Display": sam_kind_singular,
-            "DisplayPlural": sam_kind_plural,
-            "Deployable": deployable,
-        }
+        resource = CliApiResource(
+            Singular=sam_kind_singular,
+            Plural=sam_kind_plural,
+            APIKind=sam_kind_singular,
+            Display=sam_kind_singular,
+            DisplayPlural=sam_kind_plural,
+            Deployable=deployable,
+        )
+        return resource.model_dump(mode="json")
 
     def resources(self):
 
@@ -222,18 +222,14 @@ class ApiV1CliResourcesApiView(CliBaseApiView):
             kind_dict = self.dictionaryize(sam_kind=kind, deployable=deployable)
             all_resources.append(kind_dict)
 
-        try:
-            data = {SmarterJournalApiResponseKeys.DATA: all_resources}
+        data = {SmarterJournalApiResponseKeys.DATA: all_resources}
 
-            return SmarterJournaledJsonResponse(
-                request=self.request,
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.VERSION),
-                data=data,
-                status=HTTPStatus.OK.value,
-            )
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
+        return SmarterJournaledJsonResponse(
+            request=self.request,
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.RESOURCES),
+            data=data,
+            status=HTTPStatus.OK.value,
+        )
 
     def post(self, request):
         response = self.resources()

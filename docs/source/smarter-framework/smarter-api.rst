@@ -47,6 +47,7 @@ See :doc:`developer-reference/lib/django/hosts` for more details.
 
   smarter-api/documentation
   smarter-api/cli
+  smarter-api/api-contract
   smarter-api/chat
   smarter-api/authentication
   smarter-api/error-handling

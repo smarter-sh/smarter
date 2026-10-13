@@ -8,9 +8,11 @@ from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from smarter.apps.orchestrator.contract.models import OrchestratorApiOrchestrator
 from smarter.apps.orchestrator.models import (
     Orchestrator,
 )
@@ -19,6 +21,7 @@ from smarter.apps.orchestrator.serializers import (
 )
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
@@ -51,7 +54,10 @@ class ListViewBase(SmarterAdminListAPIView):
 
 
 class OrchestratorView(ViewBase):
-    """Orchestrator view for smarter api."""
+    """Orchestrator view for smarter api.
+
+    Its ``GET`` returns an :class:`OrchestratorApiOrchestrator`.
+    """
 
     serializer_class = OrchestratorSerializer
     orchestrator: Optional[Orchestrator] = None
@@ -88,9 +94,11 @@ class OrchestratorView(ViewBase):
 
     def get(self, request: Request, orchestrator_id: Optional[int] = None):
         if self.orchestrator:
-            serializer = self.serializer_class(self.orchestrator)
-            return Response(serializer.data, status=HTTPStatus.OK)
-        return HttpResponseNotFound("Orchestrator not found")
+            return Response(
+                OrchestratorApiOrchestrator.from_model(self.orchestrator, request.user).model_dump(mode="json"),
+                status=HTTPStatus.OK,
+            )
+        raise NotFound("Orchestrator not found")
 
     def post(self, request: Request, *args, **kwargs):
         try:
@@ -150,10 +158,16 @@ class OrchestratorView(ViewBase):
         return HttpResponseRedirect(plugins_path)
 
 
-class OrchestratorListView(ListViewBase):
-    """Orchestrator list view for smarter api."""
+class OrchestratorListView(ContractListMixin, ListViewBase):
+    """Orchestrator list view for smarter api: :class:`OrchestratorApiOrchestrator` models."""
 
     serializer_class = OrchestratorSerializer
+    contract_model = OrchestratorApiOrchestrator
+
+    def item(self, row):
+        """An Orchestrator of the response, whose ``canDelete`` is the requesting user's."""
+        return OrchestratorApiOrchestrator.from_model(row, self.request.user).model_dump(mode="json")
+
     orchestrators: Optional[QuerySet[Orchestrator]]
 
     def dispatch(self, request: Request, *args, **kwargs):
@@ -164,4 +178,9 @@ class OrchestratorListView(ListViewBase):
         return response
 
     def get_queryset(self, *args, **kwargs):
-        return Orchestrator.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
+        return (
+            Orchestrator.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
+            .select_related("user_profile__user", "user_profile__account")
+            .prefetch_related("tags")
+            .order_by("name")
+        )

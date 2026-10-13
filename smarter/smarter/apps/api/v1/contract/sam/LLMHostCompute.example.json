@@ -1,0 +1,42 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "LLMHostCompute",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/llmhostcompute/purpose": "example"
+      }
+    ],
+    "description": "One NVIDIA L4 with 24 GB, 8 vCPUs and 32 GiB.",
+    "name": "example_gpu_l4_1x",
+    "tags": [
+      "example",
+      "gpu",
+      "l4"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "cost": {
+      "currency": "USD",
+      "perHour": "0.9776"
+    },
+    "node": {
+      "capacityType": "ON_DEMAND",
+      "cpu": 8,
+      "diskSizeGb": 100,
+      "gpu": {
+        "count": 1,
+        "memoryGb": 24,
+        "resource": "nvidia.com/gpu",
+        "type": "L4"
+      },
+      "instanceType": "g6.2xlarge",
+      "memoryGb": 32
+    },
+    "nodeGroup": {
+      "maxNodes": 4,
+      "subnetIds": []
+    }
+  }
+}

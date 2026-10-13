@@ -8,9 +8,17 @@ from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from smarter.apps.llmclient.contract.models import (
+    LLMClientApiCustomDomain,
+    LLMClientApiFunction,
+    LLMClientApiKey,
+    LLMClientApiLLMClient,
+    LLMClientApiPlugin,
+)
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
@@ -29,6 +37,7 @@ from smarter.apps.llmclient.tasks import deploy_custom_api
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
@@ -42,14 +51,24 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 # base views
 ###############################################################################
 class ViewBase(SmarterAdminAPIView):
-    """Base class for all llmclient detail views."""
+    """
+    Base class for all llmclient detail views.
+
+    Their GET responses are built from the models of :mod:`smarter.apps.llmclient.contract.models`,
+    which the Smarter api's OpenAPI document publishes.
+    """
 
     # SmarterRequestMixin sets user, user_profile and account from the request,
     # which are immutable once set.
 
 
-class ListViewBase(SmarterAdminListAPIView):
-    """Base class for all llmclient list views."""
+class ListViewBase(ContractListMixin, SmarterAdminListAPIView):
+    """
+    Base class for all llmclient list views.
+
+    A subclass sets ``contract_model``, the model of :mod:`smarter.apps.llmclient.contract.models`
+    that each row of its response is built with.
+    """
 
     # SmarterRequestMixin sets user, user_profile and account from the request,
     # which are immutable once set.
@@ -80,6 +99,8 @@ class LLMClientView(ViewBase):
         super().initial(request, *args, **kwargs)
         if self.hashed_id:
             self.llmclient_id = LLMClient.id_from_hashed_id(self.hashed_id)
+            if not self.llmclient_id:
+                raise NotFound(f"No LLMClient has the hashed id {self.hashed_id}.")
         else:
             self.llmclient_id = kwargs.get("llmclient_id")
 
@@ -97,10 +118,12 @@ class LLMClientView(ViewBase):
             logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.llmclient, self.user_profile)
 
     def get(self, request: Request, llmclient_id: Optional[int] = None):
-        if self.llmclient:
-            serializer = self.serializer_class(self.llmclient)
-            return Response(serializer.data, status=HTTPStatus.OK)
-        return HttpResponseNotFound("LLMClient not found")
+        if not self.llmclient:
+            raise NotFound("LLMClient not found.")
+        return Response(
+            LLMClientApiLLMClient.from_model(self.llmclient, request.user).model_dump(mode="json"),
+            status=HTTPStatus.OK,
+        )
 
     def post(self, request: Request, *args, **kwargs):
         try:
@@ -176,6 +199,10 @@ class LLMClientListView(ListViewBase):
     def get_queryset(self, *args, **kwargs):
         return LLMClient.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
 
+    def item(self, row):
+        """An LLMClient of the response, whose ``canDelete`` is the requesting user's."""
+        return LLMClientApiLLMClient.from_model(row, self.request.user).model_dump(mode="json")
+
 
 class LLMClientDeployView(ViewBase):
     """LLMClient deployment view for smarter api."""
@@ -203,8 +230,9 @@ class LLMClientPluginView(ViewBase):
     def get(self, request: Request, llmclient_id: int, plugin_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         plugin = get_object_or_404(LLMClientPlugin, pk=plugin_id, llmclient=llmclient)
-        serializer = self.serializer_class(plugin)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(
+            LLMClientApiPlugin.from_model(plugin, request.user).model_dump(mode="json"), status=HTTPStatus.OK
+        )
 
     def post(self, request: Request, llmclient_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
@@ -249,6 +277,10 @@ class LLMClientPluginListView(ListViewBase):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         return LLMClientPlugin.objects.filter(llmclient=llmclient)
 
+    def item(self, row):
+        """A plugin of the response, whose ``canDelete`` is the requesting user's."""
+        return LLMClientApiPlugin.from_model(row, self.request.user).model_dump(mode="json")
+
 
 ###############################################################################
 # LLMClientAPIKey views
@@ -263,8 +295,7 @@ class LLMClientAPIKeyView(ViewBase):
     def get(self, request: Request, llmclient_id: int, apikey_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         api_key = get_object_or_404(LLMClientAPIKey, pk=apikey_id, llmclient=llmclient)
-        serializer = self.serializer_class(api_key)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(LLMClientApiKey.from_model(api_key).model_dump(mode="json"), status=HTTPStatus.OK)
 
     def post(self, request: Request, llmclient_id: int, apikey_id: Optional[int] = None):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
@@ -291,11 +322,12 @@ class LLMClientAPIKeyListView(ListViewBase):
     """LLMClientAPIKey list view for smarter api."""
 
     serializer_class = LLMClientAPIKeySerializer
+    contract_model = LLMClientApiKey
 
     def get_queryset(self, *args, **kwargs):
         llmclient_id = self.kwargs.get("llmclient_id")
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        return LLMClientAPIKey.objects.filter(llmclient=llmclient)
+        return LLMClientAPIKey.objects.filter(llmclient=llmclient).select_related("api_key")
 
 
 ###############################################################################
@@ -311,8 +343,9 @@ class LLMClientCustomDomainView(ViewBase):
     def get(self, request: Request, llmclient_id: int, customdomain_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         custom_domain = get_object_or_404(LLMClientCustomDomain, pk=customdomain_id, llmclient=llmclient)
-        serializer = self.serializer_class(custom_domain)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(
+            LLMClientApiCustomDomain.from_model(custom_domain).model_dump(mode="json"), status=HTTPStatus.OK
+        )
 
     def post(self, request: Request, llmclient_id: int, customdomain_id: int):
         """Attach the custom domain to the LLMClient, through LLMClient.custom_domain."""
@@ -351,6 +384,7 @@ class LLMClientCustomDomainListView(ListViewBase):
     """LLMClientCustomDomain list view for smarter api."""
 
     serializer_class = LLMClientCustomDomainSerializer
+    contract_model = LLMClientApiCustomDomain
 
     def get_queryset(self, *args, **kwargs):
         llmclient_id = self.kwargs.get("llmclient_id")
@@ -371,8 +405,7 @@ class LLMClientFunctionsView(ViewBase):
     def get(self, request: Request, llmclient_id: int, function_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         function = get_object_or_404(LLMClientFunctions, pk=function_id, llmclient=llmclient)
-        serializer = self.serializer_class(function)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(LLMClientApiFunction.from_model(function).model_dump(mode="json"), status=HTTPStatus.OK)
 
     def post(self, request: Request, llmclient_id: int):
         # llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
@@ -399,6 +432,7 @@ class LLMClientFunctionsListView(ListViewBase):
     """LLMClientFunctions list view for smarter api."""
 
     serializer_class = LLMClientFunctionsSerializer
+    contract_model = LLMClientApiFunction
 
     def get_queryset(self, *args, **kwargs):
         llmclient_id = self.kwargs.get("llmclient_id")

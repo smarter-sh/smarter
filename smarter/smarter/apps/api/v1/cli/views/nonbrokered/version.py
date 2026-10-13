@@ -7,7 +7,6 @@ from http import HTTPStatus
 import requests
 from celery import __version__ as celery_version
 from django import get_version as get_django_version
-from django.http import JsonResponse
 from google.genai import __version__ as google_genai_version
 from Levenshtein import __version__ as levenshtein_version
 from openai.version import VERSION as openai_version
@@ -16,6 +15,11 @@ from pydantic import VERSION as pydantic_version
 from rest_framework import __version__ as rest_framework_version
 
 from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError, CliBaseApiView
+from smarter.apps.api.v1.contract.models import (
+    CliApiVersion,
+    CliApiVersionApi,
+    CliApiVersionCli,
+)
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.lib.journal.enum import (
@@ -43,40 +47,33 @@ class ApiV1CliVersionApiView(CliBaseApiView):
         raise APIV1CLIViewError(f"Failed to get version from {url}. HTTP status code: {response.status_code}")
 
     def info(self):
-        try:
-            data = {
-                SmarterJournalApiResponseKeys.DATA: {
-                    "api": {
-                        "version": smarter_settings.version,
-                        "python": {
-                            "botocore": infrastructure.provider.sdk_version,
-                            "celery": celery_version,
-                            "django": get_django_version(),
-                            "levenshtein": levenshtein_version,
-                            "google_genai": google_genai_version,
-                            "llamaai": "unknown",
-                            "openai": openai_version,
-                            "pandas": pandas_version(),
-                            "pydantic": pydantic_version,
-                            "python": platform.python_version(),
-                            "rest_framework": rest_framework_version,
-                        },
-                    },
-                    "cli": {
-                        "version": self.cli_version(),
-                    },
-                }
-            }
+        version = CliApiVersion(
+            api=CliApiVersionApi(
+                version=smarter_settings.version,
+                python={
+                    "botocore": infrastructure.provider.sdk_version,
+                    "celery": celery_version,
+                    "django": get_django_version(),
+                    "levenshtein": levenshtein_version,
+                    "google_genai": google_genai_version,
+                    "llamaai": "unknown",
+                    "openai": openai_version,
+                    "pandas": pandas_version(),
+                    "pydantic": pydantic_version,
+                    "python": platform.python_version(),
+                    "rest_framework": rest_framework_version,
+                },
+            ),
+            cli=CliApiVersionCli(version=self.cli_version()),
+        )
+        data = {SmarterJournalApiResponseKeys.DATA: version.model_dump(mode="json")}
 
-            return SmarterJournaledJsonResponse(
-                request=self.request,
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.VERSION),
-                data=data,
-                status=HTTPStatus.OK.value,
-            )
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
+        return SmarterJournaledJsonResponse(
+            request=self.request,
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.VERSION),
+            data=data,
+            status=HTTPStatus.OK.value,
+        )
 
     def post(self, request):
         response = self.info()

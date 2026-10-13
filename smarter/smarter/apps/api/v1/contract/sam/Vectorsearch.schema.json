@@ -1,0 +1,366 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMVectorsearchMetadata": {
+      "description": "Smarter API Vectorsearch Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMVectorsearchMetadata",
+      "type": "object"
+    },
+    "SAMVectorsearchSpec": {
+      "description": "Smarter API Vectorsearch Manifest Vectorsearch.spec.",
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SAMVectorsearchSpecConfig",
+          "description": "Vectorsearch.spec.config[object]. The configuration for the Vectorsearch."
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMVectorsearchSpec",
+      "type": "object"
+    },
+    "SAMVectorsearchSpecConfig": {
+      "description": "Smarter API Vectorsearch Manifest Vectorsearch.spec.config.",
+      "properties": {
+        "auth_secret_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional name of the Secret used to authenticate against the Vectorstore, if required.",
+          "title": "Auth Secret Name"
+        },
+        "fetch_k": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Number of candidate documents to fetch before MMR re-ranking. Only valid when search_type='mmr'.",
+          "title": "Fetch K"
+        },
+        "is_enabled": {
+          "default": true,
+          "description": "Whether this Vectorsearch is active and eligible to be queried.",
+          "title": "Is Enabled",
+          "type": "boolean"
+        },
+        "k": {
+          "default": 4,
+          "description": "Number of top results to return from the search.",
+          "exclusiveMinimum": 0,
+          "title": "K",
+          "type": "integer"
+        },
+        "lambda_mult": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Diversity vs. relevance trade-off for MMR (0.0=max diversity, 1.0=max relevance). Only valid when search_type='mmr'.",
+          "title": "Lambda Mult"
+        },
+        "metadata_filter": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional metadata filter applied to the Vectorstore query, e.g. {'source': 'faq'}.",
+          "title": "Metadata Filter"
+        },
+        "score_threshold": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum relevance score a result must meet to be included. Only valid when search_type='similarity_score_threshold'.",
+          "title": "Score Threshold"
+        },
+        "search_type": {
+          "$ref": "#/$defs/VectorsearchSearchType",
+          "default": "similarity",
+          "description": "The retrieval strategy to use when querying the Vectorstore."
+        },
+        "vectorstore_name": {
+          "description": "The name of the locally-hosted Vectorstore this search queries against.",
+          "title": "Vectorstore Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vectorstore_name"
+      ],
+      "title": "SAMVectorsearchSpecConfig",
+      "type": "object"
+    },
+    "SAMVectorsearchStatus": {
+      "description": "Smarter API Vectorsearch Manifest - Status class.",
+      "properties": {
+        "accountNumber": {
+          "description": "Vectorsearch.status.account_number: The account owner of this Vectorsearch. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "Vectorsearch.status.username: The Smarter user who created this Vectorsearch. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMVectorsearchStatus",
+      "type": "object"
+    },
+    "VectorsearchSearchType": {
+      "description": "Supported retrieval strategies for a Vectorsearch query.",
+      "enum": [
+        "similarity",
+        "similarity_score_threshold",
+        "mmr"
+      ],
+      "title": "VectorsearchSearchType",
+      "type": "string"
+    }
+  },
+  "description": "Smarter API Manifest - Vectorsearch.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMVectorsearchMetadata",
+      "description": "Vectorsearch.metadata[obj]: Required, the Vectorsearch metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMVectorsearchSpec",
+      "description": "Vectorsearch.spec[obj]: Required, the Vectorsearch specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMVectorsearchStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Vectorsearch.status[obj]: Optional, Read-only. Stateful status information about the Vectorsearch."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMVectorsearch",
+  "type": "object"
+}

@@ -1,0 +1,50 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "Guardrail",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/guardrail/purpose": "example"
+      }
+    ],
+    "description": "Redacts credit card numbers and social security numbers from the user's message.",
+    "name": "example_guardrail",
+    "tags": [
+      "example",
+      "pii"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "config": {
+      "action": "redact",
+      "caseSensitive": false,
+      "categories": [],
+      "category": "pii",
+      "detectors": [
+        "credit_card",
+        "us_ssn"
+      ],
+      "failClosed": false,
+      "flags": [
+        "IGNORECASE"
+      ],
+      "isActive": true,
+      "judgePrompt": null,
+      "keywords": [],
+      "message": null,
+      "mode": "enforce",
+      "model": null,
+      "pattern": null,
+      "priority": 10,
+      "provider": null,
+      "referenceTexts": [],
+      "replacement": "[REDACTED {label}]",
+      "severity": 4,
+      "stage": "input",
+      "strategy": "detector",
+      "threshold": null,
+      "wholeWord": true
+    }
+  }
+}
