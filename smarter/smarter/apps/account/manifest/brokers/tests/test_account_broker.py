@@ -2,6 +2,7 @@
 """Test SAMAccountBroker."""
 
 import os
+from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
@@ -516,8 +517,8 @@ class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):
     def test_commands_need_an_account_or_manifest(self):
         broker = self.broker
         with patch.object(SAMAccountBroker, "brokered_account", new_callable=PropertyMock, return_value=None):
-            with self.assertRaises(SAMBrokerErrorNotReady):
-                broker.get(self.request)
+            # get lists the accounts, so it needs no account.
+            self.assertEqual(broker.get(self.request).status_code, HTTPStatus.OK)
             with self.assertRaises(SAMBrokerErrorNotFound):
                 broker.describe(self.request)
             self.assertEqual(broker.dependencies(), [])

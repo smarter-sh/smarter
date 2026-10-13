@@ -1,0 +1,105 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+so that students can open each one during class, beside the published pages at
+`docs.smarter.sh <https://docs.smarter.sh>`__.
+
+The Project
+~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The source
+     - More than nine hundred reStructuredText pages: user guides for each resource, the
+       platform and the framework, thirty-one decision records, and more than five hundred pages
+       of generated API reference.
+     - `docs/source/ <https://github.com/smarter-sh/smarter/tree/main/docs/source>`__,
+       `docs/source/index.rst <https://github.com/smarter-sh/smarter/blob/main/docs/source/index.rst>`__
+   * - The configuration
+     - Sphinx with autodoc, napoleon, ``sphinx_autodoc_typehints``, ``sphinxcontrib_django`` for
+       Django models, ``autodoc_pydantic`` for Pydantic models, ``sphinx_design``,
+       ``sphinx_copybutton``, intersphinx, a sitemap and the Read the Docs theme, with Django set
+       up so that autodoc can import every module.
+     - `docs/source/conf.py <https://github.com/smarter-sh/smarter/blob/main/docs/source/conf.py>`__
+   * - Publishing
+     - Read the Docs builds and publishes the site, with its dependencies pinned in their own
+       requirements file.
+     - `.readthedocs.yml <https://github.com/smarter-sh/smarter/blob/main/.readthedocs.yml>`__,
+       `smarter/requirements/docs.txt <https://github.com/smarter-sh/smarter/blob/main/smarter/requirements/docs.txt>`__
+   * - Building locally
+     - ``make sphinx-docs`` builds the whole site, in about twenty minutes, which is why there is
+       a faster check.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``sphinx-docs``),
+       `docs/Makefile <https://github.com/smarter-sh/smarter/blob/main/docs/Makefile>`__
+
+Pages to Study
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Kind of page
+     - Example
+     - Where to look
+   * - A resource guide
+     - The Guardrail page: overview, how it works, a complete manifest, topic sections and a
+       technical reference toctree, the pattern that every resource page follows.
+     - `smarter-resources/smarter-guardrail.rst <https://github.com/smarter-sh/smarter/blob/main/docs/source/smarter-resources/smarter-guardrail.rst>`__
+   * - An autodoc page
+     - A few lines that publish a module's docstrings.
+     - `smarter-resources/guardrail/ <https://github.com/smarter-sh/smarter/tree/main/docs/source/smarter-resources/guardrail>`__
+   * - Examples that are files
+     - Manifests kept as files and included with ``literalinclude``, so that an example in the
+       docs is the same file that can be applied.
+     - `docs/source/example-manifests/ <https://github.com/smarter-sh/smarter/tree/main/docs/source/example-manifests>`__
+   * - Decision records
+     - Thirty-one ADRs and an introduction, each with status, context, decision, alternatives and
+       consequences.
+     - `docs/source/adr/ <https://github.com/smarter-sh/smarter/tree/main/docs/source/adr>`__
+   * - A course plan
+     - These instructor pages use list-tables, includes and cross-references heavily, and the
+       ``.. include::`` of this very table.
+     - `docs/source/smarter-instructors/ <https://github.com/smarter-sh/smarter/tree/main/docs/source/smarter-instructors>`__
+
+Docstrings and Checks
+~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Docstrings worth copying
+     - Module docstrings that explain why, not only what, such as the protections and their
+       known limits in the hardened HTTP client, and the usage examples in the infrastructure
+       facade. :doc:`ADR 029 </adr/029-docstrings>`.
+     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__,
+       `infrastructure/services/__init__.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__
+   * - The docstring style
+     - reStructuredText field lists (``:param:``, ``:returns:``, ``:raises:``), cross-references
+       to Python objects, and the layout that the pydocstringformatter hook enforces.
+     - `smarter-docstrings/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docstrings/SKILL.md>`__,
+       `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__
+   * - Fast checks
+     - A script that checks every ``:doc:`` link and toctree entry, and imports every autodoc
+       target, in seconds, and a linter that finds autodoc targets that fail to import.
+     - `check-docs.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-sphinx-docs/scripts/check-docs.sh>`__,
+       `docs/source/lint.py <https://github.com/smarter-sh/smarter/blob/main/docs/source/lint.py>`__
+   * - Spelling
+     - codespell on every commit, with the project's own list of accepted words.
+     - `codespell.txt <https://github.com/smarter-sh/smarter/blob/main/codespell.txt>`__
+   * - Writing rules
+     - Evergreen prose with no "what's new" sections, terms defined on first use, valid manifests
+       in every example, and docs updated in the same change as the code.
+     - `smarter-sphinx-docs/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-sphinx-docs/SKILL.md>`__
+   * - Writing for agents
+     - ``CLAUDE.md`` and eighteen Agent Skills: documentation whose reader is a coding agent.
+     - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
+       `skills/ <https://github.com/smarter-sh/smarter/tree/main/skills>`__

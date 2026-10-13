@@ -1,0 +1,135 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+so that students can open each one during class. Python paths are under ``smarter/smarter/``.
+
+One App, End to End
+~~~~~~~~~~~~~~~~~~~
+
+The ``guardrail`` app is the reference implementation that the others follow, and the one that
+the labs change. Every app in ``apps/`` has the same layout.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Layer
+     - What it does
+     - Where to look
+   * - Django model
+     - What is stored: fields, choices, relationships, and an ownership base class that makes
+       every guardrail belong to an account and a user.
+     - `guardrail/models/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__,
+       `account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__
+   * - Migrations
+     - The schema history. Smarter prefers one regenerated ``0001_initial.py`` per app, and adds
+       a new migration instead for released apps that hold production data.
+     - `guardrail/migrations/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/migrations>`__,
+       `smarter-migrations/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-migrations/SKILL.md>`__
+   * - Pydantic manifest
+     - What a client sends: the ``metadata``, ``spec`` and ``status`` of a Guardrail manifest,
+       with types, descriptions and validators. :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - `guardrail/manifest/models/guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/manifest/models/guardrail>`__
+   * - Broker
+     - Turns the manifest into model fields (``manifest_to_django_orm()``) and back
+       (``django_orm_to_manifest_dict()``), and implements ``apply``, ``describe`` and
+       ``delete``. :doc:`/smarter-framework/smarter-broker-model`.
+     - `guardrail/manifest/brokers/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/manifest/brokers/guardrail.py>`__,
+       `lib/manifest/broker/abstract_broker_class.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__
+   * - DRF serializer and API
+     - Resource-style REST endpoints for guardrails and their events, beside the command-style
+       CLI API that every kind shares.
+     - `guardrail/serializers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/serializers.py>`__,
+       `guardrail/api/v1/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/api/v1>`__
+   * - Console views
+     - The Django view and template that host the React list page, and the session-authenticated
+       views it calls to list, clone, rename and delete.
+     - `guardrail/views/listview/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/views/listview>`__,
+       `guardrail/urls.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/urls.py>`__
+   * - Signals and receivers
+     - Events that other apps can react to, kept in ``signals.py`` and handled in
+       ``receivers.py``.
+     - `guardrail/signals.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/signals.py>`__,
+       `guardrail/receivers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/receivers.py>`__
+   * - Tests
+     - One test module per source module, with test data as YAML.
+     - `guardrail/tests/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/tests>`__
+   * - A second example
+     - The ``secret`` app, small enough to map completely in a lab, with Fernet encryption in its
+       model.
+     - `apps/secret/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/secret>`__
+
+The Request Path
+~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Step
+     - What happens
+     - Where to look
+   * - URL
+     - ``/api/v1/cli/apply/`` and the other commands are routed to one view each.
+     - `api/v1/cli/urls.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__
+   * - Authentication
+     - The CLI API requires an API key, checked against its stored hash by a Knox-based
+       authentication class that ``REST_FRAMEWORK`` sets as the default.
+     - `lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`__,
+       `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+   * - View
+     - The base view parses the YAML body, finds the broker for the kind, and maps every
+       exception to a status code.
+     - `api/v1/cli/views/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/views/base.py>`__,
+       `api/v1/cli/views/apply.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/views/apply.py>`__
+   * - Broker registry
+     - A map from each kind, such as ``Guardrail``, to its broker class.
+     - `api/v1/cli/brokers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__
+   * - Loading the manifest
+     - YAML or JSON is parsed and checked for required keys before Pydantic validates it.
+     - `lib/manifest/loader.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/loader.py>`__
+   * - The response, and its record
+     - Every response, success or error, is written to the journal.
+     - `lib/journal/http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/http.py>`__,
+       `lib/journal/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/models.py>`__
+
+Beyond the Request
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Settings
+     - Every setting is read from the environment and validated by a Pydantic ``Settings``
+       class. :doc:`ADR 007 </adr/007-settings>`.
+     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+       `settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__
+   * - Management commands
+     - A ``SmarterCommand`` base class, and commands that create accounts, users and API keys,
+       load built-in data and initialize the whole platform.
+       :doc:`ADR 010 </adr/010-management-commands>`.
+     - `lib/django/management/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/management/base.py>`__,
+       `account/management/commands/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/management/commands>`__
+   * - Celery tasks and beat
+     - Tasks on named queues, run by the worker containers, and a beat schedule that aggregates
+       charges, evaluates budgets, purges old guardrail events and reconciles self-hosted models
+       and vector databases. :doc:`ADR 030 </adr/030-task-queues>`.
+     - `workers/celery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celery.py>`__,
+       `workers/celerybeat.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__
+   * - Caching
+     - ``@cache_results`` builds a cache key from the function and its arguments, stores results
+       in Redis, and can invalidate them. :doc:`ADR 018 </adr/018-caching>`.
+     - `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__,
+       `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__
+   * - Testing
+     - ``SmarterTestBase``, which has no transaction rollback, so tests delete what they create,
+       and an in-memory provider in place of every cloud call. :doc:`ADR 013 </adr/013-testing>`.
+     - `lib/unittest/base_classes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__,
+       `smarter-python-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-python-testing/SKILL.md>`__
+   * - Adding a resource kind
+     - The list of every file a new kind touches, from the Pydantic model to the React list
+       page. :doc:`/smarter-framework/guides/developer-feature-checklist`.
+     - `smarter-sam-resource/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-sam-resource/SKILL.md>`__

@@ -7,6 +7,10 @@ limited support for anciallary UI features. The API is built on :doc:`Django RES
 includes a rich set of enterprise features for enhanced security, audit capability,
 and performance optimization.
 
+Its two official clients are the :doc:`Smarter CLI <smarter-cli>`, for people at a terminal,
+and the :doc:`Smarter Python SDK <smarter-python>`, for Python software that integrates with
+your platform.
+
 The Smarter Framework supports multiple hosting naming schemes for the Smarter API. For example:
 
 

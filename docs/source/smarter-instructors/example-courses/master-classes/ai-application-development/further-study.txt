@@ -1,0 +1,27 @@
+- **Official documentation:** the `OpenAI API documentation
+  <https://platform.openai.com/docs>`__, especially the guides to function calling, structured
+  outputs and streaming; the `openai-python <https://github.com/openai/openai-python>`__ README;
+  and the `LangChain <https://python.langchain.com/>`__ documentation on embeddings, text
+  splitters and vector stores.
+- **Libraries used in this course:** `Pydantic <https://docs.pydantic.dev/>`__, `Django REST
+  Framework <https://www.django-rest-framework.org/>`__, `React <https://react.dev/>`__, `Vite
+  <https://vite.dev/>`__, `tiktoken <https://github.com/openai/tiktoken>`__, `chatscope's chat UI
+  kit <https://github.com/chatscope/chat-ui-kit-react>`__ and its `Storybook
+  <https://chatscope.io/storybook/react/>`__, `react-json-view
+  <https://github.com/microlinkhq/react-json-view>`__, `marked <https://marked.js.org/>`__ and
+  `DOMPurify <https://github.com/cure53/DOMPurify>`__.
+- **Standards:** the `OWASP Top 10 for Large Language Model Applications
+  <https://genai.owasp.org/>`__, on prompt injection, sensitive information disclosure and
+  excessive agency, and the `Model Context Protocol <https://modelcontextprotocol.io/>`__
+  specification.
+- **Writing:** Simon Willison's `weblog <https://simonwillison.net/>`__, on building with LLMs and
+  on prompt injection, which he named.
+- **YouTube:** Andrej Karpathy's `channel <https://www.youtube.com/@AndrejKarpathy>`__, starting
+  with *Intro to Large Language Models* (2023), and the `OpenAI
+  <https://www.youtube.com/@OpenAI>`__ channel's developer talks.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, on AI engineering, and `Talk
+  Python To Me <https://talkpython.fm/>`__, for the Python side.
+- **Community:** the `OpenAI Developer Community <https://community.openai.com/>`__, for API
+  questions and changes.
+- **Smarter:** `blog.smarter.sh <https://blog.smarter.sh/>`__, on how Smarter's prompt handler,
+  plugins and guardrails were built.

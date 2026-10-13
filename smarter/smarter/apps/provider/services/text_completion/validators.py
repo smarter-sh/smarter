@@ -1,11 +1,16 @@
-"""OpenAI API request validators"""
+"""OpenAI API request validators."""
 
 from typing import Any
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
-from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
+from .const import (
+    OpenAIEndPoint,
+    OpenAIMessageKeys,
+    OpenAIObjectTypes,
+    OpenAIResponseChoicesMessage,
+)
 
 ####################################################################################################
 # Legacy openai validators
@@ -13,7 +18,7 @@ from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 
 
 def validate_temperature(temperature: Any) -> None:
-    """Ensure that temperature is a float between 0 and 1"""
+    """Ensure that temperature is a float between 0 and 1."""
     try:
         float_temperature = float(temperature)
         if float_temperature < 0 or float_temperature > 1:
@@ -23,7 +28,7 @@ def validate_temperature(temperature: Any) -> None:
 
 
 def validate_max_completion_tokens(max_completion_tokens: Any) -> None:
-    """Ensure that max_completion_tokens is an int between 1 and 2048"""
+    """Ensure that max_completion_tokens is an int between 1 and 2048."""
     if not isinstance(max_completion_tokens, int):
         raise TypeError("max_completion_tokens should be an int")
 
@@ -32,7 +37,7 @@ def validate_max_completion_tokens(max_completion_tokens: Any) -> None:
 
 
 def validate_endpoint(end_point: Any) -> None:
-    """Ensure that end_point is a valid endpoint based on the OpenAIEndPoint enum"""
+    """Ensure that end_point is a valid endpoint based on the OpenAIEndPoint enum."""
     if not isinstance(end_point, str):
         raise TypeError(f"Invalid end_point '{end_point}'. end_point should be a string.")
 
@@ -41,7 +46,7 @@ def validate_endpoint(end_point: Any) -> None:
 
 
 def validate_object_types(object_type: Any) -> None:
-    """Ensure that object_type is a valid object type based on the OpenAIObjectTypes enum"""
+    """Ensure that object_type is a valid object type based on the OpenAIObjectTypes enum."""
     if not isinstance(object_type, str):
         raise TypeError(f"Invalid object_type '{object_type}'. object_type should be a string.")
 
@@ -52,13 +57,13 @@ def validate_object_types(object_type: Any) -> None:
 
 
 def validate_request_body(request_body) -> None:
-    """See openai.chat.completion.request.json"""
+    """See openai.chat.completion.request.json."""
     if not isinstance(request_body, dict):
         raise TypeError("request body should be a dict")
 
 
 def validate_messages(request_body):
-    """See openai.chat.completion.request.json"""
+    """See openai.chat.completion.request.json."""
     if "messages" not in request_body:
         raise SmarterValueError("dict key 'messages' was not found in request body object")
     messages = request_body["messages"]
@@ -74,12 +79,27 @@ def validate_messages(request_body):
                 f"invalid role {message['role']} found in message {json.dumps(message)}. "
                 f"Should be one of {OpenAIMessageKeys.all_roles}"
             )
-        if "content" not in message:
+        if "content" not in message and not is_tool_call_message(message):
             raise SmarterValueError(f"dict key 'content' not found in message {json.dumps(message)}")
 
 
+def is_tool_call_message(message: dict) -> bool:
+    """
+    Whether the message is an assistant message that calls tools.
+
+    As in the OpenAI chat completion api, such a message may omit its ``content``, or set it to
+    null. Every other message must have a ``content``.
+
+    :param message: A message of the request body's ``messages``.
+    :returns: True if the message is an assistant message with ``tool_calls``.
+    """
+    return message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY and bool(
+        message.get(OpenAIResponseChoicesMessage.TOOL_CALLS_KEY)
+    )
+
+
 def validate_completion_request(request_body, version: str = "v1") -> None:
-    """See openai.chat.completion.request.json"""
+    """See openai.chat.completion.request.json."""
 
     validate_request_body(request_body=request_body)
     validate_messages(request_body=request_body)
@@ -94,7 +114,7 @@ def validate_completion_request(request_body, version: str = "v1") -> None:
 
 
 def validate_embedding_request(request_body) -> None:
-    """See openai.embedding.request.json"""
+    """See openai.embedding.request.json."""
     validate_request_body(request_body=request_body)
     if "input_text" not in request_body:
         raise SmarterValueError("dict key 'input_text' not found in request body object")

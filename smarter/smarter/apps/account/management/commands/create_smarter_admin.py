@@ -133,7 +133,7 @@ class Command(SmarterCommand):
         # not cached: a cached result from before this command created a key would still be empty.
         if not SmarterAuthToken.objects.filter(user=user).exists():
             _, token_key = SmarterAuthToken.objects.create(
-                user_profile=user_profile, name="smarter-admin-key", user=user, description="created by manage.py"
+                user_profile=user_profile, name="smarter_admin_key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
             self.handle_completed_success(msg=f"created API key: {token_key}")
             return

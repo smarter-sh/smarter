@@ -1,0 +1,123 @@
+Capstone A: A Complete AI Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Learning objective.** Build, test and ship a complete full-stack AI application that solves a
+real problem, using the patterns that Smarter uses in production.
+
+Students finish the course app as an assistant for a domain of their choice, for example a
+course's teaching assistant, a help desk for an invented product, or a recipe planner. Its back
+end is Django and Django REST Framework, with an OpenAI-compatible ``/v1/chat/completions``
+endpoint, conversation history trimmed to a token budget, at least two tools, a system prompt
+changed for each request without being saved, retrieval over a folder of documents with
+LangChain, and an input guardrail. Its front end is a React single-page app of their own, built
+from ``@chatscope/chat-ui-kit-react`` and ``@chatscope/chat-ui-kit-styles``, with a
+``@microlink/react-json-view`` panel for requests and tool calls, against TypeScript types
+generated from the back end's JSON Schema, with streamed progress. The API key is a ``SecretStr`` setting, and
+the whole stack runs with ``docker compose up`` from a clean clone.
+
+**What students turn in:**
+
+- The application's Git repository, with a README quickstart, unit tests that never call the
+  LLM, and at least ten evaluation cases for its prompts.
+- A one-page design note: the system prompt and what is added to it per request, the tools and
+  how their arguments are checked, and where the API key goes and where it never goes.
+- A six-minute recorded walkthrough, from ``docker compose up`` to a conversation that uses a
+  tool and a retrieved document.
+
+**How it is graded (100 points):**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 35 35
+
+   * - Criterion
+     - Pts
+     - Exemplary
+     - Developing
+   * - Prompt handler
+     - 25
+     - OpenAI-compatible, with history, a token budget, a working tool call loop and a system
+       prompt that is changed per request but never saved.
+     - Sends one prompt at a time, or saves the mutated system prompt.
+   * - Retrieval and guardrails
+     - 15
+     - Relevant passages, cited in replies; the guardrail blocks with a clear message, and its
+       failure is handled.
+     - Whole documents pasted into the prompt.
+   * - Front end and contract
+     - 20
+     - Generated types, streamed progress, Markdown rendered safely, errors shown.
+     - Hand-written types that drift from the back end.
+   * - Secrets and shipping
+     - 15
+     - No key in the repository, the image, the logs or the browser; runs from a clean clone.
+     - Key in ``settings.py``, or "works on my machine".
+   * - Tests and evaluation
+     - 15
+     - Unit tests with a fake LLM, and evaluation cases whose results are reported honestly.
+     - Tests that call the paid API, or no evaluation.
+   * - Walkthrough
+     - 10
+     - Clear and on time.
+     - Overruns, or the stack does not start.
+
+Capstone B: A New Built-in Tool for Smarter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Learning objective.** Add an AI feature to a large production codebase, end to end, following
+the patterns that the codebase already uses.
+
+Students add a built-in function to their fork of Smarter, beside the calculator, the date
+calculator and the weather function: a tool factory that returns its JSON Schema definition, the
+function itself, with its arguments validated as untrusted input, its registration in
+``LLMClientFunctions`` and in the handler, a system prompt note that tells the LLM when to use it,
+and tests that run the tool call loop with a fake LLM. An LLMClient manifest uses the function,
+and a Vite single-page app of their own, built from ``@chatscope/chat-ui-kit-react``, talks to
+that LLMClient's prompt API. A capstone
+that proposes its function to Smarter itself must be agreed with the maintainers in a GitHub issue
+first.
+
+**What students turn in:**
+
+- A pull request against their fork, with the pre-commit hooks passing and at least 90% coverage
+  of the new code.
+- The LLMClient manifest, and the single-page app's repository.
+- A one-page design note: the tool's definition, how its arguments are checked, and what the LLM
+  does with a malformed call.
+- A six-minute recorded walkthrough.
+
+**How it is graded (100 points):**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 35 35
+
+   * - Criterion
+     - Pts
+     - Exemplary
+     - Developing
+   * - Tool definition
+     - 15
+     - Precise names, descriptions and JSON Schema; the LLM calls it when it should.
+     - Vague descriptions, so the LLM never calls it.
+   * - Implementation
+     - 25
+     - Arguments validated, errors returned to the LLM as results, registered where the other
+       functions are.
+     - Trusts the arguments, or raises into the handler.
+   * - Tests
+     - 20
+     - Tool call loop tested with a fake LLM, including a malformed call; 90% coverage.
+     - Tests that call the paid API.
+   * - Front end
+     - 15
+     - The app talks to the LLMClient, and its JSON panel shows the tool call.
+     - The workbench only.
+   * - Design note and quality
+     - 15
+     - Hooks pass, docstrings, code that reads like the code around it, and a clear note.
+     - Hooks skipped.
+   * - Walkthrough
+     - 10
+     - Clear and on time.
+     - Overruns.

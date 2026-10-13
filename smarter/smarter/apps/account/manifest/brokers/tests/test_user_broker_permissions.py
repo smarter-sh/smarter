@@ -106,7 +106,7 @@ class TestSmarterUserBrokerPermissions(TestSAMBrokerBaseClass):
         self.patch_property("manifest", None)
         with self.assertRaises(SAMUserBrokerError):
             broker.apply(self.request)
-        with self.assertRaises(SAMUserBrokerError):
+        with self.assertRaises(SAMBrokerErrorNotFound):
             broker.describe(self.request)
         with self.assertRaises(SAMUserBrokerError):
             broker.manifest_to_django_orm()
