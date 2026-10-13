@@ -86,7 +86,12 @@ project = "Smarter Documentation"
 # pylint: disable=redefined-builtin
 copyright = f"2023 - {datetime.now().year}"
 author = AUTHOR
-release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+try:
+    release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+# pylint: disable=broad-except
+except Exception:
+    # no git tags available (e.g. a fork or shallow clone)
+    release = "0.0.0"
 
 
 try:

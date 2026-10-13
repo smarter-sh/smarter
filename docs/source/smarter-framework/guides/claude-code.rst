@@ -7,6 +7,8 @@ work as represented in the documentation listed below, and is subject to change 
 .. toctree::
    :maxdepth: 1
 
+   claude-code/FENT20_getting-started-claude-code
+   claude-code/FENT20_claude-code-settings-api
    claude-code/claude-code-getting-started-guide
    claude-code/claude-code-getting-started
    claude-code/getting-started-with-claude-code
