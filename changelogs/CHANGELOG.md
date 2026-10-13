@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.7...v0.22.0-alpha.8) (2026-10-13)
+
+### Features
+
+* **api:** add accounts, prompt history and journal to the contract ([e7eee5e](https://github.com/smarter-sh/smarter/commit/e7eee5eaa0eb84aabcc57a796eea6cb108e6a6eb))
+
 ## [0.22.0-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.6...v0.22.0-alpha.7) (2026-10-13)
 
 ### Features
