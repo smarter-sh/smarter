@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.5...v0.22.0-alpha.6) (2026-10-13)
+
+### Features
+
+* **vectorstore:** add the vectorstore REST api to the api contract ([99f81dd](https://github.com/smarter-sh/smarter/commit/99f81ddf37d472e107d998e16c900dd5660216a2))
+
 ## [0.22.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.4...v0.22.0-alpha.5) (2026-10-13)
 
 ### Features
