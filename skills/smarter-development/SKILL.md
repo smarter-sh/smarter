@@ -180,6 +180,7 @@ reference implementations.
 | Sphinx pages                                                    | `smarter-sphinx-docs`                  |
 | Lint, format, pre-commit                                        | `smarter-code-quality`                 |
 | Writing a commit message                                        | `smarter-git-commits`                  |
+| A course design for the Free Course Catalog (instructors docs)  | `smarter-course-design`                |
 | A release announcement post for blog.smarter.sh                 | `blog.smarter.sh-release-announcement` |
 | Any other article for blog.smarter.sh                           | `blog.smarter.sh-blog-post`            |
 

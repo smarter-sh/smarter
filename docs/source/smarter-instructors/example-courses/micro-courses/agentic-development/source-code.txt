@@ -21,7 +21,7 @@ The Instructions an Agent Reads
        definition of done.
      - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__
    * - The skills index
-     - Sixteen Agent Skills in one folder, symlinked to ``.claude/skills`` so that Claude Code
+     - Eighteen Agent Skills in one folder, symlinked to ``.claude/skills`` so that Claude Code
        finds them, with a README written for the humans who maintain them.
      - `skills/ <https://github.com/smarter-sh/smarter/tree/main/skills>`__,
        `skills/README.md <https://github.com/smarter-sh/smarter/blob/main/skills/README.md>`__

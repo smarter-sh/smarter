@@ -4,7 +4,7 @@ Agentic Software Development: Classroom Bootcamp
 An eight-hour classroom bootcamp on developing software with coding agents such as `Claude Code
 <https://claude.com/claude-code>`__, taught on a real production code base. Smarter is a code base
 shaped for agents: nearly all of its new code is now designed, written and tested by agents working
-from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the sixteen
+from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the eighteen
 `Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__ in ``skills/``, and its
 git history shows it: since late September 2026, most commits have been authored by Claude. Its
 :doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>` was built by Claude Code in

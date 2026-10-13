@@ -100,6 +100,6 @@ Docstrings and Checks
        in every example, and docs updated in the same change as the code.
      - `smarter-sphinx-docs/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-sphinx-docs/SKILL.md>`__
    * - Writing for agents
-     - ``CLAUDE.md`` and sixteen Agent Skills: documentation whose reader is a coding agent.
+     - ``CLAUDE.md`` and eighteen Agent Skills: documentation whose reader is a coding agent.
      - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
        `skills/ <https://github.com/smarter-sh/smarter/tree/main/skills>`__
