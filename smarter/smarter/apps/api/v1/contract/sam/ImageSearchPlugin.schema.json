@@ -1,0 +1,538 @@
+{
+  "$defs": {
+    "ImageSearchData": {
+      "description": "Smarter API - ImageSearchPlugin.spec.imageSearchData.",
+      "properties": {
+        "apiKey": {
+          "default": "brave_search_api_key",
+          "description": "ImageSearchPlugin.spec.apiKey[str]: the name of the Smarter Secret that contains a Brave Search API key. The api key itself is never included in the manifest.",
+          "title": "Apikey",
+          "type": "string"
+        },
+        "cacheTtl": {
+          "default": 604800,
+          "description": "ImageSearchPlugin.spec.cacheTtl[int]: seconds to cache search results. 0 disables caching.",
+          "maximum": 604800,
+          "minimum": 0,
+          "title": "Cachettl",
+          "type": "integer"
+        },
+        "filters": {
+          "$ref": "#/$defs/ImageSearchFilters",
+          "description": "ImageSearchPlugin.spec.filters[obj]: the filters that Smarter applies to the search results."
+        },
+        "llmSearchParams": {
+          "default": false,
+          "description": "ImageSearchPlugin.spec.llmSearchParams[bool]: whether the LLM may set every Brave Image Search API parameter in each tool call: count (up to 20), country, search_lang, safesearch and spellcheck. searchParams are then the defaults. If false, the LLM may only lower the count.",
+          "title": "Llmsearchparams",
+          "type": "boolean"
+        },
+        "queryTerms": {
+          "anyOf": [
+            {
+              "maxLength": 400,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.queryTerms[str]: optional search terms appended to every query that the LLM sends, e.g. 'black and white photograph'. The LLM always supplies the query itself, e.g. 'formula 1 race cars', so that Brave searches for 'formula 1 race cars black and white photograph'.",
+          "title": "Queryterms"
+        },
+        "searchParams": {
+          "$ref": "#/$defs/ImageSearchParams",
+          "description": "ImageSearchPlugin.spec.searchParams[obj]: the Brave Image Search API query parameters."
+        },
+        "timeout": {
+          "default": 10,
+          "description": "ImageSearchPlugin.spec.timeout[int]: seconds to wait for each web request, 1 to 60.",
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Timeout",
+          "type": "integer"
+        },
+        "validateUrls": {
+          "default": true,
+          "description": "ImageSearchPlugin.spec.validateUrls[bool]: only return image urls that respond to a request with HTTP 200, and not with a web page. Urls are always https.",
+          "title": "Validateurls",
+          "type": "boolean"
+        }
+      },
+      "title": "ImageSearchData",
+      "type": "object"
+    },
+    "ImageSearchFilters": {
+      "description": "Smarter API - ImageSearchPlugin.spec.imageSearchData.filters.\n\nSmarter applies these to the Brave Image Search API's results.",
+      "properties": {
+        "allowedDomains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.filters.allowedDomains[list]: if not empty, only images from web pages on these domains, and their subdomains.",
+          "title": "Alloweddomains"
+        },
+        "blockedDomains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.filters.blockedDomains[list]: never images on these domains, nor from web pages on them, including their subdomains.",
+          "title": "Blockeddomains"
+        },
+        "fileType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.filters.fileType[str]: only images of these file types, separated by '|', e.g. jpg|png. Any of: ['jpg', 'png', 'gif', 'svg', 'webp', 'avif', 'bmp', 'ico']",
+          "title": "Filetype"
+        },
+        "minHeight": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.filters.minHeight[int]: only images at least this many pixels high. Images whose height Brave does not report are skipped.",
+          "title": "Minheight"
+        },
+        "minWidth": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.filters.minWidth[int]: only images at least this many pixels wide. Images whose width Brave does not report are skipped.",
+          "title": "Minwidth"
+        }
+      },
+      "title": "ImageSearchFilters",
+      "type": "object"
+    },
+    "ImageSearchParams": {
+      "description": "Smarter API - ImageSearchPlugin.spec.imageSearchData.searchParams.\n\nThese map 1:1 to the query parameters of the Brave Image Search API, except for ``q``, the\nquery itself, which the LLM supplies. See ``imageSearchData.queryTerms``.",
+      "properties": {
+        "count": {
+          "default": 10,
+          "description": "ImageSearchPlugin.spec.searchParams.count[int]: the maximum number of images per search, 1 to 20.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.searchParams.country[str]: a two letter country code, e.g. us, or all for worldwide results.",
+          "title": "Country"
+        },
+        "safesearch": {
+          "default": "strict",
+          "description": "ImageSearchPlugin.spec.searchParams.safesearch[str]: adult content filtering. One of: ['off', 'strict']",
+          "title": "Safesearch",
+          "type": "string"
+        },
+        "searchLang": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ImageSearchPlugin.spec.searchParams.searchLang[str]: prefer images from content in this language, e.g. en or pt-br.",
+          "title": "Searchlang"
+        },
+        "spellcheck": {
+          "default": true,
+          "description": "ImageSearchPlugin.spec.searchParams.spellcheck[bool]: whether Brave may correct the spelling of the query.",
+          "title": "Spellcheck",
+          "type": "boolean"
+        }
+      },
+      "title": "ImageSearchParams",
+      "type": "object"
+    },
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMImageSearchPluginSpec": {
+      "description": "Smarter API Manifest - ImageSearchPlugin.spec.",
+      "properties": {
+        "imageSearchData": {
+          "$ref": "#/$defs/ImageSearchData",
+          "description": "ImageSearchPlugin.spec.imageSearchData[obj]: the image search configuration of the ImageSearchPlugin."
+        },
+        "prompt": {
+          "$ref": "#/$defs/SAMPluginCommonSpecPrompt",
+          "description": "Plugin.spec.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
+        },
+        "selector": {
+          "$ref": "#/$defs/SAMPluginCommonSpecSelector",
+          "description": "Plugin.spec.selector[obj]: the selector logic to use for the Plugin"
+        }
+      },
+      "required": [
+        "selector",
+        "prompt"
+      ],
+      "title": "SAMImageSearchPluginSpec",
+      "type": "object"
+    },
+    "SAMPluginCommonMetadata": {
+      "description": "Smarter API Plugin Manifest - common Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "pluginClass": {
+          "description": "The class of the plugin. one of: ['api', 'imagesearch', 'skill', 'sql', 'static', 'websearch']",
+          "title": "Pluginclass",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version",
+        "pluginClass"
+      ],
+      "title": "SAMPluginCommonMetadata",
+      "type": "object"
+    },
+    "SAMPluginCommonSpecPrompt": {
+      "description": "Smarter API Plugin Manifest - Spec - Prompt class.",
+      "properties": {
+        "maxTokens": {
+          "default": 2048,
+          "description": "Plugin.spec.prompt.maxTokens[int]. Optional. The maxTokens of the Plugin. Defaults to 2048. The maximum number of tokens the LLM should generate in the prompt response. ",
+          "exclusiveMinimum": 0,
+          "title": "Maxtokens",
+          "type": "integer"
+        },
+        "model": {
+          "default": "gpt-6-luna",
+          "description": "Plugin.spec.prompt.model[str] Optional. The model of the Plugin. Defaults to gpt-6-luna. Must be one of: ['chat-latest', 'gpt-4.1', 'gpt-4.1-2025-04-14', 'gpt-4.1-mini', 'gpt-4.1-mini-2025-04-14', 'gpt-4o', 'gpt-4o-2024-08-06', 'gpt-4o-2024-11-20', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'gpt-5-search-api', 'gpt-5-search-api-2025-10-14', 'gpt-5.2', 'gpt-5.2-2025-12-11', 'gpt-5.4', 'gpt-5.4-2026-03-05', 'gpt-5.4-mini', 'gpt-5.4-mini-2026-03-17', 'gpt-5.5', 'gpt-5.5-2026-04-23', 'gpt-5.6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-6-astra', 'gpt-6-luna', 'gpt-6-sol', 'gpt-6.1-sol']",
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "default": "openai",
+          "description": "Plugin.spec.prompt.provider[str]. Optional. The provider of the LLM. Defaults to openai. The provider is the vendor name for the LLM service that will be used to generate the prompt response.",
+          "title": "Provider",
+          "type": "string"
+        },
+        "systemRole": {
+          "description": "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM how you want it to use the Plugin data that is returned.",
+          "title": "Systemrole",
+          "type": "string"
+        },
+        "temperature": {
+          "default": 1.0,
+          "description": "Plugin.spec.prompt.temperature[float] Optional. The temperature of the Plugin. Defaults to 1.0. Should be between 0 and 1.0. The higher the temperature, the more creative the response. The lower the temperature, the more predictable the response.",
+          "maximum": 1.0,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        }
+      },
+      "required": [
+        "systemRole"
+      ],
+      "title": "SAMPluginCommonSpecPrompt",
+      "type": "object"
+    },
+    "SAMPluginCommonSpecSelector": {
+      "description": "Smarter API Plugin Manifest - Spec - Selector class.",
+      "properties": {
+        "directive": {
+          "description": "Plugin.spec.selector.directive[str]: Required. the kind of selector directive to use for the Plugin. Must be one of: ['search_terms', 'always', 'llm']",
+          "title": "Directive",
+          "type": "string"
+        },
+        "searchTerms": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Plugin.spec.selector.searchTerms[list]. Optional. The keyword search terms to use when the Plugin directive is 'search_terms'. Keywords are most effective when constrained to 1 or 2 words each and lists are limited to a few dozen items.",
+          "title": "Searchterms"
+        }
+      },
+      "required": [
+        "directive"
+      ],
+      "title": "SAMPluginCommonSpecSelector",
+      "type": "object"
+    },
+    "SAMPluginCommonStatus": {
+      "description": "Smarter API Plugin Manifest - Status class.",
+      "properties": {
+        "accountNumber": {
+          "description": "Plugin.status.account_number: The account owner of this Plugin. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "Plugin.status.account_number: The Smarter user who created this Plugin. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMPluginCommonStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - ImageSearchPlugin Model.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMPluginCommonMetadata",
+      "description": "Plugin.metadata[obj]: Required, the Plugin metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMImageSearchPluginSpec",
+      "description": "ImageSearchPlugin.spec[obj]: Required, the ImageSearchPlugin specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMPluginCommonStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plugin.status[obj]: Optional, Read-only. Stateful status information about the Plugin."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMImageSearchPlugin",
+  "type": "object"
+}

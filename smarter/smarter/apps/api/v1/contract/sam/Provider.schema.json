@@ -1,0 +1,506 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMProviderMetadata": {
+      "description": "Smarter API Provider Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMProviderMetadata",
+      "type": "object"
+    },
+    "SAMProviderSpec": {
+      "description": "Smarter API Api Connection Manifest ApiConnection.spec.",
+      "properties": {
+        "provider": {
+          "$ref": "#/$defs/SAMProviderSpecProvider",
+          "description": "Provider.spec.selector[obj]: the spec for the Provider"
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "title": "SAMProviderSpec",
+      "type": "object"
+    },
+    "SAMProviderSpecProvider": {
+      "description": "Smarter API - generic API Connection class.",
+      "properties": {
+        "api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The name of the Smarter Secret containing the API key to use for verification tests.",
+          "title": "Api Key"
+        },
+        "base_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The base URL for the Provider's API.",
+          "title": "Base Url"
+        },
+        "connectivity_test_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "",
+          "description": "The URL path to test connectivity with the Provider's API.",
+          "title": "Connectivity Test Path"
+        },
+        "contact_email": {
+          "anyOf": [
+            {
+              "format": "email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The contact email of the Provider.",
+          "title": "Contact Email"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A brief description of the Provider.",
+          "title": "Description"
+        },
+        "docs_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The documentation URL of the Provider.",
+          "title": "Docs Url"
+        },
+        "logo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The logo of the Provider.",
+          "title": "Logo"
+        },
+        "name": {
+          "description": "The name of the Provider. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. examples: 'OpenAI', 'GoogleAI', 'MetaAI'.",
+          "title": "Name",
+          "type": "string"
+        },
+        "privacy_policy_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The privacy policy URL of the Provider.",
+          "title": "Privacy Policy Url"
+        },
+        "support_email": {
+          "anyOf": [
+            {
+              "format": "email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The support email of the Provider.",
+          "title": "Support Email"
+        },
+        "terms_of_service_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The terms of service URL of the Provider.",
+          "title": "Terms Of Service Url"
+        },
+        "website_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The website_url URL of the Provider.",
+          "title": "Website Url"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "SAMProviderSpecProvider",
+      "type": "object"
+    },
+    "SAMProviderStatus": {
+      "description": "Smarter API Provider Manifest - Status class.",
+      "properties": {
+        "can_activate": {
+          "default": true,
+          "description": "Provider.status.can_activate: Indicates whether this Provider can be activated. Read only.",
+          "title": "Can Activate",
+          "type": "boolean"
+        },
+        "contact_email_verified": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider.status.contact_email_verified: The date in which the contact email for this Provider was verified. Read only.",
+          "title": "Contact Email Verified"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "is_active": {
+          "description": "Provider.status.is_active: Indicates whether this Provider is currently active. Read only.",
+          "title": "Is Active",
+          "type": "boolean"
+        },
+        "is_deprecated": {
+          "description": "Provider.status.is_deprecated: Indicates whether this Provider is deprecated. Read only.",
+          "title": "Is Deprecated",
+          "type": "boolean"
+        },
+        "is_flagged": {
+          "description": "Provider.status.is_flagged: Indicates whether this Provider has been flagged for review. Read only.",
+          "title": "Is Flagged",
+          "type": "boolean"
+        },
+        "is_suspended": {
+          "description": "Provider.status.is_suspended: Indicates whether this Provider is currently suspended. Read only.",
+          "title": "Is Suspended",
+          "type": "boolean"
+        },
+        "is_verified": {
+          "description": "Provider.status.is_verified: Indicates whether this Provider has been verified. Read only.",
+          "title": "Is Verified",
+          "type": "boolean"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "ownership_requested": {
+          "anyOf": [
+            {
+              "format": "email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider.status.ownership_requested: The Smarter user that has requested ownership of this Provider. Read only.",
+          "title": "Ownership Requested"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "support_email_verified": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider.status.support_email_verified: The date in which the support email for this Provider was verified. Read only.",
+          "title": "Support Email Verified"
+        },
+        "tos_accepted_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider.status.tos_accepted_at: The date in which the Terms of Service for this Provider were accepted. Read only.",
+          "title": "Tos Accepted At"
+        },
+        "tos_accepted_by": {
+          "anyOf": [
+            {
+              "format": "email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider.status.tos_accepted_by: The Smarter user that accepted the Terms of Service for this Provider. Read only.",
+          "title": "Tos Accepted By"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "is_active",
+        "is_flagged",
+        "is_deprecated",
+        "is_suspended",
+        "is_verified"
+      ],
+      "title": "SAMProviderStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - Account",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMProviderMetadata",
+      "description": "Provider.metadata[obj]: Required, the Provider metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMProviderSpec",
+      "description": "Provider.spec[obj]: Required, the Provider specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMProviderStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Provider.status[obj]: Optional, Read-only. Stateful status information about the Provider."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMProvider",
+  "type": "object"
+}
