@@ -1,0 +1,1051 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMLLMHostEngineConfig": {
+      "additionalProperties": false,
+      "description": "Spec.engine: the inference server.\n\nThe common settings, e.g. ``contextLength``, are translated into each engine's own\narguments, e.g. vLLM's ``--max-model-len`` and llama.cpp's ``--ctx-size``. ``args`` and\n``env`` are passed to the engine as they are, for everything else.",
+      "properties": {
+        "apiFormat": {
+          "default": "openai_compatible",
+          "description": "LLMHost.spec.engine.apiFormat[str]: the wire protocol. One of: ['openai_compatible', 'huggingface', 'ollama_native', 'custom'].",
+          "title": "Apiformat",
+          "type": "string"
+        },
+        "args": {
+          "description": "LLMHost.spec.engine.args[list]: additional arguments, passed to the engine as they are.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "command": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.command[list]: overrides the image's entrypoint. For custom engines.",
+          "title": "Command"
+        },
+        "contextLength": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.contextLength[int]: the maximum context the server allocates, in tokens.",
+          "title": "Contextlength"
+        },
+        "dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.dtype[str]: e.g. auto, bfloat16, float16.",
+          "title": "Dtype"
+        },
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "LLMHost.spec.engine.env[dict]: additional environment variables.",
+          "title": "Env",
+          "type": "object"
+        },
+        "gpuMemoryUtilization": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "maximum": 1.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.gpuMemoryUtilization[float]: the fraction of GPU memory the server may use.",
+          "title": "Gpumemoryutilization"
+        },
+        "image": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.image[str]: the container image. Defaults to the engine's official image. Pin a version in production. Required for custom.",
+          "title": "Image"
+        },
+        "maxConcurrentRequests": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.maxConcurrentRequests[int]: the requests that one replica serves at once.",
+          "title": "Maxconcurrentrequests"
+        },
+        "name": {
+          "description": "LLMHost.spec.engine.name[str]: the inference server. One of: ['vllm', 'tgi', 'sglang', 'llama_cpp', 'ollama', 'tei', 'custom'].",
+          "title": "Name",
+          "type": "string"
+        },
+        "port": {
+          "anyOf": [
+            {
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.port[int]: the container port. Defaults to the engine's port. Required for custom.",
+          "title": "Port"
+        },
+        "tensorParallelSize": {
+          "anyOf": [
+            {
+              "maximum": 16,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.engine.tensorParallelSize[int]: the GPUs that one replica shards the model across.",
+          "title": "Tensorparallelsize"
+        },
+        "trustRemoteCode": {
+          "default": false,
+          "description": "LLMHost.spec.engine.trustRemoteCode[bool]: run Python code from the model repository. Only for repositories that you trust.",
+          "title": "Trustremotecode",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "SAMLLMHostEngineConfig",
+      "type": "object"
+    },
+    "SAMLLMHostHealthCheck": {
+      "additionalProperties": false,
+      "description": "Spec.healthCheck: the probes that decide when a replica is ready.",
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.healthCheck.path[str]: the HTTP health path. Defaults to the engine's, e.g. /health.",
+          "title": "Path"
+        },
+        "periodSeconds": {
+          "default": 10,
+          "description": "LLMHost.spec.healthCheck.periodSeconds[int]: how often the probes run.",
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Periodseconds",
+          "type": "integer"
+        },
+        "startupTimeoutSeconds": {
+          "default": 3600,
+          "description": "LLMHost.spec.healthCheck.startupTimeoutSeconds[int]: the time the server has to download and load the weights before it is restarted. Large models need more.",
+          "maximum": 21600,
+          "minimum": 60,
+          "title": "Startuptimeoutseconds",
+          "type": "integer"
+        }
+      },
+      "title": "SAMLLMHostHealthCheck",
+      "type": "object"
+    },
+    "SAMLLMHostMetadata": {
+      "description": "Smarter API LLMHost Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMLLMHostMetadata",
+      "type": "object"
+    },
+    "SAMLLMHostModel": {
+      "additionalProperties": false,
+      "description": "Spec.model: what is served, and where its weights come from.",
+      "properties": {
+        "architecture": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.architecture[str]: e.g. llama, qwen3, gemma3.",
+          "title": "Architecture"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/SAMLLMHostModelCapabilities",
+          "description": "LLMHost.spec.model.capabilities[object]: what the model can do."
+        },
+        "contextWindow": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.contextWindow[int]: the model's maximum context, in tokens.",
+          "title": "Contextwindow"
+        },
+        "embeddingDimensions": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.embeddingDimensions[int]: for embedding models.",
+          "title": "Embeddingdimensions"
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.file[str]: a single weights file within the repository, e.g. a GGUF file for llama_cpp. For ollama with a Hugging Face source, the quantization tag, e.g. Q4_K_M.",
+          "title": "File"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.license[str]: e.g. apache-2.0.",
+          "title": "License"
+        },
+        "parameterCount": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.parameterCount[int]: the number of parameters.",
+          "title": "Parametercount"
+        },
+        "quantization": {
+          "default": "none",
+          "description": "LLMHost.spec.model.quantization[str]: the weights' precision. One of: ['none', 'fp32', 'fp16', 'bf16', 'fp8', 'mxfp4', 'int8', 'int4', 'gguf', 'awq', 'gptq'].",
+          "title": "Quantization",
+          "type": "string"
+        },
+        "repository": {
+          "description": "LLMHost.spec.model.repository[str]: the model, in the source's terms: a Hugging Face repository id, e.g. Qwen/Qwen3-8B; an Ollama tag, e.g. llama3.1:8b; an S3 prefix, e.g. s3://bucket/models/qwen3; a URL; or, for pvc, a path within the volume.",
+          "title": "Repository",
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.revision[str]: a Hugging Face branch, tag or commit SHA. Pin a commit SHA for reproducible deployments. Defaults to main.",
+          "title": "Revision"
+        },
+        "servedName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.servedName[str]: the model name that clients send in their requests. Defaults to the LLMHost's name. Ollama always uses repository.",
+          "title": "Servedname"
+        },
+        "source": {
+          "default": "huggingface",
+          "description": "LLMHost.spec.model.source[str]: where the weights come from. One of: ['huggingface', 'ollama', 's3', 'url', 'pvc'].",
+          "title": "Source",
+          "type": "string"
+        },
+        "task": {
+          "default": "text-generation",
+          "description": "LLMHost.spec.model.task[str]: what the model does. One of: ['text-generation', 'embedding'].",
+          "title": "Task",
+          "type": "string"
+        },
+        "tokenSecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.model.tokenSecret[str]: the name of a Smarter Secret with a Hugging Face access token, for gated models, e.g. Llama and Gemma. You must also accept the model's license on huggingface.co.",
+          "title": "Tokensecret"
+        }
+      },
+      "required": [
+        "repository"
+      ],
+      "title": "SAMLLMHostModel",
+      "type": "object"
+    },
+    "SAMLLMHostModelCapabilities": {
+      "additionalProperties": false,
+      "description": "What the model can do.\n\nInformational, for discovery and for the LLMClients that use it.",
+      "properties": {
+        "functionCalling": {
+          "default": false,
+          "description": "LLMHost.spec.model.capabilities.functionCalling[bool]: supports tool calls. Some engines also require args, e.g. vLLM's --enable-auto-tool-choice and --tool-call-parser.",
+          "title": "Functioncalling",
+          "type": "boolean"
+        },
+        "reasoning": {
+          "default": false,
+          "description": "LLMHost.spec.model.capabilities.reasoning[bool]: a reasoning model.",
+          "title": "Reasoning",
+          "type": "boolean"
+        },
+        "streaming": {
+          "default": true,
+          "description": "LLMHost.spec.model.capabilities.streaming[bool]: streams responses.",
+          "title": "Streaming",
+          "type": "boolean"
+        },
+        "vision": {
+          "default": false,
+          "description": "LLMHost.spec.model.capabilities.vision[bool]: accepts images.",
+          "title": "Vision",
+          "type": "boolean"
+        }
+      },
+      "title": "SAMLLMHostModelCapabilities",
+      "type": "object"
+    },
+    "SAMLLMHostNetwork": {
+      "additionalProperties": false,
+      "description": "Spec.network: how the LLMHost is reached.\n\nIt is always reachable inside the cluster, at its Service. With ``ingress``, it is also\nreachable at ``https://<hostname>``, with a TLS certificate from cert-manager. A public\nendpoint requires an API key, unless ``allowUnauthenticated``.",
+      "properties": {
+        "allowUnauthenticated": {
+          "default": false,
+          "description": "LLMHost.spec.network.allowUnauthenticated[bool]: permit an Ingress for an engine that does not authenticate requests, e.g. tgi and ollama. Anyone who knows the hostname can use the model.",
+          "title": "Allowunauthenticated",
+          "type": "boolean"
+        },
+        "apiKeySecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.network.apiKeySecret[str]: the name of a Smarter Secret with the API key that clients must send as a Bearer token. If omitted, Smarter generates one when the LLMHost is launched, and stores it in the Secret llmhost_<name>_api_key.",
+          "title": "Apikeysecret"
+        },
+        "hostname": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.network.hostname[str]: the Ingress hostname. Defaults to <name>.llmhost.<account number>.<environment API domain>.",
+          "title": "Hostname"
+        },
+        "ingress": {
+          "default": false,
+          "description": "LLMHost.spec.network.ingress[bool]: create an Ingress.",
+          "title": "Ingress",
+          "type": "boolean"
+        }
+      },
+      "title": "SAMLLMHostNetwork",
+      "type": "object"
+    },
+    "SAMLLMHostResources": {
+      "additionalProperties": false,
+      "description": "Spec.resources: the compute that each replica, one pod, requests.\n\nThese are the pod's resource requests, not a node's capacity. They must fit a node of the\nLLMHost's compute, which also determines the GPU model.",
+      "properties": {
+        "cpu": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.resources.cpu[str]: the pod's CPU request, e.g. 4 or 3500m.",
+          "title": "Cpu"
+        },
+        "gpuCount": {
+          "default": 0,
+          "description": "LLMHost.spec.resources.gpuCount[int]: the GPUs per replica. 0 runs on CPU.",
+          "maximum": 16,
+          "minimum": 0,
+          "title": "Gpucount",
+          "type": "integer"
+        },
+        "gpuResource": {
+          "default": "nvidia.com/gpu",
+          "description": "LLMHost.spec.resources.gpuResource[str]: the Kubernetes extended resource, e.g. nvidia.com/gpu.",
+          "title": "Gpuresource",
+          "type": "string"
+        },
+        "memory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.resources.memory[str]: the pod's memory request and limit, e.g. 24Gi.",
+          "title": "Memory"
+        },
+        "nodeSelector": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "LLMHost.spec.resources.nodeSelector[dict]: additional node labels.",
+          "title": "Nodeselector",
+          "type": "object"
+        },
+        "serviceAccountName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.resources.serviceAccountName[str]: e.g. for IRSA access to an S3 model source.",
+          "title": "Serviceaccountname"
+        },
+        "shmSize": {
+          "default": "8Gi",
+          "description": "LLMHost.spec.resources.shmSize[str]: the size of /dev/shm.",
+          "title": "Shmsize",
+          "type": "string"
+        },
+        "tolerations": {
+          "description": "LLMHost.spec.resources.tolerations[list]: Kubernetes tolerations. When gpuCount > 0, a toleration of the gpuResource taint is added.",
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tolerations",
+          "type": "array"
+        },
+        "vramRequiredGb": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.resources.vramRequiredGb[int]: the GPU memory the model requires. Informational.",
+          "title": "Vramrequiredgb"
+        }
+      },
+      "title": "SAMLLMHostResources",
+      "type": "object"
+    },
+    "SAMLLMHostScaling": {
+      "additionalProperties": false,
+      "description": "Spec.scaling: the replicas.",
+      "properties": {
+        "replicas": {
+          "default": 1,
+          "description": "LLMHost.spec.scaling.replicas[int]: the replicas. More than one requires storage.accessMode ReadWriteMany or ReadOnlyMany.",
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Replicas",
+          "type": "integer"
+        }
+      },
+      "title": "SAMLLMHostScaling",
+      "type": "object"
+    },
+    "SAMLLMHostSpec": {
+      "additionalProperties": false,
+      "description": "Smarter API LLMHost Manifest LLMHost.spec.",
+      "properties": {
+        "compute": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.compute[str]: the LLMHostCompute that the LLMHost runs on, e.g. gpu_l4_1x. Defaults to the cheapest one that its resources fit.",
+          "title": "Compute"
+        },
+        "engine": {
+          "$ref": "#/$defs/SAMLLMHostEngineConfig",
+          "description": "LLMHost.spec.engine[object]: the inference server."
+        },
+        "healthCheck": {
+          "$ref": "#/$defs/SAMLLMHostHealthCheck",
+          "description": "LLMHost.spec.healthCheck[object]: probes."
+        },
+        "model": {
+          "$ref": "#/$defs/SAMLLMHostModel",
+          "description": "LLMHost.spec.model[object]: what is served."
+        },
+        "network": {
+          "$ref": "#/$defs/SAMLLMHostNetwork",
+          "description": "LLMHost.spec.network[object]: reachability."
+        },
+        "resources": {
+          "$ref": "#/$defs/SAMLLMHostResources",
+          "description": "LLMHost.spec.resources[object]: compute."
+        },
+        "scaling": {
+          "$ref": "#/$defs/SAMLLMHostScaling",
+          "description": "LLMHost.spec.scaling[object]: replicas."
+        },
+        "storage": {
+          "$ref": "#/$defs/SAMLLMHostStorage",
+          "description": "LLMHost.spec.storage[object]: the model volume."
+        }
+      },
+      "required": [
+        "model",
+        "engine"
+      ],
+      "title": "SAMLLMHostSpec",
+      "type": "object"
+    },
+    "SAMLLMHostStatus": {
+      "description": "Smarter API LLMHost Manifest - Status class.\n\nRead only. Besides ownership, it reports the LLMHost's lifecycle state, where it can be\nreached, and its accumulated cost, as of its most recent status check.",
+      "properties": {
+        "accountNumber": {
+          "description": "LLMHost.status.account_number: The account owner of this LLMHost. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "apiKeySecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.apiKeySecret: the Smarter Secret with the API key, if any. Read only.",
+          "title": "Apikeysecret"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "deployedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.deployedAt: when it was last launched. Read only.",
+          "title": "Deployedat"
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.endpoint: the base URL inside the cluster, e.g. for LLMClients. Read only.",
+          "title": "Endpoint"
+        },
+        "estimatedCost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.estimatedCost: uptimeHours times replicas times each replica's share of its compute's node price. Read only.",
+          "title": "Estimatedcost"
+        },
+        "healthy": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.healthy: the result of the last health check. Read only.",
+          "title": "Healthy"
+        },
+        "hostStatus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.hostStatus: the lifecycle state, e.g. pending, active or error. Read only.",
+          "title": "Hoststatus"
+        },
+        "lastCheckedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.lastCheckedAt: when its status was last checked. Read only.",
+          "title": "Lastcheckedat"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.message: why the LLMHost is in its state, e.g. a container error. Read only.",
+          "title": "Message"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "publicUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.publicUrl: the base URL of the Ingress, if any. Read only.",
+          "title": "Publicurl"
+        },
+        "readyReplicas": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.readyReplicas: ready. Read only.",
+          "title": "Readyreplicas"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "replicas": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.replicas: desired. Read only.",
+          "title": "Replicas"
+        },
+        "uptimeHours": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.status.uptimeHours: hours since deployedAt. Read only.",
+          "title": "Uptimehours"
+        },
+        "username": {
+          "description": "LLMHost.status.username: The Smarter user who created this LLMHost. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMLLMHostStatus",
+      "type": "object"
+    },
+    "SAMLLMHostStorage": {
+      "additionalProperties": false,
+      "description": "Spec.storage: the model volume, a PersistentVolumeClaim mounted at /models.\n\nIt caches the weights, so that a restarted server does not download them again. The\ncluster's storage class provisions its PersistentVolume.",
+      "properties": {
+        "accessMode": {
+          "default": "ReadWriteOnce",
+          "description": "LLMHost.spec.storage.accessMode[str]: One of: ['ReadWriteOnce', 'ReadWriteMany', 'ReadOnlyMany'].",
+          "title": "Accessmode",
+          "type": "string"
+        },
+        "existingClaim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.storage.existingClaim[str]: an existing PersistentVolumeClaim to mount, instead of creating one. Required when model.source is pvc.",
+          "title": "Existingclaim"
+        },
+        "retain": {
+          "default": true,
+          "description": "LLMHost.spec.storage.retain[bool]: keep the volume, and its downloaded weights, on undeploy. It is always deleted when the LLMHost is deleted.",
+          "title": "Retain",
+          "type": "boolean"
+        },
+        "size": {
+          "default": "50Gi",
+          "description": "LLMHost.spec.storage.size[str]: e.g. 50Gi.",
+          "title": "Size",
+          "type": "string"
+        },
+        "storageClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMHost.spec.storage.storageClass[str]: defaults to the cluster's default class.",
+          "title": "Storageclass"
+        }
+      },
+      "title": "SAMLLMHostStorage",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - LLMHost.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMLLMHostMetadata",
+      "description": "LLMHost.metadata[obj]: Required, the LLMHost metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMLLMHostSpec",
+      "description": "LLMHost.spec[obj]: Required, the LLMHost specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMLLMHostStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "LLMHost.status[obj]: Optional, Read-only. Stateful status information about the LLMHost."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMLLMHost",
+  "type": "object"
+}

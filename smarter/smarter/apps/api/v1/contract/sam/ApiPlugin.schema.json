@@ -1,0 +1,628 @@
+{
+  "$defs": {
+    "ApiData": {
+      "description": "Smarter API - apiData class.",
+      "properties": {
+        "body": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Any valid JSON object containing the body of the API request, if applicable.",
+          "title": "Body"
+        },
+        "endpoint": {
+          "description": "The endpoint path for the API. Example: '/v1/weather'.",
+          "maxLength": 255,
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "headers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/RequestHeader"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A list of JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
+          "title": "Headers"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 100,
+          "description": "The maximum number of records to return from the API. Default is 100.",
+          "title": "Limit"
+        },
+        "method": {
+          "default": "GET",
+          "description": "The HTTP method to use for the API request. Default is 'GET'.",
+          "maxLength": 10,
+          "title": "Method",
+          "type": "string"
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Parameter"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
+          "title": "Parameters"
+        },
+        "testValues": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TestValue"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
+          "title": "Testvalues"
+        },
+        "urlParams": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/UrlParam"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A list of URL parameters to be included in the API request. Example: {'city': 'San Francisco'}",
+          "title": "Urlparams"
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "title": "ApiData",
+      "type": "object"
+    },
+    "Parameter": {
+      "description": "Parameter class for parameterized Plugins.\n\nThis structure is\nintended to match that which is used in the OpenAPI\nfunction calling specification.\nIt is used to define the parameters that a plugin can accept,\nand also for creating the function calling prompt api.",
+      "properties": {
+        "default": {
+          "default": null,
+          "description": "The default value of the parameter, if any.",
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A description of the parameter.",
+          "title": "Description"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
+          "title": "Enum"
+        },
+        "name": {
+          "description": "The name of the parameter.",
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "default": false,
+          "description": "Whether the parameter is required.",
+          "title": "Required",
+          "type": "boolean"
+        },
+        "type": {
+          "$ref": "#/$defs/ParameterType",
+          "description": "The data type of the parameter (one of: string, number, integer, boolean, object, array, null)."
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "Parameter",
+      "type": "object"
+    },
+    "ParameterType": {
+      "description": "Enum for parameter types.",
+      "enum": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "object",
+        "array",
+        "null"
+      ],
+      "title": "ParameterType",
+      "type": "string"
+    },
+    "RequestHeader": {
+      "description": "Model for storing HTTP request headers.",
+      "properties": {
+        "name": {
+          "description": "The name of the HTTP header.",
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "The value of the HTTP header.",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "RequestHeader",
+      "type": "object"
+    },
+    "SAMApiPluginSpec": {
+      "description": "Smarter API Manifest ApiConnection.spec.",
+      "properties": {
+        "apiData": {
+          "$ref": "#/$defs/ApiData",
+          "description": "ApiPlugin.spec.selector[obj]: the ApiData to use for the ApiPlugin"
+        },
+        "connection": {
+          "description": "ApiPlugin.spec.selector[obj]: the name of an existing ApiConnection to use for the ApiPlugin",
+          "title": "Connection",
+          "type": "string"
+        },
+        "prompt": {
+          "$ref": "#/$defs/SAMPluginCommonSpecPrompt",
+          "description": "Plugin.spec.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
+        },
+        "selector": {
+          "$ref": "#/$defs/SAMPluginCommonSpecSelector",
+          "description": "Plugin.spec.selector[obj]: the selector logic to use for the Plugin"
+        }
+      },
+      "required": [
+        "selector",
+        "prompt",
+        "connection",
+        "apiData"
+      ],
+      "title": "SAMApiPluginSpec",
+      "type": "object"
+    },
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMPluginCommonMetadata": {
+      "description": "Smarter API Plugin Manifest - common Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "pluginClass": {
+          "description": "The class of the plugin. one of: ['api', 'imagesearch', 'skill', 'sql', 'static', 'websearch']",
+          "title": "Pluginclass",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version",
+        "pluginClass"
+      ],
+      "title": "SAMPluginCommonMetadata",
+      "type": "object"
+    },
+    "SAMPluginCommonSpecPrompt": {
+      "description": "Smarter API Plugin Manifest - Spec - Prompt class.",
+      "properties": {
+        "maxTokens": {
+          "default": 2048,
+          "description": "Plugin.spec.prompt.maxTokens[int]. Optional. The maxTokens of the Plugin. Defaults to 2048. The maximum number of tokens the LLM should generate in the prompt response. ",
+          "exclusiveMinimum": 0,
+          "title": "Maxtokens",
+          "type": "integer"
+        },
+        "model": {
+          "default": "gpt-6-luna",
+          "description": "Plugin.spec.prompt.model[str] Optional. The model of the Plugin. Defaults to gpt-6-luna. Must be one of: ['chat-latest', 'gpt-4.1', 'gpt-4.1-2025-04-14', 'gpt-4.1-mini', 'gpt-4.1-mini-2025-04-14', 'gpt-4o', 'gpt-4o-2024-08-06', 'gpt-4o-2024-11-20', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'gpt-5-search-api', 'gpt-5-search-api-2025-10-14', 'gpt-5.2', 'gpt-5.2-2025-12-11', 'gpt-5.4', 'gpt-5.4-2026-03-05', 'gpt-5.4-mini', 'gpt-5.4-mini-2026-03-17', 'gpt-5.5', 'gpt-5.5-2026-04-23', 'gpt-5.6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-6-astra', 'gpt-6-luna', 'gpt-6-sol', 'gpt-6.1-sol']",
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "default": "openai",
+          "description": "Plugin.spec.prompt.provider[str]. Optional. The provider of the LLM. Defaults to openai. The provider is the vendor name for the LLM service that will be used to generate the prompt response.",
+          "title": "Provider",
+          "type": "string"
+        },
+        "systemRole": {
+          "description": "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM how you want it to use the Plugin data that is returned.",
+          "title": "Systemrole",
+          "type": "string"
+        },
+        "temperature": {
+          "default": 1.0,
+          "description": "Plugin.spec.prompt.temperature[float] Optional. The temperature of the Plugin. Defaults to 1.0. Should be between 0 and 1.0. The higher the temperature, the more creative the response. The lower the temperature, the more predictable the response.",
+          "maximum": 1.0,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        }
+      },
+      "required": [
+        "systemRole"
+      ],
+      "title": "SAMPluginCommonSpecPrompt",
+      "type": "object"
+    },
+    "SAMPluginCommonSpecSelector": {
+      "description": "Smarter API Plugin Manifest - Spec - Selector class.",
+      "properties": {
+        "directive": {
+          "description": "Plugin.spec.selector.directive[str]: Required. the kind of selector directive to use for the Plugin. Must be one of: ['search_terms', 'always', 'llm']",
+          "title": "Directive",
+          "type": "string"
+        },
+        "searchTerms": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Plugin.spec.selector.searchTerms[list]. Optional. The keyword search terms to use when the Plugin directive is 'search_terms'. Keywords are most effective when constrained to 1 or 2 words each and lists are limited to a few dozen items.",
+          "title": "Searchterms"
+        }
+      },
+      "required": [
+        "directive"
+      ],
+      "title": "SAMPluginCommonSpecSelector",
+      "type": "object"
+    },
+    "SAMPluginCommonStatus": {
+      "description": "Smarter API Plugin Manifest - Status class.",
+      "properties": {
+        "accountNumber": {
+          "description": "Plugin.status.account_number: The account owner of this Plugin. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "Plugin.status.account_number: The Smarter user who created this Plugin. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMPluginCommonStatus",
+      "type": "object"
+    },
+    "TestValue": {
+      "description": "TestValue class for SqlPlugin and ApiPlugin test values.",
+      "properties": {
+        "name": {
+          "description": "The name of the parameter being tested.",
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "description": "The test value for the parameter.",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "TestValue",
+      "type": "object"
+    },
+    "UrlParam": {
+      "description": "Model for storing url param k-v pairs.",
+      "properties": {
+        "key": {
+          "description": "The key (ie 'name') of the url param.",
+          "title": "Key",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "The value for the key.",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "title": "UrlParam",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - ApiPlugin Model",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMPluginCommonMetadata",
+      "description": "Plugin.metadata[obj]: Required, the Plugin metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMApiPluginSpec",
+      "description": "ApiPlugin.spec[obj]: Required, the ApiPlugin specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMPluginCommonStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plugin.status[obj]: Optional, Read-only. Stateful status information about the Plugin."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMApiPlugin",
+  "type": "object"
+}
