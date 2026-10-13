@@ -1,0 +1,549 @@
+{
+  "$defs": {
+    "SAMBudgetMetadata": {
+      "description": "Smarter API Budget Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMBudgetMetadata",
+      "type": "object"
+    },
+    "SAMBudgetSpec": {
+      "description": "Smarter API Budget Manifest Budget.spec.",
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SAMBudgetSpecConfig",
+          "description": "Budget.spec.config[object]. The limits of the Budget."
+        },
+        "resources": {
+          "description": "Budget.spec.resources[list]. The resources that the Budget is enforced on. Resources that are removed from the list are detached.",
+          "items": {
+            "$ref": "#/$defs/SAMBudgetSpecResource"
+          },
+          "maxItems": 1000,
+          "title": "Resources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMBudgetSpec",
+      "type": "object"
+    },
+    "SAMBudgetSpecConfig": {
+      "description": "Smarter API Budget Manifest Budget.spec.config: the budget's limits.",
+      "properties": {
+        "absoluteLimit": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "description": "Budget.spec.config.absoluteLimit: the most that may be spent in total, from when the budget is attached. 0 means no limit.",
+          "title": "Absolutelimit"
+        },
+        "action": {
+          "default": "block",
+          "description": "Budget.spec.config.action: block further charges when a limit is reached, or only warn.",
+          "enum": [
+            "block",
+            "warn"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "duration": {
+          "default": 0,
+          "description": "Budget.spec.config.duration: the billing periods, from when the budget is attached, after which it no longer applies. 0 means never.",
+          "minimum": 0,
+          "title": "Duration",
+          "type": "integer"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.spec.config.message: what people are told when the budget blocks their request. Defaults to a description of the limit that was reached.",
+          "title": "Message"
+        },
+        "period": {
+          "default": "month",
+          "description": "Budget.spec.config.period: the billing period of periodicLimit and duration.",
+          "enum": [
+            "hour",
+            "day",
+            "week",
+            "month"
+          ],
+          "title": "Period",
+          "type": "string"
+        },
+        "periodicLimit": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "description": "Budget.spec.config.periodicLimit: the most that may be spent in a billing period. 0 means no limit.",
+          "title": "Periodiclimit"
+        },
+        "unit": {
+          "default": "cost",
+          "description": "Budget.spec.config.unit: what the limits measure: cost in USD, or total tokens.",
+          "enum": [
+            "cost",
+            "tokens"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "warningThreshold": {
+          "default": 80,
+          "description": "Budget.spec.config.warningThreshold: the percentage of a limit at which a warning is sent. 0 means never.",
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Warningthreshold",
+          "type": "integer"
+        }
+      },
+      "title": "SAMBudgetSpecConfig",
+      "type": "object"
+    },
+    "SAMBudgetSpecResource": {
+      "description": "Smarter API Budget Manifest Budget.spec.resources[]: a resource that the budget is enforced on.\n\nEither kind and name, with an optional accountNumber, or a recordLocator.",
+      "properties": {
+        "accountNumber": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.spec.resources.accountNumber: the account that the resource belongs to. Defaults to your own.",
+          "title": "Accountnumber"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "Account",
+                "User",
+                "ApiConnection",
+                "SqlConnection",
+                "LLMClient",
+                "LLMHost",
+                "LLMHostCompute",
+                "MCPClient",
+                "Orchestrator",
+                "Provider",
+                "Proxy",
+                "Vectorsearch",
+                "ApiPlugin",
+                "SkillPlugin",
+                "SqlPlugin",
+                "StaticPlugin",
+                "WebsearchPlugin",
+                "ImageSearchPlugin"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.spec.resources.kind: the resource's manifest kind, e.g. LLMClient.",
+          "title": "Kind"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.spec.resources.name: the resource's name. For an Account, its account number; for a User, the username.",
+          "title": "Name"
+        },
+        "recordLocator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.spec.resources.recordLocator: any resource's record locator, e.g. llmclient-rc2x, in place of kind and name.",
+          "title": "Recordlocator"
+        }
+      },
+      "title": "SAMBudgetSpecResource",
+      "type": "object"
+    },
+    "SAMBudgetStatus": {
+      "description": "Smarter API Budget Manifest - Status class.\n\nRead only.",
+      "properties": {
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "resources": {
+          "description": "Budget.status.resources: the budget versus the actual spending of each resource. Read only.",
+          "items": {
+            "$ref": "#/$defs/SAMBudgetStatusResource"
+          },
+          "title": "Resources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified"
+      ],
+      "title": "SAMBudgetStatus",
+      "type": "object"
+    },
+    "SAMBudgetStatusResource": {
+      "description": "The budget versus the actual spending of one of the budget's resources.\n\nRead only.",
+      "properties": {
+        "absoluteActual": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "description": "Budget.status.resources.absoluteActual: spending since startDate.",
+          "title": "Absoluteactual"
+        },
+        "absolutePercent": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.status.resources.absolutePercent: absoluteActual, as a percentage of the limit.",
+          "title": "Absolutepercent"
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.status.resources.expiresAt: when the budget's duration ends.",
+          "title": "Expiresat"
+        },
+        "isActive": {
+          "description": "Budget.status.resources.isActive: whether the budget is enforced on it.",
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "isLocked": {
+          "description": "Budget.status.resources.isLocked: whether the budget refuses further charges.",
+          "title": "Islocked",
+          "type": "boolean"
+        },
+        "lockReason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.status.resources.lockReason: which limit was reached.",
+          "title": "Lockreason"
+        },
+        "periodicActual": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "description": "Budget.status.resources.periodicActual: spending this billing period.",
+          "title": "Periodicactual"
+        },
+        "periodicPercent": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Budget.status.resources.periodicPercent: periodicActual, as a percentage of the limit.",
+          "title": "Periodicpercent"
+        },
+        "recordLocator": {
+          "description": "Budget.status.resources.recordLocator: the resource's record locator.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "startDate": {
+          "description": "Budget.status.resources.startDate: when the budget was attached.",
+          "format": "date-time",
+          "title": "Startdate",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "isActive",
+        "startDate",
+        "periodicActual",
+        "absoluteActual",
+        "isLocked"
+      ],
+      "title": "SAMBudgetStatusResource",
+      "type": "object"
+    },
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - Budget.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMBudgetMetadata",
+      "description": "Budget.metadata[obj]: Required, the Budget metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMBudgetSpec",
+      "description": "Budget.spec[obj]: Required, the Budget specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMBudgetStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Budget.status[obj]: Optional, Read-only. Stateful status information about the Budget."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMBudget",
+  "type": "object"
+}

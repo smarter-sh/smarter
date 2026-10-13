@@ -28,7 +28,7 @@ SMARTER_CHAT_BRANCH ?= main
 SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 
 
-.PHONY: chat-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chat-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -403,6 +403,17 @@ chat-contract: react-smarter-chat
 	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
 	cd $(SMARTER_CHAT_DIR) && npm run contract:types
 
+# Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
+# container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
+# smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
+# journal contract or the cli api, and commit the files.
+API_CONTRACT_DIR := smarter/apps/api/v1/contract
+api-contract:
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_api_contract"
+	docker cp smarter-app:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/openapi.json smarter/$(API_CONTRACT_DIR)/openapi.json
+	rm -f smarter/$(API_CONTRACT_DIR)/sam/*.schema.json
+	docker cp smarter-app:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/sam/. smarter/$(API_CONTRACT_DIR)/sam/
+
 # -------------------------------------------------------------------------
 # Sphinx Documentation
 #
@@ -483,6 +494,7 @@ help:
 	@echo 'react-test             - Run the unit tests of all React apps, with a coverage report'
 	@echo 'react-lint             - Check the formatting, lint and types of all React apps'
 	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
+	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
 	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'

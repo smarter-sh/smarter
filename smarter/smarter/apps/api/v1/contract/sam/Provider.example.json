@@ -1,0 +1,38 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "Provider",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/provider": "example_provider"
+      },
+      {
+        "smarter.sh/created_by": "smarter_provider_broker"
+      }
+    ],
+    "description": "an example provider manifest for the Smarter API Provider",
+    "name": "acme_llm_company",
+    "tags": [
+      "example",
+      "provider",
+      "smarter-api"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "provider": {
+      "api_key": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "base_url": "https://api.acme-llm.com",
+      "connectivity_test_path": "/https://api.acme-llm.com/api/v1/ping/",
+      "contact_email": "contact@acme-llm.com",
+      "description": "Leading provider of innovative LLM solutions.",
+      "docs_url": "https://docs.acme-llm.com",
+      "logo": "https://www.acme-llm.com/assets/logo.png",
+      "name": "acme_llm_company",
+      "privacy_policy_url": "https://www.acme-llm.com/privacy",
+      "support_email": "support@acme-llm.com",
+      "terms_of_service_url": "https://www.acme-llm.com/terms",
+      "website_url": "https://www.acme-llm.com"
+    }
+  }
+}

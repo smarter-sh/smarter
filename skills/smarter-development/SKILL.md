@@ -169,25 +169,26 @@ reference implementations.
 
 ## Which skill to load
 
-| Task                                                            | Skill                                  |
-| --------------------------------------------------------------- | -------------------------------------- |
-| Adding or changing a SAM resource (manifest, broker, kind)      | `smarter-sam-resource`                 |
-| A web console list page, or any Django-hosted React app         | `smarter-django-react`                 |
-| React stories, tests, ESLint, Prettier                          | `smarter-react-testing`                |
-| Python unit tests and coverage                                  | `smarter-python-testing`               |
-| Syncing code into the Docker containers, running anything there | `smarter-docker-environment`           |
-| Code that calls Kubernetes, AWS, Route53, ACM, or Celery        | `smarter-infrastructure-safety`        |
-| Model changes and migrations                                    | `smarter-migrations`                   |
-| `manage.py` commands, built-in data, `initialize_platform`      | `smarter-management-commands`          |
-| Probing the REST API by hand                                    | `smarter-api-testing`                  |
-| Python docstrings                                               | `smarter-docstrings`                   |
-| Type annotations, `Any`, the `smarter.lib.typing` aliases       | `smarter-python-typing`                |
-| Sphinx pages                                                    | `smarter-sphinx-docs`                  |
-| Lint, format, pre-commit                                        | `smarter-code-quality`                 |
-| Writing a commit message                                        | `smarter-git-commits`                  |
-| A course design for the Free Course Catalog (instructors docs)  | `smarter-course-design`                |
-| A release announcement post for blog.smarter.sh                 | `blog.smarter.sh-release-announcement` |
-| Any other article for blog.smarter.sh                           | `blog.smarter.sh-blog-post`            |
+| Task                                                             | Skill                                  |
+| ---------------------------------------------------------------- | -------------------------------------- |
+| Adding or changing a SAM resource (manifest, broker, kind)       | `smarter-sam-resource`                 |
+| A web console list page, or any Django-hosted React app          | `smarter-django-react`                 |
+| React stories, tests, ESLint, Prettier                           | `smarter-react-testing`                |
+| Python unit tests and coverage                                   | `smarter-python-testing`               |
+| Syncing code into the Docker containers, running anything there  | `smarter-docker-environment`           |
+| Code that calls Kubernetes, AWS, Route53, ACM, or Celery         | `smarter-infrastructure-safety`        |
+| Model changes and migrations                                     | `smarter-migrations`                   |
+| `manage.py` commands, built-in data, `initialize_platform`       | `smarter-management-commands`          |
+| Probing the REST API by hand                                     | `smarter-api-testing`                  |
+| The SAM JSON Schemas, example manifests and cli OpenAPI document | `smarter-api-contract`                 |
+| Python docstrings                                                | `smarter-docstrings`                   |
+| Type annotations, `Any`, the `smarter.lib.typing` aliases        | `smarter-python-typing`                |
+| Sphinx pages                                                     | `smarter-sphinx-docs`                  |
+| Lint, format, pre-commit                                         | `smarter-code-quality`                 |
+| Writing a commit message                                         | `smarter-git-commits`                  |
+| A course design for the Free Course Catalog (instructors docs)   | `smarter-course-design`                |
+| A release announcement post for blog.smarter.sh                  | `blog.smarter.sh-release-announcement` |
+| Any other article for blog.smarter.sh                            | `blog.smarter.sh-blog-post`            |
 
 ## Definition of done
 

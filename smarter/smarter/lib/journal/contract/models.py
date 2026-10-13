@@ -22,8 +22,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
+from pydantic.alias_generators import to_camel
 
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django.pagination import ListViewPagination
 
 from .const import JOURNAL_KEY_PATTERN
 
@@ -244,6 +246,103 @@ class SAMJournalApiOrmModel(BaseModel):
         )
 
 
+# ------------------------------------------------------------------------------
+# the journal's REST api
+# ------------------------------------------------------------------------------
+
+
+class SAMJournalApiEntrySummary(BaseModel):
+    """
+    A journal entry, as the journal's list returns it: without its request and response documents.
+
+    It is the output of :class:`smarter.lib.journal.serializers.SAMJournalMiniSerializer`, in
+    camelCase. Unlike :class:`SAMJournalApiOrmModel`, its ``user`` is the username.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        alias_generator=to_camel,
+        validate_by_name=True,
+        validate_by_alias=True,
+        serialize_by_alias=True,
+    )
+
+    key: str = Field(..., pattern=JOURNAL_KEY_PATTERN, description="SAMJournal.key, the entry's primary key.")
+    created_at: Optional[datetime] = Field(None, description="SAMJournal.created_at.")
+    user: Optional[str] = Field(None, description="The username of the caller, or null for an anonymous request.")
+    thing: SAMJournalApiThing = Field(..., description="SAMJournal.thing.")
+    command: SAMJournalApiCommand = Field(..., description="SAMJournal.command.")
+    status_code: int = Field(..., ge=0, le=65535, description="SAMJournal.status_code: the http status.")
+
+    @classmethod
+    def summary_fields(cls, journal: "SAMJournal") -> dict:
+        """
+        The fields of a journal entry that both of the REST api's models have.
+
+        :param journal: The journal entry, whose ``user`` should be fetched with it.
+        :type journal: SAMJournal
+        :returns: The fields, by name.
+        :rtype: dict
+        """
+        return {
+            "key": journal.key,
+            "created_at": journal.created_at,
+            "user": journal.user.username if journal.user else None,  # type: ignore[union-attr]
+            "thing": journal.thing,
+            "command": journal.command,
+            "status_code": journal.status_code,
+        }
+
+    @classmethod
+    def from_model(cls, journal: "SAMJournal") -> "SAMJournalApiEntrySummary":
+        """
+        The REST api's summary of a journal entry.
+
+        :param journal: The journal entry, whose ``user`` should be fetched with it.
+        :type journal: SAMJournal
+        :returns: Its model.
+        :rtype: SAMJournalApiEntrySummary
+        """
+        return cls(**cls.summary_fields(journal))
+
+
+class SAMJournalApiEntry(SAMJournalApiEntrySummary):
+    """
+    A journal entry, as the journal's REST api returns it by its key: with its request and response documents.
+
+    It is the output of :class:`smarter.lib.journal.serializers.SAMJournalSerializer`, in camelCase.
+    The request document holds the caller's headers and cookies, including its api key.
+    """
+
+    request: SAMJournalApiJson = Field(..., description="SAMJournal.request: the serialized http request.")
+    response: SAMJournalApiJson = Field(..., description="SAMJournal.response: the response's JSON body.")
+
+    @classmethod
+    def from_model(cls, journal: "SAMJournal") -> "SAMJournalApiEntry":
+        """
+        The REST api's model of a journal entry.
+
+        :param journal: The journal entry, whose ``user`` should be fetched with it.
+        :type journal: SAMJournal
+        :returns: Its model.
+        :rtype: SAMJournalApiEntry
+        """
+        return cls(**cls.summary_fields(journal), request=journal.request, response=journal.response)
+
+
+class SAMJournalApiPage(BaseModel):
+    """One page of the journal's entries, newest first unless sorted, and a description of the page."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    objects: list[SAMJournalApiEntrySummary] = Field(..., description="The page's entries.")
+    pagination: ListViewPagination = Field(..., description="The page, and the list's search and order.")
+
+
+JOURNAL_API_MODELS: tuple[type[BaseModel], ...] = (SAMJournalApiEntry, SAMJournalApiPage)
+"""The models whose JSON Schemas the Smarter api's OpenAPI document includes."""
+
+
 CONTRACT_MODELS: tuple[type[BaseModel], ...] = (
     SAMJournalApiEnvelope,
     SAMJournalApiErrorResponse,
@@ -257,7 +356,10 @@ Their dependencies are exported with them.
 
 __all__ = [
     "CONTRACT_MODELS",
+    "JOURNAL_API_MODELS",
     "SAMJournalApiCommand",
+    "SAMJournalApiEntry",
+    "SAMJournalApiEntrySummary",
     "SAMJournalApiEnvelope",
     "SAMJournalApiErrorBody",
     "SAMJournalApiErrorResponse",
@@ -265,6 +367,7 @@ __all__ = [
     "SAMJournalApiMetadata",
     "SAMJournalApiModel",
     "SAMJournalApiOrmModel",
+    "SAMJournalApiPage",
     "SAMJournalApiResponse",
     "SAMJournalApiThing",
 ]

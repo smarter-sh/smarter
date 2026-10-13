@@ -1,0 +1,62 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "WebsearchPlugin",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/created_by": "smarter_websearch_plugin_broker"
+      },
+      {
+        "smarter.sh/plugin": "research_assistant"
+      }
+    ],
+    "description": "Researches any topic on the open web, and cites its sources.",
+    "name": "research_assistant",
+    "pluginClass": "websearch",
+    "tags": [
+      "websearch",
+      "research"
+    ],
+    "version": "0.1.0"
+  },
+  "spec": {
+    "prompt": {
+      "maxTokens": 2048,
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "systemRole": "You are a careful research assistant. Search the web, read the most relevant pages, and cite your sources.",
+      "temperature": 1.0
+    },
+    "selector": {
+      "directive": "search_terms",
+      "searchTerms": [
+        "search the web",
+        "look up",
+        "latest",
+        "news",
+        "research"
+      ]
+    },
+    "websearchData": {
+      "allowedDomains": null,
+      "blockedDomains": [
+        "pinterest.com"
+      ],
+      "cacheTtl": 3600,
+      "fetch": {
+        "maxCharacters": 20000,
+        "respectRobotsTxt": true
+      },
+      "search": {
+        "apiKey": "brave_search_api_key",
+        "country": null,
+        "freshness": null,
+        "language": null,
+        "maxResults": 5,
+        "provider": "brave",
+        "safeSearch": "moderate"
+      },
+      "timeout": 15
+    }
+  }
+}

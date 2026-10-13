@@ -1,11 +1,10 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'apply' view."""
+"""Smarter API command-line interface 'whoami' view."""
 
 from http import HTTPStatus
 
-from django.http import JsonResponse
-
 from smarter.apps.account.serializers import AccountSerializer, UserSerializer
+from smarter.apps.api.v1.contract.models import CliApiWhoami
 from smarter.common.conf import smarter_settings
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -13,11 +12,16 @@ from smarter.lib.journal.enum import (
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from ..base import CliBaseApiView
+from ..base import APIV1CLIViewNotFoundError, CliBaseApiView
 
 
 class ApiV1CliWhoamiApiView(CliBaseApiView):
-    """Smarter API command-line interface 'apply' view."""
+    """
+    Smarter API command-line interface 'whoami' view.
+
+    An error, e.g. an api key's user without a user profile, is raised, and returned by
+    :meth:`CliBaseApiView.dispatch` as a journaled error response.
+    """
 
     @property
     def formatted_class_name(self) -> str:
@@ -27,25 +31,29 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
     def whoami(self):
-        try:
-            if not self.user_profile:
-                return JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})
-            data = {
-                SmarterJournalApiResponseKeys.DATA: {
-                    "user": UserSerializer(self.user_profile.user).data,
-                    "account": AccountSerializer(self.user_profile.account).data,
-                    "environment": smarter_settings.environment,
-                }
+        """
+        The api key's user and account, and the platform's environment.
+
+        :returns: The journaled response.
+        :rtype: SmarterJournaledJsonResponse
+        :raises APIV1CLIViewNotFoundError: If the user has no user profile, which is a 404.
+        """
+        if not self.user_profile:
+            raise APIV1CLIViewNotFoundError("User profile not found.")
+        whoami = CliApiWhoami.model_validate(
+            {
+                "user": UserSerializer(self.user_profile.user).data,
+                "account": AccountSerializer(self.user_profile.account).data,
+                "environment": smarter_settings.environment,
             }
-            return SmarterJournaledJsonResponse(
-                request=self.request,
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.WHOAMI),
-                data=data,
-                status=HTTPStatus.OK.value,
-            )
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        )
+        data = {SmarterJournalApiResponseKeys.DATA: whoami.model_dump(mode="json")}
+        return SmarterJournaledJsonResponse(
+            request=self.request,
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.WHOAMI),
+            data=data,
+            status=HTTPStatus.OK.value,
+        )
 
     def post(self, request):
         """ApiV1CliWhoamiApiView post view."""

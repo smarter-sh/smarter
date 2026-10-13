@@ -72,6 +72,7 @@ from .views.manifest import (
     DocsExampleManifestVectorstoreView,
     DocsExampleManifestWebsearchView,
 )
+from .views.openapi import DocsOpenApiJsonView, DocsOpenApiView
 from .views.views import JsonSchemasView, ManifestsView
 
 
@@ -82,6 +83,8 @@ class DocsReverseNames:
     example_manifests = "example_manifests"
     swagger_docs = "schema-swagger-ui"
     redoc = "schema-redoc-ui"
+    openapi = "openapi"
+    openapi_json = "openapi-json"
     json_schemas = "json_schemas"
 
 
@@ -105,6 +108,9 @@ urlpatterns = [
     re_path(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name=DocsReverseNames.swagger_docs),
     re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name=DocsReverseNames.redoc),
+    # the typed OpenAPI 3.1 contract, smarter.apps.api.v1.contract.openapi.json
+    path("openapi/", DocsOpenApiView.as_view(), name=DocsReverseNames.openapi),
+    path("openapi.json", DocsOpenApiJsonView.as_view(), name=DocsReverseNames.openapi_json),
     # -------------------------------------------------------------------------
     # JSON Schemas
     # -------------------------------------------------------------------------
