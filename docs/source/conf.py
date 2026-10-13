@@ -7,6 +7,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 import builtins
+import importlib
 import logging
 import os
 import subprocess
@@ -63,7 +64,11 @@ for _noisy_logger in ("urllib3", "requests_cache", "github"):
 # and return "Unknown" instead of raising an exception when it encounters
 # an issue.
 ###############################################################################
+from pygments.lexer import inherit
+from pygments.lexers.jsx import TsxLexer
+from pygments.token import Keyword, Operator, Punctuation, Text, Whitespace
 from sphinx.addnodes import pending_xref
+from sphinx.domains.python import PythonDomain
 from sphinxcontrib_django.docstrings import classes, field_utils
 
 # Import the guardrail services' Pydantic contracts before sphinx_autodoc_typehints resolves
@@ -210,6 +215,66 @@ def resolve_builtins_exactly(app, doctree):  # pylint: disable=unused-argument
 
 
 ###############################################################################
+# The smarter-python SDK's reference pages (smarter-framework/smarter-python)
+# declare its objects with py: directives, in its own smarter.models,
+# smarter.core, smarter.client and smarter.resources packages. Many share a
+# name with a platform object, e.g. Account, LLMClient or SmarterDictType, so
+# the fuzzy search behind docstring type fields finds both, warns "more than
+# one target found", and links to either, or links a platform docstring to the
+# SDK when the platform object has no page. Platform packages also re-export
+# their models, e.g. smarter.apps.llmclient.models.LLMClient, which matches
+# again. Of a fuzzy search's matches, keep those on the referring side of the
+# SDK boundary, and of a re-exported object, the module that defines it. Fully
+# qualified references are left alone.
+###############################################################################
+SDK_PACKAGES = ("smarter.client", "smarter.core.", "smarter.models.", "smarter.resources.")
+
+
+def is_sdk_name(name: str) -> bool:
+    """Whether a fully qualified name belongs to the smarter-python SDK's reference pages."""
+    return name.startswith(SDK_PACKAGES)
+
+
+def defining_name(names: list[str]) -> str | None:
+    """Of several names of one platform object, the one in the module that defines it."""
+    objects = []
+    for name in names:
+        module_name, _, attr = name.rpartition(".")
+        try:
+            objects.append(getattr(importlib.import_module(module_name), attr))
+        # pylint: disable=broad-except
+        except Exception:
+            return None
+    if any(obj is not objects[0] for obj in objects):
+        return None
+    module_name = getattr(objects[0], "__module__", None)
+    return next((name for name in names if name.rpartition(".")[0] == module_name), None)
+
+
+def disambiguate_sdk_and_reexports(find_obj):
+    """Wrap PythonDomain.find_obj to narrow ambiguous matches; see the comment above."""
+
+    def wrapper(
+        self, env, modname, classname, name, type, searchmode=0
+    ):  # pylint: disable=too-many-arguments,too-many-positional-arguments,redefined-builtin
+        matches = find_obj(self, env, modname, classname, name, type, searchmode)
+        if searchmode != 1 or not matches:
+            return matches
+        from_sdk = is_sdk_name(f"{modname}.") if modname else False
+        matches = [match for match in matches if is_sdk_name(match[0]) == from_sdk]
+        if len(matches) > 1 and not from_sdk:
+            defining = defining_name([match[0] for match in matches])
+            if defining:
+                matches = [match for match in matches if match[0] == defining]
+        return matches
+
+    return wrapper
+
+
+PythonDomain.find_obj = disambiguate_sdk_and_reexports(PythonDomain.find_obj)
+
+
+###############################################################################
 # sphinxcontrib_django appends the pretty-printed value of every dict, list,
 # tuple or set module constant to its docstring as a JavaScript code block,
 # ignoring ":meta hide-value:". Remove that block when the constant asks for
@@ -222,8 +287,37 @@ def honor_hide_value(app, what, name, obj, options, lines):  # pylint: disable=u
         del lines[lines.index(".. code-block:: JavaScript") :]
 
 
+###############################################################################
+# Pygments' TSX lexer reads a generic type argument, e.g.
+# useState<Editor | null> or useRef<string[]>, as a JSX tag, and fails on the
+# "|" or "[". It also fails on non-ASCII JSX text, e.g. "Loading…". Sphinx then
+# warns that the literalincluded React components fail to highlight. A "<"
+# directly after a name opens a type argument: Prettier puts a space before a
+# JSX tag and around a less-than operator.
+###############################################################################
+class SmarterTsxLexer(TsxLexer):
+    """Pygments' TSX lexer, plus generic type arguments and non-ASCII JSX text."""
+
+    tokens = {
+        "root": [
+            (r"(?<=[\w$])<", Punctuation, "type-arguments"),
+            inherit,
+            (r"[^\x00-\x7f]+", Text),
+        ],
+        "type-arguments": [
+            (r"<", Punctuation, "#push"),
+            (r">", Punctuation, "#pop"),
+            (r"=>", Operator),
+            (r"\s+", Whitespace),
+            (r"[\w$.]+", Keyword.Type),
+            (r"[^\w\s$<>=]+|=", Punctuation),
+        ],
+    }
+
+
 def setup(app):
     """Register this configuration's Sphinx event handlers."""
     app.connect("doctree-read", resolve_builtins_exactly)
     # sphinxcontrib_django's handler runs at the default priority, 500.
     app.connect("autodoc-process-docstring", honor_hide_value, priority=600)
+    app.add_lexer("tsx", SmarterTsxLexer)
