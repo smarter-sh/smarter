@@ -8,6 +8,11 @@ technical prerequisites. This page explains what the three formats have in commo
 plans themselves can stay short. An instructor should be able to take a plan, adjust the dates,
 and teach it.
 
+The :doc:`django-master-class` is the exception. It has 18 hours of instruction, in eighteen
+one-hour modules of lecture and lab, taught as a three-day classroom course or a six-week online
+course. Its plans describe their own schedules, live sessions and grade weights, and use the
+rubric levels and course policies on this page.
+
 The Three Formats
 -----------------
 
