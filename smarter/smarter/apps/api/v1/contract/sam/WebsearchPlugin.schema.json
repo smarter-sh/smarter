@@ -1,0 +1,515 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMPluginCommonMetadata": {
+      "description": "Smarter API Plugin Manifest - common Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "pluginClass": {
+          "description": "The class of the plugin. one of: ['api', 'imagesearch', 'skill', 'sql', 'static', 'websearch']",
+          "title": "Pluginclass",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version",
+        "pluginClass"
+      ],
+      "title": "SAMPluginCommonMetadata",
+      "type": "object"
+    },
+    "SAMPluginCommonSpecPrompt": {
+      "description": "Smarter API Plugin Manifest - Spec - Prompt class.",
+      "properties": {
+        "maxTokens": {
+          "default": 2048,
+          "description": "Plugin.spec.prompt.maxTokens[int]. Optional. The maxTokens of the Plugin. Defaults to 2048. The maximum number of tokens the LLM should generate in the prompt response. ",
+          "exclusiveMinimum": 0,
+          "title": "Maxtokens",
+          "type": "integer"
+        },
+        "model": {
+          "default": "gpt-6-luna",
+          "description": "Plugin.spec.prompt.model[str] Optional. The model of the Plugin. Defaults to gpt-6-luna. Must be one of: ['chat-latest', 'gpt-4.1', 'gpt-4.1-2025-04-14', 'gpt-4.1-mini', 'gpt-4.1-mini-2025-04-14', 'gpt-4o', 'gpt-4o-2024-08-06', 'gpt-4o-2024-11-20', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'gpt-5-search-api', 'gpt-5-search-api-2025-10-14', 'gpt-5.2', 'gpt-5.2-2025-12-11', 'gpt-5.4', 'gpt-5.4-2026-03-05', 'gpt-5.4-mini', 'gpt-5.4-mini-2026-03-17', 'gpt-5.5', 'gpt-5.5-2026-04-23', 'gpt-5.6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-6-astra', 'gpt-6-luna', 'gpt-6-sol', 'gpt-6.1-sol']",
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "default": "openai",
+          "description": "Plugin.spec.prompt.provider[str]. Optional. The provider of the LLM. Defaults to openai. The provider is the vendor name for the LLM service that will be used to generate the prompt response.",
+          "title": "Provider",
+          "type": "string"
+        },
+        "systemRole": {
+          "description": "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM how you want it to use the Plugin data that is returned.",
+          "title": "Systemrole",
+          "type": "string"
+        },
+        "temperature": {
+          "default": 1.0,
+          "description": "Plugin.spec.prompt.temperature[float] Optional. The temperature of the Plugin. Defaults to 1.0. Should be between 0 and 1.0. The higher the temperature, the more creative the response. The lower the temperature, the more predictable the response.",
+          "maximum": 1.0,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        }
+      },
+      "required": [
+        "systemRole"
+      ],
+      "title": "SAMPluginCommonSpecPrompt",
+      "type": "object"
+    },
+    "SAMPluginCommonSpecSelector": {
+      "description": "Smarter API Plugin Manifest - Spec - Selector class.",
+      "properties": {
+        "directive": {
+          "description": "Plugin.spec.selector.directive[str]: Required. the kind of selector directive to use for the Plugin. Must be one of: ['search_terms', 'always', 'llm']",
+          "title": "Directive",
+          "type": "string"
+        },
+        "searchTerms": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Plugin.spec.selector.searchTerms[list]. Optional. The keyword search terms to use when the Plugin directive is 'search_terms'. Keywords are most effective when constrained to 1 or 2 words each and lists are limited to a few dozen items.",
+          "title": "Searchterms"
+        }
+      },
+      "required": [
+        "directive"
+      ],
+      "title": "SAMPluginCommonSpecSelector",
+      "type": "object"
+    },
+    "SAMPluginCommonStatus": {
+      "description": "Smarter API Plugin Manifest - Status class.",
+      "properties": {
+        "accountNumber": {
+          "description": "Plugin.status.account_number: The account owner of this Plugin. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "Plugin.status.account_number: The Smarter user who created this Plugin. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMPluginCommonStatus",
+      "type": "object"
+    },
+    "SAMWebsearchPluginSpec": {
+      "description": "Smarter API Manifest - WebsearchPlugin.spec.",
+      "properties": {
+        "prompt": {
+          "$ref": "#/$defs/SAMPluginCommonSpecPrompt",
+          "description": "Plugin.spec.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
+        },
+        "selector": {
+          "$ref": "#/$defs/SAMPluginCommonSpecSelector",
+          "description": "Plugin.spec.selector[obj]: the selector logic to use for the Plugin"
+        },
+        "websearchData": {
+          "$ref": "#/$defs/WebsearchData",
+          "description": "WebsearchPlugin.spec.websearchData[obj]: the web search and web fetch configuration of the WebsearchPlugin."
+        }
+      },
+      "required": [
+        "selector",
+        "prompt",
+        "websearchData"
+      ],
+      "title": "SAMWebsearchPluginSpec",
+      "type": "object"
+    },
+    "WebsearchData": {
+      "description": "Smarter API - WebsearchPlugin.spec.websearchData.",
+      "properties": {
+        "allowedDomains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.allowedDomains[list]: if not empty, only these domains, and their subdomains, may be searched and read.",
+          "title": "Alloweddomains"
+        },
+        "blockedDomains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.blockedDomains[list]: these domains, and their subdomains, are never searched nor read.",
+          "title": "Blockeddomains"
+        },
+        "cacheTtl": {
+          "default": 3600,
+          "description": "WebsearchPlugin.spec.cacheTtl[int]: seconds to cache search results and web pages. 0 disables caching.",
+          "maximum": 86400,
+          "minimum": 0,
+          "title": "Cachettl",
+          "type": "integer"
+        },
+        "fetch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WebsearchFetch"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.fetch[obj]: enables reading web pages by URL."
+        },
+        "search": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WebsearchSearch"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.search[obj]: enables web search. Requires a web search API key."
+        },
+        "timeout": {
+          "default": 15,
+          "description": "WebsearchPlugin.spec.timeout[int]: seconds to wait for each web request, 1 to 60.",
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Timeout",
+          "type": "integer"
+        }
+      },
+      "title": "WebsearchData",
+      "type": "object"
+    },
+    "WebsearchFetch": {
+      "description": "Smarter API - WebsearchPlugin.spec.websearchData.fetch: reading web pages by URL.",
+      "properties": {
+        "maxCharacters": {
+          "default": 20000,
+          "description": "WebsearchPlugin.spec.fetch.maxCharacters[int]: the maximum number of characters of a web page to return, 1000 to 100000. Longer pages are truncated.",
+          "maximum": 100000,
+          "minimum": 1000,
+          "title": "Maxcharacters",
+          "type": "integer"
+        },
+        "respectRobotsTxt": {
+          "default": true,
+          "description": "WebsearchPlugin.spec.fetch.respectRobotsTxt[bool]: whether to obey websites' robots.txt files.",
+          "title": "Respectrobotstxt",
+          "type": "boolean"
+        }
+      },
+      "title": "WebsearchFetch",
+      "type": "object"
+    },
+    "WebsearchSearch": {
+      "description": "Smarter API - WebsearchPlugin.spec.websearchData.search: web search, via a web search API.",
+      "properties": {
+        "apiKey": {
+          "description": "WebsearchPlugin.spec.search.apiKey[str]: the name of the Smarter Secret that contains the web search API's api key. The api key itself is never included in the manifest.",
+          "title": "Apikey",
+          "type": "string"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.search.country[str]: an ISO 3166-1 alpha-2 country code, e.g. us, to localize results.",
+          "title": "Country"
+        },
+        "freshness": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.search.freshness[str]: by default, restrict results to those published within the last ['day', 'week', 'month', 'year']. The LLM can override this per search.",
+          "title": "Freshness"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebsearchPlugin.spec.search.language[str]: an ISO 639-1 language code, e.g. en, to localize results.",
+          "title": "Language"
+        },
+        "maxResults": {
+          "default": 5,
+          "description": "WebsearchPlugin.spec.search.maxResults[int]: the maximum number of results per search, 1 to 20.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Maxresults",
+          "type": "integer"
+        },
+        "provider": {
+          "description": "WebsearchPlugin.spec.search.provider[str]: the web search API. One of: ['brave', 'tavily']",
+          "title": "Provider",
+          "type": "string"
+        },
+        "safeSearch": {
+          "default": "moderate",
+          "description": "WebsearchPlugin.spec.search.safeSearch[str]: adult content filtering. One of: ['off', 'moderate', 'strict']",
+          "title": "Safesearch",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "apiKey"
+      ],
+      "title": "WebsearchSearch",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - WebsearchPlugin Model.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMPluginCommonMetadata",
+      "description": "Plugin.metadata[obj]: Required, the Plugin metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMWebsearchPluginSpec",
+      "description": "WebsearchPlugin.spec[obj]: Required, the WebsearchPlugin specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMPluginCommonStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plugin.status[obj]: Optional, Read-only. Stateful status information about the Plugin."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMWebsearchPlugin",
+  "type": "object"
+}
