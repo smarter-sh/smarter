@@ -8,8 +8,8 @@ technical prerequisites. This page explains what the three formats have in commo
 plans themselves can stay short. An instructor should be able to take a plan, adjust the dates,
 and teach it.
 
-:doc:`Master classes </smarter-instructors/master-classes>` are longer, and have formats of
-their own. The :doc:`/smarter-instructors/master-classes/django-master-class`, for example, has
+:doc:`Master classes </smarter-instructors/example-courses/master-classes>` are longer, and have formats of
+their own. The :doc:`/smarter-instructors/example-courses/master-classes/django-master-class`, for example, has
 18 hours of instruction, in eighteen one-hour modules of lecture and lab, taught as a three-day
 classroom course or a six-week online course. Their plans describe their own schedules, live
 sessions and grade weights, and use the rubric levels and course policies on this page.
