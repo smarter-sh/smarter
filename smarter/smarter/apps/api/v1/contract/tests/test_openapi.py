@@ -1,6 +1,7 @@
 """Test :mod:`smarter.apps.api.v1.contract.openapi`, and the ``export_api_contract`` command."""
 
 import asyncio
+import copy
 import importlib
 import json
 import os
@@ -36,7 +37,8 @@ from smarter.apps.api.v1.contract.openapi import (
     openapi_json,
 )
 from smarter.apps.api.v1.contract.sam import sam_models
-from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.guardrail.models import Guardrail, GuardrailEvent
+from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
@@ -44,6 +46,7 @@ from smarter.apps.llmclient.models import (
     LLMClientPlugin,
 )
 from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.const import PROJECT_ROOT
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
@@ -254,6 +257,72 @@ class TestOpenApiResponses(ApiV1CliTestBase):
         response = client.get("/api/v1/llm-clients/")
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content)
         self.assertValidResponse("/llm-clients/", "get", response.json(), response.status_code)
+
+    def test_guardrail_reads(self):
+        """The Guardrails' reads, their dry run, their events, and their errors, against the document."""
+        guardrail = Guardrail.objects.create(
+            name=self.name, user_profile=self.user_profile, **copy.deepcopy(GUARDRAIL_DEFAULTS)
+        )
+        self.addCleanup(Guardrail.objects.filter(pk=guardrail.pk).delete)
+        event = GuardrailEvent.objects.create(
+            guardrail=guardrail,
+            guardrail_name=guardrail.name,
+            stage="input",
+            category="custom",
+            strategy="keyword",
+            action="block",
+            mode="enforce",
+            disposition="blocked",
+            severity=3,
+        )
+        self.addCleanup(GuardrailEvent.objects.filter(pk=event.pk).delete)
+        for template, path in {
+            "/guardrails/": "/guardrails/",
+            "/guardrails/{id}/": f"/guardrails/{guardrail.hashed_id}/",
+            "/guardrails/{id}/events/": f"/guardrails/{guardrail.pk}/events/?disposition=blocked",
+        }.items():
+            with self.subTest(path=template):
+                status, body = self.rest_get(path)
+                self.assertEqual(status, HTTPStatus.OK, body)
+                self.assertValidResponse(template, "get", body)
+        self.assertEqual(self.rest_get(f"/guardrails/{guardrail.pk}/events/")[1]["events"][0]["id"], event.pk)
+
+        client = APIClient()
+        headers = {"Authorization": f"Token {self.token_key}"}
+        path = f"/api/v1/guardrails/{guardrail.hashed_id}/evaluate/"
+        response = client.post(path, {"text": "this is forbidden", "stage": "input"}, format="json", headers=headers)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertValidResponse("/guardrails/{id}/evaluate/", "post", response.json())
+        self.assertTrue(response.json()["triggered"])
+        for invalid in ({}, {"text": "x", "stage": "sideways"}):
+            with self.subTest(invalid=invalid):
+                response = client.post(path, invalid, format="json", headers=headers)
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content)
+                self.assertValidResponse("/guardrails/{id}/evaluate/", "post", response.json(), response.status_code)
+
+        status, body = self.rest_get("/guardrails/999999999/")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND, body)
+        self.assertValidResponse("/guardrails/{id}/", "get", body, status)
+
+    def test_secret_reads(self):
+        """The Secrets' reads, without their values, and their errors, against the document."""
+        value = "not-a-real-secret-value"
+        secret = secret_factory(self.user_profile, f"{self.name}_secret", "A test secret.", value)
+        self.addCleanup(secret.delete)
+        for template, path in {"/secrets/": "/secrets/", "/secrets/{id}/": f"/secrets/{secret.pk}/"}.items():
+            with self.subTest(path=template):
+                status, body = self.rest_get(path)
+                self.assertEqual(status, HTTPStatus.OK, body)
+                self.assertValidResponse(template, "get", body)
+                self.assertNotIn(value, json.dumps(body))
+        status, body = self.rest_get("/secrets/999999999/")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND, body)
+        self.assertValidResponse("/secrets/{id}/", "get", body, status)
+        client = APIClient()
+        client.force_authenticate(user=self.non_admin_user)
+        response = client.get("/api/v1/secrets/")
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content)
+        self.assertValidResponse("/secrets/", "get", response.json(), response.status_code)
 
     def post(self, path: str, data=None) -> SmarterDictType:
         """POST to the cli, and return the response's body, which must be a success."""

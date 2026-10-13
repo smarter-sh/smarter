@@ -1680,6 +1680,775 @@
         "title": "Connection",
         "type": "object"
       },
+      "GuardrailApiEvaluateRequest": {
+        "additionalProperties": false,
+        "description": "The request body of a dry run of a Guardrail on a text.",
+        "properties": {
+          "stage": {
+            "default": "input",
+            "description": "Whether the text is the user's message (input) or the LLM's reply (output).",
+            "enum": [
+              "input",
+              "output"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "text": {
+            "description": "The text.",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "GuardrailApiEvaluateRequest",
+        "type": "object"
+      },
+      "GuardrailApiEvaluation": {
+        "additionalProperties": false,
+        "description": "The result of a dry run of a Guardrail on a text.\n\nIt records no events.",
+        "properties": {
+          "disposition": {
+            "$ref": "#/components/schemas/PipelineDisposition",
+            "description": "What would happen to the text."
+          },
+          "durationMs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "How long the Guardrail took, in milliseconds.",
+            "title": "Durationms"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The Guardrail's error, if it failed.",
+            "title": "Error"
+          },
+          "findings": {
+            "description": "What it found, if it triggered.",
+            "items": {
+              "$ref": "#/components/schemas/GuardrailApiFinding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "guardrail": {
+            "description": "The Guardrail's name.",
+            "title": "Guardrail",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The message that would replace a blocked text.",
+            "title": "Message"
+          },
+          "stage": {
+            "enum": [
+              "input",
+              "output"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "text": {
+            "description": "The text after the Guardrail's action, e.g. redacted.",
+            "title": "Text",
+            "type": "string"
+          },
+          "triggered": {
+            "description": "Whether the Guardrail triggered.",
+            "title": "Triggered",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "guardrail",
+          "stage",
+          "triggered",
+          "disposition",
+          "text",
+          "findings"
+        ],
+        "title": "GuardrailApiEvaluation",
+        "type": "object"
+      },
+      "GuardrailApiEvent": {
+        "additionalProperties": false,
+        "description": "A Guardrail's event: a :class:`smarter.apps.guardrail.models.GuardrailEvent`, a record of what it did to a prompt.\n\nIts keys are snake_case: the serializer that the api used was not camelCase.",
+        "properties": {
+          "action": {
+            "enum": [
+              "log",
+              "flag",
+              "redact",
+              "transform",
+              "block",
+              "escalate"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "pii",
+              "secrets",
+              "prompt_injection",
+              "jailbreak",
+              "toxicity",
+              "self_harm",
+              "hallucination",
+              "off_topic",
+              "compliance",
+              "formatting",
+              "custom"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The strategy's confidence.",
+            "title": "Confidence"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the Guardrail triggered.",
+            "title": "Created At"
+          },
+          "disposition": {
+            "description": "What the Guardrail did.",
+            "enum": [
+              "logged",
+              "flagged",
+              "redacted",
+              "transformed",
+              "blocked",
+              "escalated",
+              "monitored",
+              "error"
+            ],
+            "title": "Disposition",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The Guardrail's error, if it failed.",
+            "title": "Error"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "An excerpt of what matched, masked.",
+            "title": "Excerpt"
+          },
+          "guardrail": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The Guardrail's id, or null if it was deleted.",
+            "title": "Guardrail"
+          },
+          "guardrail_name": {
+            "description": "The Guardrail's name, kept if it is deleted.",
+            "title": "Guardrail Name",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "llmclient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name of the LLMClient whose prompt triggered it.",
+            "title": "Llmclient"
+          },
+          "mode": {
+            "enum": [
+              "enforce",
+              "monitor"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why it triggered, for a person.",
+            "title": "Rationale"
+          },
+          "reviewed": {
+            "description": "Whether a person has reviewed the event.",
+            "title": "Reviewed",
+            "type": "boolean"
+          },
+          "session_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The chat session.",
+            "title": "Session Key"
+          },
+          "severity": {
+            "minimum": 0,
+            "title": "Severity",
+            "type": "integer"
+          },
+          "stage": {
+            "description": "Where it triggered: the user's message, or the LLM's reply.",
+            "enum": [
+              "input",
+              "output",
+              "both"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "strategy": {
+            "enum": [
+              "regex",
+              "keyword",
+              "detector",
+              "semantic",
+              "moderation",
+              "llm_judge"
+            ],
+            "title": "Strategy",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "guardrail_name",
+          "stage",
+          "category",
+          "strategy",
+          "action",
+          "mode",
+          "disposition",
+          "severity",
+          "reviewed"
+        ],
+        "title": "GuardrailApiEvent",
+        "type": "object"
+      },
+      "GuardrailApiEvents": {
+        "additionalProperties": false,
+        "description": "The response of a Guardrail's events: its name, and its latest events, newest first.",
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailApiEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "guardrail": {
+            "description": "The Guardrail's name.",
+            "title": "Guardrail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "guardrail",
+          "events"
+        ],
+        "title": "GuardrailApiEvents",
+        "type": "object"
+      },
+      "GuardrailApiFinding": {
+        "additionalProperties": false,
+        "description": "What a Guardrail found in a text.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The strategy's confidence.",
+            "title": "Confidence"
+          },
+          "matches": {
+            "description": "Where the text matched.",
+            "items": {
+              "$ref": "#/components/schemas/GuardrailMatch"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why it triggered, for a person.",
+            "title": "Rationale"
+          }
+        },
+        "required": [
+          "matches"
+        ],
+        "title": "GuardrailApiFinding",
+        "type": "object"
+      },
+      "GuardrailApiGuardrail": {
+        "additionalProperties": false,
+        "description": "A Guardrail: a :class:`smarter.apps.guardrail.models.Guardrail`.",
+        "properties": {
+          "action": {
+            "description": "What the Guardrail does when it triggers.",
+            "enum": [
+              "log",
+              "flag",
+              "redact",
+              "transform",
+              "block",
+              "escalate"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the Guardrail now: they own it, and no LLMClient uses it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "category": {
+            "description": "What the Guardrail protects against.",
+            "enum": [
+              "pii",
+              "secrets",
+              "prompt_injection",
+              "jailbreak",
+              "toxicity",
+              "self_harm",
+              "hallucination",
+              "off_topic",
+              "compliance",
+              "formatting",
+              "custom"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The strategy's configuration.",
+            "title": "Config"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "failClosed": {
+            "description": "Whether an error of the Guardrail blocks the text.",
+            "title": "Failclosed",
+            "type": "boolean"
+          },
+          "hashedId": {
+            "description": "The Guardrail's hashed id, which its urls use.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isActive": {
+            "description": "Whether the Guardrail runs.",
+            "title": "Isactive",
+            "type": "boolean"
+          },
+          "manifestUrl": {
+            "description": "The url of the Guardrail's manifest in the web console.",
+            "title": "Manifesturl",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The message that replaces a blocked text.",
+            "title": "Message"
+          },
+          "mode": {
+            "description": "enforce acts. monitor only records what it would do.",
+            "enum": [
+              "enforce",
+              "monitor"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The regular expression of the regex strategy.",
+            "title": "Pattern"
+          },
+          "priority": {
+            "description": "The order of the Guardrails. Lower runs first.",
+            "minimum": 0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "ready": {
+            "description": "Whether the Guardrail is configured completely.",
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "replacement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The replacement of the redact action.",
+            "title": "Replacement"
+          },
+          "rfc1034CompliantName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The name, as a DNS label.",
+            "title": "Rfc1034Compliantname"
+          },
+          "severity": {
+            "description": "The severity of what the Guardrail detects, from 1 to 5.",
+            "minimum": 0,
+            "title": "Severity",
+            "type": "integer"
+          },
+          "stage": {
+            "description": "What the Guardrail checks: the user's message, the LLM's reply, or both.",
+            "enum": [
+              "input",
+              "output",
+              "both"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "strategy": {
+            "description": "How the Guardrail detects it.",
+            "enum": [
+              "regex",
+              "keyword",
+              "detector",
+              "semantic",
+              "moderation",
+              "llm_judge"
+            ],
+            "title": "Strategy",
+            "type": "string"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The confidence at which a scoring strategy triggers.",
+            "title": "Threshold"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The Guardrail's owner."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "userProfile",
+          "canDelete",
+          "manifestUrl",
+          "ready",
+          "stage",
+          "category",
+          "strategy",
+          "action",
+          "severity",
+          "mode",
+          "failClosed",
+          "priority",
+          "isActive"
+        ],
+        "title": "GuardrailApiGuardrail",
+        "type": "object"
+      },
+      "GuardrailMatch": {
+        "description": "One match of a guardrail within a text segment.\n\n:ivar start: The index of the match's first character in the segment's text.\n:vartype start: int\n:ivar end: The index after the match's last character.\n:vartype end: int\n:ivar text: The matched text.\n:vartype text: str\n:ivar label: What matched, e.g. the detector ``credit_card``, or the keyword.\n:vartype label: str or None",
+        "properties": {
+          "end": {
+            "title": "End",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Label"
+          },
+          "start": {
+            "title": "Start",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "text"
+        ],
+        "title": "GuardrailMatch",
+        "type": "object"
+      },
       "HarnessRole": {
         "description": "Role an LLMClient (Harness) plays within an Orchestrator.\n\nValues must stay aligned with\nsmarter.apps.orchestrator.models.OrchestratorHarness.Role.",
         "enum": [
@@ -2976,6 +3745,19 @@
           "null"
         ],
         "title": "ParameterType",
+        "type": "string"
+      },
+      "PipelineDisposition": {
+        "description": "Final verdict the pipeline hands back to the Harness.\n\nOrdered from least to most severe; see\n:data:`smarter.apps.guardrail.services.pipeline._DISPOSITION_PRECEDENCE`\nfor how multiple triggered guardrails are folded into one value.\n\n:cvar ALLOWED: No guardrail triggered, or only guardrails in monitor mode, or with\n    action ``LOG``, triggered.\n:cvar FLAGGED: A guardrail triggered with action ``FLAG``.\n:cvar REDACTED: A guardrail triggered with action ``REDACT``.\n:cvar TRANSFORMED: A guardrail triggered with action ``TRANSFORM``.\n:cvar ESCALATED: A guardrail triggered with action ``ESCALATE``.\n:cvar BLOCKED: A guardrail triggered with action ``BLOCK``; the\n    request or response was withheld.",
+        "enum": [
+          "allowed",
+          "flagged",
+          "redacted",
+          "transformed",
+          "blocked",
+          "escalated"
+        ],
+        "title": "PipelineDisposition",
         "type": "string"
       },
       "PluginApiPluginMeta": {
@@ -14972,6 +15754,173 @@
         "title": "SAMWebsearchPluginSpec",
         "type": "object"
       },
+      "SecretApiSecret": {
+        "additionalProperties": false,
+        "description": "A Secret's metadata: a :class:`smarter.apps.secret.models.Secret`, without its value.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the Secret now: they own it, and nothing uses it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the Secret expires, if it does.",
+            "title": "Expiresat"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "lastAccessed": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the platform last read its value.",
+            "title": "Lastaccessed"
+          },
+          "manifestUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Secret's manifest in the web console.",
+            "title": "Manifesturl"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case, e.g. openai_api_key.",
+            "title": "Name",
+            "type": "string"
+          },
+          "ready": {
+            "description": "Whether the Secret has a value that can be decrypted.",
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The Secret's owner."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "userProfile",
+          "ready",
+          "canDelete"
+        ],
+        "title": "SecretApiSecret",
+        "type": "object"
+      },
       "SkillData": {
         "description": "Smarter API - SkillPlugin.spec.skillData: an Agent Skill.\n\nExactly one of ``skill`` or ``source`` is required.",
         "properties": {
@@ -16143,6 +17092,213 @@
         ]
       }
     },
+    "/guardrails/": {
+      "get": {
+        "description": "The Guardrails that the user may read, by priority and name. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "guardrail_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GuardrailApiGuardrail"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List Guardrails",
+        "tags": [
+          "guardrails"
+        ]
+      }
+    },
+    "/guardrails/{id}/": {
+      "get": {
+        "description": "A Guardrail that the user may read. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "guardrail_retrieve",
+        "parameters": [
+          {
+            "description": "The Guardrail's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailApiGuardrail"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A Guardrail",
+        "tags": [
+          "guardrails"
+        ]
+      }
+    },
+    "/guardrails/{id}/evaluate/": {
+      "post": {
+        "description": "Run a Guardrail on a text, as the user's message (input) or the LLM's reply (output), and return what it would do. It records no events. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "guardrail_evaluate",
+        "parameters": [
+          {
+            "description": "The Guardrail's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardrailApiEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailApiEvaluation"
+                }
+              }
+            },
+            "description": "The dry run's result."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a Guardrail that the user may not read."
+          }
+        },
+        "summary": "Dry-run a Guardrail",
+        "tags": [
+          "guardrails"
+        ]
+      }
+    },
+    "/guardrails/{id}/events/": {
+      "get": {
+        "description": "The latest 100 events of a Guardrail that the user owns, newest first: what it did to prompts. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
+        "operationId": "guardrail_events",
+        "parameters": [
+          {
+            "description": "The Guardrail's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only the events that a person has reviewed (true), or has not (false).",
+            "in": "query",
+            "name": "reviewed",
+            "required": false,
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only the events with this disposition, e.g. blocked.",
+            "in": "query",
+            "name": "disposition",
+            "required": false,
+            "schema": {
+              "enum": [
+                "logged",
+                "flagged",
+                "redacted",
+                "transformed",
+                "blocked",
+                "escalated",
+                "monitored",
+                "error"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailApiEvents"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A Guardrail's events",
+        "tags": [
+          "guardrails"
+        ]
+      }
+    },
     "/llm-clients/": {
       "get": {
         "description": "The LLMClients that the user may read. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
@@ -16783,6 +17939,85 @@
           "chat"
         ]
       }
+    },
+    "/secrets/": {
+      "get": {
+        "description": "The Secrets of the user's accounts: their metadata, never their values. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "secret_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SecretApiSecret"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List Secrets",
+        "tags": [
+          "secrets"
+        ]
+      }
+    },
+    "/secrets/{id}/": {
+      "get": {
+        "description": "A Secret of the user's accounts: its metadata, never its value. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "secret_retrieve",
+        "parameters": [
+          {
+            "description": "The Secret's numeric id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecretApiSecret"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A Secret",
+        "tags": [
+          "secrets"
+        ]
+      }
     }
   },
   "security": [
@@ -16826,6 +18061,14 @@
     {
       "description": "The LLMClients' REST reads.",
       "name": "llmclients"
+    },
+    {
+      "description": "The Guardrails' REST reads, and their dry run.",
+      "name": "guardrails"
+    },
+    {
+      "description": "The Secrets' REST reads: their metadata, never their values.",
+      "name": "secrets"
     }
   ]
 }

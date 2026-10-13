@@ -33,3 +33,16 @@ API Contract
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: smarter.apps.guardrail.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: smarter.apps.secret.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: smarter.lib.drf.views.contract
+    :members:

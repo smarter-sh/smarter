@@ -7,8 +7,8 @@ The document covers the apis that the ``smarter`` cli and the SDKs call, family 
   SAM manifests declare,
 - the chat api (``/api/v1/llm-clients/{id}/config/`` and ``.../prompt/``), to chat with an
   LLMClient, as JSON or as a stream of Server-Sent Events,
-- the REST reads of the resource families, so far the LLMClients' (``/api/v1/llm-clients/``),
-  whose responses are built from each app's contract models, e.g.
+- the REST reads of the resource families, so far the LLMClients', the Guardrails' and the
+  Secrets', whose responses are built from each app's contract models, e.g.
   :mod:`smarter.apps.llmclient.contract.models`. Only the reads are published: clients write
   through the cli api's manifests, which the brokers validate.
 
@@ -33,11 +33,19 @@ requests and responses, so that clients can be generated from it.
 """
 
 import json
-from typing import Optional
+from typing import Optional, get_args
 
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
+from smarter.apps.guardrail.contract.models import (
+    GUARDRAIL_API_MODELS,
+    GuardrailApiEvaluateRequest,
+    GuardrailApiEvaluation,
+    GuardrailApiEventDisposition,
+    GuardrailApiEvents,
+    GuardrailApiGuardrail,
+)
 from smarter.apps.llmclient.contract.models import (
     LLMCLIENT_API_MODELS,
     LLMClientApiCustomDomain,
@@ -56,6 +64,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptRequest,
     PromptChatApiPromptResponse,
 )
+from smarter.apps.secret.contract.models import SECRET_API_MODELS, SecretApiSecret
 from smarter.common.const import (
     SMARTER_PROJECT_DOCS_URL,
     SMARTER_PROJECT_WEBSITE_URL,
@@ -119,12 +128,20 @@ TAG_PLATFORM = "platform"
 
 TAG_CHAT = "chat"
 TAG_LLMCLIENTS = "llmclients"
+TAG_GUARDRAILS = "guardrails"
+TAG_SECRETS = "secrets"
 
 SUPERUSER_ONLY = (
     "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
     "their resources with the cli api's get and describe."
 )
-"""The note of every REST read, whose views are SmarterAdminAPIView and SmarterAdminListAPIView."""
+"""The note of the REST reads whose views are SmarterAdminAPIView and SmarterAdminListAPIView."""
+
+READ_PERMISSION = (
+    "Requires an api key. The response includes only what the user may read: their account's resources, and "
+    "the platform's built-in ones."
+)
+"""The note of the REST reads whose views are SmarterAuthenticatedAPIView and SmarterAuthenticatedListAPIView."""
 
 CHAT_MODELS: tuple[type[BaseModel], ...] = (
     PromptChatApiConfigRequest,
@@ -140,6 +157,8 @@ CHAT_MODELS: tuple[type[BaseModel], ...] = (
 DOCUMENTED_URLCONFS: dict[str, str] = {
     "/cli/": "smarter.apps.api.v1.cli.urls",
     "/llm-clients/": "smarter.apps.llmclient.api.v1.urls",
+    "/guardrails/": "smarter.apps.guardrail.api.v1.urls",
+    "/secrets/": "smarter.apps.secret.api.v1.urls",
 }
 """
 The families of routes that the document covers: each one's path, relative to ``/api/v1``, and its urlconf.
@@ -147,11 +166,16 @@ The families of routes that the document covers: each one's path, relative to ``
 Every route of these urlconfs must be in the document, or in :data:`UNDOCUMENTED_ROUTES`.
 """
 
-PATH_PARAMETER_ALIASES: dict[str, str] = {"llmclient_id": "id", "hashed_id": "id"}
+PATH_PARAMETER_ALIASES: dict[str, str] = {
+    "llmclient_id": "id",
+    "guardrail_id": "id",
+    "secret_id": "id",
+    "hashed_id": "id",
+}
 """
 The document's names of the routes' path parameters, where they differ.
 
-An LLMClient's routes take either its numeric id or its hashed id, which the document describes as one ``{id}``.
+A resource's routes take either its numeric id or its hashed id, which the document describes as one ``{id}``.
 """
 
 NOT_YET_MODELED = "Not modeled yet. The REST reads of each resource family are the next part of the contract."
@@ -237,6 +261,8 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         SAMJournalApiErrorResponse,
         *CHAT_MODELS,
         *LLMCLIENT_API_MODELS,
+        *GUARDRAIL_API_MODELS,
+        *SECRET_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -677,6 +703,7 @@ def rest_read(
     *,
     many: bool,
     parameters: list[OpenApiParameter],
+    note: str = SUPERUSER_ONLY,
 ) -> OpenApiOperation:
     """
     A read of the REST api: a ``GET`` whose response is a row, or a list of rows, of one of the document's schemas.
@@ -685,7 +712,7 @@ def rest_read(
     :type operation_id: str
     :param summary: A one-line summary.
     :type summary: str
-    :param description: A description, to which :data:`SUPERUSER_ONLY` is added.
+    :param description: A description, to which ``note`` is added.
     :type description: str
     :param tag: The operation's tag.
     :type tag: str
@@ -695,6 +722,8 @@ def rest_read(
     :type many: bool
     :param parameters: The operation's parameters.
     :type parameters: list[OpenApiParameter]
+    :param note: Who may read, e.g. :data:`SUPERUSER_ONLY` or :data:`READ_PERMISSION`.
+    :type note: str
     :returns: The operation.
     :rtype: OpenApiOperation
     """
@@ -702,7 +731,7 @@ def rest_read(
     return OpenApiOperation(
         operationId=operation_id,
         summary=summary,
-        description=f"{description} {SUPERUSER_ONLY}",
+        description=f"{description} {note}",
         tags=[tag],
         parameters=parameters,
         responses={
@@ -839,6 +868,140 @@ def llmclient_paths() -> dict[str, OpenApiPathItem]:
     return {path: OpenApiPathItem(get=read) for path, read in reads.items()}
 
 
+def id_or_hashed_id(resource: str) -> OpenApiParameter:
+    """
+    The ``{id}`` path parameter of a resource whose routes take its numeric id or its hashed id.
+
+    :param resource: The resource's kind, e.g. Guardrail.
+    :type resource: str
+    :returns: The parameter.
+    :rtype: OpenApiParameter
+    """
+    return OpenApiParameter(
+        name="id",
+        in_="path",
+        required=True,
+        description=f"The {resource}'s numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+        schema_={"type": "string"},
+    )
+
+
+def guardrail_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Guardrails' REST reads, and the dry run of a Guardrail, relative to the server's ``/api/v1``.
+
+    :returns: The paths, e.g. ``{"/guardrails/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    guardrail_id = id_or_hashed_id("Guardrail")
+    events = rest_read(
+        "guardrail_events",
+        "A Guardrail's events",
+        "The latest 100 events of a Guardrail that the user owns, newest first: what it did to prompts.",
+        TAG_GUARDRAILS,
+        GuardrailApiEvents.__name__,
+        many=False,
+        parameters=[
+            guardrail_id,
+            OpenApiParameter(
+                name="reviewed",
+                in_="query",
+                description="Only the events that a person has reviewed (true), or has not (false).",
+                schema_={"type": "string", "enum": ["true", "false"]},
+            ),
+            OpenApiParameter(
+                name="disposition",
+                in_="query",
+                description="Only the events with this disposition, e.g. blocked.",
+                schema_={"type": "string", "enum": list(get_args(GuardrailApiEventDisposition))},
+            ),
+        ],
+        note=READ_PERMISSION,
+    )
+    evaluate = OpenApiOperation(
+        operationId="guardrail_evaluate",
+        summary="Dry-run a Guardrail",
+        description="Run a Guardrail on a text, as the user's message (input) or the LLM's reply (output), and "
+        f"return what it would do. It records no events. {READ_PERMISSION}",
+        tags=[TAG_GUARDRAILS],
+        parameters=[guardrail_id],
+        requestBody=OpenApiRequestBody(
+            required=True,
+            content={"application/json": OpenApiMediaType(schema_=ref(GuardrailApiEvaluateRequest.__name__))},
+        ),
+        responses={
+            "200": json_response("The dry run's result.", GuardrailApiEvaluation.__name__),
+            "default": json_response(
+                "An error, e.g. 400 for an invalid request, or 404 for a Guardrail that the user may not read.",
+                RestApiErrorResponse.__name__,
+            ),
+        },
+    )
+    return {
+        "/guardrails/": OpenApiPathItem(
+            get=rest_read(
+                "guardrail_list",
+                "List Guardrails",
+                "The Guardrails that the user may read, by priority and name.",
+                TAG_GUARDRAILS,
+                GuardrailApiGuardrail.__name__,
+                many=True,
+                parameters=[],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/guardrails/{id}/": OpenApiPathItem(
+            get=rest_read(
+                "guardrail_retrieve",
+                "A Guardrail",
+                "A Guardrail that the user may read.",
+                TAG_GUARDRAILS,
+                GuardrailApiGuardrail.__name__,
+                many=False,
+                parameters=[guardrail_id],
+                note=READ_PERMISSION,
+            )
+        ),
+        "/guardrails/{id}/evaluate/": OpenApiPathItem(post=evaluate),
+        "/guardrails/{id}/events/": OpenApiPathItem(get=events),
+    }
+
+
+def secret_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Secrets' REST reads, relative to the server's ``/api/v1``.
+
+    A Secret's value is never returned.
+
+    :returns: The paths, e.g. ``{"/secrets/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    return {
+        "/secrets/": OpenApiPathItem(
+            get=rest_read(
+                "secret_list",
+                "List Secrets",
+                "The Secrets of the user's accounts: their metadata, never their values.",
+                TAG_SECRETS,
+                SecretApiSecret.__name__,
+                many=True,
+                parameters=[],
+            )
+        ),
+        "/secrets/{id}/": OpenApiPathItem(
+            get=rest_read(
+                "secret_retrieve",
+                "A Secret",
+                "A Secret of the user's accounts: its metadata, never its value.",
+                TAG_SECRETS,
+                SecretApiSecret.__name__,
+                many=False,
+                parameters=[integer_id("id", "The Secret's numeric id.")],
+            )
+        ),
+    }
+
+
 def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
     """
     The paths of several families, with the operations of a path that two families share in one path item.
@@ -908,8 +1071,10 @@ def openapi_document() -> OpenApiDocument:
             OpenApiTag(name=TAG_PLATFORM, description="The platform, and the api key's user."),
             OpenApiTag(name=TAG_CHAT, description="Chats with LLMClients."),
             OpenApiTag(name=TAG_LLMCLIENTS, description="The LLMClients' REST reads."),
+            OpenApiTag(name=TAG_GUARDRAILS, description="The Guardrails' REST reads, and their dry run."),
+            OpenApiTag(name=TAG_SECRETS, description="The Secrets' REST reads: their metadata, never their values."),
         ],
-        paths=merge_paths(cli_paths(), chat_paths(), llmclient_paths()),
+        paths=merge_paths(cli_paths(), chat_paths(), llmclient_paths(), guardrail_paths(), secret_paths()),
         components=OpenApiComponents(
             schemas=schemas,
             securitySchemes={
@@ -952,7 +1117,10 @@ __all__ = [
     "PATH_PARAMETER_ALIASES",
     "UNDOCUMENTED_ROUTES",
     "chat_paths",
+    "guardrail_paths",
+    "id_or_hashed_id",
     "llmclient_paths",
+    "secret_paths",
     "merge_paths",
     "rest_read",
     "cli_paths",
