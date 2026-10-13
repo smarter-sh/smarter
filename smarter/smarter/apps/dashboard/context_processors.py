@@ -163,6 +163,7 @@ def sidebar_context() -> SmarterDictType:
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
             "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
             "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
+            "openapi": reverse(DocsReverseNames.namespace, DocsReverseNames.openapi),
             "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
             "account": "/dashboard/account/dashboard/overview/",  # FIX ME
             "admin": "/admin/",  # FIX ME
@@ -201,7 +202,7 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     ``dashboard``, ``workbench``, ``apply_manifest``, ``prompt_passthrough``,
     ``server_logs``, ``providers``, ``plugins``, ``connections``, ``secrets``,
     ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
-    ``swagger_docs``, ``redoc``, ``json_schemas``, ``account``, ``admin``.
+    ``swagger_docs``, ``redoc``, ``openapi``, ``json_schemas``, ``account``, ``admin``.
 
     :param request: The incoming HTTP request (not used directly; required by
         the Django context-processor protocol).

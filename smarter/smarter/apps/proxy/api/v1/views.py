@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.proxy.authentication import SmarterProxyAuthentication
+from smarter.apps.proxy.contract.models import ProxyApiProxies, ProxyApiProxy
 from smarter.apps.proxy.exceptions import ProxyError
 from smarter.apps.proxy.services import ProxyForwarder, proxies_for, resolve_proxy
 from smarter.lib import logging
@@ -46,19 +47,8 @@ class ProxyListView(ProxyApiViewBase):
 
     def get(self, request: Request, *args, **kwargs):
         user_profile = self.get_user_profile(request)
-        proxies = [
-            {
-                "name": proxy.name,
-                "description": proxy.description,
-                "provider": proxy.provider.name,
-                "url": request.build_absolute_uri(proxy.url),
-                "upstreamUrl": proxy.upstream_base_url,
-                "allowedPaths": proxy.allowed_paths or [],
-                "isActive": proxy.is_active,
-            }
-            for proxy in proxies_for(user_profile).order_by("name")
-        ]
-        return JsonResponse({"proxies": proxies})
+        proxies = [ProxyApiProxy.from_model(proxy, request) for proxy in proxies_for(user_profile).order_by("name")]
+        return JsonResponse(ProxyApiProxies(proxies=proxies).model_dump(mode="json"))
 
 
 class ProxyPassthroughView(ProxyApiViewBase):

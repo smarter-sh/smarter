@@ -20,6 +20,11 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
+from smarter.lib.journal.contract.models import (
+    SAMJournalApiEntry,
+    SAMJournalApiEntrySummary,
+    SAMJournalApiPage,
+)
 from smarter.lib.journal.models import SAMJournal
 from smarter.lib.journal.serializers import (
     SAMJournalMiniSerializer,
@@ -51,7 +56,7 @@ def journal_entries() -> QuerySet[SAMJournal]:
 
 
 class SAMJournalView(SmarterAdminAPIView):
-    """A journal entry, by its key, with its request and response documents."""
+    """A journal entry, by its key, with its request and response documents: a :class:`SAMJournalApiEntry`."""
 
     serializer_class = SAMJournalSerializer
 
@@ -62,7 +67,7 @@ class SAMJournalView(SmarterAdminAPIView):
         """Return the journal entry."""
         journal = get_object_or_404(self.get_queryset(), key=key)
         journal_entry_accessed.send(sender=self.__class__, journal=journal, user=request.user)
-        return Response(SAMJournalSerializer(journal).data)
+        return Response(SAMJournalApiEntry.from_model(journal).model_dump(mode="json"))
 
     def post(self, request: Request, key: str, *args, **kwargs):
         """Same as get().
@@ -74,7 +79,9 @@ class SAMJournalView(SmarterAdminAPIView):
 
 class SAMJournalListView(SmarterAdminListAPIView):
     """
-    One page of the journal entries, newest first, without their request and response documents.
+    One page of the journal entries, newest first, without their request and response documents: a.
+
+    :class:`SAMJournalApiPage`.
 
     The query parameters ``page``, ``page_size``, ``search`` and ``ordering`` are those of
     :func:`smarter.lib.django.pagination.paginate_listview`. A search matches an entry's key, thing or
@@ -93,12 +100,11 @@ class SAMJournalListView(SmarterAdminListAPIView):
         )
         journal_entries_listed.send(sender=self.__class__, user=request.user, count=pagination["count"])
         logger.debug("%s.list() - user: %s, pagination: %s", self.formatted_class_name, request.user, pagination)
-        return JsonResponse(
-            {
-                "objects": SAMJournalMiniSerializer(page, many=True).data,
-                "pagination": pagination,
-            }
+        response = SAMJournalApiPage(
+            objects=[SAMJournalApiEntrySummary.from_model(journal) for journal in page],
+            pagination=pagination,  # type: ignore[arg-type]
         )
+        return JsonResponse(response.model_dump(mode="json"))
 
     def post(self, request: Request, *args, **kwargs):
         """Same as get().

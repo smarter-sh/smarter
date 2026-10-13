@@ -1,0 +1,38 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "Proxy",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/proxy/documentation": "https://docs.claude.com/en/api/messages"
+      }
+    ],
+    "description": "Passthrough access to Anthropic's Messages API, with an API key that Smarter keeps.",
+    "name": "example_anthropic",
+    "tags": [
+      "example",
+      "anthropic"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "allowedPaths": [
+      "messages",
+      "messages/count_tokens",
+      "models",
+      "models/*"
+    ],
+    "apiKey": "anthropic_api_key",
+    "auth": {
+      "header": "x-api-key",
+      "scheme": ""
+    },
+    "baseUrl": "https://api.anthropic.com/v1/",
+    "headers": {
+      "anthropic-version": "2023-06-01"
+    },
+    "isActive": true,
+    "provider": "anthropic",
+    "timeout": 120
+  }
+}

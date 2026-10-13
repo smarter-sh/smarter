@@ -1,0 +1,44 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "Budget",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/budget/purpose": "example"
+      }
+    ],
+    "description": "Each student may spend $10 a month on AI, and $100 in total.",
+    "name": "student_monthly_allowance",
+    "tags": [
+      "example",
+      "education"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "config": {
+      "absoluteLimit": "100.00",
+      "action": "block",
+      "duration": 0,
+      "message": "You have used this month's AI allowance. It renews on the 1st of next month.",
+      "period": "month",
+      "periodicLimit": "10.00",
+      "unit": "cost",
+      "warningThreshold": 80
+    },
+    "resources": [
+      {
+        "accountNumber": null,
+        "kind": "User",
+        "name": "student1",
+        "recordLocator": null
+      },
+      {
+        "accountNumber": null,
+        "kind": "LLMClient",
+        "name": "stackademy_sql",
+        "recordLocator": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,321 @@
+{
+  "$defs": {
+    "SAMCustomDomainMetadata": {
+      "description": "Smarter API CustomDomain Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMCustomDomainMetadata",
+      "type": "object"
+    },
+    "SAMCustomDomainSpec": {
+      "description": "Smarter API CustomDomain Manifest - CustomDomain.spec.",
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SAMCustomDomainSpecConfig",
+          "description": "CustomDomain.spec.config[object]. Required. The configuration of the CustomDomain."
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMCustomDomainSpec",
+      "type": "object"
+    },
+    "SAMCustomDomainSpecConfig": {
+      "description": "Smarter API CustomDomain Manifest - CustomDomain.spec.config.",
+      "properties": {
+        "domainName": {
+          "description": "CustomDomain.spec.config.domainName[str]. Required. The domain name, e.g. 'llmclients.example.com'. It cannot be changed once the domain has been registered.",
+          "title": "Domainname",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domainName"
+      ],
+      "title": "SAMCustomDomainSpecConfig",
+      "type": "object"
+    },
+    "SAMCustomDomainStatus": {
+      "description": "Smarter API CustomDomain Manifest - Status class.\n\nRead only. Besides ownership, it reports the domain's AWS Route53 hosted zone, whether\nthe domain is verified, and its DNS records. The LLMClient that uses it is reported in\n``dependencies``.",
+      "properties": {
+        "accountNumber": {
+          "description": "CustomDomain.status.accountNumber: The account owner of this CustomDomain. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "awsHostedZoneId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CustomDomain.status.awsHostedZoneId: The AWS Route53 hosted zone of this CustomDomain, once it is registered with smarter deploy. Read only.",
+          "title": "Awshostedzoneid"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "dnsRecords": {
+          "description": "CustomDomain.status.dnsRecords: The DNS records of this CustomDomain. Read only.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Dnsrecords",
+          "type": "array"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "CustomDomain.status.username: The Smarter user who created this CustomDomain. Read only.",
+          "title": "Username",
+          "type": "string"
+        },
+        "verificationMessage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CustomDomain.status.verificationMessage: Why the domain is not verified yet, or why its verification failed. Read only.",
+          "title": "Verificationmessage"
+        },
+        "verificationStatus": {
+          "default": "Not Verified",
+          "description": "CustomDomain.status.verificationStatus: Not Verified, Verifying, Verified or Failed. The domain is Verified when its NS records are delegated to its hosted zone, and its TLS certificate is issued. Read only.",
+          "title": "Verificationstatus",
+          "type": "string"
+        },
+        "verifiedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CustomDomain.status.verifiedAt: When the domain was verified. Read only.",
+          "title": "Verifiedat"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMCustomDomainStatus",
+      "type": "object"
+    },
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - CustomDomain.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMCustomDomainMetadata",
+      "description": "CustomDomain.metadata[obj]: Required, the CustomDomain metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMCustomDomainSpec",
+      "description": "CustomDomain.spec[obj]: Required, the CustomDomain specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMCustomDomainStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "CustomDomain.status[obj]: Optional, Read-only. Stateful status information about the CustomDomain."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMCustomDomain",
+  "type": "object"
+}
