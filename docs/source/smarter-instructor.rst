@@ -3,10 +3,10 @@ Smarter Instructor Guide
 
 This guide is for teachers, professors, bootcamp instructors, workshop leaders and corporate
 trainers who use The Smarter Project in a classroom. It explains how to get Smarter running,
-how to set it up for a class, and how to use it to teach more than a dozen subjects, in short
-:doc:`micro courses <smarter-instructors/micro-courses>` from prompt engineering for
-non-programmers to Kubernetes for platform engineers, and in longer
-:doc:`master classes <smarter-instructors/master-classes>` for experienced practitioners.
+how to set it up for a class, and how to use it to teach more than a dozen subjects, from prompt
+engineering for non-programmers to Kubernetes for platform engineers. The courses themselves,
+with complete, ready-to-teach course plans, are in the
+:doc:`Free Course Catalog <smarter-instructors/example-courses/index>`.
 
 Smarter is a good fit for teaching for three reasons:
 
@@ -93,6 +93,18 @@ term:
 Point this out to your students early. It changes how they treat their coursework: a manifest
 written for an assignment can become the AI application that a student club, a part-time employer,
 or a startup actually uses.
+
+Free Course Designs
+--------------------
+
+The :doc:`Free Course Designs <smarter-instructors/example-courses/index>` has 19 complete,
+ready-to-teach course designs, from prompt engineering for non-programmers to
+Kubernetes for platform engineers. Each course design comes with turnkey course plans,
+with schedules, graded assignments and rubrics, capstone projects and reading lists, so
+that an instructor can take a plan, set the dates, and teach it. Paths in the courses
+are relative to the root of the `smarter <https://github.com/smarter-sh/smarter>`__ repository.
+
+
 
 
 Getting Smarter Running
@@ -314,38 +326,15 @@ means that you should:
   models on your own Kubernetes cluster, so that prompts never leave your network.
 
 
-Example Courses
----------------
-
-The example courses come in two kinds. A **micro course** teaches one subject in a day, or over
-two to four weeks online, and suits students who are new to it. A **master class** takes
-experienced practitioners deep into one technology, over several days or weeks. Each course has
-complete, turnkey course plans, with schedules, graded assignments and rubrics, capstone projects
-and reading lists. Paths are relative to the root of the
-`smarter <https://github.com/smarter-sh/smarter>`__ repository.
-
-.. toctree::
-   :maxdepth: 2
-
-   smarter-instructors/micro-courses
-   smarter-instructors/master-classes
-
-
 Planning a Course
 -----------------
 
 Sample Formats
 ~~~~~~~~~~~~~~
 
-Every :doc:`micro course <smarter-instructors/micro-courses>` comes with turnkey plans in three
-formats: an eight-hour classroom bootcamp of 45-minute lectures and labs, a two-week online course
-with six hours of instruction, and a four-week online course with twelve. Each online format
-pairs 30-minute recorded lectures with a weekly 90-minute live session.
-:doc:`smarter-instructors/micro-courses/course-formats` explains the formats, the grading scale
-and the course policies that the plans share. A
-:doc:`master class <smarter-instructors/master-classes>` is longer: the
-:doc:`smarter-instructors/master-classes/django-master-class` has 18 hours of instruction, as a
-three-day classroom course or a six-week online course. Other formats work well too:
+The courses in the :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` come
+with plans for classroom bootcamps and online courses of two to six weeks. Other formats work
+well too:
 
 - **A half-day workshop.** Run a shared instance. Students log in, chat with the built-in
   LLMClients, copy one manifest, change its system prompt and model, add a plugin and a guardrail,

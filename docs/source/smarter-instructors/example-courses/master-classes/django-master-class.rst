@@ -85,7 +85,7 @@ Source Code*.
 assignments and rubrics, two capstone projects, recommended texts, further study and technical
 prerequisites. This course is longer than the others in this guide, and has formats of its own,
 described in each plan. The grading scale and the course policies are those of
-:doc:`/smarter-instructors/micro-courses/course-formats`.
+:doc:`/smarter-instructors/example-courses/micro-courses/course-formats`.
 
 .. toctree::
    :maxdepth: 1
