@@ -6303,6 +6303,173 @@
         "title": "OrchestrationStrategy",
         "type": "string"
       },
+      "OrchestratorApiOrchestrator": {
+        "additionalProperties": false,
+        "description": "An Orchestrator, a multi-agent workflow over LLMClients: a :class:`smarter.apps.orchestrator.models.Orchestrator`.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the Orchestrator now: they own it, and nothing uses it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "hashedId": {
+            "description": "The Orchestrator's hashed id, e.g. rMTAwMDAwMQx, which its urls use.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isActive": {
+            "description": "Orchestrator.is_active.",
+            "title": "Isactive",
+            "type": "boolean"
+          },
+          "llmclients": {
+            "description": "Orchestrator.llmclients: the LLMClients' ids.",
+            "items": {
+              "type": "integer"
+            },
+            "title": "Llmclients",
+            "type": "array"
+          },
+          "manifestUrl": {
+            "description": "The url of the Orchestrator's manifest in the web console.",
+            "title": "Manifesturl",
+            "type": "string"
+          },
+          "maxIterations": {
+            "description": "Orchestrator.max_iterations.",
+            "minimum": 0,
+            "title": "Maxiterations",
+            "type": "integer"
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "strategy": {
+            "description": "Orchestrator.strategy: how its LLMClients collaborate.",
+            "enum": [
+              "sequential",
+              "parallel",
+              "supervisor",
+              "router",
+              "voting",
+              "debate"
+            ],
+            "title": "Strategy",
+            "type": "string"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The Orchestrator's owner."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "userProfile",
+          "canDelete",
+          "manifestUrl",
+          "strategy",
+          "maxIterations",
+          "isActive"
+        ],
+        "title": "OrchestratorApiOrchestrator",
+        "type": "object"
+      },
       "Parameter": {
         "description": "Parameter class for parameterized Plugins.\n\nThis structure is\nintended to match that which is used in the OpenAPI\nfunction calling specification.\nIt is used to define the parameters that a plugin can accept,\nand also for creating the function calling prompt api.",
         "properties": {
@@ -20025,6 +20192,233 @@
         "title": "UrlParam",
         "type": "object"
       },
+      "VectorsearchApiVectorsearch": {
+        "additionalProperties": false,
+        "description": "A Vectorsearch, a retrieval pipeline over a vectorstore: a :class:`smarter.apps.vectorsearch.models.Vectorsearch`.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "authSecret": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vectorsearch.auth_secret: the Secret's id, if any.",
+            "title": "Authsecret"
+          },
+          "canDelete": {
+            "description": "Whether the requesting user may delete the Vectorsearch now: they own it, and nothing uses it.",
+            "title": "Candelete",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "fetchK": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vectorsearch.fetch_k: the candidates of an mmr search.",
+            "title": "Fetchk"
+          },
+          "hashedId": {
+            "description": "The Vectorsearch's hashed id, e.g. rMTAwMDAwMQx, which its urls use.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isEnabled": {
+            "description": "Vectorsearch.is_enabled.",
+            "title": "Isenabled",
+            "type": "boolean"
+          },
+          "k": {
+            "description": "Vectorsearch.k: the number of chunks to return.",
+            "minimum": 0,
+            "title": "K",
+            "type": "integer"
+          },
+          "lambdaMult": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vectorsearch.lambda_mult: an mmr search's diversity.",
+            "title": "Lambdamult"
+          },
+          "manifestUrl": {
+            "description": "The url of the Vectorsearch's manifest in the web console.",
+            "title": "Manifesturl",
+            "type": "string"
+          },
+          "metadataFilter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vectorsearch.metadata_filter."
+          },
+          "name": {
+            "description": "MetaDataModel.name, in snake_case.",
+            "title": "Name",
+            "type": "string"
+          },
+          "scoreThreshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vectorsearch.score_threshold.",
+            "title": "Scorethreshold"
+          },
+          "searchType": {
+            "description": "Vectorsearch.search_type.",
+            "enum": [
+              "similarity",
+              "similarity_score_threshold",
+              "mmr"
+            ],
+            "title": "Searchtype",
+            "type": "string"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/AccountApiUserProfile",
+            "description": "The Vectorsearch's owner."
+          },
+          "vectorstore": {
+            "description": "Vectorsearch.vectorstore: the vectorstore's id.",
+            "title": "Vectorstore",
+            "type": "integer"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "userProfile",
+          "canDelete",
+          "manifestUrl",
+          "searchType",
+          "k",
+          "isEnabled",
+          "vectorstore"
+        ],
+        "title": "VectorsearchApiVectorsearch",
+        "type": "object"
+      },
       "VectorsearchSearchType": {
         "description": "Supported retrieval strategies for a Vectorsearch query.",
         "enum": [
@@ -24062,6 +24456,85 @@
         ]
       }
     },
+    "/orchestrators/": {
+      "get": {
+        "description": "The Orchestrators that the user may read, by name. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "orchestrator_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OrchestratorApiOrchestrator"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List orchestrators",
+        "tags": [
+          "orchestrators"
+        ]
+      }
+    },
+    "/orchestrators/{id}/": {
+      "get": {
+        "description": "An Orchestrator, by its id or hashed id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "orchestrator_retrieve",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestratorApiOrchestrator"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      }
+    },
     "/plugins/": {
       "get": {
         "description": "The plugins that the user owns, newest first: their metadata. Requires an api key.",
@@ -24664,6 +25137,85 @@
         "summary": "A Secret",
         "tags": [
           "secrets"
+        ]
+      }
+    },
+    "/vectorsearches/": {
+      "get": {
+        "description": "The Vectorsearchs that the user may read, by name. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "vectorsearch_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VectorsearchApiVectorsearch"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List vectorsearches",
+        "tags": [
+          "vectorsearches"
+        ]
+      }
+    },
+    "/vectorsearches/{id}/": {
+      "get": {
+        "description": "A Vectorsearch, by its id or hashed id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "vectorsearch_retrieve",
+        "parameters": [
+          {
+            "description": "The Vectorsearch's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VectorsearchApiVectorsearch"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A Vectorsearch",
+        "tags": [
+          "vectorsearches"
         ]
       }
     },
@@ -25319,6 +25871,14 @@
     {
       "description": "The Smarter Journal: a record of every request to the cli api. For superusers.",
       "name": "journal"
+    },
+    {
+      "description": "The Orchestrators' REST reads. For superusers.",
+      "name": "orchestrators"
+    },
+    {
+      "description": "The Vectorsearches' REST reads. For superusers.",
+      "name": "vectorsearches"
     }
   ]
 }

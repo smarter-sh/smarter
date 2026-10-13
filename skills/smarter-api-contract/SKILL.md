@@ -1,6 +1,6 @@
 ---
 name: smarter-api-contract
-description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api and the chat api and grows one family of REST routes at a time - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the design decisions in openapi.py, and the downstream SDKs.
+description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api, the chat api and every family of REST routes under /api/v1, and which each platform serves at /docs/openapi.json and renders at /docs/openapi/ - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the design decisions in openapi.py, and the downstream SDKs.
 ---
 
 # The Smarter API Contract
@@ -121,6 +121,11 @@ run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
   `UNDOCUMENTED_ROUTES` with a reason. The test also fails when an entry of
   `UNDOCUMENTED_ROUTES` names no route, or a route that is now documented, so
   the list stays honest. `NOT_YET_MODELED` marks the backlog.
+- Every family that `smarter.apps.api.v1.urls` mounts must be in
+  `DOCUMENTED_URLCONFS`, or in `UNDOCUMENTED_URLCONFS` with a reason
+  (`test_every_family_is_covered`). Only `/tests/` is left out. A new app's
+  `api/v1/urls.py` therefore fails the tests until it is covered: start with
+  "Covering a new family of routes" below.
 - `PATH_PARAMETER_ALIASES` renames a route's path parameters for the document,
   e.g. `<int:llmclient_id>` and `<str:hashed_id>` are both `{id}`, because one
   documented path serves both routes.
@@ -151,7 +156,7 @@ run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
 
 ## Covering a new family of routes
 
-This is how the document grows toward everything the SDKs call. The chat api
+Every family is covered now, so this is for a new app's routes. The chat api
 (`chat_paths()`) is the pattern to copy.
 
 1. **Add the family's urlconf** to `DOCUMENTED_URLCONFS`. Run the test: it
@@ -265,6 +270,11 @@ The contract is the source the SDKs generate from:
 - **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
   the same schemas.
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
+- **Every platform serves the committed `openapi.json`** at `/docs/openapi.json`
+  (`smarter.apps.docs.views.openapi`), with its own `/api/v1` added as the first
+  server, and renders it with drf-yasg's bundled Swagger UI 5 at `/docs/openapi/`,
+  the sidebar's _OpenAPI Contract_ link. It reads the file, so `make api-contract`
+  is all it needs.
 
 To check the document with an independent validator, without adding a
 dependency to the platform:
