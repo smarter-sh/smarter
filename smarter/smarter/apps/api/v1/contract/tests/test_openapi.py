@@ -30,13 +30,22 @@ from smarter.apps.api.v1.contract.openapi import (
     DOCUMENTED_URLCONFS,
     PATH_PARAMETER_ALIASES,
     UNDOCUMENTED_ROUTES,
+    llmclient_paths,
+    merge_paths,
     openapi_document,
     openapi_json,
 )
 from smarter.apps.api.v1.contract.sam import sam_models
 from smarter.apps.guardrail.models import Guardrail
-from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.models import (
+    LLMClient,
+    LLMClientAPIKey,
+    LLMClientFunctions,
+    LLMClientPlugin,
+)
+from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import PROJECT_ROOT
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
 
 GUARDRAIL_MANIFEST = os.path.join(
@@ -121,6 +130,13 @@ class TestOpenApiDocument(ApiV1CliTestBase):
                 self.assertIn(path, routes, f"{path} is listed as undocumented, but there is no such route.")
                 self.assertNotIn(path, paths, f"{path} is documented, so remove it from UNDOCUMENTED_ROUTES.")
 
+    def test_merge_paths(self):
+        """Families merge into one document, and an operation that two families define is refused."""
+        paths = merge_paths(llmclient_paths(), {"/other/": llmclient_paths()["/llm-clients/"]})
+        self.assertIn("/other/", paths)
+        with self.assertRaises(ValueError):
+            merge_paths(llmclient_paths(), llmclient_paths())
+
     def test_public_operations(self):
         paths = openapi_document().paths
         public = sorted(path for path, item in paths.items() if item.post and item.post.security == [])
@@ -165,6 +181,79 @@ class TestOpenApiResponses(ApiV1CliTestBase):
         )
         errors = [f"{list(error.absolute_path)}: {error.message[:300]}" for error in validator.iter_errors(body)]
         self.assertEqual(errors, [], f"{schema_name}: {body}")
+
+    def assertValidResponse(self, path: str, method: str, body, status: int = 200):
+        """Assert that a response body is valid under the schema that the document gives its operation and status."""
+        operation = getattr(openapi_document().paths[path], method)
+        response = operation.responses.get(str(status)) or operation.responses["default"]
+        schema = response.content["application/json"].schema_
+        errors = [
+            f"{list(error.absolute_path)}: {error.message[:300]}"
+            for error in Draft202012Validator(
+                json.loads(json.dumps(schema).replace('"#/components/', f'"{DOCUMENT_URI}#/components/')),
+                registry=self.registry,
+            ).iter_errors(body)
+        ]
+        self.assertEqual(errors, [], f"{method.upper()} {path} {status}: {str(body)[:500]}")
+
+    def rest_get(self, path: str) -> tuple[int, object]:
+        """GET a REST api path, with the api key of the test's superuser."""
+        response = APIClient().get(f"/api/v1{path}", headers={"Authorization": f"Token {self.token_key}"})
+        return response.status_code, response.json()
+
+    def test_llmclient_reads(self):
+        """Every read of the LLMClients' REST api, its 404 and its 403, against the document."""
+        llmclient = LLMClient.objects.create(name=self.name, user_profile=self.user_profile)
+        self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
+        function = LLMClientFunctions.objects.create(llmclient=llmclient, name="calculator")
+        plugin_meta = PluginMeta.objects.create(name=self.name, user_profile=self.user_profile, plugin_class="static")
+        self.addCleanup(PluginMeta.objects.filter(pk=plugin_meta.pk).delete)
+        plugin = LLMClientPlugin.objects.create(llmclient=llmclient, plugin_meta=plugin_meta)
+        token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=self.user_profile, name=self.name, user=self.admin_user, description=self.name
+        )
+        self.addCleanup(SmarterAuthToken.objects.filter(pk=token.pk).delete)
+        api_key = LLMClientAPIKey.objects.create(llmclient=llmclient, api_key=token)
+
+        reads = {
+            "/llm-clients/": "/llm-clients/",
+            "/llm-clients/{id}/": f"/llm-clients/{llmclient.hashed_id}/",
+            "/llm-clients/{id}/plugins/": f"/llm-clients/{llmclient.pk}/plugins/",
+            "/llm-clients/{id}/plugins/{plugin_id}/": f"/llm-clients/{llmclient.pk}/plugins/{plugin.pk}/",
+            "/llm-clients/{id}/apikeys/": f"/llm-clients/{llmclient.pk}/apikeys/",
+            "/llm-clients/{id}/apikeys/{apikey_id}/": f"/llm-clients/{llmclient.pk}/apikeys/{api_key.pk}/",
+            "/llm-clients/{id}/customdomains": f"/llm-clients/{llmclient.pk}/customdomains",
+            "/llm-clients/{id}/functions": f"/llm-clients/{llmclient.pk}/functions",
+            "/llm-clients/{id}/functions/{function_id}": f"/llm-clients/{llmclient.pk}/functions/{function.pk}",
+        }
+        for template, path in reads.items():
+            with self.subTest(path=template):
+                status, body = self.rest_get(path)
+                self.assertEqual(status, HTTPStatus.OK, body)
+                self.assertValidResponse(template, "get", body)
+                # a custom domain can't be created here: saving one reaches DNS.
+                if isinstance(body, list) and template != "/llm-clients/{id}/customdomains":
+                    self.assertTrue(body, f"{template} returned no rows to validate.")
+        status, body = self.rest_get(f"/llm-clients/{llmclient.pk}/")
+        self.assertEqual(body["functions"][0]["name"], "calculator")
+        # an api key is its token's public key_id, never the token's digest, its primary key.
+        self.assertEqual(body["apiKeys"][0]["apiKey"], str(token.key_id))
+        status, body = self.rest_get(f"/llm-clients/{llmclient.pk}/apikeys/")
+        self.assertEqual([item["apiKey"] for item in body], [str(token.key_id)])
+        self.assertNotIn(token.digest, json.dumps(body))
+
+        for path in ("/llm-clients/999999999/", "/llm-clients/rNotAHashedId/"):
+            with self.subTest(not_found=path):
+                status, body = self.rest_get(path)
+                self.assertEqual(status, HTTPStatus.NOT_FOUND, body)
+                self.assertValidResponse("/llm-clients/{id}/", "get", body, status)
+
+        # a user who is not a superuser. Only staff may have an api key, so the user is authenticated directly.
+        client = APIClient()
+        client.force_authenticate(user=self.non_admin_user)
+        response = client.get("/api/v1/llm-clients/")
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.content)
+        self.assertValidResponse("/llm-clients/", "get", response.json(), response.status_code)
 
     def post(self, path: str, data=None) -> SmarterDictType:
         """POST to the cli, and return the response's body, which must be a success."""

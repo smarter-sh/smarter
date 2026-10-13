@@ -18,3 +18,18 @@ API Contract
 
 .. automodule:: smarter.apps.api.v1.contract.openapi
     :members:
+
+.. automodule:: smarter.apps.account.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: smarter.apps.plugin.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: smarter.apps.llmclient.contract.models
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -6,7 +6,11 @@ The document covers the apis that the ``smarter`` cli and the SDKs call, family 
 - the cli api (``/api/v1/cli/``), to apply, get, describe, validate and delete the resources that
   SAM manifests declare,
 - the chat api (``/api/v1/llm-clients/{id}/config/`` and ``.../prompt/``), to chat with an
-  LLMClient, as JSON or as a stream of Server-Sent Events.
+  LLMClient, as JSON or as a stream of Server-Sent Events,
+- the REST reads of the resource families, so far the LLMClients' (``/api/v1/llm-clients/``),
+  whose responses are built from each app's contract models, e.g.
+  :mod:`smarter.apps.llmclient.contract.models`. Only the reads are published: clients write
+  through the cli api's manifests, which the brokers validate.
 
 It is built from:
 
@@ -34,6 +38,14 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
+from smarter.apps.llmclient.contract.models import (
+    LLMCLIENT_API_MODELS,
+    LLMClientApiCustomDomain,
+    LLMClientApiFunction,
+    LLMClientApiKey,
+    LLMClientApiLLMClient,
+    LLMClientApiPlugin,
+)
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfigRequest,
@@ -88,6 +100,7 @@ from .models import (
     OpenApiServer,
     OpenApiServerVariable,
     OpenApiTag,
+    RestApiErrorResponse,
 )
 from .sam import sam_models
 
@@ -105,6 +118,13 @@ TAG_DEPLOYMENT = "deployment"
 TAG_PLATFORM = "platform"
 
 TAG_CHAT = "chat"
+TAG_LLMCLIENTS = "llmclients"
+
+SUPERUSER_ONLY = (
+    "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
+    "their resources with the cli api's get and describe."
+)
+"""The note of every REST read, whose views are SmarterAdminAPIView and SmarterAdminListAPIView."""
 
 CHAT_MODELS: tuple[type[BaseModel], ...] = (
     PromptChatApiConfigRequest,
@@ -137,19 +157,10 @@ An LLMClient's routes take either its numeric id or its hashed id, which the doc
 NOT_YET_MODELED = "Not modeled yet. The REST reads of each resource family are the next part of the contract."
 
 UNDOCUMENTED_ROUTES: dict[str, str] = {
-    "/llm-clients/": NOT_YET_MODELED,
-    "/llm-clients/{id}/": NOT_YET_MODELED,
     "/llm-clients/{id}/prompt/config/": "A legacy alias of /llm-clients/{id}/config/, for pages that installed an "
     "older Smarter Chat.",
-    "/llm-clients/{id}/plugins/": NOT_YET_MODELED,
-    "/llm-clients/{id}/plugins/{plugin_id}/": NOT_YET_MODELED,
-    "/llm-clients/{id}/apikeys/": NOT_YET_MODELED,
-    "/llm-clients/{id}/apikeys/{apikey_id}/": NOT_YET_MODELED,
-    "/llm-clients/{id}/customdomains": NOT_YET_MODELED,
-    "/llm-clients/{id}/customdomains/{customdomain_id}": NOT_YET_MODELED,
-    "/llm-clients/{id}/functions": NOT_YET_MODELED,
-    "/llm-clients/{id}/functions/{function_id}": NOT_YET_MODELED,
-    "/llm-clients/{id}/functions/{function_id}/plugins": NOT_YET_MODELED,
+    "/llm-clients/{id}/functions/{function_id}/plugins": "It returns every plugin of the LLMClient, whatever the "
+    "function, because it is routed to LLMClientPluginListView. Not published until it is fixed or removed.",
 }
 """The paths of the routes of :data:`DOCUMENTED_URLCONFS` that the document leaves out, and why."""
 
@@ -225,6 +236,7 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         SAMJournalApiEnvelope,
         SAMJournalApiErrorResponse,
         *CHAT_MODELS,
+        *LLMCLIENT_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -656,6 +668,201 @@ def chat_paths() -> dict[str, OpenApiPathItem]:
     }
 
 
+def rest_read(
+    operation_id: str,
+    summary: str,
+    description: str,
+    tag: str,
+    item: str,
+    *,
+    many: bool,
+    parameters: list[OpenApiParameter],
+) -> OpenApiOperation:
+    """
+    A read of the REST api: a ``GET`` whose response is a row, or a list of rows, of one of the document's schemas.
+
+    :param operation_id: The operation's id, e.g. llmclient_list.
+    :type operation_id: str
+    :param summary: A one-line summary.
+    :type summary: str
+    :param description: A description, to which :data:`SUPERUSER_ONLY` is added.
+    :type description: str
+    :param tag: The operation's tag.
+    :type tag: str
+    :param item: The schema of a row, in ``components.schemas``.
+    :type item: str
+    :param many: Whether the response is a list of rows.
+    :type many: bool
+    :param parameters: The operation's parameters.
+    :type parameters: list[OpenApiParameter]
+    :returns: The operation.
+    :rtype: OpenApiOperation
+    """
+    schema = {"type": "array", "items": ref(item)} if many else ref(item)
+    return OpenApiOperation(
+        operationId=operation_id,
+        summary=summary,
+        description=f"{description} {SUPERUSER_ONLY}",
+        tags=[tag],
+        parameters=parameters,
+        responses={
+            "200": OpenApiResponse(
+                description="The list." if many else "The row.",
+                content={"application/json": OpenApiMediaType(schema_=schema)},
+            ),
+            "default": json_response(
+                "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser.",
+                RestApiErrorResponse.__name__,
+            ),
+        },
+    )
+
+
+def integer_id(name: str, description: str) -> OpenApiParameter:
+    """
+    A path parameter that is a row's numeric id.
+
+    :param name: The parameter's name, e.g. plugin_id.
+    :type name: str
+    :param description: Its description.
+    :type description: str
+    :returns: The parameter.
+    :rtype: OpenApiParameter
+    """
+    return OpenApiParameter(name=name, in_="path", required=True, description=description, schema_={"type": "integer"})
+
+
+def llmclient_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The REST reads of the LLMClients, relative to the server's ``/api/v1``.
+
+    An LLMClient is read by its numeric id or its hashed id. Its related rows, by its numeric id only:
+    their routes take no hashed id.
+
+    :returns: The paths, e.g. ``{"/llm-clients/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    llmclient_id = integer_id("id", "The LLMClient's numeric id.")
+    tag = TAG_LLMCLIENTS
+    reads = {
+        "/llm-clients/": rest_read(
+            "llmclient_list",
+            "List LLMClients",
+            "The LLMClients that the user may read.",
+            tag,
+            LLMClientApiLLMClient.__name__,
+            many=True,
+            parameters=[],
+        ),
+        "/llm-clients/{id}/": rest_read(
+            "llmclient_retrieve",
+            "An LLMClient",
+            "An LLMClient, with its functions, plugins, custom domains, api keys and urls.",
+            tag,
+            LLMClientApiLLMClient.__name__,
+            many=False,
+            parameters=[LLMCLIENT_ID_PARAMETER],
+        ),
+        "/llm-clients/{id}/plugins/": rest_read(
+            "llmclient_plugin_list",
+            "An LLMClient's plugins",
+            "The plugins of an LLMClient, each with the plugin's metadata.",
+            tag,
+            LLMClientApiPlugin.__name__,
+            many=True,
+            parameters=[llmclient_id],
+        ),
+        "/llm-clients/{id}/plugins/{plugin_id}/": rest_read(
+            "llmclient_plugin_retrieve",
+            "A plugin of an LLMClient",
+            "A plugin of an LLMClient, by the LLMClientPlugin's id.",
+            tag,
+            LLMClientApiPlugin.__name__,
+            many=False,
+            parameters=[llmclient_id, integer_id("plugin_id", "The LLMClientPlugin's id.")],
+        ),
+        "/llm-clients/{id}/apikeys/": rest_read(
+            "llmclient_apikey_list",
+            "An LLMClient's api keys",
+            "The api keys of an LLMClient: the ids of their SmarterAuthTokens, never the keys.",
+            tag,
+            LLMClientApiKey.__name__,
+            many=True,
+            parameters=[llmclient_id],
+        ),
+        "/llm-clients/{id}/apikeys/{apikey_id}/": rest_read(
+            "llmclient_apikey_retrieve",
+            "An api key of an LLMClient",
+            "An api key of an LLMClient, by the LLMClientAPIKey's id.",
+            tag,
+            LLMClientApiKey.__name__,
+            many=False,
+            parameters=[llmclient_id, integer_id("apikey_id", "The LLMClientAPIKey's id.")],
+        ),
+        "/llm-clients/{id}/customdomains": rest_read(
+            "llmclient_customdomain_list",
+            "An LLMClient's custom domains",
+            "The custom domain of an LLMClient, as a list of none or one.",
+            tag,
+            LLMClientApiCustomDomain.__name__,
+            many=True,
+            parameters=[llmclient_id],
+        ),
+        "/llm-clients/{id}/customdomains/{customdomain_id}": rest_read(
+            "llmclient_customdomain_retrieve",
+            "A custom domain of an LLMClient",
+            "A custom domain of an LLMClient, by its id.",
+            tag,
+            LLMClientApiCustomDomain.__name__,
+            many=False,
+            parameters=[llmclient_id, integer_id("customdomain_id", "The LLMClientCustomDomain's id.")],
+        ),
+        "/llm-clients/{id}/functions": rest_read(
+            "llmclient_function_list",
+            "An LLMClient's built-in functions",
+            "The built-in functions of an LLMClient.",
+            tag,
+            LLMClientApiFunction.__name__,
+            many=True,
+            parameters=[llmclient_id],
+        ),
+        "/llm-clients/{id}/functions/{function_id}": rest_read(
+            "llmclient_function_retrieve",
+            "A built-in function of an LLMClient",
+            "A built-in function of an LLMClient, by the LLMClientFunctions' id.",
+            tag,
+            LLMClientApiFunction.__name__,
+            many=False,
+            parameters=[llmclient_id, integer_id("function_id", "The LLMClientFunctions' id.")],
+        ),
+    }
+    return {path: OpenApiPathItem(get=read) for path, read in reads.items()}
+
+
+def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
+    """
+    The paths of several families, with the operations of a path that two families share in one path item.
+
+    :param families: Each family's paths.
+    :type families: dict[str, OpenApiPathItem]
+    :returns: The paths.
+    :rtype: dict[str, OpenApiPathItem]
+    :raises ValueError: If two families define the same method of a path.
+    """
+    paths: dict[str, OpenApiPathItem] = {}
+    for family in families:
+        for path, item in family.items():
+            merged = paths.get(path, OpenApiPathItem())
+            for method in ("get", "post"):
+                operation = getattr(item, method)
+                if operation is not None:
+                    if getattr(merged, method) is not None:
+                        raise ValueError(f"{method.upper()} {path} is defined twice.")
+                    setattr(merged, method, operation)
+            paths[path] = merged
+    return paths
+
+
 def openapi_document() -> OpenApiDocument:
     """
     The Smarter api's OpenAPI document.
@@ -700,8 +907,9 @@ def openapi_document() -> OpenApiDocument:
             OpenApiTag(name=TAG_DEPLOYMENT, description="Deployable resources, e.g. LLMClients."),
             OpenApiTag(name=TAG_PLATFORM, description="The platform, and the api key's user."),
             OpenApiTag(name=TAG_CHAT, description="Chats with LLMClients."),
+            OpenApiTag(name=TAG_LLMCLIENTS, description="The LLMClients' REST reads."),
         ],
-        paths={**cli_paths(), **chat_paths()},
+        paths=merge_paths(cli_paths(), chat_paths(), llmclient_paths()),
         components=OpenApiComponents(
             schemas=schemas,
             securitySchemes={
@@ -744,6 +952,9 @@ __all__ = [
     "PATH_PARAMETER_ALIASES",
     "UNDOCUMENTED_ROUTES",
     "chat_paths",
+    "llmclient_paths",
+    "merge_paths",
+    "rest_read",
     "cli_paths",
     "cli_schemas",
     "openapi_document",

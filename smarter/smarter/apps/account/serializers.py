@@ -1,6 +1,6 @@
 """Account serializers for Smarter API."""
 
-from typing import List
+from typing import List, Optional
 
 from rest_framework import serializers
 
@@ -299,6 +299,50 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
         return fields
 
 
+def user_can_delete(obj, kind: Optional[str], user: object) -> bool:
+    """
+    Return True if a user may delete a resource now.
+
+    The user must have ownership permission for the resource, as in
+    :meth:`MetaDataWithOwnershipModelManager.with_ownership_permission_for`, and no other resource may
+    depend on it, as in :meth:`AbstractBroker.dependencies`. It is the ``canDelete`` of the
+    resource's api responses, e.g. :meth:`MetaDataWithOwnershipModelSerializer.get_can_delete`.
+
+    .. note::
+
+        This builds a broker, and queries its dependencies. Checking a long list of resources is
+        correspondingly slower.
+
+    :param obj: The resource.
+    :type obj: MetaDataWithOwnershipModel
+    :param kind: The resource's SAM kind, e.g. LLMClient, which finds its broker.
+    :type kind: Optional[str]
+    :param user: The user, e.g. the request's user. Anything that is not a :class:`User`, e.g. an
+        anonymous user or None, may delete nothing.
+    :type user: object
+    :return: Whether the user may delete the resource.
+    :rtype: bool
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.api.v1.cli.brokers import Brokers
+
+    broker_class = Brokers.get_broker(kind) if kind else None
+    if broker_class is None or not isinstance(user, User):
+        return False
+    if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
+        return False
+    try:
+        broker = broker_class(None, name=obj.name, kind=kind, user_profile=obj.user_profile)
+        return not broker.dependencies()
+    # an incomplete resource, e.g. a plugin without its plugin data, can fail to initialize its broker.
+    # pylint: disable=W0718
+    except Exception as e:
+        logger.warning(
+            "%s.user_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
+        )
+        return False
+
+
 class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
     """Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
 
@@ -354,32 +398,11 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
 
         :param obj: The resource.
         :type obj: MetaDataWithOwnershipModel
-        :return: Whether the user may delete the resource, or None if the serializer has no request
-            in its context, or does not know the resource's kind.
-        :rtype: Optional[bool]
+        :return: Whether the user may delete the resource. False if the serializer has no request in
+            its context, or does not know the resource's kind. See :func:`user_can_delete`.
+        :rtype: bool
         """
-        # pylint: disable=import-outside-toplevel
-        from smarter.apps.api.v1.cli.brokers import Brokers
-
         request = self.context.get("request")
-        user = getattr(request, "user", None)
-        # the serializer's Meta.kind, or the resource's own kind, e.g. a PluginMeta's enum or a ConnectionBase's str.
         obj_kind = getattr(obj, "kind", None)
         kind = getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
-        broker_class = Brokers.get_broker(kind) if kind else None
-        if request is None or broker_class is None:
-            return False
-        if not isinstance(user, User):
-            return False
-        if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
-            return False
-        try:
-            broker = broker_class(None, name=obj.name, kind=kind, user_profile=obj.user_profile)
-            return not broker.dependencies()
-        # an incomplete resource, e.g. a plugin without its plugin data, can fail to initialize its broker.
-        # pylint: disable=W0718
-        except Exception as e:
-            logger.warning(
-                "%s.get_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
-            )
-            return False
+        return user_can_delete(obj, kind, getattr(request, "user", None) if request is not None else None)

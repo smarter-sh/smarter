@@ -66,6 +66,14 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
 
 
 class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):
+    """
+    An api key of an LLMClient.
+
+    ``api_key`` is the SmarterAuthToken's public key_id. The token's primary key is its digest, a hash
+    of the key, which the api never returns.
+    """
+
+    api_key = serializers.UUIDField(source="api_key.key_id", read_only=True)
 
     class Meta:
         model = LLMClientAPIKey

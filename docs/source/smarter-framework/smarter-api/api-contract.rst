@@ -31,8 +31,11 @@ against the platform's real responses. It covers:
    * - The chat api
      - ``/api/v1/llm-clients/{id}/config/`` and ``/api/v1/llm-clients/{id}/prompt/``, as JSON and as a
        stream of Server-Sent Events.
+   * - The LLMClients' REST reads
+     - ``GET /api/v1/llm-clients/``, an LLMClient, and its plugins, api keys, custom domains and
+       built-in functions, as lists and one by one.
 
-The other routes of a covered family, e.g. the LLMClients' REST reads, are listed in
+The other routes of a covered family are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason that it is
 left out. Until a family is covered, a client reads its resources from the REST api's own views,
 described only by the live Swagger page, untyped.
@@ -159,11 +162,33 @@ their schemas in an ``x-smarter-events`` extension of the stream's media type:
      }
    }
 
+The REST reads
+~~~~~~~~~~~~~~
+
+The REST api's views read and write each resource family's rows, e.g. ``/api/v1/llm-clients/``. The
+document publishes only their reads, the ``GET`` requests. Clients write through the cli api's
+manifests, which the brokers validate, as the SDKs do.
+
+Their responses are built from each app's contract models, e.g.
+:mod:`smarter.apps.llmclient.contract.models`, which are models of the rows, built from them by
+``from_model()``. Shared parts live with the app that owns them: a resource's owner in
+:mod:`smarter.apps.account.contract.models`, and a plugin's metadata in
+:mod:`smarter.apps.plugin.contract.models`. The models describe the JSON that the views returned
+before they were modeled, which clients already read, with two corrections:
+
+- ``canDelete`` is computed for the requesting user. The views called their serializers without the
+  request, so it was always false.
+- An LLMClient's api key is its token's public ``key_id``. It was the token's primary key, its digest.
+
+The REST views require an api key of a superuser, and refuse other users with a 403. Other users read
+their resources with the cli api's ``get`` and ``describe``.
+
 Errors
 ~~~~~~
 
 The cli api's errors are the journal's error response. The chat api's are the chat contract's
-``PromptChatApiErrorResponse``. Each operation's ``default`` response names its error's schema.
+``PromptChatApiErrorResponse``. The REST reads' are Django REST framework's ``{"detail": "..."}``,
+``RestApiErrorResponse``. Each operation's ``default`` response names its error's schema.
 
 The Swagger page
 ~~~~~~~~~~~~~~~~
