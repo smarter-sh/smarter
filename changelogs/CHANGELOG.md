@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.22.0-alpha.1...v0.22.0-alpha.2) (2026-10-13)
+
+### Features
+
+* **api:** type every cli route, commit examples, journal every error ([c5e6d8c](https://github.com/smarter-sh/smarter/commit/c5e6d8c8efe8e81fc152294b556178cca5e9cf1f))
+
 ## [0.22.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.21.1...v0.22.0-alpha.1) (2026-10-13)
 
 ### Features
