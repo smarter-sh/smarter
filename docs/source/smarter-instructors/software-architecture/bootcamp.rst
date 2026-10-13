@@ -39,9 +39,11 @@ By the end of the bootcamp, students can:
 3. Explain each of the twelve factors, and judge from the code whether a system follows it.
 4. Recognize infrastructure as code, horizontal scalability, zero trust, extensibility and
    explicit data models in a real codebase, and say what each costs.
-5. Read an Architecture Decision Record, find the code that implements it, and judge whether they
+5. Trace a request through the classic web patterns, Model-View-Controller, Django's
+   Model-View-Template and the LAMP stack, and say where a modern system departs from them.
+6. Read an Architecture Decision Record, find the code that implements it, and judge whether they
    still agree.
-6. Analyze the trade-offs of a decision, including the alternatives that were not chosen, and
+7. Analyze the trade-offs of a decision, including the alternatives that were not chosen, and
    record a decision of their own as an ADR.
 
 Technical Prerequisites
@@ -101,8 +103,12 @@ The file references in the lectures are listed in full under `Principles in the 
        claim is only as good as the code behind it.
    * - 6
      - 45
-     - **Lecture 4: Styles, patterns and extensibility.** Monolith, modular monolith (one Django
-       app per resource family) and microservices; layered architecture; ports and adapters, in
+     - **Lecture 4: Styles, patterns and extensibility.** A pattern review: Model-View-Controller
+       and the separation it makes between data, presentation and input; Django's
+       Model-View-Template, traced through the ``Secret`` model, its URLconf, views and
+       templates; and the LAMP stack, set beside Smarter's Debian, uvicorn, MariaDB and Python.
+       Then monolith, modular monolith (one Django app per resource family) and microservices;
+       layered architecture; ports and adapters, in
        the infrastructure service layer that hides AWS behind
        ``infrastructure.dns``, ``.certificates``, ``.kubernetes`` and ``.email`` and swaps in an
        in-memory provider for tests; the

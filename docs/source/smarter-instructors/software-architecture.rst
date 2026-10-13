@@ -22,6 +22,13 @@ process type, sessions kept in Redis, and liveness and readiness probes in the
 `Helm chart <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/templates>`__.
 Beyond the twelve factors, students find:
 
+- **Classic patterns.** Django's Model-View-Template, its version of Model-View-Controller, in
+  every resource family: a `model
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
+  `URL patterns <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/urls.py>`__,
+  views and `templates <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/templates>`__,
+  with MVC split between Django and a React app on the web console's pages. Underneath runs a
+  descendant of the LAMP stack: Linux, MariaDB and Python, with uvicorn in Apache's place.
 - **Ports and adapters.** All DNS, certificate, Kubernetes and email work goes through one
   `infrastructure facade
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__,
@@ -58,8 +65,9 @@ end of the course.
 
 **What the course covers.** What architecture is, and the quality attributes that drive it;
 quality attribute scenarios; describing a system with the C4 model; reading, verifying and writing
-ADRs; the twelve factors, one by one, against the code; styles and patterns, from modular monolith
-to ports and adapters; horizontal scalability, caching and task queues; data models and contracts;
+ADRs; the twelve factors, one by one, against the code; a review of the classic patterns,
+Model-View-Controller, Model-View-Template and the LAMP stack; styles and patterns, from modular
+monolith to ports and adapters; horizontal scalability, caching and task queues; data models and contracts;
 infrastructure as code; zero trust and the architecture of AI applications; and how an
 architecture evolves, including when coding agents write much of the code.
 
@@ -90,6 +98,8 @@ Each course plan lists every file that it uses, factor by factor and principle b
   decision.
 - Audit four of the twelve factors against the code, with file and line references, and combine
   the class's findings into a scorecard for the whole system.
+- Trace one request to the web console, from the URLconf through the view and template to the
+  React app and the JSON API it calls, and label each part as model, view or controller.
 - Argue the opposite of an ADR: what would Smarter look like if it had chosen differently, and
   what would that have cost?
 - Draw Smarter's architecture, from the browser and CLI to the database, the workers and the

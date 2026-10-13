@@ -1,0 +1,223 @@
+Every lecture, lab and assignment in this course rests on the files below. Every reference is to
+the ``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__,
+so that students can open each one during class. Python paths are under ``smarter/smarter/``.
+
+Configuration and Startup
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 1. Django, 12-Factor and settings
+     - Every setting is read from the environment, validated and typed by a Pydantic ``Settings``
+       class, and only then copied into Django's settings. One settings module per environment
+       inherits from ``base.py``. :doc:`ADR 004 </adr/004-12-factor>`,
+       :doc:`ADR 007 </adr/007-settings>`.
+     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+       `common/conf/env.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/env.py>`__,
+       `common/conf/defaults.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/defaults.py>`__,
+       `settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__,
+       `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__
+   * - 2. The startup sequence
+     - Every app's ``ready()`` imports its signals and receivers. The database may not be
+       reachable, or migrated, when ``ready()`` runs, so Waffle checks first. The cache is
+       resolved lazily, so that Django does not fall back to a local-memory cache when
+       ``django.core.cache`` is imported too early.
+     - `apps/dashboard/apps.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/apps.py>`__,
+       `lib/django/waffle/ready.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/ready.py>`__,
+       `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__,
+       `common/mixins/helper_mixin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/mixins/helper_mixin.py>`__
+       (``SmarterReadyState``)
+   * - 3. Python logging
+     - A logger factory, loggers switched on per subsystem by Waffle, a filter, a middleware that
+       adds the user to every record, and a handler that publishes records to Redis.
+       :doc:`ADR 011 </adr/011-logging>`.
+     - `lib/logging/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/logging>`__
+       (``get_smarter_logger.py``, ``waffle_switched_logger.py``, ``filters.py``,
+       ``middleware.py``, ``redis_log_handler.py``)
+
+The Request
+~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 4. The request and the middleware chain
+     - The ``MIDDLEWARE`` list, commented block by block, and the order in which each class sees
+       the request and the response. ``SmarterRequestMixin`` reads what middleware attached to
+       the request. A diagnostic middleware checks what every class in the chain returns.
+     - `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+       (``MIDDLEWARE``),
+       `lib/django/request.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/request.py>`__,
+       `common/utils/request.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/utils/request.py>`__,
+       `lib/django/middleware/debug.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/debug.py>`__
+   * - 5. Writing middleware
+     - A shared base class, replacements for Django's CORS, CSRF and security middleware, an API
+       key authentication middleware, and middleware that blocks probes for sensitive files and
+       bursts of 404s.
+     - `lib/django/middleware/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/middleware>`__,
+       `common/mixins/middleware_mixin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/mixins/middleware_mixin.py>`__,
+       `lib/drf/middleware.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/middleware.py>`__,
+       `apps/llmclient/middleware/security.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/middleware/security.py>`__
+   * - 6. Many hosts; Waffle
+     - ``django-hosts`` maps the console, the API and each chatbot's host to its own URLconf.
+       Waffle switches are declared once, created on first use, and checked safely before the
+       database is ready. :doc:`ADR 022 </adr/022-feature-flags>`.
+     - `hosts.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/hosts.py>`__,
+       `urls/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/urls>`__,
+       `lib/django/waffle/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/waffle>`__
+       (``switches.py``, ``is_active.py``)
+
+Data
+~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 7. Customizing the ORM
+     - Abstract base models for timestamps and metadata (name, description, version, tags and
+       annotations), and generic querysets and managers whose methods return the subclass's own
+       types.
+       :doc:`ADR 017 </adr/017-database>`.
+     - `lib/django/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/models>`__
+       (``timestamped_model.py``, ``metadata_model.py``),
+       `apps/account/models/user_profile.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/user_profile.py>`__
+       (``SmarterBaseQuerySetWithPermissions``, ``SmarterBaseModelManager``)
+   * - 8. The user; ownership and sharing
+     - Smarter keeps Django's ``User`` and adds a ``UserProfile`` that joins a user to an account.
+       Every resource inherits an owner, and its manager filters by what a user owns, what is
+       shared with them, and what they may change.
+     - `apps/account/models/user_profile.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/user_profile.py>`__,
+       `apps/account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__,
+       `apps/account/mixins.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/mixins.py>`__,
+       `common/enum.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/enum.py>`__
+       (``SmarterResourceOwnershipFilterEnum``)
+   * - 9. Signals and receivers
+     - Every app declares its own signals in ``signals.py`` and handles them in ``receivers.py``,
+       for logging, cache invalidation, the journal and prompt progress.
+     - `apps/llmclient/signals.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/signals.py>`__,
+       `apps/llmclient/receivers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/receivers.py>`__,
+       `lib/drf/receivers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/receivers.py>`__,
+       `lib/journal/receivers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/receivers.py>`__
+
+Asynchrony and Redis
+~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 10. Caching complex objects
+     - A decorator that builds a deterministic key from a function's arguments, caches ``None``
+       correctly with sentinels, and gives each function an ``.invalidate()``. Cached querysets
+       of API keys, invalidated by receivers. :doc:`ADR 018 </adr/018-caching>`.
+     - `lib/cache/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/cache>`__
+       (``decorators.py``, ``cache_sentinel.py``, ``lazy_cache.py``),
+       `lib/drf/caching.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/caching.py>`__
+   * - 11. Celery and Celery Beat
+     - One Celery app, two queues with a worker each, and a Beat schedule that names each task's
+       queue. :doc:`ADR 009 </adr/009-async-tasks>`, :doc:`ADR 030 </adr/030-task-queues>`.
+     - `lib/celery_conf/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/celery_conf>`__,
+       `workers/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/workers>`__
+       (``celery.py``, ``celerybeat.py``),
+       `apps/prompt/tasks.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/tasks.py>`__,
+       `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
+   * - 12. ASGI and publish-subscribe
+     - The ASGI application routes HTTP and WebSockets. A prompt runs in a worker thread while an
+       async generator streams its progress as Server-Sent Events, forwarded from signals through
+       a ``ContextVar``. Log records are published to Redis channels and streamed to the browser.
+     - `asgi.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/asgi.py>`__,
+       `consumers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/consumers.py>`__,
+       `apps/prompt/progress.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/progress.py>`__,
+       `lib/logging/redis_log_handler.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/logging/redis_log_handler.py>`__,
+       `terminal_emulator/api/streams.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/views/terminal_emulator/api/streams.py>`__
+
+APIs and Identity
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 13. DRF, Pydantic and authentication
+     - A ``TokenAuthentication`` subclass for hashed API keys, a YAML parser, and the Smarter Chat
+       API contract: Pydantic models with a published JSON Schema and a test that it is current.
+       :doc:`ADR 006 </adr/006-rest-api>`, :doc:`ADR 023 </adr/023-api-versioning>`,
+       :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - `lib/drf/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/drf>`__
+       (``token_authentication.py``, ``models.py``, ``parsers.py``),
+       `apps/prompt/contract/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/contract>`__,
+       `apps/llmclient/api/v1/views/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/api/v1/views/base.py>`__
+   * - 14. OAuth
+     - Google and GitHub sign-in with Python Social Auth, a pipeline with Smarter's own steps for
+       creating users, copying their details and redirecting inactive accounts, custom backends,
+       and a middleware for the errors that the pipeline raises.
+     - `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+       (``AUTHENTICATION_BACKENDS``, ``SOCIAL_AUTH_PIPELINE``),
+       `apps/account/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/pipeline.py>`__,
+       `lib/social_core/backends/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/social_core/backends>`__
+   * - 15. Mixins, enums and data helpers
+     - Mixins shared by views, models and middleware; enumerated classes; a singleton
+       metaclass; camelCase and snake_case conversion; validators; read-only YAML and CSV files;
+       and time zone aware timestamps.
+     - `common/mixins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/mixins>`__,
+       `common/enum.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/enum.py>`__,
+       `common/utils/conversion.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/utils/conversion.py>`__,
+       `lib/django/validators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/validators.py>`__,
+       `common/utils/file_handlers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/utils/file_handlers.py>`__,
+       `lib/django/models/timestamped_model.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/models/timestamped_model.py>`__
+
+Front End, Quality and the Whole
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 16. Template tags, static assets and styles
+     - A template tag manager that reads a React app's Vite manifest and renders its scripts and
+       root element; one small tag per app; the web console's Keen theme, built on Bootstrap; and
+       Tailwind in the Smarter Chat package. :doc:`ADR 019 </adr/019-react>`,
+       :doc:`ADR 025 </adr/025-templates>`, :doc:`ADR 026 </adr/026-keen>`.
+     - `lib/django/templatetags/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/templatetags>`__,
+       `apps/dashboard/templatetags/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/dashboard/templatetags>`__,
+       `templates/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/templates>`__,
+       `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__
+   * - 17. Testing, pre-commit and coverage
+     - Test base classes without transaction rollback, an in-memory infrastructure provider,
+       pre-commit hooks as the lint standard, and coverage targets per app.
+       :doc:`ADR 013 </adr/013-testing>`, :doc:`ADR 028 </adr/028-code-quality>`.
+     - `lib/unittest/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/unittest>`__,
+       `apps/infrastructure/providers/memory.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__,
+       `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__,
+       `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__,
+       `.github/workflows/test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__
+   * - 18. The terminal window
+     - A page gated by a setting and a Waffle switch, a template tag that hosts a React app, a
+       login-protected view that streams from an async generator subscribed to a Redis channel, a
+       logging handler that publishes to that channel, and the React component that renders the
+       stream.
+     - `apps/dashboard/views/terminal_emulator/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/dashboard/views/terminal_emulator>`__,
+       `apps/dashboard/templatetags/react_terminal_emulator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/templatetags/react_terminal_emulator.py>`__,
+       `smarter-terminal-emulator <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-terminal-emulator>`__

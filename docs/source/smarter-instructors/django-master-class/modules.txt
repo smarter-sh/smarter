@@ -1,0 +1,136 @@
+Each module is a 30-minute lecture followed by a lab of about 30 minutes. Labs are done on each student's own
+clone of Smarter, running under Docker Compose, on a branch per lab. The file references are
+listed in full under `The Modules in the Source Code`_.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 6 47 47
+
+   * - #
+     - Lecture
+     - Lab
+   * - 1
+     - **Django and 12-Factor; managing settings.** The twelve factors as they apply to Django.
+       Why Smarter reads every setting from the environment into a Pydantic ``Settings`` class,
+       ``smarter_settings``, and copies it into Django's settings only afterwards: types,
+       defaults, secrets as ``SecretStr``, and placeholders that count as missing. One settings
+       module per environment. :doc:`ADR 007 </adr/007-settings>`.
+     - Add a typed, validated setting to ``smarter_settings``, with a default, set it in ``.env``,
+       and use it in a view. Show what happens when it is set to an invalid value.
+   * - 2
+     - **The startup sequence.** What runs, in order, from ``manage.py`` or ``asgi.py`` to the first
+       request: settings, the app registry, each ``AppConfig.ready()``, and URL loading. Why
+       ``ready()`` must not query the database or the cache, and how Smarter's Waffle helpers and
+       lazy cache cope when they are not yet available.
+     - Add logging to an app's ``ready()``, then make it query the database, and run
+       ``makemigrations`` against an empty database to see why that fails. Fix it the way
+       ``is_database_ready()`` does.
+   * - 3
+     - **Getting more out of Python logging.** Loggers, handlers, filters and formatters; one
+       logger factory; verbose logging switched on per subsystem with Waffle, not by editing code;
+       request context added to every record by middleware; logs to standard output.
+       :doc:`ADR 011 </adr/011-logging>`.
+     - Add a Waffle-switched logger to a module, turn it on in the Django admin, and filter its
+       records by user with the log context middleware.
+   * - 4
+     - **The request object and the middleware chain.** How each middleware sees the request on
+       the way in and the response on the way out, in ``MIDDLEWARE`` order. What Smarter's chain
+       adds to the request (the host's URLconf, the user, the API key's user, the log context),
+       and how ``SmarterRequestMixin`` reads it back.
+     - Turn on the diagnostic middleware, then add a middleware that prints the request's
+       attributes at three points in the chain, and explain each difference.
+   * - 5
+     - **Writing middleware.** Function and class middleware, ``process_view`` and
+       ``process_exception``, sync and async capable middleware, and short-circuiting with a
+       response. Smarter's replacements for Django's CORS, CSRF and security middleware, and
+       why each one was needed.
+     - Write a middleware that adds a request id to the request and the response, and logs it.
+       Test it with Django's ``RequestFactory``.
+   * - 6
+     - **Many hosts in one site; Waffle.** ``django-hosts`` and ``ROOT_HOSTCONF``: the console,
+       the API and every chatbot's host routed to their own URLconfs, and ``reverse()`` across
+       hosts. Feature flags, switches and samples with Waffle, and Smarter's switch registry.
+       :doc:`ADR 022 </adr/022-feature-flags>`.
+     - Add a host pattern for a new subdomain with its own URLconf, and gate one of its views
+       with a new Waffle switch.
+   * - 7
+     - **Customizing the ORM.** Abstract base models, custom managers and querysets, chaining
+       queryset methods, typing generic managers, ``select_related`` and ``prefetch_related``,
+       and the N+1 problem. :doc:`ADR 017 </adr/017-database>`.
+     - Add a queryset method to a model's manager that chains with ``filter()``, and use the
+       Django Debug Toolbar to remove an N+1 query from a list page.
+   * - 8
+     - **The user and resource ownership.** A custom ``AUTH_USER_MODEL`` against a profile model,
+       and why Smarter keeps Django's ``User`` and adds ``UserProfile``. Accounts, owners and
+       shared resources in ``MetaDataWithOwnershipModelManager``: what a user owns, what is
+       shared with them, and what they may change.
+     - Create a model on ``MetaDataWithOwnershipModel``, and write tests that one account's user
+       cannot read another account's rows until they are shared.
+   * - 9
+     - **Signals and receivers.** Built-in model signals, custom signals, ``signals.py`` and
+       ``receivers.py`` loaded from ``ready()``, ``transaction.on_commit``, and when a signal is
+       the wrong tool.
+     - Declare a custom signal, send it from a view, and write two receivers: one that logs, and
+       one that invalidates a cache entry.
+   * - 10
+     - **Caching complex objects.** What can be pickled and what should not be; caching
+       querysets, model instances and Pydantic models; deterministic keys from arguments; caching
+       ``None``; invalidation; and why a security check is never cached.
+       :doc:`ADR 018 </adr/018-caching>`.
+     - Cache an expensive query with ``@cache_results``, invalidate it from a ``post_save``
+       receiver, and prove both with tests.
+   * - 11
+     - **Celery and Celery Beat.** Brokers, workers, queues and routing; retries and idempotency;
+       a Beat schedule; why ``.delay()`` is not eager in tests; and passing ids, not model
+       instances. :doc:`ADR 009 </adr/009-async-tasks>`, :doc:`ADR 030 </adr/030-task-queues>`.
+     - Write a task that aggregates rows for an account, route it to the right queue, schedule it
+       in Beat, and watch it run in the worker's logs.
+   * - 12
+     - **ASGI and publish-subscribe.** WSGI against ASGI, uvicorn, Channels' ``ProtocolTypeRouter``,
+       async views, ``sync_to_async`` and ``SynchronousOnlyOperation``, Server-Sent Events, and
+       Redis publish-subscribe as a message bus between processes. How Smarter streams a prompt's
+       progress while the prompt itself runs synchronously.
+     - Write an async view that streams Server-Sent Events from a Redis channel, and publish to
+       that channel from the Celery task of Module 11.
+   * - 13
+     - **API best practices.** Django REST Framework viewsets and serializers, Pydantic models as
+       the API contract, a published JSON Schema, versioning, and custom authentication with
+       hashed API keys in an authentication class and a middleware.
+       :doc:`ADR 023 </adr/023-api-versioning>`, :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - Add an endpoint whose response is built from a Pydantic model and dumped to JSON,
+       authenticated by API key. Call it with ``curl`` and a throwaway key.
+   * - 14
+     - **Working with OAuth.** The OAuth 2.0 authorization code flow, Python Social Auth's
+       backends and pipeline, adding Smarter's own steps to the pipeline, handling its
+       exceptions in middleware, and keeping client secrets in ``smarter_settings``.
+     - Register a GitHub OAuth app for ``localhost``, sign in with it, and add a pipeline step that
+       logs each sign-in.
+   * - 15
+     - **Mixins, enums and Django's data helpers.** Smarter's helper mixins and enumerated
+       classes; ``django.utils.timezone`` and aware datetimes; ``django.utils.text`` and
+       Smarter's case conversion; validators; and ``File``, ``Storage`` and
+       ``default_storage``.
+     - Write a validator, with tests, for a field that Module 8's model will store, and use an
+       enumerated class for its choices.
+   * - 16
+     - **Template tags, static assets and styles.** Simple and inclusion tags; how a template tag
+       reads a React app's Vite manifest and renders its scripts and root element;
+       ``collectstatic`` and WhiteNoise; the Keen theme, built on Bootstrap, in the web console;
+       Tailwind in the Smarter Chat package. :doc:`ADR 019 </adr/019-react>`,
+       :doc:`ADR 026 </adr/026-keen>`.
+     - Write a template tag that renders an account's resource count as a Bootstrap badge, and
+       use it on a console page.
+   * - 17
+     - **Testing, pre-commit and coverage.** Test base classes, fixtures built once, cleanup
+       without transaction rollback, mocking Celery and outside services, the pre-commit hooks
+       (black, isort, flake8, bandit and more), and coverage targets per app.
+       :doc:`ADR 013 </adr/013-testing>`, :doc:`ADR 028 </adr/028-code-quality>`.
+     - Install the pre-commit hooks, run them on the course branch and fix what they find, then
+       raise the coverage of the Module 8 model and validator to 90%.
+   * - 18
+     - **Putting it all together: the terminal window.** The web console's terminal window, from
+       the setting and the Waffle switch that enable it, through the template tag and the React
+       app, to the logging handler that publishes each record to Redis and the view that streams
+       it to the browser.
+     - Add a filter to the terminal window's stream, for example by logger name, from the query
+       string through the view, with a test.
