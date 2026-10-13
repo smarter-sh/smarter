@@ -651,7 +651,7 @@ class SAMProviderBroker(AbstractBroker):
                 command=command,
             ) from e
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

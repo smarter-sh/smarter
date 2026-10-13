@@ -38,6 +38,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
     memoized_dependencies,
@@ -746,7 +747,7 @@ class SAMVectorsearchBroker(AbstractBroker):
 
             # done! return the response. Django will take care of committing the transaction
             self.cache_invalidations()
-            return self.json_response_ok(command=command, data=self.to_json())
+            return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.prompt.__name__
@@ -773,7 +774,7 @@ class SAMVectorsearchBroker(AbstractBroker):
                 raise SAMVectorsearchBrokerError(
                     f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     @memoized_dependencies
     def dependencies(self) -> List[AbstractBroker]:
@@ -790,7 +791,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         self.verify_no_dependencies(command)
         if self.vectorsearch:
             try:
@@ -808,7 +809,7 @@ class SAMVectorsearchBroker(AbstractBroker):
                 raise SAMVectorsearchBrokerError(
                     f"Failed to delete {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__

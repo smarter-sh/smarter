@@ -4,6 +4,7 @@
 from typing import Any, List, Optional, Type
 
 from django.core import serializers
+from django.db.models import QuerySet
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -70,6 +71,15 @@ class SAMPluginBaseBroker(AbstractBroker):
     _plugin_status: Optional[SAMPluginCommonStatus] = None
     _orm_instance: Optional[PluginDataBase] = None
 
+    plugin_class: Optional[str] = None
+    """
+    The ``PluginMeta.plugin_class`` of this broker's kind, e.g. ``api`` for ApiPlugin.
+
+    Plugin names are unique per user profile, not per plugin class, so every ``PluginMeta``
+    lookup is filtered by it. Otherwise ``get`` of one plugin kind returns the plugins of every
+    kind, and ``describe`` of a plugin with another kind's broker fails.
+    """
+
     def plugin_init(self) -> None:
         """Initialize the plugin model instance."""
         self._plugin = None
@@ -87,6 +97,28 @@ class SAMPluginBaseBroker(AbstractBroker):
         :rtype: Type[PluginMeta]
         """
         return PluginMeta
+
+    def plugin_meta_queryset(self) -> QuerySet[PluginMeta]:
+        """
+        Return the ``PluginMeta`` rows of this broker's plugin class.
+
+        :returns: The PluginMeta rows whose ``plugin_class`` is :attr:`plugin_class`.
+        """
+        if self.plugin_class is None:
+            return PluginMeta.objects.all()
+        return PluginMeta.objects.filter(plugin_class=self.plugin_class)
+
+    @property
+    def orm_meta_instance(self) -> Optional[PluginMeta]:
+        """
+        Return the ``PluginMeta`` of this broker, if it is of this broker's plugin class.
+
+        :returns: The PluginMeta instance, or None.
+        """
+        meta = self._orm_meta_instance
+        if meta is not None and self.plugin_class is not None and meta.plugin_class != self.plugin_class:  # type: ignore[attr-defined]
+            return None
+        return meta  # type: ignore[return-value]
 
     @property
     def formatted_class_name(self) -> str:
@@ -186,7 +218,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-                plugin_meta = PluginMeta.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                plugin_meta = self.plugin_meta_queryset().get(user_profile=account_admin_user_profile, name=self.name)
                 self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                 logger.debug(
                     "%s.orm_instance() - retrieved %s for %s owned by %s",
@@ -206,7 +238,9 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    plugin_meta = PluginMeta.objects.get(user_profile=smarter_admin_user_profile, name=self.name)
+                    plugin_meta = self.plugin_meta_queryset().get(
+                        user_profile=smarter_admin_user_profile, name=self.name
+                    )
                     self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                     logger.debug(
                         "%s.orm_instance() - retrieved %s for %s owned by %s",
@@ -433,7 +467,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         if self.orm_meta_instance:
             self._plugin_meta = self.orm_meta_instance  # type: ignore
             return self._plugin_meta
-        self._plugin_meta = PluginMeta.objects.filter(name=self.name).with_read_permission_for(self.user).first()  # type: ignore
+        self._plugin_meta = self.plugin_meta_queryset().filter(name=self.name).with_read_permission_for(self.user).first()  # type: ignore
         if self._plugin_meta:
             logger.debug(
                 "%s.plugin_meta() %s found for %s",
@@ -1023,9 +1057,9 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            plugins = PluginMeta.objects.filter(user_profile__account=self.account, name=name)
+            plugins = self.plugin_meta_queryset().filter(user_profile__account=self.account, name=name)
         else:
-            plugins = PluginMeta.objects.filter(user_profile__account=self.account)
+            plugins = self.plugin_meta_queryset().filter(user_profile__account=self.account)
         logger.debug(
             "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )

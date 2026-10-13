@@ -372,7 +372,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.OK)
         self.test_token_record.refresh_from_db()
         self.assertTrue(self.test_token_record.is_active)
-        self.assertTrue(response[SmarterJournalApiResponseKeys.DATA]["orm_instance"]["fields"]["is_active"])
+        self.assertEqual(response[SmarterJournalApiResponseKeys.DATA]["name"], self.test_token_record.name)
 
     def test_undeploy(self) -> None:
         """Test undeploy command."""
@@ -430,7 +430,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.OK)
         self.test_token_record.refresh_from_db()
         self.assertFalse(self.test_token_record.is_active)
-        self.assertFalse(response[SmarterJournalApiResponseKeys.DATA]["orm_instance"]["fields"]["is_active"])
+        self.assertEqual(response[SmarterJournalApiResponseKeys.DATA]["name"], self.test_token_record.name)
 
     def test_delete(self) -> None:
         """Test delete command."""
