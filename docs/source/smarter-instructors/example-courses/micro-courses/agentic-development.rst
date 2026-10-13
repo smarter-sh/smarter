@@ -22,7 +22,7 @@ shaped for agents, and the written instructions that make them effective:
 - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__, the short file that
   every session loads, with eight hard rules, such as never running git write commands and faking
   every cloud call in tests, because the development containers hold live credentials.
-- Sixteen `Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__, each a
+- Eighteen `Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__, each a
   ``SKILL.md`` with its own references and scripts, starting from
   `smarter-development <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-development/SKILL.md>`__,
   which says which narrower skill to load for each kind of work.
