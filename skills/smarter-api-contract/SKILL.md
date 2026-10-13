@@ -1,6 +1,6 @@
 ---
 name: smarter-api-contract
-description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the cli api's OpenAPI document (openapi.json) - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a cli route or its response, when a test says the contract is out of date, or when adding a kind or a cli command. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a new cli route, the design decisions in openapi.py, and the downstream SDKs.
+description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api and the chat api and grows one family of REST routes at a time - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the design decisions in openapi.py, and the downstream SDKs.
 ---
 
 # The Smarter API Contract
@@ -14,7 +14,7 @@ with the code and a breaking change shows up in a pull request's diff.
 | ------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `sam/<Kind>.schema.json`  | One JSON Schema per SAM kind. Exactly the `data` of `POST /api/v1/cli/json-schema/<Kind>/`                | The kind's SAM model: `Brokers.get_broker(kind)._pydantic_model.model_json_schema()`             |
 | `sam/<Kind>.example.json` | One example manifest per kind, without its read-only `status`                                             | The broker's `example_manifest()`, rendered in-process by the cli's public example-manifest view |
-| `openapi.json`            | OpenAPI 3.1 document of every `/api/v1/cli/` route                                                        | `openapi.py`, from the SAM models, the journal and chat contracts, and `models.py`               |
+| `openapi.json`            | OpenAPI 3.1 document of the covered families: `/api/v1/cli/` and the chat api, so far                     | `openapi.py`, from the SAM models, the journal and chat contracts, and `models.py`               |
 | `sam.py`                  | Builds and writes the schemas and examples                                                                |                                                                                                  |
 | `models.py`               | `CliApi*`: the `data` of cli responses that aren't manifests. `OpenApi*`: the document itself             |                                                                                                  |
 | `openapi.py`              | Assembles the document: `cli_schemas()`, `cli_paths()`, `openapi_document()`                              |                                                                                                  |
@@ -33,8 +33,8 @@ Anything that reaches these files changes the contract:
 - the journal contract (`smarter/lib/journal/contract/models.py`) or the chat
   contract models the document uses (`PromptChatApiConfigResponse`,
   `PromptChatApiCompletionV1`, `PromptChatApiMessage`, ...),
-- a cli route (`smarter/apps/api/v1/cli/urls.py`), or the shape of a cli
-  view's response,
+- a route of a covered family (a urlconf in `DOCUMENTED_URLCONFS`, e.g.
+  `smarter/apps/api/v1/cli/urls.py`), or the shape of its view's response,
 - `contract/models.py` or `contract/openapi.py` themselves.
 
 A field description counts too: it's in the schema, and in the SDKs' docstrings.
@@ -110,9 +110,24 @@ Nothing in the contract package needs editing. Register the broker in
 run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
 `test_every_kind_has_a_model` and `test_every_kind_is_a_manifest` check the rest.
 
+## Route coverage
+
+`openapi.py` declares which families of routes the document covers, and
+`test_every_route_is_documented` holds it to them:
+
+- `DOCUMENTED_URLCONFS` maps each family's path, relative to `/api/v1`, to its
+  urlconf, e.g. `"/llm-clients/": "smarter.apps.llmclient.api.v1.urls"`.
+- Every `path()` route of those urlconfs must be in the document, or in
+  `UNDOCUMENTED_ROUTES` with a reason. The test also fails when an entry of
+  `UNDOCUMENTED_ROUTES` names no route, or a route that is now documented, so
+  the list stays honest. `NOT_YET_MODELED` marks the backlog.
+- `PATH_PARAMETER_ALIASES` renames a route's path parameters for the document,
+  e.g. `<int:llmclient_id>` and `<str:hashed_id>` are both `{id}`, because one
+  documented path serves both routes.
+
 ## Adding or changing a cli route
 
-`test_every_cli_route_is_documented` fails until the route is in the document.
+`test_every_route_is_documented` fails until the route is in the document.
 
 1. **Model the response's `data`** in `contract/models.py`, as a `CliApiModel`
    (`extra="allow"`), with a docstring and field descriptions. Reuse a chat or
@@ -120,7 +135,9 @@ run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
 2. **Build the view's response from the model**:
    `data = {SmarterJournalApiResponseKeys.DATA: Model(...).model_dump(mode="json")}`,
    not a dict that is documented elsewhere. See the status, version, whoami,
-   resources and validate views.
+   resources and validate views. Let errors raise: `CliBaseApiView.dispatch()`
+   returns every exception as the journal's error response, with the status from
+   `http_status_for_exception()`. Never return a bare `{"error": ...}`.
 3. **Add the operation** to `cli_paths()` in `openapi.py` with `operation(...)`:
    an `operationId` (snake case, unique), a summary, a description, a tag, the
    response schema's name, and its parameters and request body. Add an envelope
@@ -132,8 +149,40 @@ run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
    Patch anything that reaches AWS, Kubernetes or GitHub (see `test_platform`).
 5. Run `make api-contract`, the tests, and update `api-contract.rst`.
 
-Leave a route out only for a real reason, by adding its path and the reason to
-`UNDOCUMENTED_CLI_ROUTES`. It is empty: every cli route is documented.
+## Covering a new family of routes
+
+This is how the document grows toward everything the SDKs call. The chat api
+(`chat_paths()`) is the pattern to copy.
+
+1. **Add the family's urlconf** to `DOCUMENTED_URLCONFS`. Run the test: it
+   lists every route of the family. Add each one to `UNDOCUMENTED_ROUTES` with
+   `NOT_YET_MODELED`, and aliases for its path parameters if needed. Now the
+   backlog is explicit, and nothing new slips in.
+2. **Find the models.** Use the existing contract models when there are some
+   (the chat contract, the journal contract). For a REST view that returns a DRF
+   serializer's output, write a Pydantic model of the row, as ADR-031 says: its
+   exact fields, built by a `from_model(row)` classmethod, and a test that its
+   `Literal`s match the model's choices. Validate it against real rows of the
+   local database before tightening a type.
+3. **Build the view's response from the model**, then add the family's
+   models to the components in `model_schemas()` (keep them in a tuple like
+   `CHAT_MODELS`), and its operations in a `<family>_paths()` function, merged
+   into `paths` in `openapi_document()`. Give each operation the family's tag,
+   its real error schema as `default`, and its real parameters, headers included.
+4. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.
+5. **Test real responses** of each operation against the document, including
+   an error. Use `APIClient` with the headers a real client sends (see
+   `chat_post()`).
+6. Update `api-contract.rst`'s table of covered families, and tell the SDK
+   (see "Downstream").
+
+## Streaming responses
+
+OpenAPI 3.1 can't type the events of a `text/event-stream` response. The
+stream's media type gets a plain string schema, and an `x-smarter-events`
+extension (`OpenApiMediaType.x_smarter_events`) that maps each event's name to
+the schema of its JSON data. A test reads the stream (`sse_events()`) and
+validates every event's data against the schema that the extension names.
 
 ## Design decisions in openapi.py (don't undo them)
 
@@ -150,8 +199,10 @@ Leave a route out only for a real reason, by adding its path and the reason to
 - **No `exclude_none`** when dumping the document. It would also strip the
   `"default": null` inside schemas. `OpenApiModel` drops its own `None` fields
   in a wrap serializer instead.
-- **Every error is the `default` response**, the journal's error envelope,
-  because every cli error is journaled the same way.
+- **Every error is the `default` response**, with the family's own error
+  schema: the journal's error envelope for the cli api, `PromptChatApiErrorResponse`
+  for the chat api, and `LLMClientPromptErrorResponse` for a prompt, whose
+  failure may be either.
 - **Prettier must not format these files.** `.pre-commit-config.yaml` excludes
   `^smarter/` from Prettier. A formatter that rewrote the JSON would make the
   "up to date" tests fail.
@@ -164,9 +215,10 @@ The contract is the source the SDKs generate from:
   copies `sam/*.json` into `tests/data/sam/` and `openapi.json` into
   `tests/data/contracts/` (`scripts/sync-contracts.sh`, with `git show` at the
   ref), and `make sam-models` regenerates `smarter/models/sam/`. Its
-  `tests/test_contracts.py::TestOpenApiContract` fails when a cli request of the
-  SDK is not in the document, or the document has an operation that the SDK
-  doesn't call. A new cli operation is SDK work: say so in your summary.
+  `tests/test_contracts.py::TestOpenApiContract` fails when a request of the
+  SDK to a covered family is not in the document, or the document has an
+  operation that the SDK doesn't call. A new operation is SDK work: say so in
+  your summary. Extend that test with the SDK's calls of each newly covered family.
 - **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
   the same schemas.
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.

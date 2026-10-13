@@ -1,5 +1,5 @@
 """
-The Smarter api contract: the JSON Schemas of the SAM manifests, and the OpenAPI document of the cli api.
+The Smarter api contract: the JSON Schemas of the SAM manifests, and the OpenAPI document of the Smarter api.
 
 Both are generated from the platform's Pydantic models by ``manage.py export_api_contract``, and
 committed beside this package: ``sam/<Kind>.schema.json`` and ``openapi.json``. Tests fail when a

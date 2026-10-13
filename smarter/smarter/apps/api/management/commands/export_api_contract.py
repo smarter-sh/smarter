@@ -1,4 +1,4 @@
-"""Write the Smarter api contract: the SAM JSON Schemas, and the cli api's OpenAPI document."""
+"""Write the Smarter api contract: the SAM JSON Schemas and examples, and the Smarter api's OpenAPI document."""
 
 from smarter.apps.api.v1.contract.const import OPENAPI_PATH, SAM_SCHEMA_DIR
 from smarter.apps.api.v1.contract.openapi import write_openapi
@@ -16,7 +16,7 @@ class Command(SmarterCommand):
     the files.
     """
 
-    help = "Write the SAM JSON Schemas, and the cli api's OpenAPI document."
+    help = "Write the SAM JSON Schemas and examples, and the Smarter api's OpenAPI document."
 
     def add_arguments(self, parser):
         parser.add_argument("--sam-dir", default=SAM_SCHEMA_DIR, help="The folder of the SAM JSON Schemas.")

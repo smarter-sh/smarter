@@ -1,5 +1,7 @@
 """Test :mod:`smarter.apps.api.v1.contract.openapi`, and the ``export_api_contract`` command."""
 
+import asyncio
+import importlib
 import json
 import os
 import re
@@ -11,12 +13,13 @@ from urllib.parse import urlencode
 import yaml
 from django.core.management import call_command
 from django.urls import URLPattern
+from django.urls.resolvers import RoutePattern
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
+from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
-from smarter.apps.api.v1.cli.urls import urlpatterns as cli_urlpatterns
 from smarter.apps.api.v1.contract.const import (
     OPENAPI_PATH,
     SAM_EXAMPLE_SUFFIX,
@@ -24,7 +27,9 @@ from smarter.apps.api.v1.contract.const import (
 )
 from smarter.apps.api.v1.contract.models import OpenApiDocument
 from smarter.apps.api.v1.contract.openapi import (
-    UNDOCUMENTED_CLI_ROUTES,
+    DOCUMENTED_URLCONFS,
+    PATH_PARAMETER_ALIASES,
+    UNDOCUMENTED_ROUTES,
     openapi_document,
     openapi_json,
 )
@@ -57,7 +62,7 @@ def refs(value) -> list[str]:
 
 
 class TestOpenApiDocument(ApiV1CliTestBase):
-    """Test the cli api's OpenAPI document."""
+    """Test the Smarter api's OpenAPI document."""
 
     def test_committed_document_is_up_to_date(self):
         """Openapi.json must be regenerated when a SAM model, a contract model or the cli api changes."""
@@ -93,18 +98,28 @@ class TestOpenApiDocument(ApiV1CliTestBase):
             with self.subTest(kind=kind):
                 self.assertEqual(schemas[ref.rsplit("/", 1)[-1]]["properties"]["kind"]["const"], kind)
 
-    def test_every_cli_route_is_documented(self):
-        """A new cli route must be added to the document, or to UNDOCUMENTED_CLI_ROUTES."""
+    def test_every_route_is_documented(self):
+        """A new route of a documented family must be added to the document, or to UNDOCUMENTED_ROUTES."""
         paths = openapi_document().paths
-        for pattern in cli_urlpatterns:
-            if not isinstance(pattern, URLPattern) or not pattern.name:
-                continue  # e.g. the legacy schema/ redirect
-            path = "/cli/" + re.sub(r"<(?:\w+:)?(\w+)>", r"{\1}", str(pattern.pattern))
-            with self.subTest(route=pattern.name):
-                self.assertTrue(
-                    path in paths or path in UNDOCUMENTED_CLI_ROUTES,
-                    f"{path} is not in the OpenAPI document.",
+        routes = set()
+        for prefix, urlconf in DOCUMENTED_URLCONFS.items():
+            for pattern in importlib.import_module(urlconf).urlpatterns:
+                if not isinstance(pattern, URLPattern) or not isinstance(pattern.pattern, RoutePattern):
+                    continue  # e.g. the cli's legacy schema/ redirect, a re_path
+                path = prefix + re.sub(
+                    r"<(?:\w+:)?(\w+)>",
+                    lambda match: "{" + PATH_PARAMETER_ALIASES.get(match.group(1), match.group(1)) + "}",
+                    str(pattern.pattern),
                 )
+                routes.add(path)
+                with self.subTest(route=path):
+                    self.assertTrue(
+                        path in paths or path in UNDOCUMENTED_ROUTES, f"{path} is not in the OpenAPI document."
+                    )
+        for path in UNDOCUMENTED_ROUTES:
+            with self.subTest(undocumented=path):
+                self.assertIn(path, routes, f"{path} is listed as undocumented, but there is no such route.")
+                self.assertNotIn(path, paths, f"{path} is documented, so remove it from UNDOCUMENTED_ROUTES.")
 
     def test_public_operations(self):
         paths = openapi_document().paths
@@ -198,6 +213,83 @@ class TestOpenApiResponses(ApiV1CliTestBase):
         body = self.post("resources/")
         self.assertValid("CliApiResourcesResponse", body)
         self.assertEqual(body["metadata"]["command"], "resources")
+
+    def chat_post(self, path: str, body: SmarterDictType, **headers) -> tuple[int, object]:
+        """POST JSON to the chat api, as a client of version 2 of the chat contract."""
+        client = APIClient()
+        response = client.post(
+            f"/api/v1/{path}",
+            data=body,
+            format="json",
+            headers={
+                "Authorization": f"Token {self.token_key}",
+                "X-Smarter-Capabilities": "chat-contract-v2",
+                **headers,
+            },
+        )
+        return response.status_code, response
+
+    @staticmethod
+    def sse_events(response) -> list[tuple[str, SmarterDictType]]:
+        """The (event, data) of each event of a streaming response, without its retry and keepalive frames."""
+
+        async def collect():
+            return [chunk.decode() if isinstance(chunk, bytes) else chunk async for chunk in response.streaming_content]
+
+        events = []
+        for frame in "".join(asyncio.run(collect())).split("\n\n"):
+            lines = dict(line.split(": ", 1) for line in frame.splitlines() if line.startswith(("event: ", "data: ")))
+            if "event" in lines:
+                events.append((lines["event"], json.loads(lines["data"])))
+        return events
+
+    def test_chat_api(self):
+        """The chat api's configuration, its prompt as JSON and as a stream, and its error, with real LLM calls."""
+        llmclient = LLMClient.objects.create(
+            name=self.name,
+            user_profile=self.user_profile,
+            description="Test LLMClient",
+            version="1.0.0",
+            app_name="Smarter",
+            app_assistant="Smarty Pants",
+            app_welcome_message="Welcome to Smarter!",
+        )
+        self.addCleanup(llmclient.delete)
+
+        status, response = self.chat_post(f"llm-clients/{llmclient.id}/config/", {"session_key": None})
+        self.assertEqual(status, HTTPStatus.OK, response.content)
+        config = response.json()
+        self.assertValid("PromptChatApiConfigResponse", config)
+        session_key = config["data"]["session_key"]
+
+        messages = [{"role": "user", "content": "Say hello in two words."}]
+        status, response = self.chat_post(
+            f"llm-clients/{llmclient.hashed_id}/prompt/", {"session_key": session_key, "messages": messages}
+        )
+        self.assertEqual(status, HTTPStatus.OK, response.content)
+        self.assertValid("PromptChatApiPromptResponse", response.json())
+
+        status, response = self.chat_post(
+            f"llm-clients/{llmclient.id}/prompt/",
+            {"session_key": session_key, "messages": messages},
+            Accept="text/event-stream, application/json",
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(response["Content-Type"], "text/event-stream")
+        events = self.sse_events(response)
+        self.assertEqual(events[-1][0], "result")
+        self.assertGreater(len(events), 1)
+        stream = OpenApiDocument.model_validate(committed_document()).paths["/llm-clients/{id}/prompt/"]
+        schemas = stream.post.responses["200"].content["text/event-stream"].x_smarter_events
+        for event, data in events:
+            with self.subTest(event=event):
+                self.assertIn(event, schemas)
+                self.assertValid(schemas[event]["$ref"].rsplit("/", 1)[-1], data)
+        self.assertValid("PromptChatApiPromptResponse", events[-1][1]["response"])
+
+        status, response = self.chat_post("llm-clients/999999999/config/", {})
+        self.assertEqual(status, HTTPStatus.NOT_FOUND, response.content)
+        self.assertValid("PromptChatApiErrorResponse", response.json())
 
     def test_chat(self):
         """Prompt/config and prompt, with a real LLM call."""
