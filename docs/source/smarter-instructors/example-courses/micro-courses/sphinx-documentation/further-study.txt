@@ -1,0 +1,15 @@
+- **Frameworks:** `Diátaxis <https://diataxis.fr/>`__, Daniele Procida's framework of tutorials,
+  how-to guides, reference and explanation, which most good technical documentation follows.
+- **Style guides:** the `Google developer documentation style guide
+  <https://developers.google.com/style>`__ and the `Microsoft Writing Style Guide
+  <https://learn.microsoft.com/en-us/style-guide/welcome/>`__.
+- **Tools:** the `Sphinx documentation <https://www.sphinx-doc.org/>`__, its `reStructuredText
+  primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`__, the `Read the
+  Docs tutorial <https://docs.readthedocs.io/en/stable/tutorial/>`__, and `Vale
+  <https://vale.sh/>`__ for checking prose against a style guide.
+- **Community:** `Write the Docs <https://www.writethedocs.org/>`__, its guide, its newsletter and
+  its Slack, and the `Good Docs Project <https://www.thegooddocsproject.dev/>`__ templates.
+- **YouTube:** conference talks on the `Write the Docs <https://www.youtube.com/@WritetheDocs>`__
+  channel, including Daniele Procida's talk on Diátaxis.
+- **Reading:** the documentation of Django, Stripe and the Python standard library, often held up as
+  models, studied as examples of structure and voice.

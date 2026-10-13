@@ -1,0 +1,105 @@
+Every lecture, lab and assignment in this course works with the files and pages below, on the
+``main`` branch of `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, so
+that students can open each one during class.
+
+The Rules of the Project
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter has
+     - Where to look
+   * - The license
+     - The GNU Affero General Public License, version 3: copyleft that also applies when a
+       modified version is offered to users over a network.
+     - `LICENSE <https://github.com/smarter-sh/smarter/blob/main/LICENSE>`__
+   * - Contributing and conduct
+     - How to contribute, and the code of conduct that every participant agrees to.
+       :doc:`/smarter-framework/guides/contributing`,
+       :doc:`/smarter-framework/guides/code-of-conduct`.
+     - `CONTRIBUTING.md <https://github.com/smarter-sh/smarter/blob/main/CONTRIBUTING.md>`__,
+       `CODE_OF_CONDUCT.md <https://github.com/smarter-sh/smarter/blob/main/CODE_OF_CONDUCT.md>`__
+   * - Reporting a vulnerability
+     - A private email address for security reports, and a request not to open a public issue.
+     - `SECURITY.md <https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__
+   * - Issues and pull requests
+     - Forms for bug reports and feature requests, and a pull request template that asks for the
+       type of change and the issue it resolves.
+     - `.github/ISSUE_TEMPLATE/ <https://github.com/smarter-sh/smarter/tree/main/.github/ISSUE_TEMPLATE>`__,
+       `PULL_REQUEST_TEMPLATE.md <https://github.com/smarter-sh/smarter/blob/main/.github/PULL_REQUEST_TEMPLATE.md>`__
+   * - Who reviews
+     - A ``CODEOWNERS`` file that names the reviewers for each path, and a single maintainer
+       today: a real case for a discussion of the bus factor.
+     - `.github/CODEOWNERS <https://github.com/smarter-sh/smarter/blob/main/.github/CODEOWNERS>`__
+   * - Funding
+     - How the project can be sponsored.
+     - `.github/FUNDING.yml <https://github.com/smarter-sh/smarter/blob/main/.github/FUNDING.yml>`__
+
+From Commit to Release
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Conventional commits
+     - Every commit message is checked by commitlint, with the conventional and Angular rules,
+       because the release tooling reads them.
+     - `commitlint.config.js <https://github.com/smarter-sh/smarter/blob/main/commitlint.config.js>`__,
+       `smarter-git-commits/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-git-commits/SKILL.md>`__
+   * - Pre-commit hooks
+     - Formatting, linting, spelling, security scans and secret detection on every commit.
+     - `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__
+   * - Automated releases
+     - semantic-release turns commits into versions on four branches: ``main`` and ``next``, and
+       prereleases on ``beta`` and ``alpha``. There have been more than five hundred releases.
+       :doc:`/smarter-framework/guides/semantic-versioning`.
+     - `release.config.js <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__,
+       `releases <https://github.com/smarter-sh/smarter/releases>`__
+   * - Changelogs
+     - Generated from the commits, one file for the current release and one for each older
+       minor version.
+     - `CHANGELOG.md <https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md>`__,
+       `changelogs/ <https://github.com/smarter-sh/smarter/tree/main/changelogs>`__
+   * - Dependency updates
+     - Dependabot proposes updates as pull requests, and a weekly workflow bumps the pre-commit
+       hooks.
+     - `.github/dependabot.yml <https://github.com/smarter-sh/smarter/blob/main/.github/dependabot.yml>`__,
+       `precommitVersionBumps.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/precommitVersionBumps.yml>`__
+
+Where to Contribute
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Place
+     - What students can do there
+     - Where to look
+   * - Issues
+     - Find work, labeled ``good first issue``, ``help wanted``, ``documentation``, ``bug`` or
+       ``enhancement``, and ask about an approach before writing code.
+     - `issues <https://github.com/smarter-sh/smarter/issues>`__,
+       `labels <https://github.com/smarter-sh/smarter/labels>`__
+   * - Discussions
+     - Questions, ideas, and arranging a class's contributions with the maintainers.
+     - `discussions <https://github.com/smarter-sh/smarter/discussions>`__
+   * - Pull requests
+     - See how changes are proposed, reviewed and merged, including commits whose bodies explain
+       every change.
+     - `pull requests <https://github.com/smarter-sh/smarter/pulls>`__
+   * - The documentation
+     - More than nine hundred pages in reStructuredText, the easiest first contribution.
+       :doc:`/smarter-framework/guides/documentation`.
+     - `docs/source/ <https://github.com/smarter-sh/smarter/tree/main/docs/source>`__
+   * - The other repositories
+     - The CLI in Go, the chat component in TypeScript, the VS Code extension, the Python SDK and
+       the Terraform, each smaller and easier to start with than the platform.
+     - `github.com/smarter-sh <https://github.com/smarter-sh>`__

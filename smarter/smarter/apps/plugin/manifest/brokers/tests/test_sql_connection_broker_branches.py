@@ -1,6 +1,7 @@
 """Test the guard and failure branches of SAMSqlConnectionBroker, with its connection, manifest or user replaced."""
 
 import os
+from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from smarter.apps.connection.manifest.brokers import SAMConnectionBrokerError
@@ -8,6 +9,7 @@ from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
 from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -92,11 +94,12 @@ class TestSqlConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
             with patch.object(SAMSqlConnectionBroker, "manifest", new_callable=PropertyMock, return_value=None):
                 self.assertFalse(broker.is_valid)
 
-    def test_get_requires_a_name(self):
+    def test_get_without_a_name(self):
+        """Test that get without a name lists the SqlConnections, rather than refusing."""
         broker = self.broker
         self.patch_property("name", None)
-        with self.assertRaises(SAMBrokerErrorNotReady):
-            broker.get(self.request)
+        response = broker.get(self.request)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_get_serialization_failure(self):
         broker = self.broker
@@ -123,7 +126,7 @@ class TestSqlConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
             with self.assertRaises(SAMBrokerErrorNotReady):
                 broker.describe(self.request, name=broker.name)
         with patch.object(SAMSqlConnectionBroker, "manifest", new_callable=PropertyMock, return_value=None):
-            with self.assertRaises(SAMBrokerErrorNotReady):
+            with self.assertRaises(SAMBrokerErrorNotFound):
                 broker.describe(self.request, name=broker.name)
 
     def test_no_dependencies_without_a_connection(self):
@@ -139,5 +142,5 @@ class TestSqlConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
                 with self.assertRaises(SAMConnectionBrokerError):
                     broker.delete(self.request)
             with patch.object(SAMSqlConnectionBroker, "connection", new_callable=PropertyMock, return_value=None):
-                with self.assertRaises(SAMBrokerErrorNotReady):
+                with self.assertRaises(SAMBrokerErrorNotFound):
                     broker.delete(self.request)

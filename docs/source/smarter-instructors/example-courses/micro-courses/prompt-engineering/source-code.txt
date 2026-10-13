@@ -1,0 +1,113 @@
+Every lecture, lab and assignment in this course works with the manifests below. They are the
+built-in examples that ship with every Smarter installation, so students can open them in the web
+console, or read them on the ``main`` branch of
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__. No programming is
+needed to read them. The Python files are listed for instructors and curious students. Python
+paths are under ``smarter/smarter/``.
+
+Prompts and Settings
+~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - A minimal assistant
+     - The ``simple`` LLMClient: a one-line system prompt, a small model, temperature 1.0 and a
+       4,096-token limit. Every setting a prompt engineer changes sits under
+       ``spec.config.prompt``.
+     - `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+   * - A production-quality system prompt
+     - The ``customer_support`` LLMClient: a persona (Sam), an audience, a narrow job, an output
+       format, refusals, a skill for on-brand replies, a plugin that reads web pages, and four
+       input guardrails.
+     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__
+   * - Seventeen more examples
+     - Built-in LLMClients for weather, mathematics, dates, data analysis, research, ticket
+       triage, workplace writing, programming and others, each a worked example of a different
+       prompting job.
+     - `llmclient/data/llm-clients/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__
+   * - Every setting, defined
+     - The Pydantic model that defines and validates ``provider``, ``defaultModel``,
+       ``defaultSystemRole``, ``defaultTemperature``, ``defaultMaxTokens`` and the ``app...``
+       settings, each with a description. A misspelled key is rejected, with an error that says
+       why.
+     - `llmclient/manifest/models/llmclient/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/manifest/models/llmclient/spec.py>`__
+   * - Branding
+     - ``spec.config.styles``: logo, background, avatars, fonts and colors for each part of the
+       chat, validated as plain CSS. :doc:`/smarter-resources/llmclient/styles`.
+     - `llmclient/manifest/models/llmclient/styles.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/manifest/models/llmclient/styles.py>`__
+
+Knowledge and Tools
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Two decisions, not one
+     - A plugin is offered to the model only when Smarter selects it, because the prompt contains
+       one of its ``searchTerms`` exactly, with a typo, or as a synonym, or because its selector
+       directive is ``ALWAYS``. Only then does the model decide, from the plugin's description,
+       whether to call it. :doc:`/smarter-resources/plugin/nlp`.
+     - `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+       (``selected()``),
+       `plugin/nlp.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/nlp.py>`__
+   * - Static knowledge
+     - A Static Plugin returns fixed facts, here about a fictional Willy Wonka product, so the
+       model quotes them instead of making them up.
+     - `everlasting-gobstopper.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/everlasting-gobstopper.yaml>`__
+   * - Skills as knowledge
+     - SkillPlugins for brand voice, meeting notes, code review and SQL analysis, and three of
+       Anthropic's published skills.
+     - `skill-brand-voice.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/skill-brand-voice.yaml>`__,
+       `sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/sample-plugins>`__
+   * - Tools that act
+     - Websearch Plugins for research, news, local search and reading a page, and an
+       ImageSearchPlugin that lets the model show real pictures instead of inventing urls.
+     - `websearch-research-assistant.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/websearch-research-assistant.yaml>`__,
+       `image-search.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/image-search.yaml>`__
+   * - Built-in functions
+     - A calculator, a date calculator and a weather function that any LLMClient can list under
+       ``spec.functions``.
+     - `prompt/functions/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions>`__
+
+Safety, Cost and Evidence
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Guardrails
+     - Eighteen built-in guardrails, each a short manifest. ``off_topic_input`` asks a small
+       model whether a message is in scope, and ``pii_redaction_input`` removes personal data
+       before the model sees it.
+     - `off-topic-input.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/off-topic-input.yaml>`__,
+       `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+   * - The workbench Console
+     - Beside the chat, the Console shows the LLMClient's configuration, every request sent to
+       the model, every tool call, which plugins were selected, and the server's logs.
+     - `smarter-chat: src/components/Console/ <https://github.com/smarter-sh/smarter-chat/tree/main/src/components/Console>`__
+   * - Tokens and cost
+     - Every request is recorded as a charge, with its tokens, provider and model, and priced
+       per model. :doc:`/smarter-platform/cost-accounting`.
+     - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__,
+       `account/models/llm_prices.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/llm_prices.py>`__
+   * - A record of every prompt
+     - Each prompt, answer and tool call is kept, so an assignment can ask for the conversation
+       that produced a result. :doc:`/smarter-platform/smarter-journal`.
+     - `prompt/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/models>`__
+   * - A per-student allowance
+     - A Budget that caps what each student can spend in a month.
+       :doc:`/smarter-resources/smarter-budget`.
+     - `student-monthly-allowance.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/student-monthly-allowance.yaml>`__

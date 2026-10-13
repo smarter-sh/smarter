@@ -1,0 +1,17 @@
+- **Official documentation:** `react.dev <https://react.dev/learn>`__, whose *Learn* section is the
+  best introduction to modern React, the `Vite guide <https://vite.dev/guide/>`__, the `Bootstrap
+  documentation <https://getbootstrap.com/docs/>`__, the `TypeScript handbook
+  <https://www.typescriptlang.org/docs/handbook/intro.html>`__, `Testing Library
+  <https://testing-library.com/docs/>`__, `Storybook <https://storybook.js.org/docs>`__ and `Mock
+  Service Worker <https://mswjs.io/docs/>`__.
+- **Reference:** `MDN Web Docs <https://developer.mozilla.org/>`__ for HTML, CSS, JavaScript and web
+  APIs, and `web.dev <https://web.dev/>`__ for performance and accessibility.
+- **Podcasts:** `Syntax <https://syntax.fm/>`__ with Wes Bos and Scott Tolinski.
+- **YouTube:** `Fireship <https://www.youtube.com/@Fireship>`__ for short overviews of tools and
+  ideas, and the `React Conf <https://www.youtube.com/@ReactConfOfficial>`__ talks.
+- **Writing:** Josh W. Comeau's `blog <https://www.joshwcomeau.com/>`__ on CSS and React, Kent C.
+  Dodds's `blog <https://kentcdodds.com/blog>`__ on testing React, and Dan Abramov's `overreacted.io
+  <https://overreacted.io/>`__.
+- **Accessibility:** the W3C's `WCAG 2.2 quick reference
+  <https://www.w3.org/WAI/WCAG22/quickref/>`__ and the `ARIA Authoring Practices Guide
+  <https://www.w3.org/WAI/ARIA/apg/>`__.

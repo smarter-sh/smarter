@@ -64,6 +64,7 @@ from .error_classes import (
     SAMBrokerInternalError,
     SAMBrokerReadOnlyError,
 )
+from .result import SAMBrokerCommandResult
 
 inflect_engine = inflect.engine()
 
@@ -2183,9 +2184,49 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return retval
 
+    def readable_by_name(
+        self, model_class: Type[MetaDataWithOwnershipModel], owned: Optional[MetaDataWithOwnershipModel]
+    ) -> Optional[MetaDataWithOwnershipModel]:
+        """
+        Return the resource to describe: the user's own, or else one with this name that the user may read.
+
+        ``get`` lists every resource that the user may read, including the ones that are shared
+        with the account, e.g. built-in Guardrails. ``describe`` must find each of them by the
+        name that ``get`` returned. ``apply`` and ``delete`` must not: they act on the user's own
+        resource only.
+
+        :param model_class: The resource's Django model.
+        :param owned: The user's own resource of this name, if any.
+        :returns: The resource, or None if the user may read none of this name.
+        """
+        if owned is not None:
+            return owned
+        if not self.name or not self.user_profile:
+            return None
+        return (
+            model_class.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .filter(name=self.name)
+            .order_by("pk")
+            .first()
+        )
+
+    def command_result(self) -> SmarterDictType:
+        """
+        The ``data`` of the response to a command that changed the resource, e.g. apply.
+
+        It identifies the resource, and nothing else. Use :meth:`to_json` for logging only: it
+        includes the broker's request, authentication and cache key, which a client must not see.
+
+        :returns: The resource's api version, kind and name.
+        """
+        return SAMBrokerCommandResult(apiVersion=self.api_version, kind=self.kind, name=self.name).dump()
+
     def to_json(self) -> SmarterDictType:
         """
-        Serialize the broker instance to a JSON string.
+        Serialize the broker instance to a JSON string, for logging.
+
+        It includes the broker's internal state, e.g. its request, authentication and cache key,
+        so it is never returned to a client. See :meth:`command_result`.
 
         :return: A JSON string representation of the broker instance.
         :rtype: str

@@ -33,6 +33,7 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
     memoized_dependencies,
@@ -914,7 +915,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -998,7 +999,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
 
         if self.manifest is None:
-            raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
         try:
             data = self.manifest.model_dump()
@@ -1086,7 +1087,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

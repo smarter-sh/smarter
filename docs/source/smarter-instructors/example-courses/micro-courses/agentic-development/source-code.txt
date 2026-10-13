@@ -1,0 +1,138 @@
+Every lecture, lab and assignment in this course rests on the files and commits below. Every
+reference is to the ``main`` branch of
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, so that students can
+open each one during class. Python paths are under ``smarter/smarter/``.
+
+The Instructions an Agent Reads
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - Project instructions
+     - One short file that every session loads: what Smarter is, eight hard rules (never run git
+       write commands, fake every cloud call in tests, run the tests yourself, never build the
+       20-minute Sphinx build, the pre-commit hooks are the lint standard, a coverage floor, a
+       public repository, and when live LLM calls are allowed), a repository map, and the
+       definition of done.
+     - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__
+   * - The skills index
+     - Eighteen Agent Skills in one folder, symlinked to ``.claude/skills`` so that Claude Code
+       finds them, with a README written for the humans who maintain them.
+     - `skills/ <https://github.com/smarter-sh/smarter/tree/main/skills>`__,
+       `skills/README.md <https://github.com/smarter-sh/smarter/blob/main/skills/README.md>`__
+   * - The entry skill
+     - Loaded first for any change: the non-negotiable rules, the pattern-first workflow, the
+       caching and Pydantic rules, and a table that says which narrower skill to load next.
+     - `smarter-development/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-development/SKILL.md>`__
+   * - Canonical references
+     - Long, worked examples that a skill points to, read only when needed: a complete resource
+       kind, a test module, a Sphinx page, a Django-hosted React app and a commit message.
+     - `smarter-sam-resource/references/ <https://github.com/smarter-sh/smarter/tree/main/skills/smarter-sam-resource/references>`__,
+       `smarter-python-testing/references/ <https://github.com/smarter-sh/smarter/tree/main/skills/smarter-python-testing/references>`__,
+       `smarter-git-commits/references/ <https://github.com/smarter-sh/smarter/tree/main/skills/smarter-git-commits/references>`__
+   * - Scripts the agent runs
+     - Fast checks that replace slow ones, so the agent can verify its own work in seconds: link
+       and autodoc checks instead of the Sphinx build, and scripts that copy changed files into
+       containers that have no bind mount.
+     - `check-docs.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-sphinx-docs/scripts/check-docs.sh>`__,
+       `sync-changed-files.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/scripts/sync-changed-files.sh>`__,
+       `sync-to-containers.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/scripts/sync-to-containers.sh>`__
+   * - Agent-facing documentation
+     - Smarter's Sphinx documentation is written as much for agents as for people, and its
+       docstrings are published by autodoc, so an agent can read the intent behind a module.
+       :doc:`ADR 029 </adr/029-docstrings>`.
+     - `docs/source/ <https://github.com/smarter-sh/smarter/tree/main/docs/source>`__,
+       `smarter-docstrings/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docstrings/SKILL.md>`__
+
+What the Code Base Gives the Agent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Property
+     - What Smarter does
+     - Where to look
+   * - Existing, similar code
+     - Every Django app has the same layout (``manifest/``, ``models/``, ``api/``,
+       ``serializers.py``, ``tests/``), so a fourth resource kind is copied from three. The
+       newest, cleanest examples are named in the skills.
+     - `apps/guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail>`__,
+       `apps/secret/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/secret>`__
+   * - A thorough test suite
+     - More than five thousand unit tests, a coverage floor of 90% per app, and one test module
+       per source module. :doc:`ADR 013 </adr/013-testing>`.
+     - `smarter-python-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-python-testing/SKILL.md>`__,
+       `codecov.yml <https://github.com/smarter-sh/smarter/blob/main/codecov.yml>`__
+   * - Hooks that catch the agent
+     - black, flake8, isort, autoflake, bandit, codespell, pyupgrade, Prettier, ESLint, secret
+       detection and commitlint run on every commit, and the CI workflow repeats the React format,
+       lint and type checks before running both test suites.
+     - `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__,
+       `test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__
+   * - Types and schemas
+     - Pydantic models for every manifest and contract, and ``Smarter...Type`` aliases instead of
+       ``Any``, so a wrong guess becomes an immediate error.
+       :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - `lib/typing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/typing.py>`__,
+       `smarter-python-typing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-python-typing/SKILL.md>`__
+   * - Useful logs
+     - Every log line starts with the dotted path of the code that wrote it, and verbose logging
+       is switched on per subsystem with waffle switches. :doc:`ADR 011 </adr/011-logging>`.
+     - `lib/logging/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/logging>`__,
+       `lib/django/waffle/switches.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/switches.py>`__
+   * - A safe place to experiment
+     - The development containers hold live cloud credentials, so tests replace every DNS,
+       certificate, Kubernetes and email call with an in-memory provider, and tests that touch
+       real infrastructure are tagged and skipped.
+     - `smarter-infrastructure-safety/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-infrastructure-safety/SKILL.md>`__,
+       `infrastructure/providers/memory.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__
+
+Agent Work in the History
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Since late September 2026, most commits to Smarter have been authored by Claude, and they carry
+most of the lines added in that time. Students can check this themselves with
+``git shortlog -sn --no-merges HEAD --since=2026-09-29``. The commits below are worth reading in
+full: each body explains what was wrong, what changed, and how it was tested.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Commit
+     - Why it is worth studying
+     - Where to look
+   * - ImageSearchPlugin
+     - A complete new resource kind, built by Claude Code in a live class demonstration: plugin,
+       Pydantic manifest models, broker, migrations, sample manifests, React fixes, docs and
+       tests, merged in pull request #775.
+     - `commit 1da6bccc3 <https://github.com/smarter-sh/smarter/commit/1da6bccc3847f0d06e1b801496cbb838cffb0dab>`__,
+       `plugin/plugin/image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/image_search.py>`__,
+       `PR #775 <https://github.com/smarter-sh/smarter/pull/775>`__
+   * - A mistake turned into a skill
+     - A fix for caching design mistakes in plugins and the MCP client, which also added the
+       caching rules to the entry skill so that the same mistake is not made again.
+     - `commit eeb7a7a19 <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__,
+       `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__
+   * - A convention turned into a skill
+     - A codebase-wide refactor that replaced improper uses of ``Any`` with typed aliases, and
+       added the ``smarter-python-typing`` skill that keeps it that way.
+     - `commit bcd679acd <https://github.com/smarter-sh/smarter/commit/bcd679acdd4859faa70aa7defcc20386ce14bd3e>`__
+   * - Skills as a product feature
+     - The same Agent Skills format is a Smarter resource: a
+       :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>` gives an LLMClient a skill,
+       fetched from GitHub through the hardened HTTP client. The SkillPlugin was itself designed
+       and written by Claude Code.
+     - `plugin/plugin/skill.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/skill.py>`__,
+       `plugin/plugin/skill_sources.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/skill_sources.py>`__
+   * - Attribution
+     - The commit skill sets out who is the author, who is the co-author, and the
+       ``Co-Authored-By`` trailers, and forbids the agent from committing at all.
+     - `smarter-git-commits/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-git-commits/SKILL.md>`__

@@ -3,6 +3,7 @@
 
 from typing import TYPE_CHECKING, Optional, Type
 
+from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.manifest.models.api_plugin.spec import (
@@ -25,6 +26,7 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -76,6 +78,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     """
 
     # override the base abstract manifest model with the Plugin model
+    plugin_class = SAMPluginCommonMetadataClassValues.API.value
     _manifest: Optional[SAMApiPlugin] = None
     _pydantic_model: Type[SAMApiPlugin] = SAMApiPlugin
     _plugin: Optional[ApiPlugin] = None
@@ -641,15 +644,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.apply.__name__
+        command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
         if not self.manifest:
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot describe",
-                thing=self.kind,
-                command=command,
-            )
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         data = json.loads(self.manifest.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
@@ -726,7 +725,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
             self.cache_invalidations()
-            return self.json_response_ok(command=command, data=self.to_json())
+            return self.json_response_ok(command=command, data=self.command_result())
         try:
             raise SAMBrokerErrorNotReady(
                 f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else self.kind or "ApiPlugin"} not ready",

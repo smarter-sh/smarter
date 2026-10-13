@@ -632,12 +632,11 @@ class SAMAccountBroker(AbstractBroker):
                 command=command,
             )
 
-        if self.brokered_account is None:
-            raise SAMBrokerErrorNotReady(
-                f"Account not set for {self.kind} broker. Cannot get.",
-                thing=self.thing,
-                command=command,
-            )
+        name = self.clean_cli_param(
+            param=kwargs.get(SAMMetadataKeys.NAME.value, None),
+            param_name="name",
+            url=self.smarter_build_absolute_uri(request),
+        )
 
         # returns Optional[list[dict[str, str]]]:
         # [
@@ -648,15 +647,13 @@ class SAMAccountBroker(AbstractBroker):
         # ]
         model_titles = self.get_model_titles(serializer=AccountSerializer())
 
-        # generate a QuerySet of PluginMeta objects that match our search criteria
-        account = Account.get_cached_object(pk=self.brokered_account.id)  # type: ignore
-        accounts = [account] if account else []
+        accounts = Account.objects.all()
+        if name:
+            accounts = accounts.filter(name=name)
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for account in accounts:
+        for account in accounts.order_by("name")[:MAX_RESULTS]:
             try:
                 logger.debug("%s.get() processing Account: %s", self.formatted_class_name, account)
-                self.brokered_account = account
                 model_dump = AccountSerializer(account).data
                 camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
@@ -666,7 +663,7 @@ class SAMAccountBroker(AbstractBroker):
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: self.brokered_account.account_number,
+            SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
@@ -774,7 +771,7 @@ class SAMAccountBroker(AbstractBroker):
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=self.to_json())
+        return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

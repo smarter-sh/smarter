@@ -1,0 +1,17 @@
+- **Hands-on training:** PortSwigger's free `Web Security Academy
+  <https://portswigger.net/web-security>`__, with labs for every class of web vulnerability, and
+  Lakera's `Gandalf <https://gandalf.lakera.ai/>`__ for prompt injection.
+- **References:** the `OWASP Top 10 <https://owasp.org/www-project-top-ten/>`__, the `OWASP Top 10
+  for LLM Applications <https://genai.owasp.org/llm-top-10/>`__, the `OWASP Cheat Sheet Series
+  <https://cheatsheetseries.owasp.org/>`__, the `OWASP ASVS
+  <https://owasp.org/www-project-application-security-verification-standard/>`__, and MITRE `ATLAS
+  <https://atlas.mitre.org/>`__ for attacks on AI systems.
+- **Writing:** Simon Willison's `writing on prompt injection
+  <https://simonwillison.net/tags/prompt-injection/>`__, which named the attack and tracks it, and
+  the `Google Project Zero blog <https://googleprojectzero.blogspot.com/>`__ for deep vulnerability
+  research.
+- **Podcasts:** `Darknet Diaries <https://darknetdiaries.com/>`__ for stories of real attacks,
+  `Risky Business <https://risky.biz/>`__ for weekly security news, and `Security Now
+  <https://twit.tv/shows/security-now>`__.
+- **YouTube:** `LiveOverflow <https://www.youtube.com/@LiveOverflow>`__ for how exploits work, and
+  talks from DEF CON and Black Hat on their official channels, including the DEF CON AI Village.
