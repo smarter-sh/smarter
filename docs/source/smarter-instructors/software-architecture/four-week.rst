@@ -42,7 +42,8 @@ By the end of the course, students can:
 2. Describe a large system with the C4 model and other views.
 3. Read, verify and write Architecture Decision Records.
 4. Explain each of the twelve factors, and judge from the code whether a system follows it.
-5. Compare architectural styles, integration patterns and data architectures, and recognize
+5. Compare architectural styles, classic patterns (Model-View-Controller, Model-View-Template
+   and the LAMP stack), integration patterns and data architectures, and recognize
    infrastructure as code, horizontal scalability, zero trust, extensibility and explicit data
    models in a real codebase.
 6. Explain architecture for cloud-native and AI applications, including cost as a quality
@@ -113,8 +114,11 @@ The file references in the lectures are listed in full under `Principles in the 
        the twelve-factor audit. Start Assignment 2.
    * - 3
      - Lecture 7
-     - **Styles and extensibility.** Monolith, modular monolith (one Django app per resource
-       family), microservices, event-driven and serverless. Ports and adapters in the
+     - **Styles and extensibility.** A pattern review: Model-View-Controller from Smalltalk to the
+       web, Django's Model-View-Template traced through the ``Secret`` model, URLconf, views and
+       templates, the web console's split of MVC between Django and React, and the LAMP stack
+       beside Smarter's Debian, uvicorn, MariaDB and Python. Then monolith, modular monolith (one
+       Django app per resource family), microservices, event-driven and serverless. Ports and adapters in the
        infrastructure service layer, the broker registry of kinds, ``PluginBase`` for new plugin
        types, and Provider manifests for new LLM providers.
    * - 3

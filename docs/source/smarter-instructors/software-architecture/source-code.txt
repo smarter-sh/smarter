@@ -164,3 +164,46 @@ Beyond the Twelve Factors
      - Behavior and diagnostics are switched at run time with Django Waffle, without a
        deployment. :doc:`ADR 022 </adr/022-feature-flags>`.
      - `lib/django/waffle/switches.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/switches.py>`__
+
+Classic Patterns
+~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Pattern
+     - How Smarter follows it
+     - Where to look
+   * - Model-View-Controller
+     - Trygve Reenskaug's pattern from Smalltalk at Xerox PARC (1979), later the shape of almost
+       every server-side web framework: a model holds the data and its rules, a view presents it,
+       and a controller turns input into changes to the model. In Smarter's web console the
+       pattern is split across the network. Django sends a page shell, a React app in the browser
+       renders the view and handles the user's actions, and JSON API views act on the models.
+       :doc:`ADR 019 </adr/019-react>` still limits React to the Workbench; the packages show how
+       far the code has moved since.
+     - `react/packages/smarter-secret-list/src/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-secret-list/src>`__,
+       `secret/views/listview/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/secret/views/listview>`__
+   * - Model-View-Template
+     - Django's own version of MVC, which its FAQ calls MTV. The Django *view* does the
+       controller's job, the *template* does the view's job, and the URLconf with the framework's
+       request handling is the remaining controller. One resource family shows all three: the
+       ``Secret`` model, the URL patterns that route to its views, and the templates they render.
+       :doc:`ADR 001 </adr/001-django>`, :doc:`ADR 025 </adr/025-templates>`.
+     - `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
+       `secret/urls.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/urls.py>`__,
+       `secret/views/detailview.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/views/detailview.py>`__,
+       `templates/react/secret-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/secret-list.html>`__
+   * - LAMP
+     - Linux, Apache, MySQL and PHP (or Perl or Python): the open-source web stack named in 1998,
+       on which much of the early web ran. Smarter is a descendant. The image is built on Debian
+       Linux; MariaDB, the fork of MySQL by MySQL's original author, is reached through Django's
+       MySQL backend; Python replaces PHP; and uvicorn, behind a Kubernetes ingress, replaces
+       Apache. What LAMP did not have shows what changed since: Redis, Celery workers, containers,
+       autoscaling and a React front end.
+     - `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__,
+       `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__,
+       `settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`__
+       (``DATABASES``),
+       `llmclient/k8s/ingress.yaml.tpl <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/k8s/ingress.yaml.tpl>`__

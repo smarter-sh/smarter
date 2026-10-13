@@ -41,7 +41,9 @@ By the end of the course, students can:
 4. Recognize infrastructure as code, horizontal scalability, zero trust, extensibility and
    explicit data models in a real codebase, and say what each costs.
 5. Verify ADRs against code, and recognize drift.
-6. Compare architectural styles and patterns for a given problem, write ADRs, and plan the
+6. Trace a request through Model-View-Controller, Django's Model-View-Template and the LAMP
+   stack, and say where a modern system departs from them.
+7. Compare architectural styles and patterns for a given problem, write ADRs, and plan the
    evolution of an architecture.
 
 Technical Prerequisites
@@ -93,7 +95,9 @@ The file references in the lectures are listed in full under `Principles in the 
        :doc:`twelve-factor guide </smarter-framework/guides/12-factor-app>` is read critically.
    * - 2
      - Lecture 5 (30 min)
-     - **Styles, patterns and extensibility.** Modular monolith (one Django app per resource
+     - **Styles, patterns and extensibility.** A pattern review of Model-View-Controller,
+       Django's Model-View-Template (the ``Secret`` model, URLconf, views and templates) and the
+       LAMP stack that Smarter descends from. Modular monolith (one Django app per resource
        family), ports and adapters in the infrastructure service layer, the
        :doc:`broker model </smarter-framework/smarter-broker-model>` and its registry of kinds,
        and Django models for storage beside Pydantic models for contracts
