@@ -1,17 +1,18 @@
 Course Formats and Grading
 ==========================
 
-Every example course in this guide comes with three complete course plans: a one-day classroom
+Every micro course in this guide comes with three complete course plans: a one-day classroom
 bootcamp, a two-week online course and a four-week online course. Each plan has a schedule,
 graded assignments with rubrics, two capstone projects, recommended texts, further study and the
 technical prerequisites. This page explains what the three formats have in common, so that the
 plans themselves can stay short. An instructor should be able to take a plan, adjust the dates,
 and teach it.
 
-The :doc:`django-master-class` is the exception. It has 18 hours of instruction, in eighteen
-one-hour modules of lecture and lab, taught as a three-day classroom course or a six-week online
-course. Its plans describe their own schedules, live sessions and grade weights, and use the
-rubric levels and course policies on this page.
+:doc:`Master classes </smarter-instructors/master-classes>` are longer, and have formats of
+their own. The :doc:`/smarter-instructors/master-classes/django-master-class`, for example, has
+18 hours of instruction, in eighteen one-hour modules of lecture and lab, taught as a three-day
+classroom course or a six-week online course. Their plans describe their own schedules, live
+sessions and grade weights, and use the rubric levels and course policies on this page.
 
 The Three Formats
 -----------------
