@@ -84,12 +84,14 @@ it. Smarter gives a training program a real platform to teach on, and a library 
 teach with. Learners build working AI applications from the first hour, on the same software that
 can run them in production afterwards.
 
-**19 example courses, 56 turnkey course plans.** Almost every course in the
-:doc:`Smarter Instructor Guide <smarter-instructor>` comes in
-:doc:`three formats <smarter-instructors/course-formats>`: an eight-hour classroom bootcamp, a
-two-week online course and a four-week online course. The 18-hour
-:doc:`Django Master Class <smarter-instructors/django-master-class>` runs over three days in a
-classroom or six weeks online. The online formats pair 30-minute recorded
+**19 example courses, 56 turnkey course plans.** The
+:doc:`Smarter Instructor Guide <smarter-instructor>` has 18
+:doc:`micro courses <smarter-instructors/micro-courses>`, each in
+:doc:`three formats <smarter-instructors/micro-courses/course-formats>`: an eight-hour classroom
+bootcamp, a two-week online course and a four-week online course. Its
+:doc:`master classes <smarter-instructors/master-classes>` go deeper: the 18-hour
+:doc:`Django Master Class <smarter-instructors/master-classes/django-master-class>` runs over
+three days in a classroom or six weeks online. The online formats pair 30-minute recorded
 lectures with a weekly 90-minute live session, so they fit around a working week. Every plan has
 a schedule, graded assignments with rubrics, capstone projects, a reading list and the technical
 prerequisites. A trainer can take a plan, set the dates, and teach it.
@@ -101,28 +103,28 @@ prerequisites. A trainer can take a plan, set the dates, and teach it.
    * - Who is learning
      - Courses
    * - **Every employee** (no programming)
-     - :doc:`Prompt Engineering <smarter-instructors/prompt-engineering>`,
-       :doc:`AI Applications <smarter-instructors/ai-applications>`
+     - :doc:`Prompt Engineering <smarter-instructors/micro-courses/prompt-engineering>`,
+       :doc:`AI Applications <smarter-instructors/micro-courses/ai-applications>`
    * - **Leaders, managers, risk and compliance** (no programming)
-     - :doc:`AI Governance <smarter-instructors/ai-governance>`,
-       :doc:`AI Economics <smarter-instructors/ai-economics>`
+     - :doc:`AI Governance <smarter-instructors/micro-courses/ai-governance>`,
+       :doc:`AI Economics <smarter-instructors/micro-courses/ai-economics>`
    * - **Software engineers**
-     - :doc:`Agentic Development <smarter-instructors/agentic-development>`,
-       :doc:`Backend <smarter-instructors/backend-development>`,
-       :doc:`Front End <smarter-instructors/frontend-development>`,
-       :doc:`Full Stack <smarter-instructors/full-stack-development>`,
-       :doc:`API Design <smarter-instructors/api-design>`,
-       :doc:`Secure Software <smarter-instructors/secure-software>`,
-       :doc:`Software Quality <smarter-instructors/software-quality>`,
-       :doc:`Software Architecture <smarter-instructors/software-architecture>`,
-       :doc:`Django Master Class <smarter-instructors/django-master-class>`,
-       :doc:`Documentation with Sphinx <smarter-instructors/sphinx-documentation>`,
-       :doc:`Open Source <smarter-instructors/open-source>`
+     - :doc:`Agentic Development <smarter-instructors/micro-courses/agentic-development>`,
+       :doc:`Backend <smarter-instructors/micro-courses/backend-development>`,
+       :doc:`Front End <smarter-instructors/micro-courses/frontend-development>`,
+       :doc:`Full Stack <smarter-instructors/micro-courses/full-stack-development>`,
+       :doc:`API Design <smarter-instructors/micro-courses/api-design>`,
+       :doc:`Secure Software <smarter-instructors/micro-courses/secure-software>`,
+       :doc:`Software Quality <smarter-instructors/micro-courses/software-quality>`,
+       :doc:`Software Architecture <smarter-instructors/micro-courses/software-architecture>`,
+       :doc:`Django Master Class <smarter-instructors/master-classes/django-master-class>`,
+       :doc:`Documentation with Sphinx <smarter-instructors/micro-courses/sphinx-documentation>`,
+       :doc:`Open Source <smarter-instructors/micro-courses/open-source>`
    * - **Platform, cloud and machine learning engineers**
-     - :doc:`Docker <smarter-instructors/docker>`,
-       :doc:`Kubernetes <smarter-instructors/kubernetes>`,
-       :doc:`Infrastructure as Code <smarter-instructors/infrastructure-as-code>`,
-       :doc:`Self-Hosted Models <smarter-instructors/self-hosted-models>`
+     - :doc:`Docker <smarter-instructors/micro-courses/docker>`,
+       :doc:`Kubernetes <smarter-instructors/micro-courses/kubernetes>`,
+       :doc:`Infrastructure as Code <smarter-instructors/micro-courses/infrastructure-as-code>`,
+       :doc:`Self-Hosted Models <smarter-instructors/micro-courses/self-hosted-models>`
 
 Smarter is built to be run for a group of learners:
 
@@ -317,7 +319,7 @@ At a glance
 -----------
 
 - **Get started** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
-- **Teaching and training** | :doc:`Instructor Guide <smarter-instructor>` | :doc:`Course formats <smarter-instructors/course-formats>`
+- **Teaching and training** | :doc:`Instructor Guide <smarter-instructor>` | :doc:`Course formats <smarter-instructors/micro-courses/course-formats>`
 
   - 19 example courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and an 18-hour Django Master Class.
   - Per-learner budgets, separate accounts for each cohort, and a record of every prompt, on learners' laptops or on one shared Kubernetes instance.

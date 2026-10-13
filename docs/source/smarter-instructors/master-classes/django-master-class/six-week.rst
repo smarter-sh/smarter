@@ -11,7 +11,7 @@ keep it all honest. Each topic is a one-hour module: a 30-minute recorded lectur
 together in the week's live session on the student's own running copy of Smarter. Week 1 covers
 configuration and startup, week 2 the request, week 3 data, week 4 asynchrony and Redis, week 5
 APIs and identity, and week 6 the front end, quality and one feature that uses it all. See
-:doc:`../course-formats` for the grading scale and the course policies, and
+:doc:`/smarter-instructors/micro-courses/course-formats` for the grading scale and the course policies, and
 :doc:`../django-master-class` for an overview of the subject.
 
 At a Glance
@@ -105,7 +105,7 @@ Students watch the week's three lectures before its live session. Each module is
 Live Sessions
 ~~~~~~~~~~~~~
 
-This course's live sessions differ from the standard session in :doc:`../course-formats`, because
+This course's live sessions differ from the standard session in :doc:`/smarter-instructors/micro-courses/course-formats`, because
 they hold the labs:
 
 - **15 minutes:** questions on the week's lectures, and common problems seen in the previous
@@ -143,7 +143,7 @@ Grading
      - 40%
 
 The grading scale, the rubric levels and the course policies are those of
-:doc:`../course-formats`.
+:doc:`/smarter-instructors/micro-courses/course-formats`.
 
 Graded Assignments
 ------------------

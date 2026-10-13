@@ -10,7 +10,7 @@ contracts in Pydantic, OAuth, template tags that host React apps, and the tests 
 keep it all honest. Each topic is a one-hour module, a 30-minute lecture and a 30-minute lab on
 the student's own running copy of Smarter. Day 1 covers configuration, startup and the request,
 day 2 data, asynchrony and Redis, and day 3 APIs, identity, the front end and quality. See
-:doc:`../course-formats` for the grading scale and the course policies, and
+:doc:`/smarter-instructors/micro-courses/course-formats` for the grading scale and the course policies, and
 :doc:`../django-master-class` for an overview of the subject.
 
 At a Glance
@@ -125,7 +125,7 @@ Grading
      - 45%
 
 The grading scale, the rubric levels and the course policies are those of
-:doc:`../course-formats`.
+:doc:`/smarter-instructors/micro-courses/course-formats`.
 
 Graded Assignments
 ------------------
