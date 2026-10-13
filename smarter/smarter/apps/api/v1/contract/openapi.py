@@ -39,6 +39,13 @@ from typing import Optional, get_args
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
+from smarter.apps.account.contract.models import (
+    ACCOUNT_API_MODELS,
+    AccountApiAccountDetail,
+    AccountApiContact,
+    AccountApiProfile,
+    AccountApiUserDetail,
+)
 from smarter.apps.guardrail.contract.models import (
     GUARDRAIL_API_MODELS,
     GuardrailApiEvaluateRequest,
@@ -76,6 +83,12 @@ from smarter.apps.mcpclient.contract.models import (
 )
 from smarter.apps.plugin.contract.models import PluginApiPluginMeta
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
+from smarter.apps.prompt.contract.history import (
+    PROMPT_HISTORY_API_MODELS,
+    PromptHistoryApiPluginUsage,
+    PromptHistoryApiSession,
+    PromptHistoryApiToolCall,
+)
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfigRequest,
     PromptChatApiConfigResponse,
@@ -110,9 +123,14 @@ from smarter.common.const import (
     SMARTER_PROJECT_DOCS_URL,
     SMARTER_PROJECT_WEBSITE_URL,
 )
+from smarter.lib.journal.api.v1.views import SORT_FIELDS as JOURNAL_SORT_FIELDS
+from smarter.lib.journal.contract.const import JOURNAL_KEY_PATTERN
 from smarter.lib.journal.contract.models import (
+    JOURNAL_API_MODELS,
+    SAMJournalApiEntry,
     SAMJournalApiEnvelope,
     SAMJournalApiErrorResponse,
+    SAMJournalApiPage,
 )
 
 from .const import (
@@ -177,6 +195,9 @@ TAG_LLMHOSTS = "llmhosts"
 TAG_PLUGINS = "plugins"
 TAG_PROVIDERS = "providers"
 TAG_PROXIES = "proxies"
+TAG_ACCOUNTS = "accounts"
+TAG_HISTORY = "history"
+TAG_JOURNAL = "journal"
 
 SUPERUSER_ONLY = (
     "Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read "
@@ -212,6 +233,9 @@ DOCUMENTED_URLCONFS: dict[str, str] = {
     "/plugins/": "smarter.apps.plugin.api.v1.urls",
     "/providers/": "smarter.apps.provider.api.v1.urls",
     "/proxy/": "smarter.apps.proxy.api.v1.urls",
+    "/accounts/": "smarter.apps.account.api.v1.urls",
+    "/prompts/": "smarter.apps.prompt.api.v1.urls",
+    "/journal/": "smarter.lib.journal.api.v1.urls",
 }
 """
 The families of routes that the document covers: each one's path, relative to ``/api/v1``, and its urlconf.
@@ -227,6 +251,7 @@ PATH_PARAMETER_ALIASES: dict[str, str] = {
     "vectorstore_id": "id",
     "llmhost_id": "id",
     "hashed_id": "id",
+    "pk": "id",
 }
 """
 The document's names of the routes' path parameters, where they differ.
@@ -246,6 +271,12 @@ UNDOCUMENTED_ROUTES: dict[str, str] = {
     "/proxy/{name}/{path}": "A Proxy's passthrough, whose requests and responses are its provider's api, not Smarter's.",
     "/llm-clients/{id}/prompt/config/": "A legacy alias of /llm-clients/{id}/config/, for pages that installed an "
     "older Smarter Chat.",
+    "/accounts/batch-create-users/": "Creates users from a CSV file in the web console. Clients apply User "
+    "manifests with the cli api.",
+    "/prompts/smarter/{provider_name}/": "The chat api of an LLM provider through Smarter, whose requests and "
+    "responses are the provider's, not Smarter's.",
+    "/prompts/passthrough/{provider_name}/": "A passthrough to an LLM provider's api, whose requests and responses "
+    "are the provider's, not Smarter's.",
     "/llm-clients/{id}/functions/{function_id}/plugins": "It returns every plugin of the LLMClient, whatever the "
     "function, because it is routed to LLMClientPluginListView. Not published until it is fixed or removed.",
 }
@@ -331,6 +362,9 @@ def model_schemas() -> tuple[dict[str, OpenApiSchema], dict[str, str]]:
         *LLMHOST_API_MODELS,
         *PROVIDER_API_MODELS,
         *PROXY_API_MODELS,
+        *ACCOUNT_API_MODELS,
+        *PROMPT_HISTORY_API_MODELS,
+        *JOURNAL_API_MODELS,
         *CLI_API_MODELS,
     ]
     refs, schema = models_json_schema([(model, "validation") for model in models], ref_template=REF_TEMPLATE)
@@ -1701,6 +1735,223 @@ def proxy_paths() -> dict[str, OpenApiPathItem]:
     }
 
 
+def account_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The accounts' REST reads, relative to the server's ``/api/v1``.
+
+    Only superusers may call them.
+
+    :returns: The paths, e.g. ``{"/accounts/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    tag = TAG_ACCOUNTS
+
+    def read(operation_id, summary, description, item, parameters, many=False):
+        return rest_read(operation_id, summary, description, tag, item, many=many, parameters=parameters)
+
+    return {
+        "/accounts/": OpenApiPathItem(
+            get=read("account_list", "List accounts", "Every account.", AccountApiAccountDetail.__name__, [], True)
+        ),
+        "/accounts/{account_id}/": OpenApiPathItem(
+            get=read(
+                "account_retrieve",
+                "An account",
+                "An account, by its id.",
+                AccountApiAccountDetail.__name__,
+                [integer_id("account_id", "The account's id.")],
+            )
+        ),
+        "/accounts/users/": OpenApiPathItem(
+            get=read("user_list", "List users", "Every user.", AccountApiUserDetail.__name__, [], True)
+        ),
+        "/accounts/users/{user_id}/": OpenApiPathItem(
+            get=read(
+                "user_retrieve",
+                "A user",
+                "A user, by its id.",
+                AccountApiUserDetail.__name__,
+                [integer_id("user_id", "The user's id.")],
+            )
+        ),
+        "/accounts/user-profiles/": OpenApiPathItem(
+            get=read(
+                "user_profile_list",
+                "List user profiles",
+                "Every user profile: each user's membership of an account.",
+                AccountApiProfile.__name__,
+                [],
+                True,
+            )
+        ),
+        "/accounts/user-profiles/{user_profile_id}/": OpenApiPathItem(
+            get=read(
+                "user_profile_retrieve",
+                "A user profile",
+                "A user profile, by its id.",
+                AccountApiProfile.__name__,
+                [integer_id("user_profile_id", "The user profile's id.")],
+            )
+        ),
+        "/accounts/contacts/": OpenApiPathItem(
+            get=read(
+                "contact_list",
+                "List account contacts",
+                "Every account's contacts, who receive its notices.",
+                AccountApiContact.__name__,
+                [],
+                True,
+            )
+        ),
+        "/accounts/contacts/{account_contact_id}/": OpenApiPathItem(
+            get=read(
+                "contact_retrieve",
+                "An account contact",
+                "An account contact, by its id.",
+                AccountApiContact.__name__,
+                [integer_id("account_contact_id", "The account contact's id.")],
+            )
+        ),
+    }
+
+
+HISTORY_PERMISSION = (
+    "Requires an api key. The response includes only the chat sessions whose user the user may manage: their "
+    "own, their account's users' for an account admin, and every one for a superuser."
+)
+"""The note of the prompt history's reads."""
+
+
+def history_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The prompt history's REST reads, relative to the server's ``/api/v1``, newest first.
+
+    :returns: The paths, e.g. ``{"/prompts/history/prompt/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    tag = TAG_HISTORY
+    row_id = integer_id("id", "The row's id.")
+
+    def read(operation_id, summary, description, item, parameters, many=False):
+        return rest_read(
+            operation_id, summary, description, tag, item, many=many, parameters=parameters, note=HISTORY_PERMISSION
+        )
+
+    return {
+        "/prompts/history/prompt/": OpenApiPathItem(
+            get=read(
+                "history_session_list",
+                "List chat sessions",
+                "The chat sessions: each conversation with an LLMClient.",
+                PromptHistoryApiSession.__name__,
+                [],
+                True,
+            )
+        ),
+        "/prompts/history/prompt/{id}/": OpenApiPathItem(
+            get=read(
+                "history_session_retrieve",
+                "A chat session",
+                "A chat session.",
+                PromptHistoryApiSession.__name__,
+                [row_id],
+            )
+        ),
+        "/prompts/history/tool-calls/": OpenApiPathItem(
+            get=read(
+                "history_tool_call_list",
+                "List tool calls",
+                "The tool calls that the LLMs made in the chat sessions, with their input and result.",
+                PromptHistoryApiToolCall.__name__,
+                [],
+                True,
+            )
+        ),
+        "/prompts/history/tool-calls/{id}/": OpenApiPathItem(
+            get=read(
+                "history_tool_call_retrieve", "A tool call", "A tool call.", PromptHistoryApiToolCall.__name__, [row_id]
+            )
+        ),
+        "/prompts/history/plugin-usage/": OpenApiPathItem(
+            get=read(
+                "history_plugin_usage_list",
+                "List plugin usage",
+                "The plugins that the chat sessions used.",
+                PromptHistoryApiPluginUsage.__name__,
+                [],
+                True,
+            )
+        ),
+        "/prompts/history/plugin-usage/{id}/": OpenApiPathItem(
+            get=read(
+                "history_plugin_usage_retrieve",
+                "A plugin usage",
+                "A use of a plugin in a chat session.",
+                PromptHistoryApiPluginUsage.__name__,
+                [row_id],
+            )
+        ),
+    }
+
+
+def journal_paths() -> dict[str, OpenApiPathItem]:
+    """
+    The Smarter Journal's REST reads, relative to the server's ``/api/v1``.
+
+    Only superusers may call them.
+
+    :returns: The paths, e.g. ``{"/journal/": ...}``.
+    :rtype: dict[str, OpenApiPathItem]
+    """
+    tag = TAG_JOURNAL
+    return {
+        "/journal/": OpenApiPathItem(
+            get=rest_read(
+                "journal_list",
+                "List journal entries",
+                "One page of the journal's entries, newest first unless sorted, without their request and response "
+                "documents.",
+                tag,
+                SAMJournalApiPage.__name__,
+                many=False,
+                parameters=[
+                    query("page", "The page, from 1.", {"type": "integer", "default": 1}),
+                    query("page_size", "The entries of a page, at most 100.", {"type": "integer", "default": 25}),
+                    query("search", "Text that an entry's key, thing or command contains.", {"type": "string"}),
+                    query(
+                        "ordering",
+                        "The column to sort by, e.g. createdAt, or -createdAt to sort it in descending order.",
+                        {
+                            "type": "string",
+                            "enum": [f"{sign}{column}" for column in JOURNAL_SORT_FIELDS for sign in ("", "-")],
+                        },
+                    ),
+                ],
+            )
+        ),
+        "/journal/{key}/": OpenApiPathItem(
+            get=rest_read(
+                "journal_retrieve",
+                "A journal entry",
+                "A journal entry, by its key, with its request and response documents. The request document holds "
+                "the caller's headers, including its api key.",
+                tag,
+                SAMJournalApiEntry.__name__,
+                many=False,
+                parameters=[
+                    OpenApiParameter(
+                        name="key",
+                        in_="path",
+                        required=True,
+                        description="The entry's key, 64 hexadecimal characters.",
+                        schema_={"type": "string", "pattern": JOURNAL_KEY_PATTERN},
+                    )
+                ],
+            )
+        ),
+    }
+
+
 def merge_paths(*families: dict[str, OpenApiPathItem]) -> dict[str, OpenApiPathItem]:
     """
     The paths of several families, with the operations of a path that two families share in one path item.
@@ -1788,6 +2039,12 @@ def openapi_document() -> OpenApiDocument:
                 description="The Proxies that the user may use. Served only when the platform enables Proxies "
                 "(SMARTER_ENABLE_PROXY).",
             ),
+            OpenApiTag(name=TAG_ACCOUNTS, description="The accounts, their users and contacts. For superusers."),
+            OpenApiTag(name=TAG_HISTORY, description="The chat sessions, and their tool calls and plugin usage."),
+            OpenApiTag(
+                name=TAG_JOURNAL,
+                description="The Smarter Journal: a record of every request to the cli api. For superusers.",
+            ),
         ],
         paths=merge_paths(
             cli_paths(),
@@ -1801,6 +2058,9 @@ def openapi_document() -> OpenApiDocument:
             plugin_paths(),
             provider_paths(),
             proxy_paths(),
+            account_paths(),
+            history_paths(),
+            journal_paths(),
         ),
         components=OpenApiComponents(
             schemas=schemas,

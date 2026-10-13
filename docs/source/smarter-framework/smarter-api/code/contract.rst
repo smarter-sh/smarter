@@ -69,5 +69,10 @@ API Contract
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: smarter.apps.prompt.contract.history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: smarter.lib.drf.views.contract
     :members:

@@ -17,6 +17,524 @@
         "title": "AccountApiAccount",
         "type": "object"
       },
+      "AccountApiAccountDetail": {
+        "additionalProperties": false,
+        "description": "An account: a :class:`smarter.apps.account.models.Account`.",
+        "properties": {
+          "accountNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.account_number, e.g. 1234-5678-9012.",
+            "title": "Accountnumber"
+          },
+          "address1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.address1.",
+            "title": "Address1"
+          },
+          "address2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.address2.",
+            "title": "Address2"
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.city.",
+            "title": "City"
+          },
+          "companyName": {
+            "description": "Account.company_name.",
+            "title": "Companyname",
+            "type": "string"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.country.",
+            "title": "Country"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.currency, e.g. USD.",
+            "title": "Currency"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "hashedId": {
+            "description": "The account's hashed id, e.g. rMTAwMDAwMQx.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isActive": {
+            "description": "Account.is_active.",
+            "title": "Isactive",
+            "type": "boolean"
+          },
+          "isDefaultAccount": {
+            "description": "Account.is_default_account.",
+            "title": "Isdefaultaccount",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.language, e.g. EN.",
+            "title": "Language"
+          },
+          "name": {
+            "description": "MetaDataModel.name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.phone_number.",
+            "title": "Phonenumber"
+          },
+          "postalCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.postal_code.",
+            "title": "Postalcode"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.state.",
+            "title": "State"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.timezone, e.g. America/Denver.",
+            "title": "Timezone"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "isDefaultAccount",
+          "companyName",
+          "isActive"
+        ],
+        "title": "AccountApiAccountDetail",
+        "type": "object"
+      },
+      "AccountApiContact": {
+        "additionalProperties": false,
+        "description": "A contact of an account, who receives its notices: a :class:`smarter.apps.account.models.AccountContact`.",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountApiAccount",
+            "description": "AccountContact.account."
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "email": {
+            "description": "AccountContact.email.",
+            "title": "Email",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "AccountContact.first_name.",
+            "title": "Firstname",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isPrimary": {
+            "description": "AccountContact.is_primary: whether it is the account's main contact.",
+            "title": "Isprimary",
+            "type": "boolean"
+          },
+          "isTest": {
+            "description": "AccountContact.is_test: whether a test created it.",
+            "title": "Istest",
+            "type": "boolean"
+          },
+          "lastName": {
+            "description": "AccountContact.last_name.",
+            "title": "Lastname",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "AccountContact.phone.",
+            "title": "Phone"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "welcomed": {
+            "description": "AccountContact.welcomed: whether it was sent the welcome email.",
+            "title": "Welcomed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "account",
+          "firstName",
+          "lastName",
+          "email",
+          "isPrimary",
+          "isTest",
+          "welcomed"
+        ],
+        "title": "AccountApiContact",
+        "type": "object"
+      },
+      "AccountApiProfile": {
+        "additionalProperties": false,
+        "description": "A user's membership of an account: a :class:`smarter.apps.account.models.UserProfile`.",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountApiAccount",
+            "description": "UserProfile.account."
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Createdat"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "hashedId": {
+            "description": "The user profile's hashed id.",
+            "title": "Hashedid",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isTest": {
+            "description": "UserProfile.is_test: whether a test created it.",
+            "title": "Istest",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "MetaDataModel.name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "profileImageUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UserProfile.profile_image_url.",
+            "title": "Profileimageurl"
+          },
+          "tags": {
+            "description": "MetaDataModel.tags, by name.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updatedat"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AccountApiUserDetail",
+            "description": "UserProfile.user."
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "hashedId",
+          "name",
+          "user",
+          "account",
+          "isTest"
+        ],
+        "title": "AccountApiProfile",
+        "type": "object"
+      },
       "AccountApiUser": {
         "additionalProperties": false,
         "description": "A user, as the owner of a resource: a :class:`django.contrib.auth.models.User`'s username and email.",
@@ -44,6 +562,58 @@
           "username"
         ],
         "title": "AccountApiUser",
+        "type": "object"
+      },
+      "AccountApiUserDetail": {
+        "additionalProperties": false,
+        "description": "A user: a :class:`django.contrib.auth.models.User`, without its password and permissions.",
+        "properties": {
+          "email": {
+            "default": "",
+            "description": "User.email.",
+            "title": "Email",
+            "type": "string"
+          },
+          "firstName": {
+            "default": "",
+            "description": "User.first_name.",
+            "title": "Firstname",
+            "type": "string"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "isStaff": {
+            "description": "User.is_staff: whether the user administers their account.",
+            "title": "Isstaff",
+            "type": "boolean"
+          },
+          "isSuperuser": {
+            "description": "User.is_superuser: whether the user administers the platform.",
+            "title": "Issuperuser",
+            "type": "boolean"
+          },
+          "lastName": {
+            "default": "",
+            "description": "User.last_name.",
+            "title": "Lastname",
+            "type": "string"
+          },
+          "username": {
+            "description": "User.username.",
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "isStaff",
+          "isSuperuser"
+        ],
+        "title": "AccountApiUserDetail",
         "type": "object"
       },
       "AccountApiUserProfile": {
@@ -4817,6 +5387,65 @@
         "title": "LLMHostApiUndeployed",
         "type": "object"
       },
+      "ListViewPagination": {
+        "additionalProperties": false,
+        "description": "The description of one page of a list api's resources, as :func:`paginate_listview` returns it.\n\nIts JSON is camelCase, e.g. ``pageSize``.",
+        "properties": {
+          "count": {
+            "description": "The number of resources that match the search, on every page.",
+            "minimum": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "numPages": {
+            "description": "The number of pages.",
+            "minimum": 1,
+            "title": "Numpages",
+            "type": "integer"
+          },
+          "ordering": {
+            "default": "",
+            "description": "The column that sorts the list, e.g. -createdAt, or an empty string for the default order.",
+            "title": "Ordering",
+            "type": "string"
+          },
+          "page": {
+            "description": "The page's number, from 1.",
+            "minimum": 1,
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "The most resources that a page has.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "search": {
+            "default": "",
+            "description": "The search, or an empty string.",
+            "title": "Search",
+            "type": "string"
+          },
+          "sortFields": {
+            "description": "The columns that the list may be sorted by.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Sortfields",
+            "type": "array"
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "numPages",
+          "count"
+        ],
+        "title": "ListViewPagination",
+        "type": "object"
+      },
       "MCPClientApiErrorResponse": {
         "anyOf": [
           {
@@ -8322,6 +8951,326 @@
         "title": "PromptChatApiUsage",
         "type": "object"
       },
+      "PromptHistoryApiPluginUsage": {
+        "additionalProperties": false,
+        "description": "A use of a plugin in a chat session: a :class:`smarter.apps.prompt.models.PromptPluginUsage`.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Created At"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "input_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "PromptPluginUsage.input_text.",
+            "title": "Input Text"
+          },
+          "plugin": {
+            "$ref": "#/components/schemas/PluginApiPluginMeta",
+            "description": "PromptPluginUsage.plugin: the plugin."
+          },
+          "prompt": {
+            "$ref": "#/components/schemas/PromptHistoryApiSession",
+            "description": "PromptPluginUsage.prompt: the chat session."
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "prompt",
+          "plugin"
+        ],
+        "title": "PromptHistoryApiPluginUsage",
+        "type": "object"
+      },
+      "PromptHistoryApiSession": {
+        "additionalProperties": false,
+        "description": "A chat session: one conversation with an LLMClient, a :class:`smarter.apps.prompt.models.Prompt`.",
+        "properties": {
+          "annotations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.annotations.",
+            "title": "Annotations"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Created At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.description.",
+            "title": "Description"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "ip_address": {
+            "description": "Prompt.ip_address: the client's IP address.",
+            "title": "Ip Address",
+            "type": "string"
+          },
+          "llmclient": {
+            "description": "Prompt.llmclient: the LLMClient's id.",
+            "title": "Llmclient",
+            "type": "integer"
+          },
+          "name": {
+            "default": "",
+            "description": "MetaDataModel.name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "session_key": {
+            "description": "Prompt.session_key, which identifies the session.",
+            "maxLength": 255,
+            "title": "Session Key",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updated At"
+          },
+          "url": {
+            "description": "Prompt.url: the url that the session's chat was configured with.",
+            "title": "Url",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "Prompt.user_agent: the client's user agent.",
+            "maxLength": 255,
+            "title": "User Agent",
+            "type": "string"
+          },
+          "user_profile": {
+            "description": "Prompt.user_profile: the user profile's id.",
+            "title": "User Profile",
+            "type": "integer"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "MetaDataModel.version, e.g. 1.0.0.",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "session_key",
+          "ip_address",
+          "user_agent",
+          "url",
+          "user_profile",
+          "llmclient"
+        ],
+        "title": "PromptHistoryApiSession",
+        "type": "object"
+      },
+      "PromptHistoryApiToolCall": {
+        "additionalProperties": false,
+        "description": "A tool call that the LLM made in a chat session: a :class:`smarter.apps.prompt.models.PromptToolCall`.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.created_at.",
+            "title": "Created At"
+          },
+          "function_args": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "PromptToolCall.function_args.",
+            "title": "Function Args"
+          },
+          "function_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "PromptToolCall.function_name.",
+            "title": "Function Name"
+          },
+          "id": {
+            "description": "The row's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "plugin": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "PromptToolCall.plugin: the PluginMeta's id, for a plugin.",
+            "title": "Plugin"
+          },
+          "prompt": {
+            "$ref": "#/components/schemas/PromptHistoryApiSession",
+            "description": "PromptToolCall.prompt: the chat session."
+          },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "PromptToolCall.request: the tool's input."
+          },
+          "response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "PromptToolCall.response: the tool's result."
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "TimestampedModel.updated_at.",
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "prompt"
+        ],
+        "title": "PromptHistoryApiToolCall",
+        "type": "object"
+      },
       "ProviderApiModel": {
         "additionalProperties": false,
         "description": "A model of an LLM provider: a :class:`smarter.apps.provider.models.ProviderModel`, with its provider.",
@@ -11143,6 +12092,234 @@
         "title": "SAMImageSearchPluginSpec",
         "type": "object"
       },
+      "SAMJournalApiEntry": {
+        "additionalProperties": false,
+        "description": "A journal entry, as the journal's REST api returns it by its key: with its request and response documents.\n\nIt is the output of :class:`smarter.lib.journal.serializers.SAMJournalSerializer`, in camelCase.\nThe request document holds the caller's headers and cookies, including its api key.",
+        "properties": {
+          "command": {
+            "description": "SAMJournal.command.",
+            "enum": [
+              "apply",
+              "prompt",
+              "chat_config",
+              "delete",
+              "deploy",
+              "describe",
+              "get",
+              "journal",
+              "logs",
+              "example_manifest",
+              "status",
+              "json_schema",
+              "version",
+              "undeploy",
+              "validate",
+              "whoami",
+              "resources"
+            ],
+            "title": "Command",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "SAMJournal.created_at.",
+            "title": "Createdat"
+          },
+          "key": {
+            "description": "SAMJournal.key, the entry's primary key.",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "request": {
+            "$ref": "#/components/schemas/JsonValue",
+            "description": "SAMJournal.request: the serialized http request."
+          },
+          "response": {
+            "$ref": "#/components/schemas/JsonValue",
+            "description": "SAMJournal.response: the response's JSON body."
+          },
+          "statusCode": {
+            "description": "SAMJournal.status_code: the http status.",
+            "maximum": 65535,
+            "minimum": 0,
+            "title": "Statuscode",
+            "type": "integer"
+          },
+          "thing": {
+            "description": "SAMJournal.thing.",
+            "enum": [
+              "Account",
+              "ApiConnection",
+              "ApiPlugin",
+              "SmarterAuthToken",
+              "Budget",
+              "CustomDomain",
+              "Guardrail",
+              "ImageSearchPlugin",
+              "LLMClient",
+              "MCPClient",
+              "Orchestrator",
+              "Prompt",
+              "ChatConfig",
+              "Proxy",
+              "Provider",
+              "Secret",
+              "SkillPlugin",
+              "SqlConnection",
+              "SqlPlugin",
+              "Plugin",
+              "User",
+              "Vectorsearch",
+              "Vectorstore",
+              "WebsearchPlugin"
+            ],
+            "title": "Thing",
+            "type": "string"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The username of the caller, or null for an anonymous request.",
+            "title": "User"
+          }
+        },
+        "required": [
+          "key",
+          "thing",
+          "command",
+          "statusCode",
+          "request",
+          "response"
+        ],
+        "title": "SAMJournalApiEntry",
+        "type": "object"
+      },
+      "SAMJournalApiEntrySummary": {
+        "additionalProperties": false,
+        "description": "A journal entry, as the journal's list returns it: without its request and response documents.\n\nIt is the output of :class:`smarter.lib.journal.serializers.SAMJournalMiniSerializer`, in\ncamelCase. Unlike :class:`SAMJournalApiOrmModel`, its ``user`` is the username.",
+        "properties": {
+          "command": {
+            "description": "SAMJournal.command.",
+            "enum": [
+              "apply",
+              "prompt",
+              "chat_config",
+              "delete",
+              "deploy",
+              "describe",
+              "get",
+              "journal",
+              "logs",
+              "example_manifest",
+              "status",
+              "json_schema",
+              "version",
+              "undeploy",
+              "validate",
+              "whoami",
+              "resources"
+            ],
+            "title": "Command",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "SAMJournal.created_at.",
+            "title": "Createdat"
+          },
+          "key": {
+            "description": "SAMJournal.key, the entry's primary key.",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "statusCode": {
+            "description": "SAMJournal.status_code: the http status.",
+            "maximum": 65535,
+            "minimum": 0,
+            "title": "Statuscode",
+            "type": "integer"
+          },
+          "thing": {
+            "description": "SAMJournal.thing.",
+            "enum": [
+              "Account",
+              "ApiConnection",
+              "ApiPlugin",
+              "SmarterAuthToken",
+              "Budget",
+              "CustomDomain",
+              "Guardrail",
+              "ImageSearchPlugin",
+              "LLMClient",
+              "MCPClient",
+              "Orchestrator",
+              "Prompt",
+              "ChatConfig",
+              "Proxy",
+              "Provider",
+              "Secret",
+              "SkillPlugin",
+              "SqlConnection",
+              "SqlPlugin",
+              "Plugin",
+              "User",
+              "Vectorsearch",
+              "Vectorstore",
+              "WebsearchPlugin"
+            ],
+            "title": "Thing",
+            "type": "string"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The username of the caller, or null for an anonymous request.",
+            "title": "User"
+          }
+        },
+        "required": [
+          "key",
+          "thing",
+          "command",
+          "statusCode"
+        ],
+        "title": "SAMJournalApiEntrySummary",
+        "type": "object"
+      },
       "SAMJournalApiEnvelope": {
         "additionalProperties": true,
         "description": "The fields that every journaled response adds beside the view's own data.",
@@ -11289,6 +12466,30 @@
           "thing"
         ],
         "title": "SAMJournalApiMetadata",
+        "type": "object"
+      },
+      "SAMJournalApiPage": {
+        "additionalProperties": false,
+        "description": "One page of the journal's entries, newest first unless sorted, and a description of the page.",
+        "properties": {
+          "objects": {
+            "description": "The page's entries.",
+            "items": {
+              "$ref": "#/components/schemas/SAMJournalApiEntrySummary"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/ListViewPagination",
+            "description": "The page, and the list's search and order."
+          }
+        },
+        "required": [
+          "objects",
+          "pagination"
+        ],
+        "title": "SAMJournalApiPage",
         "type": "object"
       },
       "SAMKind": {
@@ -20040,6 +21241,322 @@
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "openapi": "3.1.0",
   "paths": {
+    "/accounts/": {
+      "get": {
+        "description": "Every account. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "account_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountApiAccountDetail"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List accounts",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/contacts/": {
+      "get": {
+        "description": "Every account's contacts, who receive its notices. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "contact_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountApiContact"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List account contacts",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/contacts/{account_contact_id}/": {
+      "get": {
+        "description": "An account contact, by its id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "contact_retrieve",
+        "parameters": [
+          {
+            "description": "The account contact's id.",
+            "in": "path",
+            "name": "account_contact_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountApiContact"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An account contact",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/user-profiles/": {
+      "get": {
+        "description": "Every user profile: each user's membership of an account. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "user_profile_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountApiProfile"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List user profiles",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/user-profiles/{user_profile_id}/": {
+      "get": {
+        "description": "A user profile, by its id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "user_profile_retrieve",
+        "parameters": [
+          {
+            "description": "The user profile's id.",
+            "in": "path",
+            "name": "user_profile_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountApiProfile"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A user profile",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/users/": {
+      "get": {
+        "description": "Every user. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "user_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountApiUserDetail"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List users",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/users/{user_id}/": {
+      "get": {
+        "description": "A user, by its id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "user_retrieve",
+        "parameters": [
+          {
+            "description": "The user's id.",
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountApiUserDetail"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A user",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/accounts/{account_id}/": {
+      "get": {
+        "description": "An account, by its id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "account_retrieve",
+        "parameters": [
+          {
+            "description": "The account's id.",
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountApiAccountDetail"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "An account",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/cli/apply/": {
       "post": {
         "description": "Create the resource that a manifest declares, or update it to match the manifest.",
@@ -21019,6 +22536,134 @@
         "summary": "A Guardrail's events",
         "tags": [
           "guardrails"
+        ]
+      }
+    },
+    "/journal/": {
+      "get": {
+        "description": "One page of the journal's entries, newest first unless sorted, without their request and response documents. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "journal_list",
+        "parameters": [
+          {
+            "description": "The page, from 1.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The entries of a page, at most 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Text that an entry's key, thing or command contains.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The column to sort by, e.g. createdAt, or -createdAt to sort it in descending order.",
+            "in": "query",
+            "name": "ordering",
+            "required": false,
+            "schema": {
+              "enum": [
+                "createdAt",
+                "-createdAt",
+                "user",
+                "-user",
+                "thing",
+                "-thing",
+                "command",
+                "-command",
+                "statusCode",
+                "-statusCode"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SAMJournalApiPage"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List journal entries",
+        "tags": [
+          "journal"
+        ]
+      }
+    },
+    "/journal/{key}/": {
+      "get": {
+        "description": "A journal entry, by its key, with its request and response documents. The request document holds the caller's headers, including its api key. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "journal_retrieve",
+        "parameters": [
+          {
+            "description": "The entry's key, 64 hexadecimal characters.",
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SAMJournalApiEntry"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A journal entry",
+        "tags": [
+          "journal"
         ]
       }
     },
@@ -22496,6 +24141,243 @@
         ]
       }
     },
+    "/prompts/history/plugin-usage/": {
+      "get": {
+        "description": "The plugins that the chat sessions used. Requires an api key. The response includes only the chat sessions whose user the user may manage: their own, their account's users' for an account admin, and every one for a superuser.",
+        "operationId": "history_plugin_usage_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PromptHistoryApiPluginUsage"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List plugin usage",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/prompts/history/plugin-usage/{id}/": {
+      "get": {
+        "description": "A use of a plugin in a chat session. Requires an api key. The response includes only the chat sessions whose user the user may manage: their own, their account's users' for an account admin, and every one for a superuser.",
+        "operationId": "history_plugin_usage_retrieve",
+        "parameters": [
+          {
+            "description": "The row's id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptHistoryApiPluginUsage"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A plugin usage",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/prompts/history/prompt/": {
+      "get": {
+        "description": "The chat sessions: each conversation with an LLMClient. Requires an api key. The response includes only the chat sessions whose user the user may manage: their own, their account's users' for an account admin, and every one for a superuser.",
+        "operationId": "history_session_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PromptHistoryApiSession"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List chat sessions",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/prompts/history/prompt/{id}/": {
+      "get": {
+        "description": "A chat session. Requires an api key. The response includes only the chat sessions whose user the user may manage: their own, their account's users' for an account admin, and every one for a superuser.",
+        "operationId": "history_session_retrieve",
+        "parameters": [
+          {
+            "description": "The row's id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptHistoryApiSession"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A chat session",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/prompts/history/tool-calls/": {
+      "get": {
+        "description": "The tool calls that the LLMs made in the chat sessions, with their input and result. Requires an api key. The response includes only the chat sessions whose user the user may manage: their own, their account's users' for an account admin, and every one for a superuser.",
+        "operationId": "history_tool_call_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PromptHistoryApiToolCall"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "List tool calls",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/prompts/history/tool-calls/{id}/": {
+      "get": {
+        "description": "A tool call. Requires an api key. The response includes only the chat sessions whose user the user may manage: their own, their account's users' for an account admin, and every one for a superuser.",
+        "operationId": "history_tool_call_retrieve",
+        "parameters": [
+          {
+            "description": "The row's id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptHistoryApiToolCall"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
+          }
+        },
+        "summary": "A tool call",
+        "tags": [
+          "history"
+        ]
+      }
+    },
     "/providers/": {
       "get": {
         "description": "The active Providers that the user may read, by name. Requires an api key. The response includes only what the user may read: their account's resources, and the platform's built-in ones.",
@@ -23425,6 +25307,18 @@
     {
       "description": "The Proxies that the user may use. Served only when the platform enables Proxies (SMARTER_ENABLE_PROXY).",
       "name": "proxies"
+    },
+    {
+      "description": "The accounts, their users and contacts. For superusers.",
+      "name": "accounts"
+    },
+    {
+      "description": "The chat sessions, and their tool calls and plugin usage.",
+      "name": "history"
+    },
+    {
+      "description": "The Smarter Journal: a record of every request to the cli api. For superusers.",
+      "name": "journal"
     }
   ]
 }

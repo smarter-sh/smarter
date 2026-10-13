@@ -13,10 +13,12 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 
+from smarter.apps.account.contract.models import AccountApiContact
 from smarter.apps.account.models import AccountContact
 from smarter.apps.account.serializers import AccountContactSerializer
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -25,14 +27,19 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 # pylint: disable=W0613
 class AccountContactView(AccountViewBase):
-    """AccountContact view for smarter api."""
+    """AccountContact view for smarter api.
+
+    Its ``GET`` returns an :class:`AccountApiContact`.
+    """
 
     serializer_class = AccountContactSerializer
     account_contact: AccountContact
 
     def get(self, request: Request, account_contact_id: int):
-        self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
-        return JsonResponse(self.serializer_class(self.account_contact).data)
+        self.account_contact = get_object_or_404(
+            AccountContact.objects.select_related("account"), pk=account_contact_id
+        )
+        return JsonResponse(AccountApiContact.from_model(self.account_contact).model_dump(mode="json"))
 
     def post(self, request: Request):
         return HttpResponseBadRequest()
@@ -58,16 +65,18 @@ class AccountContactView(AccountViewBase):
         return HttpResponseRedirect(plugins_path)
 
 
-class AccountContactListView(AccountListViewBase):
-    """AccountContact list view for smarter api."""
+class AccountContactListView(ContractListMixin, AccountListViewBase):
+    """AccountContact list view for smarter api: :class:`AccountApiContact` models."""
 
     serializer_class = AccountContactSerializer
+    contract_model = AccountApiContact
 
     def get_queryset(self):
         if not self.request:
             return AccountContact.objects.none()
         if not self.request.user.is_authenticated:  # type: ignore
             return AccountContact.objects.none()
+        contacts = AccountContact.objects.select_related("account").order_by("pk")
         if self.request.user.is_superuser:  # type: ignore
-            return AccountContact.objects.all()
-        return AccountContact.objects.filter(account=self.user_profile.account)  # type: ignore
+            return contacts
+        return contacts.filter(account=self.user_profile.account)  # type: ignore

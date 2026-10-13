@@ -14,7 +14,7 @@ with the code and a breaking change shows up in a pull request's diff.
 | ------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `sam/<Kind>.schema.json`  | One JSON Schema per SAM kind. Exactly the `data` of `POST /api/v1/cli/json-schema/<Kind>/`                | The kind's SAM model: `Brokers.get_broker(kind)._pydantic_model.model_json_schema()`             |
 | `sam/<Kind>.example.json` | One example manifest per kind, without its read-only `status`                                             | The broker's `example_manifest()`, rendered in-process by the cli's public example-manifest view |
-| `openapi.json`            | OpenAPI 3.1 document of the covered families: `/api/v1/cli/` and the chat api, so far                     | `openapi.py`, from the SAM models, the journal and chat contracts, and `models.py`               |
+| `openapi.json`            | OpenAPI 3.1 document of the cli api, the chat api, and the REST families in `DOCUMENTED_URLCONFS`         | `openapi.py`, from the SAM models, the journal and chat contracts, and `models.py`               |
 | `sam.py`                  | Builds and writes the schemas and examples                                                                |                                                                                                  |
 | `models.py`               | `CliApi*`: the `data` of cli responses that aren't manifests. `OpenApi*`: the document itself             |                                                                                                  |
 | `openapi.py`              | Assembles the document: `cli_schemas()`, `cli_paths()`, `openapi_document()`                              |                                                                                                  |
@@ -187,7 +187,10 @@ This is how the document grows toward everything the SDKs call. The chat api
    POST, e.g. a Guardrail's dry run, or an MCPClient's tool call: say in its
    description what it changes, and who may call it.
    Keep a response's existing key style, even if it isn't camelCase (a
-   Guardrail's events are snake_case): clients already read it.
+   Guardrail's events and the prompt history are snake_case): clients already
+   read it. A paged list (the journal's) is `{"objects": [...], "pagination":
+...}`, whose `pagination` is `smarter.lib.django.pagination.ListViewPagination`:
+   document its query parameters with `query()`.
 5. **Remove the routes from `UNDOCUMENTED_ROUTES`** as they're documented.
 6. **Test real responses** of each operation against the document, including
    a 404 and a 403 (see `test_llmclient_reads()`). `OpenApiResponseMixin`, in
@@ -200,7 +203,10 @@ This is how the document grows toward everything the SDKs call. The chat api
 7. **Watch for secrets and permissions.** A foreign key to a `SmarterAuthToken`
    is its digest: publish its `key_id` instead, as `LLMClientApiKey` does. Check
    that each read filters by `with_read_permission_for(user)`: modeling the
-   plugins found a retrieve that returned any account's plugin. A non-superuser
+   plugins found a retrieve that returned any account's plugin. Rows that
+   hold a user's private data, e.g. the prompt history's conversations, filter
+   by `with_ownership_permission_for(user)` instead: read permission includes
+   the platform account's rows, which every user may read. A non-superuser
    in another account (`mortal_user_factory()`) must get a 404. Never call
    `factory_account_teardown()` in a test: it deletes every test account,
    including the class's own.
