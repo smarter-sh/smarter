@@ -15,6 +15,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
+from smarter.apps.plugin.contract.models import PluginApiPluginMeta
 from smarter.apps.plugin.manifest.controller import (
     PLUGIN_MAP,
     SAM_MAP,
@@ -30,6 +31,7 @@ from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -51,7 +53,7 @@ class PluginView(SmarterAuthenticatedAPIView):
                 SmarterWaffleSwitches.ALLOW_API_GET,
             )
             return JsonResponse(
-                {"error": "GET method is not allowed for this endpoint."}, status=HTTPStatus.METHOD_NOT_ALLOWED
+                {"detail": "GET method is not allowed for this endpoint."}, status=HTTPStatus.METHOD_NOT_ALLOWED
             )
 
         return get_plugin(request, plugin_id)
@@ -98,10 +100,15 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         return redirect("/plugins/" + str(new_id) + "/")
 
 
-class PluginListView(SmarterAuthenticatedListAPIView):
+class PluginListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     """Plugins list view for smarter api."""
 
     serializer_class = PluginMetaSerializer
+    contract_model = PluginApiPluginMeta
+
+    def item(self, row):
+        """A plugin of the response, whose ``canDelete`` is the requesting user's."""
+        return PluginApiPluginMeta.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self):
         plugins = PluginMeta.objects.with_ownership_permission_for(user=self.user_profile.user).order_by("-created_at")  # type: ignore
@@ -177,15 +184,23 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 # handlers for plugins
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
-    """Get a plugin json representation by id."""
+    """
+    Get a plugin's manifest, by id, if the user may read the plugin.
+
+    A plugin that the user may not read is not found, so that the plugins of other accounts are not
+    disclosed. Errors are Django REST framework's ``{"detail": ...}``.
+    """
 
     plugin: Optional[PluginBase] = None
 
     try:
         user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"detail": "User not found"}, status=HTTPStatus.NOT_FOUND)
 
+    readable = PluginMeta.objects.with_read_permission_for(user=request.user)  # type: ignore[attr-defined]
+    if not readable.filter(pk=plugin_id).exists():
+        return JsonResponse({"detail": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
@@ -197,15 +212,15 @@ def get_plugin(request, plugin_id):
             )
         plugin = plugin_controller.plugin
     except PluginMeta.DoesNotExist:
-        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"detail": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
     except ValidationError as e:
-        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"detail": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return JsonResponse({"detail": f"Internal error: {e}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     if plugin.ready:
         return JsonResponse(plugin.to_json(), status=HTTPStatus.OK)
-    return JsonResponse({"error": "Internal plugin error."}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    return JsonResponse({"detail": "Internal plugin error."}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 def create_plugin(request, data: Optional[SmarterDictType] = None):

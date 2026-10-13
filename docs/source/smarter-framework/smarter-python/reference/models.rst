@@ -22,6 +22,9 @@ are kept, and are available as attributes and in :meth:`SmarterModel.to_dict`.
 
    The base class of the SDK's models: a Pydantic model that keeps unknown fields.
 
+   Pydantic's ``model_`` namespace isn't protected, because the api has fields such as an LLMHost's
+   ``modelTask``, which older Pydantic versions would warn about.
+
    .. py:method:: to_dict() -> dict[str, typing.Any]
 
       The model as a JSON-compatible dict, with the api's own field names.
@@ -501,7 +504,7 @@ Models of the platform's own endpoints: ``whoami``, ``version`` and ``status``.
 
 .. py:module:: smarter.models.account
 
-Models of accounts, users and account contacts, as ``/api/v1/accounts/`` returns them.
+Models of accounts, users, user profiles and account contacts, as ``/api/v1/accounts/`` returns them.
 
 .. py:class:: Account
 
@@ -608,6 +611,31 @@ Models of accounts, users and account contacts, as ``/api/v1/accounts/`` returns
    .. py:attribute:: is_superuser
       :type: Optional
       :value: alias ``isSuperuser``
+
+
+
+.. py:class:: UserProfile
+
+   Bases: :class:`smarter.models.base.SmarterResource`
+
+   A user's membership of an account, which owns the resources that the user creates in it.
+
+   .. py:attribute:: user
+      :type: User
+
+
+   .. py:attribute:: account
+      :type: SmarterAccountRef
+
+
+   .. py:attribute:: profile_image_url
+      :type: Optional
+      :value: alias ``profileImageUrl``
+
+
+   .. py:attribute:: is_test
+      :type: Optional
+      :value: alias ``isTest``
 
 
 
@@ -757,25 +785,81 @@ Models of LLMClients and their plugins, built-in functions, api keys and custom 
       :type: Optional
       :value: alias ``apiKey``
 
+      The api key's public key_id, a UUID. Never the key itself.
+
+
+   .. py:attribute:: created_at
+      :type: Optional
+      :value: alias ``createdAt``
+
+
+   .. py:attribute:: updated_at
+      :type: Optional
+      :value: alias ``updatedAt``
+
 
 
 .. py:class:: LLMClientCustomDomain
 
    Bases: :class:`smarter.models.base.SmarterCamelModel`
 
-   A custom domain on which an LLMClient is deployed.
+   A custom domain on which an LLMClient is deployed: the domain itself, and its verification.
 
    .. py:attribute:: id
       :type: int
 
 
-   .. py:attribute:: llmclient
+   .. py:attribute:: name
       :type: Optional
 
 
-   .. py:attribute:: custom_domain
+   .. py:attribute:: description
       :type: Optional
-      :value: alias ``customDomain``
+
+
+   .. py:attribute:: version
+      :type: Optional
+
+
+   .. py:attribute:: domain_name
+      :type: Optional
+      :value: alias ``domainName``
+
+      The domain, e.g. example.com.
+
+
+   .. py:attribute:: verification_status
+      :type: Optional
+      :value: alias ``verificationStatus``
+
+      Not Verified, Verifying, Verified or Failed.
+
+
+   .. py:attribute:: verified_at
+      :type: Optional
+      :value: alias ``verifiedAt``
+
+
+   .. py:attribute:: verification_message
+      :type: Optional
+      :value: alias ``verificationMessage``
+
+
+   .. py:attribute:: user_profile
+      :type: Optional
+      :value: alias ``userProfile``
+
+      The owner's user profile id.
+
+
+   .. py:attribute:: created_at
+      :type: Optional
+      :value: alias ``createdAt``
+
+
+   .. py:attribute:: updated_at
+      :type: Optional
+      :value: alias ``updatedAt``
 
 
 
@@ -787,6 +871,19 @@ Models of LLMClients and their plugins, built-in functions, api keys and custom 
 
    Prompt it with :meth:`smarter.resources.llmclients.LLMClients.prompt`, or start a chat with
    :meth:`smarter.resources.llmclients.LLMClients.chat`.
+
+   .. py:attribute:: can_delete
+      :type: Optional
+      :value: alias ``canDelete``
+
+      Whether the api key's user may delete the LLMClient now.
+
+
+   .. py:attribute:: ready
+      :type: Optional
+
+      Whether the LLMClient can be prompted.
+
 
    .. py:attribute:: rfc1034_compliant_name
       :type: Optional
@@ -843,12 +940,43 @@ Models of LLMClients and their plugins, built-in functions, api keys and custom 
       :value: alias ``sandboxUrl``
 
 
+   .. py:attribute:: url_llmclient
+      :type: Optional
+      :value: alias ``urlLlmclient``
+
+      Where to send prompts: the chat api's prompt url.
+
+
+   .. py:attribute:: url_chat_config
+      :type: Optional
+      :value: alias ``urlChatConfig``
+
+      The chat api's configuration url.
+
+
+   .. py:attribute:: is_authentication_required
+      :type: Optional
+      :value: alias ``isAuthenticationRequired``
+
+      Whether prompting the LLMClient requires an api key.
+
+
    .. py:attribute:: functions
       :type: list
 
 
    .. py:attribute:: plugins
       :type: list
+
+
+   .. py:attribute:: api_keys
+      :type: list
+      :value: alias ``apiKeys``
+
+
+   .. py:attribute:: custom_domains
+      :type: list
+      :value: alias ``customDomains``
 
 
 
@@ -2068,6 +2196,8 @@ Models of secrets, prompt history, proxies, orchestrators and vectorsearches.
 
    .. py:attribute:: plugin
       :type: Optional
+
+      The id of the plugin that the tool belongs to, if any.
 
 
    .. py:attribute:: function_name

@@ -1,0 +1,64 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "ImageSearchPlugin",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/created_by": "smarter_image_search_plugin_broker"
+      },
+      {
+        "smarter.sh/plugin": "safe_image_search"
+      }
+    ],
+    "description": "Finds kid-friendly, freely licensed images from Wikimedia Commons.",
+    "name": "safe_image_search",
+    "pluginClass": "imagesearch",
+    "tags": [
+      "imagesearch",
+      "kid-friendly"
+    ],
+    "version": "0.1.0"
+  },
+  "spec": {
+    "imageSearchData": {
+      "apiKey": "brave_search_api_key",
+      "cacheTtl": 604800,
+      "filters": {
+        "allowedDomains": [
+          "wikimedia.org"
+        ],
+        "blockedDomains": null,
+        "fileType": null,
+        "minHeight": null,
+        "minWidth": 400
+      },
+      "llmSearchParams": false,
+      "queryTerms": null,
+      "searchParams": {
+        "count": 5,
+        "country": null,
+        "safesearch": "strict",
+        "searchLang": null,
+        "spellcheck": true
+      },
+      "timeout": 10,
+      "validateUrls": true
+    },
+    "prompt": {
+      "maxTokens": 2048,
+      "model": "gpt-6-luna",
+      "provider": "openai",
+      "systemRole": "You are a friendly assistant for children. Show images that help to explain your answers.",
+      "temperature": 1.0
+    },
+    "selector": {
+      "directive": "search_terms",
+      "searchTerms": [
+        "image",
+        "picture",
+        "photo",
+        "show me"
+      ]
+    }
+  }
+}

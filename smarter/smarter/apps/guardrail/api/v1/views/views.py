@@ -12,6 +12,9 @@ views do not create or update them:
   guardrail. The JSON body is ``{"text": "...", "stage": "input"}``. It records no events.
 - ``GET guardrails/<hashed_id>/events/``: the latest events of a Guardrail that the user owns.
 
+The responses are built from the models of :mod:`smarter.apps.guardrail.contract.models`, which the
+Smarter api's OpenAPI document publishes. Errors are Django REST framework's ``{"detail": ...}``.
+
 .. note::
 
     **Experimental.** The Guardrail was designed and coded by Claude Code (Anthropic's
@@ -23,27 +26,32 @@ from http import HTTPStatus
 from typing import Any
 
 from django.db.models import QuerySet
-from django.http import Http404, JsonResponse
+from django.http import Http404
+from rest_framework.exceptions import ParseError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.guardrail.caching import (
     invalidate_all_cached_guardrails_for_user_profile,
 )
-from smarter.apps.guardrail.models import Guardrail, GuardrailStage
-from smarter.apps.guardrail.serializers import (
-    GuardrailEventSerializer,
-    GuardrailSerializer,
+from smarter.apps.guardrail.contract.models import (
+    GuardrailApiEvaluation,
+    GuardrailApiEvent,
+    GuardrailApiEvents,
+    GuardrailApiFinding,
+    GuardrailApiGuardrail,
 )
+from smarter.apps.guardrail.models import Guardrail, GuardrailStage
+from smarter.apps.guardrail.serializers import GuardrailSerializer
 from smarter.apps.guardrail.services import GuardrailPipeline
 from smarter.apps.guardrail.signals import guardrail_called
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
-from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
@@ -53,11 +61,12 @@ MAX_EVENTS = 100
 """The maximum number of events returned."""
 
 
-def evaluate(guardrail: Guardrail, text: str, stage: str) -> SmarterDictType:
+def evaluate(guardrail: Guardrail, text: str, stage: str) -> GuardrailApiEvaluation:
     """
     Dry-run a guardrail on a text, as the user's message (input) or the LLM's reply (output).
 
     :returns: Whether it triggered, the disposition, the text after its action, and its findings.
+    :rtype: GuardrailApiEvaluation
     """
     pipeline = GuardrailPipeline([guardrail], record_events=False)
     if stage == GuardrailStage.INPUT:
@@ -67,24 +76,20 @@ def evaluate(guardrail: Guardrail, text: str, stage: str) -> SmarterDictType:
         result = pipeline.run_post({"choices": [{"index": 0, "message": {"role": "assistant", "content": text}}]})
         output = result.payload["choices"][0]["message"]["content"]
     outcome = result.outcomes[0] if result.outcomes else None
-    return {
-        "guardrail": guardrail.name,
-        "stage": stage,
-        "triggered": bool(result.triggered_findings),
-        "disposition": result.disposition.value,
-        "text": output,
-        "message": result.fallback_message,
-        "error": outcome.error if outcome else None,
-        "durationMs": outcome.duration_ms if outcome else None,
-        "findings": [
-            {
-                "confidence": finding.confidence,
-                "rationale": finding.rationale,
-                "matches": [match.model_dump() for match in finding.matches],
-            }
+    return GuardrailApiEvaluation(
+        guardrail=guardrail.name,
+        stage=stage,  # type: ignore[arg-type]
+        triggered=bool(result.triggered_findings),
+        disposition=result.disposition,
+        text=output,
+        message=result.fallback_message,
+        error=outcome.error if outcome else None,
+        duration_ms=outcome.duration_ms if outcome else None,
+        findings=[
+            GuardrailApiFinding(confidence=finding.confidence, rationale=finding.rationale, matches=finding.matches)
             for finding in result.triggered_findings
         ],
-    }
+    )
 
 
 class GuardrailViewBase(SmarterAuthenticatedAPIView):
@@ -121,7 +126,8 @@ class GuardrailView(GuardrailViewBase):
 
     def get(self, request: Request, *args, **kwargs):
         """Return a Guardrail that the user may read."""
-        return Response(GuardrailSerializer(self.get_guardrail(request, **kwargs)).data, status=HTTPStatus.OK)
+        guardrail = self.get_guardrail(request, **kwargs)
+        return Response(GuardrailApiGuardrail.from_model(guardrail, request.user).model_dump(mode="json"))
 
     def delete(self, request: Request, *args, **kwargs):
         """Delete a Guardrail that the user owns."""
@@ -143,18 +149,14 @@ class GuardrailEvaluateView(GuardrailViewBase):
         text = data.get("text")
         stage = str(data.get("stage") or GuardrailStage.INPUT)
         if not isinstance(text, str) or not text:
-            return JsonResponse({"error": "text is required."}, status=HTTPStatus.BAD_REQUEST)
+            raise ParseError("text is required.")
         if len(text) > MAX_EVALUATE_LENGTH:
-            return JsonResponse(
-                {"error": f"text must be at most {MAX_EVALUATE_LENGTH} characters."}, status=HTTPStatus.BAD_REQUEST
-            )
+            raise ParseError(f"text must be at most {MAX_EVALUATE_LENGTH} characters.")
         if stage not in (GuardrailStage.INPUT, GuardrailStage.OUTPUT):
-            return JsonResponse({"error": "stage must be input or output."}, status=HTTPStatus.BAD_REQUEST)
+            raise ParseError("stage must be input or output.")
         if not guardrail.runs_on(stage):
-            return JsonResponse(
-                {"error": f"Guardrail {guardrail.name} does not run on {stage}."}, status=HTTPStatus.BAD_REQUEST
-            )
-        return JsonResponse(evaluate(guardrail, text, stage))
+            raise ParseError(f"Guardrail {guardrail.name} does not run on {stage}.")
+        return Response(evaluate(guardrail, text, stage).model_dump(mode="json"))
 
 
 class GuardrailEventsView(GuardrailViewBase):
@@ -170,14 +172,22 @@ class GuardrailEventsView(GuardrailViewBase):
         disposition = request.query_params.get("disposition")
         if disposition:
             events = events.filter(disposition=disposition)
-        data = GuardrailEventSerializer(events.order_by("-created_at")[:MAX_EVENTS], many=True).data
-        return JsonResponse({"guardrail": guardrail.name, "events": data})
+        rows = events.order_by("-created_at")[:MAX_EVENTS]
+        response = GuardrailApiEvents(
+            guardrail=guardrail.name, events=[GuardrailApiEvent.from_model(row) for row in rows]
+        )
+        return Response(response.model_dump(mode="json"))
 
 
-class GuardrailListView(SmarterAuthenticatedListAPIView):
+class GuardrailListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     """The Guardrails that the user may read."""
 
     serializer_class = GuardrailSerializer
+    contract_model = GuardrailApiGuardrail
+
+    def item(self, row):
+        """A Guardrail of the response, whose ``canDelete`` is the requesting user's."""
+        return GuardrailApiGuardrail.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[Guardrail]:
         return Guardrail.objects.with_read_permission_for(user=self.request.user).order_by("priority", "name")  # type: ignore[attr-defined]

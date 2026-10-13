@@ -1,0 +1,52 @@
+{
+  "apiVersion": "smarter.sh/v1",
+  "kind": "Vectorstore",
+  "metadata": {
+    "annotations": [
+      {
+        "smarter.sh/vectorstore/purpose": "example"
+      }
+    ],
+    "description": "A self-hosted Qdrant vector database of a company's product documentation.",
+    "name": "example_knowledge_base",
+    "tags": [
+      "example",
+      "rag",
+      "qdrant"
+    ],
+    "version": "1.0.0"
+  },
+  "spec": {
+    "backend": "qdrant",
+    "connection": null,
+    "embeddings": {
+      "batchSize": 64,
+      "chunkOverlap": 200,
+      "chunkSize": 1000,
+      "dimensions": null,
+      "model": "text-embedding-3-small",
+      "provider": "openai"
+    },
+    "hosting": "self_hosted",
+    "index": {
+      "deletionProtection": false,
+      "dimension": 1536,
+      "metric": "cosine",
+      "name": null
+    },
+    "isActive": true,
+    "maintenance": {
+      "snapshotIntervalHours": 24,
+      "snapshotRetention": 7,
+      "snapshots": true
+    },
+    "pinecone": null,
+    "selfHosted": {
+      "cpu": "500m",
+      "image": "qdrant/qdrant:v1.19.1",
+      "memory": "1Gi",
+      "storage": "10Gi",
+      "storageClass": null
+    }
+  }
+}

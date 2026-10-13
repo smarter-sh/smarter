@@ -1,0 +1,350 @@
+{
+  "$defs": {
+    "HarnessRole": {
+      "description": "Role an LLMClient (Harness) plays within an Orchestrator.\n\nValues must stay aligned with\nsmarter.apps.orchestrator.models.OrchestratorHarness.Role.",
+      "enum": [
+        "planner",
+        "executor",
+        "critic",
+        "router",
+        "summarizer",
+        "tool_caller"
+      ],
+      "title": "HarnessRole",
+      "type": "string"
+    },
+    "OrchestrationStrategy": {
+      "description": "Coordination pattern the Orchestrator applies across its member LLMClients.\n\nValues must stay aligned with\nsmarter.apps.orchestrator.models.OrchestrationStrategy.",
+      "enum": [
+        "sequential",
+        "parallel",
+        "supervisor",
+        "router",
+        "voting",
+        "debate"
+      ],
+      "title": "OrchestrationStrategy",
+      "type": "string"
+    },
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMOrchestratorHarnessConfig": {
+      "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key \u2014 resolved\nagainst the account's existing LLMClients at apply time.",
+      "properties": {
+        "config": {
+          "additionalProperties": true,
+          "description": "Per-membership overrides (e.g. temperature, system prompt fragment, tool allowlist).",
+          "title": "Config",
+          "type": "object"
+        },
+        "executionOrder": {
+          "default": 0,
+          "description": "Relative ordering for sequential/supervisor strategies.",
+          "minimum": 0,
+          "title": "Executionorder",
+          "type": "integer"
+        },
+        "isActive": {
+          "default": true,
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "llmClientName": {
+          "description": "Name of an existing LLMClient to attach as a Harness.",
+          "title": "Llmclientname",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/HarnessRole",
+          "default": "executor"
+        }
+      },
+      "required": [
+        "llmClientName"
+      ],
+      "title": "SAMOrchestratorHarnessConfig",
+      "type": "object"
+    },
+    "SAMOrchestratorMetadata": {
+      "description": "Smarter API Orchestrator Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMOrchestratorMetadata",
+      "type": "object"
+    },
+    "SAMOrchestratorSpec": {
+      "description": "Smarter API Orchestrator Manifest Orchestrator.spec.",
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/SAMOrchestratorSpecConfig",
+          "description": "Orchestrator.spec.config[object]. The configuration for the Orchestrator."
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "title": "SAMOrchestratorSpec",
+      "type": "object"
+    },
+    "SAMOrchestratorSpecConfig": {
+      "description": "Spec block for an Orchestrator SAM manifest.\n\nMirrors smarter.apps.orchestrator.models.Orchestrator. Consumed by the\nmanifest controller to create/update the corresponding Orchestrator\nmodel instance and its OrchestratorHarness memberships.",
+      "properties": {
+        "harnesses": {
+          "description": "LLMClients (Harnesses) that participate in this Orchestrator.",
+          "items": {
+            "$ref": "#/$defs/SAMOrchestratorHarnessConfig"
+          },
+          "minItems": 1,
+          "title": "Harnesses",
+          "type": "array"
+        },
+        "isActive": {
+          "default": true,
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "maxIterations": {
+          "default": 10,
+          "description": "Upper bound on orchestration loop iterations.",
+          "minimum": 1,
+          "title": "Maxiterations",
+          "type": "integer"
+        },
+        "strategy": {
+          "$ref": "#/$defs/OrchestrationStrategy",
+          "default": "sequential"
+        }
+      },
+      "required": [
+        "harnesses"
+      ],
+      "title": "SAMOrchestratorSpecConfig",
+      "type": "object"
+    },
+    "SAMOrchestratorStatus": {
+      "description": "Smarter API Orchestrator Manifest - Status class.",
+      "properties": {
+        "accountNumber": {
+          "description": "Orchestrator.status.account_number: The account owner of this Orchestrator. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "username": {
+          "description": "Orchestrator.status.username: The Smarter user who created this Orchestrator. Read only.",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username"
+      ],
+      "title": "SAMOrchestratorStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - Orchestrator.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMOrchestratorMetadata",
+      "description": "Orchestrator.metadata[obj]: Required, the Orchestrator metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMOrchestratorSpec",
+      "description": "Orchestrator.spec[obj]: Required, the Orchestrator specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMOrchestratorStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Orchestrator.status[obj]: Optional, Read-only. Stateful status information about the Orchestrator."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMOrchestrator",
+  "type": "object"
+}

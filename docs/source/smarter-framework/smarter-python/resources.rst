@@ -38,9 +38,11 @@ are for superusers only.
      - Read them, and manage them with manifests. A plugin's manifest kind is its class, e.g.
        ``SqlPlugin``, which ``client.plugins`` looks up for you.
    * - ``client.accounts``
-     - Accounts, and ``accounts.users`` and ``accounts.contacts``.
+     - Accounts, and ``accounts.users``, ``accounts.user_profiles`` (each user's membership of an
+       account) and ``accounts.contacts``. Superusers only.
    * - ``client.history``
-     - The chat sessions, their tool calls and their plugin uses.
+     - The chat sessions, their tool calls and their plugin uses, newest first: the user's own, their
+       account's users' for an account admin, and every one for a superuser.
    * - ``client.journal``
      - The :doc:`Smarter Journal <../smarter-api/smarter-journal>`, page by page. Superusers only.
    * - ``client.providers``

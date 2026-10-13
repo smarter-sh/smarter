@@ -15,9 +15,11 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 
+from smarter.apps.account.contract.models import AccountApiProfile
 from smarter.apps.account.models import UserProfile
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -26,10 +28,14 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 # pylint: disable=W0613
 class UserProfileView(AccountViewBase):
-    """UserProfile view for smarter api."""
+    """UserProfile view for smarter api.
+
+    Its ``GET`` returns an :class:`AccountApiProfile`.
+    """
 
     def get(self, request: Request, user_profile_id: int):
-        self.user_profile = get_object_or_404(UserProfile, pk=user_profile_id)
+        user_profile = get_object_or_404(UserProfile.objects.select_related("user", "account"), pk=user_profile_id)
+        return JsonResponse(AccountApiProfile.from_model(user_profile).model_dump(mode="json"))
 
     def post(self, request: Request, user_profile_id: Optional[int] = None):
         return HttpResponseBadRequest()
@@ -57,8 +63,10 @@ class UserProfileView(AccountViewBase):
         return HttpResponseRedirect("/")
 
 
-class UserProfileListView(AccountListViewBase):
-    """UserProfile list view for smarter api."""
+class UserProfileListView(ContractListMixin, AccountListViewBase):
+    """UserProfile list view for smarter api: :class:`AccountApiProfile` models."""
+
+    contract_model = AccountApiProfile
 
     def get_queryset(self):
         if not isinstance(self.user_profile, UserProfile):
@@ -67,6 +75,7 @@ class UserProfileListView(AccountListViewBase):
             return UserProfile.objects.none()
         if not self.request.user.is_authenticated:  # type: ignore
             return UserProfile.objects.none()
+        user_profiles = UserProfile.objects.select_related("user", "account").order_by("pk")
         if self.request.user.is_superuser:  # type: ignore
-            return UserProfile.objects.all()
-        return self.user_profile.cached_account
+            return user_profiles
+        return user_profiles.filter(account=self.user_profile.account)

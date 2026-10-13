@@ -1,4 +1,9 @@
-"""Secret API views."""
+"""
+Secret API views.
+
+Their responses are built from :class:`smarter.apps.secret.contract.models.SecretApiSecret`, a
+Secret's metadata without its value, which the Smarter api's OpenAPI document publishes.
+"""
 
 from django.db.models import QuerySet
 from django.http.response import HttpResponseForbidden
@@ -7,12 +12,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile
+from smarter.apps.secret.contract.models import SecretApiSecret
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
@@ -49,7 +56,7 @@ class SecretView(SmarterAdminAPIView):
     def get(self, request: Request, secret_id: int, *args, **kwargs):
         """Return the Secret, without its value."""
         secret = get_object_or_404(self.get_queryset(), pk=secret_id)
-        return Response(SecretSerializer(secret).data)
+        return Response(SecretApiSecret.from_model(secret, request.user).model_dump(mode="json"))
 
     def post(self, request: Request, secret_id: int, *args, **kwargs):
         """Same as get().
@@ -59,10 +66,15 @@ class SecretView(SmarterAdminAPIView):
         return self.get(request, secret_id, *args, **kwargs)
 
 
-class SecretListView(SmarterAdminListAPIView):
+class SecretListView(ContractListMixin, SmarterAdminListAPIView):
     """Class for secret list views."""
 
     serializer_class = SecretSerializer
+    contract_model = SecretApiSecret
+
+    def item(self, row):
+        """A Secret of the response, whose ``canDelete`` is the requesting user's."""
+        return SecretApiSecret.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self):
         return secrets_for_user(self.request.user)

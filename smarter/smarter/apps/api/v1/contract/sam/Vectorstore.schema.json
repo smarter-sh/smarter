@@ -1,0 +1,660 @@
+{
+  "$defs": {
+    "SAMDependency": {
+      "description": "A resource that depends on the resource that a manifest describes.",
+      "properties": {
+        "kind": {
+          "description": "kind[String]: The SAM kind of the resource that depends on this resource, e.g. LLMClient. Read only.",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "name[String]: The name of the resource that depends on this resource. Read only.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "SAMDependency",
+      "type": "object"
+    },
+    "SAMVectorstoreEmbeddings": {
+      "description": "Vectorstore.spec.embeddings: how documents and queries are turned into vectors.",
+      "properties": {
+        "batchSize": {
+          "default": 64,
+          "description": "Vectorstore.__init__.embeddings.batchSize: chunks per embeddings request and upsert.",
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Batchsize",
+          "type": "integer"
+        },
+        "chunkOverlap": {
+          "default": 200,
+          "description": "Vectorstore.__init__.embeddings.chunkOverlap: characters shared by consecutive chunks.",
+          "maximum": 2000,
+          "minimum": 0,
+          "title": "Chunkoverlap",
+          "type": "integer"
+        },
+        "chunkSize": {
+          "default": 1000,
+          "description": "Vectorstore.__init__.embeddings.chunkSize: characters per chunk.",
+          "maximum": 8000,
+          "minimum": 100,
+          "title": "Chunksize",
+          "type": "integer"
+        },
+        "dimensions": {
+          "anyOf": [
+            {
+              "maximum": 20000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.__init__.embeddings.dimensions: ask the model for vectors of this size, if it supports it, e.g. text-embedding-3. It must equal index.dimension.",
+          "title": "Dimensions"
+        },
+        "model": {
+          "description": "Vectorstore.__init__.embeddings.model: the embeddings model, e.g. text-embedding-3-small.",
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "description": "Vectorstore.__init__.embeddings.provider: a Provider with an OpenAI-compatible embeddings API, e.g. openai.",
+          "minLength": 1,
+          "title": "Provider",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "model"
+      ],
+      "title": "SAMVectorstoreEmbeddings",
+      "type": "object"
+    },
+    "SAMVectorstoreIndex": {
+      "description": "Vectorstore.spec.index: the index (Pinecone), or collection (Qdrant), of the database.",
+      "properties": {
+        "deletionProtection": {
+          "default": false,
+          "description": "Vectorstore.__init__.index.deletionProtection: refuse to destroy the database.",
+          "title": "Deletionprotection",
+          "type": "boolean"
+        },
+        "dimension": {
+          "description": "Vectorstore.__init__.index.dimension: of the embeddings model's vectors.",
+          "maximum": 20000,
+          "minimum": 1,
+          "title": "Dimension",
+          "type": "integer"
+        },
+        "metric": {
+          "default": "cosine",
+          "description": "Vectorstore.__init__.index.metric: the distance metric.",
+          "enum": [
+            "cosine",
+            "euclidean",
+            "dotproduct"
+          ],
+          "title": "Metric",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "maxLength": 45,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.__init__.index.name: the index or collection's name, in lowercase letters, digits and hyphens. Defaults to the manifest's name, with the account number for a managed service.",
+          "title": "Name"
+        }
+      },
+      "required": [
+        "dimension"
+      ],
+      "title": "SAMVectorstoreIndex",
+      "type": "object"
+    },
+    "SAMVectorstoreMaintenance": {
+      "description": "Vectorstore.spec.maintenance: what Celery Beat does, besides checking its status.",
+      "properties": {
+        "snapshotIntervalHours": {
+          "default": 24,
+          "description": "Vectorstore.__init__.maintenance.snapshotIntervalHours: how often.",
+          "maximum": 720,
+          "minimum": 1,
+          "title": "Snapshotintervalhours",
+          "type": "integer"
+        },
+        "snapshotRetention": {
+          "default": 7,
+          "description": "Vectorstore.__init__.maintenance.snapshotRetention: how many are kept. Older ones are deleted.",
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Snapshotretention",
+          "type": "integer"
+        },
+        "snapshots": {
+          "default": true,
+          "description": "Vectorstore.__init__.maintenance.snapshots: take Qdrant snapshots, or Pinecone backups.",
+          "title": "Snapshots",
+          "type": "boolean"
+        }
+      },
+      "title": "SAMVectorstoreMaintenance",
+      "type": "object"
+    },
+    "SAMVectorstoreMetadata": {
+      "description": "Smarter API Vectorstore Manifest - Metadata class.",
+      "properties": {
+        "annotations": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    },
+                    {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    {
+                      "items": {},
+                      "type": "array"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest annotations. Used for storing arbitrary metadata as\n            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The\n            key should be a valid url-friendly string. The value accepts\n            multi-line string values (YAML block scalars) and various scalar types including\n            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.\n            ",
+          "title": "Annotations"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The description for this resource. Be brief. Keep it under 255 characters.",
+          "title": "Description"
+        },
+        "name": {
+          "description": "The camelCase name of the manifest resource",
+          "title": "Name",
+          "type": "string"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
+          "title": "Tags"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The semantic version of the manifest. Example: 0.1.0",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "title": "SAMVectorstoreMetadata",
+      "type": "object"
+    },
+    "SAMVectorstorePinecone": {
+      "description": "Vectorstore.spec.pinecone: where Pinecone runs a serverless index.",
+      "properties": {
+        "cloud": {
+          "default": "aws",
+          "description": "Vectorstore.__init__.pinecone.cloud",
+          "enum": [
+            "aws",
+            "gcp",
+            "azure"
+          ],
+          "title": "Cloud",
+          "type": "string"
+        },
+        "region": {
+          "default": "us-east-1",
+          "description": "Vectorstore.__init__.pinecone.region",
+          "minLength": 1,
+          "title": "Region",
+          "type": "string"
+        }
+      },
+      "title": "SAMVectorstorePinecone",
+      "type": "object"
+    },
+    "SAMVectorstoreSelfHosted": {
+      "description": "Vectorstore.spec.selfHosted: the Qdrant server that Smarter runs on Kubernetes.",
+      "properties": {
+        "cpu": {
+          "default": "500m",
+          "description": "Vectorstore.__init__.selfHosted.cpu: requested, e.g. 500m.",
+          "title": "Cpu",
+          "type": "string"
+        },
+        "image": {
+          "default": "qdrant/qdrant:v1.19.1",
+          "description": "Vectorstore.__init__.selfHosted.image: the Qdrant image.",
+          "title": "Image",
+          "type": "string"
+        },
+        "memory": {
+          "default": "1Gi",
+          "description": "Vectorstore.__init__.selfHosted.memory: requested, e.g. 1Gi.",
+          "title": "Memory",
+          "type": "string"
+        },
+        "storage": {
+          "default": "10Gi",
+          "description": "Vectorstore.__init__.selfHosted.storage: the size of its volume, e.g. 10Gi.",
+          "title": "Storage",
+          "type": "string"
+        },
+        "storageClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.__init__.selfHosted.storageClass: of its volume. Defaults to the cluster's.",
+          "title": "Storageclass"
+        }
+      },
+      "title": "SAMVectorstoreSelfHosted",
+      "type": "object"
+    },
+    "SAMVectorstoreSpec": {
+      "description": "Smarter API Vectorstore Manifest Vectorstore.spec.",
+      "properties": {
+        "backend": {
+          "description": "Vectorstore.__init__.backend: qdrant or pinecone.",
+          "enum": [
+            "qdrant",
+            "pinecone"
+          ],
+          "title": "Backend",
+          "type": "string"
+        },
+        "connection": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.__init__.connection: managed only. The name of an ApiConnection with the service's URL and API key Secret, e.g. https://api.pinecone.io, or a Qdrant Cloud cluster's URL.",
+          "title": "Connection"
+        },
+        "embeddings": {
+          "$ref": "#/$defs/SAMVectorstoreEmbeddings",
+          "description": "Vectorstore.__init__.embeddings"
+        },
+        "hosting": {
+          "default": "managed",
+          "description": "Vectorstore.__init__.hosting: self_hosted, run by Smarter on Kubernetes (qdrant only), or managed, a service reached through the ApiConnection in connection.",
+          "enum": [
+            "self_hosted",
+            "managed"
+          ],
+          "title": "Hosting",
+          "type": "string"
+        },
+        "index": {
+          "$ref": "#/$defs/SAMVectorstoreIndex",
+          "description": "Vectorstore.__init__.index"
+        },
+        "isActive": {
+          "default": true,
+          "description": "Vectorstore.__init__.isActive: whether it may be used.",
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "maintenance": {
+          "$ref": "#/$defs/SAMVectorstoreMaintenance",
+          "description": "Vectorstore.__init__.maintenance"
+        },
+        "pinecone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMVectorstorePinecone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.__init__.pinecone: pinecone only."
+        },
+        "selfHosted": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SAMVectorstoreSelfHosted"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.__init__.selfHosted: self_hosted only."
+        }
+      },
+      "required": [
+        "backend",
+        "index",
+        "embeddings"
+      ],
+      "title": "SAMVectorstoreSpec",
+      "type": "object"
+    },
+    "SAMVectorstoreStatus": {
+      "description": "Smarter API Vectorstore Manifest - Status class.\n\nRead only.",
+      "properties": {
+        "accountNumber": {
+          "description": "Vectorstore.status.accountNumber: the owner's account. Read only.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "apiKeySecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.apiKeySecret: the Secret with a self-hosted database's API key.",
+          "title": "Apikeysecret"
+        },
+        "created": {
+          "description": "The date in which this resource was created. Read only.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMDependency"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "dependencies[List]: The resources that depend on this resource, and that must be deleted, or stop referring to it, before it can be deleted. Lists only the resources that you can read. Read only.",
+          "title": "Dependencies"
+        },
+        "deployedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deployedat"
+        },
+        "documentCount": {
+          "default": 0,
+          "description": "Vectorstore.status.documentCount: its documents.",
+          "title": "Documentcount",
+          "type": "integer"
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.endpoint: where it is reached.",
+          "title": "Endpoint"
+        },
+        "indexName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.indexName: the Pinecone index, or Qdrant collection.",
+          "title": "Indexname"
+        },
+        "lastCheckedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lastcheckedat"
+        },
+        "lastMaintenanceAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lastmaintenanceat"
+        },
+        "lastSnapshotAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lastsnapshotat"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.message: why, if it failed.",
+          "title": "Message"
+        },
+        "modified": {
+          "description": "The date in which this resource was most recently changed. Read only.",
+          "format": "date-time",
+          "title": "Modified",
+          "type": "string"
+        },
+        "recordLocator": {
+          "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+          "title": "Recordlocator",
+          "type": "string"
+        },
+        "snapshotCount": {
+          "default": 0,
+          "description": "Vectorstore.status.snapshotCount: its snapshots, or backups.",
+          "title": "Snapshotcount",
+          "type": "integer"
+        },
+        "username": {
+          "description": "Vectorstore.status.username: the owner. Read only.",
+          "title": "Username",
+          "type": "string"
+        },
+        "vectorCount": {
+          "default": 0,
+          "description": "Vectorstore.status.vectorCount: as of lastCheckedAt.",
+          "title": "Vectorcount",
+          "type": "integer"
+        },
+        "vectorstoreStatus": {
+          "description": "Vectorstore.status.vectorstoreStatus: pending, provisioning, ready, stopped, failed or deleting.",
+          "title": "Vectorstorestatus",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordLocator",
+        "created",
+        "modified",
+        "accountNumber",
+        "username",
+        "vectorstoreStatus"
+      ],
+      "title": "SAMVectorstoreStatus",
+      "type": "object"
+    }
+  },
+  "description": "Smarter API Manifest - Vectorstore.",
+  "properties": {
+    "apiVersion": {
+      "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "description": "kind[String]: Required. The kind of resource described by the manifest.",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/SAMVectorstoreMetadata",
+      "description": "Vectorstore.metadata[obj]: Required, the Vectorstore metadata."
+    },
+    "spec": {
+      "$ref": "#/$defs/SAMVectorstoreSpec",
+      "description": "Vectorstore.spec[obj]: Required, the Vectorstore specification."
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SAMVectorstoreStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Vectorstore.status[obj]: Optional, Read-only. Stateful status information about the Vectorstore."
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "SAMVectorstore",
+  "type": "object"
+}
