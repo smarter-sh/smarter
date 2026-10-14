@@ -16,6 +16,7 @@ from django.core.management import call_command
 from django.urls import URLPattern, URLResolver
 from django.urls.resolvers import RoutePattern
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
@@ -37,6 +38,8 @@ from smarter.apps.api.v1.contract.openapi import (
 )
 from smarter.apps.api.v1.contract.sam import sam_models
 from smarter.apps.api.v1.contract.tests.mixins import (
+    REGENERATE,
+    SKILL,
     OpenApiResponseMixin,
     committed_document,
 )
@@ -58,6 +61,31 @@ from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.const import PROJECT_ROOT
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
+
+CONTRACT = "smarter/smarter/apps/api/v1/contract/openapi.py"
+"""The module that declares the document's routes, which failure messages point to."""
+
+FIX_UNDOCUMENTED_ROUTE = (
+    "To fix it, document the route: model its response in contract/models.py, build the view's response from "
+    f"that model, add the operation to cli_paths() or the family's *_paths() function in {CONTRACT}, test a real "
+    "response in TestOpenApiResponses, and run `make api-contract`. If the route must not be published, add it to "
+    f"UNDOCUMENTED_ROUTES in {CONTRACT} with the reason instead. See 'Adding or changing a cli route' in {SKILL}."
+)
+"""What to do when a route of a documented family is not in the document."""
+
+FIX_UNCOVERED_FAMILY = (
+    f"To fix it, add the family's urlconf to DOCUMENTED_URLCONFS in {CONTRACT}, and list its routes in "
+    "UNDOCUMENTED_ROUTES as NOT_YET_MODELED until they are documented. If the family must not be published, add "
+    f"it to UNDOCUMENTED_URLCONFS with the reason instead. See 'Covering a new family of routes' in {SKILL}."
+)
+"""What to do when a family of routes under /api/v1 is not covered."""
+
+FIX_REF = (
+    "If openapi.json was edited or merged by hand, regenerate it: run `make api-contract`. If it is current, "
+    f"{CONTRACT} builds a broken schema: a ref() names a model that is not in model_schemas() or cli_schemas(). "
+    f"Add the model there, then run `make api-contract`. See {SKILL}."
+)
+"""What to do when the document's schemas or refs are broken."""
 
 GUARDRAIL_MANIFEST = os.path.join(
     PROJECT_ROOT, "apps", "guardrail", "manifest", "brokers", "tests", "data", "guardrail.yaml"
@@ -81,35 +109,49 @@ class TestOpenApiDocument(ApiV1CliTestBase):
         """Openapi.json must be regenerated when a SAM model, a contract model or the cli api changes."""
         with open(OPENAPI_PATH, encoding="utf-8") as file:
             committed = file.read()
-        self.assertEqual(committed, openapi_json(), "openapi.json is out of date. Run `manage.py export_api_contract`.")
+        self.assertEqual(committed, openapi_json(), f"openapi.json is out of date. {REGENERATE}")
 
     def test_document_is_a_valid_model(self):
         document = OpenApiDocument.model_validate(committed_document())
-        self.assertEqual(document.openapi, "3.1.0")
-        self.assertEqual(document.model_dump(mode="json"), committed_document())
+        self.assertEqual(document.openapi, "3.1.0", f"openapi.json is not an OpenAPI 3.1 document. {REGENERATE}")
+        self.assertEqual(
+            document.model_dump(mode="json"),
+            committed_document(),
+            "openapi.json has content that contract/models.py doesn't model: it was edited by hand, or "
+            f"OpenApiDocument changed. {REGENERATE}",
+        )
 
     def test_refs_resolve(self):
         document = committed_document()
         schemas = document["components"]["schemas"]
         for ref in refs(document):
             with self.subTest(ref=ref):
-                self.assertTrue(ref.startswith("#/components/schemas/"), ref)
-                self.assertIn(ref.rsplit("/", 1)[-1], schemas)
+                self.assertTrue(ref.startswith("#/components/schemas/"), f"{ref} is not a component schema. {FIX_REF}")
+                self.assertIn(ref.rsplit("/", 1)[-1], schemas, f"{ref} names no schema. {FIX_REF}")
 
     def test_schemas_are_valid_json_schemas(self):
         for name, schema in committed_document()["components"]["schemas"].items():
             with self.subTest(schema=name):
-                Draft202012Validator.check_schema(schema)
+                try:
+                    Draft202012Validator.check_schema(schema)
+                except SchemaError as error:
+                    self.fail(f"{name} is not a valid JSON Schema: {error.message}. {FIX_REF}")
 
     def test_every_kind_is_a_manifest(self):
         schemas = committed_document()["components"]["schemas"]
         kinds = sorted(sam_models())
-        self.assertEqual(schemas["SAMKind"]["enum"], kinds)
+        self.assertEqual(schemas["SAMKind"]["enum"], kinds, f"SAMKind doesn't list the registered kinds. {REGENERATE}")
         mapping = schemas["SAMManifest"]["discriminator"]["mapping"]
-        self.assertEqual(sorted(mapping), kinds)
+        self.assertEqual(sorted(mapping), kinds, f"SAMManifest doesn't map the registered kinds. {REGENERATE}")
         for kind, ref in mapping.items():
             with self.subTest(kind=kind):
-                self.assertEqual(schemas[ref.rsplit("/", 1)[-1]]["properties"]["kind"]["const"], kind)
+                self.assertEqual(
+                    schemas[ref.rsplit("/", 1)[-1]]["properties"]["kind"]["const"],
+                    kind,
+                    f"{ref}'s kind is not the const {kind}. If openapi.json is current, cli_schemas() in "
+                    f"{CONTRACT} no longer adds the const: restore it (see 'Design decisions' in {SKILL}). "
+                    f"Otherwise: {REGENERATE}",
+                )
 
     def test_every_route_is_documented(self):
         """A new route of a documented family must be added to the document, or to UNDOCUMENTED_ROUTES."""
@@ -127,12 +169,24 @@ class TestOpenApiDocument(ApiV1CliTestBase):
                 routes.add(path)
                 with self.subTest(route=path):
                     self.assertTrue(
-                        path in paths or path in UNDOCUMENTED_ROUTES, f"{path} is not in the OpenAPI document."
+                        path in paths or path in UNDOCUMENTED_ROUTES,
+                        f"{path} is not in the OpenAPI document. {FIX_UNDOCUMENTED_ROUTE}",
                     )
         for path in UNDOCUMENTED_ROUTES:
             with self.subTest(undocumented=path):
-                self.assertIn(path, routes, f"{path} is listed as undocumented, but there is no such route.")
-                self.assertNotIn(path, paths, f"{path} is documented, so remove it from UNDOCUMENTED_ROUTES.")
+                self.assertIn(
+                    path,
+                    routes,
+                    f"{path} is listed in UNDOCUMENTED_ROUTES, but there is no such route. To fix it, remove it from "
+                    f"UNDOCUMENTED_ROUTES in {CONTRACT}, or, if the route was renamed or its path parameter "
+                    "changed, update the entry or PATH_PARAMETER_ALIASES to match.",
+                )
+                self.assertNotIn(
+                    path,
+                    paths,
+                    f"{path} is documented, so it must not be in UNDOCUMENTED_ROUTES. To fix it, remove it from "
+                    f"UNDOCUMENTED_ROUTES in {CONTRACT}.",
+                )
 
     def test_every_family_is_covered(self):
         """A new family of routes under /api/v1 must be documented, or added to UNDOCUMENTED_URLCONFS."""
@@ -145,12 +199,22 @@ class TestOpenApiDocument(ApiV1CliTestBase):
             with self.subTest(family=family):
                 self.assertTrue(
                     family in DOCUMENTED_URLCONFS or family in UNDOCUMENTED_URLCONFS,
-                    f"{family} is neither documented nor in UNDOCUMENTED_URLCONFS.",
+                    f"{family} is neither documented nor in UNDOCUMENTED_URLCONFS. {FIX_UNCOVERED_FAMILY}",
                 )
         for family in UNDOCUMENTED_URLCONFS:
             with self.subTest(undocumented=family):
-                self.assertIn(family, families)
-                self.assertNotIn(family, DOCUMENTED_URLCONFS)
+                self.assertIn(
+                    family,
+                    families,
+                    f"{family} is in UNDOCUMENTED_URLCONFS, but smarter.apps.api.v1.urls mounts no such family. "
+                    f"To fix it, remove it from UNDOCUMENTED_URLCONFS in {CONTRACT}, or correct its path.",
+                )
+                self.assertNotIn(
+                    family,
+                    DOCUMENTED_URLCONFS,
+                    f"{family} is in both DOCUMENTED_URLCONFS and UNDOCUMENTED_URLCONFS. To fix it, remove it "
+                    f"from UNDOCUMENTED_URLCONFS in {CONTRACT}.",
+                )
 
     def test_merge_paths(self):
         """Families merge into one document, and an operation that two families define is refused."""
