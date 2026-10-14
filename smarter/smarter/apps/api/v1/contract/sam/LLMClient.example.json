@@ -95,26 +95,26 @@
       "deepwiki"
     ],
     "plugins": [
-      "market_research",
-      "anthropic_pdf",
-      "safe_image_search",
-      "code_review",
-      "research_assistant",
-      "example_configuration",
-      "brand_voice_support_replies",
-      "anthropic_mcp_builder",
-      "sql_analyst",
-      "url_reader",
-      "svg_image_search",
       "everlasting_gobstopper",
-      "local_search_fr",
+      "example_configuration",
+      "bw_image_search",
       "diagram_image_search",
-      "python_docs_assistant",
+      "safe_image_search",
+      "svg_image_search",
       "image_search",
       "anthropic_internal_comms",
+      "anthropic_mcp_builder",
+      "anthropic_pdf",
+      "brand_voice_support_replies",
+      "code_review",
+      "meeting_notes",
+      "sql_analyst",
+      "python_docs_assistant",
+      "local_search_fr",
+      "market_research",
       "news_monitor",
-      "bw_image_search",
-      "meeting_notes"
+      "research_assistant",
+      "url_reader"
     ]
   }
 }

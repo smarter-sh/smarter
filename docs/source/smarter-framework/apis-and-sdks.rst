@@ -28,7 +28,8 @@ the design that they share.
      - A Python library, ``pip install smarter-api``, for applications, services, notebooks, tests
        and automation.
    * - :doc:`VS Code Extension <vs-code-extension>`
-     - Validation and auto-completion of manifests in your editor, from the same JSON Schemas.
+     - The editor for manifests: validation as you type, completion and help from the same JSON
+       Schemas, and the CLI's validate, apply and deploy commands.
 
 The three ideas are layered. SAM says *what* a resource is, the Smarter API is *how* a client asks
 for it, and the OpenAPI contract is the *written agreement* between the platform and its clients.

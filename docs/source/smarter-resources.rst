@@ -23,8 +23,8 @@ understood and applied by non-developers using the web console.
 Smarter manifest files can be processed by the :doc:`Smarter CLI <smarter-framework/smarter-cli>` as well as by
 drag-and-drop on the web console, both of which interact seamlessly and securely
 with the :doc:`Smarter API <smarter-framework/smarter-api>` to provision, update, and manage the lifecycle of Smarter Resources.
-The Smarter Project maintains a :doc:`VS Code Extension <smarter-framework/vs-code-extension>` that provides syntax highlighting,
-manifest validation, and inline documentation for authoring SAM files.
+The Smarter Project maintains a :doc:`VS Code Extension <smarter-framework/vs-code-extension>` that validates
+SAM files as you write them, completes and documents their keys, and applies them to your platform.
 
 Resources compose into four layers, and understanding those layers is the fastest way to understand
 the platform:

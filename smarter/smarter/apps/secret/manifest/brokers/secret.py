@@ -5,7 +5,6 @@ import traceback
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, List, Optional, Type
 
-from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
 from rest_framework import serializers
 
@@ -555,7 +554,8 @@ class SAMSecretBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         current_date = datetime.now(timezone.utc)
-        expiration_date = (current_date + relativedelta(months=6)).date()
+        # fixed, because the api contract commits this example and it must be deterministic.
+        expiration_date = datetime(2030, 12, 31, tzinfo=timezone.utc)
         metadata = SAMSecretMetadata(
             name="example_secret",
             description="an example secret manifest for the Smarter API Secret",
