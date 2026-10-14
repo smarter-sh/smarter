@@ -85,6 +85,7 @@ class SAMCustomDomainBroker(AbstractBroker):
 
     _manifest: Optional[SAMCustomDomain] = None
     _pydantic_model: Type[SAMCustomDomain] = SAMCustomDomain
+    deployable = True
     _custom_domain: Optional[LLMClientCustomDomain] = None
     _name: Optional[str] = None
     _ready: bool = False

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-from typing import Any, Callable, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, ClassVar, Iterable, List, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -147,6 +147,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _kind: Optional[str] = None
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
+
+    deployable: ClassVar[bool] = False
+    """
+    True when the broker implements :meth:`deploy`.
+
+    The cli api's ``resources`` command reports it as each kind's ``Deployable``,
+    and the smarter cli offers ``deploy`` and ``undeploy`` commands for those kinds.
+    A broker that sets it must override :meth:`deploy`; :meth:`undeploy` may still
+    raise :class:`SAMBrokerErrorNotImplemented`, as CustomDomain's and
+    LLMHostCompute's do.
+    """
     _created: bool = False
     _orm_meta_instance: Optional[MetaDataWithOwnershipModel] = None
     _orm_instance: Optional[MetaDataWithOwnershipModel] = None
