@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.24.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.24.0...v0.24.1-alpha.1) (2026-10-14)
+
+### Bug Fixes
+
+* force a new release ([935a863](https://github.com/smarter-sh/smarter/commit/935a863e1193f263e990f65eb99c43fc794eef08))
+
+### Refactoring
+
+* **llmtool:** rename the plugin django app to llmtool ([dcf5be3](https://github.com/smarter-sh/smarter/commit/dcf5be3e499d4488d28d58fa57d19aca41d7226a))
+
 ## [0.24.0](https://github.com/smarter-sh/smarter/compare/v0.23.0...v0.24.0) (2026-10-14)
 
 ### Features
