@@ -172,6 +172,10 @@
         "safesearch": {
           "default": "strict",
           "description": "ImageSearchPlugin.spec.searchParams.safesearch[str]: adult content filtering. One of: ['off', 'strict']",
+          "enum": [
+            "off",
+            "strict"
+          ],
           "title": "Safesearch",
           "type": "string"
         },
