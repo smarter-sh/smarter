@@ -13,7 +13,7 @@ language can be generated from it rather than written by hand:
 Both are generated from the platform's Pydantic models, so they can't drift from what the platform
 actually does. This page is the technical reference, written for SDK authors and for backend
 developers. For an introduction, see :doc:`Smarter OpenAPI Contract <../smarter-openapi>`, and for the
-design goals that the contract and its clients share, :doc:`Smarter APIs and SDKs <../apis-and-sdks>`. If you change a SAM
+design goals that the contract and its clients share, :doc:`Smarter APIs, SDKs and Integrations <../apis-and-sdks>`. If you change a SAM
 model, the :doc:`journal's <smarter-journal>` response envelope, the
 :doc:`chat contract <../smarter-chat/api-contract>`, or a route that the document covers, read this
 page first.
@@ -75,8 +75,10 @@ tested against the platform's real responses:
 The few routes that the document leaves out are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason: web console
 actions, whose clients use manifests instead, passthroughs to LLM providers' own apis, and routes
-that aren't implemented yet. The families that it leaves out, only the views that the platform's
-unit tests call, are listed in :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
+that aren't implemented yet. The families that it leaves out, the views that the platform's unit
+tests call, and the :doc:`Smarter Project MCP server <../../smarter-platform/smarter-project-mcp-server>`,
+whose protocol the Model Context Protocol specification defines, are listed in
+:data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 
 Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with Swagger
 UI at ``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The

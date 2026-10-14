@@ -13,8 +13,10 @@ handshake, and closes the connection:
 
 **Security.** The endpoint is user supplied, and the connection is made from the Smarter
 server, so every HTTP request, including redirects and the message endpoint of the legacy
-SSE transport, is checked with :func:`~smarter.apps.plugin.plugin.safe_http.validate_public_url`:
-it must be https, on the standard port, and every address its host resolves to must be public.
+SSE transport, is checked with :func:`validate_endpoint_url`: it must be https, on the
+standard port, and every address its host resolves to must be public. The one exception is
+the local environment, where a loopback host, e.g. ``http://localhost:9357``, is permitted,
+so that a developer's MCPClients can reach the platform's own MCP server.
 Credentials are read from the MCPClient's Smarter Secret when a connection is made, and are
 sent only as HTTP headers. The stdio transport, which would run a command on the Smarter
 server, is not supported.
@@ -31,6 +33,7 @@ import fnmatch
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from typing import Any, Awaitable, Callable, Optional, TypeVar
+from urllib.parse import urlparse
 
 import anyio
 import anyio.to_thread
@@ -41,8 +44,9 @@ from mcp.client import Transport
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 
-from smarter.apps.plugin.plugin.safe_http import validate_public_url
-from smarter.common.const import VERSION
+from smarter.apps.plugin.plugin.safe_http import is_loopback_host, validate_public_url
+from smarter.common.conf import smarter_settings
+from smarter.common.const import VERSION, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -146,15 +150,41 @@ def leaf_exception(e: BaseException) -> BaseException:
     return e
 
 
+def validate_endpoint_url(url: str) -> None:
+    """
+    Validate that Smarter may connect to an MCP server's URL.
+
+    In the local environment, a loopback host, e.g. ``http://localhost:9357/`` or
+    ``https://127.0.0.1/``, is permitted, on any port, so that a developer's MCPClients can
+    reach MCP servers that run on their machine, such as the platform's own. Every other
+    URL, and every URL in every other environment, must pass
+    :func:`~smarter.apps.plugin.plugin.safe_http.validate_public_url`. Loopback hosts are
+    never permitted in a deployed environment, where they would let an MCPClient reach the
+    services of the Smarter server itself.
+
+    :param url: The URL.
+    :raises SafeHttpError: If the URL is not permitted.
+    """
+    if smarter_settings.environment == SmarterEnvironments.LOCAL:
+        try:
+            parsed = urlparse(url)
+            hostname = parsed.hostname
+        except ValueError:
+            hostname = None
+        if hostname and parsed.scheme in ("http", "https") and is_loopback_host(hostname):
+            return
+    validate_public_url(url)
+
+
 async def guard_request(request: httpx2.Request) -> None:
     """
-    An httpx2 request hook that refuses requests to non-public hosts.
+    An httpx2 request hook that refuses requests that :func:`validate_endpoint_url` does not permit.
 
     :param request: The request about to be sent.
     :raises SafeHttpError: If the URL is not https, not on the standard port, or its host
         resolves to an address that is not public.
     """
-    await anyio.to_thread.run_sync(validate_public_url, str(request.url))
+    await anyio.to_thread.run_sync(validate_endpoint_url, str(request.url))
 
 
 def guarded_http_client(
@@ -342,7 +372,7 @@ class MCPServerConnection:
         if not url:
             raise SmarterMCPClientConfigurationError(f"MCPClient {self.mcpclient.name} has no endpointUrl.")
         try:
-            validate_public_url(url)
+            validate_endpoint_url(url)
         except SmarterValueError as e:
             raise SmarterMCPClientConnectionError(f"MCPClient {self.mcpclient.name}: {e.message}") from e
         headers = self.request_headers()
@@ -489,4 +519,5 @@ __all__ = [
     "matches_any",
     "run_sync",
     "truncate",
+    "validate_endpoint_url",
 ]

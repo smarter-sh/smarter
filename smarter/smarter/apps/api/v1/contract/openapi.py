@@ -258,6 +258,10 @@ Every route of these urlconfs must be in the document, or in :data:`UNDOCUMENTED
 
 UNDOCUMENTED_URLCONFS: dict[str, str] = {
     "/tests/": "Views that only the platform's own unit tests call.",
+    "/mcp/": (
+        "The Smarter Project MCP server, smarter.apps.mcpserver: one JSON-RPC endpoint per server, "
+        "whose methods and messages the Model Context Protocol specification defines, not OpenAPI."
+    ),
 }
 """
 The families of routes under ``/api/v1`` that the document leaves out, and why.

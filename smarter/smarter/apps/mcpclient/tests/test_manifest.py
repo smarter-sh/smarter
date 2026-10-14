@@ -11,6 +11,7 @@ Test the MCPClient Pydantic manifest: :mod:`smarter.apps.mcpclient.manifest.mode
 import copy
 import glob
 import os
+from urllib.parse import urlparse
 
 from pydantic import ValidationError
 
@@ -26,7 +27,8 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.model import SAMMCPClient
 from smarter.apps.mcpclient.manifest.models.mcpclient.spec import (
     SAMMCPClientSpecConfig,
 )
-from smarter.common.utils import get_readonly_yaml_file
+from smarter.apps.mcpclient.utils import MCPClientExamples, manifest_template_values
+from smarter.apps.plugin.plugin.safe_http import is_loopback_host
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -49,20 +51,47 @@ class TestMCPClientManifest(SmarterTestBase):
             self.config(**fields)
 
     def test_example_manifests(self):
-        """Test that every example manifest in data/mcpclients is valid."""
-        filespecs = sorted(glob.glob(os.path.join(EXAMPLES_PATH, "*.yaml")))
-        self.assertGreaterEqual(len(filespecs), 18)
+        """Test that every example manifest and manifest template in data/mcpclients is valid."""
+        examples = MCPClientExamples()
+        self.assertEqual(
+            examples.count(),
+            len(
+                glob.glob(os.path.join(EXAMPLES_PATH, "*.yaml")) + glob.glob(os.path.join(EXAMPLES_PATH, "*.yaml.tpl"))
+            ),
+        )
+        self.assertGreaterEqual(examples.count(), 28)
         names = []
-        for filespec in filespecs:
-            with self.subTest(filespec=os.path.basename(filespec)):
-                manifest = SAMMCPClient(**get_readonly_yaml_file(filespec))
+        for example in examples:
+            with self.subTest(filename=example.filename):
+                manifest = SAMMCPClient(**example.to_json())
                 config = manifest.spec.config
                 self.assertIn(config.transport, ("http", "sse"))
-                self.assertTrue(config.endpointUrl.startswith("https://"))
+                hostname = urlparse(config.endpointUrl).hostname
+                self.assertTrue(
+                    config.endpointUrl.startswith("https://")
+                    or (config.endpointUrl.startswith("http://") and is_loopback_host(hostname))
+                )
                 if config.authType != "none":
                     self.assertTrue(config.credentials)
                 names.append(manifest.metadata.name)
         self.assertEqual(len(names), len(set(names)))
+
+    def test_example_manifest_templates(self):
+        """The smarter_project_* templates are filled in with this platform's scheme and domain."""
+        values = manifest_template_values()
+        templates = [example for example in MCPClientExamples() if example.is_template]
+        self.assertEqual(len(templates), 10)
+        for example in templates:
+            with self.subTest(filename=example.filename):
+                self.assertTrue(example.name.startswith("smarter_project"))
+                endpoint_url = example.to_json()["spec"]["config"]["endpointUrl"]
+                self.assertTrue(
+                    endpoint_url.startswith(
+                        f"{values['environment_platform_scheme']}://{values['environment_platform_domain']}"
+                        "/api/v1/mcp/smarter-project/"
+                    )
+                )
+                self.assertNotIn("$", example.to_yaml())
 
     def test_test_manifest(self):
         """Test the test manifest."""
@@ -92,15 +121,28 @@ class TestMCPClientManifest(SmarterTestBase):
         self.assertInvalid(transport="websocket")
 
     def test_endpoint_url(self):
-        """Test that the endpoint must be an https URL on the standard port, without credentials or a fragment."""
+        """Test that the endpoint must be https, or http for localhost, may name a port, and has no credentials or fragment."""
         self.assertEqual(
             self.config(endpointUrl="https://mcp.example.com/mcp?x=1").endpointUrl, "https://mcp.example.com/mcp?x=1"
         )
         self.assertEqual(
             self.config(endpointUrl="https://mcp.example.com:443/mcp").endpointUrl, "https://mcp.example.com:443/mcp"
         )
+        self.assertEqual(
+            self.config(endpointUrl="https://localhost:9357/api/v1/mcp/").endpointUrl,
+            "https://localhost:9357/api/v1/mcp/",
+        )
+        for url in (
+            "http://localhost:9357/api/v1/mcp/",
+            "http://api.localhost:9357/mcp",
+            "http://127.0.0.1:8000/mcp",
+            "http://[::1]:8000/mcp",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.config(endpointUrl=url).endpointUrl, url)
         self.assertInvalid(endpointUrl="http://mcp.example.com/mcp")
-        self.assertInvalid(endpointUrl="https://mcp.example.com:8443/mcp")
+        self.assertInvalid(endpointUrl="http://localhost.example.com/mcp")
+        self.assertInvalid(endpointUrl="https://mcp.example.com:99999/mcp")
         self.assertInvalid(endpointUrl="https://user:password@mcp.example.com/mcp")
         self.assertInvalid(endpointUrl="https://mcp.example.com/mcp#fragment")
         self.assertInvalid(endpointUrl="not a url")
