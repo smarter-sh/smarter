@@ -7,7 +7,8 @@ language can be generated from it rather than written by hand:
 - a **JSON Schema and an example manifest for every SAM kind**, which describe the manifests that
   the API accepts and returns, and
 - an **OpenAPI 3.1 document** of the apis that the :doc:`Smarter CLI <../smarter-cli>` and the
-  :doc:`Smarter Python SDK <../smarter-python>` call.
+  :doc:`Python <../smarter-python>`, :doc:`Node.js <../smarter-nodejs>` and
+  :doc:`Go <../smarter-golang>` SDKs call.
 
 Both are generated from the platform's Pydantic models, so they can't drift from what the platform
 actually does. This page is the technical reference, written for SDK authors and for backend

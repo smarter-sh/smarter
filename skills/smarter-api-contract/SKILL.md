@@ -267,6 +267,12 @@ The contract is the source the SDKs generate from:
   your summary. Extend that test with the SDK's calls of each newly covered family.
   Its `TestRecordedResponses` validates the SDK's recorded fixtures against the
   document: add each new fixture to its `FIXTURES`.
+- **smarter-nodejs** (`../smarter-nodejs`) and **smarter-golang**
+  (`../smarter-golang`) copy the same files the same way (`make contracts
+SMARTER_REF=<ref>`, into `test/data/` and `testdata/`), regenerate their SAM
+  types or structs (`make sam-models`), and have the same contract tests
+  (`test/contracts.test.ts`, `contracts_test.go`), including the list of
+  operations that they don't call. A new operation is work in all three SDKs.
 - **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
   the same schemas.
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
