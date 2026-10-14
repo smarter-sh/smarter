@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.22.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.22.0...v0.22.1-alpha.1) (2026-10-14)
+
+### Bug Fixes
+
+* **api:** make committed LLMClient and Secret examples deterministic ([954d92e](https://github.com/smarter-sh/smarter/commit/954d92e3e0750f97dd2d6c712543f50c0af47626))
+
 ## [0.22.0](https://github.com/smarter-sh/smarter/compare/v0.21.1...v0.22.0) (2026-10-13)
 
 ### Features
