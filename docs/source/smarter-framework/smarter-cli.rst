@@ -28,7 +28,7 @@ interact with Smarter resources. The general format is:
 
   Available Commands:
     apply       Apply a Smarter manifest
-    chat        Chat with a deployed LLMClient
+    chat        Chat with an LLMClient
     completion  Generate the autocompletion script for the specified shell
     configure   Configure the smarter command-line interface
     delete      Permanently delete a Smarter resource
@@ -36,10 +36,13 @@ interact with Smarter resources. The general format is:
     describe    Return a manifest for the resource kind
     get         Generate a list of Smarter resources
     help        Help about any command
+    json-schema Retrieve the JSON Schema of a resource kind's manifest
     logs        Returns the logs for a resource
     manifest    Generate an example manifest for the resource kind
+    resources   List the resource kinds of the Smarter Platform
     status      Retrieve real-time status of the Smarter Platform
     undeploy    Undo a Smarter resource deployment.
+    validate    Validate a Smarter manifest without applying it
     version     Retrieve version information
     whoami      Retrieve information about the api_key owner
 
@@ -48,32 +51,63 @@ interact with Smarter resources. The general format is:
         --config string          config file (default is $HOME/.smarter/config.yaml)
         --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
     -h, --help                   help for smarter
-    -o, --output_format string   output format: json, yaml (default "json")
+        --max_retries int        how many times to resend a request that failed for a transient reason (default 2)
+    -o, --output_format string   output format: json, yaml, tabular (default "json")
+        --timeout duration       how long to wait for the Smarter API, e.g. 30s or 5m (default 2m0s)
     -v, --verbose                verbose output
 
+On a new machine, run ``smarter configure`` first. It writes your account
+number, api key and root domain to ``~/.smarter/config.yaml``, readable only
+by you, with one api key per environment. The Python, Node.js and Go SDKs read
+the same file.
+
+Flags override the file, and so do the environment variables that the SDKs
+share: ``SMARTER_API_KEY``, ``SMARTER_ENVIRONMENT``, ``SMARTER_BASE_URL`` (a
+platform url such as ``http://localhost:9357``, instead of the environment's),
+``SMARTER_CONFIG_FILE``, ``SMARTER_TIMEOUT`` (seconds), ``SMARTER_MAX_RETRIES``
+and ``SMARTER_LOG`` (``debug`` or ``info`` turns on ``--verbose``). The cli
+doesn't read ``SMARTER_ROOT_DOMAIN``, which the platform's own settings use for
+its apex domain.
 
 Commands
 --------
 
-The cli implements a set of verbs for working with Smarter resources
+The cli implements a set of verbs for working with Smarter resources. Each one
+is a single request to the platform's cli api, ``/api/v1/cli/``.
 
-- `apply <../smarter/smarter/apps/api/v0/cli/views/apply.py>`__:
-  executes services as necessary in order to migrate a Smarter resource
-  from its present state to that which is described in the provided
-  manifest.
-- `delete <../smarter/smarter/apps/api/v0/cli/views/delete.py>`__:
-  permanently, unrecoverably destroys a Smarter resource.
-- `deploy <../smarter/smarter/apps/api/v0/cli/views/delete.py>`__:
-  manages the deploy state of a deployable Smarter resource (Plugin and
-  LLMClient).
-- `describe <../smarter/smarter/apps/api/v0/cli/views/describe.py>`__:
-  returns a report in yaml or json format that is a superset of a
-  manifest describing the present state of a Smarter resource.
-- `logs <../smarter/smarter/apps/api/v0/cli/views/describe.py>`__:
-  returns log data in standard console log format for a Smarter resource
-- `status <../smarter/smarter/apps/api/v0/cli/views/status.py>`__:
-  returns a report in yaml or json format that provides real-time
-  information on the state of the Smarter platform.
+- **apply** migrates a Smarter resource from its present state to the one
+  described in a manifest. ``--dry-run`` validates the manifest instead, as
+  **validate** does, and changes nothing.
+- **validate** checks a manifest against the model of its kind, as apply does
+  first, without saving it. It prints each error with its path in the
+  manifest, and exits 1 when the manifest is invalid, so it can guard a CI
+  pipeline.
+- **get** lists the resources of a kind, as a table unless ``-o`` says
+  otherwise.
+- **describe** returns the manifest of a resource, which ``-o yaml`` makes
+  ready to edit and apply again.
+- **delete** permanently, unrecoverably destroys a Smarter resource.
+- **deploy** and **undeploy** manage the deployment of the kinds that have
+  one: LLMClient, LLMHost, LLMHostCompute, VectorStore, CustomDomain,
+  SmarterAuthToken (``apikey``) and User, which deploying activates.
+  ``smarter resources`` reports which kinds deploy. Deploying can create real,
+  billable infrastructure, such as an LLMHostCompute's node group.
+  CustomDomains and LLMHostComputes can't be undeployed yet.
+- **logs** returns the log data of a resource.
+- **manifest** generates an example manifest of a kind, as yaml.
+- **json-schema** returns the JSON Schema that manifests of a kind are
+  validated against, for editors such as VS Code.
+- **chat prompt** sends a prompt to an LLMClient and prints its response;
+  **chat config** returns the LLMClient's chat configuration. Both take the
+  LLMClient's name with ``--llmclient``. Prompts from one machine share a
+  session until ``--new_session`` starts another.
+- **resources** lists every resource kind of the platform.
+- **status**, **version** and **whoami** report on the platform, the cli and
+  the owner of the configured api key.
+
+Errors go to stderr, and every failed command exits with status 1. A request
+that fails for a transient reason (no response, or a 408, 429, 502, 503 or 504
+from a proxy) is sent again, up to ``--max_retries`` times, as the SDKs do.
 
 .. raw:: html
 
@@ -82,12 +116,14 @@ The cli implements a set of verbs for working with Smarter resources
 Related API endpoints
 ---------------------
 
-- https://api.example.com/v1/cli/apply/: Apply a manifest
-- https://api.example.com/v1/cli/describe/: print the manifest
-- https://api.example.com/v1/cli/deploy/: Deploy a resource
-- https://api.example.com/v1/cli/logs/: Get logs for a resource
-- https://api.example.com/v1/cli/delete/: Delete a resource
-- https://api.example.com/v1/cli/status/: Smarter platform status
+Every command posts to one route of the platform's cli api, under
+``/api/v1/cli/``: ``apply/``, ``validate/``, ``get/<kind>/``,
+``describe/<kind>/``, ``delete/<kind>/``, ``deploy/<kind>/``,
+``undeploy/<kind>/``, ``logs/<kind>/``, ``example-manifest/<kind>/``,
+``json-schema/<kind>/``, ``prompt/<name>/``, ``prompt/config/<name>/``,
+``resources/``, ``status/``, ``version/`` and ``whoami/``. Their requests and
+responses are documented in the platform's :doc:`OpenAPI document
+<smarter-openapi>`, which the cli's tests check every command against.
 
 Manifest Spec
 -------------
@@ -98,18 +134,10 @@ See :doc:`Smarter Manifest Specification <developer-reference/lib/drf/manifest>`
 Kind
 ~~~~
 
-- `Account <../smarter/smarter/apps/account/api/v1/manifests/>`__
-- `ApiKey <../smarter/smarter/apps/account/api/v1/manifests/>`__
-- `Chat <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `PromptHistory <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `PromptPluginUsage <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `PromptToolCall <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `LLMClient <../smarter/smarter/apps/llmclient/api/v1/manifests/>`__
-- `Plugin <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
-- `SqlConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
-- `ApiConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
-- `User <../smarter/smarter/apps/account/api/v1/manifests/>`__
-- `Secret <../smarter/smarter/apps/secret/api/v1/manifests/>`__
+Every command that takes a ``<kind>`` accepts each kind of resource that a
+manifest can declare, such as ``llmclient``, ``guardrail``, ``secret``,
+``plugin`` or ``vectorstore``. ``smarter resources`` lists them all, and
+``smarter get --help`` shows their command names.
 
 Broker Model
 ~~~~~~~~~~~~

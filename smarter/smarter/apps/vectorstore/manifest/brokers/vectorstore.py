@@ -106,6 +106,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     _manifest: Optional[SAMVectorstore] = None
     _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
+    deployable = True
     _vectorstore: Optional[VectorstoreMeta] = None
     _name: Optional[str] = None
     _ready: bool = False

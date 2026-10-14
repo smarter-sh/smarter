@@ -122,6 +122,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
 
     _manifest: Optional[SAMLLMHostCompute] = None
     _pydantic_model: Type[SAMLLMHostCompute] = SAMLLMHostCompute
+    deployable = True
     _compute: Optional[LLMHostCompute] = None
     _provisioner: Optional[ComputeProvisioner] = None
     _name: Optional[str] = None
