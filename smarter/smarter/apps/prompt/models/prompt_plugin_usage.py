@@ -2,7 +2,7 @@
 
 from django.db import models
 
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches

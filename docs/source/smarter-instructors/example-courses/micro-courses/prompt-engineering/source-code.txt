@@ -55,24 +55,24 @@ Knowledge and Tools
      - A plugin is offered to the model only when Smarter selects it, because the prompt contains
        one of its ``searchTerms`` exactly, with a typo, or as a synonym, or because its selector
        directive is ``ALWAYS``. Only then does the model decide, from the plugin's description,
-       whether to call it. :doc:`/smarter-resources/plugin/nlp`.
-     - `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+       whether to call it. :doc:`/smarter-resources/llmtool/nlp`.
+     - `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
        (``selected()``),
-       `plugin/nlp.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/nlp.py>`__
+       `plugin/nlp.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/nlp.py>`__
    * - Static knowledge
      - A Static Plugin returns fixed facts, here about a fictional Willy Wonka product, so the
        model quotes them instead of making them up.
-     - `everlasting-gobstopper.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/everlasting-gobstopper.yaml>`__
+     - `everlasting-gobstopper.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/everlasting-gobstopper.yaml>`__
    * - Skills as knowledge
      - SkillPlugins for brand voice, meeting notes, code review and SQL analysis, and three of
        Anthropic's published skills.
-     - `skill-brand-voice.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/skill-brand-voice.yaml>`__,
-       `sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/sample-plugins>`__
+     - `skill-brand-voice.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/skill-brand-voice.yaml>`__,
+       `sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__
    * - Tools that act
      - Websearch Plugins for research, news, local search and reading a page, and an
        ImageSearchPlugin that lets the model show real pictures instead of inventing urls.
-     - `websearch-research-assistant.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/websearch-research-assistant.yaml>`__,
-       `image-search.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/sample-plugins/image-search.yaml>`__
+     - `websearch-research-assistant.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/websearch-research-assistant.yaml>`__,
+       `image-search.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/image-search.yaml>`__
    * - Built-in functions
      - A calculator, a date calculator and a weather function that any LLMClient can list under
        ``spec.functions``.

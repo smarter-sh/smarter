@@ -19,7 +19,7 @@ from smarter.apps.account.models import Budget, Charge, ChargeTypes
 from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (

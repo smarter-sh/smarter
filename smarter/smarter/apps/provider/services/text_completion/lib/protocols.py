@@ -34,7 +34,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.prompt.models import Prompt
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,

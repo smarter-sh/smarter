@@ -7,9 +7,9 @@ from django.db import models
 from smarter.apps.account.models import (
     UserProfile,
 )
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.llmtool.manifest.controller import PluginController
+from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -138,7 +138,7 @@ class LLMClientPlugin(TimestampedModel):
 
         See Also:
 
-        - :py:class:`smarter.apps.plugin.manifest.controller.PluginController`
+        - :py:class:`smarter.apps.llmtool.manifest.controller.PluginController`
         - :py:class:`smarter.lib.manifest.loader.SAMLoader`
         """
         if not llmclient:
@@ -173,7 +173,7 @@ class LLMClientPlugin(TimestampedModel):
 
         See Also:
 
-        - :py:class:`smarter.apps.plugin.controller.PluginController`
+        - :py:class:`smarter.apps.llmtool.controller.PluginController`
         """
         if not llmclient:
             return []

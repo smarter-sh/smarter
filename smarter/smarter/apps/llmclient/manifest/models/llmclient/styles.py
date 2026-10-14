@@ -24,7 +24,7 @@ from typing import ClassVar, Literal, Optional
 from pydantic import ConfigDict, Field, field_validator
 
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
-from smarter.apps.plugin.plugin.safe_http import SafeHttpError, fetch
+from smarter.apps.llmtool.plugin.safe_http import SafeHttpError, fetch
 from smarter.lib.manifest.models import AbstractSAMSpecBase, is_client_manifest
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -141,7 +141,7 @@ def validate_image_url_is_available(url: str) -> None:
     Validate that an image url responds with an image.
 
     The url is requested with HEAD, or with GET if the server doesn't allow HEAD, through
-    :func:`smarter.apps.plugin.plugin.safe_http.fetch`, which refuses urls that aren't public
+    :func:`smarter.apps.llmtool.plugin.safe_http.fetch`, which refuses urls that aren't public
     (server-side request forgery), and follows redirects, validating each one. The response must
     be HTTP 200, directly or after redirects (e.g. a 301), and must not be a web page. The result is
     not cached, so that each apply checks that the url is still available.

@@ -12,7 +12,7 @@ from smarter.apps.dashboard.views.views import (
     NotificationsView,
 )
 from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
-from smarter.apps.plugin import urls as plugin_urls
+from smarter.apps.llmtool import urls as plugin_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case

@@ -38,11 +38,11 @@ from urllib.parse import urlparse
 
 from pydantic import Field, field_validator, model_validator
 
+from smarter.apps.llmtool.plugin.safe_http import is_loopback_host
 from smarter.apps.mcpclient.manifest.enum import (
     SAMMCPClientAuthType,
     SAMMCPClientTransport,
 )
-from smarter.apps.plugin.plugin.safe_http import is_loopback_host
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 

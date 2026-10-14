@@ -203,7 +203,7 @@ RUN pip install setuptools wheel pip-tools && \
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
-# The WordNet thesaurus, which smarter.apps.plugin.nlp uses to match plugin selector
+# The WordNet thesaurus, which smarter.apps.llmtool.nlp uses to match plugin selector
 # search terms by synonym. NLTK looks for it in ~/nltk_data, among other places.
 RUN python -m nltk.downloader -q -d /home/smarter_user/nltk_data wordnet
 

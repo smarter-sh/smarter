@@ -73,6 +73,7 @@ from smarter.apps.llmhost.contract.models import (
     LLMHostApiStatus,
     LLMHostApiUndeployed,
 )
+from smarter.apps.llmtool.contract.models import PluginApiPluginMeta
 from smarter.apps.mcpclient.contract.models import (
     MCPCLIENT_API_MODELS,
     MCPClientApiMCPClient,
@@ -85,7 +86,6 @@ from smarter.apps.orchestrator.contract.models import (
     ORCHESTRATOR_API_MODELS,
     OrchestratorApiOrchestrator,
 )
-from smarter.apps.plugin.contract.models import PluginApiPluginMeta
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
 from smarter.apps.prompt.contract.history import (
     PROMPT_HISTORY_API_MODELS,
@@ -240,7 +240,7 @@ DOCUMENTED_URLCONFS: dict[str, str] = {
     "/mcpclients/": "smarter.apps.mcpclient.api.v1.urls",
     "/vectorstores/": "smarter.apps.vectorstore.api.v1.urls",
     "/llmhosts/": "smarter.apps.llmhost.api.v1.urls",
-    "/plugins/": "smarter.apps.plugin.api.v1.urls",
+    "/plugins/": "smarter.apps.llmtool.api.v1.urls",
     "/providers/": "smarter.apps.provider.api.v1.urls",
     "/proxy/": "smarter.apps.proxy.api.v1.urls",
     "/accounts/": "smarter.apps.account.api.v1.urls",

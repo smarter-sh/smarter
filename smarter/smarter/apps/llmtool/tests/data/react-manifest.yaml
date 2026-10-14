@@ -1,0 +1,30 @@
+---
+# A Vite-generated manifest.json for the llmtool-list React app, as yaml.
+_rolldown-runtime.js:
+  file: assets/rolldown-runtime.js
+  name: rolldown-runtime
+_xterm-TdnZ7DQy.css:
+  file: assets/xterm-TdnZ7DQy.css
+  src: _xterm-TdnZ7DQy.css
+_xterm.js:
+  file: assets/xterm.js
+  name: xterm
+  imports:
+    - _rolldown-runtime.js
+  css:
+    - assets/xterm-TdnZ7DQy.css
+index.html:
+  file: assets/index.js
+  name: index
+  src: index.html
+  isEntry: true
+  imports:
+    - _rolldown-runtime.js
+    - _xterm.js
+  css:
+    - assets/index-DvLY75bJ.css
+# Added by the package's vite.config.ts after the build.
+_custom:
+  buildTime: "2026-10-12T01:09:47.988Z"
+  version: 0.3.0
+  buildEnv: production

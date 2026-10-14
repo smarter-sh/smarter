@@ -11,7 +11,7 @@ from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
 )
-from smarter.apps.plugin.plugin.safe_http import SafeResponse
+from smarter.apps.llmtool.plugin.safe_http import SafeResponse
 from smarter.apps.vectorstore.api.v1 import views
 from smarter.apps.vectorstore.api.v1.urls import VectorstoreApiV1ReverseViews as Names
 from smarter.apps.vectorstore.models import VectorstoreDocument, VectorstoreMeta

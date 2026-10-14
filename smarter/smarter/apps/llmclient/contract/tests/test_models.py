@@ -32,7 +32,7 @@ from smarter.apps.llmclient.serializers import (
     LLMClientPluginSerializer,
     LLMClientSerializer,
 )
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib.drf.models import SmarterAuthToken
 
 NAME = "test_llmclient_contract_models"

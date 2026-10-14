@@ -80,7 +80,7 @@ Docstrings and Checks
      - Module docstrings that explain why, not only what, such as the protections and their
        known limits in the hardened HTTP client, and the usage examples in the infrastructure
        facade. :doc:`ADR 029 </adr/029-docstrings>`.
-     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__,
+     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__,
        `infrastructure/services/__init__.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/services/__init__.py>`__
    * - The docstring style
      - reStructuredText field lists (``:param:``, ``:returns:``, ``:raises:``), cross-references

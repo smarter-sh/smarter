@@ -33,7 +33,7 @@ from django.http import Http404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from smarter.apps.plugin.plugin.safe_http import SafeHttpError, fetch
+from smarter.apps.llmtool.plugin.safe_http import SafeHttpError, fetch
 from smarter.apps.vectorstore.caching import (
     invalidate_all_cached_vectorstores_for_user_profile,
 )
