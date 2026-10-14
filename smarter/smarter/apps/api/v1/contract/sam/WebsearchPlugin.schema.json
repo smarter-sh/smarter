@@ -420,6 +420,12 @@
         "freshness": {
           "anyOf": [
             {
+              "enum": [
+                "day",
+                "week",
+                "month",
+                "year"
+              ],
               "type": "string"
             },
             {
@@ -453,12 +459,21 @@
         },
         "provider": {
           "description": "WebsearchPlugin.spec.search.provider[str]: the web search API. One of: ['brave', 'tavily']",
+          "enum": [
+            "brave",
+            "tavily"
+          ],
           "title": "Provider",
           "type": "string"
         },
         "safeSearch": {
           "default": "moderate",
           "description": "WebsearchPlugin.spec.search.safeSearch[str]: adult content filtering. One of: ['off', 'moderate', 'strict']",
+          "enum": [
+            "off",
+            "moderate",
+            "strict"
+          ],
           "title": "Safesearch",
           "type": "string"
         }
