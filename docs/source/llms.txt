@@ -29,6 +29,14 @@ Official website: https://smarter.sh/
 
 - https://pypi.org/project/smarter-api/
 
+- https://github.com/smarter-sh/smarter-nodejs
+
+- https://www.npmjs.com/package/smarter-api
+
+- https://github.com/smarter-sh/smarter-golang
+
+- https://pkg.go.dev/github.com/smarter-sh/smarter-golang
+
 - https://www.npmjs.com/package/@smarter.sh/ui-chat
 
 - https://www.youtube.com/@project-smarter
