@@ -29,6 +29,10 @@ enterprise AI applications. The result is a batteries-included platform that ena
 developers to build production-ready AI solutions more quickly, with greater consistency,
 reliability, and operational control.
 
+The manifests, the API, its :doc:`OpenAPI contract <smarter-framework/smarter-openapi>`, the CLI
+and the SDKs are grouped under :doc:`Smarter APIs and SDKs <smarter-framework/apis-and-sdks>`, which
+also presents the design goals that they share.
+
 This section of the documentation provides the technical reference for the Smarter
 Development Framework, including its architecture, specifications, APIs, command-line
 tools, SDKs, and supporting technologies.
@@ -40,13 +44,9 @@ tools, SDKs, and supporting technologies.
 
    smarter-framework/getting-started
    smarter-framework/guides
-   smarter-framework/smarter-api
+   smarter-framework/apis-and-sdks
    smarter-framework/smarter-broker-model
    smarter-framework/smarter-chat
-   smarter-framework/smarter-cli
-   smarter-framework/smarter-python
-   smarter-framework/smarter-manifests
    smarter-framework/smarter-on-kubernetes
-   smarter-framework/vs-code-extension
    smarter-framework/developer-reference
    smarter-framework/technologies

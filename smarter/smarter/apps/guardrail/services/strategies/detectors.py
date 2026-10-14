@@ -157,7 +157,6 @@ DETECTORS: dict[str, Detector] = {
         ),
     )
 }
-"""The built-in detectors, by name."""
 
 
 def detect(text: str, detectors: list[str]) -> list[GuardrailMatch]:
