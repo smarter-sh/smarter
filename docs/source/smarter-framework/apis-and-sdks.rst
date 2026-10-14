@@ -26,7 +26,13 @@ the design that they share.
      - A command-line program, like ``kubectl``, for people at a terminal and for shell scripts.
    * - :doc:`Smarter Python SDK <smarter-python>`
      - A Python library, ``pip install smarter-api``, for applications, services, notebooks, tests
-       and automation.
+       and automation. The reference implementation of every Smarter SDK.
+   * - :doc:`Smarter Node.js SDK <smarter-nodejs>`
+     - A TypeScript library for Node.js, ``npm install @smarter.sh/api``, for web back ends, serverless
+       functions, services and automation.
+   * - :doc:`Smarter Go SDK <smarter-golang>`
+     - A Go module, ``go get github.com/smarter-sh/smarter-golang``, for services, Kubernetes
+       operators, infrastructure tooling and automation.
    * - :doc:`VS Code Extension <vs-code-extension>`
      - The editor for manifests: validation as you type, completion and help from the same JSON
        Schemas, and the CLI's validate, apply and deploy commands.
@@ -36,8 +42,10 @@ for it, and the OpenAPI contract is the *written agreement* between the platform
 The CLI and the SDKs are clients of that agreement, and nothing else: none of them has access to the
 platform that your own software doesn't have.
 
-Smarter's SDKs follow the same design, whatever their language. The Python SDK is the first of
-them, and SDKs for Node.js and Go are planned.
+Smarter's SDKs follow the same design, whatever their language. The Python SDK was the first of
+them, and is the reference implementation: the Node.js and Go SDKs have its features, resources,
+verbs and errors, number their architecture decisions as it does, and are tested against the same
+recorded responses of the platform.
 
 
 Design Goals
@@ -171,7 +179,9 @@ Start from the contract, not from the platform's code:
 3. Test that every kind's example manifest parses with its generated model, and that every request
    that the SDK sends is an operation of ``openapi.json``.
 4. Follow the design goals above, and the :doc:`Python SDK <smarter-python>` as the reference
-   implementation, from its configuration lookup to its exception hierarchy.
+   implementation, from its configuration lookup to its exception hierarchy. The
+   :doc:`Node.js <smarter-nodejs>` and :doc:`Go <smarter-golang>` SDKs show how its design
+   translates into other languages.
 
 
 .. toctree::
@@ -183,4 +193,6 @@ Start from the contract, not from the platform's code:
    smarter-openapi
    smarter-cli
    smarter-python
+   smarter-nodejs
+   smarter-golang
    vs-code-extension
