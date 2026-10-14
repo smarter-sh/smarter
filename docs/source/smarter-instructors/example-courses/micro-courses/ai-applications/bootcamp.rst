@@ -95,9 +95,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 5
      - 45
      - **Lecture 3: Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL
-       Plugin </smarter-resources/plugin/plugin/sql>` runs a fixed, parameterized query that the
+       Plugin </smarter-resources/llmtool/plugin/sql>` runs a fixed, parameterized query that the
        model can only fill in (`stackademy_sql
-       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__),
+       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__),
        and a SkillPlugin teaches the model a schema so that it writes SQL for a person to review
        (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
        with a read-only database user, its password in a :doc:`Secret
@@ -105,8 +105,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 6
      - 45
      - **Lecture 4: Tools and MCP.** Function calling, :doc:`API
-       </smarter-resources/plugin/plugin/api>` and :doc:`Websearch
-       </smarter-resources/plugin/plugin/websearch>` plugins, and the `Model Context Protocol
+       </smarter-resources/llmtool/plugin/api>` and :doc:`Websearch
+       </smarter-resources/llmtool/plugin/websearch>` plugins, and the `Model Context Protocol
        <https://modelcontextprotocol.io/>`__. :doc:`MCP clients
        </smarter-resources/smarter-mcpclient>` in Smarter.
    * - 7
@@ -352,7 +352,7 @@ Recommended Texts
   (O'Reilly, 2025). Chapter 6, on retrieval and agents, is the best follow-up to the bootcamp.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-vectorstore`,
   :doc:`/smarter-resources/smarter-mcpclient`, :doc:`/smarter-resources/smarter-connection`,
-  :doc:`/smarter-resources/plugin/plugin/sql` and :doc:`/smarter-resources/smarter-orchestrator`.
+  :doc:`/smarter-resources/llmtool/plugin/sql` and :doc:`/smarter-resources/smarter-orchestrator`.
 
 Further Study
 -------------

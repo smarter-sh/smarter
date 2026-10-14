@@ -17,7 +17,7 @@ from smarter.apps.llmclient.models import (
     LLMClientHelper,
     LLMClientPlugin,
 )
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 

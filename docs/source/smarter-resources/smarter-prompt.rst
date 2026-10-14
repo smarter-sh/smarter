@@ -13,7 +13,7 @@ database, serving the :doc:`configuration object <prompt/example-config>` to the
 ReactJS chat component, handling REST API :doc:`prompt requests <prompt/example-request>`,
 serving :doc:`prompt responses <prompt/example-response>`, and orchestrating the
 Smarter resources associated with a session, including :doc:`Account <smarter-account>`,
-:doc:`LLMClient <smarter-llmclient>`, and :doc:`Plugin <smarter-plugin>`.
+:doc:`LLMClient <smarter-llmclient>`, and :doc:`Plugin <smarter-llmtool>`.
 
 Smarter sessions do not expire unless deleted by an administrator as part of MySQL database disk space maintenance operations.
 
@@ -53,7 +53,7 @@ Usage
     - :doc:`Smarter Journal <../smarter-framework/developer-reference/smarter-journal>`
     - :doc:`Smarter Account <../smarter-resources/smarter-account>`
     - :doc:`Smarter LLMClients <../smarter-resources/smarter-llmclient>`
-    - :doc:`Smarter Plugins <../smarter-resources/smarter-plugin>`
+    - :doc:`Smarter LLMTool Plugins <../smarter-resources/smarter-llmtool>`
 
 
 Technical Reference

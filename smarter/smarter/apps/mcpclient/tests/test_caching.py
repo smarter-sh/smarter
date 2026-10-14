@@ -10,6 +10,7 @@ Test :mod:`smarter.apps.mcpclient.caching`.
 
 from unittest import mock
 
+from smarter.apps.llmtool.plugin.tests.base_classes import capture_signal
 from smarter.apps.mcpclient.caching import (
     get_cached_catalog,
     get_cached_mcpclients_available_to_user_profile,
@@ -25,7 +26,6 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_connected,
     mcpclient_connection_failed,
 )
-from smarter.apps.plugin.plugin.tests.base_classes import capture_signal
 
 from .base_classes import (
     GUARD_PATCH,

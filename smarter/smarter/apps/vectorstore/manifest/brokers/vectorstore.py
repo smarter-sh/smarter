@@ -26,7 +26,7 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.connection.models import ApiConnection
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorstore.caching import (
     invalidate_all_cached_vectorstores_for_user_profile,

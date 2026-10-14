@@ -3,7 +3,7 @@
 from django.contrib.auth.models import User
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .base import CommandTestBase

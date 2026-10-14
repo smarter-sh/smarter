@@ -49,7 +49,7 @@ ownership; and writing for coding agents.
 - `docs/source/ <https://github.com/smarter-sh/smarter/tree/main/docs/source>`__ and its
   `conf.py <https://github.com/smarter-sh/smarter/blob/main/docs/source/conf.py>`__.
 - The reStructuredText docstrings in any Python module, such as
-  `safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__,
+  `safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__,
   and the pages that autodoc builds from them.
 - `docs/source/adr/ <https://github.com/smarter-sh/smarter/tree/main/docs/source/adr>`__, the
   decision records.

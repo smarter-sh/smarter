@@ -130,7 +130,7 @@ analyze:
 	@echo "==============================================================================="
 	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
-# docker exec smarter-app bash -c "coverage run manage.py test smarter.apps.plugin && coverage report -m && coverage html"
+# docker exec smarter-app bash -c "coverage run manage.py test smarter.apps.llmtool && coverage report -m && coverage html"
 coverage:
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."

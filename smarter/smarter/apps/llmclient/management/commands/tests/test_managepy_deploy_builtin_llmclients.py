@@ -18,7 +18,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.management.commands.deploy_builtin_llmclients import Command
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file

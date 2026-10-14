@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("account", "0001_initial"),
         ("llmclient", "0002_initial"),
-        ("plugin", "0001_initial"),
+        ("llmtool", "0001_initial"),
         (
             "taggit",
             "0006_rename_taggeditem_content_type_object_id_taggit_tagg_content_8fc721_idx",
@@ -203,7 +203,7 @@ class Migration(migrations.Migration):
                     "plugin",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="plugin.pluginmeta",
+                        to="llmtool.pluginmeta",
                     ),
                 ),
             ],
@@ -266,7 +266,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="plugin.pluginmeta",
+                        to="llmtool.pluginmeta",
                     ),
                 ),
             ],

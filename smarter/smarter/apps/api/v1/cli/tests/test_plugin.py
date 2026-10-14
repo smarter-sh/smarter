@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
