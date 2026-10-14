@@ -45,3 +45,4 @@ capabilities of the various team member roles, and provides usable tools and abs
    smarter-resources/smarter-provider
    smarter-resources/smarter-secret
    smarter-resources/smarter-vectorstore
+   smarter-resources/getting-started-claude-code
