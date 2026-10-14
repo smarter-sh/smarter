@@ -36,6 +36,21 @@ the design that they share.
    * - :doc:`VS Code Extension <vs-code-extension>`
      - The editor for manifests: validation as you type, completion and help from the same JSON
        Schemas, and the CLI's validate, apply and deploy commands.
+   * - :doc:`Smarter Chat for WordPress <smarter-wordpress>`
+     - A WordPress plugin that adds a deployed LLMClient's chat to a WordPress site: a launcher on
+       every page, a block and a shortcode.
+   * - :doc:`Smarter Chat for Drupal <smarter-drupal>`
+     - A Drupal module that adds the chat to a Drupal site: a launcher on every page, and a block.
+   * - :doc:`Smarter Chat for Shopify <smarter-shopify>`
+     - A Shopify app whose theme app extension adds the chat to a store, from the theme editor.
+   * - :doc:`Smarter Chat for Google Tag Manager <smarter-gtm>`
+     - A tag template that adds the chat to any site with a Google Tag Manager container.
+   * - :doc:`Smarter Chat for Documentation Sites <smarter-docs-sites>`
+     - Plugins for Docusaurus, MkDocs and Sphinx, and a recipe for VitePress, that add the chat to
+       every page of a documentation site.
+
+The last five are built on :doc:`Smarter Chat <smarter-chat>`'s embed script, one ``<script>`` tag
+that any web page can use, which they write for you from a settings screen.
 
 The three ideas are layered. SAM says *what* a resource is, the Smarter API is *how* a client asks
 for it, and the OpenAPI contract is the *written agreement* between the platform and its clients.
@@ -196,3 +211,8 @@ Start from the contract, not from the platform's code:
    smarter-nodejs
    smarter-golang
    vs-code-extension
+   smarter-wordpress
+   smarter-drupal
+   smarter-shopify
+   smarter-gtm
+   smarter-docs-sites
