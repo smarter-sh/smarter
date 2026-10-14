@@ -7,9 +7,9 @@ limited support for anciallary UI features. The API is built on :doc:`Django RES
 includes a rich set of enterprise features for enhanced security, audit capability,
 and performance optimization.
 
-Its two official clients are the :doc:`Smarter CLI <smarter-cli>`, for people at a terminal,
-and the :doc:`Smarter Python SDK <smarter-python>`, for Python software that integrates with
-your platform.
+Its official clients are the :doc:`Smarter CLI <smarter-cli>`, for people at a terminal, and the
+:doc:`Python <smarter-python>`, :doc:`Node.js <smarter-nodejs>` and :doc:`Go <smarter-golang>`
+SDKs, for software that integrates with your platform.
 
 The whole API is described by a typed OpenAPI 3.1 document, the
 :doc:`Smarter OpenAPI Contract <smarter-openapi>`, which every platform serves at
