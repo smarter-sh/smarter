@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.24.0](https://github.com/smarter-sh/smarter/compare/v0.23.0...v0.24.0) (2026-10-14)
+
+### Features
+
+* **mcpserver:** serve the smarter project's code and docs over mcp ([e46d176](https://github.com/smarter-sh/smarter/commit/e46d176bc7fe7ccc0f7e321831bd7a239ae52abb))
+
+### Bug Fixes
+
+* **api:** report each kind's deployable from its broker in resources ([f0206be](https://github.com/smarter-sh/smarter/commit/f0206beaae423d78eaf52617336de1341fbf1b97))
+
 ## [0.24.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.24.0-alpha.1...v0.24.0-alpha.2) (2026-10-14)
 
 ### Bug Fixes
