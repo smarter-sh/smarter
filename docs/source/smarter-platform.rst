@@ -38,6 +38,7 @@ The Smarter platform's fundamental building blocks to this extent are:
    smarter-platform/adding-an-llm-provider
    smarter-platform/cost-accounting
    smarter-platform/smarter-journal
+   smarter-platform/smarter-project-mcp-server
    smarter-platform/configuration
    smarter-platform/security
    smarter-platform/backup-and-restore

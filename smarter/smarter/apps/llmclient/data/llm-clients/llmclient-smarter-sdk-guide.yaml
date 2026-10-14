@@ -1,0 +1,98 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "A developer advocate who helps programmers integrate their applications with Smarter, with its Python, Node.js and Go SDKs, its command-line interface, and its api."
+  name: smarter_sdk_guide
+  version: 1.0.0
+  tags:
+    - smarter
+    - developer-tools
+    - sdk
+    - api
+  annotations:
+    - smarter.sh/llmclient/use-case: sdk and api support
+    - smarter.sh/llmclient/showcases: MCPClient, the Smarter Project MCP server, Guardrail
+    - smarter.sh/llmclient/last-updated: 2026-10-14
+    - smarter.sh/llmclient/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    prompt:
+      appAssistant: Ada
+      appExamplePrompts:
+      - How do I send a prompt to an LLMClient from Python?
+      - Show me how to apply a manifest with the Node.js SDK.
+      - How does the Go SDK authenticate, and where does it read my api key?
+      - What does smarter apply do, and which api endpoint does it call?
+      appFileAttachment: false
+      appInfoUrl: https://docs.smarter.sh
+      appName: Smarter SDK Guide
+      appPlaceholder: Ask me how to use Smarter from your code...
+      appWelcomeMessage: Welcome! Tell me what you're building, and in which language, and I'll show you how to call Smarter.
+      customDomain: null
+      defaultMaxTokens: 4096
+      defaultModel: gpt-6-luna
+      defaultSystemRole: |
+        You are a developer advocate of The Smarter Project (https://smarter.sh). You help programmers
+        integrate their applications with the Smarter platform, through its official SDKs, its
+        command-line interface, and its api.
+
+        Answer from your MCP servers, never from memory, because the SDKs change often:
+        - smarter_project_github_python, smarter_project_github_nodejs and smarter_project_github_golang:
+          the Python, Node.js and Go SDKs. Use the one for the user's language. If the user has not named
+          a language, ask which one.
+        - smarter_project_github_cli: the smarter command-line interface.
+        - smarter_project_github: the platform's documentation, docs.smarter.sh, and its api.
+        Search an SDK's documentation and its code together, in one round of tool calls, because you
+        may call tools once per reply: the documentation for examples, and the code to confirm a
+        function's signature. If the tools do not answer the question, say
+        so. DO NOT INVENT functions, parameters or endpoints. Never ask for, or repeat, an api key.
+
+        Your replies are displayed in a chat window that renders GitHub flavored markdown. Lead with a
+        complete, runnable example in a fenced code block, with the language named, then explain it
+        briefly. Link to the documentation page or the GitHub url that your tools returned. When the
+        user compares languages, show the same call in each, in a table or in consecutive code blocks.
+      defaultTemperature: 1.0
+      deployed: false
+      provider: openai
+      subdomain: null
+    styles:
+      appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+      appBackgroundImageUrl: https://cdn.smarter.sh/cms/img/techdots.png
+      assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/smarter/assistant.png
+      googleFont: Montserrat
+      borderRadius: 12px
+      conversationHeader:
+        backgroundColor: '#0d1117'
+        color: '#ffffff'
+        infoColor: '#fdb913'
+      messageList:
+        backgroundColor: rgba(255, 255, 255, 0.88)
+        color: '#1f2328'
+      incomingMessage:
+        backgroundColor: '#fff7e6'
+        color: '#3a2a1a'
+        borderColor: '#fdd9a0'
+        linkColor: '#0969da'
+      outgoingMessage:
+        backgroundColor: '#0969da'
+        color: '#ffffff'
+      buttons:
+        color: '#0969da'
+      typingIndicator:
+        color: '#0969da'
+  functions: []
+  plugins: []
+  # The Smarter Project's SDKs, cli and documentation, through the platform's own Smarter Project
+  # MCP server, one MCPClient per repository. They require no Secret.
+  mcpClients:
+    - smarter_project_github_python      # smarter-sh/smarter-python
+    - smarter_project_github_nodejs      # smarter-sh/smarter-nodejs
+    - smarter_project_github_golang      # smarter-sh/smarter-golang
+    - smarter_project_github_cli         # smarter-sh/smarter-cli
+    - smarter_project_github             # smarter-sh/smarter, and docs.smarter.sh
+  guardrails:
+    - prompt_injection_keyword_input
+    - secrets_redaction_input
+    - secrets_leak_output
+    - script_injection_output

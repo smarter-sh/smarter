@@ -44,6 +44,7 @@ import requests
 from pydantic import JsonValue
 
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.typing import SmarterDictType
 
 DEFAULT_TIMEOUT = 15
@@ -99,6 +100,31 @@ class SafeResponse:
             if key.lower() == "charset" and value:
                 return value.strip("\"'")
         return None
+
+
+def is_loopback_host(hostname: Optional[str]) -> bool:
+    """
+    Return whether a host name is the local machine: ``localhost``, a subdomain of it, or a loopback address.
+
+    The local hosts are those of :attr:`SmarterValidator.LOCAL_HOSTS <smarter.lib.django.validators.SmarterValidator.LOCAL_HOSTS>`,
+    any subdomain of ``localhost``, e.g. ``api.localhost``, and any loopback address, e.g.
+    ``::1``. The name is not resolved, so this tells only what the name says.
+    :func:`validate_public_url` refuses all of them. Callers that permit loopback hosts, e.g.
+    the MCPClient in the local environment, use this to decide when to skip it.
+
+    :param hostname: A host name or IP address, without a port, e.g. ``urlparse(url).hostname``.
+    :returns: True if the host is the local machine.
+    """
+    if not hostname:
+        return False
+    host = hostname.lower().rstrip(".").strip("[]")
+    local_hosts = {local_host.rsplit(":", 1)[0] for local_host in SmarterValidator.LOCAL_HOSTS}
+    if host in local_hosts or host.endswith(".localhost"):
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def validate_public_url(url: str) -> None:

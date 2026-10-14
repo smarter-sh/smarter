@@ -1674,6 +1674,47 @@ class Settings(BaseSettings):
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate plugin_max_data_results: {v}") from e
 
+    mcpserver_rate_limit: int = Field(
+        settings_defaults.MCPSERVER_RATE_LIMIT,
+        ge=0,
+        description="The maximum number of requests per minute that one client IP address may send to the Smarter Project MCP server. 0 disables the limit.",
+        title="MCP Server Rate Limit",
+    )
+    """
+    The maximum number of requests per minute that one client IP address may send to the Smarter Project MCP server.
+
+    The MCP server, :mod:`smarter.apps.mcpserver`, requires no authentication, so the limit
+    protects the platform's database from a client that floods it. Requests beyond the limit
+    are answered ``429 Too Many Requests`` until the minute ends. The platform's own
+    MCPClients count too: they connect from the platform's egress addresses, and each tool
+    call is about three requests, so set the limit well above the platform's own traffic.
+    0 disables the limit.
+    :type: int
+    :default: Value from ``settings_defaults.MCPSERVER_RATE_LIMIT``
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @before_field_validator("mcpserver_rate_limit")
+    def parse_mcpserver_rate_limit(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'mcpserver_rate_limit' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the mcpserver_rate_limit value to validate
+        Returns:
+            int: The validated mcpserver_rate_limit.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.MCPSERVER_RATE_LIMIT
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError(f"mcpserver_rate_limit {int_value} must be a non-negative integer.")
+            return int_value
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError(f"could not validate mcpserver_rate_limit: {v}") from e
+
     sensitive_files_amnesty_patterns: List[Pattern] = Field(
         settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS,
         description="List of regex patterns for sensitive file amnesty.",
