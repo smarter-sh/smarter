@@ -16,6 +16,10 @@ come in three layers, and each layer is built from the one before it:
    Google Tag Manager container, or a documentation site. Each one adds a deployed LLMClient's chat
    to their site from a settings screen.
 
+.. image:: https://cdn.smarter.sh/docs/smarter-framework/apis-and-sdks/smarter-integrations.png
+  :alt: The Smarter APIs, the SDKs and developer tools built on them, and the website integrations
+  :width: 100%
+
 The :ref:`design goals <apis-and-sdks-design-goals>` that the APIs and the SDKs share come after
 them, followed by what to do if you want to write an SDK for another language.
 
