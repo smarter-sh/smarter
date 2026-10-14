@@ -144,8 +144,8 @@ Making the LLM Do Things
        (``process_tool_call()``, ``handle_function_provided()``),
        `apps/provider/services/text_completion/utils.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/utils.py>`__
        (``pair_tool_messages()``),
-       `apps/plugin/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/sql.py>`__,
-       `apps/plugin/plugin/api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/api.py>`__
+       `apps/llmtool/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/sql.py>`__,
+       `apps/llmtool/plugin/api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/api.py>`__
    * - 11. Mutating the system prompt
      - A plugin that adds its own system prompt when it is selected; a Markdown note added to the
        copy of the messages that is sent, never to the saved history; and MCP servers'
@@ -154,7 +154,7 @@ Making the LLM Do Things
        explains why the note goes into the copy.
        `Commit 86c0ecdc9 <https://github.com/smarter-sh/smarter/commit/86c0ecdc9c88d3490f1d1e3a88df584a8f9ee77a>`__
        added MCP servers.
-     - `apps/plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+     - `apps/llmtool/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
        (``customize_prompt()``),
        `openai_compatible_chat_provider.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
        (``openai_messages``, ``add_markdown_system_prompt()``, ``handle_plugin_selected()``,

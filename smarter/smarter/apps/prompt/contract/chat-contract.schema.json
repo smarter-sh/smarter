@@ -1909,7 +1909,7 @@
     },
     "PromptChatApiPluginMeta": {
       "additionalProperties": false,
-      "description": "A plugin's metadata: a :class:`smarter.apps.plugin.models.PluginMeta`.\n\nIts owner is left out: the configuration never includes a user's profile.",
+      "description": "A plugin's metadata: a :class:`smarter.apps.llmtool.models.PluginMeta`.\n\nIts owner is left out: the configuration never includes a user's profile.",
       "properties": {
         "annotations": {
           "anyOf": [
@@ -2034,7 +2034,7 @@
     },
     "PromptChatApiPluginSelection": {
       "additionalProperties": false,
-      "description": "A plugin selector's activation: a :class:`smarter.apps.plugin.models.PluginSelectorHistory`.",
+      "description": "A plugin selector's activation: a :class:`smarter.apps.llmtool.models.PluginSelectorHistory`.",
       "properties": {
         "created_at": {
           "anyOf": [

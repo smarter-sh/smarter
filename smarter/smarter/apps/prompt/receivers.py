@@ -8,8 +8,8 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from openai.types.chat.chat_completion import ChatCompletion
 
-from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.signals import plugin_deleting
+from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.utils import request_to_json

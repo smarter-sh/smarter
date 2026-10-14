@@ -189,16 +189,16 @@ An LLM is only as useful as the information it can get to. Smarter connects your
 to external data through every approach in use today. Each one is a :doc:`Resource <smarter-resources>`
 that you declare in a manifest, and none of them requires you to write code:
 
-- **Remote APIs**: an :doc:`API Plugin <smarter-resources/plugin/plugin/api>` calls your REST
+- **Remote APIs**: an :doc:`API Plugin <smarter-resources/llmtool/plugin/api>` calls your REST
   services, and authenticates with credentials that are stored as
   :doc:`Secrets <smarter-resources/smarter-secret>`, which the model never sees.
-- **Remote SQL**: a :doc:`SQL Plugin <smarter-resources/plugin/plugin/sql>` runs parameterized
+- **Remote SQL**: a :doc:`SQL Plugin <smarter-resources/llmtool/plugin/sql>` runs parameterized
   queries against your databases through a managed :doc:`Connection <smarter-resources/smarter-connection>`.
 - **MCP servers**: an :doc:`MCPClient <smarter-resources/smarter-mcpclient>` gives your application
   the tools of any server in the Model Context Protocol ecosystem.
-- **The web**: a :doc:`WebsearchPlugin <smarter-resources/plugin/plugin/websearch>` searches the web
+- **The web**: a :doc:`WebsearchPlugin <smarter-resources/llmtool/plugin/websearch>` searches the web
   and reads the pages it finds.
-- **Expertise**: a :doc:`SkillPlugin <smarter-resources/plugin/plugin/skill>` packages instructions
+- **Expertise**: a :doc:`SkillPlugin <smarter-resources/llmtool/plugin/skill>` packages instructions
   and reference material that teach a model how to do a specific job well.
 - **Your own documents**: a :doc:`Vectorstore <smarter-resources/smarter-vectorstore>` provides
   semantic search over your PDFs, manuals and other proprietary content. Smarter runs the vector
@@ -228,7 +228,7 @@ will eventually try to do something it should not. It does not rely on the model
 makes the dangerous actions impossible:
 
 - **No code execution.** Smarter never runs code written by a model, or by a third party, on its
-  own servers. A :doc:`SkillPlugin <smarter-resources/plugin/plugin/skill>` provides instructions,
+  own servers. A :doc:`SkillPlugin <smarter-resources/llmtool/plugin/skill>` provides instructions,
   not programs, and Smarter rejects any :doc:`MCPClient <smarter-resources/smarter-mcpclient>`
   that would launch an MCP server as a local process. Remote MCP servers run on their own
   infrastructure, not on yours.
@@ -373,7 +373,7 @@ At a glance
 
 - **Knowledge and tools**
 
-  - :doc:`API <smarter-resources/plugin/plugin/api>`, :doc:`SQL <smarter-resources/plugin/plugin/sql>`, :doc:`Websearch <smarter-resources/plugin/plugin/websearch>`, :doc:`Skill <smarter-resources/plugin/plugin/skill>`, and :doc:`Static <smarter-resources/plugin/plugin/static>` :doc:`Plugins <smarter-resources/smarter-plugin>`.
+  - :doc:`API <smarter-resources/llmtool/plugin/api>`, :doc:`SQL <smarter-resources/llmtool/plugin/sql>`, :doc:`Websearch <smarter-resources/llmtool/plugin/websearch>`, :doc:`Skill <smarter-resources/llmtool/plugin/skill>`, and :doc:`Static <smarter-resources/llmtool/plugin/static>` :doc:`Plugins <smarter-resources/smarter-llmtool>`.
   - :doc:`MCPClients <smarter-resources/smarter-mcpclient>` for the Model Context Protocol ecosystem.
   - :doc:`Vectorstores <smarter-resources/smarter-vectorstore>` for semantic search over your own content.
 

@@ -46,11 +46,11 @@ Current app packages include:
 - `smarter-guardrail-list`
 - `smarter-llmhost-compute-list`
 - `smarter-llmhost-list`
+- `smarter-llmtool-list`
 - `smarter-manifest-dropzone`
 - `smarter-manifest-editor`
 - `smarter-mcpclient-list`
 - `smarter-orchestrator-list`
-- `smarter-plugin-list`
 - `smarter-prompt-list`
 - `smarter-prompt-passthrough`
 - `smarter-provider-list`

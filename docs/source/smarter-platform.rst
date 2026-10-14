@@ -9,7 +9,7 @@ Smarter runs natively on :doc:`Kubernetes <smarter-framework/technologies/kubern
 the cloud at :doc:`Amazon Web Services (AWS) <smarter-framework/technologies/aws>`.
 It provides the necessary :doc:`infrastructure <smarter-platform/cloud-infrastructure>` and services to host and manage
 :doc:`AI-driven workflows, agents and llmclients <smarter-resources/smarter-llmclient>` that
-are :doc:`securely integrated <smarter-resources/smarter-plugin>` to
+are :doc:`securely integrated <smarter-resources/smarter-llmtool>` to
 enterprise data sources and systems.
 
 The Smarter platform's fundamental building blocks to this extent are:

@@ -584,7 +584,7 @@
       "type": "object"
     }
   },
-  "description": "Smarter API Manifest - ApiPlugin Model",
+  "description": "Smarter API Manifest - ApiPlugin Model.",
   "properties": {
     "apiVersion": {
       "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",

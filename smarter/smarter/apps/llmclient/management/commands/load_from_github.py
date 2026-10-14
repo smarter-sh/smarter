@@ -12,7 +12,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
-from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
+from smarter.apps.llmtool.manifest.controller import SAM_MAP, PluginController
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError

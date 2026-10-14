@@ -13,7 +13,7 @@ production platform for LLM applications that does all of this, and its code is 
 speaks the OpenAI API to every provider. Its `built-in functions
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions>`__ are
 tool calls with JSON Schema definitions. Its `plugins
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
 rewrite the system prompt when a prompt matches them. API keys are `encrypted Secrets
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__ and
 ``SecretStr`` settings, and its `Proxy
@@ -71,7 +71,7 @@ Source Code*.
 
 **Read.** :doc:`/smarter-framework/guides/openai-api-getting-started-guide`,
 :doc:`/smarter-framework/guides/openai-json-examples`, :doc:`/smarter-framework/smarter-chat`,
-:doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-resources/smarter-plugin`,
+:doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-resources/smarter-llmtool`,
 :doc:`/smarter-resources/smarter-secret`, :doc:`/smarter-resources/smarter-proxy`,
 :doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 008 </adr/008-function-calling>`,
 :doc:`ADR 031 </adr/031-pydantic-over-json>`.

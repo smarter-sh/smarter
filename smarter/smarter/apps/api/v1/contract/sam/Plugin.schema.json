@@ -273,7 +273,7 @@
       "type": "object"
     },
     "SAMPluginStaticSpec": {
-      "description": "Smarter API Plugin Manifest Plugin.spec",
+      "description": "Smarter API Plugin Manifest Plugin.spec.",
       "properties": {
         "data": {
           "$ref": "#/$defs/SAMPluginStaticSpecData",
@@ -297,7 +297,7 @@
       "type": "object"
     },
     "SAMPluginStaticSpecData": {
-      "description": "Smarter API Plugin Manifest Plugin.spec.data",
+      "description": "Smarter API Plugin Manifest Plugin.spec.data.",
       "properties": {
         "staticData": {
           "anyOf": [
@@ -318,7 +318,7 @@
       "type": "object"
     }
   },
-  "description": "Smarter API Manifest - Plugin",
+  "description": "Smarter API Manifest - Plugin.",
   "properties": {
     "apiVersion": {
       "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",

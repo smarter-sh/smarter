@@ -112,8 +112,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Knowledge.** Why models make things up. Grounding with
-       :doc:`Static </smarter-resources/plugin/plugin/static>` and
-       :doc:`Skill </smarter-resources/plugin/plugin/skill>` plugins.
+       :doc:`Static </smarter-resources/llmtool/plugin/static>` and
+       :doc:`Skill </smarter-resources/llmtool/plugin/skill>` plugins.
    * - 3
      - Lecture 8
      - **Retrieval.** Embeddings and similarity search, explained without mathematics. Loading
@@ -121,8 +121,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        with citations.
    * - 3
      - Lecture 9
-     - **Tools.** :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` and :doc:`API
-       </smarter-resources/plugin/plugin/api>` plugins. Smarter offers a plugin only when the prompt
+     - **Tools.** :doc:`Websearch </smarter-resources/llmtool/plugin/websearch>` and :doc:`API
+       </smarter-resources/llmtool/plugin/api>` plugins. Smarter offers a plugin only when the prompt
        matches one of its ``searchTerms`` (exactly, with a typo, or as a synonym), and the model
        then decides, from the plugin's description, whether to call it. Reading plugin selection and
        tool calls in the Console.
@@ -418,7 +418,7 @@ Recommended Texts
   agents.
 - **Background:** Ethan Mollick, *Co-Intelligence: Living and Working with AI* (Portfolio, 2024).
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-llmclient`,
-  :doc:`/smarter-resources/smarter-plugin`, :doc:`/smarter-resources/smarter-vectorstore`,
+  :doc:`/smarter-resources/smarter-llmtool`, :doc:`/smarter-resources/smarter-vectorstore`,
   :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-orchestrator` and
   :doc:`/smarter-platform/cost-accounting`.
 

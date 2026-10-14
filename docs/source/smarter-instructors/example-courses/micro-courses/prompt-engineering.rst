@@ -26,11 +26,11 @@ from the one-line `simple
 assistant to `customer_support
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
 a complete support agent with a persona, refusals, a skill, a tool and four guardrails; twenty
-`sample plugins <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/sample-plugins>`__;
+`sample plugins <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__;
 and eighteen `built-in guardrails
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__.
 Smarter also makes visible a point that most courses miss: a tool is used only after two
-decisions. Smarter :doc:`selects a plugin </smarter-resources/plugin/nlp>` when the prompt matches
+decisions. Smarter :doc:`selects a plugin </smarter-resources/llmtool/nlp>` when the prompt matches
 one of its search terms, exactly, with a typo or as a synonym, and only then does the model decide,
 from the plugin's description, whether to call it.
 
@@ -46,15 +46,15 @@ Orchestrator; and designing, branding and deploying an assistant for a real audi
 
 - `llmclient/data/llm-clients/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
   the built-in LLMClients, especially ``simple``, ``customer_support`` and ``weather``.
-- `plugin/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/sample-plugins>`__,
+- `plugin/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__,
   the sample Static, Skill, Websearch and ImageSearch plugins.
 - `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
   the built-in guardrails, each a short manifest that a non-programmer can read.
 
 Each course plan lists every manifest and file that it uses under *Smarter in the Source Code*.
 
-**Read.** :doc:`/smarter-resources/smarter-llmclient`, :doc:`/smarter-resources/smarter-plugin`,
-:doc:`/smarter-resources/plugin/nlp`, :doc:`/smarter-resources/llmclient/styles`,
+**Read.** :doc:`/smarter-resources/smarter-llmclient`, :doc:`/smarter-resources/smarter-llmtool`,
+:doc:`/smarter-resources/llmtool/nlp`, :doc:`/smarter-resources/llmclient/styles`,
 :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-framework/smarter-manifests`.
 
 **Exercises.**
@@ -64,10 +64,10 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
   that it should decline.
 - Run the same ten prompts at ``defaultTemperature`` 0 and 1, and on two models. Compare the
   answers, the tokens used and the cost.
-- Give an LLMClient knowledge with a :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>` or
-  a :doc:`Static Plugin </smarter-resources/plugin/plugin/static>`, and the ability to act with a
-  :doc:`Websearch Plugin </smarter-resources/plugin/plugin/websearch>` or an
-  :doc:`API Plugin </smarter-resources/plugin/plugin/api>`. Use the Console to see when Smarter
+- Give an LLMClient knowledge with a :doc:`SkillPlugin </smarter-resources/llmtool/plugin/skill>` or
+  a :doc:`Static Plugin </smarter-resources/llmtool/plugin/static>`, and the ability to act with a
+  :doc:`Websearch Plugin </smarter-resources/llmtool/plugin/websearch>` or an
+  :doc:`API Plugin </smarter-resources/llmtool/plugin/api>`. Use the Console to see when Smarter
   selects the plugin and when the model calls it, and how the search terms and the description
   each influence that.
 - Try to make an assistant go off topic, then add the built-in ``off_topic_input`` guardrail and

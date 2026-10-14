@@ -8,7 +8,7 @@ A Smarter Budget is a set of spending limits, in USD or in tokens, per hour, day
 and in total. It is enforced on each of the resources that it is attached to: a user, an
 :doc:`Account <smarter-account>`, an :doc:`LLMClient <smarter-llmclient>`, a
 :doc:`Provider <smarter-provider>`, a :doc:`Proxy <smarter-proxy>`, an
-:doc:`LLMHost <smarter-llmhost>` compute, a :doc:`Plugin <smarter-plugin>`, a
+:doc:`LLMHost <smarter-llmhost>` compute, a :doc:`Plugin <smarter-llmtool>`, a
 :doc:`Connection <smarter-connection>`, an :doc:`MCPClient <smarter-mcpclient>`, and more.
 
 When a resource's spending reaches a limit, Smarter refuses further requests that would be

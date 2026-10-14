@@ -34,29 +34,29 @@ from smarter.apps.llmhost.manifest.models.llmhost.const import (
 from smarter.apps.llmhost.manifest.models.llmhost_compute.const import (
     MANIFEST_KIND as LLM_HOST_COMPUTE_MANIFEST_KIND,
 )
+from smarter.apps.llmtool.manifest.models.api_plugin.const import (
+    MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
+)
+from smarter.apps.llmtool.manifest.models.image_search_plugin.const import (
+    MANIFEST_KIND as IMAGESEARCHPLUGIN_MANIFEST_KIND,
+)
+from smarter.apps.llmtool.manifest.models.skill_plugin.const import (
+    MANIFEST_KIND as SKILLPLUGIN_MANIFEST_KIND,
+)
+from smarter.apps.llmtool.manifest.models.sql_plugin.const import (
+    MANIFEST_KIND as SQLPLUGIN_MANIFEST_KIND,
+)
+from smarter.apps.llmtool.manifest.models.static_plugin.const import (
+    MANIFEST_KIND as STATICPLUGIN_MANIFEST_KIND,
+)
+from smarter.apps.llmtool.manifest.models.websearch_plugin.const import (
+    MANIFEST_KIND as WEBSEARCHPLUGIN_MANIFEST_KIND,
+)
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCP_CLIENT_MANIFEST_KIND,
 )
 from smarter.apps.orchestrator.manifest.models.orchestrator.const import (
     MANIFEST_KIND as ORCHESTRATOR_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.api_plugin.const import (
-    MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.image_search_plugin.const import (
-    MANIFEST_KIND as IMAGESEARCHPLUGIN_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.skill_plugin.const import (
-    MANIFEST_KIND as SKILLPLUGIN_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.sql_plugin.const import (
-    MANIFEST_KIND as SQLPLUGIN_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.static_plugin.const import (
-    MANIFEST_KIND as STATICPLUGIN_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.websearch_plugin.const import (
-    MANIFEST_KIND as WEBSEARCHPLUGIN_MANIFEST_KIND,
 )
 from smarter.apps.prompt.manifest.models.prompt.const import (
     MANIFEST_KIND as PROMPT_MANIFEST_KIND,

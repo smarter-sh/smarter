@@ -11,13 +11,13 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import get_cached_admin_user_for_account
-from smarter.apps.plugin.manifest.models.common.plugin.model import (
+from smarter.apps.llmtool.manifest.models.common.plugin.model import (
     SAMPluginCommonMetadata,
 )
-from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
-from smarter.apps.plugin.models import (
+from smarter.apps.llmtool.manifest.models.static_plugin.const import MANIFEST_KIND
+from smarter.apps.llmtool.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.llmtool.manifest.models.static_plugin.spec import SAMPluginStaticSpec
+from smarter.apps.llmtool.models import (
     PluginDataBase,
     PluginDataStatic,
     PluginMeta,

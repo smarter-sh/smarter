@@ -13,7 +13,7 @@ from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.contract.tests.mixins import OpenApiResponseMixin
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.prompt.api.v1.serializers import (
     PromptSerializer,
     PromptToolCallSerializer,
