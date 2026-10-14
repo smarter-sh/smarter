@@ -22,3 +22,4 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/napl-adding-llm-provider
    claude-code/getting-started-claude-code-as-coding-assistant
    claude-code/Getting-Started-With-Jean-Claude
+   claude-code/napl-claude-code-getting-started
