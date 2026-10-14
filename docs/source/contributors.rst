@@ -27,6 +27,8 @@ GitHub Repositories
      - `smarter-infrastructure (Terraform) <https://github.com/smarter-sh/smarter-infrastructure>`_
    * - `smarter-cli (Golang) <https://github.com/smarter-sh/smarter-cli>`_
      - `smarter-deploy (DockerHub) <https://github.com/smarter-sh/smarter-deploy>`_
+   * - `smarter-nodejs (npm) <https://github.com/smarter-sh/smarter-nodejs>`_
+     - `smarter-golang (Go) <https://github.com/smarter-sh/smarter-golang>`_
    * - `smarter-chat (React) <https://github.com/smarter-sh/smarter-chat>`_
      - some day™ 😄
 
