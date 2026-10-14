@@ -26,29 +26,44 @@ from smarter.apps.api.v1.contract.sam import (
     sam_schema_path,
     write_sam_schemas,
 )
+from smarter.apps.api.v1.contract.tests.mixins import REGENERATE, SKILL
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+
+FIX_EXAMPLE = (
+    "The example manifest is not valid under its kind's schema. To fix it, change the broker's "
+    "example_manifest() so that it is valid (or, if the example is right, the SAM model), then run "
+    f"`make api-contract` and commit the changed sam/ files. See 'Rules for example manifests' in {SKILL}."
+)
+"""What to do when a kind's example manifest is not valid under its schema."""
 
 
 class TestSamSchemas(ApiV1CliTestBase):
     """Test the committed SAM JSON Schemas against the models, and against the cli's responses."""
 
     def test_every_kind_has_a_model(self):
-        self.assertEqual(sorted(sam_models()), sorted(SAMKinds.all()))
+        self.assertEqual(
+            sorted(sam_models()),
+            sorted(SAMKinds.all()),
+            "Every kind in SAMKinds must have a broker in Brokers._brokers, and every broker a kind. "
+            "Register the missing one (see the skill smarter-sam-resource), then run `make api-contract`.",
+        )
 
     def test_committed_schemas_are_up_to_date(self):
         """The committed sam/<Kind>.schema.json files must be regenerated when a SAM model changes."""
         committed = sorted(
             path[: -len(SAM_SCHEMA_SUFFIX)] for path in os.listdir(SAM_SCHEMA_DIR) if path.endswith(SAM_SCHEMA_SUFFIX)
         )
-        self.assertEqual(committed, sorted(sam_models()), "Run `manage.py export_api_contract`.")
+        self.assertEqual(
+            committed, sorted(sam_models()), f"The committed sam/ files don't match the registered kinds. {REGENERATE}"
+        )
         for kind in sam_models():
             with self.subTest(kind=kind):
                 with open(sam_schema_path(kind), encoding="utf-8") as file:
                     self.assertEqual(
                         file.read(),
                         sam_schema_json(kind),
-                        f"sam/{kind}.schema.json is out of date. Run `manage.py export_api_contract`.",
+                        f"sam/{kind}.schema.json is out of date. {REGENERATE}",
                     )
 
     def test_committed_examples_are_up_to_date(self):
@@ -56,14 +71,16 @@ class TestSamSchemas(ApiV1CliTestBase):
         committed = sorted(
             path[: -len(SAM_EXAMPLE_SUFFIX)] for path in os.listdir(SAM_SCHEMA_DIR) if path.endswith(SAM_EXAMPLE_SUFFIX)
         )
-        self.assertEqual(committed, sorted(sam_models()), "Run `manage.py export_api_contract`.")
+        self.assertEqual(
+            committed, sorted(sam_models()), f"The committed sam/ files don't match the registered kinds. {REGENERATE}"
+        )
         for kind in sam_models():
             with self.subTest(kind=kind):
                 with open(sam_example_path(kind), encoding="utf-8") as file:
                     self.assertEqual(
                         file.read(),
                         sam_example_json(kind),
-                        f"sam/{kind}.example.json is out of date. Run `manage.py export_api_contract`.",
+                        f"sam/{kind}.example.json is out of date. {REGENERATE}",
                     )
 
     def test_committed_examples_are_valid(self):
@@ -74,8 +91,9 @@ class TestSamSchemas(ApiV1CliTestBase):
                     schema = json.load(file)
                 with open(sam_example_path(kind), encoding="utf-8") as file:
                     example = json.load(file)
-                self.assertNotIn("status", example)
-                self.assertEqual([error.message for error in Draft202012Validator(schema).iter_errors(example)], [])
+                self.assertNotIn("status", example, f"sam/{kind}.example.json has a status. {REGENERATE}")
+                errors = [error.message for error in Draft202012Validator(schema).iter_errors(example)]
+                self.assertEqual(errors, [], f"sam/{kind}.example.json: {FIX_EXAMPLE}")
 
     def test_example_without_a_manifest(self):
         response = JsonResponse({"error": "broken"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
@@ -111,7 +129,7 @@ class TestSamSchemas(ApiV1CliTestBase):
                         response[SmarterJournalApiResponseKeys.DATA]
                     )
                 ]
-                self.assertEqual(errors, [])
+                self.assertEqual(errors, [], f"{kind}: {FIX_EXAMPLE}")
 
     def test_write_sam_schemas_removes_stale_schemas(self):
         with tempfile.TemporaryDirectory() as directory:

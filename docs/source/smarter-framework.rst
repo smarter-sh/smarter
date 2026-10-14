@@ -36,7 +36,7 @@ the SDKs and the website integrations are grouped under
 design goals that the APIs and SDKs share.
 
 This section of the documentation provides the technical reference for the Smarter
-Development Framework, including its architecture, specifications, APIs, command-line
+Development Framework, including its :doc:`architecture <smarter-framework/architecture>`, specifications, APIs, command-line
 tools, SDKs, and supporting technologies.
 
 
@@ -45,6 +45,7 @@ tools, SDKs, and supporting technologies.
    :caption: Technical Reference
 
    smarter-framework/getting-started
+   smarter-framework/architecture
    smarter-framework/guides
    smarter-framework/apis-and-sdks
    smarter-framework/smarter-broker-model

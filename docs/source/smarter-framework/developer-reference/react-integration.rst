@@ -658,8 +658,8 @@ pipelines and advanced React development workflows.
   :caption: Technical Reference
 
   react-integration/dashboard
+  react-integration/llmclient-list
   react-integration/manifest-dropzone
-  react-integration/prompt-list
   react-integration/prompt-passthrough
   react-integration/smarter-chat
   react-integration/terminal-application

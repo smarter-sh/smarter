@@ -32,13 +32,13 @@ class PromptListView(SmarterAuthenticatedWebView):
     the React component that will render the list of LLMClients. The React
     component uses the views located in ./api for its data.
 
-      id="smarter-prompt-list-root"
+      id="smarter-llmclient-list-root"
       django-csrf-cookie-name="csrftoken"
       django-session-cookie-name="sessionid"
-      smarter-prompt-list-api-url="/prompt/api/llm-clients/"
+      smarter-llmclient-list-api-url="/prompt/api/llm-clients/"
     """
 
-    template_path = "react/prompt-list.html"
+    template_path = "react/llmclient-list.html"
 
     @property
     def formatted_class_name(self) -> str:
@@ -51,12 +51,12 @@ class PromptListView(SmarterAuthenticatedWebView):
         from smarter.apps.prompt.urls import PromptReverseNames
 
         context = {
-            "prompt_list": {
-                "root_id": "smarter-prompt-list-root",
+            "llmclient_list": {
+                "root_id": "smarter-llmclient-list-root",
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "prompt_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api_all),
+                "llmclient_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api_all),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }
