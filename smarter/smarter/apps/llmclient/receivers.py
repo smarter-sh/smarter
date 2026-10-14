@@ -7,8 +7,8 @@ from django.db import transaction
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
-from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.signals import plugin_deleting
+from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker

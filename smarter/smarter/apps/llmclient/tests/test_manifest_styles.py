@@ -14,7 +14,7 @@ from smarter.apps.llmclient.manifest.models.llmclient.styles import (
     validate_image_url_is_available,
     validate_length,
 )
-from smarter.apps.plugin.plugin.safe_http import SafeHttpError, SafeResponse
+from smarter.apps.llmtool.plugin.safe_http import SafeHttpError, SafeResponse
 from smarter.lib.manifest.models import client_manifest_validation
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

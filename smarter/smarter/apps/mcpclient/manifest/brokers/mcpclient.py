@@ -17,6 +17,7 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.mcpclient.caching import (
     invalidate_all_cached_mcpclients_for_user_profile,
     invalidate_cached_catalog,
@@ -37,7 +38,6 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.spec import (
 from smarter.apps.mcpclient.manifest.models.mcpclient.status import SAMMCPClientStatus
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.serializers import MCPClientSerializer
-from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches

@@ -13,7 +13,7 @@ Basic Usage
 .. code-block:: python
 
     from django.dispatch import receiver
-    from smarter.apps.plugin.signals import plugin_called
+    from smarter.apps.llmtool.signals import plugin_called
 
     @receiver(plugin_called, dispatch_uid="plugin_called")
     def handle_plugin_called(sender, plugin):

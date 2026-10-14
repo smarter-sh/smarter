@@ -93,10 +93,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 5 (30 min)
      - **Knowledge and tools.** Grounding with :doc:`Static
-       </smarter-resources/plugin/plugin/static>` and :doc:`Skill
-       </smarter-resources/plugin/plugin/skill>` plugins, and acting with :doc:`Websearch
-       </smarter-resources/plugin/plugin/websearch>` and :doc:`API
-       </smarter-resources/plugin/plugin/api>` plugins. Smarter offers a plugin only when the prompt
+       </smarter-resources/llmtool/plugin/static>` and :doc:`Skill
+       </smarter-resources/llmtool/plugin/skill>` plugins, and acting with :doc:`Websearch
+       </smarter-resources/llmtool/plugin/websearch>` and :doc:`API
+       </smarter-resources/llmtool/plugin/api>` plugins. Smarter offers a plugin only when the prompt
        matches one of its ``searchTerms``, and the model then decides, from the plugin's
        description, whether to call it.
    * - 2
@@ -334,7 +334,7 @@ Recommended Texts
   Week 1: chapters 1 to 4. Week 2: chapters 5 to 8.
 - **Background:** Ethan Mollick, *Co-Intelligence: Living and Working with AI* (Portfolio, 2024).
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-llmclient`,
-  :doc:`/smarter-resources/smarter-plugin`, :doc:`/smarter-resources/smarter-guardrail`,
+  :doc:`/smarter-resources/smarter-llmtool`, :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/llmclient/styles` and :doc:`/smarter-framework/smarter-manifests`.
 
 Further Study

@@ -44,7 +44,7 @@ from mcp.client import Transport
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 
-from smarter.apps.plugin.plugin.safe_http import is_loopback_host, validate_public_url
+from smarter.apps.llmtool.plugin.safe_http import is_loopback_host, validate_public_url
 from smarter.common.conf import smarter_settings
 from smarter.common.const import VERSION, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
@@ -158,7 +158,7 @@ def validate_endpoint_url(url: str) -> None:
     ``https://127.0.0.1/``, is permitted, on any port, so that a developer's MCPClients can
     reach MCP servers that run on their machine, such as the platform's own. Every other
     URL, and every URL in every other environment, must pass
-    :func:`~smarter.apps.plugin.plugin.safe_http.validate_public_url`. Loopback hosts are
+    :func:`~smarter.apps.llmtool.plugin.safe_http.validate_public_url`. Loopback hosts are
     never permitted in a deployed environment, where they would let an MCPClient reach the
     services of the Smarter server itself.
 

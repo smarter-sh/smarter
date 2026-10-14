@@ -101,7 +101,7 @@ class names its views differently, add a small adapter class (see
 - **`smarter.lib.django.shortcuts.reverse(ns, name, kwargs=...)` is broken with
   kwargs.** Use Django's `reverse(f"{ns}:{name}", kwargs=...)`.
 - **GitHub rate limits.** Tests that load plugins from GitHub must wrap them in
-  `mock_remote_skills()` (`smarter/smarter/apps/plugin/plugin/tests/base_classes.py`).
+  `mock_remote_skills()` (`smarter/smarter/apps/llmtool/plugin/tests/base_classes.py`).
 - **Deployed LLMClient hosts don't resolve locally.** A request with
   `HTTP_HOST=<name>.<account>.api...` never finds its LLMClient in the dev stack
   (see `smarter-docker-environment`). To test what a deployed host serves, call

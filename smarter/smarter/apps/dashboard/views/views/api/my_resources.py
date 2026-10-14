@@ -72,10 +72,10 @@ from smarter.apps.llmclient.models import (
     LLMClientAPIKey,
     LLMClientCustomDomain,
 )
-from smarter.apps.plugin.models import (
+from smarter.apps.llmtool.models import (
     PluginMeta,
 )
-from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.urls import ProviderReverseNames

@@ -566,7 +566,7 @@ def get_users_for_account(account: Account) -> list[User]:
     if not account:
         raise SmarterValueError("Account is required")
     users = User.objects.filter(user_profile__account=account)
-    return [user for user in users]
+    return [*users]
 
 
 def get_user_profiles_for_account(account: Account) -> list[UserProfile]:
@@ -621,7 +621,7 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     .. code-block:: python
 
         from smarter.apps.account.models import UserProfile
-        from smarter.apps.plugin.utils import valid_plugin_owners_for_user
+        from smarter.apps.llmtool.utils import valid_plugin_owners_for_user
 
         user_profile = UserProfile.objects.get(user__username="exampleuser")
         owners = valid_plugin_owners_for_user(user_profile)

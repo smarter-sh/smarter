@@ -82,9 +82,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 3 (30 min)
      - **Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL Plugin
-       </smarter-resources/plugin/plugin/sql>` runs a fixed, parameterized query that the model can
+       </smarter-resources/llmtool/plugin/sql>` runs a fixed, parameterized query that the model can
        only fill in (`stackademy_sql
-       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__),
+       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__),
        and a SkillPlugin teaches the model a schema so that it writes SQL for a person to review
        (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
        with a read-only database user, its password in a :doc:`Secret
@@ -95,10 +95,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        break it, and diagnose why. Start Assignment 1.
    * - 2
      - Lecture 4 (30 min)
-     - **Tools.** Function calling, :doc:`API </smarter-resources/plugin/plugin/api>` and
-       :doc:`Websearch </smarter-resources/plugin/plugin/websearch>` plugins. Plugin selection by
+     - **Tools.** Function calling, :doc:`API </smarter-resources/llmtool/plugin/api>` and
+       :doc:`Websearch </smarter-resources/llmtool/plugin/websearch>` plugins. Plugin selection by
        search terms decides which tools Smarter offers, and their descriptions steer which ones
-       the model calls (:doc:`/smarter-resources/plugin/nlp`).
+       the model calls (:doc:`/smarter-resources/llmtool/nlp`).
    * - 2
      - Lecture 5 (30 min)
      - **MCP.** The `Model Context Protocol <https://modelcontextprotocol.io/>`__, its servers and
@@ -340,7 +340,7 @@ Recommended Texts
   2024), chapter 8 on semantic search and retrieval, for students who want the mechanics.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-vectorstore`,
   :doc:`/smarter-resources/smarter-mcpclient`, :doc:`/smarter-resources/smarter-connection`,
-  :doc:`/smarter-resources/plugin/plugin/sql` and :doc:`/smarter-resources/smarter-orchestrator`.
+  :doc:`/smarter-resources/llmtool/plugin/sql` and :doc:`/smarter-resources/smarter-orchestrator`.
 
 Further Study
 -------------
