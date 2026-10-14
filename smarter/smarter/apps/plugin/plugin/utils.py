@@ -259,7 +259,9 @@ class PluginExamples:
     def __init__(self, *args, **kwargs):
         """Initialize the class."""
         self._plugin_examples = []
-        for file in os.listdir(self.PLUGINS_PATH):
+        # sorted, because os.listdir() order depends on the filesystem, and the
+        # api contract's committed LLMClient example lists these names.
+        for file in sorted(os.listdir(self.PLUGINS_PATH)):
             if file.endswith(".yaml"):
                 plugin_example = PluginExample(filepath=self.PLUGINS_PATH, filename=file)
                 self._plugin_examples.append(plugin_example)

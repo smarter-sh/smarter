@@ -10,7 +10,9 @@ language can be generated from it rather than written by hand:
   :doc:`Smarter Python SDK <../smarter-python>` call.
 
 Both are generated from the platform's Pydantic models, so they can't drift from what the platform
-actually does. They are written for SDK authors, and for backend developers. If you change a SAM
+actually does. This page is the technical reference, written for SDK authors and for backend
+developers. For an introduction, see :doc:`Smarter OpenAPI Contract <../smarter-openapi>`, and for the
+design goals that the contract and its clients share, :doc:`Smarter APIs and SDKs <../apis-and-sdks>`. If you change a SAM
 model, the :doc:`journal's <smarter-journal>` response envelope, the
 :doc:`chat contract <../smarter-chat/api-contract>`, or a route that the document covers, read this
 page first.
@@ -260,35 +262,11 @@ The cli api's errors are the journal's error response. The chat api's are the ch
 ``RestApiErrorResponse``. A failed connection to an MCP server adds the MCPClient's connection status
 beside its ``detail``. Each operation's ``default`` response names its error's schema.
 
-The Swagger page
-~~~~~~~~~~~~~~~~
+Clients
+-------
 
-The live Swagger and Redoc pages (``/docs/swagger/`` and ``/docs/redoc/``) are a different thing.
-drf-yasg generates them from the views, in OpenAPI 2, for every api of the platform, including the
-REST writes, but with untyped request and response bodies. The *OpenAPI Contract* page
-(``/docs/openapi/``) renders the typed document. Generate clients from ``openapi.json``.
-
-
-Generating a Client
--------------------
-
-Any OpenAPI 3.1 or JSON Schema 2020-12 tool can read the contract, from a checkout or from a
-running platform. For example, the TypeScript types of the whole api:
-
-.. code-block:: console
-
-   npx openapi-typescript smarter/smarter/apps/api/v1/contract/openapi.json -o smarter.d.ts
-   npx openapi-typescript https://platform.example.com/docs/openapi.json -o smarter.d.ts
-
-The Python SDK copies the contract from a checkout of the platform, at a commit or a release tag
-(``make contracts SMARTER_REF=v0.20.0``), and generates its manifest models from the SAM schemas
-with datamodel-code-generator (``make sam-models``). Its tests parse every kind's committed example
-with its generated model, and check that every cli request that it sends is an operation of
-``openapi.json``. No running platform is needed.
-
-Some generators read only OpenAPI 3.0. oapi-codegen, for Go, is one of them: it rejects the 3.1
-forms of ``exclusiveMinimum`` and ``exclusiveMaximum``. For those, generate types from the SAM
-schemas directly, or use a generator that supports 3.1.
+The live Swagger and Redoc pages, and how to generate a client from ``openapi.json``, are on the
+user-facing :doc:`Smarter OpenAPI Contract <../smarter-openapi>` page.
 
 
 Technical Reference
