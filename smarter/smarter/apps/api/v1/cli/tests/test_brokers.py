@@ -1,5 +1,7 @@
 """Test Api v1 CLI brokers.py coverage gaps."""
 
+import inspect
+
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -42,3 +44,42 @@ class TestApiCliV1Brokers(SmarterTestBase):
         all_kinds = SAMKinds.all()
 
         self.assertEqual(set(all_brokers), set(all_kinds))
+
+    def test_deployable_matches_deploy(self):
+        """
+        Test that a broker is deployable exactly when its deploy() is implemented.
+
+        deploy() is unimplemented when it raises SAMBrokerErrorNotImplemented, as
+        AbstractBroker's does; a broker that refuses with any other error would
+        hide that from this test. The cli api's resources command reports each
+        kind's deployable, and the smarter cli builds its deploy commands from it.
+        """
+        for kind in Brokers.all_brokers():
+            broker_class = Brokers.get_broker(kind)
+            with self.subTest(kind=kind):
+                source = inspect.getsource(broker_class.deploy)
+                implemented = "SAMBrokerErrorNotImplemented" not in source and "not implemented" not in source
+                self.assertEqual(
+                    implemented,
+                    broker_class.deployable,
+                    f"{broker_class.__name__}.deploy() is {'implemented' if implemented else 'not implemented'}, "
+                    f"but {broker_class.__name__}.deployable is {broker_class.deployable}",
+                )
+
+    def test_deployable_kinds(self):
+        """Test the kinds whose brokers deploy, so that a change to them is deliberate."""
+        deployable = sorted(kind for kind in Brokers.all_brokers() if Brokers.get_broker(kind).deployable)
+        self.assertEqual(
+            deployable,
+            sorted(
+                [
+                    SAMKinds.AUTH_TOKEN.value,
+                    SAMKinds.CUSTOM_DOMAIN.value,
+                    SAMKinds.LLM_CLIENT.value,
+                    SAMKinds.LLM_HOST.value,
+                    SAMKinds.LLM_HOST_COMPUTE.value,
+                    SAMKinds.USER.value,
+                    SAMKinds.VECTORSTORE.value,
+                ]
+            ),
+        )
