@@ -22,7 +22,7 @@ Usage
 Works like kubectl, the Smarter cli uses a verb-noun command structure to
 interact with Smarter resources. The general format is:
 
-.. code-block:: shell
+.. code-block:: text
 
   smarter [command] [flags]
 

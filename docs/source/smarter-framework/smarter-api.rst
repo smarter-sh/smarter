@@ -43,7 +43,7 @@ See :doc:`developer-reference/lib/django/hosts` for more details.
 .. literalinclude:: ../../../smarter/smarter/apps/api/v1/urls.py
    :language: python
    :linenos:
-   :lines: 28-
+   :start-at: from django.urls import include, path
 
 
 .. toctree::
