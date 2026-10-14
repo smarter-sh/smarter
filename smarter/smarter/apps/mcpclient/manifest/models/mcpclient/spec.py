@@ -42,6 +42,7 @@ from smarter.apps.mcpclient.manifest.enum import (
     SAMMCPClientAuthType,
     SAMMCPClientTransport,
 )
+from smarter.apps.plugin.plugin.safe_http import is_loopback_host
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
@@ -88,8 +89,10 @@ def validate_endpoint_url(url: str) -> str:
     """
     Validate an MCP server's endpoint URL.
 
-    The URL must be https, on the standard port, without credentials or a fragment.
-    Whether its host has a public address is verified each time Smarter connects.
+    The URL must be https, without credentials or a fragment, and may name a port. A
+    loopback host, e.g. ``http://localhost:9357/``, may also be http, because no TLS
+    certificate is issued for it. Whether Smarter may connect to the URL is verified each
+    time it connects: see :func:`smarter.apps.mcpclient.connection.validate_endpoint_url`.
 
     :param url: The URL.
     :returns: The URL.
@@ -97,15 +100,15 @@ def validate_endpoint_url(url: str) -> str:
     """
     try:
         parsed = urlparse(url)
-        port = parsed.port
+        _ = parsed.port  # raises ValueError if the port is not a number from 0 to 65535
     except ValueError as e:
         raise SAMValidationError(f"endpointUrl: '{url}' is not a valid URL.") from e
-    if parsed.scheme != "https" or not parsed.hostname:
+    if not parsed.hostname:
         raise SAMValidationError(f"endpointUrl: '{url}' must be an https URL.")
+    if parsed.scheme != "https" and not (parsed.scheme == "http" and is_loopback_host(parsed.hostname)):
+        raise SAMValidationError(f"endpointUrl: '{url}' must be an https URL, or an http URL of localhost.")
     if parsed.username or parsed.password:
         raise SAMValidationError("endpointUrl: must not contain credentials. Use credentials instead.")
-    if port not in (None, 443):
-        raise SAMValidationError(f"endpointUrl: '{url}' must use the standard https port.")
     if parsed.fragment:
         raise SAMValidationError(f"endpointUrl: '{url}' must not contain a fragment.")
     return url

@@ -75,8 +75,10 @@ tested against the platform's real responses:
 The few routes that the document leaves out are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason: web console
 actions, whose clients use manifests instead, passthroughs to LLM providers' own apis, and routes
-that aren't implemented yet. The families that it leaves out, only the views that the platform's
-unit tests call, are listed in :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
+that aren't implemented yet. The families that it leaves out, the views that the platform's unit
+tests call, and the :doc:`Smarter Project MCP server <../../smarter-platform/smarter-project-mcp-server>`,
+whose protocol the Model Context Protocol specification defines, are listed in
+:data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 
 Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with Swagger
 UI at ``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The

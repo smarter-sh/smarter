@@ -1,0 +1,86 @@
+# The files of the test repositories of the mcpserver tests. base_classes.py stores them with
+# indexer.store_files(), and test_indexer.py packs them into a GitHub-style tar archive.
+docs:
+  - path: README.md
+    content: |
+      # Test Platform
+
+      The Test Platform builds governed AI applications from yaml manifests.
+      Read the documentation at docs/source.
+  - path: docs/source/index.rst
+    content: |
+      Test Platform Documentation
+      ===========================
+
+      Welcome to the Test Platform. It deploys LLMClients from manifests.
+  - path: docs/source/custom-domains.rst
+    content: |
+      Custom Domains
+      ==============
+
+      A custom domain gives an LLMClient its own host name.
+
+      Verification
+      ------------
+
+      Custom domain verification checks the domain's DNS records every hour.
+      When verification succeeds, the platform issues a certificate for the custom domain.
+      A custom domain that fails verification for a week is deactivated.
+  - path: docs/source/guides/getting-started.md
+    content: |
+      # Getting Started
+
+      Install the cli, then apply your first manifest with `apply -f manifest.yaml`.
+  - path: LICENSE
+    content: |
+      The test license. Permission is granted to apply this software.
+  - path: platform/apps/domains/verification.py
+    content: |
+      """Custom domain verification."""
+
+
+      def verify_custom_domain(domain: str) -> bool:
+          """Verify a custom domain's DNS records."""
+          records = lookup_dns_records(domain)
+          return bool(records)
+
+
+      def lookup_dns_records(domain: str) -> list[str]:
+          """Return the DNS records of a domain."""
+          return [domain]
+  - path: platform/apps/domains/models.py
+    content: |
+      class CustomDomain:
+          """A custom domain of an LLMClient."""
+
+          name = "custom_domain"
+  - path: platform/settings.py
+    content: |
+      ENVIRONMENT_PLATFORM_DOMAIN = "platform.example.com"
+code:
+  - path: README.md
+    content: |
+      # Test CLI
+
+      The test command-line interface applies manifests.
+  - path: cmd/apply.go
+    content: |
+      package cmd
+
+      // applyCmd applies a manifest.
+      var applyCmd = &cobra.Command{
+      	Use:   "apply -f <manifest.yaml>",
+      	Short: "Apply a manifest",
+      }
+
+      func readManifest(path string) (string, error) {
+      	return path, nil
+      }
+  - path: cmd/delete.go
+    content: |
+      package cmd
+
+      // deleteCmd deletes a resource.
+      var deleteCmd = &cobra.Command{
+      	Use: "delete <kind> <name>",
+      }
