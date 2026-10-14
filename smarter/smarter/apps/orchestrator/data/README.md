@@ -1,3 +1,5 @@
-# Built in Orchestrators and Plugins
+# Built-in Orchestrators
 
-You'll find these in /home/smarter_user/data/manifests/ inside the Docker container.
+Reserved for built-in Orchestrator manifests. There are none yet. When there are, a
+`manage.py add_builtin_orchestrators` command will apply them, as `add_builtin_guardrails`
+does for `../../guardrail/data/guardrails/`.

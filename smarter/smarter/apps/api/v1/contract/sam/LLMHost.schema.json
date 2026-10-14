@@ -28,6 +28,12 @@
         "apiFormat": {
           "default": "openai_compatible",
           "description": "LLMHost.spec.engine.apiFormat[str]: the wire protocol. One of: ['openai_compatible', 'huggingface', 'ollama_native', 'custom'].",
+          "enum": [
+            "openai_compatible",
+            "huggingface",
+            "ollama_native",
+            "custom"
+          ],
           "title": "Apiformat",
           "type": "string"
         },
@@ -134,6 +140,15 @@
         },
         "name": {
           "description": "LLMHost.spec.engine.name[str]: the inference server. One of: ['vllm', 'tgi', 'sglang', 'llama_cpp', 'ollama', 'tei', 'custom'].",
+          "enum": [
+            "vllm",
+            "tgi",
+            "sglang",
+            "llama_cpp",
+            "ollama",
+            "tei",
+            "custom"
+          ],
           "title": "Name",
           "type": "string"
         },
@@ -424,6 +439,19 @@
         "quantization": {
           "default": "none",
           "description": "LLMHost.spec.model.quantization[str]: the weights' precision. One of: ['none', 'fp32', 'fp16', 'bf16', 'fp8', 'mxfp4', 'int8', 'int4', 'gguf', 'awq', 'gptq'].",
+          "enum": [
+            "none",
+            "fp32",
+            "fp16",
+            "bf16",
+            "fp8",
+            "mxfp4",
+            "int8",
+            "int4",
+            "gguf",
+            "awq",
+            "gptq"
+          ],
           "title": "Quantization",
           "type": "string"
         },
@@ -461,12 +489,23 @@
         "source": {
           "default": "huggingface",
           "description": "LLMHost.spec.model.source[str]: where the weights come from. One of: ['huggingface', 'ollama', 's3', 'url', 'pvc'].",
+          "enum": [
+            "huggingface",
+            "ollama",
+            "s3",
+            "url",
+            "pvc"
+          ],
           "title": "Source",
           "type": "string"
         },
         "task": {
           "default": "text-generation",
           "description": "LLMHost.spec.model.task[str]: what the model does. One of: ['text-generation', 'embedding'].",
+          "enum": [
+            "text-generation",
+            "embedding"
+          ],
           "title": "Task",
           "type": "string"
         },
@@ -961,6 +1000,11 @@
         "accessMode": {
           "default": "ReadWriteOnce",
           "description": "LLMHost.spec.storage.accessMode[str]: One of: ['ReadWriteOnce', 'ReadWriteMany', 'ReadOnlyMany'].",
+          "enum": [
+            "ReadWriteOnce",
+            "ReadWriteMany",
+            "ReadOnlyMany"
+          ],
           "title": "Accessmode",
           "type": "string"
         },
