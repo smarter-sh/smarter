@@ -34,6 +34,17 @@ type. They prompt an LLMClient, which makes billable LLM requests, and they neve
 
    SMARTER_BASE_URL=http://localhost:9357 SMARTER_API_KEY=<api key> make test-live
 
+Releases
+--------
+
+The SDK is released as the `Smarter Chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__
+component is. semantic-release versions it from its conventional commits on each push to ``main``,
+and as a prerelease on each push to ``alpha`` or ``beta``: it writes the version to ``package.json``
+and ``src/version.ts``, adds the release notes to ``CHANGELOG.md``, tags the commit and creates a
+GitHub release. It does not publish to npm. A maintainer publishes a release on ``main`` to the
+``@smarter.sh`` scope of the public npm registry with ``make release``, which runs the tests, builds
+the package and runs ``npm publish --access public``.
+
 Keeping in step with the platform
 ---------------------------------
 

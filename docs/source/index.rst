@@ -343,7 +343,7 @@ clients have no access to the platform that your code doesn't have.
   tested against its real responses. Generate a client in any language from it.
 - **Official SDKs and tools.** The :doc:`Python SDK <smarter-framework/smarter-python>`
   (``pip install smarter-api``), the :doc:`Node.js SDK <smarter-framework/smarter-nodejs>`
-  (``npm install smarter-api``), the :doc:`Go SDK <smarter-framework/smarter-golang>`, the
+  (``npm install @smarter.sh/api``), the :doc:`Go SDK <smarter-framework/smarter-golang>`, the
   :doc:`CLI <smarter-framework/smarter-cli>`, a
   `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_,
   and a :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat
@@ -394,7 +394,7 @@ At a glance
   - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
   - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
-  - :doc:`APIs and SDKs <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python <smarter-framework/smarter-python>` (``pip install smarter-api``), :doc:`Node.js <smarter-framework/smarter-nodejs>` (``npm install smarter-api``) and :doc:`Go <smarter-framework/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
+  - :doc:`APIs and SDKs <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python <smarter-framework/smarter-python>` (``pip install smarter-api``), :doc:`Node.js <smarter-framework/smarter-nodejs>` (``npm install @smarter.sh/api``) and :doc:`Go <smarter-framework/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
 
 
 Usage
