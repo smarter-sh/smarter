@@ -157,7 +157,7 @@ class GuardrailExamples:
     def __init__(self, *args, **kwargs):
         """Initialize the class."""
         self._guardrail_examples = []
-        for file in os.listdir(self.GUARDRAILS_PATH):
+        for file in sorted(os.listdir(self.GUARDRAILS_PATH)):
             if file.endswith(".yaml"):
                 guardrail_example = GuardrailExample(filepath=self.GUARDRAILS_PATH, filename=file)
                 self._guardrail_examples.append(guardrail_example)
