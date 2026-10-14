@@ -5,7 +5,7 @@ Every Smarter platform documents its api in the web console's sidebar:
 
 - **OpenAPI Contract** (``/docs/openapi/``) renders the typed OpenAPI 3.1 document of the Smarter api,
   which is also served as ``/docs/openapi.json``, to generate clients and SDKs from. See
-  :doc:`api-contract`.
+  :doc:`../smarter-openapi`, and :doc:`api-contract` for its technical reference.
 - **Swagger** (``/docs/swagger/``) and **Redoc** (``/docs/redoc/``) are generated from the
   platform's views, in OpenAPI 2, and cover every endpoint, but without typed request and response
   bodies.
