@@ -357,6 +357,6 @@ Troubleshooting
    - :doc:`claude-code-getting-started-guide`
    - :doc:`/smarter-platform/adding-an-llm-provider`
    - :doc:`/smarter-resources/smarter-llmclient`
-   - :doc:`/smarter-resources/smarter-plugin`
+   - :doc:`/smarter-resources/smarter-llmtool`
    - :doc:`/smarter-framework/smarter-cli`
    - `Anthropic Claude Documentation <https://docs.anthropic.com/>`_

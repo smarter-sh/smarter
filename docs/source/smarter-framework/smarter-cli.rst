@@ -195,7 +195,7 @@ Code samples
 - Abstract
   `broker <../smarter/smarter/apps/api/v0/manifests/broker.py>`__
 - Example implementation for Plugin
-  `broker <../smarter/smarter/apps/plugin/api/v0/manifests/broker.py>`__
+  `broker <../smarter/smarter/apps/llmtool/api/v0/manifests/broker.py>`__
 
 Controller Model
 ~~~~~~~~~~~~~~~~
@@ -207,5 +207,5 @@ subclass.
 - Abstract
   `controller <../smarter/smarter/apps/api/v0/cli/controller.py>`__
 - Example implementation for Plugin
-  `controller <../smarter/smarter/apps/plugin/controller.py>`__ as an
+  `controller <../smarter/smarter/apps/llmtool/controller.py>`__ as an
   example.

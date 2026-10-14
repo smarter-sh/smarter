@@ -39,10 +39,10 @@ from smarter.apps.llmclient.models import (
     LLMClientMCPClients,
     LLMClientPlugin,
 )
+from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.signals import broker_ready
+from smarter.apps.llmtool.utils import get_plugin_examples_by_name
 from smarter.apps.mcpclient.models import MCPClient
-from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.signals import broker_ready
-from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging

@@ -7,7 +7,7 @@ shaped for agents: nearly all of its new code is now designed, written and teste
 from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the eighteen
 `Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__ in ``skills/``, and its
 git history shows it: since late September 2026, most commits have been authored by Claude. Its
-:doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>` was built by Claude Code in
+:doc:`ImageSearchPlugin </smarter-resources/llmtool/plugin/image-search>` was built by Claude Code in
 a live class demonstration, from the request to a `merged pull request
 <https://github.com/smarter-sh/smarter/pull/775>`__ with tests and documentation. Students read the
 instructions that make this work, delegate real tasks in their own fork, review the results as they
@@ -102,7 +102,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        caching rules added by `commit eeb7a7a19
        <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__,
        the zsh word-splitting trap behind ``sync-changed-files.sh``, and the same format reused
-       as a product feature in the :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>`.
+       as a product feature in the :doc:`SkillPlugin </smarter-resources/llmtool/plugin/skill>`.
    * - 7
      - 45
      - **Lab 3: With and without.** Give the same task to the agent twice, once with the skills

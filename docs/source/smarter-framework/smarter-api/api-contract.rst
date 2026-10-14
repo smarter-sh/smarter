@@ -221,7 +221,7 @@ Their responses are built from each app's contract models, e.g.
 :mod:`smarter.apps.llmclient.contract.models`, which are models of the rows, built from them by
 ``from_model()``. Shared parts live with the app that owns them: a resource's owner in
 :mod:`smarter.apps.account.contract.models`, and a plugin's metadata in
-:mod:`smarter.apps.plugin.contract.models`. The models describe the JSON that the views returned
+:mod:`smarter.apps.llmtool.contract.models`. The models describe the JSON that the views returned
 before they were modeled, which clients already read, with two corrections:
 
 - ``canDelete`` is computed for the requesting user, for every family. The

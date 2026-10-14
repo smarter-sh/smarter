@@ -8,7 +8,7 @@ future high-traffic scenarios.
 """
 
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text

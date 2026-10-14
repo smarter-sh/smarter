@@ -31,7 +31,7 @@ How You Ask
   front: which tests must pass, what mustn't change, whether a migration is
   allowed, what needs documenting. An unstated constraint is the most common
   reason a correct-looking change has to be redone.
-- **Point at an example.** "Do it the way ``smarter-plugin-list`` does it" is
+- **Point at an example.** "Do it the way ``smarter-llmtool-list`` does it" is
   worth several paragraphs of description.
 - **Plan large changes before writing them.** For work that spans several
   apps, ask for a plan first (Claude Code has a plan mode for this), correct

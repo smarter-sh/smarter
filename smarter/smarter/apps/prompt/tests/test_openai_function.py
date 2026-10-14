@@ -14,9 +14,9 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.signals import plugin_called, plugin_selected
+from smarter.apps.llmtool.manifest.controller import PluginController
+from smarter.apps.llmtool.nlp import does_refer_to
+from smarter.apps.llmtool.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.models import Prompt, PromptHistory, PromptPluginUsage
 from smarter.apps.prompt.signals import (
     chat_response,

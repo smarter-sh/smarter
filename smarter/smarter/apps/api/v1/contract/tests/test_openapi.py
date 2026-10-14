@@ -48,12 +48,12 @@ from smarter.apps.llmclient.models import (
     LLMClientFunctions,
     LLMClientPlugin,
 )
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.mcpclient.caching import invalidate_cached_catalog
 from smarter.apps.mcpclient.connection import MCPServerConnection
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.tests.base_classes import mock_mcp_server
-from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.const import PROJECT_ROOT
 from smarter.lib.drf.models import SmarterAuthToken

@@ -70,7 +70,7 @@ const FEATURES: Feature[] = [
     name: "WebsearchPlugin",
     version: "0.16",
     description: "Let LLMs search the web using services like Tavily",
-    docsPath: "smarter-resources/plugin/plugin/websearch.html",
+    docsPath: "smarter-resources/llmtool/plugin/websearch.html",
   },
   {
     name: "Guardrails",
@@ -88,7 +88,7 @@ const FEATURES: Feature[] = [
     name: "SkillPlugin",
     version: "0.15",
     description: "Agent Skills (SKILL.md), inline or sourced from GitHub",
-    docsPath: "smarter-resources/plugin/plugin/skill.html",
+    docsPath: "smarter-resources/llmtool/plugin/skill.html",
   },
 ];
 

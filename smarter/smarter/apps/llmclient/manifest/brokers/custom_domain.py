@@ -35,7 +35,7 @@ from smarter.apps.llmclient.models import (
     LLMClientCustomDomainDNS,
 )
 from smarter.apps.llmclient.serializers import LLMClientCustomDomainListSerializer
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

@@ -114,7 +114,7 @@ full: each body explains what was wrong, what changed, and how it was tested.
        Pydantic manifest models, broker, migrations, sample manifests, React fixes, docs and
        tests, merged in pull request #775.
      - `commit 1da6bccc3 <https://github.com/smarter-sh/smarter/commit/1da6bccc3847f0d06e1b801496cbb838cffb0dab>`__,
-       `plugin/plugin/image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/image_search.py>`__,
+       `plugin/plugin/image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/image_search.py>`__,
        `PR #775 <https://github.com/smarter-sh/smarter/pull/775>`__
    * - A mistake turned into a skill
      - A fix for caching design mistakes in plugins and the MCP client, which also added the
@@ -127,11 +127,11 @@ full: each body explains what was wrong, what changed, and how it was tested.
      - `commit bcd679acd <https://github.com/smarter-sh/smarter/commit/bcd679acdd4859faa70aa7defcc20386ce14bd3e>`__
    * - Skills as a product feature
      - The same Agent Skills format is a Smarter resource: a
-       :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>` gives an LLMClient a skill,
+       :doc:`SkillPlugin </smarter-resources/llmtool/plugin/skill>` gives an LLMClient a skill,
        fetched from GitHub through the hardened HTTP client. The SkillPlugin was itself designed
        and written by Claude Code.
-     - `plugin/plugin/skill.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/skill.py>`__,
-       `plugin/plugin/skill_sources.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/skill_sources.py>`__
+     - `plugin/plugin/skill.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/skill.py>`__,
+       `plugin/plugin/skill_sources.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/skill_sources.py>`__
    * - Attribution
      - The commit skill sets out who is the author, who is the co-author, and the
        ``Co-Authored-By`` trailers, and forbids the agent from committing at all.
