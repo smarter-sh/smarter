@@ -1,0 +1,637 @@
+# pylint: disable=R0801,W0613
+"""Test plugin base class."""
+
+import copy
+from time import sleep
+
+from pydantic_core import ValidationError as PydanticValidationError
+
+from smarter.apps.account.models import UserProfile
+from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.llmtool.manifest.controller import (
+    PLUGIN_MAP,
+    PluginController,
+    PluginType,
+)
+from smarter.apps.llmtool.manifest.enum import (
+    SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginCommonSpecSelectorKeys,
+    SAMPluginSpecKeys,
+)
+from smarter.apps.llmtool.models import (
+    PLUGIN_DATA_MAP,
+    PluginDataType,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
+from smarter.apps.llmtool.plugin.base import SmarterPluginError
+from smarter.apps.llmtool.plugin.tests.base_classes import mock_remote_skills
+from smarter.apps.llmtool.plugin.utils import PluginExamples
+from smarter.apps.llmtool.serializers import (
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+    PluginStaticSerializer,
+)
+from smarter.apps.llmtool.signals import (
+    plugin_called,
+    plugin_cloned,
+    plugin_created,
+    plugin_deleted,
+    plugin_ready,
+    plugin_selected,
+    plugin_updated,
+)
+from smarter.apps.llmtool.tests.test_setup import get_test_file_path
+from smarter.apps.llmtool.utils import add_example_plugins
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.secret.models import Secret
+from smarter.common.utils import get_readonly_yaml_file, to_snake_case
+
+# python stuff
+from smarter.lib import json, logging
+from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.loader import SAMLoaderError
+from smarter.lib.typing import SmarterDictType
+
+logger = logging.getLogger(__name__)
+
+
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
+class TestPluginBase(TestAccountMixin):
+    """Test plugin base class."""
+
+    data: SmarterDictType
+    kind: str
+    plugin_class: PluginType
+    plugin_data: PluginDataType
+    user_profile: UserProfile
+
+    _plugin_called = False
+    _plugin_cloned = False
+    _plugin_created = False
+    _plugin_deleted = False
+    _plugin_ready = False
+    _plugin_selected = False
+    _plugin_selected_called = False
+    _plugin_updated = False
+
+    def plugin_called_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_called_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_called = True
+
+    def plugin_cloned_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_cloned_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_cloned = True
+
+    def plugin_created_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_created_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_created = True
+
+    def plugin_deleted_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_deleted_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_deleted = True
+
+    def plugin_ready_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_ready_signal_handler() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs
+        )
+        self._plugin_ready = True
+
+    def plugin_selected_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_selected_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_selected = True
+
+    def plugin_selected_called_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_selected_called_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_selected_called = True
+
+    def plugin_updated_signal_handler(self, *args, **kwargs):
+        logger.info(
+            "%s.plugin_updated_signal_handler() called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        self._plugin_updated = True
+
+    @property
+    def signals(self):
+        return {
+            "plugin_called": self._plugin_called,
+            "plugin_cloned": self._plugin_cloned,
+            "plugin_created": self._plugin_created,
+            "plugin_deleted": self._plugin_deleted,
+            "plugin_ready": self._plugin_ready,
+            "plugin_selected": self._plugin_selected,
+            "plugin_updated": self._plugin_updated,
+        }
+
+    def setUp(self):
+        """Set up test fixtures."""
+        super().setUp()
+        config_path = get_test_file_path("everlasting-gobstopper.yaml")
+        self.data = get_readonly_yaml_file(config_path)
+        self.kind = self.data[SAMKeys.KIND.value]
+        self.plugin_class = PLUGIN_MAP[self.kind]
+        self.plugin_data = PLUGIN_DATA_MAP[self.kind]
+
+    # pylint: disable=broad-exception-caught
+    def test_create(self):
+        """Test that we can create a plugin."""
+
+        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_create")
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_create")
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_ready"])
+
+        self.assertIsInstance(plugin, self.plugin_class)
+        self.assertTrue(plugin.ready)
+        self.assertIsInstance(plugin.plugin_meta, PluginMeta)
+        self.assertIsInstance(plugin.plugin_selector, PluginSelector)
+        self.assertIsInstance(plugin.plugin_prompt, PluginPrompt)
+        self.assertIsInstance(plugin.plugin_data, self.plugin_data)
+        self.assertIsInstance(plugin.plugin_data_serializer, PluginStaticSerializer)
+        self.assertIsInstance(plugin.plugin_meta_serializer, PluginMetaSerializer)
+        self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
+        self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
+
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
+        self.assertEqual(plugin.plugin_meta.name, snake_case_name)  # type: ignore
+
+        self.assertEqual(
+            plugin.plugin_selector.directive,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+            ],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.provider,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.PROVIDER.value],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.system_role,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.model,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MODEL.value],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.temperature,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.max_completion_tokens,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+            ],
+        )
+
+    def test_to_json(self):
+        """Test that the StaticPlugin generates correct JSON output."""
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_to_json")
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        to_json = plugin.to_json()
+
+        if not isinstance(to_json, dict):
+            self.fail("Expected JSON output to be a dict.")
+
+        logger.info("TestPluginBase().test_to_json() data: %s", self.data)
+        logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
+
+        # verify that signal was sent
+        self.assertTrue(self.signals["plugin_ready"])
+
+        self.assertIsInstance(to_json, dict)
+
+        # Helper function to create assertion error messages with JSON dump
+        def assert_equal_with_dump(actual, expected, field_description):
+            try:
+                self.assertEqual(actual, expected)
+            except AssertionError as e:
+                logger.error("Assertion failed for %s", field_description)
+                logger.error("to_json dump: %s", json.dumps(to_json))
+                raise AssertionError(f"{field_description} assertion failed. to_json: {json.dumps(to_json)}") from e
+
+        # ensure that we can go from json output to a string and back to json without error
+        # taking into account that the PluginMeta name will always save in snake_case format.
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
+        assert_equal_with_dump(to_json[SAMKeys.METADATA.value]["name"], snake_case_name, "Plugin name (snake_case)")
+
+        assert_equal_with_dump(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+            "Selector directive",
+        )
+
+        assert_equal_with_dump(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
+            ].strip(),
+            "Prompt provider",
+        )
+
+        assert_equal_with_dump(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            "Prompt system role",
+        )
+
+        assert_equal_with_dump(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
+            "Prompt model",
+        )
+
+        assert_equal_with_dump(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+            "Prompt temperature",
+        )
+
+        assert_equal_with_dump(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+            ],
+            "Prompt max tokens",
+        )
+
+    def test_delete(self):
+        """Test that we can delete a plugin using the StaticPlugin."""
+        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_delete")
+        plugin_updated.connect(self.plugin_updated_signal_handler, dispatch_uid="plugin_updated_test_delete")
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_delete")
+        plugin_deleted.connect(self.plugin_deleted_signal_handler, dispatch_uid="plugin_deleted_test_delete")
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        plugin_id = plugin.id
+        plugin.delete()
+
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_created"] or self.signals["plugin_updated"])
+        self.assertTrue(self.signals["plugin_ready"])
+        self.assertTrue(self.signals["plugin_deleted"])
+
+        with self.assertRaises(PluginMeta.DoesNotExist):
+            PluginMeta.objects.get(pk=plugin_id)
+
+        with self.assertRaises(PluginSelector.DoesNotExist):
+            PluginSelector.objects.get(plugin_id=plugin_id)
+
+        with self.assertRaises(PluginPrompt.DoesNotExist):
+            PluginPrompt.objects.get(plugin_id=plugin_id)
+
+        with self.assertRaises(self.plugin_data.DoesNotExist):
+            self.plugin_data.objects.get(plugin_id=plugin_id)
+
+    def test_add_sample_plugins(self):
+        """Test utility function to add sample plugins to a user account."""
+
+        # the WebsearchPlugin examples need their search provider's api key Secret.
+        for secret_name in ("brave_search_api_key", "tavily_api_key"):
+            if not Secret.objects.filter(user_profile=self.user_profile, name=secret_name).exists():
+                secret = Secret.objects.create(
+                    user_profile=self.user_profile,
+                    name=secret_name,
+                    description="placeholder web search api key for unit tests",
+                    encrypted_value=Secret.encrypt(value="not-a-real-api-key"),
+                )
+                self.addCleanup(secret.delete)
+
+        # add the sample plugins to the user account. the remote SkillPlugin examples
+        # are retrieved from the test skill, since unit tests must not depend on GitHub.
+        with mock_remote_skills():
+            add_example_plugins(user_profile=self.user_profile)
+
+        # verify that all of the sample plugins were added to the user account
+        plugins = PluginMeta.objects.filter(user_profile__account=self.account)
+        self.assertEqual(len(plugins), PluginExamples().count())
+
+        # verify that all of the sample plugins were correctdly created
+        # and are in a ready state.
+        for plugin in plugins:
+            self.assertTrue(PluginController(user_profile=self.user_profile, plugin_meta=plugin).ready)
+
+    # pylint: disable=too-many-statements
+    def test_validation_bad_structure(self):
+        """Test that the StaticPlugin raises an error when given bad data."""
+        with self.assertRaises((SmarterPluginError, SAMValidationError)):
+            self.plugin_class(data={})
+
+        # every malformed manifest must be rejected. Depending on where it is caught, that
+        # is the loader, the plugin (which reports a loader that is not ready as a
+        # SAMValidationError), or Pydantic. deepcopy, so that each case removes one thing.
+        rejected = (SAMLoaderError, SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
+        removals = [
+            (SAMKeys.METADATA.value,),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.DATA.value),
+            (SAMKeys.METADATA.value, "name"),
+        ]
+        for removal in removals:
+            bad_data = copy.deepcopy(self.data)
+            parent = bad_data
+            for key in removal[:-1]:
+                parent = parent[key]
+            parent.pop(removal[-1])
+            with self.subTest(removed=".".join(removal)), self.assertRaises(rejected):
+                self.plugin_class(data=bad_data)
+
+    def test_pydantic_validation_errors(self):
+        """Test that the StaticPlugin raises an error when given bad data."""
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(
+            SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+        )
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.PROVIDER.value)
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value)
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MODEL.value)
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(
+            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+        )
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MAXTOKENS.value)
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("staticData")
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+    def test_validation_bad_data_types(self):
+        """Test that the StaticPlugin raises an error when given bad data."""
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.METADATA.value]["tags"] = "not a list"
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+        ] = "not a list"
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+        ] = "not a float"
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+            SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+        ] = "not an int"
+        with self.assertRaises((TypeError, PydanticValidationError)):
+            self.plugin_data(data=bad_data)
+
+    def test_clone(self):
+        """Test that we can clone a plugin using the StaticPlugin."""
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_clone")
+        plugin_cloned.connect(self.plugin_cloned_signal_handler, dispatch_uid="plugin_cloned_test_clone")
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        # PluginController(account=self.user_profile.cached_account, user=self.user_profile.cached_user, plugin_meta=plugin)
+        clone_id = plugin.clone()  # type: ignore
+        plugin_clone = self.plugin_class(user_profile=self.user_profile, plugin_id=clone_id)
+
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_ready"])
+        self.assertTrue(self.signals["plugin_cloned"])
+
+        if not isinstance(plugin, self.plugin_class):
+            self.fail("Original plugin is not of type StaticPlugin.")
+        if not isinstance(plugin.plugin_meta, PluginMeta) or not isinstance(plugin_clone.plugin_meta, PluginMeta):  # type: ignore
+            self.fail("PluginMeta is None for either original or cloned plugin.")
+
+        self.assertNotEqual(plugin.id, plugin_clone.id)
+        self.assertNotEqual(plugin.plugin_meta.name, plugin_clone.plugin_meta.name)  # type: ignore
+        self.assertNotEqual(plugin.plugin_meta.created_at, plugin_clone.plugin_meta.created_at)  # type: ignore
+
+        self.assertEqual(plugin.plugin_meta.user_profile, plugin_clone.plugin_meta.user_profile)  # type: ignore
+        self.assertListEqual(list(plugin.plugin_meta.tags.all()), list(plugin_clone.plugin_meta.tags.all()))  # type: ignore
+
+        self.assertEqual(plugin.plugin_selector.directive, plugin_clone.plugin_selector.directive)  # type: ignore
+        self.assertEqual(plugin.plugin_selector.search_terms, plugin_clone.plugin_selector.search_terms)  # type: ignore
+
+        self.assertEqual(plugin.plugin_prompt.system_role, plugin_clone.plugin_prompt.system_role)  # type: ignore
+        self.assertEqual(plugin.plugin_prompt.model, plugin_clone.plugin_prompt.model)  # type: ignore
+        self.assertEqual(plugin.plugin_prompt.temperature, plugin_clone.plugin_prompt.temperature)  # type: ignore
+        self.assertEqual(plugin.plugin_prompt.max_completion_tokens, plugin_clone.plugin_prompt.max_completion_tokens)  # type: ignore
+
+        self.assertEqual(plugin.plugin_data.description, plugin_clone.plugin_data.description)  # type: ignore
+        self.assertEqual(plugin.plugin_data.static_data, plugin_clone.plugin_data.static_data)  # type: ignore
+
+        plugin.delete()
+        plugin_clone.delete()
+
+    def test_json_serialization(self):
+        """Test that the StaticPlugin generates correct JSON output."""
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_json_serialization")
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        to_json = plugin.to_json()
+
+        # verify that signal was sent
+        self.assertTrue(self.signals["plugin_ready"])
+
+        # ensure that we can go from json output to a string and back to json without error
+        to_json = json.loads(json.dumps(to_json))
+
+        # ensure that the json output still matches the original data
+        self.assertIsInstance(to_json, dict)
+
+        snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
+        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
+
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+            ],
+        )
+
+    def test_plugin_called_signal(self):
+        """Test the plugin_called signal."""
+        plugin_called.connect(self.plugin_called_signal_handler, dispatch_uid="plugin_called_test_plugin_called_signal")
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        function_args = {
+            "inquiry_type": "sales_promotions",
+        }
+        plugin.tool_call_fetch_plugin_response(function_args=function_args)
+
+        self.assertTrue(self.signals["plugin_called"])
+
+    def test_plugin_selected_signal(self):
+        """Test the plugin_selected signal."""
+        plugin_selected.connect(
+            self.plugin_selected_signal_handler, dispatch_uid="plugin_selected_test_plugin_selected_signal"
+        )
+
+        messages = [
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
+            },
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "have you ever heard of everlasting gobstoppers?",
+            },
+        ]
+
+        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        plugin.selected(user=self.admin_user, messages=messages)
+        self.assertTrue(self.signals["plugin_selected"])
+
+        sleep(1)
+
+        self._plugin_selected = False
+        messages = [
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llmclient.",
+            },
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "this should return false.",
+            },
+        ]
+        self.assertFalse(self.signals["plugin_selected"])

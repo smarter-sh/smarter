@@ -6,8 +6,8 @@ from unittest import mock
 import yaml
 
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
-from smarter.apps.plugin.models import PluginDataSql, PluginMeta
-from smarter.apps.plugin.tests.base_classes import PluginAppTestBase
+from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
+from smarter.apps.llmtool.tests.base_classes import PluginAppTestBase
 
 
 class TestLLMClientPlugin(PluginAppTestBase):

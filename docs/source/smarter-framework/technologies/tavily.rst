@@ -8,14 +8,14 @@ publication date) rather than as a page of links for a person to read. This make
 for tool calling, where the LLM reads the results and cites them.
 
 Smarter uses Tavily as one of the two web search APIs of the
-:doc:`WebsearchPlugin <../../smarter-resources/plugin/plugin/websearch>`. The other is the
+:doc:`WebsearchPlugin <../../smarter-resources/llmtool/plugin/websearch>`. The other is the
 `Brave Search API <https://brave.com/search/api/>`_. Each WebsearchPlugin chooses its search API
 in its manifest.
 
 .. note::
 
     The WebsearchPlugin is experimental. See
-    :doc:`WebsearchPlugin <../../smarter-resources/plugin/plugin/websearch>`.
+    :doc:`WebsearchPlugin <../../smarter-resources/llmtool/plugin/websearch>`.
 
 
 How Smarter Uses Tavily
@@ -60,7 +60,7 @@ query and its parameters. A repeated question does not call Tavily again until t
 expires.
 
 The implementation is
-:py:class:`smarter.apps.plugin.plugin.websearch_providers.TavilySearchProvider`.
+:py:class:`smarter.apps.llmtool.plugin.websearch_providers.TavilySearchProvider`.
 
 **The smarter LLMClient.** The platform's built-in ``smarter`` LLMClient, the Smarter sales
 agent, uses the built-in WebsearchPlugin ``smarter_project_websearch`` to find current
@@ -116,7 +116,7 @@ Setup
 
 Other WebsearchPlugins can use the same Secret, by setting ``apiKey: tavily_api_key``, or a
 Secret of their own: ``apiKey`` is the name of any Secret that the plugin's owner can read. See
-the sample manifests in ``smarter/smarter/apps/plugin/data/sample-plugins/websearch-*.yaml``.
+the sample manifests in ``smarter/smarter/apps/llmtool/data/sample-plugins/websearch-*.yaml``.
 
 The environment variable is listed in :doc:`Configuration <../../smarter-platform/configuration>`.
 

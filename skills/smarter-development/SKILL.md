@@ -111,10 +111,10 @@ and the `reset_cache` management command import `django.core.cache`.
 - **A per-object TTL** (e.g. a manifest's `cacheTtl`): decorate a function
   defined inside the method with a plain `@cache_results(timeout=<ttl>)`. A
   timeout of 0 stores nothing, so it needs no special case. See
-  `ImageSearchPlugin.brave_images()` in `apps/plugin/plugin/image_search.py`.
+  `ImageSearchPlugin.brave_images()` in `apps/llmtool/plugin/image_search.py`.
 - **Don't cache failures.** Raise inside the cached function and catch outside
   it, so that an error or empty result is never stored. See
-  `get_cached_api_response` in `apps/plugin/plugin/api.py`. To remember a
+  `get_cached_api_response` in `apps/llmtool/plugin/api.py`. To remember a
   failure for less time than a success, wrap a short-TTL function that returns
   the result or the error inside a long-TTL one that raises on the error. See
   `cached_catalog_functions()` in `apps/mcpclient/caching.py`.

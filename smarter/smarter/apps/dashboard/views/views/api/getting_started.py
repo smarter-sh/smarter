@@ -18,7 +18,7 @@ from smarter.apps.dashboard.views.views.api.my_resources import (
     get_secrets,
 )
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
 from smarter.lib.django.shortcuts import reverse

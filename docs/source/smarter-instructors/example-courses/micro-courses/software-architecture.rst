@@ -38,7 +38,7 @@ Beyond the twelve factors, students find:
 - **Extensibility.** A :doc:`broker model </smarter-framework/smarter-broker-model>` with a
   `registry of resource kinds
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__,
-  a `PluginBase <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__
+  a `PluginBase <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
   class for new plugin types, and :doc:`new LLM providers added by manifest
   </smarter-platform/adding-an-llm-provider>`, not code.
 - **Explicit data models.** Django models for what is stored, Pydantic models for what crosses a
@@ -55,7 +55,7 @@ Beyond the twelve factors, students find:
   encrypted at rest, `network policies
   <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/kubernetes/network_policy.tf>`__
   between pods, outbound plugin calls that `refuse private addresses
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__,
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__,
   and the model itself treated as untrusted, with :doc:`guardrails
   </smarter-resources/smarter-guardrail>` on its input and output.
 

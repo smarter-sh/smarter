@@ -1,10 +1,10 @@
 Agentic Software Development with Claude Code
 =============================================
 
-**Why Smarter.** Smarter's :doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>`
+**Why Smarter.** Smarter's :doc:`ImageSearchPlugin </smarter-resources/llmtool/plugin/image-search>`
 was built by a coding agent during a live in-class demonstration, and the students watched how it
 was done. Claude Code wrote a complete new resource kind: the
-`plugin <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/image_search.py>`__,
+`plugin <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/image_search.py>`__,
 its Pydantic manifest models, broker, migrations, sample manifests, documentation and tests. It
 then wrote the `commit
 <https://github.com/smarter-sh/smarter/commit/1da6bccc3847f0d06e1b801496cbb838cffb0dab>`__, whose
@@ -39,7 +39,7 @@ shaped for agents, and the written instructions that make them effective:
   that makes experiments safe.
 
 The same Agent Skills format is also a Smarter feature: a
-:doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>` gives an LLMClient a skill fetched
+:doc:`SkillPlugin </smarter-resources/llmtool/plugin/skill>` gives an LLMClient a skill fetched
 from GitHub, so students can see skills from both sides, as instructions for a coding agent and as
 knowledge for an application they build.
 

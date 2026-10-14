@@ -1051,9 +1051,9 @@ class SAMUserBroker(AbstractBroker):
         from smarter.apps.guardrail.models import Guardrail
         from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
         from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
+        from smarter.apps.llmtool.models import PluginMeta
         from smarter.apps.mcpclient.models import MCPClient
         from smarter.apps.orchestrator.models import Orchestrator
-        from smarter.apps.plugin.models import PluginMeta
         from smarter.apps.provider.models import Provider
         from smarter.apps.proxy.models import Proxy
         from smarter.apps.secret.models import Secret

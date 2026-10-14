@@ -22,7 +22,7 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.secret.models import Secret
 from smarter.lib.manifest.enum import (
     SAMKeys,
