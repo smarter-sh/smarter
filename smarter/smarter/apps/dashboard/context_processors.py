@@ -92,12 +92,12 @@ from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.urls import LLMClientReverseNames
 from smarter.apps.llmhost.urls import LLMHostReverseNames
-from smarter.apps.mcpclient.urls import MCPClientReverseNames
-from smarter.apps.orchestrator.urls import OrchestratorReverseNames
-from smarter.apps.plugin.models import (
+from smarter.apps.llmtool.models import (
     PluginMeta,
 )
-from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.llmtool.urls import PluginReverseNames
+from smarter.apps.mcpclient.urls import MCPClientReverseNames
+from smarter.apps.orchestrator.urls import OrchestratorReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.proxy.urls import ProxyReverseNames

@@ -12,7 +12,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.apps.connection.urls import ConnectionReverseNames
-from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
 from smarter.lib.cache import cache_results

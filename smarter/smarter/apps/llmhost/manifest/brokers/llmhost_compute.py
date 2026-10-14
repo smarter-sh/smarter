@@ -46,7 +46,7 @@ from smarter.apps.llmhost.models.compute import LLMHostComputeNodeGroupStatus
 from smarter.apps.llmhost.serializers import LLMHostComputeSerializer
 from smarter.apps.llmhost.services.compute import ComputeProvisioner
 from smarter.apps.llmhost.services.exceptions import LLMHostComputeError
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

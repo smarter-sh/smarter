@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 from pydantic import ValidationError
 
 from smarter.apps.llmclient.models import LLMClientFunctions
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.prompt.contract.models import (
     PromptChatApiCompletion,
     PromptChatApiCompletionV1,

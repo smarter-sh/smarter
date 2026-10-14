@@ -11,7 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.secret.models import Secret
 from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import MANIFEST_KIND
 from smarter.apps.vectorsearch.manifest.models.vectorsearch.metadata import (

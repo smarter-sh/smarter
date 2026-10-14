@@ -48,7 +48,7 @@ the platform:
    hand-off, parallel fan-out, supervisor/worker delegation, routing, or voting/debate.
 
 **Extensibility & Trust**
-   :doc:`smarter-resources/smarter-plugin` is how a model does things beyond generating text — Static,
+   :doc:`smarter-resources/smarter-llmtool` is how a model does things beyond generating text — Static,
    Skill, API, and SQL tool calls — reaching external systems through
    :doc:`smarter-resources/smarter-connection` and the wider Model Context Protocol ecosystem through
    :doc:`smarter-resources/smarter-mcpclient`. :doc:`smarter-resources/smarter-vectorstore` gives those
@@ -70,7 +70,7 @@ Harness invocations that led to it.
 Because Resources are layered rather than monolithic, different roles on a team naturally gravitate
 toward different parts of the stack, without needing to understand the whole thing to be productive:
 
-- **Prompt engineers** work in the Conversation and Extensibility layers — :doc:`smarter-resources/smarter-prompt`, :doc:`smarter-resources/smarter-plugin`, and :doc:`smarter-resources/smarter-guardrail` — using :doc:`YAML manifests <smarter-framework/smarter-manifests>` and the :doc:`Smarter CLI <smarter-framework/smarter-cli>`.
+- **Prompt engineers** work in the Conversation and Extensibility layers — :doc:`smarter-resources/smarter-prompt`, :doc:`smarter-resources/smarter-llmtool`, and :doc:`smarter-resources/smarter-guardrail` — using :doc:`YAML manifests <smarter-framework/smarter-manifests>` and the :doc:`Smarter CLI <smarter-framework/smarter-cli>`.
 - **Business Process Analysts** work downstream of the Conversation layer, querying archived :doc:`smarter-resources/smarter-prompt` history and :doc:`smarter-resources/smarter-account` usage data through Smarter's MariaDB database and reporting tools.
 - **Application developers** work in the Model Connectivity and Extensibility layers, composing multi-agent workflows with :doc:`smarter-resources/smarter-orchestrator` and wiring :doc:`smarter-resources/smarter-connection` and :doc:`smarter-resources/smarter-mcpclient` resources into applications using Python, the :doc:`Smarter Application Framework <smarter-framework>`, and its built-in :doc:`REST APIs <smarter-framework/smarter-api>`.
 - **Data scientists** work in the Model Connectivity layer, deploying and evaluating models and retrieval pipelines through :doc:`smarter-resources/smarter-llmhost` and :doc:`smarter-resources/smarter-vectorstore`.
@@ -92,7 +92,7 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-llmhost
    smarter-resources/smarter-mcpclient
    smarter-resources/smarter-orchestrator
-   smarter-resources/smarter-plugin
+   smarter-resources/smarter-llmtool
    smarter-resources/smarter-prompt
    smarter-resources/smarter-provider
    smarter-resources/smarter-proxy

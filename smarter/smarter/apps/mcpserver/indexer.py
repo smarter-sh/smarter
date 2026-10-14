@@ -16,7 +16,7 @@ up to date with its branch:
    partial index.
 
 The urls are fixed GitHub urls of public repositories, not user-supplied ones, so the
-requests do not go through :mod:`smarter.apps.plugin.plugin.safe_http`. GitHub's api allows
+requests do not go through :mod:`smarter.apps.llmtool.plugin.safe_http`. GitHub's api allows
 60 unauthenticated requests an hour, and an hourly refresh of every repository needs one
 request for each.
 

@@ -23,7 +23,7 @@ from smarter.apps.llmclient.models import (
     LLMClientFunctions,
     LLMClientPlugin,
 )
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib.drf.models import SmarterAuthToken
 
 

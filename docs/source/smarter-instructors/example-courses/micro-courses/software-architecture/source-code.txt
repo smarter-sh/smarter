@@ -123,7 +123,7 @@ Beyond the Twelve Factors
      - `lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`__,
        `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
        `lib/django/middleware/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/middleware>`__,
-       `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__,
+       `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__,
        `guardrail/services/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/pipeline.py>`__
    * - Extensibility
      - New resource kinds register a broker. New plugin types subclass ``PluginBase``. New LLM
@@ -131,7 +131,7 @@ Beyond the Twelve Factors
        clouds implement the ``CloudProvider`` interface. :doc:`ADR 024 </adr/024-broker-model>`,
        :doc:`/smarter-platform/adding-an-llm-provider`.
      - `api/v1/cli/brokers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__,
-       `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/base.py>`__,
+       `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__,
        `infrastructure/providers/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/base.py>`__
    * - Ports and adapters
      - All DNS, certificate, Kubernetes and email work goes through one facade, and the
@@ -146,7 +146,7 @@ Beyond the Twelve Factors
        :doc:`ADR 017 </adr/017-database>`, :doc:`ADR 031 </adr/031-pydantic-over-json>`.
      - `account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__,
        `lib/manifest/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/manifest>`__,
-       `plugin/manifest/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/manifest/models>`__
+       `plugin/manifest/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/manifest/models>`__
    * - Multi-tenancy
      - Every resource belongs to an account and a user, and every query is scoped by them.
        :doc:`/smarter-platform/account-management`.

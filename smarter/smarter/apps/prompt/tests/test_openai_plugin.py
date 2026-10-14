@@ -3,8 +3,8 @@
 """Test lambda_openai_v2 function."""
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.llmtool.manifest.controller import PluginController
+from smarter.apps.llmtool.plugin.static import StaticPlugin
 from smarter.common.utils import get_readonly_yaml_file
 
 from .test_setup import get_test_file_path
@@ -38,7 +38,7 @@ class TestStaticPlugin(TestAccountMixin):
 
     # pylint: disable=broad-exception-caught
     def test_get_additional_info(self):
-        """Test default return value of tool_call_fetch_plugin_response()"""
+        """Test default return value of tool_call_fetch_plugin_response()."""
         if not self.plugin:
             self.fail("self.plugin is None")
         if not self.plugin.plugin_data:
@@ -57,7 +57,7 @@ class TestStaticPlugin(TestAccountMixin):
         self.assertTrue(return_data is not None)
 
     def test_info_tool_factory(self):
-        """Test integrity plugin_tool_factory()"""
+        """Test integrity plugin_tool_factory()."""
         itf = self.plugin.custom_tool
         self.assertIsInstance(itf, dict)
 

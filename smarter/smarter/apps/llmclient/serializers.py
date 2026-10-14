@@ -13,7 +13,7 @@ from smarter.apps.llmclient.manifest.models.custom_domain.const import (
 from smarter.apps.llmclient.manifest.models.llmclient.const import (
     MANIFEST_KIND as LLMCLIENT_KIND,
 )
-from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import (

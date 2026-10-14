@@ -42,14 +42,14 @@ from smarter.apps.llmclient.api.v1 import urls as llmclient_urls
 from smarter.apps.llmclient.const import namespace as llmclient_namespace
 from smarter.apps.llmhost.api.v1 import urls as llmhost_urls
 from smarter.apps.llmhost.const import namespace as llmhost_namespace
+from smarter.apps.llmtool.api.v1 import urls as llmtool_urls
+from smarter.apps.llmtool.const import namespace as llmtool_namespace
 from smarter.apps.mcpclient.api.v1 import urls as mcpclient_urls
 from smarter.apps.mcpclient.const import namespace as mcpclient_namespace
 from smarter.apps.mcpserver import urls as mcpserver_urls
 from smarter.apps.mcpserver.const import namespace as mcpserver_namespace
 from smarter.apps.orchestrator.api.v1 import urls as orchestrator_urls
 from smarter.apps.orchestrator.const import namespace as orchestrator_namespace
-from smarter.apps.plugin.api.v1 import urls as plugin_urls
-from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.api.v1 import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_namespace
 from smarter.apps.provider.api.v1 import urls as provider_urls
@@ -91,7 +91,7 @@ urlpatterns = [
     path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("journal/", include(journal_urls, namespace=journal_namespace)),
     path("orchestrators/", include(orchestrator_urls, namespace=orchestrator_namespace)),
-    path("plugins/", include(plugin_urls, namespace=plugin_namespace)),
+    path("plugins/", include(llmtool_urls, namespace=llmtool_namespace)),
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
     path("providers/", include(provider_urls, namespace=provider_namespace)),
     path("secrets/", include(secret_urls, namespace=secret_namespace)),

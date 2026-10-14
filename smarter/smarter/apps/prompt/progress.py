@@ -51,8 +51,8 @@ from .signals import (
 )
 
 if TYPE_CHECKING:
+    from smarter.apps.llmtool.plugin.base import PluginBase
     from smarter.apps.mcpclient.models import MCPClient
-    from smarter.apps.plugin.plugin.base import PluginBase
 
 logger = logging.getLogger(__name__)
 

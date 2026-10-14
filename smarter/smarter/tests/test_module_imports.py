@@ -22,7 +22,7 @@ API_URLCONFS = [
 ENUM_MODULES = [
     "smarter.apps.connection.manifest.enum",
     "smarter.apps.llmclient.manifest.enum",
-    "smarter.apps.plugin.manifest.models.common.plugin.enum",
+    "smarter.apps.llmtool.manifest.models.common.plugin.enum",
     "smarter.apps.proxy.manifest.enum",
     "smarter.apps.proxy.manifest.models.enum",
     "smarter.apps.secret.manifest.enum",

@@ -9,7 +9,7 @@ resources the requesting user may manage, the tool calls that the LLMs made in t
 The models are the outputs of the serializers of :mod:`smarter.apps.prompt.api.v1.serializers`,
 which the REST api returned before it was modeled, and which clients already read. Their keys are
 snake_case, unlike the rest of the REST api's, for the same reason. A plugin is a
-:class:`smarter.apps.plugin.contract.models.PluginApiPluginMeta`, in camelCase.
+:class:`smarter.apps.llmtool.contract.models.PluginApiPluginMeta`, in camelCase.
 
 The models forbid extra fields: the api returns exactly what they declare.
 """
@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Optional
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from smarter.apps.account.contract.models import MetaDataApiAnnotations
-from smarter.apps.plugin.contract.models import PluginApiPluginMeta
+from smarter.apps.llmtool.contract.models import PluginApiPluginMeta
 
 if TYPE_CHECKING:
     from smarter.apps.prompt.models import Prompt, PromptPluginUsage, PromptToolCall

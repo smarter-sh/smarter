@@ -41,11 +41,11 @@ smarter apply -f my-ai-application.yaml
   infrastructure.
 - **Every way to reach external data.** Each approach is a
   [Resource](https://docs.smarter.sh/en/latest/smarter-resources.html) that
-  you declare in a manifest, with no code: [Remote APIs](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/api.html),
-  [Remote SQL](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/sql.html),
+  you declare in a manifest, with no code: [Remote APIs](https://docs.smarter.sh/en/latest/smarter-resources/llmtool/plugin/api.html),
+  [Remote SQL](https://docs.smarter.sh/en/latest/smarter-resources/llmtool/plugin/sql.html),
   [MCP servers](https://docs.smarter.sh/en/latest/smarter-resources/smarter-mcpclient.html),
-  [the web](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/websearch.html),
-  [skills](https://docs.smarter.sh/en/latest/smarter-resources/plugin/plugin/skill.html),
+  [the web](https://docs.smarter.sh/en/latest/smarter-resources/llmtool/plugin/websearch.html),
+  [skills](https://docs.smarter.sh/en/latest/smarter-resources/llmtool/plugin/skill.html),
   and [your own documents](https://docs.smarter.sh/en/latest/smarter-resources/smarter-vectorstore.html).
 - **Governed from the first prompt.** Deterministic
   [Guardrails](https://docs.smarter.sh/en/latest/smarter-resources/smarter-guardrail.html)
@@ -91,7 +91,7 @@ smarter apply -f my-ai-application.yaml
     and [security](https://docs.smarter.sh/en/latest/smarter-platform/security.html).
 - **Knowledge and tools**
   - API, SQL, Websearch, Skill, and Static
-    [Plugins](https://docs.smarter.sh/en/latest/smarter-resources/smarter-plugin.html).
+    [Plugins](https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmtool.html).
   - [MCPClients](https://docs.smarter.sh/en/latest/smarter-resources/smarter-mcpclient.html)
     for the Model Context Protocol ecosystem.
   - [Vectorstores](https://docs.smarter.sh/en/latest/smarter-resources/smarter-vectorstore.html)

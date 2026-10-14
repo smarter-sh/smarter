@@ -6563,7 +6563,7 @@
       },
       "PluginApiPluginMeta": {
         "additionalProperties": false,
-        "description": "A plugin's metadata: a :class:`smarter.apps.plugin.models.PluginMeta`.",
+        "description": "A plugin's metadata: a :class:`smarter.apps.llmtool.models.PluginMeta`.",
         "properties": {
           "annotations": {
             "anyOf": [
@@ -8003,7 +8003,7 @@
       },
       "PromptChatApiPluginMeta": {
         "additionalProperties": false,
-        "description": "A plugin's metadata: a :class:`smarter.apps.plugin.models.PluginMeta`.\n\nIts owner is left out: the configuration never includes a user's profile.",
+        "description": "A plugin's metadata: a :class:`smarter.apps.llmtool.models.PluginMeta`.\n\nIts owner is left out: the configuration never includes a user's profile.",
         "properties": {
           "annotations": {
             "anyOf": [
@@ -8128,7 +8128,7 @@
       },
       "PromptChatApiPluginSelection": {
         "additionalProperties": false,
-        "description": "A plugin selector's activation: a :class:`smarter.apps.plugin.models.PluginSelectorHistory`.",
+        "description": "A plugin selector's activation: a :class:`smarter.apps.llmtool.models.PluginSelectorHistory`.",
         "properties": {
           "created_at": {
             "anyOf": [
@@ -10575,7 +10575,7 @@
         "type": "object"
       },
       "SAMApiPlugin": {
-        "description": "Smarter API Manifest - ApiPlugin Model",
+        "description": "Smarter API Manifest - ApiPlugin Model.",
         "properties": {
           "apiVersion": {
             "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
@@ -16621,7 +16621,7 @@
         "type": "object"
       },
       "SAMPluginStaticSpec": {
-        "description": "Smarter API Plugin Manifest Plugin.spec",
+        "description": "Smarter API Plugin Manifest Plugin.spec.",
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SAMPluginStaticSpecData",
@@ -16645,7 +16645,7 @@
         "type": "object"
       },
       "SAMPluginStaticSpecData": {
-        "description": "Smarter API Plugin Manifest Plugin.spec.data",
+        "description": "Smarter API Plugin Manifest Plugin.spec.data.",
         "properties": {
           "staticData": {
             "anyOf": [
@@ -18436,7 +18436,7 @@
         "type": "object"
       },
       "SAMSqlPlugin": {
-        "description": "Smarter API Manifest - Sql Connection Model",
+        "description": "Smarter API Manifest - Sql Connection Model.",
         "properties": {
           "apiVersion": {
             "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",
@@ -18480,7 +18480,7 @@
         "type": "object"
       },
       "SAMSqlPluginSpec": {
-        "description": "Smarter API SqlData Connection Manifest SqlConnection.spec",
+        "description": "Smarter API SqlData Connection Manifest SqlConnection.spec.",
         "properties": {
           "connection": {
             "description": "SqlPlugin.spec.selector[obj]: the name of an existing SqlConnector to use for the SqlPlugin",
@@ -18510,7 +18510,7 @@
         "type": "object"
       },
       "SAMStaticPlugin": {
-        "description": "Smarter API Manifest - Plugin",
+        "description": "Smarter API Manifest - Plugin.",
         "properties": {
           "apiVersion": {
             "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",

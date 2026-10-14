@@ -7,7 +7,7 @@ shaped for agents: nearly all of its new code is now designed, written and teste
 from `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the eighteen
 `Agent Skills <https://github.com/smarter-sh/smarter/tree/main/skills>`__ in ``skills/``, and its
 git history shows it: since late September 2026, most commits have been authored by Claude. Its
-:doc:`ImageSearchPlugin </smarter-resources/plugin/plugin/image-search>` was built by Claude Code in
+:doc:`ImageSearchPlugin </smarter-resources/llmtool/plugin/image-search>` was built by Claude Code in
 a live class demonstration, from the request to a `merged pull request
 <https://github.com/smarter-sh/smarter/pull/775>`__ with tests and documentation. There are six
 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers how agents work
@@ -87,7 +87,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        from repeated mistakes, such as the caching rules added by `commit eeb7a7a19
        <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__.
        The same format as a product feature: the
-       :doc:`SkillPlugin </smarter-resources/plugin/plugin/skill>`.
+       :doc:`SkillPlugin </smarter-resources/llmtool/plugin/skill>`.
    * - 2
      - Lecture 5 (30 min)
      - **Safety.** Permissions, sandboxes, live credentials (and why Smarter's

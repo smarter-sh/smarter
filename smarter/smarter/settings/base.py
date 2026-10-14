@@ -742,7 +742,7 @@ INSTALLED_APPS = [
     "smarter.apps.mcpclient",
     "smarter.apps.mcpserver",
     "smarter.apps.orchestrator",
-    "smarter.apps.plugin",
+    "smarter.apps.llmtool",
     "smarter.apps.prompt",
     "smarter.apps.provider",
     "smarter.apps.proxy",

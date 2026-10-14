@@ -23,7 +23,7 @@ from smarter.apps.llmclient.models import (
 from smarter.apps.llmclient.serializers import (
     LLMClientConfigSerializer,
 )
-from smarter.apps.plugin.models import (
+from smarter.apps.llmtool.models import (
     PluginSelectorHistory,
 )
 from smarter.apps.prompt.contract.builders import (
