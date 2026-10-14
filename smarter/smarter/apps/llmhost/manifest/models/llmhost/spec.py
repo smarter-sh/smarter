@@ -48,7 +48,7 @@ node group of those nodes, which Smarter scales as LLMHosts are launched and des
 
 import os
 import re
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar, Literal, Optional
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
@@ -130,7 +130,7 @@ def engine_supports_api_key(engine: str) -> bool:
 
 def choice(value: Optional[str], choices: list[str], field: str) -> str:
     """Return ``value``, lower cased, if it is one of ``choices``."""
-    value = (value or "").strip().lower()
+    value = str(value or "").strip().lower()
     lowered = {c.lower(): c for c in choices}
     if value not in lowered:
         raise SAMValidationError(f"{field}: must be one of {choices}, not '{value}'.")
@@ -184,7 +184,7 @@ class SAMLLMHostModel(LLMHostBaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".model"
 
-    source: str = Field(
+    source: Literal[tuple(SAMLLMHostModelSource.all())] = Field(  # type: ignore[valid-type]
         default=SAMLLMHostModelSource.HUGGINGFACE.value,
         description=f"{class_identifier}.source[str]: where the weights come from. One of: {SAMLLMHostModelSource.all()}.",
     )
@@ -217,7 +217,7 @@ class SAMLLMHostModel(LLMHostBaseModel):
             "Defaults to the LLMHost's name. Ollama always uses repository."
         ),
     )
-    task: str = Field(
+    task: Literal[tuple(SAMLLMHostTask.all())] = Field(  # type: ignore[valid-type]
         default=SAMLLMHostTask.TEXT_GENERATION.value,
         description=f"{class_identifier}.task[str]: what the model does. One of: {SAMLLMHostTask.all()}.",
     )
@@ -243,7 +243,7 @@ class SAMLLMHostModel(LLMHostBaseModel):
     embeddingDimensions: Optional[int] = Field(
         default=None, ge=0, description=f"{class_identifier}.embeddingDimensions[int]: for embedding models."
     )
-    quantization: str = Field(
+    quantization: Literal[tuple(SAMLLMHostQuantization.all())] = Field(  # type: ignore[valid-type]
         default=SAMLLMHostQuantization.NONE.value,
         description=f"{class_identifier}.quantization[str]: the weights' precision. One of: {SAMLLMHostQuantization.all()}.",
     )
@@ -252,17 +252,17 @@ class SAMLLMHostModel(LLMHostBaseModel):
         description=f"{class_identifier}.capabilities[object]: what the model can do.",
     )
 
-    @field_validator("source")
+    @field_validator("source", mode="before")
     @classmethod
     def validate_source(cls, v: str) -> str:
         return choice(v, SAMLLMHostModelSource.all(), "model.source")
 
-    @field_validator("task")
+    @field_validator("task", mode="before")
     @classmethod
     def validate_task(cls, v: str) -> str:
         return choice(v, SAMLLMHostTask.all(), "model.task")
 
-    @field_validator("quantization")
+    @field_validator("quantization", mode="before")
     @classmethod
     def validate_quantization(cls, v: str) -> str:
         return choice(v, SAMLLMHostQuantization.all(), "model.quantization")
@@ -325,7 +325,7 @@ class SAMLLMHostEngineConfig(LLMHostBaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".engine"
 
-    name: str = Field(
+    name: Literal[tuple(SAMLLMHostEngine.all())] = Field(  # type: ignore[valid-type]
         ...,
         description=f"{class_identifier}.name[str]: the inference server. One of: {SAMLLMHostEngine.all()}.",
     )
@@ -336,7 +336,7 @@ class SAMLLMHostEngineConfig(LLMHostBaseModel):
             "Pin a version in production. Required for custom."
         ),
     )
-    apiFormat: str = Field(
+    apiFormat: Literal[tuple(SAMLLMHostApiFormat.all())] = Field(  # type: ignore[valid-type]
         default=SAMLLMHostApiFormat.OPENAI_COMPATIBLE.value,
         description=f"{class_identifier}.apiFormat[str]: the wire protocol. One of: {SAMLLMHostApiFormat.all()}.",
     )
@@ -391,12 +391,12 @@ class SAMLLMHostEngineConfig(LLMHostBaseModel):
         description=f"{class_identifier}.env[dict]: additional environment variables.",
     )
 
-    @field_validator("name")
+    @field_validator("name", mode="before")
     @classmethod
     def validate_name(cls, v: str) -> str:
         return choice(v, SAMLLMHostEngine.all(), "engine.name")
 
-    @field_validator("apiFormat")
+    @field_validator("apiFormat", mode="before")
     @classmethod
     def validate_api_format(cls, v: str) -> str:
         return choice(v, SAMLLMHostApiFormat.all(), "engine.apiFormat")
@@ -500,7 +500,7 @@ class SAMLLMHostStorage(LLMHostBaseModel):
     storageClass: Optional[str] = Field(
         default=None, description=f"{class_identifier}.storageClass[str]: defaults to the cluster's default class."
     )
-    accessMode: str = Field(
+    accessMode: Literal[tuple(SAMLLMHostStorageAccessMode.all())] = Field(  # type: ignore[valid-type]
         default=SAMLLMHostStorageAccessMode.READ_WRITE_ONCE.value,
         description=f"{class_identifier}.accessMode[str]: One of: {SAMLLMHostStorageAccessMode.all()}.",
     )
@@ -524,7 +524,7 @@ class SAMLLMHostStorage(LLMHostBaseModel):
     def validate_size(cls, v: str) -> str:
         return quantity(v, "storage.size")  # type: ignore[return-value]
 
-    @field_validator("accessMode")
+    @field_validator("accessMode", mode="before")
     @classmethod
     def validate_access_mode(cls, v: str) -> str:
         return choice(v, SAMLLMHostStorageAccessMode.all(), "storage.accessMode")

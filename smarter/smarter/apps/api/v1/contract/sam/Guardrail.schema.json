@@ -155,6 +155,14 @@
       "properties": {
         "action": {
           "description": "Guardrail.spec.config.action[str]: what the guardrail does when it triggers. One of: ['log', 'flag', 'redact', 'transform', 'block', 'escalate'].",
+          "enum": [
+            "log",
+            "flag",
+            "redact",
+            "transform",
+            "block",
+            "escalate"
+          ],
           "title": "Action",
           "type": "string"
         },
@@ -182,6 +190,19 @@
         "category": {
           "default": "custom",
           "description": "Guardrail.spec.config.category[str]: the risk the guardrail addresses. One of: ['pii', 'secrets', 'prompt_injection', 'jailbreak', 'toxicity', 'self_harm', 'hallucination', 'off_topic', 'compliance', 'formatting', 'custom'].",
+          "enum": [
+            "pii",
+            "secrets",
+            "prompt_injection",
+            "jailbreak",
+            "toxicity",
+            "self_harm",
+            "hallucination",
+            "off_topic",
+            "compliance",
+            "formatting",
+            "custom"
+          ],
           "title": "Category",
           "type": "string"
         },
@@ -271,6 +292,10 @@
         "mode": {
           "default": "enforce",
           "description": "Guardrail.spec.config.mode[str]: enforce, to take the action, or monitor, to only record what the action would have been.",
+          "enum": [
+            "enforce",
+            "monitor"
+          ],
           "title": "Mode",
           "type": "string"
         },
@@ -358,11 +383,24 @@
         },
         "stage": {
           "description": "Guardrail.spec.config.stage[str]: when the guardrail runs. One of: ['input', 'output', 'both'].",
+          "enum": [
+            "input",
+            "output",
+            "both"
+          ],
           "title": "Stage",
           "type": "string"
         },
         "strategy": {
           "description": "Guardrail.spec.config.strategy[str]: how the guardrail detects. One of: ['regex', 'keyword', 'detector', 'semantic', 'moderation', 'llm_judge'].",
+          "enum": [
+            "regex",
+            "keyword",
+            "detector",
+            "semantic",
+            "moderation",
+            "llm_judge"
+          ],
           "title": "Strategy",
           "type": "string"
         },

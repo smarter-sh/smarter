@@ -3204,6 +3204,10 @@
           "safesearch": {
             "default": "strict",
             "description": "ImageSearchPlugin.spec.searchParams.safesearch[str]: adult content filtering. One of: ['off', 'strict']",
+            "enum": [
+              "off",
+              "strict"
+            ],
             "title": "Safesearch",
             "type": "string"
           },
@@ -11841,6 +11845,14 @@
         "properties": {
           "action": {
             "description": "Guardrail.spec.config.action[str]: what the guardrail does when it triggers. One of: ['log', 'flag', 'redact', 'transform', 'block', 'escalate'].",
+            "enum": [
+              "log",
+              "flag",
+              "redact",
+              "transform",
+              "block",
+              "escalate"
+            ],
             "title": "Action",
             "type": "string"
           },
@@ -11868,6 +11880,19 @@
           "category": {
             "default": "custom",
             "description": "Guardrail.spec.config.category[str]: the risk the guardrail addresses. One of: ['pii', 'secrets', 'prompt_injection', 'jailbreak', 'toxicity', 'self_harm', 'hallucination', 'off_topic', 'compliance', 'formatting', 'custom'].",
+            "enum": [
+              "pii",
+              "secrets",
+              "prompt_injection",
+              "jailbreak",
+              "toxicity",
+              "self_harm",
+              "hallucination",
+              "off_topic",
+              "compliance",
+              "formatting",
+              "custom"
+            ],
             "title": "Category",
             "type": "string"
           },
@@ -11957,6 +11982,10 @@
           "mode": {
             "default": "enforce",
             "description": "Guardrail.spec.config.mode[str]: enforce, to take the action, or monitor, to only record what the action would have been.",
+            "enum": [
+              "enforce",
+              "monitor"
+            ],
             "title": "Mode",
             "type": "string"
           },
@@ -12044,11 +12073,24 @@
           },
           "stage": {
             "description": "Guardrail.spec.config.stage[str]: when the guardrail runs. One of: ['input', 'output', 'both'].",
+            "enum": [
+              "input",
+              "output",
+              "both"
+            ],
             "title": "Stage",
             "type": "string"
           },
           "strategy": {
             "description": "Guardrail.spec.config.strategy[str]: how the guardrail detects. One of: ['regex', 'keyword', 'detector', 'semantic', 'moderation', 'llm_judge'].",
+            "enum": [
+              "regex",
+              "keyword",
+              "detector",
+              "semantic",
+              "moderation",
+              "llm_judge"
+            ],
             "title": "Strategy",
             "type": "string"
           },
@@ -14425,6 +14467,12 @@
           "apiFormat": {
             "default": "openai_compatible",
             "description": "LLMHost.spec.engine.apiFormat[str]: the wire protocol. One of: ['openai_compatible', 'huggingface', 'ollama_native', 'custom'].",
+            "enum": [
+              "openai_compatible",
+              "huggingface",
+              "ollama_native",
+              "custom"
+            ],
             "title": "Apiformat",
             "type": "string"
           },
@@ -14531,6 +14579,15 @@
           },
           "name": {
             "description": "LLMHost.spec.engine.name[str]: the inference server. One of: ['vllm', 'tgi', 'sglang', 'llama_cpp', 'ollama', 'tei', 'custom'].",
+            "enum": [
+              "vllm",
+              "tgi",
+              "sglang",
+              "llama_cpp",
+              "ollama",
+              "tei",
+              "custom"
+            ],
             "title": "Name",
             "type": "string"
           },
@@ -14821,6 +14878,19 @@
           "quantization": {
             "default": "none",
             "description": "LLMHost.spec.model.quantization[str]: the weights' precision. One of: ['none', 'fp32', 'fp16', 'bf16', 'fp8', 'mxfp4', 'int8', 'int4', 'gguf', 'awq', 'gptq'].",
+            "enum": [
+              "none",
+              "fp32",
+              "fp16",
+              "bf16",
+              "fp8",
+              "mxfp4",
+              "int8",
+              "int4",
+              "gguf",
+              "awq",
+              "gptq"
+            ],
             "title": "Quantization",
             "type": "string"
           },
@@ -14858,12 +14928,23 @@
           "source": {
             "default": "huggingface",
             "description": "LLMHost.spec.model.source[str]: where the weights come from. One of: ['huggingface', 'ollama', 's3', 'url', 'pvc'].",
+            "enum": [
+              "huggingface",
+              "ollama",
+              "s3",
+              "url",
+              "pvc"
+            ],
             "title": "Source",
             "type": "string"
           },
           "task": {
             "default": "text-generation",
             "description": "LLMHost.spec.model.task[str]: what the model does. One of: ['text-generation', 'embedding'].",
+            "enum": [
+              "text-generation",
+              "embedding"
+            ],
             "title": "Task",
             "type": "string"
           },
@@ -15358,6 +15439,11 @@
           "accessMode": {
             "default": "ReadWriteOnce",
             "description": "LLMHost.spec.storage.accessMode[str]: One of: ['ReadWriteOnce', 'ReadWriteMany', 'ReadOnlyMany'].",
+            "enum": [
+              "ReadWriteOnce",
+              "ReadWriteMany",
+              "ReadOnlyMany"
+            ],
             "title": "Accessmode",
             "type": "string"
           },
@@ -15625,6 +15711,12 @@
           "authType": {
             "default": "none",
             "description": "MCPClient.spec.config.authType[str]: how to authenticate with the MCP server. One of: ['none', 'api_key', 'bearer_token', 'oauth2']. oauth2 sends an OAuth access token, obtained elsewhere, as a bearer token.",
+            "enum": [
+              "none",
+              "api_key",
+              "bearer_token",
+              "oauth2"
+            ],
             "title": "Authtype",
             "type": "string"
           },
@@ -15699,6 +15791,10 @@
           "transport": {
             "default": "http",
             "description": "MCPClient.spec.config.transport[str]: the MCP transport. One of: ['http', 'sse']. http is Streamable HTTP, and sse is the legacy HTTP+SSE transport.",
+            "enum": [
+              "http",
+              "sse"
+            ],
             "title": "Transport",
             "type": "string"
           }
@@ -21558,6 +21654,12 @@
           "freshness": {
             "anyOf": [
               {
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ],
                 "type": "string"
               },
               {
@@ -21591,12 +21693,21 @@
           },
           "provider": {
             "description": "WebsearchPlugin.spec.search.provider[str]: the web search API. One of: ['brave', 'tavily']",
+            "enum": [
+              "brave",
+              "tavily"
+            ],
             "title": "Provider",
             "type": "string"
           },
           "safeSearch": {
             "default": "moderate",
             "description": "WebsearchPlugin.spec.search.safeSearch[str]: adult content filtering. One of: ['off', 'moderate', 'strict']",
+            "enum": [
+              "off",
+              "moderate",
+              "strict"
+            ],
             "title": "Safesearch",
             "type": "string"
           }
