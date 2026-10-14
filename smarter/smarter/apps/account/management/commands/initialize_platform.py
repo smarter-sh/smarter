@@ -125,6 +125,13 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize MCPClients: %s", e)
 
         try:
+            # queued for the Celery worker, which downloads the repositories from GitHub: the
+            # built-in smarter_project_* MCPClients read them through the platform's MCP server.
+            call_command("index_smarter_project", queue=True)
+        except Exception as e:
+            logger.error("Failed to queue the indexing of The Smarter Project's repositories: %s", e)
+
+        try:
             call_command("add_builtin_llmhost_compute")
         except Exception as e:
             logger.error("Failed to initialize LLMHostCompute: %s", e)

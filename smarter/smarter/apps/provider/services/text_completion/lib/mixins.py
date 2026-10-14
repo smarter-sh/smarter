@@ -518,8 +518,8 @@ class ChatDbMixin(AccountMixin):
 
         Parameters
         ----------
-        prompt : Prompt, required
-            The prompt instance for which to record plugin usage.
+        prompt : Prompt
+            The prompt instance for which to record plugin usage. Required.
         plugin : Plugin, optional
             The plugin instance used in the prompt (default: None).
         input_text : str, optional

@@ -133,6 +133,7 @@ class SAMLLMHostBroker(AbstractBroker):
 
     _manifest: Optional[SAMLLMHost] = None
     _pydantic_model: Type[SAMLLMHost] = SAMLLMHost
+    deployable = True
     _llmhost: Optional[LLMHost] = None
     _service: Optional[LLMHostService] = None
     _name: Optional[str] = None

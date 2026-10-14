@@ -4,13 +4,16 @@ import io
 import os
 import re
 from pathlib import Path
+from string import Template
 from typing import Iterator, Optional, Union
+from urllib.parse import urlparse
 
 import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.secret.models import Secret
+from smarter.common.conf import smarter_settings
 from smarter.common.const import PYTHON_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -20,12 +23,49 @@ from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING])
 
+MANIFEST_EXTENSION = ".yaml"
+TEMPLATE_EXTENSION = ".yaml.tpl"
+
+
+def manifest_template_values() -> dict[str, str]:
+    """
+    Return the values that fill in the built-in MCPClient manifest templates, ``*.yaml.tpl``.
+
+    The templates are :class:`string.Template` strings, so that an MCPClient can name the
+    platform that applies it, e.g. the Smarter Project MCP server of that platform:
+
+    - ``environment_platform_scheme``: ``https``, or ``http`` in local development, from
+      ``smarter_settings.environment_url``.
+    - ``environment_platform_domain``: ``smarter_settings.environment_platform_domain``,
+      e.g. ``alpha.platform.example.com``, or ``localhost:9357`` in local development.
+
+    :returns: The values, by placeholder name.
+    """
+    return {
+        "environment_platform_scheme": urlparse(str(smarter_settings.environment_url)).scheme or "https",
+        "environment_platform_domain": str(smarter_settings.environment_platform_domain),
+    }
+
+
+def render_manifest_template(template: str) -> str:
+    """
+    Fill in a manifest template with :func:`manifest_template_values`.
+
+    :param template: The template.
+    :returns: The manifest.
+    :raises KeyError: If the template names a placeholder that has no value.
+    """
+    return Template(template).substitute(manifest_template_values())
+
 
 class MCPClientExample:
     """
     A class for loading and working with built-in YAML-based MCPClient examples.
 
     This class reads MCPClient example files in YAML format, parses their contents, and exposes metadata and serialization methods for inspection and testing.
+    A file named ``*.yaml.tpl`` is a template, which is filled in with
+    :func:`render_manifest_template` when it is read, so that :meth:`to_yaml` and
+    :meth:`to_json` return the manifest for this platform.
 
     :param filepath: The directory path containing the YAML file.
     :type filepath: str
@@ -52,8 +92,9 @@ class MCPClientExample:
     def __init__(self, filepath: str, filename: str):
         """Initialize the class from a yaml file."""
         with open(os.path.join(filepath, filename), encoding="utf-8") as file:
-            self._yaml = file.read()
-            self._json = yaml.safe_load(self._yaml)
+            text = file.read()
+        self._yaml = render_manifest_template(text) if filename.endswith(TEMPLATE_EXTENSION) else text
+        self._json = yaml.safe_load(self._yaml)
 
         self._filename = filename
         self._filepath = filepath
@@ -74,6 +115,11 @@ class MCPClientExample:
     @property
     def fullpath(self) -> Optional[str]:
         return str(Path(self.filepath) / self.filename) if self.filepath and self.filename else None
+
+    @property
+    def is_template(self) -> bool:
+        """Whether the file is a template, ``*.yaml.tpl``, rather than a manifest."""
+        return bool(self.filename and self.filename.endswith(TEMPLATE_EXTENSION))
 
     @property
     def name(self) -> Optional[str]:
@@ -106,7 +152,8 @@ class MCPClientExample:
         if not isinstance(self.filename, str):
             return self.filename
         try:
-            filename = os.path.splitext(self.filename)[0]  # Remove the file extension
+            filename = self.filename.removesuffix(".tpl")
+            filename = os.path.splitext(filename)[0]  # Remove the file extension
             name = re.sub(r"[-_]", " ", filename)  # Replace hyphens and underscores with spaces
             name = name.title().replace(" ", "")  # Capitalize each word and remove spaces
             return name
@@ -129,7 +176,7 @@ class MCPClientExamples:
 
     .. note::
 
-        Only files ending with ``.yaml`` in the mcpclients path are loaded as examples.
+        Only files ending with ``.yaml``, or ``.yaml.tpl`` for templates, in the mcpclients path are loaded as examples.
 
     .. tip::
 
@@ -155,7 +202,7 @@ class MCPClientExamples:
         """Initialize the class."""
         self._mcpclient_examples = []
         for file in sorted(os.listdir(self.MCPCLIENTS_PATH)):
-            if file.endswith(".yaml"):
+            if file.endswith((MANIFEST_EXTENSION, TEMPLATE_EXTENSION)):
                 mcpclient_example = MCPClientExample(filepath=self.MCPCLIENTS_PATH, filename=file)
                 self._mcpclient_examples.append(mcpclient_example)
 
@@ -179,7 +226,7 @@ class MCPClientExamples:
 
 def add_builtin_mcpclients(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
     """
-    Apply the built-in MCPClient manifests, in ``data/mcpclients``, for a user.
+    Apply the built-in MCPClient manifests and manifest templates, in ``data/mcpclients``, for a user.
 
     ``manage.py initialize_platform`` applies them for the Smarter admin user, so that every
     account's LLMClients may list them in their ``spec.mcpClients``.
@@ -197,6 +244,9 @@ def add_builtin_mcpclients(user_profile: Optional[UserProfile], verbose: bool = 
     .. note::
 
         - This function applies the manifests with the ``apply_manifest`` management command.
+        - A template, ``*.yaml.tpl``, is filled in with :func:`render_manifest_template`, and
+          the resulting manifest is applied, e.g. the ``smarter_project_*`` MCPClients, which
+          read the Smarter Project MCP server of this platform.
         - Manifests that require authentication name a Smarter Secret in ``spec.config.credentials``,
           and the MCPClient broker refuses to apply them until that Secret exists. Those manifests
           are skipped until the Secret is created, after which re-running this function applies them.
@@ -253,9 +303,18 @@ def add_builtin_mcpclients(user_profile: Optional[UserProfile], verbose: bool = 
         output = io.StringIO()
         error_output = io.StringIO()
         try:
-            call_command(
-                "apply_manifest", filespec=mcpclient.fullpath, username=username, stdout=output, stderr=error_output
-            )
+            if mcpclient.is_template:
+                call_command(
+                    "apply_manifest",
+                    manifest=mcpclient.to_yaml(),
+                    username=username,
+                    stdout=output,
+                    stderr=error_output,
+                )
+            else:
+                call_command(
+                    "apply_manifest", filespec=mcpclient.fullpath, username=username, stdout=output, stderr=error_output
+                )
         # pylint: disable=broad-except
         except Exception as e:
             logger.error("%s failed to apply MCPClient manifest %s: %s", logger_prefix, mcpclient.fullpath, e)
