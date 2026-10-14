@@ -2,8 +2,7 @@ apiVersion: smarter.sh/v1
 kind: ApiConnection
 metadata:
   annotations: []
-  description: Example ApiConnection using any of the following authentication methods:
-    [none, basic, token, oauth]
+  description: "Example ApiConnection using any of the following authentication methods: none, basic, token, oauth"
   name: example_connection
   version: 0.1.0
 spec:
