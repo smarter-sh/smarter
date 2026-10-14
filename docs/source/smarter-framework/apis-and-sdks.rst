@@ -1,15 +1,35 @@
-Smarter APIs and SDKs
-=====================
+Smarter APIs, SDKs and Integrations
+===================================
 
 Everything that you can do in the :doc:`web console <../smarter-platform/smarter-web-console>`, you
-can also do from your own software. This section documents the pieces that make that possible, and
-the design that they share.
+can also do from your own software, and a deployed LLMClient's chat can appear on web sites that
+aren't built with Smarter at all. This section documents the pieces that make that possible. They
+come in three layers, and each layer is built from the one before it:
+
+1. :ref:`The APIs <apis-and-sdks-apis>` define what a Smarter resource is, and how software asks
+   the platform for it. Everything else in this section is built from them.
+2. :ref:`The SDKs and developer tools <apis-and-sdks-sdks>` are for programmers, as the APIs are.
+   They are clients of the APIs, generated from their contract: libraries for Python, Node.js and
+   Go, the ``smarter`` command-line program, and the VS Code extension.
+3. :ref:`The website integrations <apis-and-sdks-integrations>` are for people who generally don't
+   program against Smarter: the owners and administrators of a WordPress, Drupal or Shopify site, a
+   Google Tag Manager container, or a documentation site. Each one adds a deployed LLMClient's chat
+   to their site from a settings screen.
+
+The :ref:`design goals <apis-and-sdks-design-goals>` that the APIs and the SDKs share come after
+them, followed by what to do if you want to write an SDK for another language.
+
+
+.. _apis-and-sdks-apis:
+
+The APIs
+--------
 
 .. list-table::
    :header-rows: 1
    :widths: 30 70
 
-   * - Piece
+   * - API
      - What it is
    * - :doc:`Smarter API Manifests (SAM) <smarter-manifests>`
      - The resource model. A YAML or JSON document that declares what a resource (an LLMClient, a
@@ -22,8 +42,22 @@ the design that they share.
      - The machine-readable description of the Smarter API: an OpenAPI 3.1 document, and a JSON
        Schema and example manifest for every SAM kind. Clients in any language are generated from
        it.
-   * - :doc:`Smarter CLI <smarter-cli>`
-     - A command-line program, like ``kubectl``, for people at a terminal and for shell scripts.
+
+The three are layered. SAM says *what* a resource is, the Smarter API is *how* a client asks for
+it, and the OpenAPI contract is the *written agreement* between the platform and its clients.
+
+
+.. _apis-and-sdks-sdks:
+
+SDKs and Developer Tools
+------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - SDK or tool
+     - What it is
    * - :doc:`Smarter Python SDK <smarter-python>`
      - A Python library, ``pip install smarter-api``, for applications, services, notebooks, tests
        and automation. The reference implementation of every Smarter SDK.
@@ -33,12 +67,41 @@ the design that they share.
    * - :doc:`Smarter Go SDK <smarter-golang>`
      - A Go module, ``go get github.com/smarter-sh/smarter-golang``, for services, Kubernetes
        operators, infrastructure tooling and automation.
+   * - :doc:`Smarter CLI <smarter-cli>`
+     - A command-line program, like ``kubectl``, for people at a terminal and for shell scripts.
    * - :doc:`VS Code Extension <vs-code-extension>`
      - The editor for manifests: validation as you type, completion and help from the same JSON
        Schemas, and the CLI's validate, apply and deploy commands.
+
+The CLI and the SDKs are clients of the OpenAPI contract, and nothing else: none of them has access
+to the platform that your own software doesn't have.
+
+Smarter's SDKs follow the same design, whatever their language. The Python SDK was the first of
+them, and is the reference implementation: the Node.js and Go SDKs have its features, resources,
+verbs and errors, number their architecture decisions as it does, and are tested against the same
+recorded responses of the platform.
+
+
+.. _apis-and-sdks-integrations:
+
+Website Integrations
+--------------------
+
+The website integrations bring a deployed LLMClient to sites that are built on other platforms.
+They don't call the Smarter API themselves. Each one is built on :doc:`Smarter Chat
+<smarter-chat>`'s embed script, one ``<script>`` tag that any web page can use, and writes that tag
+for you from a settings screen, so a site owner needs no code and no knowledge of Smarter beyond
+the address of their LLMClient.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Integration
+     - What it is
    * - :doc:`Smarter Chat for WordPress <smarter-wordpress>`
-     - A WordPress plugin that adds a deployed LLMClient's chat to a WordPress site: a launcher on
-       every page, a block and a shortcode.
+     - A WordPress plugin that adds the chat to a WordPress site: a launcher on every page, a block
+       and a shortcode.
    * - :doc:`Smarter Chat for Drupal <smarter-drupal>`
      - A Drupal module that adds the chat to a Drupal site: a launcher on every page, and a block.
    * - :doc:`Smarter Chat for Shopify <smarter-shopify>`
@@ -49,19 +112,8 @@ the design that they share.
      - Plugins for Docusaurus, MkDocs and Sphinx, and a recipe for VitePress, that add the chat to
        every page of a documentation site.
 
-The last five are built on :doc:`Smarter Chat <smarter-chat>`'s embed script, one ``<script>`` tag
-that any web page can use, which they write for you from a settings screen.
 
-The three ideas are layered. SAM says *what* a resource is, the Smarter API is *how* a client asks
-for it, and the OpenAPI contract is the *written agreement* between the platform and its clients.
-The CLI and the SDKs are clients of that agreement, and nothing else: none of them has access to the
-platform that your own software doesn't have.
-
-Smarter's SDKs follow the same design, whatever their language. The Python SDK was the first of
-them, and is the reference implementation: the Node.js and Go SDKs have its features, resources,
-verbs and errors, number their architecture decisions as it does, and are tested against the same
-recorded responses of the platform.
-
+.. _apis-and-sdks-design-goals:
 
 Design Goals
 ------------
@@ -201,16 +253,26 @@ Start from the contract, not from the platform's code:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Smarter APIs and SDKs
+   :caption: APIs
 
    smarter-manifests
    smarter-api
    smarter-openapi
-   smarter-cli
+
+.. toctree::
+   :maxdepth: 1
+   :caption: SDKs and Developer Tools
+
    smarter-python
    smarter-nodejs
    smarter-golang
+   smarter-cli
    vs-code-extension
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Website Integrations
+
    smarter-wordpress
    smarter-drupal
    smarter-shopify

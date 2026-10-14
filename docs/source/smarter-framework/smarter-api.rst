@@ -14,7 +14,7 @@ SDKs, for software that integrates with your platform.
 The whole API is described by a typed OpenAPI 3.1 document, the
 :doc:`Smarter OpenAPI Contract <smarter-openapi>`, which every platform serves at
 ``/docs/openapi.json``, and from which clients in any language can be generated. See
-:doc:`Smarter APIs and SDKs <apis-and-sdks>` for the design that the API and its clients share.
+:doc:`Smarter APIs, SDKs and Integrations <apis-and-sdks>` for the design that the API and its clients share.
 
 The Smarter Framework supports multiple hosting naming schemes for the Smarter API. For example:
 

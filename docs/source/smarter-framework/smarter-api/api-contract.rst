@@ -13,7 +13,7 @@ language can be generated from it rather than written by hand:
 Both are generated from the platform's Pydantic models, so they can't drift from what the platform
 actually does. This page is the technical reference, written for SDK authors and for backend
 developers. For an introduction, see :doc:`Smarter OpenAPI Contract <../smarter-openapi>`, and for the
-design goals that the contract and its clients share, :doc:`Smarter APIs and SDKs <../apis-and-sdks>`. If you change a SAM
+design goals that the contract and its clients share, :doc:`Smarter APIs, SDKs and Integrations <../apis-and-sdks>`. If you change a SAM
 model, the :doc:`journal's <smarter-journal>` response envelope, the
 :doc:`chat contract <../smarter-chat/api-contract>`, or a route that the document covers, read this
 page first.
