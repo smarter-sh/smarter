@@ -92,6 +92,9 @@ class SmarterWaffleSwitches:
     MCPCLIENT_LOGGING = "log_mcpclient"
     """Enables logging within the smarter.apps.mcpclient namespace."""
 
+    MCPSERVER_LOGGING = "log_mcpserver"
+    """Enables logging within the smarter.apps.mcpserver namespace."""
+
     ORCHESTRATOR = "log_orchestrator"
     """Enables logging within the smarter.apps.orchestror namespace."""
 
@@ -266,6 +269,11 @@ class SmarterWaffleSwitches:
         MCPCLIENT_LOGGING: SmarterWaffleSwitch(
             name=MCPCLIENT_LOGGING,
             comment="Enables logging throughout the smarter.app.mcpclient namespace.",
+            default=True,
+        ),
+        MCPSERVER_LOGGING: SmarterWaffleSwitch(
+            name=MCPSERVER_LOGGING,
+            comment="Enables logging throughout the smarter.app.mcpserver namespace.",
             default=True,
         ),
         ORCHESTRATOR: SmarterWaffleSwitch(

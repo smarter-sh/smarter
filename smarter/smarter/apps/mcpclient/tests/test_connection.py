@@ -32,6 +32,7 @@ from smarter.apps.mcpclient.connection import (
     matches_any,
     run_sync,
     truncate,
+    validate_endpoint_url,
 )
 from smarter.apps.mcpclient.exceptions import (
     SmarterMCPClientConfigurationError,
@@ -40,6 +41,7 @@ from smarter.apps.mcpclient.exceptions import (
 )
 from smarter.apps.mcpclient.models import MCPAuthType, MCPClient, MCPTransport
 from smarter.apps.plugin.plugin.safe_http import SafeHttpError
+from smarter.common.const import SmarterEnvironments
 
 from .base_classes import (
     GUARD_PATCH,
@@ -176,6 +178,38 @@ class TestMCPServerConnection(MCPClientTestBase):
             with self.assertRaises(SmarterMCPClientConnectionError) as cm:
                 self.connection().discover()
         self.assertIn("public address", cm.exception.message)
+
+    def test_validate_endpoint_url(self):
+        """A loopback host is permitted in the local environment only.
+
+        Every other url must be public.
+        """
+        loopback_urls = ("http://localhost:9357/api/v1/mcp/", "https://127.0.0.1/mcp", "http://api.localhost:9357/mcp")
+        with (
+            mock.patch("smarter.apps.mcpclient.connection.smarter_settings") as settings,
+            mock.patch(GUARD_PATCH) as guard,
+        ):
+            settings.environment = SmarterEnvironments.LOCAL
+            for url in loopback_urls:
+                validate_endpoint_url(url)
+            guard.assert_not_called()
+            validate_endpoint_url("https://mcp.example.com/mcp")
+            validate_endpoint_url("ftp://localhost/mcp")
+            validate_endpoint_url("http://[invalid")
+            self.assertEqual(guard.call_count, 3)
+            guard.reset_mock()
+            for environment in (SmarterEnvironments.ALPHA, SmarterEnvironments.PROD):
+                settings.environment = environment
+                for url in loopback_urls:
+                    validate_endpoint_url(url)
+            self.assertEqual(guard.call_count, 2 * len(loopback_urls))
+
+    def test_loopback_host_is_refused_outside_the_local_environment(self):
+        """The real guard refuses localhost in a deployed environment."""
+        with mock.patch("smarter.apps.mcpclient.connection.smarter_settings") as settings:
+            settings.environment = SmarterEnvironments.PROD
+            with self.assertRaises(SafeHttpError):
+                validate_endpoint_url("http://localhost:9357/api/v1/mcp/")
 
     def test_no_endpoint_url(self):
         """Test that an MCPClient without an endpoint URL is a configuration error."""

@@ -3,9 +3,21 @@ Embedding Smarter Chat
 
 This guide is for developers who want to add a Smarter chatbot to their own website or
 application, with the `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__
-npm package. You need a deployed :doc:`LLMClient <../../smarter-resources/smarter-llmclient>` and a
-React 19 application built with a bundler, such as Vite, webpack, Rollup or Next.js. You don't
-need to know anything about Smarter's backend.
+npm package. You need a deployed :doc:`LLMClient <../../smarter-resources/smarter-llmclient>`. You
+don't need to know anything about Smarter's backend.
+
+The package can be used two ways:
+
+- **The embed script**, one ``<script>`` tag, for any web page: WordPress, Drupal, Shopify,
+  Squarespace, Wix, Webflow, SharePoint, a documentation site, or a server-rendered or static html
+  page. It needs no build, and includes React. See `The Embed Script`_.
+- **The React component**, ``SmarterChat``, for a React 19 application built with a bundler, such
+  as Vite, webpack, Rollup or Next.js. See `Installation`_.
+
+For several platforms, a plugin writes the embed script's tag for you, from a settings screen:
+:doc:`WordPress <../smarter-wordpress>`, :doc:`Drupal <../smarter-drupal>`,
+:doc:`Shopify <../smarter-shopify>`, :doc:`Google Tag Manager <../smarter-gtm>`, and
+:doc:`Docusaurus, MkDocs, Sphinx and VitePress <../smarter-docs-sites>`.
 
 
 Before You Start
@@ -60,6 +72,116 @@ if that matters to you.
 What the page receives is the public configuration: the LLMClient's name, welcome message, example
 prompts, model and system prompt, but not, for example, its owner's profile or the session's
 diagnostic histories, which only the workbench sees.
+
+
+The Embed Script
+----------------
+
+``dist/embed.js`` is a single classic script that includes React, React DOM, Smarter Chat and its
+css. It renders each chat in its own `Shadow DOM
+<https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>`__, so the
+site's css can't change the chat, and the chat's css can't change the site. Add it to a page:
+
+.. code-block:: html
+
+  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js"
+    data-chatbot="https://stackademy.3141-5926-5359.api.example.com/" async></script>
+
+That adds a **launcher**: a chat button in a corner of the page, which opens the chat in a panel
+(the whole screen, on a phone). The chat, and its first request to the LLMClient, load only when the
+visitor opens it. Its session cookie is for the whole site (path ``/``), so the conversation follows
+the visitor from page to page.
+
+To put the chat in the page instead, use the ``<smarter-chat>`` element, on any page that loads the
+script. It fills its width, and is 600px high unless you say otherwise:
+
+.. code-block:: html
+
+  <smarter-chat chatbot="https://stackademy.3141-5926-5359.api.example.com/" height="70vh"></smarter-chat>
+
+The element's attributes, the script tag's ``data-`` attributes, and the properties of
+``window.SmarterChatConfig`` (camelCase, e.g. ``apiKey``) are the same options:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 20 55
+
+   * - Option
+     - Default
+     - Description
+   * - ``chatbot``
+     - (required)
+     - The deployed LLMClient's url.
+   * - ``api-key``
+     -
+     - A Smarter api key, for LLMClients that require one. It is public in the page.
+   * - ``mode``
+     - ``launcher`` or ``inline``
+     - ``launcher`` is the script tag's default; ``inline`` is the element's.
+   * - ``position``
+     - ``bottom-right``
+     - The launcher's corner: ``bottom-right`` or ``bottom-left``.
+   * - ``open``
+     - ``false``
+     - Start with the launcher open.
+   * - ``label``
+     - ``Chat``
+     - The launcher's accessible name.
+   * - ``color``
+     - ``#ff5733``
+     - The launcher button's color.
+   * - ``width``, ``height``
+     - ``400px``, ``600px``
+     - The launcher's panel, or the inline chat (``100%``, ``600px``). Any css length.
+   * - ``z-index``
+     - ``2147483000``
+     - The launcher's stacking order.
+   * - ``session-cookie-name``
+     - one per chatbot host
+     - The cookie that keeps the chat session.
+   * - ``cookie-path``
+     - ``/``
+     - The session cookie's path.
+   * - ``stream-progress``
+     - ``true``
+     - Display a running prompt's progress.
+   * - ``debug``
+     - ``false``
+     - Log to the browser console.
+   * - ``target``
+     -
+     - The script tag and ``window.SmarterChatConfig`` only: the css selector of an element in which
+       to render the chat inline.
+
+Where a script tag's attributes can't be set, as in a tag manager, set ``window.SmarterChatConfig``,
+an object or an array of them, before the script runs. A chatbot is added once per page, however
+many times the script runs:
+
+.. code-block:: html
+
+  <script>
+    window.SmarterChatConfig = { chatbot: "https://stackademy.3141-5926-5359.api.example.com/", position: "bottom-left" };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js" async></script>
+
+Page scripts can open and close the launcher, e.g. from a "Chat with us" button, with
+``SmarterChat.open()``, ``SmarterChat.close()`` and ``SmarterChat.toggle()``, add a chat with
+``SmarterChat.mount(options)``, and listen for the element's ``smarter-chat-toggle`` event, whose
+``event.detail.open`` says whether it opened. The site's css can style the launcher's parts:
+``smarter-chat::part(launcher)``, ``::part(panel)`` and ``::part(chat)``.
+
+``embed.js`` loads its other files from an ``embed/`` directory beside it: Mermaid, only when a
+message has a diagram, and KaTeX's fonts, only when one has math. To host the script yourself, copy
+``dist/embed.js`` and ``dist/embed/`` from the npm package together, anywhere. On a CDN url, pin a
+version (``@0.9.0``) if you want to review changes before your visitors see them; ``@0`` follows the
+latest 0.x release.
+
+A site with a Content Security Policy must allow the script's origin in ``script-src`` (and
+``https://fonts.googleapis.com`` in ``style-src``, if the LLMClient's styles use a Google font), and
+the LLMClient's host in ``connect-src``. The chat's own css is a constructable stylesheet, which
+``style-src`` doesn't restrict, but KaTeX's font rules (added to the page's head) and Mermaid
+diagrams' styles are ``<style>`` elements, which need ``'unsafe-inline'`` in ``style-src``; without
+it, math falls back to the browser's fonts, and diagrams lose their colors.
 
 
 Installation
@@ -145,6 +267,10 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
    * - ``sessionCookieExpiration``
      - one day
      - The session cookie's lifetime, in milliseconds. After it, the visitor starts a new chat.
+   * - ``cookiePath``
+     - the page's path
+     - The path of the session and debug cookies. ``"/"`` keeps one chat session as the visitor moves
+       from page to page.
    * - ``csrfCookieName``
      - ``"csrftoken"``
      - The name of a Django CSRF cookie, whose value is sent as the ``X-CSRFToken`` header. Only the
@@ -289,7 +415,8 @@ Bundling Notes
 - **The UMD bundle**, ``dist/smarter-chat-library.umd.js``, expects ``React``, ``ReactDOM`` and
   ``jsxRuntime`` globals. It can't import Mermaid, and displays diagrams as code, unless the page
   maps ``mermaid`` to Mermaid's ES module with an import map, for example to
-  ``https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs``. Prefer a bundler.
+  ``https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs``. Prefer a bundler, or, without
+  one, `The Embed Script`_, which includes React and loads Mermaid itself.
 - **Production builds** of the component strip its ``console.debug`` calls.
 
 
@@ -305,7 +432,8 @@ What the Component Stores in the Browser
      - Contents
    * - ``session_key`` (``sessionCookieName``)
      - cookie
-     - The chat session's key, for the page's path, ``SameSite=Lax``.
+     - The chat session's key, for the page's path (or ``cookiePath``), ``SameSite=Lax``. The embed
+       script's is ``smarter_chat_<chatbot host>``, for the path ``/``.
    * - ``debug`` (``debugCookieName``)
      - cookie
      - The LLMClient's debug mode.

@@ -19,6 +19,8 @@ class TestInitializePlatform(CommandTestBase):
         self.assertIn("add_builtin_custom_domains", names)
         self.assertIn("add_plugin_examples", names)
         self.assertIn("create_stackademy", names)
+        self.assertIn("index_smarter_project", names)
+        self.assertEqual(call.call_args_list[names.index("index_smarter_project")].kwargs, {"queue": True})
         self.assertLess(names.index("initialize_providers"), names.index("create_stackademy"))
         self.assertIn("verify_dns_configuration", names)
         self.assertEqual(names[-1], "sync_infrastructure_inventory")

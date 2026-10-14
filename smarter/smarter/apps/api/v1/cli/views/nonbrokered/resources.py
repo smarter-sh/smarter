@@ -3,7 +3,8 @@
 Smarter API command-line interface 'resources' view.
 
 Generates a list of dicts describing every resource
-in SAMKinds.
+in SAMKinds. A kind's ``Deployable`` is its broker's
+:attr:`~smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.deployable`.
 
 Example:
 
@@ -185,6 +186,7 @@ retval = {
 
 from http import HTTPStatus
 
+from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
 from smarter.apps.api.v1.contract.models import CliApiResource
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -218,7 +220,9 @@ class ApiV1CliResourcesApiView(CliBaseApiView):
         all_resources = []
         all_kinds = SAMKinds.all()
         for kind in all_kinds:
-            deployable = kind == SAMKinds.PROMPT.value
+            # a kind is deployable when its broker implements deploy and undeploy.
+            broker_class = Brokers.get_broker(kind)
+            deployable = broker_class is not None and broker_class.deployable
             kind_dict = self.dictionaryize(sam_kind=kind, deployable=deployable)
             all_resources.append(kind_dict)
 
