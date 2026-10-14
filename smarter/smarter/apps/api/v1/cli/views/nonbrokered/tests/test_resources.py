@@ -5,6 +5,7 @@ from unittest import mock
 
 from rest_framework.test import APIClient
 
+from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -103,17 +104,19 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
             self.assertEqual(resource["Display"], resource["Singular"])
             self.assertEqual(resource["DisplayPlural"], resource["Plural"])
 
-    def test_resources_only_prompt_is_deployable(self) -> None:
-        """Test that Prompt is the only resource kind flagged as deployable."""
+    def test_resources_deployable_is_the_brokers(self) -> None:
+        """Test that a kind is deployable exactly when its broker is, and that Prompt, whose broker doesn't deploy, isn't."""
         response, status = self.get_response(path=self.path)
         self.assertEqual(status, HTTPStatus.OK)
         data = response[SmarterJournalApiResponseKeys.DATA]
 
-        deployable_singulars = [resource["Singular"] for resource in data if resource["Deployable"]]
-        self.assertEqual(deployable_singulars, [SAMKinds.PROMPT.value])
+        for resource in data:
+            with self.subTest(kind=resource["APIKind"]):
+                self.assertEqual(resource["Deployable"], Brokers.get_broker(resource["APIKind"]).deployable)
 
-        not_deployable_singulars = [resource["Singular"] for resource in data if not resource["Deployable"]]
-        self.assertNotIn(SAMKinds.PROMPT.value, not_deployable_singulars)
+        deployable = sorted(resource["Singular"] for resource in data if resource["Deployable"])
+        self.assertIn(SAMKinds.LLM_CLIENT.value, deployable)
+        self.assertNotIn(SAMKinds.PROMPT.value, deployable)
 
     def test_resources_known_entries(self) -> None:
         """Spot-check a handful of well-known resource kinds, including a pluralization edge case."""
@@ -130,7 +133,7 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
                 "APIKind": "Prompt",
                 "Display": "Prompt",
                 "DisplayPlural": "Prompts",
-                "Deployable": True,
+                "Deployable": False,
             },
         )
         self.assertEqual(
@@ -152,7 +155,7 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
                 "APIKind": "SmarterAuthToken",
                 "Display": "SmarterAuthToken",
                 "DisplayPlural": "SmarterAuthTokens",
-                "Deployable": False,
+                "Deployable": True,
             },
         )
         # Vectorsearch is an irregular plural ("-search" -> "-searches"), so it's a good

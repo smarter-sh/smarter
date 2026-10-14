@@ -76,6 +76,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": OPERATIONAL,
     },
+    "index-smarter-project": {
+        "task": "smarter.apps.mcpserver.tasks.index_repositories",
+        "schedule": timedelta(hours=1),
+        "options": OPERATIONAL,
+    },
 }
 app.conf.beat_schedule_filename = "/home/smarter_user/data/celery/celerybeat-schedule"
 
