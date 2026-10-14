@@ -43,7 +43,7 @@ come from.
 
 import os
 import re
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar, Literal, Optional
 
 from pydantic import Field, field_validator
 
@@ -152,7 +152,7 @@ class ImageSearchParams(SmarterBasePydanticModel):
         default=None,
         description=f"{class_identifier}.searchLang[str]: prefer images from content in this language, e.g. en or pt-br.",
     )
-    safesearch: str = Field(
+    safesearch: Literal[tuple(ImageSearchSafeSearch.all())] = Field(  # type: ignore[valid-type]
         default=ImageSearchSafeSearch.STRICT.value,
         description=f"{class_identifier}.safesearch[str]: adult content filtering. One of: {ImageSearchSafeSearch.all()}",
     )
@@ -179,7 +179,7 @@ class ImageSearchParams(SmarterBasePydanticModel):
         except ValueError as e:
             raise SAMValidationError(f"{cls.class_identifier}: {e}") from e
 
-    @field_validator("safesearch")
+    @field_validator("safesearch", mode="before")
     @classmethod
     def validate_safesearch(cls, v: str) -> str:
         """Validate the safe search level."""

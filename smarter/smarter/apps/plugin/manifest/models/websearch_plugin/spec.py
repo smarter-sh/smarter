@@ -39,7 +39,7 @@ search, and a ``fetch`` section to enable fetch. At least one is required.
 
 import os
 import re
-from typing import ClassVar, Optional
+from typing import ClassVar, Literal, Optional
 
 from pydantic import Field, field_validator, model_validator
 
@@ -74,7 +74,7 @@ class WebsearchSearch(SmarterBasePydanticModel):
 
     class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.search"
 
-    provider: str = Field(
+    provider: Literal[tuple(WebsearchProvider.all())] = Field(  # type: ignore[valid-type]
         ...,
         description=f"{class_identifier}.provider[str]: the web search API. One of: {WebsearchProvider.all()}",
     )
@@ -91,7 +91,7 @@ class WebsearchSearch(SmarterBasePydanticModel):
         le=MAX_RESULTS,
         description=f"{class_identifier}.maxResults[int]: the maximum number of results per search, 1 to {MAX_RESULTS}.",
     )
-    safeSearch: str = Field(
+    safeSearch: Literal[tuple(WebsearchSafeSearch.all())] = Field(  # type: ignore[valid-type]
         default=WebsearchSafeSearch.MODERATE.value,
         description=f"{class_identifier}.safeSearch[str]: adult content filtering. One of: {WebsearchSafeSearch.all()}",
     )
@@ -103,7 +103,7 @@ class WebsearchSearch(SmarterBasePydanticModel):
         default=None,
         description=f"{class_identifier}.language[str]: an ISO 639-1 language code, e.g. en, to localize results.",
     )
-    freshness: Optional[str] = Field(
+    freshness: Optional[Literal[tuple(WebsearchFreshness.all())]] = Field(  # type: ignore[valid-type]
         default=None,
         description=(
             f"{class_identifier}.freshness[str]: by default, restrict results to those published within the last "
@@ -111,7 +111,7 @@ class WebsearchSearch(SmarterBasePydanticModel):
         ),
     )
 
-    @field_validator("provider")
+    @field_validator("provider", mode="before")
     @classmethod
     def validate_provider(cls, v: str) -> str:
         """Validate the provider."""
@@ -128,7 +128,7 @@ class WebsearchSearch(SmarterBasePydanticModel):
             raise SAMValidationError(f"{cls.class_identifier}.apiKey must be the name of a Smarter Secret.")
         return v.strip()
 
-    @field_validator("safeSearch")
+    @field_validator("safeSearch", mode="before")
     @classmethod
     def validate_safe_search(cls, v: str) -> str:
         """Validate the safe search level."""
@@ -161,7 +161,7 @@ class WebsearchSearch(SmarterBasePydanticModel):
             raise SAMValidationError(f"{cls.class_identifier}.language must be a two letter language code: {v}")
         return v
 
-    @field_validator("freshness")
+    @field_validator("freshness", mode="before")
     @classmethod
     def validate_freshness(cls, v: Optional[str]) -> Optional[str]:
         """Validate the default freshness."""
