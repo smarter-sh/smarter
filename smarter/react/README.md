@@ -44,6 +44,7 @@ Current app packages include:
 - `smarter-custom-domain-list`
 - `smarter-dashboard`
 - `smarter-guardrail-list`
+- `smarter-llmclient-list`
 - `smarter-llmhost-compute-list`
 - `smarter-llmhost-list`
 - `smarter-llmtool-list`
@@ -51,7 +52,6 @@ Current app packages include:
 - `smarter-manifest-editor`
 - `smarter-mcpclient-list`
 - `smarter-orchestrator-list`
-- `smarter-prompt-list`
 - `smarter-prompt-passthrough`
 - `smarter-provider-list`
 - `smarter-proxy-list`
