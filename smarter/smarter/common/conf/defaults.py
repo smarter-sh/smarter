@@ -148,6 +148,7 @@ class SettingsDefaults:
         "INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE", "infrastructure_celery_task_queue"
     )
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
+    MCPSERVER_RATE_LIMIT: int = int(get_env("MCPSERVER_RATE_LIMIT", 1200))  # requests per minute, per client IP
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),
