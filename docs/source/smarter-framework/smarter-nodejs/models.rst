@@ -7,7 +7,7 @@ type of the same name, e.g. ``Guardrail``: the schema validates, and the type an
 
 .. code-block:: typescript
 
-   import { Guardrail } from "smarter-api";
+   import { Guardrail } from "@smarter.sh/api";
 
    const guardrail: Guardrail = Guardrail.parse(JSON.parse(text));
 
@@ -26,7 +26,7 @@ The SDK has a TypeScript type of every :doc:`manifest <../smarter-manifests>` ki
 
 .. code-block:: typescript
 
-   import { SAM_KINDS } from "smarter-api";
+   import { SAM_KINDS } from "@smarter.sh/api";
 
    const llmclient = (await client.llmClients.describe("customer_support")).toSam("LLMClient");
    console.log(llmclient.spec.config.prompt.provider, llmclient.spec.config.prompt.defaultModel, llmclient.status?.deployed);

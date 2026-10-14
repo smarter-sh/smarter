@@ -31,7 +31,7 @@ Official website: https://smarter.sh/
 
 - https://github.com/smarter-sh/smarter-nodejs
 
-- https://www.npmjs.com/package/smarter-api
+- https://www.npmjs.com/package/@smarter.sh/api
 
 - https://github.com/smarter-sh/smarter-golang
 

@@ -120,7 +120,7 @@ provider's own SDK:
 .. code-block:: typescript
 
    import OpenAI from "openai";
-   import { Smarter } from "smarter-api";
+   import { Smarter } from "@smarter.sh/api";
 
    const smarter = new Smarter();
    const openai = new OpenAI({ baseURL: smarter.proxies.baseUrl("openai"), apiKey: smarter.apiKey });
@@ -135,6 +135,6 @@ wrap yet, with the same retries and errors, and a Zod schema of the response:
 
 .. code-block:: typescript
 
-   import { JsonValue } from "smarter-api";
+   import { JsonValue } from "@smarter.sh/api";
 
    const data = await client.http.request("GET", "llmhosts/report/", JsonValue);

@@ -15,11 +15,11 @@ your :doc:`MCP servers <../smarter-resources/smarter-mcpclient>`.
 
 .. code-block:: console
 
-   npm install smarter-api
+   npm install @smarter.sh/api
 
 .. code-block:: typescript
 
-   import { Smarter } from "smarter-api";
+   import { Smarter } from "@smarter.sh/api";
 
    const client = new Smarter(); // SMARTER_API_KEY, or the smarter cli's ~/.smarter/config.yaml
 
@@ -27,8 +27,9 @@ your :doc:`MCP servers <../smarter-resources/smarter-mcpclient>`.
    const response = await client.llmClients.prompt(llmclient.id, "Where is my order #1234?");
    console.log(response.text);
 
-The package is ``smarter-api`` on `npm <https://www.npmjs.com/package/smarter-api>`__, the same name
-as the Python SDK's package on PyPI. It is written in TypeScript, ships its type declarations, and
+The package is ``@smarter.sh/api`` on `npm <https://www.npmjs.com/package/@smarter.sh/api>`__, in the
+``@smarter.sh`` scope beside the `Smarter Chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__
+component, and is the npm counterpart of the Python SDK's ``smarter-api`` on PyPI. It is written in TypeScript, ships its type declarations, and
 runs on every Node.js release that is not end-of-life (22 and later). Its source is
 `github.com/smarter-sh/smarter-nodejs <https://github.com/smarter-sh/smarter-nodejs>`__.
 

@@ -16,7 +16,7 @@ One prompt
 
 .. code-block:: typescript
 
-   import { Smarter, messageText } from "smarter-api";
+   import { Smarter, messageText } from "@smarter.sh/api";
 
    const client = new Smarter();
    const llmclient = await client.llmClients.find("calculator");

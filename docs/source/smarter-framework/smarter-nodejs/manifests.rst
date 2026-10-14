@@ -14,7 +14,7 @@ The manifest API
 
 .. code-block:: typescript
 
-   import { Smarter } from "smarter-api";
+   import { Smarter } from "@smarter.sh/api";
 
    const client = new Smarter();
 
@@ -64,7 +64,7 @@ The types build manifests in code, too:
 
 .. code-block:: typescript
 
-   import type { SAMSecret } from "smarter-api";
+   import type { SAMSecret } from "@smarter.sh/api";
 
    const secret: SAMSecret = (await client.secrets.exampleManifest()).toSam("Secret");
    secret.metadata.name = "stripe_api_key";
@@ -84,7 +84,7 @@ repository, review changes in pull requests, and apply them from CI/CD:
 
    import { readdirSync } from "node:fs";
    import { join } from "node:path";
-   import { Smarter } from "smarter-api";
+   import { Smarter } from "@smarter.sh/api";
 
    const client = new Smarter();
    const paths = readdirSync("manifests").filter((name) => name.endsWith(".yaml")).sort().map((name) => join("manifests", name));

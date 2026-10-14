@@ -14,7 +14,7 @@ This is the lookup of every Smarter SDK, so the same environment configures the 
 
 .. code-block:: typescript
 
-   import { Smarter } from "smarter-api";
+   import { Smarter } from "@smarter.sh/api";
 
    const client = new Smarter({
      apiKey: "your 64-character Smarter api key",
@@ -97,7 +97,7 @@ test double:
 .. code-block:: typescript
 
    import { ProxyAgent, fetch as undiciFetch } from "undici";
-   import { Smarter } from "smarter-api";
+   import { Smarter } from "@smarter.sh/api";
 
    const dispatcher = new ProxyAgent("http://proxy.example.com:3128");
    const client = new Smarter({

@@ -28,7 +28,7 @@ the design that they share.
      - A Python library, ``pip install smarter-api``, for applications, services, notebooks, tests
        and automation. The reference implementation of every Smarter SDK.
    * - :doc:`Smarter Node.js SDK <smarter-nodejs>`
-     - A TypeScript library for Node.js, ``npm install smarter-api``, for web back ends, serverless
+     - A TypeScript library for Node.js, ``npm install @smarter.sh/api``, for web back ends, serverless
        functions, services and automation.
    * - :doc:`Smarter Go SDK <smarter-golang>`
      - A Go module, ``go get github.com/smarter-sh/smarter-golang``, for services, Kubernetes

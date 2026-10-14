@@ -36,7 +36,7 @@ An ``APIStatusError`` carries the response's ``statusCode``, a readable ``messag
 
 .. code-block:: typescript
 
-   import { NotFoundError, SmarterError } from "smarter-api";
+   import { NotFoundError, SmarterError } from "@smarter.sh/api";
 
    try {
      await client.manifests.describe("LLMClient", "no_such_client");
