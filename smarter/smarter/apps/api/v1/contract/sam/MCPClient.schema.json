@@ -199,6 +199,12 @@
         "authType": {
           "default": "none",
           "description": "MCPClient.spec.config.authType[str]: how to authenticate with the MCP server. One of: ['none', 'api_key', 'bearer_token', 'oauth2']. oauth2 sends an OAuth access token, obtained elsewhere, as a bearer token.",
+          "enum": [
+            "none",
+            "api_key",
+            "bearer_token",
+            "oauth2"
+          ],
           "title": "Authtype",
           "type": "string"
         },
@@ -273,6 +279,10 @@
         "transport": {
           "default": "http",
           "description": "MCPClient.spec.config.transport[str]: the MCP transport. One of: ['http', 'sse']. http is Streamable HTTP, and sse is the legacy HTTP+SSE transport.",
+          "enum": [
+            "http",
+            "sse"
+          ],
           "title": "Transport",
           "type": "string"
         }

@@ -44,7 +44,7 @@ Each strategy has its own fields:
 
 import os
 import re
-from typing import ClassVar, Optional
+from typing import ClassVar, Literal, Optional
 
 from pydantic import Field, field_validator, model_validator
 
@@ -80,7 +80,7 @@ REGEX_FLAGS = ("IGNORECASE", "MULTILINE", "DOTALL")
 
 def choice(value: Optional[str], choices: list[str], field: str) -> str:
     """Return a lower cased value, if it is one of ``choices``."""
-    value = (value or "").strip().lower()
+    value = str(value or "").strip().lower()
     if value not in choices:
         raise SAMValidationError(f"{field}: must be one of {choices}, not '{value}'.")
     return value
@@ -100,17 +100,17 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".config"
 
     # --- when and what ---
-    stage: str = Field(
+    stage: Literal[tuple(SAMGuardrailStage.all())] = Field(  # type: ignore[valid-type]
         ...,
         description=f"{class_identifier}.stage[str]: when the guardrail runs. One of: {SAMGuardrailStage.all()}.",
     )
-    category: str = Field(
+    category: Literal[tuple(SAMGuardrailCategory.all())] = Field(  # type: ignore[valid-type]
         default=SAMGuardrailCategory.CUSTOM.value,
         description=f"{class_identifier}.category[str]: the risk the guardrail addresses. One of: {SAMGuardrailCategory.all()}.",
     )
 
     # --- detection ---
-    strategy: str = Field(
+    strategy: Literal[tuple(SAMGuardrailStrategy.all())] = Field(  # type: ignore[valid-type]
         ...,
         description=f"{class_identifier}.strategy[str]: how the guardrail detects. One of: {SAMGuardrailStrategy.all()}.",
     )
@@ -178,7 +178,7 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
     )
 
     # --- response ---
-    action: str = Field(
+    action: Literal[tuple(SAMGuardrailAction.all())] = Field(  # type: ignore[valid-type]
         ...,
         description=f"{class_identifier}.action[str]: what the guardrail does when it triggers. One of: {SAMGuardrailAction.all()}.",
     )
@@ -202,7 +202,7 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
     )
 
     # --- lifecycle ---
-    mode: str = Field(
+    mode: Literal[tuple(SAMGuardrailMode.all())] = Field(  # type: ignore[valid-type]
         default=SAMGuardrailMode.ENFORCE.value,
         description=(
             f"{class_identifier}.mode[str]: enforce, to take the action, or monitor, to only record what the action "
@@ -226,27 +226,27 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
         description=f"{class_identifier}.isActive[bool]: whether the guardrail runs.",
     )
 
-    @field_validator("stage")
+    @field_validator("stage", mode="before")
     @classmethod
     def validate_stage(cls, v: str) -> str:
         return choice(v, SAMGuardrailStage.all(), "stage")
 
-    @field_validator("category")
+    @field_validator("category", mode="before")
     @classmethod
     def validate_category(cls, v: str) -> str:
         return choice(v, SAMGuardrailCategory.all(), "category")
 
-    @field_validator("strategy")
+    @field_validator("strategy", mode="before")
     @classmethod
     def validate_strategy(cls, v: str) -> str:
         return choice(v, SAMGuardrailStrategy.all(), "strategy")
 
-    @field_validator("action")
+    @field_validator("action", mode="before")
     @classmethod
     def validate_action(cls, v: str) -> str:
         return choice(v, SAMGuardrailAction.all(), "action")
 
-    @field_validator("mode")
+    @field_validator("mode", mode="before")
     @classmethod
     def validate_mode(cls, v: str) -> str:
         return choice(v, SAMGuardrailMode.all(), "mode")
