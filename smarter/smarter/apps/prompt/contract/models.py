@@ -35,7 +35,7 @@ if TYPE_CHECKING:
         LLMClientPlugin,
         LLMClientRequests,
     )
-    from smarter.apps.plugin.models import PluginMeta, PluginSelectorHistory
+    from smarter.apps.llmtool.models import PluginMeta, PluginSelectorHistory
     from smarter.apps.prompt.models import PromptPluginUsage, PromptToolCall
 
 PromptChatApiJson = JsonValue
@@ -367,7 +367,7 @@ class PromptChatApiOrmModel(BaseModel):
 
 class PromptChatApiPluginMeta(PromptChatApiOrmModel):
     """
-    A plugin's metadata: a :class:`smarter.apps.plugin.models.PluginMeta`.
+    A plugin's metadata: a :class:`smarter.apps.llmtool.models.PluginMeta`.
 
     Its owner is left out: the configuration never includes a user's profile.
     """
@@ -387,7 +387,7 @@ class PromptChatApiPluginMeta(PromptChatApiOrmModel):
         The contract's model of a plugin's metadata.
 
         :param plugin_meta: The row, whose tags should be prefetched.
-        :type plugin_meta: smarter.apps.plugin.models.PluginMeta
+        :type plugin_meta: smarter.apps.llmtool.models.PluginMeta
         :returns: The model.
         :rtype: PromptChatApiPluginMeta
         """
@@ -561,7 +561,7 @@ class PromptChatApiPromptPluginUsage(PromptChatApiOrmModel):
 
 
 class PromptChatApiPluginSelection(PromptChatApiOrmModel):
-    """A plugin selector's activation: a :class:`smarter.apps.plugin.models.PluginSelectorHistory`."""
+    """A plugin selector's activation: a :class:`smarter.apps.llmtool.models.PluginSelectorHistory`."""
 
     plugin_selector: int = Field(..., description="PluginSelectorHistory.plugin_selector: the PluginSelector's id.")
     search_term: Optional[str] = Field(None, max_length=255, description="PluginSelectorHistory.search_term.")
@@ -574,7 +574,7 @@ class PromptChatApiPluginSelection(PromptChatApiOrmModel):
         The contract's model of a plugin selector's activation.
 
         :param row: The row.
-        :type row: smarter.apps.plugin.models.PluginSelectorHistory
+        :type row: smarter.apps.llmtool.models.PluginSelectorHistory
         :returns: The model.
         :rtype: PromptChatApiPluginSelection
         """

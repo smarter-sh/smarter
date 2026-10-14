@@ -723,7 +723,7 @@ class SAMProviderBroker(AbstractBroker):
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.guardrail.models import Guardrail
         from smarter.apps.llmclient.models import LLMClient
-        from smarter.apps.plugin.models import PluginMeta, PluginPrompt
+        from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
         from smarter.apps.proxy.models import Proxy
         from smarter.apps.vectorstore.models import VectorstoreMeta
 

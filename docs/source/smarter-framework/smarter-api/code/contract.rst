@@ -24,7 +24,7 @@ API Contract
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: smarter.apps.plugin.contract.models
+.. automodule:: smarter.apps.llmtool.contract.models
     :members:
     :undoc-members:
     :show-inheritance:

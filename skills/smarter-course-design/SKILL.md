@@ -137,7 +137,7 @@ the Sphinx docs.
 
 Every reference to code is a link a student can click during class.
 
-- **A file:** `` `image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/image_search.py>`__ ``
+- **A file:** `` `image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/image_search.py>`__ ``
 - **A folder:** `` `apps/guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail>`__ ``
 - **A commit:** full 40-character SHA in the URL, 9 characters in the text:
   `` `commit eeb7a7a19 <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__ ``

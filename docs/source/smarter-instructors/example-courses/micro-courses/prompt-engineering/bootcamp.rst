@@ -102,10 +102,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 6
      - 45
      - **Lecture 4: Knowledge and tools.** Why models make things up, and how to ground them.
-       :doc:`Static </smarter-resources/plugin/plugin/static>` and :doc:`Skill
-       </smarter-resources/plugin/plugin/skill>` plugins for knowledge; :doc:`Websearch
-       </smarter-resources/plugin/plugin/websearch>` and :doc:`API
-       </smarter-resources/plugin/plugin/api>` plugins for action. Two decisions decide whether a
+       :doc:`Static </smarter-resources/llmtool/plugin/static>` and :doc:`Skill
+       </smarter-resources/llmtool/plugin/skill>` plugins for knowledge; :doc:`Websearch
+       </smarter-resources/llmtool/plugin/websearch>` and :doc:`API
+       </smarter-resources/llmtool/plugin/api>` plugins for action. Two decisions decide whether a
        tool is used: Smarter offers a plugin only when the prompt matches one of its
        ``searchTerms``, and the model then calls it or not, guided by the plugin's description.
    * - 7
@@ -356,7 +356,7 @@ Recommended Texts
 - **Reference:** John Berryman and Albert Ziegler, *Prompt Engineering for LLMs* (O'Reilly, 2024).
   Chapters 1 to 4 explain how a model sees a prompt, and are worth reading after the bootcamp.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-llmclient`,
-  :doc:`/smarter-resources/smarter-plugin`, :doc:`/smarter-resources/smarter-guardrail` and
+  :doc:`/smarter-resources/smarter-llmtool`, :doc:`/smarter-resources/smarter-guardrail` and
   :doc:`/smarter-framework/smarter-manifests`.
 
 Further Study

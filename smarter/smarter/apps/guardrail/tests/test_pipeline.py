@@ -19,7 +19,7 @@ from smarter.apps.guardrail.signals import (
     guardrail_failed,
     guardrail_triggered,
 )
-from smarter.apps.plugin.plugin.tests.base_classes import capture_signal
+from smarter.apps.llmtool.plugin.tests.base_classes import capture_signal
 from smarter.apps.provider.services.text_completion.contracts import GuardrailStage
 
 from .base_classes import (

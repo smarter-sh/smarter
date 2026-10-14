@@ -6,8 +6,8 @@ tools, guardrails and, increasingly, other models. Most courses can show these p
 time, in a different framework each, and only to students who can program. In Smarter, each part is
 a resource declared in a short YAML manifest, with the same ``apply``, ``describe`` and ``delete``
 lifecycle: :doc:`Vectorstores </smarter-resources/smarter-vectorstore>` on Qdrant or Pinecone for
-retrieval, :doc:`SQL </smarter-resources/plugin/plugin/sql>` and :doc:`API
-</smarter-resources/plugin/plugin/api>` plugins over a :doc:`Connection
+retrieval, :doc:`SQL </smarter-resources/llmtool/plugin/sql>` and :doc:`API
+</smarter-resources/llmtool/plugin/api>` plugins over a :doc:`Connection
 </smarter-resources/smarter-connection>` for structured data, :doc:`MCP clients
 </smarter-resources/smarter-mcpclient>` for the tools of any MCP server, :doc:`Guardrails
 </smarter-resources/smarter-guardrail>` for safety, and an :doc:`Orchestrator
@@ -23,19 +23,19 @@ which searches the web through the Exa MCP server, reads pages and PDFs, and che
 with an output guardrail; `twenty-five ready-made MCP clients
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
 for services such as GitHub, Notion, Linear and Stripe; twenty `sample plugins
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/sample-plugins>`__;
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__;
 and `Stackademy
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data/stackademy>`__, a
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__, a
 fictional university whose course catalog is served both from a database and from a REST API.
 
 Smarter also makes the design decisions behind safe AI applications visible, where students can
 see them and argue about them:
 
 - A tool is used only after two decisions: Smarter
-  :doc:`selects a plugin </smarter-resources/plugin/nlp>` when the prompt matches its search
+  :doc:`selects a plugin </smarter-resources/llmtool/nlp>` when the prompt matches its search
   terms, and only then does the model decide whether to call it.
 - A SQL Plugin runs a fixed, `parameterized query
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__
   that the model can only fill in, so the model never writes SQL that runs. The ``data_analyst``
   LLMClient shows the other pattern: a skill that teaches the model a schema, so that it writes SQL
   for a person to review.
@@ -66,7 +66,7 @@ the journal and deployment.
 - `mcpclient/data/mcpclients/
   <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
   and `plugin/data/
-  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/plugin/data>`__.
+  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data>`__.
 - `vectorstore/data/vectorstores/
   <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__,
   one manifest for each kind of vector database.
@@ -75,8 +75,8 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 
 **Read.** :doc:`/smarter-resources/smarter-vectorstore`,
 :doc:`/smarter-resources/smarter-vectorsearch`, :doc:`/smarter-resources/smarter-mcpclient`,
-:doc:`/smarter-resources/smarter-connection`, :doc:`/smarter-resources/plugin/plugin/sql`,
-:doc:`/smarter-resources/smarter-orchestrator`, :doc:`/smarter-resources/plugin/nlp`.
+:doc:`/smarter-resources/smarter-connection`, :doc:`/smarter-resources/llmtool/plugin/sql`,
+:doc:`/smarter-resources/smarter-orchestrator`, :doc:`/smarter-resources/llmtool/nlp`.
 
 **Exercises.**
 

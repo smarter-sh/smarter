@@ -8,7 +8,7 @@ requests. Smarter assumes that a model will eventually try to do something it sh
 defends with deterministic controls rather than instructions: `guardrails
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
 on both the prompt and the reply, a single `hardened function
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
 for every outbound request to a user-supplied URL, credentials kept in encrypted `Secrets
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__ that the
 model never sees, and parameterized queries and tool allow lists for least privilege. Every defense
@@ -105,7 +105,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 4: Outbound requests and SSRF.** Server-side request forgery, cloud metadata
        addresses, DNS rebinding, and a reading of
-       ``smarter/smarter/apps/plugin/plugin/safe_http.py``: public https only, fresh DNS resolution,
+       ``smarter/smarter/apps/llmtool/plugin/safe_http.py``: public https only, fresh DNS resolution,
        and why that check must never be cached.
    * - 7
      - 45

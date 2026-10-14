@@ -1,0 +1,37 @@
+.card-view {
+  display: block;
+}
+
+.llmtool-card > .card-header {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.smarter-llmtool-card {
+}
+
+.user-llmtool-card {
+}
+
+.card-body > p {
+  margin-bottom: 2px !important;
+}
+
+.llmtool-list-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.llmtool-list-card-header {
+  position: relative;
+}
+
+.llmtool-list-card-title {
+  border-bottom: 1px solid red;
+  padding-bottom: 6px;
+}
+
+.llmtool-list-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

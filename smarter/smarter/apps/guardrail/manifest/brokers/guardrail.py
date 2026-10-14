@@ -45,7 +45,7 @@ from smarter.apps.guardrail.models import (
     GuardrailEvent,
 )
 from smarter.apps.guardrail.serializers import GuardrailSerializer
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

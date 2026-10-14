@@ -24,7 +24,7 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
 )
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.serializers import ApiConnectionSerializer
-from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
+from smarter.apps.llmtool.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
@@ -1016,7 +1016,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
-        from smarter.apps.plugin.models import PluginDataApi, PluginMeta
+        from smarter.apps.llmtool.models import PluginDataApi, PluginMeta
         from smarter.apps.vectorstore.models import VectorstoreMeta
 
         connection = self.connection

@@ -1,7 +1,7 @@
 Plugin Views
 ================
 
-.. automodule:: smarter.apps.plugin.views.listview.api
+.. automodule:: smarter.apps.llmtool.views.listview.api
     :members:
     :undoc-members:
     :show-inheritance:

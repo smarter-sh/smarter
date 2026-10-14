@@ -58,7 +58,7 @@ fake them.
 | kubectl (the Kubernetes service)              | `configure_kubernetes(lambda: fake)`, or `KubectlKubernetesService(allow_in_tests=True)` with `subprocess.run` patched | `smarter/smarter/apps/infrastructure/services/kubernetes.py`; see `smarter/smarter/apps/infrastructure/tests/test_kubernetes.py`            |
 | Email                                         | `configure_email(InMemoryEmailService)`, or `patch(f"{MODULE}.infrastructure")`                                        | `smarter/smarter/apps/infrastructure/services/email.py`                                                                                     |
 | Outbound proxy calls to LLM providers         | `configure_transport(...)`. Real calls raise `ProxyConfigurationError` in tests                                        | `smarter/smarter/apps/proxy/services.py`                                                                                                    |
-| GitHub-hosted skills                          | `with mock_remote_skills(): ...`                                                                                       | `smarter/smarter/apps/plugin/plugin/tests/base_classes.py`                                                                                  |
+| GitHub-hosted skills                          | `with mock_remote_skills(): ...`                                                                                       | `smarter/smarter/apps/llmtool/plugin/tests/base_classes.py`                                                                                 |
 
 The llmhost test base class (`smarter/smarter/apps/llmhost/tests/base_classes.py`)
 is the model for a whole suite that runs against in-memory infrastructure:
