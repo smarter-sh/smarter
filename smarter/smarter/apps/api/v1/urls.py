@@ -9,6 +9,7 @@ delegates route handling to app-specific URL modules.
 - ``accounts/``: User account management endpoints.
 - ``llmclients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
+- ``mcp/``: The Smarter Project MCP server, which reads the project's documentation and code.
 - ``journal/``: Smarter Journal entries (superusers only).
 - ``connections/``: External connection integration endpoints.
 - ``plugins/``: Plugin management endpoints.
@@ -43,6 +44,8 @@ from smarter.apps.llmhost.api.v1 import urls as llmhost_urls
 from smarter.apps.llmhost.const import namespace as llmhost_namespace
 from smarter.apps.mcpclient.api.v1 import urls as mcpclient_urls
 from smarter.apps.mcpclient.const import namespace as mcpclient_namespace
+from smarter.apps.mcpserver import urls as mcpserver_urls
+from smarter.apps.mcpserver.const import namespace as mcpserver_namespace
 from smarter.apps.orchestrator.api.v1 import urls as orchestrator_urls
 from smarter.apps.orchestrator.const import namespace as orchestrator_namespace
 from smarter.apps.plugin.api.v1 import urls as plugin_urls
@@ -82,6 +85,7 @@ urlpatterns = [
     path("llm-clients/", include(llmclient_urls, namespace=llmclient_namespace)),
     path("llmhosts/", include(llmhost_urls, namespace=llmhost_namespace)),
     path("mcpclients/", include(mcpclient_urls, namespace=mcpclient_namespace)),
+    path("mcp/", include(mcpserver_urls, namespace=mcpserver_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
     path("connections/", include(connection_urls, namespace=connnection_namespace)),
     path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),

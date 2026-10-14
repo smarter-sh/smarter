@@ -103,6 +103,7 @@ class SAMUserBroker(AbstractBroker):
     # override the base abstract manifest model with the User model
     _manifest: Optional[SAMUser] = None
     _pydantic_model: Type[SAMUser] = SAMUser
+    deployable = True
     _account_contact: Optional[AccountContact] = None
     _brokered_user: Optional[User] = None
     _brokered_user_profile: Optional[UserProfile] = None

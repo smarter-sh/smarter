@@ -394,7 +394,7 @@ At a glance
   - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
   - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
-  - :doc:`APIs and SDKs <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python <smarter-framework/smarter-python>` (``pip install smarter-api``), :doc:`Node.js <smarter-framework/smarter-nodejs>` (``npm install @smarter.sh/api``) and :doc:`Go <smarter-framework/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, and a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_.
+  - :doc:`APIs, SDKs and integrations <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python <smarter-framework/smarter-python>` (``pip install smarter-api``), :doc:`Node.js <smarter-framework/smarter-nodejs>` (``npm install @smarter.sh/api``) and :doc:`Go <smarter-framework/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and chat integrations for WordPress, Drupal, Shopify, Google Tag Manager and documentation sites.
 
 
 Usage

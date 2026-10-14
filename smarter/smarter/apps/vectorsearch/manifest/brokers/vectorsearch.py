@@ -814,13 +814,15 @@ class SAMVectorsearchBroker(AbstractBroker):
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerError(f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(
+            message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
+        )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerError(
-            f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
+        raise SAMBrokerErrorNotImplemented(
+            message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

@@ -107,6 +107,7 @@ env:
   SMARTER_MYSQL_ROOT_USERNAME: "root"
   SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: "smarter_test_db"
+  SMARTER_MCPSERVER_RATE_LIMIT: "1200"
   SMARTER_MYSQL_USER: "smarter_platform_prod"
   SMARTER_NAMESPACE: "smarter-platform-alpha"
   SMARTER_OPENAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
