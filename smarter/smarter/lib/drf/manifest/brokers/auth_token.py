@@ -81,6 +81,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     # override the base abstract manifest model with the SAMSmarterAuthToken model
     _manifest: Optional[SAMSmarterAuthToken]
     _pydantic_model: Type[SAMSmarterAuthToken] = SAMSmarterAuthToken
+    deployable = True
     _smarter_auth_token: Optional[SmarterAuthToken]
     _token_key: Optional[str]
     _orm_instance: Optional[SmarterAuthToken]

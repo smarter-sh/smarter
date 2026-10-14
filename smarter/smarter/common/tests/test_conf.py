@@ -166,6 +166,10 @@ class TestSettings(SmarterTestBase):
     def test_plugin_max_data_results(self):
         self.assertIsNotNone(smarter_settings.plugin_max_data_results)
 
+    def test_mcpserver_rate_limit(self):
+        self.assertIsInstance(smarter_settings.mcpserver_rate_limit, int)
+        self.assertGreaterEqual(smarter_settings.mcpserver_rate_limit, 0)
+
     def test_sensitive_files_amnesty_patterns(self):
         self.assertIsNotNone(smarter_settings.sensitive_files_amnesty_patterns)
 

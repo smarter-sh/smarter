@@ -139,9 +139,11 @@ Security
 
 - Only remote MCP servers are supported. The ``stdio`` transport, which would run a command
   on the Smarter server, is rejected.
-- ``endpointUrl`` must be an https URL on the standard port. Every request, including
-  redirects, must go to a host whose addresses are all public, so that an MCPClient cannot
-  reach Smarter's internal network or a cloud metadata service.
+- ``endpointUrl`` must be an https URL, or an http URL of localhost, and may name a port. Smarter
+  connects only on the standard https port, and every request, including redirects, must go to
+  a host whose addresses are all public, so that an MCPClient cannot reach Smarter's internal
+  network or a cloud metadata service. The one exception is local development, where an
+  MCPClient may connect to a loopback host, e.g. ``http://localhost:9357``, on any port.
 - ``headers`` may not set credential or transport headers, such as ``Authorization``,
   ``Cookie``, ``Host`` or ``Mcp-Session-Id``.
 - ``allowedTools`` limits the tools that the LLM may call. For servers with tools that write
@@ -234,6 +236,11 @@ The Smarter repository includes example manifests for popular remote MCP servers
      - Query and manage Supabase projects, databases and edge functions.
      - http
      - bearer_token
+
+The ``smarter_project`` and ``smarter_project_github*`` MCPClients read the platform's own
+:doc:`Smarter Project MCP server <../smarter-platform/smarter-project-mcp-server>`, which searches
+and reads The Smarter Project's documentation and source code. Their manifests are templates,
+``*.yaml.tpl``, whose ``endpointUrl`` names the domain of the platform that applies them.
 
 For example, DeepWiki's MCP server requires no authentication:
 

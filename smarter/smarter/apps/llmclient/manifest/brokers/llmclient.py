@@ -126,6 +126,7 @@ class SAMLLMClientBroker(AbstractBroker):
     # override the base abstract manifest model with the LLMClient model
     _manifest: Optional[SAMLLMClient] = None
     _pydantic_model: Type[SAMLLMClient] = SAMLLMClient
+    deployable = True
     _llmclient: Optional[LLMClient] = None
     _functions: Optional[List[str]] = None
     _plugins: Optional[List[str]] = None

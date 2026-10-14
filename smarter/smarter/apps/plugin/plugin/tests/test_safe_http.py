@@ -93,6 +93,25 @@ class TestSafeHttp(SmarterTestBase):
                 with self.assertRaises(safe_http.SafeHttpError):
                     safe_http.validate_public_url("https://no-such-host.example/")
 
+    def test_is_loopback_host(self):
+        """Localhost, its subdomains, the local hosts of SmarterValidator and loopback addresses are loopback hosts."""
+        for host in (
+            "localhost",
+            "LOCALHOST",
+            "localhost.",
+            "api.localhost",
+            "127.0.0.1",
+            "127.8.9.10",
+            "::1",
+            "[::1]",
+            "testserver",
+        ):
+            with self.subTest(host=host):
+                self.assertTrue(safe_http.is_loopback_host(host))
+        for host in (None, "", "example.com", "localhost.example.com", "10.0.0.1", "169.254.169.254", "8.8.8.8"):
+            with self.subTest(host=host):
+                self.assertFalse(safe_http.is_loopback_host(host))
+
     def test_error_is_a_value_error(self):
         """Test that SafeHttpError is a SmarterValueError, and carries the HTTP status code."""
         self.assertTrue(issubclass(safe_http.SafeHttpError, SmarterValueError))
