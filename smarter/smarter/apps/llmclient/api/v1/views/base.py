@@ -19,7 +19,7 @@ from smarter.apps.llmclient.models import (
     LLMClientPlugin,
 )
 from smarter.apps.llmclient.signals import llmclient_called
-from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.prompt.contract.builders import (
     PromptChatApiError,
     PromptChatApiErrorForbidden,

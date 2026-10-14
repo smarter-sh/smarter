@@ -37,19 +37,19 @@ from smarter.apps.llmhost.manifest.brokers.llmhost import SAMLLMHostBroker
 from smarter.apps.llmhost.manifest.brokers.llmhost_compute import (
     SAMLLMHostComputeBroker,
 )
+from smarter.apps.llmtool.manifest.brokers.api_plugin import SAMApiPluginBroker
+from smarter.apps.llmtool.manifest.brokers.image_search_plugin import (
+    SAMImageSearchPluginBroker,
+)
+from smarter.apps.llmtool.manifest.brokers.skill_plugin import SAMSkillPluginBroker
+from smarter.apps.llmtool.manifest.brokers.sql_plugin import SAMSqlPluginBroker
+from smarter.apps.llmtool.manifest.brokers.static_plugin import SAMStaticPluginBroker
+from smarter.apps.llmtool.manifest.brokers.websearch_plugin import (
+    SAMWebsearchPluginBroker,
+)
 from smarter.apps.mcpclient.manifest.brokers.mcpclient import SAMMCPClientBroker
 from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
     SAMOrchestratorBroker,
-)
-from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
-from smarter.apps.plugin.manifest.brokers.image_search_plugin import (
-    SAMImageSearchPluginBroker,
-)
-from smarter.apps.plugin.manifest.brokers.skill_plugin import SAMSkillPluginBroker
-from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
-from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
-from smarter.apps.plugin.manifest.brokers.websearch_plugin import (
-    SAMWebsearchPluginBroker,
 )
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker

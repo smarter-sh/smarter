@@ -5,7 +5,7 @@ Smarter Chat for Shopify puts your Smarter chatbot, a deployed
 :doc:`LLMClient <../smarter-resources/smarter-llmclient>`, on a Shopify store, from the theme editor:
 a chat button in a corner of every page of the storefront, and a **Smarter Chat** block for any
 section. The chat renders in its own Shadow DOM, so the theme can't break it, and its look comes
-from the LLMClient's manifest. With :doc:`plugins <../smarter-resources/smarter-plugin>` that read
+from the LLMClient's manifest. With :doc:`plugins <../smarter-resources/smarter-llmtool>` that read
 your catalog, shipping and policies, it can answer shoppers' questions.
 
 It is a Shopify app with one theme app extension and no server, which writes the tag of the

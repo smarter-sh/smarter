@@ -16,7 +16,7 @@ students can read, test and try to break:
   `detectors <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/detectors.py>`__
   for credit cards, social security numbers, AWS keys, private keys and JWTs.
 - **One hardened function for outbound requests.**
-  `safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+  `safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
   allows only https on port 443 to hosts whose every address is public, re-validates every
   redirect, bounds the response, and states in its own docstring the DNS rebinding window that
   remains. MCP connections get the same checks, and no stdio transport.
@@ -53,7 +53,7 @@ scanning and code review; and responsible disclosure and incident response.
 
 - `guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail>`__,
   its built-in guardrails, strategies and pipeline.
-- `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+- `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
   and `mcpclient/connection.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/connection.py>`__.
 - `lib/django/middleware/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/middleware>`__
   and `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__.

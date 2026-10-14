@@ -10,7 +10,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from pydantic import SecretStr
 
 from smarter.apps.account.models import charge_authorization
-from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.prompt.functions.calculator import (
     calculator,
 )

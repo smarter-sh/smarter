@@ -361,7 +361,7 @@ Recommended Texts
 - **Reference:** William S. Vincent, *Django for APIs* (latest edition), for Django REST
   Framework.
 - **In the repository:** :doc:`/adr`, :doc:`/smarter-framework/smarter-chat`,
-  :doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-resources/smarter-plugin`,
+  :doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-resources/smarter-llmtool`,
   :doc:`/smarter-resources/smarter-proxy` and :doc:`/smarter-resources/smarter-guardrail`.
 
 Further Study

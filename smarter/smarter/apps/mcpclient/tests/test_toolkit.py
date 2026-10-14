@@ -10,6 +10,7 @@ Test :mod:`smarter.apps.mcpclient.toolkit`.
 
 from unittest import mock
 
+from smarter.apps.llmtool.plugin.tests.base_classes import capture_signal
 from smarter.apps.mcpclient.connection import MCPServerConnection, MCPToolInfo
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.signals import (
@@ -24,7 +25,6 @@ from smarter.apps.mcpclient.toolkit import (
     MCPToolkit,
     input_schema,
 )
-from smarter.apps.plugin.plugin.tests.base_classes import capture_signal
 
 from .base_classes import (
     README_TEXT,

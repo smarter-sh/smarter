@@ -34,7 +34,7 @@ LLMClients are managed using the :doc:`Smarter command-line interface (CLI) <../
 .. seealso::
 
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
-    - :doc:`Smarter Plugin <../smarter-resources/smarter-plugin>`
+    - :doc:`Smarter LLMTool Plugin <../smarter-resources/smarter-llmtool>`
     - :doc:`Smarter Prompt <../smarter-resources/smarter-prompt>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter Chat <../smarter-framework/smarter-chat>`
@@ -107,7 +107,7 @@ every setting, with a crash course in colors, sizes, fonts and images, and a cas
 Example Manifest
 ----------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
@@ -230,7 +230,7 @@ Use ad hoc Sql queries to monitor your Smarter LLMClient's production performanc
 See:
 
  - :py:class:`smarter.apps.llmclient.models.LLMClientRequests`
- - :py:class:`smarter.apps.plugin.models.PluginSelectorHistory`
+ - :py:class:`smarter.apps.llmtool.models.PluginSelectorHistory`
  - :py:class:`smarter.lib.journal.models.SAMJournal`
 
 Scaling

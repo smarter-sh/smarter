@@ -27,7 +27,7 @@ from smarter.apps.account.contract.models import (
     MetaDataApiAnnotations,
 )
 from smarter.apps.account.serializers import user_can_delete
-from smarter.apps.plugin.contract.models import PluginApiPluginMeta
+from smarter.apps.llmtool.contract.models import PluginApiPluginMeta
 
 if TYPE_CHECKING:
     from smarter.apps.llmclient.models import (

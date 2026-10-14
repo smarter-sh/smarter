@@ -11,14 +11,14 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("llmclient", "0001_initial"),
-        ("plugin", "0001_initial"),
+        ("llmtool", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
             model_name="llmclientplugin",
             name="plugin_meta",
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="plugin.pluginmeta"),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="llmtool.pluginmeta"),
         ),
         migrations.AddField(
             model_name="llmclientrequests",

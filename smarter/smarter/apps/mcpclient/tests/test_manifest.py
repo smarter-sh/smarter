@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 
 from pydantic import ValidationError
 
+from smarter.apps.llmtool.plugin.safe_http import is_loopback_host
 from smarter.apps.mcpclient.const import DATA_PATH
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     DEFAULT_API_KEY_HEADER,
@@ -28,7 +29,6 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.spec import (
     SAMMCPClientSpecConfig,
 )
 from smarter.apps.mcpclient.utils import MCPClientExamples, manifest_template_values
-from smarter.apps.plugin.plugin.safe_http import is_loopback_host
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

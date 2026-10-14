@@ -28,7 +28,7 @@ The cli implements a set of verbs for working with Smarter resources
 
 The cli is designed to work with a manifest utf-8 text document, in yaml or json format, inspired by Kubernetes' kubectl, itself modeled on the [OpenAPI Specification v3.x](https://spec.openapis.org/oas/latest.html). The actual implementation of this specification is located [here](../smarter/smarter/apps/api/v0/cli/). The Smarter API can manage [escaped](https://en.wikipedia.org/wiki/Escape_character) representations of characters outside of the utf-8 standard.
 
-[Example manifest](../smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml)
+[Example manifest](../smarter/smarter/apps/llmtool/data/sample-plugins/example-configuration.yaml)
 
 ### Kind
 
@@ -39,9 +39,9 @@ The cli is designed to work with a manifest utf-8 text document, in yaml or json
 - [PromptPluginUsage](../smarter/smarter/apps/chat/api/v1/manifests/)
 - [PromptToolCall](../smarter/smarter/apps/chat/api/v1/manifests/)
 - [ChatBot](../smarter/smarter/apps/chatbot/api/v1/manifests/)
-- [Plugin](../smarter/smarter/apps/plugin/api/v1/manifests/)
-- [SqlConnection](../smarter/smarter/apps/plugin/api/v1/manifests/)
-- [ApiConnection](../smarter/smarter/apps/plugin/api/v1/manifests/)
+- [Plugin](../smarter/smarter/apps/llmtool/api/v1/manifests/)
+- [SqlConnection](../smarter/smarter/apps/llmtool/api/v1/manifests/)
+- [ApiConnection](../smarter/smarter/apps/llmtool/api/v1/manifests/)
 - [User](../smarter/smarter/apps/account/api/v1/manifests/)
 - [Secret](../smarter/smarter/apps/secret/api/v1/manifests/)
 
@@ -69,11 +69,11 @@ A brokered entity consists of the following:
 #### Code samples
 
 - Abstract [broker](../smarter/smarter/apps/api/v0/manifests/broker.py)
-- Example implementation for Plugin [broker](../smarter/smarter/apps/plugin/api/v0/manifests/broker.py)
+- Example implementation for Plugin [broker](../smarter/smarter/apps/llmtool/api/v0/manifests/broker.py)
 
 ### Controller Model
 
 In cases where there exist multiple variations of a manifest `kind`, we use a Controller pattern to route a Broker to the correct Python subclass.
 
 - Abstract [controller](../smarter/smarter/apps/api/v0/cli/controller.py)
-- Example implementation for Plugin [controller](../smarter/smarter/apps/plugin/controller.py) as an example.
+- Example implementation for Plugin [controller](../smarter/smarter/apps/llmtool/controller.py) as an example.

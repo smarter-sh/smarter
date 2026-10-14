@@ -9,7 +9,7 @@ import yaml
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.models import ApiConnection
-from smarter.apps.plugin.manifest.enum import (
+from smarter.apps.llmtool.manifest.enum import (
     SAMApiConnectionSpecConnectionKeys,
     SAMApiConnectionSpecKeys,
 )

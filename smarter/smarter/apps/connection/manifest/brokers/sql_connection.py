@@ -26,7 +26,7 @@ from smarter.apps.connection.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.connection.serializers import SqlConnectionSerializer
-from smarter.apps.plugin.manifest.enum import (
+from smarter.apps.llmtool.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
 )
 from smarter.apps.secret.models import Secret
@@ -1102,7 +1102,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
-        from smarter.apps.plugin.models import PluginDataSql, PluginMeta
+        from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
 
         connection = self.connection
         if not connection:

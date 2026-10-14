@@ -30,7 +30,7 @@ SERIALIZER_MODULES = [
     "smarter.apps.llmhost.serializers",
     "smarter.apps.mcpclient.serializers",
     "smarter.apps.orchestrator.serializers",
-    "smarter.apps.plugin.serializers",
+    "smarter.apps.llmtool.serializers",
     "smarter.apps.provider.serializers",
     "smarter.apps.proxy.serializers",
     "smarter.apps.secret.serializers",

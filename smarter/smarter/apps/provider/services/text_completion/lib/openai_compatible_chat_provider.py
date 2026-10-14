@@ -30,11 +30,11 @@ from smarter.apps.guardrail.services import (
     PipelineDisposition,
     PipelineResult,
 )
+from smarter.apps.llmtool.manifest.controller import PluginController
+from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
+from smarter.apps.llmtool.plugin.base import PluginBase
+from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.apps.mcpclient.toolkit import MCPToolkit
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.models import PluginMeta, PluginPrompt
-from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.prompt.functions.calculator import (
     calculator,
     calculator_tool_factory,
