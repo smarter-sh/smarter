@@ -1,3 +1,5 @@
-# Built in Vectorsearchs and Plugins
+# Built-in Vectorsearches
 
-You'll find these in /home/smarter_user/data/manifests/ inside the Docker container.
+Reserved for built-in Vectorsearch manifests. There are none yet. When there are, a
+`manage.py add_builtin_vectorsearches` command will apply them, as `add_builtin_guardrails`
+does for `../../guardrail/data/guardrails/`.

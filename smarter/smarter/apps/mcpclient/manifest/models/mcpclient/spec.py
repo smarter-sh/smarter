@@ -33,7 +33,7 @@ and the server's instructions are added to the system prompt.
 
 import os
 import re
-from typing import ClassVar, Optional
+from typing import ClassVar, Literal, Optional
 from urllib.parse import urlparse
 
 from pydantic import Field, field_validator, model_validator
@@ -117,7 +117,7 @@ class SAMMCPClientSpecConfig(AbstractSAMSpecBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".config"
 
     # --- connection ---
-    transport: str = Field(
+    transport: Literal[tuple(SAMMCPClientTransport.supported())] = Field(  # type: ignore[valid-type]
         default=SAMMCPClientTransport.HTTP.value,
         description=(
             f"{class_identifier}.transport[str]: the MCP transport. One of: "
@@ -144,7 +144,7 @@ class SAMMCPClientSpecConfig(AbstractSAMSpecBase):
     )
 
     # --- auth ---
-    authType: str = Field(
+    authType: Literal[tuple(SAMMCPClientAuthType.all())] = Field(  # type: ignore[valid-type]
         default=SAMMCPClientAuthType.NONE.value,
         description=(
             f"{class_identifier}.authType[str]: how to authenticate with the MCP server. One of: "
@@ -207,14 +207,14 @@ class SAMMCPClientSpecConfig(AbstractSAMSpecBase):
         ),
     )
 
-    @field_validator("transport")
+    @field_validator("transport", mode="before")
     @classmethod
     def validate_transport(cls, v: str) -> str:
         """Validate the transport.
 
         stdio is reserved, and not supported.
         """
-        v = (v or "").lower()
+        v = str(v or "").strip().lower()
         if v == SAMMCPClientTransport.STDIO.value:
             raise SAMValidationError(
                 "transport: stdio is not supported. Smarter connects only to remote MCP servers, via http or sse."
@@ -244,11 +244,11 @@ class SAMMCPClientSpecConfig(AbstractSAMSpecBase):
                 )
         return v
 
-    @field_validator("authType")
+    @field_validator("authType", mode="before")
     @classmethod
     def validate_auth_type(cls, v: str) -> str:
         """Validate the authentication type."""
-        v = (v or SAMMCPClientAuthType.NONE.value).lower()
+        v = str(v or SAMMCPClientAuthType.NONE.value).strip().lower()
         if v not in SAMMCPClientAuthType.all():
             raise SAMValidationError(f"authType: must be one of {SAMMCPClientAuthType.all()}, not '{v}'.")
         return v
