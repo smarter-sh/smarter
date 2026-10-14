@@ -38,7 +38,7 @@ Defending an AI Application
    * - Least privilege for tools
      - A SQL Plugin runs only a fixed, parameterized query, and an MCP client offers only the
        tools on its allow list, such as the read-only tools of GitHub's server.
-     - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml>`__,
+     - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__,
        `mcpclients/github.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/github.yaml>`__
 
 Secrets and Outbound Requests
@@ -67,7 +67,7 @@ Secrets and Outbound Requests
        every resolved address public, no credentials in URLs, every redirect re-validated,
        bounded responses and timeouts. Its docstring states the remaining DNS rebinding window
        honestly.
-     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/plugin/plugin/safe_http.py>`__
+     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
    * - MCP servers
      - The same checks on every request to an MCP server, and no stdio transport, which would
        run a command on the Smarter server.

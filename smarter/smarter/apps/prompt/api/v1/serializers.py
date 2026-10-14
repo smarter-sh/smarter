@@ -3,7 +3,7 @@
 
 from rest_framework import serializers
 
-from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.apps.prompt.models import (
     Prompt,
     PromptHistory,

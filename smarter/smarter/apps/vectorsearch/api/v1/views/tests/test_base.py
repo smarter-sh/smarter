@@ -7,8 +7,8 @@ from django.test import RequestFactory
 from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.plugin.plugin.tests.base_classes import mock_remote_skills
-from smarter.apps.plugin.utils import add_example_plugins
+from smarter.apps.llmtool.plugin.tests.base_classes import mock_remote_skills
+from smarter.apps.llmtool.utils import add_example_plugins
 from smarter.apps.vectorsearch.manifest.brokers.vectorsearch import (
     SAMVectorsearchBroker,
 )

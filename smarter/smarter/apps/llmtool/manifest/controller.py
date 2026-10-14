@@ -1,0 +1,374 @@
+"""Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
+
+from functools import cached_property
+from typing import Dict, Optional, Union
+
+from django.core.exceptions import MultipleObjectsReturned
+
+from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import valid_resource_owners_for_user
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib import json, logging
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.journal.enum import SmarterJournalThings
+from smarter.lib.manifest.controller import AbstractController
+from smarter.lib.manifest.exceptions import SAMExceptionBase
+from smarter.lib.typing import SmarterDictType
+
+# plugin
+from ..models import PluginMeta
+from ..plugin.api import ApiPlugin
+from ..plugin.image_search import ImageSearchPlugin
+from ..plugin.skill import SkillPlugin
+from ..plugin.sql import SqlPlugin
+from ..plugin.static import StaticPlugin
+from ..plugin.websearch import WebsearchPlugin
+
+# common plugin
+from .enum import SAMPluginCommonMetadataClassValues
+from .models.api_plugin.model import SAMApiPlugin
+from .models.common.plugin.model import SAMPluginCommon
+from .models.image_search_plugin.model import SAMImageSearchPlugin
+from .models.skill_plugin.model import SAMSkillPlugin
+from .models.sql_plugin.model import SAMSqlPlugin
+from .models.static_plugin.model import SAMStaticPlugin
+from .models.websearch_plugin.model import SAMWebsearchPlugin
+
+VALID_MANIFEST_KINDS = [
+    SAMKinds.STATIC_PLUGIN.value,
+    SAMKinds.SQL_PLUGIN.value,
+    SAMKinds.API_PLUGIN.value,
+    SAMKinds.SKILL_PLUGIN.value,
+    SAMKinds.WEBSEARCH_PLUGIN.value,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value,
+]
+PluginType = (
+    type[ApiPlugin]
+    | type[SqlPlugin]
+    | type[StaticPlugin]
+    | type[SkillPlugin]
+    | type[WebsearchPlugin]
+    | type[ImageSearchPlugin]
+)
+Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin, WebsearchPlugin, ImageSearchPlugin]]
+SAMPluginType = (
+    type[SAMApiPlugin]
+    | type[SAMSqlPlugin]
+    | type[SAMStaticPlugin]
+    | type[SAMSkillPlugin]
+    | type[SAMWebsearchPlugin]
+    | type[SAMImageSearchPlugin]
+)
+SAMPlugins = Optional[
+    Union[
+        dict,
+        SAMPluginCommon,
+        SAMApiPlugin,
+        SAMSqlPlugin,
+        SAMStaticPlugin,
+        SAMSkillPlugin,
+        SAMWebsearchPlugin,
+        SAMImageSearchPlugin,
+    ]
+]
+PLUGIN_MAP: dict[str, PluginType] = {
+    SAMKinds.API_PLUGIN.value: ApiPlugin,
+    SAMKinds.SQL_PLUGIN.value: SqlPlugin,
+    SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
+    SAMKinds.SKILL_PLUGIN.value: SkillPlugin,
+    SAMKinds.WEBSEARCH_PLUGIN.value: WebsearchPlugin,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value: ImageSearchPlugin,
+}
+PLUGIN_META_CLASS_MAP = {
+    SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
+    SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
+    SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
+    SAMPluginCommonMetadataClassValues.SKILL.value: SkillPlugin,
+    SAMPluginCommonMetadataClassValues.WEBSEARCH.value: WebsearchPlugin,
+    SAMPluginCommonMetadataClassValues.IMAGE_SEARCH.value: ImageSearchPlugin,
+}
+SAM_MAP: dict[str, SAMPluginType] = {
+    SAMKinds.API_PLUGIN.value: SAMApiPlugin,
+    SAMKinds.SQL_PLUGIN.value: SAMSqlPlugin,
+    SAMKinds.STATIC_PLUGIN.value: SAMStaticPlugin,
+    SAMKinds.SKILL_PLUGIN.value: SAMSkillPlugin,
+    SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPlugin,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value: SAMImageSearchPlugin,
+}
+
+
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
+
+
+class SAMPluginControllerError(SAMExceptionBase):
+    """Base exception for Smarter API Plugin Controller handling."""
+
+
+class PluginController(AbstractController):
+    """
+    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations, and Django ORM models within the Smarter platform.
+
+    The PluginController is responsible for orchestrating the instantiation and management of plugin
+    objects based on manifest data, plugin metadata, or plugin names. It supports dynamic loading of
+    plugin classes, validation of manifest kinds, and ensures that only valid plugin configurations
+    are accepted. This controller acts as a bridge between the declarative plugin manifests (often
+    defined in YAML or JSON), the underlying plugin Python classes, and the persistent plugin metadata
+    stored in the database.
+
+    **Key Responsibilities**
+
+    - Validates and processes plugin manifest data, ensuring compatibility with supported plugin kinds.
+    - Dynamically selects and instantiates the appropriate plugin class (API, SQL, or Static) based on manifest or metadata.
+    - Maintains references to the manifest, plugin instance, and plugin metadata for coordinated access.
+    - Integrates with user and account context to support multi-tenant plugin management.
+    - Provides error handling for invalid or ambiguous plugin initialization scenarios.
+
+    **Model Relationships**
+
+    - Utilizes :class:`smarter.apps.llmtool.models.PluginMeta` for persistent plugin metadata.
+    - Interacts with Pydantic manifest models such as :class:`smarter.apps.llmtool.manifest.models.api_plugin.model.SAMApiPlugin`,
+      :class:`smarter.apps.llmtool.manifest.models.sql_plugin.model.SAMSqlPlugin`, and
+      :class:`smarter.apps.llmtool.manifest.models.static_plugin.model.SAMStaticPlugin`.
+    - Supports plugin implementations including :class:`smarter.apps.llmtool.plugin.api.ApiPlugin`,
+      :class:`smarter.apps.llmtool.plugin.sql.SqlPlugin`, and :class:`smarter.apps.llmtool.plugin.static.StaticPlugin`.
+
+    **Usage Example**
+
+    .. code-block:: python
+
+        # Initialize a PluginController with manifest data
+        my_user_profile = UserProfile.get_cached_object(user=admin_user)
+        controller = PluginController(
+            manifest=my_manifest,
+            user_profile=my_user_profile
+        )
+        plugin_instance = controller.plugin
+
+        # Initialize with plugin metadata
+        my_plugin_meta = PluginMeta.objects.get(id=plugin_id)
+        controller = PluginController(
+            plugin_meta=my_plugin_meta,
+            user_profile=my_user_profile
+        )
+        plugin_instance = controller.plugin
+
+    **Notes**
+
+    - Only one of `manifest`, `plugin_meta`, or `name` should be provided during initialization.
+    - The controller enforces validation of manifest kinds and plugin class compatibility.
+    - Logging and error handling are integrated using the Smarter platform's logging and exception infrastructure.
+    """
+
+    _manifest: SAMPlugins = None
+    _plugin: Plugins = None
+    _plugin_meta: Optional[PluginMeta] = None
+    _name: Optional[str] = None
+
+    def __init__(
+        self,
+        user_profile: UserProfile,
+        manifest: SAMPlugins = None,
+        plugin_meta: Optional[PluginMeta] = None,
+        name: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(user_profile, **kwargs)
+        logger.debug(
+            "%s.__init__ called with user_profile: %s, manifest: %s, plugin_meta: %s, name: %s, kwargs: %s",
+            self.formatted_class_name,
+            user_profile,
+            manifest,
+            plugin_meta,
+            name,
+            kwargs,
+        )
+        if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta) and not bool(name)):
+            raise SAMPluginControllerError(
+                f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}, name: {bool(name)}."
+            )
+        if manifest and not isinstance(manifest, SAMPluginCommon):
+            if not isinstance(manifest, dict):
+                raise SAMPluginControllerError(
+                    f"Manifest should descend from {SAMPluginCommon}. Received? {type(manifest)}."
+                )
+            if "kind" not in manifest:
+                raise SAMPluginControllerError("Manifest dict should contain 'kind' key to determine the plugin type.")
+            if manifest["kind"] not in VALID_MANIFEST_KINDS:
+                raise SAMPluginControllerError(
+                    f"Manifest kind {manifest['kind']} should be one of: {VALID_MANIFEST_KINDS}."
+                )
+            SAMPluginCls = self.sam_map.get(manifest["kind"])
+            logger.warning(
+                "%s received %s manifest as dict, converting to %s. This may be deprecated in the future.",
+                self.formatted_class_name,
+                manifest["kind"],
+                type(SAMPluginCls).__name__,
+            )
+            manifest = SAMPluginCls(**manifest)  # type: ignore[call-arg]
+
+        if isinstance(manifest, SAMPluginCommon):
+            self._manifest = manifest
+            logger.debug("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
+            if self._manifest.kind not in VALID_MANIFEST_KINDS:
+                raise SAMPluginControllerError(
+                    f"Manifest kind {self._manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
+                )
+
+        if isinstance(plugin_meta, PluginMeta):
+            self._plugin_meta = plugin_meta
+            logger.debug("%s received plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+
+        if isinstance(name, str):
+            self._name = name
+            logger.debug("%s received name: %s", self.formatted_class_name, self._name)
+
+        if self.ready:
+            logger.debug(
+                "%s initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
+                self.formatted_class_name,
+                self.account,
+                self.user,
+                self.user_profile,
+                self.manifest,
+                self.plugin_meta,
+                self.name,
+            )
+        else:
+            logger.warning(
+                "%s initialized but not ready. account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
+                self.formatted_class_name,
+                self.account,
+                self.user,
+                self.user_profile,
+                self.manifest,
+                self.plugin_meta,
+                self.name,
+            )
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this mixin."""
+        class_name = f"{__name__}.{PluginController.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    ###########################################################################
+    # Abstract property implementations
+    ###########################################################################
+    @property
+    def manifest(self) -> Optional[SAMPluginCommon]:
+        return self._manifest  # type: ignore
+
+    @property
+    def name(self) -> Optional[str]:
+        if self._name:
+            return self._name
+        if self.manifest:
+            self._name = self.manifest.metadata.name
+        return self._name
+
+    @property
+    def plugin_meta(self) -> Optional[PluginMeta]:
+        if not self._plugin_meta and self.user_profile and self.name and self.manifest:
+            try:
+                plugin_meta = PluginMeta.objects.get(
+                    user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
+                )
+                if not plugin_meta:
+                    logger.debug(
+                        "%s.plugin_meta: No PluginMeta found for user_profile %s, name %s, plugin_class %s",
+                        self.formatted_class_name,
+                        self.user_profile,
+                        self.name,
+                        self.plugin_class,
+                    )
+                    return None
+                if plugin_meta.user_profile not in valid_resource_owners_for_user(self.user_profile):
+                    logger.warning(
+                        "%s.plugin_meta: PluginMeta %s does not belong to a valid resource owner for user_profile %s",
+                        self.formatted_class_name,
+                        plugin_meta,
+                        self.user_profile,
+                    )
+                    return None
+                self._plugin_meta = plugin_meta
+                logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+            except MultipleObjectsReturned:
+                self._plugin_meta = PluginMeta.objects.get(
+                    user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
+                )
+            except PluginMeta.DoesNotExist:
+                pass
+        return self._plugin_meta
+
+    # pylint: disable=too-many-return-statements
+    @property
+    def plugin_class(self) -> Optional[str]:
+        """Returns the plugin class based on the manifest kind."""
+        if not self.manifest or not self.manifest.kind:
+            return None
+
+        if self.manifest.kind == SmarterJournalThings.API_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.API.value
+        if self.manifest.kind == SmarterJournalThings.SQL_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.SQL.value
+        if self.manifest.kind == SmarterJournalThings.STATIC_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.STATIC.value
+        if self.manifest.kind == SmarterJournalThings.SKILL_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.SKILL.value
+        if self.manifest.kind == SmarterJournalThings.WEBSEARCH_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.WEBSEARCH.value
+        if self.manifest.kind == SmarterJournalThings.IMAGE_SEARCH_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.IMAGE_SEARCH.value
+        return None
+
+    @property
+    def plugin(self) -> Plugins:
+        return self.obj
+
+    @cached_property
+    def map(self) -> Dict[str, PluginType]:
+        return PLUGIN_MAP
+
+    @cached_property
+    def plugin_meta_class_map(self) -> Dict[str, PluginType]:
+        return PLUGIN_META_CLASS_MAP
+
+    @cached_property
+    def sam_map(self) -> Dict[str, SAMPluginType]:
+        """Maps manifest kinds to their respective SAM plugin classes."""
+        return SAM_MAP
+
+    @property
+    def obj(self) -> Plugins:
+        if self._plugin:
+            return self._plugin
+        if self._plugin_meta:
+            Plugin = (
+                self.plugin_meta_class_map[self.plugin_meta.plugin_class]
+                if self.plugin_meta and self.plugin_meta.plugin_class in self.plugin_meta_class_map
+                else None
+            )
+            if not Plugin:
+                plugin_class = self.plugin_meta.plugin_class if self.plugin_meta else "Unknown"
+                raise SAMPluginControllerError(f"Plugin class {plugin_class} is not supported.")
+            self._plugin = (
+                Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
+                if self.plugin_meta and self.user_profile
+                else None
+            )
+            if isinstance(self._plugin, SAMPluginCommon):
+                self._manifest = self._plugin.manifest  # type: ignore[assignment]
+        elif self.manifest:
+            Plugin = self.map[self.manifest.kind]
+            self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)  # type: ignore[call-arg]
+        return self._plugin
+
+    def model_dump_json(self) -> Optional[SmarterDictType]:
+        if self.plugin:
+            return json.loads(self.plugin.manifest.model_dump_json()) if self.plugin and self.plugin.manifest else None
+        return None
+
+    def get_model_titles(self) -> list[dict[str, str]]:
+        if self.plugin and self.plugin.manifest:
+            return [{"name": f, "type": str(t)} for f, t in self.plugin.manifest.__annotations__.items()]
+        return []

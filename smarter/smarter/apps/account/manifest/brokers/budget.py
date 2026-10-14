@@ -35,7 +35,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.models.budget import is_visible, resolve_resource
 from smarter.apps.account.serializers import BudgetSerializer
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -87,12 +87,12 @@ RESOURCE_MODELS = {
     "Provider": "provider.Provider",
     "Proxy": "proxy.Proxy",
     "Vectorsearch": "vectorsearch.Vectorsearch",
-    "ApiPlugin": "plugin.PluginMeta",
-    "SkillPlugin": "plugin.PluginMeta",
-    "SqlPlugin": "plugin.PluginMeta",
-    "StaticPlugin": "plugin.PluginMeta",
-    "WebsearchPlugin": "plugin.PluginMeta",
-    "ImageSearchPlugin": "plugin.PluginMeta",
+    "ApiPlugin": "llmtool.PluginMeta",
+    "SkillPlugin": "llmtool.PluginMeta",
+    "SqlPlugin": "llmtool.PluginMeta",
+    "StaticPlugin": "llmtool.PluginMeta",
+    "WebsearchPlugin": "llmtool.PluginMeta",
+    "ImageSearchPlugin": "llmtool.PluginMeta",
 }
 """The Django models of the kinds of resource, other than Account and User, that are owned by a user."""
 
@@ -118,7 +118,7 @@ def resource_to_manifest(resource_locator: str) -> SmarterDictType:
         }
     if resource is not None and isinstance(getattr(resource, "user_profile", None), UserProfile):
         model_label = resource._meta.label  # pylint: disable=protected-access
-        kind = getattr(resource, "kind", None) if model_label == "plugin.PluginMeta" else None
+        kind = getattr(resource, "kind", None) if model_label == "llmtool.PluginMeta" else None
         kind = str(kind) if kind else next((k for k, label in RESOURCE_MODELS.items() if label == model_label), None)
         if kind:
             return {

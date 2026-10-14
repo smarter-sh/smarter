@@ -848,8 +848,8 @@ class SAMSecretBroker(AbstractBroker):
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.connection.models import ApiConnection, SqlConnection
         from smarter.apps.llmhost.models import LLMHost
+        from smarter.apps.llmtool.models import PluginDataWebsearch, PluginMeta
         from smarter.apps.mcpclient.models import MCPClient
-        from smarter.apps.plugin.models import PluginDataWebsearch, PluginMeta
         from smarter.apps.provider.models import Provider
         from smarter.apps.proxy.models import Proxy
         from smarter.apps.vectorsearch.models import Vectorsearch

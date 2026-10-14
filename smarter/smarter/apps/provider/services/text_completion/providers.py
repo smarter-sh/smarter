@@ -59,7 +59,7 @@ from pydantic import SecretStr
 from rest_framework.request import Request
 
 from smarter.apps.account.models import User, UserProfile
-from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.clients import OpenAIPassthroughClient
 from smarter.apps.provider.models import Provider, get_providers

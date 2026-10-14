@@ -12,6 +12,7 @@ from taggit.managers import TaggableManager
 
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.models import LLMClient  # adjust to actual location
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.orchestrator.enum import HarnessRole, OrchestrationStrategy
 from smarter.apps.orchestrator.manifest.models.orchestrator.const import MANIFEST_KIND
 from smarter.apps.orchestrator.manifest.models.orchestrator.metadata import (
@@ -27,7 +28,6 @@ from smarter.apps.orchestrator.manifest.models.orchestrator.status import (
     SAMOrchestratorStatus,
 )
 from smarter.apps.orchestrator.models import Orchestrator, OrchestratorHarness
-from smarter.apps.plugin.signals import broker_ready
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches

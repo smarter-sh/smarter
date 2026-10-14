@@ -22,7 +22,7 @@ from pydantic import SecretStr
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.plugin.models import PluginPrompt
+from smarter.apps.llmtool.models import PluginPrompt
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib import (

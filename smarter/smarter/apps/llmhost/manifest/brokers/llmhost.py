@@ -46,7 +46,7 @@ from smarter.apps.llmhost.services.compute import (
 )
 from smarter.apps.llmhost.services.engines import get_engine
 from smarter.apps.llmhost.services.exceptions import LLMHostComputeError
-from smarter.apps.plugin.signals import broker_ready
+from smarter.apps.llmtool.signals import broker_ready
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

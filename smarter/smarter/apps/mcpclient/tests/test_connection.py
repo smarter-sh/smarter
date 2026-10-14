@@ -18,6 +18,7 @@ import httpx2
 import mcp_types
 from mcp.server import MCPServer
 
+from smarter.apps.llmtool.plugin.safe_http import SafeHttpError
 from smarter.apps.mcpclient.connection import (
     MAX_RESULT_CHARACTERS,
     TRUNCATION_MARKER,
@@ -40,7 +41,6 @@ from smarter.apps.mcpclient.exceptions import (
     SmarterMCPClientPermissionError,
 )
 from smarter.apps.mcpclient.models import MCPAuthType, MCPClient, MCPTransport
-from smarter.apps.plugin.plugin.safe_http import SafeHttpError
 from smarter.common.const import SmarterEnvironments
 
 from .base_classes import (
