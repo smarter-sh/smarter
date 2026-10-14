@@ -7,13 +7,22 @@ from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
 )
+from smarter.apps.guardrail.manifest.models.guardrail.const import (
+    MANIFEST_KIND as GUARDRAIL_KIND,
+)
 from smarter.apps.llmclient.manifest.models.custom_domain.const import (
     MANIFEST_KIND as CUSTOM_DOMAIN_KIND,
 )
 from smarter.apps.llmclient.manifest.models.llmclient.const import (
     MANIFEST_KIND as LLMCLIENT_KIND,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.const import (
+    MANIFEST_KIND as PLUGIN_KIND,
+)
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
+from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
+    MANIFEST_KIND as MCPCLIENT_KIND,
+)
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import (
@@ -22,6 +31,8 @@ from .models import (
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
     LLMClientFunctions,
+    LLMClientGuardrails,
+    LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
 )
@@ -199,6 +210,28 @@ class LLMClientPluginMiniSerializer(SmarterCamelCaseSerializer):
     name = serializers.CharField(source="plugin_meta.name", read_only=True)
 
 
+class LLMClientMCPClientMiniSerializer(SmarterCamelCaseSerializer):
+    """An MCPClient of an LLMClient: the link's id, and the MCPClient's name."""
+
+    # pylint: disable=C0115
+    class Meta:
+        model = LLMClientMCPClients
+        fields = ("id", "name")
+
+    name = serializers.CharField(source="mcpclient.name", read_only=True)
+
+
+class LLMClientGuardrailMiniSerializer(SmarterCamelCaseSerializer):
+    """A Guardrail of an LLMClient: the link's id, and the Guardrail's name."""
+
+    # pylint: disable=C0115
+    class Meta:
+        model = LLMClientGuardrails
+        fields = ("id", "name")
+
+    name = serializers.CharField(source="guardrail.name", read_only=True)
+
+
 class LLMClientFunctionsSerializer(SmarterCamelCaseSerializer):
 
     class Meta:
@@ -218,6 +251,9 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
     user_profile = UserProfileSerializer()
     functions = serializers.SerializerMethodField()
     plugins = serializers.SerializerMethodField()
+    mcpclients = serializers.SerializerMethodField()
+    guardrails = serializers.SerializerMethodField()
+    tools = serializers.SerializerMethodField()
     custom_domains = serializers.SerializerMethodField()
     api_keys = serializers.SerializerMethodField()
     rfc1034_compliant_name = serializers.SerializerMethodField()
@@ -257,6 +293,36 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
     def get_plugins(self, obj: LLMClient):
         qs = LLMClientPlugin.objects.filter(llmclient=obj).select_related("plugin_meta")
         return LLMClientPluginMiniSerializer(qs, many=True).data
+
+    def get_mcpclients(self, obj: LLMClient):
+        qs = LLMClientMCPClients.objects.filter(llmclient=obj).select_related("mcpclient")
+        return LLMClientMCPClientMiniSerializer(qs, many=True).data
+
+    def get_guardrails(self, obj: LLMClient):
+        qs = LLMClientGuardrails.objects.filter(llmclient=obj).select_related("guardrail")
+        return LLMClientGuardrailMiniSerializer(qs, many=True).data
+
+    def get_tools(self, obj: LLMClient):
+        """
+        Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails.
+
+        :param obj: The LLMClient.
+        :returns: One ``{"id", "name", "kind"}`` per function, plugin, MCPClient and guardrail, in that
+            order. ``id`` is the link row's id, and ``kind`` is ``Function`` or the linked resource's
+            manifest kind.
+        :rtype: list[dict]
+        """
+        return [
+            {"id": item["id"], "name": item["name"], "kind": kind}
+            for kind, items in (
+                ("Function", self.get_functions(obj)),
+                (PLUGIN_KIND, self.get_plugins(obj)),
+                (MCPCLIENT_KIND, self.get_mcpclients(obj)),
+                (GUARDRAIL_KIND, self.get_guardrails(obj)),
+            )
+            for item in items
+            if item["name"]
+        ]
 
     def get_custom_domains(self, obj: LLMClient):
         qs = LLMClientCustomDomain.objects.filter(id=obj.custom_domain.id) if obj.custom_domain else LLMClientCustomDomain.objects.none()  # type: ignore
@@ -330,6 +396,9 @@ __all__ = [
     "LLMClientConfigSerializer",
     "LLMClientAPIKeySerializer",
     "LLMClientPluginSerializer",
+    "LLMClientPluginMiniSerializer",
+    "LLMClientMCPClientMiniSerializer",
+    "LLMClientGuardrailMiniSerializer",
     "LLMClientFunctionsSerializer",
     "LLMClientCustomDomainSerializer",
     "LLMClientCustomDomainListSerializer",

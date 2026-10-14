@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.25.0](https://github.com/smarter-sh/smarter/compare/v0.24.1...v0.25.0) (2026-10-14)
+
+### Features
+
+* **llmclient:** add tools, mcpclients and guardrails to the list page ([6b302cf](https://github.com/smarter-sh/smarter/commit/6b302cf3e85fb71da55e4bbb0b89685c5b7ce218))
+
+## [0.25.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.24.1...v0.25.0-alpha.1) (2026-10-14)
+
+### Features
+
+* **llmclient:** add tools, mcpclients and guardrails to the list page ([6b302cf](https://github.com/smarter-sh/smarter/commit/6b302cf3e85fb71da55e4bbb0b89685c5b7ce218))
+
 ## [0.24.1](https://github.com/smarter-sh/smarter/compare/v0.24.0...v0.24.1) (2026-10-14)
 
 ### Bug Fixes
