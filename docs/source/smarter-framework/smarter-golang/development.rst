@@ -56,3 +56,14 @@ Keeping in step with the platform
 When the platform changes a contract or a manifest kind, refresh, run the tests, and fix what they
 find. The tests also fail when the platform publishes an API operation that the SDK doesn't call.
 The API reference is pkg.go.dev, which a release tag updates.
+
+Releases
+--------
+
+semantic-release versions the SDK from its conventional commit messages on ``main``. It writes the
+version into ``version.go``, tags the commit ``vX.Y.Z``, which is the Go module's version, and
+creates a GitHub Release. The ``Build-Release GitHub`` workflow then builds and tests the tag on
+Linux, macOS and Windows, asks the Go module proxy to fetch it and pkg.go.dev to index it, and
+checks that a new module can import it with ``go get``. Run that workflow by hand to publish a tag
+again. A published version can't be deleted or replaced, because the module proxy caches it: retract
+a bad one with a ``retract`` directive in ``go.mod``, in a new release.
