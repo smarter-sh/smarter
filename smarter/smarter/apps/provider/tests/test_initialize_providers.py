@@ -86,6 +86,59 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertTrue(models.get(name="model-b").is_default)
         self.addCleanup(provider.logo.delete, save=False)
 
+    def test_provider_auth_headers(self):
+        """Test the headers with which each provider authenticates to its models api."""
+        self.assertEqual(
+            initialize_providers.anthropic_auth_headers("k"),
+            {"x-api-key": "k", "anthropic-version": initialize_providers.ANTHROPIC_VERSION},
+        )
+        self.assertEqual(initialize_providers.googleai_auth_headers("k"), {"x-goog-api-key": "k"})
+        self.assertEqual(initialize_providers.bearer_auth_headers("k"), {"Authorization": "Bearer k"})
+
+    def test_anthropic_and_googleai_models_requests(self):
+        """Test that Anthropic and Google AI send their own auth headers and a page size, rather than a Bearer token."""
+        for method, header, params in (
+            ("initialize_anthropic", "x-api-key", {"limit": "1000"}),
+            ("initialize_googleai", "x-goog-api-key", {"pageSize": "1000"}),
+        ):
+            with self.subTest(method=method), patch.object(Command, "initialize_generic_provider") as generic:
+                getattr(self.command, method)()
+                kwargs = generic.call_args.kwargs
+                self.assertIn(header, kwargs["auth_headers"]("k"))
+                self.assertEqual(kwargs["models_params"], params)
+
+    def test_custom_auth_headers_and_params(self):
+        """Test that a provider's auth headers and query parameters are sent to its models api."""
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()) as get:
+            self.command.initialize_generic_provider(
+                api_key_env_var=ENV_VAR,
+                name=self.name,
+                provider_configuration={
+                    "description": "a test provider",
+                    "base_url": "https://api.example.com/v1/",
+                    "default_model": "model-b",
+                },
+                logo_filename=LOGO,
+                provider_api_url="https://example.com/keys",
+                auth_headers=initialize_providers.anthropic_auth_headers,
+                models_params={"limit": "1000"},
+            )
+        self.addCleanup(Provider.objects.get(name=self.name).logo.delete, save=False)
+        self.assertEqual(get.call_args.kwargs["headers"]["x-api-key"], "sk-test-initialize")
+        self.assertEqual(get.call_args.kwargs["params"], {"limit": "1000"})
+
+    def test_gemini_models_response(self):
+        """Test that the Gemini api's models, listed in models with a models/ prefixed name, are created."""
+        response = MagicMock(status_code=200)
+        response.json.return_value = {"models": [{"name": "models/gemini-a"}, {"name": "models/model-b"}, {}]}
+        with patch.object(initialize_providers.requests, "get", return_value=response):
+            self.initialize()
+        provider = Provider.objects.get(name=self.name)
+        self.addCleanup(provider.logo.delete, save=False)
+        models = ProviderModel.objects.filter(provider=provider)
+        self.assertEqual(sorted(models.values_list("name", flat=True)), ["gemini-a", "model-b"])
+        self.assertTrue(models.get(name="model-b").is_default)
+
     def test_initialize_generic_provider_without_api_key(self):
         """
         Test that a provider whose api key is not set, or is a placeholder, is created without a key.

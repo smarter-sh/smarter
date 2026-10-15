@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 from decimal import Decimal
+from io import StringIO
 from unittest import mock
 
 from django.core.management import call_command
@@ -68,5 +69,9 @@ class TestBuiltinBudgets(TestAccountMixin):
 
     def test_command(self):
         """Test the add_builtin_budgets management command."""
-        call_command("add_builtin_budgets")
+        call_command("add_builtin_budgets", stdout=StringIO())
         self.assertEqual(Budget.objects.filter(name__in=self.names).count(), len(self.names))
+        # run again, it creates nothing, and says that the budgets already existed.
+        out = StringIO()
+        call_command("add_builtin_budgets", stdout=out)
+        self.assertIn(f"Created 0 built-in budgets: none. {len(self.names)} already existed", out.getvalue())

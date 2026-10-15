@@ -8,7 +8,7 @@ from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
-from taggit.managers import TaggableManager
+from taggit.managers import TaggableManager, _TaggableManager
 
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmtool.signals import broker_ready
@@ -705,7 +705,7 @@ class SAMVectorsearchBroker(AbstractBroker):
                 # Fix note: occasionally seeing AttributeError: 'list' object has no attribute 'set'
                 # in the logs, which is why this is wrapped in a try/except block.
                 try:
-                    if not isinstance(self.vectorsearch.tags, TaggableManager):
+                    if not isinstance(self.vectorsearch.tags, (TaggableManager, _TaggableManager)):
                         logger.warning(
                             "%s.apply() vectorsearch.tags is a list instead of a TaggableManager for %s %s "
                             "owned by %s. This is unexpected and may indicate an issue with the Vectorsearch "
