@@ -18,6 +18,7 @@ import logging.config
 import math
 import os
 import re
+import secrets
 import subprocess
 import sys
 import time
@@ -30,6 +31,7 @@ from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 from smarter.common.utils import mask_string
 from smarter.lib import json
@@ -626,6 +628,13 @@ See:
 """
 
 smarter_settings.require_secret_key()
+
+# A placeholder such as SET-ME-PLEASE is published in this repository, so it is never
+# used as a key. settings_defaults already generates a key when SECRET_KEY is unset,
+# but not when it is set to a placeholder.
+if is_missing_value(SECRET_KEY):
+    SECRET_KEY = secrets.token_hex(32)
+    logger.warning("SECRET_KEY not set. Using a randomized value.")
 
 logger.debug("PROJECT_ROOT: %s", PROJECT_ROOT)
 logger.debug("BASE_DIR: %s", BASE_DIR)
