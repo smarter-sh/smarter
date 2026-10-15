@@ -106,8 +106,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 4: Tools and MCP.** Function calling, :doc:`API
        </smarter-resources/llmtool/plugin/api>` and :doc:`Websearch
-       </smarter-resources/llmtool/plugin/websearch>` plugins, and the `Model Context Protocol
-       <https://modelcontextprotocol.io/>`__. :doc:`MCP clients
+       </smarter-resources/llmtool/plugin/websearch>` plugins, :doc:`Extensions
+       </smarter-framework/extensibility>` such as the official weather and calculator tools,
+       and the `Model Context Protocol <https://modelcontextprotocol.io/>`__. :doc:`MCP clients
        </smarter-resources/smarter-mcpclient>` in Smarter.
    * - 7
      - 45

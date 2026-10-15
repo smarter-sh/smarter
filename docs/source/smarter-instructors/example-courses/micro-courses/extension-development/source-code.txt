@@ -1,0 +1,241 @@
+Every lecture, lab and assignment in this course rests on the files and commits below. Every
+reference is to the ``main`` branch of `github.com/smarter-sh/smarter
+<https://github.com/smarter-sh/smarter>`__, unless another repository is named, so that students
+can open each one during class. Python paths are under ``smarter/smarter/``.
+
+Tools and Extensibility
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The tool call loop
+     - Smarter offers the LLM the tools that its LLMClient lists, the LLM asks to call one,
+       Smarter runs it and returns the result, and the LLM answers from it. Extension tools are
+       loaded by ``handle_extensions()`` beside the MCP clients' tools, and dispatched by
+       ``process_tool_call()``. :doc:`/smarter-resources/llmtool/how-tools-work`.
+     - `openai_compatible_chat_provider.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
+   * - Plugins and Extensions
+     - Two ways to add a tool, for two kinds of people. A Plugin is a SAM manifest that
+       configures one of six built-in tool patterns; an Extension is a Python package that a
+       platform superuser installs at run time. :doc:`/smarter-framework/extensibility` compares
+       them line by line.
+     - `apps/llmtool/plugin/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/plugin>`__,
+       `apps/llmtool/extension/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/extension>`__
+   * - The framework's map
+     - The package's module docstring lists each module and what it is for: the manifest, the
+       archive, the protocol, settings, the loader, lifecycle, the installer, the toolkit and the
+       registry.
+     - `extension/__init__.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/__init__.py>`__
+   * - The models
+     - ``Extension``, ``ExtensionVersion`` (each version's archive is stored in the database),
+       ``ExtensionSetting`` and ``ExtensionResource``. An Extension is available to every account,
+       or to listed ones.
+     - `models/extension.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/models/extension.py>`__
+   * - Listing an Extension
+     - An LLMClient lists Extensions by slug in ``spec.extensions``. The built-in weather
+       LLMClient's system prompt names the tool exactly as the LLM sees it,
+       ``ext_weather_get_weather``, and a test keeps prompts and manifests from drifting apart.
+     - `llmclient-weather.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-weather.yaml>`__
+
+The Official Extensions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What it shows
+     - Where to look
+   * - The weather Extension
+     - The developer guide's worked example: the ``get_weather`` tool from the OpenAI function
+       calling guide, implemented for real, with a secret setting, a setting with a default, two
+       third-party services that may fail, and a result modeled with Pydantic.
+     - `smarter-extension-weather <https://github.com/smarter-sh/smarter-extension-weather>`__:
+       `pyproject.toml <https://github.com/smarter-sh/smarter-extension-weather/blob/main/pyproject.toml>`__,
+       `weather/tools.py <https://github.com/smarter-sh/smarter-extension-weather/blob/main/weather/tools.py>`__,
+       `weather/models.py <https://github.com/smarter-sh/smarter-extension-weather/blob/main/weather/models.py>`__,
+       `weather/services.py <https://github.com/smarter-sh/smarter-extension-weather/blob/main/weather/services.py>`__
+   * - The documentation
+     - The package's module docstring, in reStructuredText, is the Extension's documentation,
+       written for the administrator who decides whether to install it. The platform renders it
+       with raw HTML and file inclusion disabled.
+     - `weather/__init__.py <https://github.com/smarter-sh/smarter-extension-weather/blob/main/weather/__init__.py>`__,
+       `extension/docs.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/docs.py>`__
+   * - Untrusted input
+     - The calculator never calls ``eval()``. It parses the LLM's expression with ``ast`` and
+       evaluates only the nodes it allows, with a cap on exponents so that ``9**9**9`` cannot
+       exhaust the platform's memory.
+     - `calculator/evaluator.py <https://github.com/smarter-sh/smarter-extension-calculator/blob/main/calculator/evaluator.py>`__,
+       `calculator/tools.py <https://github.com/smarter-sh/smarter-extension-calculator/blob/main/calculator/tools.py>`__
+   * - The smallest Extension
+     - One tool and no settings, for date arithmetic: a template to start from.
+     - `smarter-extension-date-calculator <https://github.com/smarter-sh/smarter-extension-date-calculator>`__
+   * - The test fixtures
+     - The framework's own test Extensions: ``echo``, whose tools succeed, fail, refuse, time out
+       and return non-JSON, with a secret setting, a waffle switch, a SAM manifest and lifecycle
+       hooks; ``broken``, which does not import; and ``incompatible``.
+     - `tests/data/extensions/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/extension/tests/data/extensions>`__
+
+Writing an Extension
+~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The pyproject.toml
+     - A standard Python project file, not a SAM manifest. ``ExtensionManifest`` validates its
+       ``[project]`` and ``[tool.smarter]`` tables. Dependencies are checked against the
+       platform's installed libraries and never installed, and ``compatibility_problems()``
+       explains every unmet Python, Smarter or library requirement.
+       :doc:`/smarter-framework/extensions/pyproject-reference`.
+     - `extension/manifest.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/manifest.py>`__
+   * - The tool protocol
+     - A tool is a class with a ``name``, a Pydantic ``arguments_model`` and a ``call()``
+       method. Its docstring is its description for the LLM, and its arguments model's JSON
+       Schema is its parameters, so the definition offered to the LLM can never disagree with the
+       validation. ``problems()`` explains why a class is not a valid tool.
+       :doc:`/adr/031-pydantic-over-json`.
+     - `extension/protocol.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/protocol.py>`__
+   * - Running a tool
+     - ``ExtensionToolkit`` names each tool ``ext_<slug>_<tool>``, validates the LLM's
+       arguments, runs the call in a thread with the manifest's timeout, and checks that the
+       result is JSON. Invalid arguments, exceptions, timeouts and ``ExtensionToolError`` are
+       returned to the LLM as ``{"error": ...}`` rather than failing the prompt, and a broken
+       Extension is skipped and reported.
+     - `extension/toolkit.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/toolkit.py>`__
+   * - Settings and secrets
+     - Settings are declared in ``pyproject.toml`` and configured by a superuser. Values are
+       coerced to their declared types, and a ``secret`` setting is a Smarter Secret, encrypted at
+       rest, that reaches the tool as a ``SecretStr``, read at call time and never cached.
+     - `extension/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/settings.py>`__
+   * - Lifecycle hooks
+     - Eight hooks, from ``pre_install`` to ``post_uninstall``, all doing nothing by default. A
+       ``pre_*`` hook that raises cancels the action; a ``post_*`` hook that raises leaves the
+       Extension installed but disabled. :doc:`/smarter-framework/extensions/lifecycle`.
+     - `extension/lifecycle.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/lifecycle.py>`__
+   * - Switches and resources
+     - Waffle switches declared in ``pyproject.toml`` are created as ``ext_<slug>_<name>``, and
+       SAM manifests in the package's ``manifests/`` folder are applied through the real brokers.
+       Each is recorded, so that uninstalling deletes exactly what the Extension created.
+     - `extension/resources.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/resources.py>`__
+   * - Testing helpers
+     - ``tool_context()`` and ``call_tool()`` let an Extension's tests call its tools as the
+       platform does, without installing the Extension, the database or an LLM, while letting
+       unexpected exceptions reach the test. :doc:`/smarter-framework/extensions/testing`.
+     - `extension/testing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/testing.py>`__,
+       `tests/test_tools.py <https://github.com/smarter-sh/smarter-extension-weather/blob/main/tests/test_tools.py>`__
+       (weather)
+   * - Management commands
+     - ``validate_extension`` prints each tool's definition exactly as the LLM will see it;
+       ``package_extension``, ``test_extension``, ``install_extension``,
+       ``uninstall_extension`` and ``add_builtin_extensions`` cover the rest of a developer's
+       loop.
+     - `management/commands/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/management/commands>`__
+
+Installing, Loading and Publishing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The archive
+     - A zip file, validated without importing it: at most 10 MB, 50 MB expanded and 2,000
+       files, with no links or paths that leave its directory. ``build_archive()`` fixes every
+       timestamp, so the same source always builds the same sha256.
+     - `extension/archive.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/archive.py>`__
+   * - The installer
+     - The one place where an Extension's state changes: install, update, roll back, configure,
+       enable, disable and uninstall. The web console, the management commands and the registry
+       client all go through it.
+     - `extension/installer.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/installer.py>`__
+   * - Loading code at run time
+     - Each process extracts a version's archive once, atomically by rename, and imports it under
+       a name unique to its version and sha256, so an update loads beside the old version instead
+       of reloading modules. This is why an Extension's modules use relative imports.
+     - `extension/loader.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/loader.py>`__
+   * - The registry
+     - A public GitHub repository whose CI validates each submission, builds an index, and signs
+       it with an Ed25519 key. Platforms verify the signature on every read, through the hardened
+       HTTP client, and check every archive against the signed sha256.
+       :doc:`/smarter-framework/extensions/publishing`.
+     - `extension/registry.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/registry.py>`__,
+       `extensions-registry <https://github.com/smarter-sh/extensions-registry>`__:
+       `scripts/validate.py <https://github.com/smarter-sh/extensions-registry/blob/main/scripts/validate.py>`__,
+       `scripts/build_index.py <https://github.com/smarter-sh/extensions-registry/blob/main/scripts/build_index.py>`__,
+       `publishers.yaml <https://github.com/smarter-sh/extensions-registry/blob/main/publishers.yaml>`__
+   * - Releasing a version
+     - semantic-release on each push to ``main``: a ``fix`` releases a patch and a ``feat`` a
+       minor version. The workflow builds the archive and prints the ``archive_url`` and
+       ``sha256`` that the registry entry needs.
+     - `release.yml <https://github.com/smarter-sh/smarter-extension-weather/blob/main/.github/workflows/release.yml>`__,
+       `test.yml <https://github.com/smarter-sh/smarter-extension-weather/blob/main/.github/workflows/test.yml>`__,
+       `scripts/package.py <https://github.com/smarter-sh/smarter-extension-weather/blob/main/scripts/package.py>`__
+       (weather)
+   * - The web console
+     - Superusers browse the registry, install, upload, configure, enable, update, roll back and
+       uninstall on two React pages, whose api is typed by Pydantic models exported as a JSON
+       Schema. :doc:`/smarter-platform/extensions`.
+     - `extension/views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/views.py>`__,
+       `extension/contract.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/contract.py>`__,
+       `smarter-extension-console/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-extension-console>`__
+   * - Observability
+     - Eight signals, from ``extension_installed`` to ``extension_tool_failed``, feed Smarter's
+       logs, progress messages and history. The ``log_extension`` waffle switch turns on the
+       framework's logging.
+     - `apps/llmtool/signals.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/signals.py>`__
+
+Extensions in the History
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extensions arrived in one large commit, with two follow-ups, and the official Extensions have
+histories of their own.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Commit
+     - Why it is worth studying
+     - Where to look
+   * - Extensions arrive
+     - Adding a Python tool used to mean changing Smarter itself: three functions hardcoded in the
+       chat provider, a choices enum, and a release. The commit body explains every module of the
+       new framework, the migration from ``spec.functions`` to ``spec.extensions``, and how it
+       was verified against the live registry.
+     - `commit fda234a37 <https://github.com/smarter-sh/smarter/commit/fda234a37245907c40197a503822c113eb041f0a>`__
+   * - Drift after a big change
+     - Built-in system prompts still named tools that the LLM was no longer offered. The fix
+       renames them to ``ext_<slug>_<tool>`` and adds a test that every tool a prompt names
+       belongs to an Extension that its manifest lists.
+     - `commit 1aa73c2a0 <https://github.com/smarter-sh/smarter/commit/1aa73c2a0b8681995ca3abf21529941ab04feaf2>`__
+   * - From admin forms to the console
+     - Extension management moves from the Django admin to two React pages, with a typed
+       contract, and the admin becomes read-only.
+     - `commit e353a68a7 <https://github.com/smarter-sh/smarter/commit/e353a68a7cb04814a3550042688594f1fee54c47>`__
+   * - A result the LLM can read
+     - ``get_weather`` 0.2.0 returns current conditions, starts the forecast at the current hour,
+       gives times in the location's timezone, and names the unit of every measurement.
+     - `commit 51ec052a5 <https://github.com/smarter-sh/smarter-extension-weather/commit/51ec052a5ffb8515b0ceff337d744b1ad5cd0e10>`__
+       (weather)
+   * - Automating releases
+     - Hand-made tags replaced by semantic-release, so that a commit's type decides the version.
+     - `commit 45f3690c2 <https://github.com/smarter-sh/smarter-extension-weather/commit/45f3690c2ba793306a2e1f467c7217e579e2b7c8>`__
+       (weather)
+   * - A registry release
+     - The commit that publishes two Extensions' 0.2.0: one YAML file per version.
+     - `commit a42a93ae9 <https://github.com/smarter-sh/extensions-registry/commit/a42a93ae97945169ba2677368e4943b91da25f33>`__
+       (extensions-registry)

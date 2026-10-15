@@ -450,7 +450,7 @@ sphinx-docs:
 	@echo "Building Sphinx documentation using local Python environment."
 	@echo "This may take a few minutes..."
 	@echo "==============================================================================="
-	cd docs && make SPHINXOPTS="-W -T -D language=en" html
+	cd docs && make SPHINXOPTS="-j auto -W -T -D language=en" html
 
 sphinx-linkcheck:
 	cd docs && make linkcheck

@@ -56,9 +56,9 @@ Knowledge and Tools
        one of its ``searchTerms`` exactly, with a typo, or as a synonym, or because its selector
        directive is ``ALWAYS``. Only then does the model decide, from the plugin's description,
        whether to call it. :doc:`/smarter-resources/llmtool/nlp`.
-     - `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
+     - `llmtool/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
        (``selected()``),
-       `plugin/nlp.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/nlp.py>`__
+       `llmtool/nlp.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/nlp.py>`__
    * - Static knowledge
      - A Static Plugin returns fixed facts, here about a fictional Willy Wonka product, so the
        model quotes them instead of making them up.

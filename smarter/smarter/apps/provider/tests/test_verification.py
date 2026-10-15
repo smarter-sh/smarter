@@ -8,12 +8,24 @@ import os
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+import httpx
 from django.utils import timezone
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    BadRequestError,
+    InternalServerError,
+    NotFoundError,
+    RateLimitError,
+)
 
 from smarter.apps.provider.models import (
     Provider,
     ProviderModel,
     ProviderModelVerification,
+    ProviderModelVerificationTypes,
     ProviderStatus,
     ProviderVerification,
 )
@@ -33,7 +45,13 @@ def record(provider_verification=None, provider_model_verification=None, is_succ
     verification.save()
 
 
-def completion(content: str) -> MagicMock:
+def api_error(cls: type[APIStatusError], status_code: int, message: str) -> APIStatusError:
+    """Return the openai exception that the client raises when a provider responds with ``status_code``."""
+    request = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+    return cls(message, response=httpx.Response(status_code, request=request), body=None)
+
+
+def completion(content: str | None) -> MagicMock:
     """Return a chat completion whose first choice's message is ``content``."""
     response = MagicMock()
     response.choices[0].message.content = content
@@ -235,6 +253,80 @@ class TestProviderModelVerification(ProviderTestBase):
         """Test that a summary of 10 words or less succeeds."""
         self.openai.chat.completions.create.return_value = completion("A short summary of seven words here.")
         self.assertTrue(model_checks.verify_model_summarization(provider_model=self.model))
+
+    def test_answers_without_text(self):
+        """Test that a model that answers with no text, as a reasoning model that runs out of tokens does, fails translation and summarization without raising."""
+        self.openai.chat.completions.create.return_value = completion(None)
+        with self.assertLogs(model_checks.base_logger, "ERROR") as logs:
+            self.assertFalse(model_checks.verify_model_translation(provider_model=self.model))
+            self.assertFalse(model_checks.verify_model_summarization(provider_model=self.model))
+        output = "\n".join(logs.output)
+        self.assertIn("did not translate", output)
+        self.assertIn("did not summarize", output)
+        self.assertNotIn("Traceback", output)
+        self.assertEqual(
+            self.openai.chat.completions.create.call_args.kwargs["max_completion_tokens"],
+            model_checks.VERIFICATION_MAX_COMPLETION_TOKENS,
+        )
+
+    def test_text_to_text_reuses_text_input(self):
+        """Test that text_to_text, which runs the text_input check, does not call the provider again when text_input has just succeeded."""
+        self.assertTrue(model_checks.verify_model_text_input(provider_model=self.model))
+        self.assertTrue(model_checks.verify_model_text_to_text(provider_model=self.model))
+        self.assertEqual(self.openai.chat.completions.create.call_count, 1)
+
+    def test_inconclusive_errors(self):
+        """Test that an error about the account or the provider, rather than the model, changes neither the model's verifications nor whether it is active."""
+        request = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+        errors = [
+            # Anthropic reports an account without credit as a 400.
+            api_error(
+                BadRequestError,
+                400,
+                "Error code: 400 - {'error': {'code': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API.'}}",
+            ),
+            api_error(AuthenticationError, 401, "invalid x-api-key"),
+            api_error(APIStatusError, 402, "payment required"),
+            api_error(
+                RateLimitError, 429, "You exceeded your current quota, please check your plan and billing details."
+            ),
+            api_error(InternalServerError, 503, "overloaded"),
+            APIConnectionError(request=request),
+            APITimeoutError(request=request),
+        ]
+        for is_active in (True, False):
+            for error in errors:
+                with self.subTest(error=str(error), is_active=is_active):
+                    self.reset()
+                    ProviderModel.objects.filter(pk=self.model.pk).update(is_active=is_active)
+                    self.openai.chat.completions.create.side_effect = error
+                    with (
+                        patch.object(model_checks, "set_model_verification") as recorded,
+                        self.assertLogs(model_checks.base_logger, "WARNING") as logs,
+                    ):
+                        self.assertIsNone(model_checks.verify_provider_model(self.model.id))
+                    recorded.assert_not_called()
+                    self.assertEqual(ProviderModel.objects.get(pk=self.model.pk).is_active, is_active)
+                    self.assertIn("inconclusive", "\n".join(logs.output))
+
+    def test_model_errors(self):
+        """Test that an error about the model, such as a retired model or one that cannot chat, deactivates it."""
+        errors = [
+            api_error(NotFoundError, 404, "models/gemini-2.5-flash is no longer available to new users."),
+            api_error(BadRequestError, 400, "This model only supports Interactions API."),
+        ]
+        for error in errors:
+            with self.subTest(error=str(error)):
+                self.reset()
+                ProviderModel.objects.filter(pk=self.model.pk).update(is_active=True)
+                self.openai.chat.completions.create.side_effect = error
+                model_checks.verify_provider_model(self.model.id)
+                self.assertFalse(ProviderModel.objects.get(pk=self.model.pk).is_active)
+                self.assertFalse(
+                    ProviderModelVerification.objects.get(
+                        provider_model=self.model, verification_type=ProviderModelVerificationTypes.TEXT_INPUT
+                    ).is_successful
+                )
 
     def test_verify_provider_model(self):
         """Test that a model that passes its checks is activated, and one that fails is deactivated."""

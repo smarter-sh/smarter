@@ -39,8 +39,12 @@ Beyond the twelve factors, students find:
   `registry of resource kinds
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__,
   a `PluginBase <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
-  class for new plugin types, and :doc:`new LLM providers added by manifest
-  </smarter-platform/adding-an-llm-provider>`, not code.
+  class for new plugin types, :doc:`Extensions </smarter-framework/extensibility>`: Python
+  packages of tools that an administrator installs at run time, each version loaded beside the
+  last by a `loader
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/loader.py>`__,
+  and :doc:`new LLM providers added by manifest </smarter-platform/adding-an-llm-provider>`, not
+  code.
 - **Explicit data models.** Django models for what is stored, Pydantic models for what crosses a
   boundary, and an `ownership base class
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__

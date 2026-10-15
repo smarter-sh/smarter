@@ -120,7 +120,7 @@ The file references in the lectures are listed in full under `Principles in the 
        beside Smarter's Debian, uvicorn, MariaDB and Python. Then monolith, modular monolith (one
        Django app per resource family), microservices, event-driven and serverless. Ports and adapters in the
        infrastructure service layer, the broker registry of kinds, ``PluginBase`` for new plugin
-       types, and Provider manifests for new LLM providers.
+       types, Extensions installed at run time, and Provider manifests for new LLM providers.
    * - 3
      - Lecture 8
      - **Integration, asynchrony and horizontal scalability.** Queues, :doc:`task queues
