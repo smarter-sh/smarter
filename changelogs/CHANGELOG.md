@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.26.3](https://github.com/smarter-sh/smarter/compare/v0.26.2...v0.26.3) (2026-10-15)
+
+### Bug Fixes
+
+* **provider:** return an absolute logo url under filesystem storage ([cd9a833](https://github.com/smarter-sh/smarter/commit/cd9a8333821d1bb0ca1e40e711749680f740cef9))
+
 ## [0.26.2](https://github.com/smarter-sh/smarter/compare/v0.26.1...v0.26.2) (2026-10-15)
 
 ### Bug Fixes
