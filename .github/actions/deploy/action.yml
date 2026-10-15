@@ -449,7 +449,6 @@ runs:
             "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
             "SMARTER_S3_BUCKET": ${{ env.SMARTER_S3_BUCKET && format('"{0}"', env.SMARTER_S3_BUCKET) || 'null' }},
             "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
-            "SMARTER_SMTP_FROM_EMAIL": "no-reply@platform.smarter.sh",
             "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
             "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
             "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},

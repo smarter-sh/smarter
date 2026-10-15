@@ -676,8 +676,12 @@ class ProviderVerification(TimestampedModel):
 
     @property
     def is_valid(self) -> bool:
-        """Check if the verification is valid."""
-        if not self.elapsed_updated:
+        """
+        Check if the verification is valid: it succeeded, less than ``VERIFICATION_LIFETIME`` seconds ago.
+
+        A verification saved within the last second has an ``elapsed_updated`` of 0, which is valid.
+        """
+        if self.elapsed_updated is None:
             return False
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
@@ -712,8 +716,12 @@ class ProviderModelVerification(TimestampedModel):
 
     @property
     def is_valid(self) -> bool:
-        """Check if the verification is valid."""
-        if not self.elapsed_updated:
+        """
+        Check if the verification is valid: it succeeded, less than ``VERIFICATION_LIFETIME`` seconds ago.
+
+        A verification saved within the last second has an ``elapsed_updated`` of 0, which is valid.
+        """
+        if self.elapsed_updated is None:
             return False
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
