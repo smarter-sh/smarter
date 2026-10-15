@@ -115,7 +115,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Tools.** Function calling, :doc:`API </smarter-resources/llmtool/plugin/api>` and
        :doc:`Websearch </smarter-resources/llmtool/plugin/websearch>` plugins. Plugin selection by
        search terms decides which tools Smarter offers, and their descriptions steer which ones
-       the model calls (:doc:`/smarter-resources/llmtool/nlp`).
+       the model calls (:doc:`/smarter-resources/llmtool/nlp`). :doc:`Extensions
+       </smarter-framework/extensibility>`, such as the official weather and calculator tools,
+       are installed by an administrator and offered on every prompt of an LLMClient that lists
+       them.
    * - 3
      - Lecture 8
      - **MCP.** The `Model Context Protocol <https://modelcontextprotocol.io/>`__ and

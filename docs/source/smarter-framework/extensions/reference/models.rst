@@ -9,3 +9,4 @@ Models
 .. autoclass:: smarter.apps.llmclient.models.LLMClientExtensions
     :members:
     :show-inheritance:
+    :no-index:

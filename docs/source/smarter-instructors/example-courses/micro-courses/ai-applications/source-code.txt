@@ -35,7 +35,7 @@ Applications to Take Apart
    * - Stackademy
      - A fictional university's course catalog, served two ways: by a SQL Plugin over a database,
        and by an API Plugin over a REST API, each with its own LLMClient.
-     - `plugin/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__
+     - `llmtool/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__
 
 Knowledge and Data
 ~~~~~~~~~~~~~~~~~~
@@ -66,7 +66,7 @@ Knowledge and Data
        parameters, with types, descriptions and allowed values, so it never writes SQL that
        runs. :doc:`/smarter-resources/llmtool/plugin/sql`.
      - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__,
-       `plugin/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/sql.py>`__
+       `llmtool/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/sql.py>`__
    * - Connections and credentials
      - A Connection names the database or API, and its password is the name of a Secret, so
        neither the model nor the plugin's author ever sees it.
@@ -87,11 +87,18 @@ Action and Orchestration
      - Smarter offers a plugin's tool to the model only when the prompt matches one of its search
        terms, exactly, with a typo or as a synonym. The model then decides, from the tool's
        description, whether to call it. :doc:`/smarter-resources/llmtool/nlp`.
-     - `plugin/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
+     - `llmtool/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
        (``selected()``)
    * - Twenty sample plugins
      - Static, Skill, Websearch and ImageSearch plugins, ready to attach to an LLMClient.
-     - `plugin/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__
+     - `llmtool/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__
+   * - Official Extensions
+     - A calculator, a date calculator and a weather tool: Python packages that an administrator
+       installs from the signed Smarter Extension registry, and that any LLMClient lists under
+       ``spec.extensions``. Unlike a plugin, an Extension's tools are offered on every prompt.
+       :doc:`/smarter-framework/extensibility`.
+     - `smarter-extension-weather <https://github.com/smarter-sh/smarter-extension-weather>`__,
+       `llmclient-weather.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-weather.yaml>`__
    * - MCP clients
      - Twenty-five ready-made MCP clients, for GitHub, Notion, Linear, Stripe, Hugging Face,
        Microsoft Learn and others. Each states its transport, its credentials (a Secret) and the
