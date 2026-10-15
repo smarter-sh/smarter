@@ -701,7 +701,7 @@ Models of accounts, users, user profiles and account contacts, as ``/api/v1/acco
 
 .. py:module:: smarter.models.llmclient
 
-Models of LLMClients and their plugins, built-in functions, api keys and custom domains.
+Models of LLMClients and their plugins, MCPClients, guardrails, built-in functions, api keys and custom domains.
 
 .. py:class:: LLMClientPluginRef
 
@@ -715,6 +715,61 @@ Models of LLMClients and their plugins, built-in functions, api keys and custom 
 
    .. py:attribute:: name
       :type: Optional
+
+
+
+.. py:class:: LLMClientMCPClientRef
+
+   Bases: :class:`smarter.models.base.SmarterCamelModel`
+
+   An MCPClient of an LLMClient, by the link's id and the MCPClient's name.
+
+   .. py:attribute:: id
+      :type: int
+
+
+   .. py:attribute:: name
+      :type: Optional
+
+
+
+.. py:class:: LLMClientGuardrailRef
+
+   Bases: :class:`smarter.models.base.SmarterCamelModel`
+
+   A guardrail of an LLMClient, by the link's id and the guardrail's name.
+
+   .. py:attribute:: id
+      :type: int
+
+
+   .. py:attribute:: name
+      :type: Optional
+
+
+
+.. py:class:: LLMClientTool
+
+   Bases: :class:`smarter.models.base.SmarterCamelModel`
+
+   Something that an LLMClient adds to a prompt: a built-in function, plugin, MCPClient or guardrail.
+
+   .. py:attribute:: id
+      :type: int
+
+      The id of the link row: the LLMClient's function, plugin, MCPClient or guardrail.
+
+
+   .. py:attribute:: name
+      :type: str
+
+      The function's name, or the linked resource's.
+
+
+   .. py:attribute:: kind
+      :type: str
+
+      Function, or the linked resource's manifest kind: Plugin, MCPClient or Guardrail.
 
 
 
@@ -967,6 +1022,20 @@ Models of LLMClients and their plugins, built-in functions, api keys and custom 
 
    .. py:attribute:: plugins
       :type: list
+
+
+   .. py:attribute:: mcpclients
+      :type: list
+
+
+   .. py:attribute:: guardrails
+      :type: list
+
+
+   .. py:attribute:: tools
+      :type: list
+
+      Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails, in that order.
 
 
    .. py:attribute:: api_keys
@@ -2113,12 +2182,89 @@ Models of secrets, prompt history, proxies, orchestrators and vectorsearches.
 
    An orchestrator: a multi-agent workflow that composes LLMClients.
 
+   .. py:attribute:: strategy
+      :type: Optional
+
+      How its LLMClients collaborate: sequential, parallel, supervisor, router, voting or debate.
+
+
+   .. py:attribute:: max_iterations
+      :type: Optional
+      :value: alias ``maxIterations``
+
+
+   .. py:attribute:: is_active
+      :type: Optional
+      :value: alias ``isActive``
+
+
+   .. py:attribute:: llmclients
+      :type: list
+
+      The ids of its LLMClients.
+
+
 
 .. py:class:: Vectorsearch
 
    Bases: :class:`smarter.models.base.SmarterResource`
 
-   A vectorsearch: a retrieval pipeline over one or more vectorstores.
+   A vectorsearch: a retrieval pipeline over a vectorstore.
+
+   .. py:attribute:: search_type
+      :type: Optional
+      :value: alias ``searchType``
+
+      similarity, similarity_score_threshold or mmr.
+
+
+   .. py:attribute:: k
+      :type: Optional
+
+      The number of chunks to return.
+
+
+   .. py:attribute:: score_threshold
+      :type: Optional
+      :value: alias ``scoreThreshold``
+
+
+   .. py:attribute:: fetch_k
+      :type: Optional
+      :value: alias ``fetchK``
+
+      The candidates of an mmr search.
+
+
+   .. py:attribute:: lambda_mult
+      :type: Optional
+      :value: alias ``lambdaMult``
+
+      An mmr search's diversity.
+
+
+   .. py:attribute:: metadata_filter
+      :type: Optional
+      :value: alias ``metadataFilter``
+
+
+   .. py:attribute:: is_enabled
+      :type: Optional
+      :value: alias ``isEnabled``
+
+
+   .. py:attribute:: vectorstore
+      :type: Optional
+
+      The id of its vectorstore.
+
+
+   .. py:attribute:: auth_secret
+      :type: Optional
+      :value: alias ``authSecret``
+
+      The id of its Secret, if any.
+
 
 
 .. py:class:: PromptSession
