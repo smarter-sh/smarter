@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.27.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.27.0...v0.27.1-alpha.1) (2026-10-15)
+
+### Bug Fixes
+
+* **helm:** pass the extension registry public key to the platform ([980d66c](https://github.com/smarter-sh/smarter/commit/980d66c0fb9d8e2005ae4661ef5245331907fd54))
+
 ## [0.27.0](https://github.com/smarter-sh/smarter/compare/v0.26.5...v0.27.0) (2026-10-15)
 
 ### Features
