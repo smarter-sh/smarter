@@ -3,6 +3,7 @@
 import copy
 from contextlib import ExitStack
 from unittest.mock import MagicMock, PropertyMock, patch
+from urllib.parse import urljoin
 
 from django.test import RequestFactory
 
@@ -18,6 +19,7 @@ from smarter.apps.provider.manifest.brokers.provider import (
 )
 from smarter.apps.provider.manifest.models.provider.model import SAMProvider
 from smarter.apps.provider.models import Provider
+from smarter.common.conf import smarter_settings
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotFound,
@@ -52,10 +54,21 @@ class TestProviderBrokerBranches(TestAccountMixin):
         return provider
 
     def test_logo_url_of_a_stored_logo(self):
+        """FileSystemStorage returns a relative path, which becomes an absolute platform URL."""
         provider = MagicMock()
         provider.logo.name = "logos/provider.png"
         provider.logo.url = "/media/logos/provider.png"
-        self.assertEqual(self.broker(provider=provider).logo_url, "/media/logos/provider.png")
+        self.assertEqual(
+            self.broker(provider=provider).logo_url,
+            urljoin(smarter_settings.environment_url, "/media/logos/provider.png"),
+        )
+
+    def test_logo_url_of_a_logo_stored_in_s3(self):
+        """S3 storage already returns an absolute URL, which is returned as-is."""
+        provider = MagicMock()
+        provider.logo.name = "logos/provider.png"
+        provider.logo.url = "https://cdn.example.com/logos/provider.png"
+        self.assertEqual(self.broker(provider=provider).logo_url, "https://cdn.example.com/logos/provider.png")
 
     def test_manifest_to_django_orm_guards(self):
         base_class = next(c for c in SAMProviderBroker.__mro__[1:] if "manifest_to_django_orm" in vars(c))
