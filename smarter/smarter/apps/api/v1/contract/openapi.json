@@ -7605,6 +7605,19 @@
             "default": null,
             "description": "The look of the chat: the manifest's spec.config.styles, with snake_case keys."
           },
+          "total_tools": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The number of the LLMClient's extensions, plugins and MCPClients.",
+            "title": "Total Tools"
+          },
           "url_llmclient": {
             "description": "The url of the LLMClient's prompt api.",
             "title": "Url Llmclient",
