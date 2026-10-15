@@ -14,11 +14,20 @@ The platform uses it through :data:`smarter.apps.infrastructure.services.infrast
     from smarter.apps.infrastructure.services import infrastructure
 
     infrastructure.email.send_email(subject="Welcome!", body="<p>Hello</p>", to="user@example.com", html=True)
+
+Files are attached with :class:`EmailAttachment`:
+
+.. code-block:: python
+
+    attachment = EmailAttachment(filename="job.log", content=log.encode("utf-8"))
+    infrastructure.email.send_email(subject="Job log", body="Attached.", to="ops@example.com", attachments=[attachment])
 """
 
 import smtplib
 from abc import abstractmethod
 from dataclasses import dataclass, field
+from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Callable, List, Optional, Union
@@ -47,6 +56,33 @@ SMTP_ERRORS = (
     smtplib.SMTPServerDisconnected,
     smtplib.SMTPNotSupportedError,
 )
+
+
+@dataclass(frozen=True)
+class EmailAttachment:
+    """A file attached to an email."""
+
+    filename: str
+    """The file's name, as the recipient sees it."""
+
+    content: bytes
+    """The file's contents."""
+
+    content_type: str = "text/plain"
+    """The file's MIME type, e.g. ``text/plain`` or ``application/gzip``."""
+
+    def mime_part(self) -> MIMEBase:
+        """
+        Return the attachment as a base64-encoded MIME part.
+
+        :returns: The MIME part, with a ``Content-Disposition: attachment`` header.
+        """
+        maintype, _, subtype = self.content_type.partition("/")
+        part = MIMEBase(maintype, subtype or "octet-stream")
+        part.set_payload(self.content)
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", "attachment", filename=self.filename)
+        return part
 
 
 class EmailService(InfrastructureService):
@@ -93,17 +129,29 @@ class EmailService(InfrastructureService):
             return None
         return valid_emails
 
-    def message(self, subject: str, body: str, to: list[str], html: bool = False, from_email=None) -> MIMEMultipart:
+    # pylint: disable=too-many-arguments
+    def message(
+        self,
+        subject: str,
+        body: str,
+        to: list[str],
+        html: bool = False,
+        from_email=None,
+        attachments: Optional[List[EmailAttachment]] = None,
+    ) -> MIMEMultipart:
         """
         Return a message, from ``smarter_settings.smtp_from_email`` unless ``from_email`` is given.
 
         It has no ``Bcc`` header: blind copies are added to the envelope by :meth:`_deliver`.
+        A message with attachments is ``multipart/mixed``, with the body as its first part.
         """
-        message = MIMEMultipart("alternative")
+        message = MIMEMultipart("mixed" if attachments else "alternative")
         message["Subject"] = subject
         message["From"] = from_email or smarter_settings.smtp_from_email
         message["To"] = ", ".join(to)
         message.attach(MIMEText(body, "html") if html else MIMEText(body))
+        for attachment in attachments or []:
+            message.attach(attachment.mime_part())
         return message
 
     def log_not_sent(self, subject: str, to: Union[str, List[str]]) -> None:
@@ -142,6 +190,7 @@ class EmailService(InfrastructureService):
         from_email: Optional[str] = None,
         quiet: bool = False,
         bcc_admin: bool = True,
+        attachments: Optional[List[EmailAttachment]] = None,
     ) -> bool:
         """
         Send an email.
@@ -159,6 +208,8 @@ class EmailService(InfrastructureService):
         :param bcc_admin: Send a blind copy to the platform's admin, ``smarter_settings.email_admin``.
             Pass False for an email that carries a secret, e.g. a password reset link, which only
             its recipient may see.
+        :param attachments: Files to attach. The message's size, attachments included, is limited
+            by the SMTP server, e.g. 10 MB for AWS Simple Email Service.
         :returns: True if the email was sent.
         """
         if not self.ready:
@@ -173,7 +224,7 @@ class EmailService(InfrastructureService):
             logger.debug("%s quiet mode. Would have sent '%s' to: %s", self.formatted_class_name, subject, recipients)
             return False
 
-        message = self.message(subject, body, recipients, html=html, from_email=from_email)
+        message = self.message(subject, body, recipients, html=html, from_email=from_email, attachments=attachments)
         bcc = self.admin_bcc(recipients) if bcc_admin else []
         try:
             self._deliver(message, recipients, bcc)
@@ -270,6 +321,7 @@ class SentEmail:
     bcc: list[str] = field(default_factory=list)
     body: str = ""
     headers: dict[str, str] = field(default_factory=dict)
+    attachments: list[EmailAttachment] = field(default_factory=list)
 
 
 class InMemoryEmailService(EmailService):
@@ -295,6 +347,15 @@ class InMemoryEmailService(EmailService):
             raise EmailServiceError(self.fail)
         payload = message.get_payload()
         body = payload[0].get_payload() if isinstance(payload, list) and payload else str(payload)
+        attachments = [
+            EmailAttachment(
+                filename=str(part.get_filename()),
+                content=part.get_payload(decode=True),
+                content_type=part.get_content_type(),
+            )
+            for part in message.walk()
+            if part.get_content_disposition() == "attachment"
+        ]
         self.outbox.append(
             SentEmail(
                 subject=str(message["Subject"]),
@@ -303,6 +364,7 @@ class InMemoryEmailService(EmailService):
                 bcc=list(bcc),
                 body=str(body),
                 headers={key: str(value) for key, value in message.items()},
+                attachments=attachments,
             )
         )
 
@@ -331,6 +393,7 @@ def get_email() -> EmailService:
 
 
 __all__ = [
+    "EmailAttachment",
     "EmailService",
     "InMemoryEmailService",
     "SMTPEmailService",
