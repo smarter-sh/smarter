@@ -18,12 +18,15 @@ import io
 from contextlib import redirect_stdout
 from unittest import mock
 
+import yaml
 from django.core.management import call_command
 
+from smarter.apps.llmtool.management.commands import create_stackademy
 from smarter.apps.llmtool.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.static import StaticPlugin
 from smarter.lib import logging
+from smarter.lib.manifest.template import manifest_template_values
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase, get_data_path
 
@@ -296,6 +299,26 @@ class TestPluginManagementCommands(PluginAppTestBase):
         self.assertIn("smarter/apps/llmtool/data/stackademy/stackademy-plugin-api.yaml", filespecs)
         for call in apply_manifest_v2.call_args_list:
             self.assertEqual(call.kwargs["username"], self.username)
+        # the ApiConnection points to this platform, rather than to the local development server.
+        connection = next(
+            call.kwargs["manifest"]
+            for call in apply_manifest_v2.call_args_list
+            if call.kwargs["filespec"] == create_stackademy.API_CONNECTION_FILE_PATH
+        )
+        values = manifest_template_values()
+        self.assertEqual(
+            yaml.safe_load(connection)["spec"]["connection"]["baseUrl"],
+            f"{values['environment_platform_scheme']}://{values['environment_platform_domain']}/api/v1/tests",
+        )
+
+    def test_create_stackademy_fails_when_a_manifest_is_not_applied(self):
+        """Test that create_stackademy fails, rather than carrying on, when apply_manifest_v2 returns False."""
+        with mock.patch(
+            f"{COMMANDS_MODULE}.create_stackademy.apply_manifest_v2", return_value=False
+        ) as apply_manifest_v2:
+            with self.assertRaises(SystemExit):
+                self.call("create_stackademy", account_number=self.account_number)
+        apply_manifest_v2.assert_called_once()
 
     def test_create_stackademy_unknown_account(self):
         """Test that create_stackademy does nothing for an account that does not exist."""

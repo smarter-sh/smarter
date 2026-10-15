@@ -8,7 +8,7 @@ from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
-from taggit.managers import TaggableManager
+from taggit.managers import TaggableManager, _TaggableManager
 
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.models import LLMClient  # adjust to actual location
@@ -680,7 +680,7 @@ class SAMOrchestratorBroker(AbstractBroker):
                 # Fix note: occasionally seeing AttributeError: 'list' object has no attribute 'set'
                 # in the logs, which is why this is wrapped in a try/except block.
                 try:
-                    if not isinstance(self.orchestrator.tags, TaggableManager):
+                    if not isinstance(self.orchestrator.tags, (TaggableManager, _TaggableManager)):
                         logger.warning(
                             "%s.apply() orchestrator.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the Orchestrator model definition or the database state. Tags=%s",
                             self.formatted_class_name,

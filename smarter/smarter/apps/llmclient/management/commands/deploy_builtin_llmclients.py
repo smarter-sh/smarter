@@ -7,6 +7,7 @@ import os
 from typing import Optional
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import transaction
 
 from smarter.apps.account.models import Account, User, UserProfile
@@ -16,6 +17,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.llmclient.manifest.models.llmclient.model import SAMLLMClient
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.tasks import deploy_default_api
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
@@ -42,10 +44,18 @@ class Command(SmarterCommand):
       - Iterate through all plugin manifest files and create each plugin.
       - Iterate through all llmclient manifest files, create each llmclient, and deploy it asynchronously.
       - Output progress and status messages for each operation.
+      - Exit with a ``CommandError``, listing them, if any manifest failed. Every manifest is still
+        attempted, so that one that fails doesn't prevent the others from being applied.
 
     This command is intended for administrators to quickly provision standard llmclients and plugins
     for new or existing accounts, ensuring consistent setup and deployment across environments.
     """
+
+    UNVERIFIED_DNS_STATUSES = (
+        LLMClient.DnsVerificationStatusChoices.NOT_VERIFIED,
+        LLMClient.DnsVerificationStatusChoices.FAILED,
+    )
+    """The domain statuses of a deployed llmclient that no deploy task is going to change."""
 
     _url: Optional[str] = None
     user: User
@@ -150,6 +160,11 @@ class Command(SmarterCommand):
         follows to create it again. Resolvers that query the domain in between cache the NXDOMAIN for
         minutes. Applied this way, ``LLMClient.save()`` queues a deploy task only for an llmclient that
         is not deployed yet, and nothing for one that is.
+
+        An llmclient that was already deployed, but whose domain was never verified, or failed to verify,
+        e.g. because the DNS service wasn't ready, or its domain didn't resolve in time, is deployed again
+        with ``deploy_default_api``. Otherwise nothing ever retries it, because its ``deployed`` doesn't
+        change, and it stays unreachable until someone undeploys and redeploys it by hand.
         """
         if not self.user_profile:
             raise SmarterValueError("UserProfile is required to create and deploy an llmclient.")
@@ -161,12 +176,22 @@ class Command(SmarterCommand):
         manifest_data = copy.deepcopy(SAMLoader(file_path=filespec).json_data or {})
         manifest_data.setdefault("spec", {}).setdefault("config", {}).setdefault("prompt", {})["deployed"] = True
         manifest = SAMLoader(manifest=manifest_data)
+        name = manifest_data.get("metadata", {}).get("name")
+        was_deployed = LLMClient.objects.filter(user_profile=self.user_profile, name=name, deployed=True).exists()
         if not self.apply_manifest(manifest, filespec):
             return False
 
         try:
             sam_llmclient = SAMLLMClient(**manifest.pydantic_model_dump())
-            LLMClient.objects.get(user_profile=self.user_profile, name=sam_llmclient.metadata.name)
+            llmclient = LLMClient.objects.get(user_profile=self.user_profile, name=sam_llmclient.metadata.name)
+            if was_deployed and llmclient.dns_verification_status in self.UNVERIFIED_DNS_STATUSES:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"LLMClient {llmclient.name} is deployed, but its domain is {llmclient.dns_verification_status}. "
+                        "Deploying it again."
+                    )
+                )
+                deploy_default_api.delay(llmclient_id=llmclient.id)
             return True
         # pylint: disable=W0718
         except Exception as e:
@@ -191,24 +216,31 @@ class Command(SmarterCommand):
         self.stdout.write(self.style.NOTICE(f"Deploying built-in plugins and llmclients for account {account_number}."))
         self.stdout.write(self.style.NOTICE("=" * 80))
 
+        failed: list[str] = []
         plugins_path = os.path.join(smarter_settings.data_directory, "manifests/plugins/*.yaml")
-        plugin_files = glob.glob(plugins_path)
+        plugin_files = sorted(glob.glob(plugins_path))
         i = 0
         for filespec in plugin_files:
             i += 1
             self.stdout.write(self.style.NOTICE(f"Creating Plugin {i} of {len(plugin_files)}"))
             self.stdout.write(self.style.NOTICE("-" * 80))
-            self.create_plugin(filespec=filespec)
+            if not self.create_plugin(filespec=filespec):
+                failed.append(filespec)
             self.stdout.write(self.style.NOTICE("\n"))
 
         llmclients_path = os.path.join(smarter_settings.data_directory, "manifests/llm-clients/*.yaml")
-        llmclient_files = glob.glob(llmclients_path)
+        llmclient_files = sorted(glob.glob(llmclients_path))
         i = 0
         for filespec in llmclient_files:
             i += 1
             self.stdout.write(self.style.NOTICE(f"Creating LLMClient {i} of {len(llmclient_files)}"))
             self.stdout.write(self.style.NOTICE("-" * 80))
-            self.create_and_deploy_llmclient(filespec=filespec)
+            if not self.create_and_deploy_llmclient(filespec=filespec):
+                failed.append(filespec)
             self.stdout.write(self.style.NOTICE("\n"))
 
+        if failed:
+            msg = f"{len(failed)} built-in manifests failed to apply: {', '.join(failed)}"
+            self.handle_completed_failure(msg=msg)
+            raise CommandError(msg)
         self.handle_completed_success()

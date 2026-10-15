@@ -224,6 +224,19 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_get(response)
         self.assertTrue(is_valid_response)
 
+    def test_apply_updates_the_tags_of_an_existing_llmclient(self):
+        """
+        Test that apply replaces the tags of an LLMClient that already exists with the manifest's.
+
+        apply checked for a ``TaggableManager``, the field, while ``llmclient.tags`` is a
+        ``_TaggableManager``, its manager, so it logged a warning and never set the tags.
+        """
+        self.broker.apply(self.request, **self.kwargs)
+        self.broker.llmclient.tags.set(["stale_tag"])
+        self.broker.apply(self.request, **self.kwargs)
+        self.broker.llmclient.refresh_from_db()
+        self.assertEqual(set(self.broker.llmclient.tags.names()), set(self.broker.manifest.metadata.tags or []))
+
     def test_apply(self):
         """
         Test apply method.
