@@ -3459,6 +3459,28 @@
         "title": "LLMClientApiFunction",
         "type": "object"
       },
+      "LLMClientApiGuardrailRef": {
+        "additionalProperties": false,
+        "description": "A Guardrail of an LLMClient, in the LLMClient's own response: the LLMClientGuardrails' id, and the Guardrail's name.",
+        "properties": {
+          "id": {
+            "description": "LLMClientGuardrails.id.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "description": "The Guardrail's name, Guardrail.name.",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "LLMClientApiGuardrailRef",
+        "type": "object"
+      },
       "LLMClientApiKey": {
         "additionalProperties": false,
         "description": "An api key of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientAPIKey`.",
@@ -3878,6 +3900,14 @@
             "title": "Functions",
             "type": "array"
           },
+          "guardrails": {
+            "description": "The LLMClient's guardrails.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiGuardrailRef"
+            },
+            "title": "Guardrails",
+            "type": "array"
+          },
           "hashedId": {
             "description": "The LLMClient's hashed id, e.g. rMTAwMDAwNgx, which its urls use.",
             "title": "Hashedid",
@@ -3918,6 +3948,14 @@
             "default": null,
             "description": "The url of the LLMClient's manifest in the web console.",
             "title": "Manifesturl"
+          },
+          "mcpclients": {
+            "description": "The LLMClient's MCPClients.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiMCPClientRef"
+            },
+            "title": "Mcpclients",
+            "type": "array"
           },
           "name": {
             "description": "MetaDataModel.name, in snake_case.",
@@ -4045,6 +4083,14 @@
             "description": "LLMClient.tls_certificate_issuance_status.",
             "title": "Tlscertificateissuancestatus"
           },
+          "tools": {
+            "description": "Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails, in that order.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiTool"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
           "updatedAt": {
             "anyOf": [
               {
@@ -4137,6 +4183,9 @@
           "canDelete",
           "functions",
           "plugins",
+          "mcpclients",
+          "guardrails",
+          "tools",
           "customDomains",
           "apiKeys",
           "ready",
@@ -4144,6 +4193,28 @@
           "allowedOrigins"
         ],
         "title": "LLMClientApiLLMClient",
+        "type": "object"
+      },
+      "LLMClientApiMCPClientRef": {
+        "additionalProperties": false,
+        "description": "An MCPClient of an LLMClient, in the LLMClient's own response: the LLMClientMCPClients' id, and the MCPClient's name.",
+        "properties": {
+          "id": {
+            "description": "LLMClientMCPClients.id.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "description": "The MCPClient's name, MCPClient.name.",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "LLMClientApiMCPClientRef",
         "type": "object"
       },
       "LLMClientApiPlugin": {
@@ -4221,6 +4292,40 @@
           "name"
         ],
         "title": "LLMClientApiPluginRef",
+        "type": "object"
+      },
+      "LLMClientApiTool": {
+        "additionalProperties": false,
+        "description": "Something that an LLMClient adds to a prompt: a function, plugin, MCPClient or guardrail.",
+        "properties": {
+          "id": {
+            "description": "The link row's id: LLMClientFunctions, LLMClientPlugin, ... .id.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "Function, or the linked resource's manifest kind.",
+            "enum": [
+              "Function",
+              "Plugin",
+              "MCPClient",
+              "Guardrail"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "description": "The function's or the linked resource's name.",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind"
+        ],
+        "title": "LLMClientApiTool",
         "type": "object"
       },
       "LLMClientPromptErrorResponse": {
