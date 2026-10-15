@@ -22,8 +22,10 @@ from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
+    SAMDependencyReference,
 )
 from smarter.lib.manifest.broker.abstract_broker_class import BrokerNotImplemented
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -234,6 +236,35 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
                 command=SmarterJournalCliCommands.DESCRIBE, data={"status": {"ready": True}}
             )
         self.assertEqual(response.status_code, 200)
+
+    def test_describe_survives_a_dependency_validation_error(self):
+        broker = self.broker
+        with patch.object(SAMGuardrailBroker, "dependencies_status", side_effect=SAMValidationError("boom")):
+            response = broker.json_response_ok(
+                command=SmarterJournalCliCommands.DESCRIBE, data={"status": {"ready": True}}
+            )
+        self.assertEqual(response.status_code, 200)
+
+    def test_dependency_broker_falls_back_to_a_reference(self):
+        """A dependent whose broker fails to initialize is returned as a reference to its kind, name and owner."""
+        broker = self.broker
+        instance = MagicMock(user_profile=self.user_profile)
+        instance.name = "broken_plugin"
+        failing_broker_class = MagicMock(side_effect=SAMValidationError("Invalid value found in model"))
+        with patch("smarter.apps.api.v1.cli.brokers.Brokers.get_broker", return_value=failing_broker_class):
+            dependency = broker.dependency_broker("Plugin", instance)
+        self.assertIsInstance(dependency, SAMDependencyReference)
+        self.assertEqual((dependency.kind, dependency.name), ("Plugin", "broken_plugin"))
+        self.assertEqual(dependency.account, self.account)
+        self.assertIn("broken_plugin", repr(dependency))
+
+    def test_dependency_reference_without_an_owner(self):
+        self.assertIsNone(SAMDependencyReference(kind="Plugin", name="orphan", user_profile=None).account)
+
+    def test_dependency_broker_needs_a_registered_kind(self):
+        with patch("smarter.apps.api.v1.cli.brokers.Brokers.get_broker", return_value=None):
+            with self.assertRaises(SAMBrokerError):
+                self.broker.dependency_broker("NotAKind", MagicMock())
 
     def test_get_or_create_secret_errors(self):
         broker = self.broker
