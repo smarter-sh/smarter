@@ -325,6 +325,9 @@ class PromptChatApiLLMClientBase(PromptChatApiModel):
     app_placeholder: Optional[str] = None
     app_info_url: Optional[str] = None
     app_file_attachment: Optional[bool] = None
+    total_tools: Optional[int] = Field(
+        None, description="The number of the LLMClient's extensions, plugins and MCPClients."
+    )
     styles: Optional[PromptChatApiStyles] = Field(
         None, description="The look of the chat: the manifest's spec.config.styles, with snake_case keys."
     )

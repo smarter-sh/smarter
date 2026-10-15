@@ -55,7 +55,7 @@ describe("ListView", () => {
     );
     const row = await screen.findByRole("row", { name: /example_1/ });
     expect(row).toHaveTextContent(
-      "get_current_weather, example_configuration, everlasting_gobstopper, example_mcpclient, example_guardrail",
+      "get_current_weather, example_configuration, everlasting_gobstopper, example_mcpclient",
     );
   });
 

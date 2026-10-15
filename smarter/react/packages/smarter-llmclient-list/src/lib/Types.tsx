@@ -38,11 +38,11 @@ export type Guardrail = {
   name: string;
 };
 
-/** One of an llmclient's functions, plugins, MCPClients or guardrails. */
+/** One of an llmclient's functions, plugins or MCPClients. Guardrails are not tools. */
 export type Tool = {
   id: number;
   name: string;
-  kind: "Function" | "Plugin" | "MCPClient" | "Guardrail";
+  kind: "Function" | "Plugin" | "MCPClient";
 };
 
 export type Function = {
