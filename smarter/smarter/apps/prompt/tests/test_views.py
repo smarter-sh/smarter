@@ -273,6 +273,7 @@ class TestPromptConfigViewForDeployedHosts(TestAccountMixin):
         self.assertNotIn("user_profile", data["llmclient"])
         self.assertEqual(set(data["history"]), {"chat_history"})
         self.assertEqual(data["plugins"]["plugins"], [])
+        self.assertIsInstance(data["llmclient"]["total_tools"], int)
         content = response.content.decode()
         self.assertNotIn(self.admin_user.email, content)
         self.assertNotIn(self.admin_user.username, content)

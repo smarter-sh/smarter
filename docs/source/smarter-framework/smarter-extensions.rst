@@ -47,7 +47,9 @@ model is the JSON Schema of its parameters, and its ``call()`` method does the w
 Smarter does the rest: it offers the tool to the LLM as ``ext_weather_get_weather``, validates
 the LLM's arguments, runs the tool with the administrator's settings and a timeout, returns the
 result, or an error that the LLM can recover from, and sends the signals that Smarter's logs,
-progress messages and history record.
+progress messages and history record. Every tool follows this
+:ref:`tool protocol <extension-tool-protocol>`, which the platform checks when it loads the
+Extension.
 
 .. toctree::
    :maxdepth: 1

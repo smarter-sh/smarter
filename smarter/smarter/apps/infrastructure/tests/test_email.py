@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from pydantic import SecretStr
 
 from smarter.apps.infrastructure.services import (
+    EmailAttachment,
     InMemoryEmailService,
     SMTPEmailService,
     configure_email,
@@ -67,6 +68,29 @@ class TestInMemoryEmailService(InfrastructureTestBase):
         self.assertIn("Hi", sent.body)
         self.assertEqual(self.sent(events, email_sent)[0]["recipients"], ["a@example.com"])
 
+    def test_attachments(self):
+        attachments = [
+            EmailAttachment(filename="job.txt", content=b"line 1\n"),
+            EmailAttachment(filename="data.gz", content=b"\x1f\x8b", content_type="application/gzip"),
+        ]
+        self.assertTrue(
+            self.email.send_email("Log", "<p>Attached</p>", "a@example.com", html=True, attachments=attachments)
+        )
+        sent = self.email.outbox[0]
+        self.assertIn("Attached", sent.body)
+        self.assertEqual(sent.attachments, attachments)
+        self.assertIn("multipart/mixed", sent.headers["Content-Type"])
+
+    def test_without_attachments(self):
+        self.email.send_email("Hello", "Hi", "a@example.com")
+        self.assertEqual(self.email.outbox[0].attachments, [])
+        self.assertIn("multipart/alternative", self.email.outbox[0].headers["Content-Type"])
+
+    def test_attachment_without_subtype(self):
+        part = EmailAttachment(filename="blob", content=b"x", content_type="application").mime_part()
+        self.assertEqual(part.get_content_type(), "application/octet-stream")
+        self.assertIn('filename="blob"', part["Content-Disposition"])
+
     def test_from_email(self):
         self.email.send_email("Hello", "Hi", "a@example.com", from_email="support@example.com")
         self.assertEqual(self.email.outbox[0].sender, "support@example.com")
@@ -121,6 +145,14 @@ class TestSMTPEmailService(InfrastructureTestBase):
         self.assertIn("Subject: Hello", message)
         self.assertNotIn("Bcc", message)
         self.assertNotIn("admin@example.com", message)
+
+    def test_attachment(self):
+        attachment = EmailAttachment(filename="job.txt", content=b"the whole log")
+        with patch(f"{MODULE}.smarter_settings", smtp_settings()):
+            self.assertTrue(self.email.send_email("Log", "Attached", "a@example.com", attachments=[attachment]))
+        message = self.server.sendmail.call_args.args[2]
+        self.assertIn('Content-Disposition: attachment; filename="job.txt"', message)
+        self.assertIn("dGhlIHdob2xlIGxvZw==", message)  # base64 of the log
 
     def test_without_admin_bcc(self):
         """An email with a secret, e.g. a password reset link, has no blind copy."""
