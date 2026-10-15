@@ -57,15 +57,16 @@ Of note:
 
 - `Automated Pull
   Requests <https://github.com/smarter-sh/smarter/pulls?q=is%3Apr+is%3Aclosed>`__:
-  Github Actions are triggered on pull requests to run any of several
-  different kinds of technology-specific unit tests depending on the
-  contents of the commits included in the PR.
+  Dependabot opens pull requests for dependency updates. The Python and
+  React unit tests run in the ``Tests`` GitHub Actions workflow, which a
+  maintainer starts by hand (``workflow_dispatch``), not on every push or
+  pull request.
 - `python-dotenv <https://github.com/smarter-sh/smarter/blob/main/docs/example-dot-env>`__ for
   storing sensitive data for local development
 - `.gitignore <https://github.com/smarter-sh/smarter/blob/main/.gitignore>`__ ensures that no sensitive nor useless
   data accidentally gets pushed to GitHub.
-- `tox.ini <https://github.com/smarter-sh/smarter/blob/main/tox.ini>`__ file for configuring behaviors of Python
-  testing tools
+- `tox.ini <https://github.com/smarter-sh/smarter/blob/main/tox.ini>`__ runs flake8 and pylint in isolated
+  environments. The unit tests run in the ``smarter-app`` Docker container, not in tox.
 - `GitHub Actions <https://github.com/features/actions>`__ automates
   unit testing, semantic release rule checking, and dependabot actions.
 - `GitHub
