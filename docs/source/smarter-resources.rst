@@ -84,6 +84,7 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-account
    smarter-resources/smarter-authtoken
    smarter-resources/smarter-budget
+   smarter-resources/smarter-claude
    smarter-resources/smarter-connection
    smarter-resources/smarter-guardrail
    smarter-resources/smarter-llmclient
