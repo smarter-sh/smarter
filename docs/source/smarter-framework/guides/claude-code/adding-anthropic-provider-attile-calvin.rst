@@ -1,4 +1,4 @@
-.. _adding-anthropic-provider-yourname:
+.. _adding-anthropic-provider-attile-calvin:
 
 ======================================================
 How-To: Add Anthropic (Claude) as an LLM Provider
