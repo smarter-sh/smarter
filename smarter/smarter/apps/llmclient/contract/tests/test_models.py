@@ -7,6 +7,9 @@ from pydantic import ValidationError
 
 from smarter.apps.account.serializers import user_can_delete
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.guardrail.manifest.models.guardrail.const import (
+    MANIFEST_KIND as GUARDRAIL_KIND,
+)
 from smarter.apps.llmclient.contract.models import (
     LLMClientApiCustomDomain,
     LLMClientApiDnsVerificationStatus,
@@ -16,6 +19,7 @@ from smarter.apps.llmclient.contract.models import (
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
     LLMClientApiTlsCertificateIssuanceStatus,
+    LLMClientApiToolKind,
     LLMClientApiVerificationStatus,
 )
 from smarter.apps.llmclient.models import (
@@ -32,7 +36,13 @@ from smarter.apps.llmclient.serializers import (
     LLMClientPluginSerializer,
     LLMClientSerializer,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.const import (
+    MANIFEST_KIND as PLUGIN_KIND,
+)
 from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
+    MANIFEST_KIND as MCPCLIENT_KIND,
+)
 from smarter.lib.drf.models import SmarterAuthToken
 
 NAME = "test_llmclient_contract_models"
@@ -73,7 +83,15 @@ class TestLLMClientContractModels(TestAccountMixin):
         for key in ignore:
             new.pop(key)
             old.pop(key)
-        self.assertEqual(new, old)
+        differences = sorted(key for key in new.keys() | old.keys() if new.get(key) != old.get(key))
+        self.assertEqual(
+            new,
+            old,
+            f"{type(model).__name__} and {type(serializer).__name__} differ in {differences}. "
+            f"When the serializer changes, change the contract model in "
+            f"smarter/smarter/apps/llmclient/contract/models.py to match, then run `make api-contract` "
+            f"to regenerate smarter/smarter/apps/api/v1/contract/openapi.json, and commit both.",
+        )
 
     def test_choices(self):
         """The Literals are the model fields' choices."""
@@ -87,6 +105,12 @@ class TestLLMClientContractModels(TestAccountMixin):
             with self.subTest(field=f"{model.__name__}.{field}"):
                 self.assertEqual(list(get_args(literal)), choices(model, field))
 
+    def test_tool_kinds(self):
+        """A tool's kind is Function, or the manifest kind of a plugin, MCPClient or guardrail."""
+        self.assertEqual(
+            list(get_args(LLMClientApiToolKind)), ["Function", PLUGIN_KIND, MCPCLIENT_KIND, GUARDRAIL_KIND]
+        )
+
     def test_llmclient_is_the_serializers_output(self):
         """The LLMClient's JSON is the serializer's.
 
@@ -96,6 +120,12 @@ class TestLLMClientContractModels(TestAccountMixin):
         self.assert_is_serializers_output(model, LLMClientSerializer(self.llmclient), "defaultSystemRole")
         self.assertEqual([function.name for function in model.functions], ["calculator"])
         self.assertEqual([plugin.name for plugin in model.plugins], [NAME])
+        self.assertEqual(model.mcpclients, [])
+        self.assertEqual(model.guardrails, [])
+        self.assertEqual(
+            [(tool.id, tool.name, tool.kind) for tool in model.tools],
+            [(self.function.pk, "calculator", "Function"), (self.plugin.pk, NAME, PLUGIN_KIND)],
+        )
         self.assertEqual([api_key.id for api_key in model.api_keys], [self.api_key.pk])
         self.assertEqual(model.custom_domains, [])
         self.assertEqual(model.tags, ["contract"])
