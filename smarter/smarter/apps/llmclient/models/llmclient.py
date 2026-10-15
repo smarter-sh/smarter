@@ -104,7 +104,7 @@ class LLMClient(MetaDataWithOwnershipModel):
     - :class:`LLMClientCustomDomainDNS`
     - :class:`LLMClientPlugin`
     - :class:`LLMClientAPIKey`
-    - :class:`LLMClientFunctions`
+    - :class:`LLMClientExtensions`
     - :class:`LLMClientRequests`
 
     :raises SmarterValueError: If invalid URLs or domains are provided.
@@ -950,24 +950,11 @@ class LLMClient(MetaDataWithOwnershipModel):
         cloned_llmclient = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)  # type: ignore
         pk = cloned_llmclient.pk
 
-        try:
-            from .llmclient_functions import LLMClientFunctions
+        from .llmclient_extension import LLMClientExtensions
 
-            new_llmclient_functions = LLMClientFunctions.objects.get(llmclient_id=pk)
-            logger.debug(
-                "%s.clone() found LLMClientFunctions for LLMClient id: %s. Cloning related LLMClientFunctions.",
-                logger_prefix,
-                pk,
-            )
-            new_llmclient_functions.pk = pk
-            new_llmclient_functions.save()
-            logger.debug("%s.clone() cloned LLMClientFunctions for LLMClient id: %s", logger_prefix, pk)
-        except LLMClientFunctions.DoesNotExist:
-            logger.debug(
-                "%s.clone() did not find LLMClientFunctions for LLMClient id: %s. Skipping cloning of related LLMClientFunctions.",
-                logger_prefix,
-                pk,
-            )
+        for link in LLMClientExtensions.objects.filter(llmclient=self):
+            LLMClientExtensions.objects.get_or_create(llmclient=cloned_llmclient, extension=link.extension)
+            logger.debug("%s.clone() cloned extension %s to LLMClient id: %s", logger_prefix, link.extension, pk)
 
         try:
             from .llmclient_plugin import LLMClientPlugin

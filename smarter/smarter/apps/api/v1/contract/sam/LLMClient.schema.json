@@ -177,7 +177,7 @@
           "$ref": "#/$defs/SAMLLMClientSpecConfig",
           "description": "LLMClient.spec.config[object]. The configuration for the LLMClient."
         },
-        "functions": {
+        "extensions": {
           "anyOf": [
             {
               "items": {
@@ -190,8 +190,8 @@
             }
           ],
           "default": null,
-          "description": "LLMClient.spec.functions[list]. Optional. The built-in Smarter Functions to add to the LLMClient. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
-          "title": "Functions"
+          "description": "LLMClient.spec.extensions[list]. Optional. The slugs of the Extensions whose tools the LLMClient offers the LLM. Example: ['weather', 'calculator']. Extensions are Python packages that a platform administrator installs; each must be installed, enabled and available to your account. See https://docs.smarter.sh/ for more information.",
+          "title": "Extensions"
         },
         "guardrails": {
           "anyOf": [

@@ -48,10 +48,10 @@ from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientPlugin,
 )
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.mcpclient.caching import invalidate_cached_catalog
 from smarter.apps.mcpclient.connection import MCPServerConnection
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
@@ -261,7 +261,9 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
         """Every read of the LLMClients' REST api, its 404 and its 403, against the document."""
         llmclient = LLMClient.objects.create(name=self.name, user_profile=self.user_profile)
         self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
-        function = LLMClientFunctions.objects.create(llmclient=llmclient, name="calculator")
+        extension = Extension.objects.create(slug="test-openapi", display_name="Test OpenAPI")
+        self.addCleanup(Extension.objects.filter(pk=extension.pk).delete)
+        extension_link = LLMClientExtensions.objects.create(llmclient=llmclient, extension=extension)
         plugin_meta = PluginMeta.objects.create(name=self.name, user_profile=self.user_profile, plugin_class="static")
         self.addCleanup(PluginMeta.objects.filter(pk=plugin_meta.pk).delete)
         plugin = LLMClientPlugin.objects.create(llmclient=llmclient, plugin_meta=plugin_meta)
@@ -279,8 +281,8 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
             "/llm-clients/{id}/apikeys/": f"/llm-clients/{llmclient.pk}/apikeys/",
             "/llm-clients/{id}/apikeys/{apikey_id}/": f"/llm-clients/{llmclient.pk}/apikeys/{api_key.pk}/",
             "/llm-clients/{id}/customdomains": f"/llm-clients/{llmclient.pk}/customdomains",
-            "/llm-clients/{id}/functions": f"/llm-clients/{llmclient.pk}/functions",
-            "/llm-clients/{id}/functions/{function_id}": f"/llm-clients/{llmclient.pk}/functions/{function.pk}",
+            "/llm-clients/{id}/extensions": f"/llm-clients/{llmclient.pk}/extensions",
+            "/llm-clients/{id}/extensions/{extension_id}": f"/llm-clients/{llmclient.pk}/extensions/{extension_link.pk}",
         }
         for template, path in reads.items():
             with self.subTest(path=template):
@@ -291,7 +293,7 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
                 if isinstance(body, list) and template != "/llm-clients/{id}/customdomains":
                     self.assertTrue(body, f"{template} returned no rows to validate.")
         status, body = self.rest_get(f"/llm-clients/{llmclient.pk}/")
-        self.assertEqual(body["functions"][0]["name"], "calculator")
+        self.assertEqual(body["extensions"][0]["name"], "test-openapi")
         # an api key is its token's public key_id, never the token's digest, its primary key.
         self.assertEqual(body["apiKeys"][0]["apiKey"], str(token.key_id))
         status, body = self.rest_get(f"/llm-clients/{llmclient.pk}/apikeys/")

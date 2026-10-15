@@ -72,7 +72,7 @@ spec:
         color: '#f28c28'
       typingIndicator:
         color: '#3f6b35'
-  functions:
+  extensions:
     - calculator
   guardrails:
     - prompt_injection_keyword_input

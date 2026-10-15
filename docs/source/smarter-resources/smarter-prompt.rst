@@ -70,7 +70,6 @@ Technical Reference
    prompt/const
    prompt/manifest
    prompt/models
-   prompt/functions
    prompt/management
    prompt/signals
    prompt/tasks

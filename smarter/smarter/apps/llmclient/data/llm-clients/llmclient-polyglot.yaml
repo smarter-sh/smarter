@@ -85,7 +85,6 @@ spec:
         color: '#c678dd'
       typingIndicator:
         color: '#61afef'
-  functions: []
   plugins:
     - code_review
     - image_search

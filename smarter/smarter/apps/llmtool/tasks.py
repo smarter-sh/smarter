@@ -172,3 +172,29 @@ def create_plugin_selector_history(*args, **kwargs):
 )
 def create_plugin_charge(*args, **kwargs):
     pass
+
+
+@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+def check_extension_updates() -> list[str]:
+    """
+    Record the newest compatible version of every extension installed from the registry.
+
+    Run daily by Celery beat, so that the admin console can say when an update is available.
+    Does nothing while the registry is disabled.
+
+    :returns: The slugs of the extensions for which an update is available.
+    :rtype: list[str]
+    """
+    # pylint: disable=import-outside-toplevel
+    from .extension.exceptions import SmarterExtensionRegistryError
+    from .extension.registry import check_for_updates, is_enabled
+
+    prefix = formatted_text(module_prefix + "check_extension_updates()")
+    if not is_enabled():
+        logger.info("%s the extension registry is disabled", prefix)
+        return []
+    try:
+        return [extension.slug for extension in check_for_updates(refresh=True)]
+    except SmarterExtensionRegistryError as e:
+        logger.warning("%s could not check for updates: %s", prefix, e)
+        return []

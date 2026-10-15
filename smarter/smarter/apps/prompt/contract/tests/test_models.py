@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 
 from pydantic import ValidationError
 
-from smarter.apps.llmclient.models import LLMClientFunctions
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.prompt.contract.models import (
     PromptChatApiCompletion,
@@ -16,9 +15,8 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiConfigResponseV1,
     PromptChatApiErrorResponse,
     PromptChatApiFailureV1,
-    PromptChatApiFunctionName,
     PromptChatApiHistory,
-    PromptChatApiLLMClientFunction,
+    PromptChatApiLLMClientExtension,
     PromptChatApiLLMClientPlugin,
     PromptChatApiLLMClientRequest,
     PromptChatApiMessage,
@@ -153,9 +151,11 @@ def complete_config() -> PromptChatApiConfig:
                 {"id": 2, "llmclient": 1, "plugin_meta": PLUGIN_META},
             ],
         },
-        functions={
-            "meta_data": {"total_functions": 1, "functions_returned": 1},
-            "functions": [{"id": 1, "llmclient": 1, "name": "calculator"}],
+        extensions={
+            "meta_data": {"total_extensions": 1, "extensions_returned": 1},
+            "extensions": [
+                {"id": 1, "llmclient": 1, "extension": 3, "name": "weather", "version": "1.0.0", "enabled": True}
+            ],
         },
     )
 
@@ -172,14 +172,14 @@ class TestChatConfigTransformations(SmarterTestBase):
         self.assertEqual(data["history"], {"chat_history": [{"role": "user", "content": "hi"}]})
         self.assertEqual(data["meta_data"], {"ready": True, "is_deployed": True})
         self.assertEqual(data["plugins"], {"meta_data": {"total_plugins": 2, "plugins_returned": 2}, "plugins": []})
-        self.assertEqual(data["functions"]["functions"], [])
+        self.assertEqual(data["extensions"]["extensions"], [])
         self.assertNotIn("owner@example.com", str(data))
         PromptChatApiConfigResponse.model_validate({**ENVELOPE, "data": data})
 
-    def test_public_without_functions(self):
+    def test_public_without_extensions(self):
         config = complete_config()
-        config.functions = None
-        self.assertIsNone(config.public().functions)
+        config.extensions = None
+        self.assertIsNone(config.public().extensions)
 
     def test_complete_v2_keeps_every_field(self):
         data = complete_config().model_dump(mode="json", exclude_unset=True)
@@ -194,6 +194,7 @@ class TestChatConfigTransformations(SmarterTestBase):
         self.assertEqual(data["chatbot"]["user_profile"]["accountNumber"], "1")
         self.assertIn("chatbot_request_history", data["history"])
         self.assertNotIn("llmclient", str(list(data)))
+        self.assertEqual(data["extensions"]["extensions"][0]["chatbot"], 1)
         PromptChatApiConfigResponseV1.model_validate({**ENVELOPE, "data": data})
 
     def test_legacy_key_names_renames_keys_at_every_depth(self):
@@ -217,13 +218,10 @@ class TestChatConfigTransformations(SmarterTestBase):
 
 
 class TestOrmModels(SmarterTestBase):
-    """Test the contract's models of the LLMClient's plugins and functions, which mirror their Django ORM rows."""
+    """Test the contract's models of the LLMClient's plugins and extensions, which mirror their Django ORM rows."""
 
     def test_plugin_classes_match_the_orm(self):
         self.assertEqual(set(get_args(PromptChatApiPluginClass)), {value for value, _ in PluginMeta.PLUGIN_CLASSES})
-
-    def test_function_names_match_the_orm(self):
-        self.assertEqual(set(get_args(PromptChatApiFunctionName)), set(LLMClientFunctions.choices_list()))
 
     def test_from_model(self):
         now = datetime.now(timezone.utc)
@@ -249,9 +247,12 @@ class TestOrmModels(SmarterTestBase):
         self.assertEqual(model.plugin_meta.tags, ["db", "sql"])
         self.assertEqual(model.plugin_meta.plugin_class, "sql")
 
-        function = MagicMock(pk=2, created_at=now, updated_at=now, llmclient_id=7)
-        function.name = "calculator"
-        self.assertEqual(PromptChatApiLLMClientFunction.from_model(function).name, "calculator")
+        extension = MagicMock(pk=3, slug="weather", enabled=True, installed_version=MagicMock(version="1.0.0"))
+        link = MagicMock(pk=2, created_at=now, updated_at=now, llmclient_id=7, extension=extension)
+        model = PromptChatApiLLMClientExtension.from_model(link)
+        self.assertEqual((model.name, model.extension, model.version, model.enabled), ("weather", 3, "1.0.0", True))
+        extension.installed_version = None
+        self.assertIsNone(PromptChatApiLLMClientExtension.from_model(link).version)
 
     def test_orm_models_are_strict(self):
         """The models of ORM rows have exactly their fields: an extra field, or an unknown choice, is an error."""
@@ -260,7 +261,7 @@ class TestOrmModels(SmarterTestBase):
         with self.assertRaises(ValidationError):
             PromptChatApiPluginMeta(**{**PLUGIN_META, "plugin_class": "PluginMeta"})
         with self.assertRaises(ValidationError):
-            PromptChatApiLLMClientFunction(id=1, llmclient=1, name="not_a_function")
+            PromptChatApiLLMClientExtension(id=1, llmclient=1, extension=1, name="weather", enabled=True, secret="x")
 
     def test_v1_models_are_deprecated(self):
         with self.assertWarns(DeprecationWarning):

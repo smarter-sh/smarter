@@ -1,0 +1,11 @@
+[project]
+name = "smarter-extension-incompatible"
+version = "1.0.0"
+description = "An extension that this platform cannot run."
+requires-python = ">=99"
+dependencies = ["a-package-that-does-not-exist>=1", "pydantic<1"]
+
+[tool.smarter]
+slug = "incompatible"
+package = "incompatible"
+tools = ["incompatible.tools:Nothing"]

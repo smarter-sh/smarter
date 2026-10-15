@@ -1,7 +1,7 @@
 # pylint: disable=W0613,C0302
 """PromptConfigView is a Django class-based view responsible for providing configuration data to the ReactJS prompt UI component in the Smarter web application."""
 
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from django.http import (
     HttpRequest,
@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.llmclient.models import (
     LLMClient,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientHelper,
     LLMClientPlugin,
     LLMClientRequests,
@@ -37,11 +37,11 @@ from smarter.apps.prompt.contract.builders import (
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1, CHAT_CONTRACT_V2
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfig,
-    PromptChatApiFunctionList,
+    PromptChatApiExtensionList,
     PromptChatApiHistory,
     PromptChatApiListMetaData,
     PromptChatApiLLMClient,
-    PromptChatApiLLMClientFunction,
+    PromptChatApiLLMClientExtension,
     PromptChatApiLLMClientPlugin,
     PromptChatApiLLMClientRequest,
     PromptChatApiMetaData,
@@ -255,7 +255,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         Whether the client receives the complete configuration.
 
         The complete configuration includes the LLMClient's every field, e.g. its owner's profile, the
-        session's diagnostic histories, and the lists of plugins and functions. It is returned when the
+        session's diagnostic histories, and the lists of plugins and extensions. It is returned when the
         LLMClient was found by its id or hashed id, i.e. by a workbench or platform api url, which
         checks that the user may read it, and to the cli. A deployed LLMClient's own host, which pages
         that embed Smarter Chat call, receives :func:`~smarter.apps.prompt.contract.builders.public_config`.
@@ -321,7 +321,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             ``session_key``, ``sandbox_mode``, ``debug_mode``, ``llmclient`` (serialized by
             ``LLMClientConfigSerializer``, with ``url_llmclient`` from :meth:`prompt_url`), ``history``
             (the session's messages in ``chat_history``, and its diagnostic histories), ``meta_data``
-            (``LLMClientHelper.to_json()``), ``plugins`` and ``functions``.
+            (``LLMClientHelper.to_json()``), ``plugins`` and ``extensions``.
         :rtype: Optional[PromptChatApiConfig]
         :raises pydantic.ValidationError: If the data breaks the contract.
 
@@ -362,10 +362,13 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             .order_by("-pk")[:MAX_RETURNED_PLUGINS]
         )
 
-        llmclient_functions_count = LLMClientFunctions.objects.filter(llmclient=self.llmclient).count()
-        llmclient_functions = LLMClientFunctions.objects.filter(llmclient=self.llmclient).order_by("-pk")[
-            :MAX_RETURNED_PLUGINS
-        ]
+        llmclient_extensions_count = LLMClientExtensions.objects.filter(llmclient=self.llmclient).count()
+        llmclient_extensions = (
+            LLMClientExtensions.objects.filter(llmclient=self.llmclient)
+            .select_related("extension", "extension__installed_version")
+            .defer("extension__installed_version__archive")
+            .order_by("extension__slug")[:MAX_RETURNED_PLUGINS]
+        )
 
         # the session's history, from its rows. The messages are "prompt_history" in PromptHelper.
         chat_helper = self.session.chat_helper
@@ -407,11 +410,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                 ),
                 plugins=[PromptChatApiLLMClientPlugin.from_model(plugin) for plugin in llmclient_plugins],
             ),
-            functions=PromptChatApiFunctionList(
+            extensions=PromptChatApiExtensionList(
                 meta_data=PromptChatApiListMetaData(
-                    total_functions=llmclient_functions_count, functions_returned=len(llmclient_functions)
+                    total_extensions=llmclient_extensions_count, extensions_returned=len(llmclient_extensions)
                 ),
-                functions=[PromptChatApiLLMClientFunction.from_model(function) for function in llmclient_functions],
+                extensions=[PromptChatApiLLMClientExtension.from_model(link) for link in llmclient_extensions],
             ),
         )
 

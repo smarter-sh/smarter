@@ -371,10 +371,9 @@ def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
     )
 
 
-# llm_tool_requested.send(sender=get_current_weather, location=location, unit=unit)
 @receiver(llm_tool_requested, dispatch_uid="llm_tool_requested")
 def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
-    """Handle get_current_weather() request signal."""
+    """Handle a tool call request signal."""
 
     sender_name = sender.__name__
 
@@ -388,7 +387,7 @@ def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
 
 @receiver(llm_tool_responded, dispatch_uid="llm_tool_responded")
 def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response: SmarterDictType, **kwargs):
-    """Handle get_current_weather() response signal."""
+    """Handle a tool call response signal."""
     sender_name = sender.__name__
 
     logger.info(

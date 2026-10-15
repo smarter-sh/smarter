@@ -68,7 +68,7 @@ spec:
         color: '#c0392b'
       typingIndicator:
         color: '#c0392b'
-  functions:
-    - date_calculator
+  extensions:
+    - date-calculator
   guardrails:
     - prompt_injection_keyword_input

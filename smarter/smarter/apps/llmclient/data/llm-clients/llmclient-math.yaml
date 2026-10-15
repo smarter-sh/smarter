@@ -100,7 +100,7 @@ spec:
         color: '#ffe08a'
       typingIndicator:
         color: '#ffe08a'
-  functions:
+  extensions:
     - calculator
   plugins:
     - image_search

@@ -35,6 +35,11 @@ the SDKs and the website integrations are grouped under
 :doc:`Smarter APIs, SDKs and Integrations <smarter-framework/apis-and-sdks>`, which also presents the
 design goals that the APIs and SDKs share.
 
+Smarter is extended in two ways, with :doc:`Plugins and Extensions <smarter-framework/extensibility>`:
+Plugins are YAML manifests that configure Smarter's built-in tool patterns, and
+:doc:`Extensions <smarter-framework/smarter-extensions>` are Python packages that platform
+administrators install at run time.
+
 This section of the documentation provides the technical reference for the Smarter
 Development Framework, including its :doc:`architecture <smarter-framework/architecture>`, specifications, APIs, command-line
 tools, SDKs, and supporting technologies.
@@ -46,6 +51,8 @@ tools, SDKs, and supporting technologies.
 
    smarter-framework/getting-started
    smarter-framework/architecture
+   smarter-framework/extensibility
+   smarter-framework/smarter-extensions
    smarter-framework/guides
    smarter-framework/apis-and-sdks
    smarter-framework/smarter-broker-model

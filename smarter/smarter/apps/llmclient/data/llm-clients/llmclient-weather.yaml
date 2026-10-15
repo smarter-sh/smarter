@@ -85,8 +85,8 @@ spec:
         color: '#0277bd'
       typingIndicator:
         color: '#ffb300'
-  functions:
-    - get_current_weather
+  extensions:
+    - weather
   plugins:
     - image_search
   guardrails:
