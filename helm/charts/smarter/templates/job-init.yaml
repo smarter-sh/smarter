@@ -57,26 +57,34 @@ spec:
               # Run every step, even after a failure, then exit non-zero if any step failed,
               # so that a failed step fails the Job (and the Helm hook) instead of being hidden.
               # Commands that carry passwords are not echoed.
-              status=0
-              run() {
-                echo "--- $*"
-                "$@" || { echo "FAILED: $*"; status=1; }
-              }
-              mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
-              mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER DATABASE {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
-              mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';" || status=1
-              mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER USER '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';" || status=1
-              mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;" || status=1
-              mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} < /home/smarter_user/sql/smarter-test-db.sql || status=1
-              run python manage.py rename_plugin_app_label
-              run python manage.py makemigrations
-              run python manage.py migrate
-              run python manage.py convert_database_charset
-              python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" || { echo "FAILED: manage.py initialize_platform"; status=1; }
-              run python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/smarter-demo
-              run python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
-              run python manage.py deploy_example_llmclient
-              run python manage.py deploy_builtin_llmclients --account_number 3141-5926-5359
+              # The steps' output is also written to a log file, which is emailed when the Job completes,
+              # to databaseInit.notifyEmail, or to smarter_settings.email_admin. The steps run in a
+              # subshell (they are piped to tee), so their exit status is passed back in a file.
+              {
+                status=0
+                run() {
+                  echo "--- $*"
+                  "$@" || { echo "FAILED: $*"; status=1; }
+                }
+                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
+                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER DATABASE {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
+                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';" || status=1
+                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER USER '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';" || status=1
+                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;" || status=1
+                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} < /home/smarter_user/sql/smarter-test-db.sql || status=1
+                run python manage.py rename_plugin_app_label
+                run python manage.py makemigrations
+                run python manage.py migrate
+                run python manage.py convert_database_charset
+                python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" || { echo "FAILED: manage.py initialize_platform"; status=1; }
+                run python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/smarter-demo
+                run python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
+                run python manage.py deploy_example_llmclient
+                run python manage.py deploy_builtin_llmclients --account_number 3141-5926-5359
+                echo $status > /tmp/job-init.status
+              } 2>&1 | tee /tmp/job-init.log
+              status=$(cat /tmp/job-init.status 2>/dev/null || echo 1)
+              python manage.py email_job_log --file /tmp/job-init.log --job "{{ .Release.Name }}-smarter-job-init {{ .Chart.Version }}" --status "$status" --to "{{ .Values.databaseInit.notifyEmail | default "" }}" || true
               exit $status
 
           command:

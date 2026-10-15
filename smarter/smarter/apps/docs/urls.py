@@ -13,10 +13,10 @@ from .views.developer import (
     DeveloperDocsCodeOfConduct,
     DeveloperDocsDockerComposeView,
     DeveloperDocsDockerfileView,
+    DeveloperDocsExtensionProtocolView,
     DeveloperDocsMakefileView,
     DeveloperDocsReadme,
     DeveloperDocsRequirementsView,
-    DeveloperDocsWeatherFunctionView,
 )
 from .views.json_schema import (
     DocsJsonSchemaAccountView,
@@ -98,7 +98,11 @@ urlpatterns = [
     path("developer/CHANGELOG.md/", DeveloperDocsChangelog.as_view(), name="developer-changelog"),
     path("developer/CODE_OF_CONDUCT.md/", DeveloperDocsCodeOfConduct.as_view(), name="developer-code-of-conduct"),
     path("developer/makefile/", DeveloperDocsMakefileView.as_view(), name="developer-makefile"),
-    path("developer/weather-function/", DeveloperDocsWeatherFunctionView.as_view(), name="developer-weather-function"),
+    path(
+        "developer/extension-protocol/",
+        DeveloperDocsExtensionProtocolView.as_view(),
+        name="developer-extension-protocol",
+    ),
     path("developer/requirements/", DeveloperDocsRequirementsView.as_view(), name="developer-requirements"),
     path("developer/dockerfile/", DeveloperDocsDockerfileView.as_view(), name="developer-dockerfile"),
     path("developer/docker-compose/", DeveloperDocsDockerComposeView.as_view(), name="developer-docker-compose"),

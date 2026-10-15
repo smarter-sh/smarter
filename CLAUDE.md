@@ -40,6 +40,12 @@ holds only what applies to nearly every task.
    billable LLM prompt requests when testing your work. Note that unit tests
    do this as well, so, every time you run tests you are also generating
    billable LLM requests, which is fine.
+9. **`make run` never returns.** It is `docker compose up`, attached to the
+   logs. Start `make run` and `make build && make run` only with
+   `run_in_background: true`, then poll `curl localhost:9357/` for a 302. A
+   foreground call, even with a long timeout, blocks you until someone stops
+   the containers, and looks to the user like you are stuck. Load
+   `smarter-docker-environment` before your first container command.
 
 ## Repository map
 
@@ -66,9 +72,9 @@ Services in `docker-compose.yml`: `smarter-app` (Django dev server on
 
 - **There is no bind mount.** Host `smarter/smarter/<path>` is
   `/home/smarter_user/smarter/smarter/<path>` in the container, and edits must
-  reach them. Prefer `make build && make run` (about 5 seconds, run it in the
-  background and wait for the dev server), which updates every container from the
-  host's tree. `skills/smarter-docker-environment/scripts/sync-to-containers.sh`
+  reach them. Prefer `make build && make run` (about 5 seconds, always with
+  `run_in_background: true`, then wait for the dev server; see hard rule 9),
+  which updates every container from the host's tree. `skills/smarter-docker-environment/scripts/sync-to-containers.sh`
   copies individual files, when a rebuild isn't possible.
 - When you copy files instead, use
   `skills/smarter-docker-environment/scripts/sync-changed-files.sh`. Don't

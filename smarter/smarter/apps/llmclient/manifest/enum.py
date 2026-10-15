@@ -11,5 +11,5 @@ class SAMLLMClientSpecKeys(SmarterEnumAbstract):
 
     CONFIG = "config"
     PLUGINS = "plugins"
-    FUNCTIONS = "functions"
+    EXTENSIONS = "extensions"
     AUTH_TOKEN = "apiKey"

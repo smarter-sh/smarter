@@ -13,7 +13,7 @@ from .models import (
     LLMClientAPIKey,
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
@@ -190,28 +190,26 @@ class LLMClientPluginAdmin(SmarterCustomerModelAdmin):
         return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
 
 
-class LLMClientFunctionsAdmin(SmarterCustomerModelAdmin):
+class LLMClientExtensionsAdmin(SmarterCustomerModelAdmin):
     """
-    LLMClientFunctions model admin.
+    LLMClientExtensions model admin.
 
-    Descends from LLMClientPlugin, so visibility is
-    determined by the parent LLMClientPlugin and role.
+    Visibility is determined by ownership of the parent LLMClient, and role.
     """
 
-    model = LLMClientFunctions
+    model = LLMClientExtensions
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in LLMClientFunctions._meta.fields]
+    list_display = ["llmclient", "extension", "created_at", "updated_at"]
 
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
             return qs.none()
-
         return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
 
 
@@ -243,6 +241,6 @@ smarter_restricted_admin_site.register(LLMClientCustomDomain, LLMClientCustomDom
 smarter_restricted_admin_site.register(LLMClientCustomDomainDNS, LLMClientCustomDomainDNSAdmin)
 smarter_restricted_admin_site.register(LLMClientAPIKey, LLMClientAPIKeyAdmin)
 smarter_restricted_admin_site.register(LLMClientPlugin, LLMClientPluginAdmin)
-smarter_restricted_admin_site.register(LLMClientFunctions, LLMClientFunctionsAdmin)
+smarter_restricted_admin_site.register(LLMClientExtensions, LLMClientExtensionsAdmin)
 smarter_restricted_admin_site.register(LLMClientMCPClients, LLMClientMCPClientsAdmin)
 smarter_restricted_admin_site.register(LLMClientRequests, LLMClientRequestsAdmin)

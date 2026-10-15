@@ -4,7 +4,7 @@ from .llmclient import LLMClient, validate_provider
 from .llmclient_api_key import LLMClientAPIKey
 from .llmclient_custom_domain import LLMClientCustomDomain
 from .llmclient_custom_domain_dns import LLMClientCustomDomainDNS
-from .llmclient_functions import LLMClientFunctions
+from .llmclient_extension import LLMClientExtensions
 from .llmclient_guardrail import LLMClientGuardrails
 from .llmclient_helper import LLMClientHelper
 from .llmclient_mcpclient import LLMClientMCPClients
@@ -16,7 +16,7 @@ __all__ = [
     "LLMClientAPIKey",
     "LLMClientCustomDomain",
     "LLMClientCustomDomainDNS",
-    "LLMClientFunctions",
+    "LLMClientExtensions",
     "LLMClientPlugin",
     "LLMClientRequests",
     "LLMClientGuardrails",

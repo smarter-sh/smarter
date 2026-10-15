@@ -33,5 +33,4 @@ spec:
       deployed: false
       provider: openai
       subdomain: null
-  functions: []
   plugins: []

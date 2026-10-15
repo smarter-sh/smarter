@@ -62,7 +62,6 @@ spec:
         color: '#0d0d0d'
       typingIndicator:
         color: '#10a37f'
-  functions: []
   plugins:
     - image_search
     - bw_image_search

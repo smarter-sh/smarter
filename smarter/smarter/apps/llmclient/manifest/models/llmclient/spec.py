@@ -213,9 +213,9 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
         description=f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the "
         f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/plugins/ for more information.",
     )
-    functions: Optional[List[str]] = Field(
+    extensions: Optional[List[str]] = Field(
         None,
-        description=f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the {MANIFEST_KIND}. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
+        description=f"{class_identifier}.extensions[list]. Optional. The slugs of the Extensions whose tools the {MANIFEST_KIND} offers the LLM. Example: ['weather', 'calculator']. Extensions are Python packages that a platform administrator installs; each must be installed, enabled and available to your account. See https://docs.smarter.sh/ for more information.",
     )
     guardrails: Optional[List[str]] = Field(
         None,

@@ -86,7 +86,6 @@ spec:
         color: '#1b6ca8'
       typingIndicator:
         color: '#1b6ca8'
-  functions: []
   plugins:
     - url_reader
     - code_review

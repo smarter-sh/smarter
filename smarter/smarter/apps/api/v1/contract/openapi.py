@@ -57,7 +57,7 @@ from smarter.apps.guardrail.contract.models import (
 from smarter.apps.llmclient.contract.models import (
     LLMCLIENT_API_MODELS,
     LLMClientApiCustomDomain,
-    LLMClientApiFunction,
+    LLMClientApiExtension,
     LLMClientApiKey,
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
@@ -309,8 +309,6 @@ UNDOCUMENTED_ROUTES: dict[str, str] = {
     "handler, and answers 405.",
     "/vectorsearches/{id}/vectorsearch/": "Running a Vectorsearch is not implemented yet: the route has no POST "
     "handler, and answers 405.",
-    "/llm-clients/{id}/functions/{function_id}/plugins": "It returns every plugin of the LLMClient, whatever the "
-    "function, because it is routed to LLMClientPluginListView. Not published until it is fixed or removed.",
 }
 """The paths of the routes of :data:`DOCUMENTED_URLCONFS` that the document leaves out, and why."""
 
@@ -927,7 +925,7 @@ def llmclient_paths() -> dict[str, OpenApiPathItem]:
         "/llm-clients/{id}/": rest_read(
             "llmclient_retrieve",
             "An LLMClient",
-            "An LLMClient, with its functions, plugins, custom domains, api keys and urls.",
+            "An LLMClient, with its extensions, plugins, custom domains, api keys and urls.",
             tag,
             LLMClientApiLLMClient.__name__,
             many=False,
@@ -987,23 +985,23 @@ def llmclient_paths() -> dict[str, OpenApiPathItem]:
             many=False,
             parameters=[llmclient_id, integer_id("customdomain_id", "The LLMClientCustomDomain's id.")],
         ),
-        "/llm-clients/{id}/functions": rest_read(
-            "llmclient_function_list",
-            "An LLMClient's built-in functions",
-            "The built-in functions of an LLMClient.",
+        "/llm-clients/{id}/extensions": rest_read(
+            "llmclient_extension_list",
+            "An LLMClient's extensions",
+            "The extensions whose tools an LLMClient offers the LLM.",
             tag,
-            LLMClientApiFunction.__name__,
+            LLMClientApiExtension.__name__,
             many=True,
             parameters=[llmclient_id],
         ),
-        "/llm-clients/{id}/functions/{function_id}": rest_read(
-            "llmclient_function_retrieve",
-            "A built-in function of an LLMClient",
-            "A built-in function of an LLMClient, by the LLMClientFunctions' id.",
+        "/llm-clients/{id}/extensions/{extension_id}": rest_read(
+            "llmclient_extension_retrieve",
+            "An extension of an LLMClient",
+            "An extension of an LLMClient, by the LLMClientExtensions' id.",
             tag,
-            LLMClientApiFunction.__name__,
+            LLMClientApiExtension.__name__,
             many=False,
-            parameters=[llmclient_id, integer_id("function_id", "The LLMClientFunctions' id.")],
+            parameters=[llmclient_id, integer_id("extension_id", "The LLMClientExtensions' id.")],
         ),
     }
     return {path: OpenApiPathItem(get=read) for path, read in reads.items()}

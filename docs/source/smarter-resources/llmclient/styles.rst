@@ -71,7 +71,7 @@ see in the chat's technical documentation.
        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #14213d; color: #fff; border-bottom: 1px solid #d1dbe3;">
          <div style="width: 38px; height: 38px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #14213d; font-weight: bold;">S</div>
          <div style="flex: 1;"><b>Stackademy v1.0.0</b><br><span style="color: #fca311; font-size: 12px;">openai gpt-6-luna</span></div>
-         <span style="color: #fca311;">&#x2b6f;</span>
+         <span style="color: #fff;">&#x2b6f;</span>
        </div>
        <div style="padding: 12px; background: repeating-linear-gradient(45deg, #f4f4f4, #f4f4f4 10px, #ebebeb 10px, #ebebeb 20px);">
          <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px;">
@@ -96,7 +96,7 @@ see in the chat's technical documentation.
        <code>outgoingMessage</code><span>the user's amber bubble, with <code>userAvatarUrl</code> beside it</span>
        <code>typingIndicator</code><span>"Stanley is typing", while the LLM answers</span>
        <code>messageInput</code><span>the box at the bottom, where the user types</span>
-       <code>buttons</code><span>the send arrow, the attach button, and the header's buttons</span>
+       <code>buttons</code><span>the send arrow and the attach button</span>
      </div>
    </div>
 
@@ -260,8 +260,9 @@ Each part is a section of ``styles``, with its settings indented beneath it:
      - The frame around the whole chat, its default text color, and the thin line around it.
    * - ``conversationHeader``
      - ``backgroundColor``, ``color``, ``infoColor``, ``borderColor``
-     - The bar at the top: its background, the LLMClient's name (``color``), the line beneath the name,
-       which names the LLM provider and model (``infoColor``), and the line under the bar.
+     - The bar at the top: its background, the LLMClient's name and the buttons on the bar (``color``),
+       the line beneath the name, which names the LLM provider and model (``infoColor``), and the line
+       under the bar. Choose a ``color`` that stands out against the ``backgroundColor``.
    * - ``messageList``
      - ``backgroundColor``, ``color``
      - The area that holds the conversation. Over a background image, ``backgroundColor`` tints the
@@ -280,7 +281,9 @@ Each part is a section of ``styles``, with its settings indented beneath it:
        ``spec.config.prompt.appPlaceholder``), and the line above the strip.
    * - ``buttons``
      - ``color``
-     - The send and attach buttons, and the header's buttons.
+     - The send and attach buttons, on the message input. The buttons on the header use the
+       header's ``color`` instead, so that they stand out against the header, whose color is usually
+       the opposite of the input's. Without a header ``color``, they use this one.
    * - ``typingIndicator``
      - ``color``
      - "Stanley is typing" and its bouncing dots.

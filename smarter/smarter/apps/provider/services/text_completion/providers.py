@@ -282,7 +282,6 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             prompt: Prompt,
             data: Union[SmarterDictType, list],
             plugins: Optional[List[PluginBase]] = None,
-            functions: Optional[list[str]] = None,
         ) -> SmarterChatCompletionResponseType:
             """Expose the handler method of the default provider."""
 
@@ -297,9 +296,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 api_key=api_key,
                 default_model=client_orm.default_model,
             )
-            handler = smarter_openai_compatible_provider.handler(
-                user_profile, prompt, data, plugins=plugins, functions=functions
-            )
+            handler = smarter_openai_compatible_provider.handler(user_profile, prompt, data, plugins=plugins)
             return handler
 
         return get_handler
