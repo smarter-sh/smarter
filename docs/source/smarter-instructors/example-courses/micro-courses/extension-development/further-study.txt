@@ -1,0 +1,25 @@
+- **Official documentation:** OpenAI's `function calling guide
+  <https://platform.openai.com/docs/guides/function-calling>`__, whose ``get_weather`` example the
+  weather Extension implements; the `Pydantic documentation <https://docs.pydantic.dev/>`__, on
+  models, validation and JSON Schema; and the `Python Packaging User Guide
+  <https://packaging.python.org/>`__, including the ``pyproject.toml`` specification.
+- **Standards:** `PEP 440 <https://peps.python.org/pep-0440/>`__ (version identifiers),
+  `PEP 508 <https://peps.python.org/pep-0508/>`__ (dependency specifiers),
+  `Semantic Versioning <https://semver.org/>`__, `Conventional Commits
+  <https://www.conventionalcommits.org/>`__, and `JSON Schema <https://json-schema.org/>`__.
+- **Other plugin ecosystems:** the `WordPress Plugin Handbook
+  <https://developer.wordpress.org/plugins/>`__, the model for Smarter's run-time install, and the
+  `VS Code Extension API <https://code.visualstudio.com/api>`__, for how another platform
+  describes, packages and publishes extensions.
+- **Software supply chain:** `The Update Framework <https://theupdateframework.io/>`__, the design
+  behind signed package indexes, `Sigstore <https://www.sigstore.dev/>`__ and `SLSA
+  <https://slsa.dev/>`__, to compare with the registry's Ed25519 signature and sha256 checks.
+- **Other tool protocols:** the `Model Context Protocol <https://modelcontextprotocol.io/>`__
+  specification, the third way to give a Smarter LLMClient tools.
+- **YouTube:** the `PyCon US <https://www.youtube.com/@PyConUS>`__ channel, for talks on packaging,
+  Pydantic and testing, and the `AI Engineer <https://www.youtube.com/@aiDotEngineer>`__ channel,
+  for talks on tool use and agents.
+- **Podcasts:** `Talk Python To Me <https://talkpython.fm/>`__ and `Python Bytes
+  <https://pythonbytes.fm/>`__, which cover packaging, Pydantic and the Python ecosystem
+  regularly, and `Latent Space <https://www.latent.space/podcast>`__, on building with LLMs.
+- **Writing:** `blog.smarter.sh <https://blog.smarter.sh>`__, on how Smarter was built.

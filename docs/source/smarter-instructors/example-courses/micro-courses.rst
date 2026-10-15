@@ -39,6 +39,9 @@ in common. They are starting points: pick, combine and adapt the ones that fit y
    * - :doc:`micro-courses/api-design`
      - Software developers
      - Any language
+   * - :doc:`micro-courses/extension-development`
+     - Python developers
+     - Python
    * - :doc:`micro-courses/secure-software`
      - Developers and security students
      - Some
@@ -83,6 +86,7 @@ in common. They are starting points: pick, combine and adapt the ones that fit y
    micro-courses/frontend-development
    micro-courses/full-stack-development
    micro-courses/api-design
+   micro-courses/extension-development
    micro-courses/secure-software
    micro-courses/docker
    micro-courses/kubernetes
