@@ -1,18 +1,29 @@
 """Test the guard and failure branches of the Provider manifest broker, called directly with its properties replaced."""
 
+import copy
 from contextlib import ExitStack
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.llmtool.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
+from smarter.apps.llmtool.plugin.static import StaticPlugin
+from smarter.apps.llmtool.tests.base_classes import get_test_data
 from smarter.apps.provider.manifest.brokers.provider import (
     SAMProviderBroker,
     SAMProviderBrokerError,
 )
 from smarter.apps.provider.manifest.models.provider.model import SAMProvider
 from smarter.apps.provider.models import Provider
-from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
+from smarter.lib.manifest.broker import (
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMDependencyReference,
+)
 
 
 class TestProviderBrokerBranches(TestAccountMixin):
@@ -119,3 +130,58 @@ class TestProviderBrokerBranches(TestAccountMixin):
         ):
             with self.assertRaises(SAMProviderBrokerError):
                 self.broker().delete(self.request)
+
+    # -------------------------------------------------------------------------
+    # a dependent resource whose stored data no longer validates
+    # -------------------------------------------------------------------------
+    def create_plugin_with_a_removed_model(self, provider: Provider) -> PluginMeta:
+        """A StaticPlugin that uses this provider, and whose stored model is no longer a valid model."""
+        name = f"test_provider_broken_plugin_{self.hash_suffix}"
+        data = copy.deepcopy(get_test_data("static-plugin.yaml"))
+        data["metadata"]["name"] = name
+        plugin = StaticPlugin(manifest=SAMStaticPlugin(**data), user_profile=self.user_profile)
+        self.assertTrue(plugin.ready)
+        self.addCleanup(PluginMeta.objects.filter(name=name, user_profile=self.user_profile).delete)
+        plugin_meta = PluginMeta.objects.get(name=name, user_profile=self.user_profile)
+        # bypass validation, as when a model is later removed from the list of valid models.
+        PluginPrompt.objects.filter(plugin=plugin_meta).update(provider=provider.name, model="gpt-4-turbo")
+        PluginPrompt.get_cached_prompt_by_plugin(plugin=plugin_meta, invalidate=True)
+        return plugin_meta
+
+    def test_describe_with_a_dependent_that_no_longer_validates(self):
+        """A plugin whose stored model is no longer valid neither breaks describe nor allows delete."""
+        provider = self.create_provider()
+        plugin_meta = self.create_plugin_with_a_removed_model(provider)
+        broker = SAMProviderBroker(request=self.request, kind="Provider", name=provider.name)
+
+        dependencies = broker.dependencies()
+        self.assertEqual(len(dependencies), 1)
+        self.assertIsInstance(dependencies[0], SAMDependencyReference)
+        self.assertEqual(dependencies[0].name, plugin_meta.name)
+        self.assertEqual(dependencies[0].account, self.account)
+
+        response = broker.describe(self.request, name=provider.name)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(plugin_meta.name, response.content.decode())
+
+        with self.assertRaises(SAMBrokerError) as ctx:
+            broker.verify_no_dependencies()
+        self.assertIn(plugin_meta.name, str(ctx.exception))
+
+    # -------------------------------------------------------------------------
+    # describe a provider that another account owns
+    # -------------------------------------------------------------------------
+    def test_describe_a_built_in_provider(self):
+        """A user may describe a built-in Provider, which the Smarter admin's account owns."""
+        request = RequestFactory().get("/api/v1/cli/describe/Provider/?name=openai")
+        request.user = self.non_admin_user
+        broker = SAMProviderBroker(request=request, kind="Provider")
+        built_in = Provider.objects.get(name="openai", user_profile=smarter_cached_objects.smarter_admin_user_profile)
+        self.assertNotEqual(broker.account, built_in.user_profile.account)
+        response = broker.describe(request, name="openai")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(broker.provider, built_in)
+
+    def test_describe_an_unknown_provider(self):
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker().describe(self.request, name=f"no_such_provider_{self.hash_suffix}")
