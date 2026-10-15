@@ -87,6 +87,37 @@ logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__ + ".Settings()")
 
 
+#: A Django REST Framework throttle rate: requests per second, minute, hour or day.
+THROTTLE_RATE_PATTERN: Pattern = re.compile(r"^\d+/(s|sec|second|m|min|minute|h|hour|d|day)$")
+
+#: The values that disable a throttle.
+THROTTLE_RATE_DISABLED = ("none", "off", "disabled")
+
+
+def validate_throttle_rate(field_name: str, v: Optional[str], default: Optional[str]) -> Optional[str]:
+    """
+    Validate a Django REST Framework throttle rate.
+
+    :param field_name: The name of the field, for the error message.
+    :param v: The rate, e.g. ``120/minute``, or one of ``THROTTLE_RATE_DISABLED``.
+    :param default: The rate to use if the value is empty.
+    :returns: The rate, or None if the throttle is disabled.
+    :raises SmarterConfigurationError: If the value is not a rate.
+    """
+    if isinstance(v, str) and v.strip().lower() in THROTTLE_RATE_DISABLED:
+        return None
+    if v is None or str(v).strip() in THE_EMPTY_SET:
+        return default
+    if not isinstance(v, str):
+        raise SmarterConfigurationError(f"{field_name} of type {type(v)} is not a str: {v}")
+    value = v.strip().lower()
+    if not THROTTLE_RATE_PATTERN.match(value):
+        raise SmarterConfigurationError(
+            f"{field_name} {v} is not a throttle rate, e.g. 120/minute, or one of {THROTTLE_RATE_DISABLED}."
+        )
+    return value
+
+
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 class Settings(BaseSettings):
     """
@@ -3438,6 +3469,66 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"stripe_test_secret_key of type {type(v)} is not a SecretStr.")
         return v
 
+    throttle_rate_anon: Optional[str] = Field(
+        settings_defaults.THROTTLE_RATE_ANON,
+        description="The request rate limit of each anonymous client, by IP address. None disables it.",
+        examples=["120/minute", "10/second", "none"],
+        title="Anonymous Throttle Rate",
+    )
+    """
+    The request rate limit of each anonymous client, by IP address.
+
+    Applies to Django REST Framework views and to the apis that a deployed LLMClient serves,
+    e.g. the prompt api of a page that embeds Smarter Chat. A client that exceeds it receives
+    HTTP 429 Too Many Requests with a ``Retry-After`` header. See :mod:`smarter.lib.drf.throttling`.
+
+    :type: Optional[str]
+    :default: Value from ``settings_defaults.THROTTLE_RATE_ANON``
+    :raises SmarterConfigurationError: If the value is not a rate, e.g. ``120/minute``, or ``none``.
+    """
+
+    @before_field_validator("throttle_rate_anon")
+    def validate_throttle_rate_anon(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `throttle_rate_anon` field.
+
+        Args:
+            v (Optional[str]): The rate, e.g. ``120/minute``, or ``none`` to disable the throttle.
+
+        Returns:
+            Optional[str]: The validated rate, or None if the throttle is disabled.
+        """
+        return validate_throttle_rate("throttle_rate_anon", v, settings_defaults.THROTTLE_RATE_ANON)
+
+    throttle_rate_user: Optional[str] = Field(
+        settings_defaults.THROTTLE_RATE_USER,
+        description="The request rate limit of each authenticated user. None disables it.",
+        examples=["600/minute", "20/second", "none"],
+        title="User Throttle Rate",
+    )
+    """
+    The request rate limit of each authenticated user.
+
+    Applies to Django REST Framework views and to the apis that a deployed LLMClient serves.
+    A user who exceeds it receives HTTP 429 Too Many Requests with a ``Retry-After`` header.
+    See :mod:`smarter.lib.drf.throttling`.
+
+    :type: Optional[str]
+    :default: Value from ``settings_defaults.THROTTLE_RATE_USER``
+    :raises SmarterConfigurationError: If the value is not a rate, e.g. ``600/minute``, or ``none``.
+    """
+
+    @before_field_validator("throttle_rate_user")
+    def validate_throttle_rate_user(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `throttle_rate_user` field.
+
+        Args:
+            v (Optional[str]): The rate, e.g. ``600/minute``, or ``none`` to disable the throttle.
+
+        Returns:
+            Optional[str]: The validated rate, or None if the throttle is disabled.
+        """
+        return validate_throttle_rate("throttle_rate_user", v, settings_defaults.THROTTLE_RATE_USER)
+
     verbose_logging: bool = Field(
         settings_defaults.VERBOSE_LOGGING,
         description="Whether to enable verbose logging for debugging purposes.",
@@ -3577,6 +3668,54 @@ class Settings(BaseSettings):
             - SmarterEnvironments()
         """
         return self.environment == SmarterEnvironments.LOCAL
+
+    @property
+    def secret_key_is_set(self) -> bool:
+        """
+        Return True if a Django secret key was configured.
+
+        A secret key is not configured if it is missing, if it is a placeholder such as
+        ``helm/charts/smarter/values.yaml``'s ``SET-ME-IN-helm/...``, or if it is the random
+        key that ``settings_defaults`` generates when ``SECRET_KEY`` is not set.
+
+        Example:
+            >>> print(smarter_settings.secret_key_is_set)
+            True
+
+        See Also:
+            - smarter_settings.secret_key
+            - smarter_settings.require_secret_key()
+        """
+        if is_missing_value(self.secret_key):
+            return False
+        if settings_defaults.SECRET_KEY_IS_GENERATED and self.secret_key is not None:
+            generated = settings_defaults.SECRET_KEY.get_secret_value()
+            return self.secret_key.get_secret_value() != generated
+        return True
+
+    def require_secret_key(self) -> None:
+        """
+        Refuse to run outside of the local environment without a Django secret key.
+
+        Without a configured key, every process generates its own random key, so sessions,
+        password reset tokens and other signed values break across pods and restarts. A
+        placeholder key is worse: it is published in this repository, so anyone could forge
+        signed values with it. Locally, a generated key is fine, and only logs a warning.
+
+        :raises SmarterConfigurationError: If the secret key is not configured, and the
+            environment is not local.
+
+        See Also:
+            - smarter_settings.secret_key_is_set
+        """
+        if self.secret_key_is_set:
+            return
+        if not self.environment_is_local:
+            raise SmarterConfigurationError(
+                f"SECRET_KEY is not set. It is required in the {self.environment} environment. "
+                "Set SMARTER_SECRET_KEY to a long (50+ characters), random string that is the same for every pod."
+            )
+        logger.warning("%s SECRET_KEY is not set. Using a randomized value.", logger_prefix)
 
     @cached_property
     def environment_cdn_domain(self) -> str:

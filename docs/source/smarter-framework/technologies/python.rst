@@ -21,7 +21,7 @@ Coding Style
 - `coverage <https://coverage.readthedocs.io/en/latest/>`__ to measure test coverage.
 - `pydocstringformatter <https://pypi.org/project/pydocstringformatter/>`__ to format docstrings.
 - `pre-commit <https://pre-commit.com/>`__ for managing git hooks.
-- `tox <https://tox.readthedocs.io/en/latest/>`__ for testing in multiple environments.
+- `tox <https://tox.readthedocs.io/en/latest/>`__ for running flake8 and pylint in isolated environments.
 - `watchdog <https://python-watchdog.readthedocs.io/en/stable/>`__ for file system monitoring.
 - `pre-commit hooks <https://pre-commit.com/>`__ for additional checks, such as fixing byte order markers, checking for merge conflicts, trailing whitespace, and more.
 
