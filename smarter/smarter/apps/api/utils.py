@@ -156,10 +156,12 @@ def apply_manifest(
     )
     if verbose:
         logger.debug("%s manifest: %s", logger_prefix, data)
-        logger.debug("%s headers: %s", logger_prefix, headers)
 
-    httpx_response = httpx.post(url, content=data, headers=headers, timeout=60.0)
-    token_record.delete()
+    # the key is deleted even if the request raises, e.g. on a timeout, so that no key outlives it.
+    try:
+        httpx_response = httpx.post(url, content=data, headers=headers, timeout=60.0)
+    finally:
+        token_record.delete()
     if httpx_response.status_code == httpx.codes.OK:
         logger.debug("%s Manifest applied.", logger_prefix)
     else:

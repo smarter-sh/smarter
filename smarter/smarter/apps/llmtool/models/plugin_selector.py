@@ -76,6 +76,17 @@ class PluginSelector(TimestampedModel):
         search_terms = json.dumps(self.search_terms)[:50]
         return f"{str(self.directive)} - {search_terms}"
 
+    def save(self, *args, **kwargs):
+        """
+        Save the PluginSelector, and replace its cached copy with the saved row.
+
+        A plugin reads its PluginSelector from the cache. A copy cached before the save would
+        otherwise be read back, e.g. by ``PluginBase.save()`` after an update, and written
+        over the row, reverting what the manifest just applied.
+        """
+        super().save(*args, **kwargs)
+        self.get_cached_selector_by_plugin(self.plugin, invalidate=True)
+
     @classmethod
     def get_cached_selector_by_plugin(
         cls, plugin: PluginMeta, invalidate: bool = False

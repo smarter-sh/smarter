@@ -182,6 +182,7 @@ reference implementations.
 | Probing the REST API by hand                                     | `smarter-api-testing`                  |
 | The SAM JSON Schemas, example manifests and cli OpenAPI document | `smarter-api-contract`                 |
 | Python docstrings                                                | `smarter-docstrings`                   |
+| Logger calls: prefixes, levels, waffle switches, secrets         | `smarter-logging`                      |
 | Type annotations, `Any`, the `smarter.lib.typing` aliases        | `smarter-python-typing`                |
 | Sphinx pages                                                     | `smarter-sphinx-docs`                  |
 | Lint, format, pre-commit                                         | `smarter-code-quality`                 |

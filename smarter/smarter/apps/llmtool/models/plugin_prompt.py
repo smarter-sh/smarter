@@ -63,6 +63,17 @@ class PluginPrompt(TimestampedModel):
     def __str__(self) -> str:
         return str(self.plugin.name)
 
+    def save(self, *args, **kwargs):
+        """
+        Save the PluginPrompt, and replace its cached copy with the saved row.
+
+        A plugin reads its PluginPrompt from the cache. A copy cached before the save would
+        otherwise be read back, e.g. by ``PluginBase.save()`` after an update, and written
+        over the row, reverting what the manifest just applied.
+        """
+        super().save(*args, **kwargs)
+        self.get_cached_prompt_by_plugin(self.plugin, invalidate=True)
+
     @classmethod
     def get_cached_prompt_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginPrompt", None]:
         """

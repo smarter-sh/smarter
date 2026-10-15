@@ -220,14 +220,16 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_snake_case("my_snake_case")  # returns True
             SmarterValidator.is_valid_snake_case("NotSnakeCase")   # returns False
+
+        It matches the pattern itself, rather than calling ``validate_snake_case()``, because
+        constructing a ``SmarterValueError`` logs an error, and a value that is not snake case
+        is an expected answer here, e.g. when the drf 0004 migration finds names to convert.
         """
         logger.debug("%s.is_valid_snake_case() %s", logger_prefix, value)
-        try:
-            SmarterValidator.validate_snake_case(value)
-            return True
-        except SmarterValueError:
+        valid = bool(value) and re.match(SmarterValidator.VALID_SNAKE_CASE, value) is not None
+        if not valid:
             logger.debug("%s.is_valid_snake_case() invalid %s", logger_prefix, value)
-            return False
+        return valid
 
     @staticmethod
     def validate_pascal_case(value: str) -> str:
