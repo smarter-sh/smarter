@@ -93,7 +93,6 @@ spec:
         color: '#7ee787'
       typingIndicator:
         color: '#7ee787'
-  functions: []
   plugins:
     - anthropic_mcp_builder
     - code_review

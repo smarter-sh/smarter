@@ -232,7 +232,7 @@ class SAMLLMClientStylesConversationHeader(SAMLLMClientStyleSection):
     )
     color: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.color[str]. Optional. The color of the LLMClient's name. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
+        description=f"{class_identifier}.color[str]. Optional. The color of the LLMClient's name, and of the header's buttons: new chat, show or hide the Console, sandbox or production, and Docs. Choose a color that contrasts with backgroundColor. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
     )
     infoColor: Optional[str] = Field(
         None,
@@ -325,7 +325,10 @@ class SAMLLMClientStylesMessageInput(SAMLLMClientStyleSection):
 
 class SAMLLMClientStylesButtons(SAMLLMClientStyleSection):
     """
-    ``spec.config.styles.buttons``: the send and attach buttons, and the header's buttons.
+    ``spec.config.styles.buttons``: the send and attach buttons, on the message input.
+
+    The header's buttons take the header's text color, ``conversationHeader.color``, so that
+    they contrast with the header, whose background is usually the opposite of the input's.
 
     chatscope's ``Button``, class ``.cs-button``.
     """
@@ -334,7 +337,7 @@ class SAMLLMClientStylesButtons(SAMLLMClientStyleSection):
 
     color: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.color[str]. Optional. The color of the buttons' icons. chatscope's $button-color. Example: '#6ea9d7'.",
+        description=f"{class_identifier}.color[str]. Optional. The color of the send and attach buttons' icons, on the message input. The header's buttons use conversationHeader.color, or this color if it is not set. chatscope's $button-color. Example: '#6ea9d7'.",
     )
 
 

@@ -452,3 +452,9 @@ smarter_restricted_admin_site.register(PluginMetaSkill, PluginSkillAdmin)
 smarter_restricted_admin_site.register(PluginMetaWebsearch, PluginWebsearchAdmin)
 smarter_restricted_admin_site.register(PluginMetaImageSearch, PluginImageSearchAdmin)
 smarter_restricted_admin_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
+
+# pylint: disable=wrong-import-position
+from .extension.admin import ExtensionAdmin  # noqa: E402
+from .models import Extension  # noqa: E402
+
+smarter_restricted_admin_site.register(Extension, ExtensionAdmin)

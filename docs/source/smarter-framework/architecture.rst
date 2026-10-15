@@ -27,6 +27,9 @@ Django apps, which run on Linux.
     │  ┌─ infrastructure ──────── facade: .dns .certificates .kubernetes .email ────────┐  │
     │  │   providers: AWS (Route53, ACM, EKS) · in-memory fake (tests)                  │  │
     │  └────────────────────────────────────────────────────────────────────────────────┘  │
+    │  extensibility: Plugins, SAM manifests that configure built-in tool patterns         │
+    │    (llmtool.plugin) · Extensions, Python packages that superusers install at         │
+    │    run time from the signed registry (llmtool.extension) · MCP servers (mcpclient)   │
     └───────────────────────────────────────────┬──────────────────────────────────────────┘
     ┌───────────────────────────────────────────▼──────────────────────────────────────────┐
     │ 3. SMARTER SUBSYSTEMS                                 smarter/smarter/lib/*          │
@@ -143,6 +146,12 @@ three groups:
   :doc:`../smarter-resources/smarter-vectorstore`,
   :doc:`../smarter-resources/smarter-vectorsearch` and
   :doc:`../smarter-resources/smarter-guardrail`.
+
+LLMs reach everything they don't already know through tools, and Smarter can be extended with
+new tools in two ways: Plugins, YAML manifests that configure one of the ``llmtool`` app's
+built-in tool patterns, and Extensions, Python packages in ``llmtool.extension`` that platform
+superusers install at run time, from the web console's Extensions page, by upload or from the signed Smarter Extension registry.
+MCP servers, through the ``mcpclient`` app, are a third source of tools. See :doc:`extensibility`.
 
 The ``infrastructure`` app is the only part of Smarter that talks to the cloud.
 It offers a single facade for DNS, TLS certificates, Kubernetes and email, with

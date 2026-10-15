@@ -710,6 +710,28 @@
             {% endif %}
             <!--end:Menu item-->
 
+            <!--begin:Menu item Extensions -->
+            {% if user.is_superuser %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.extensions }}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Extensions</span>
+                {% if extension_updates %}
+                <span class="menu-badge"><span class="badge badge-warning" title="Updates available">{{ extension_updates }}</span></span>
+                {% endif %}
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item-->
+
             <!--begin:Menu item Infrastructure Resources -->
             {% if user.is_superuser %}
             <div class="menu-item">

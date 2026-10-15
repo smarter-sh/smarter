@@ -10,9 +10,9 @@ refuse what it must refuse; and run the same way on a laptop and in production. 
 production platform for LLM applications that does all of this, and its code is public. Its
 `prompt handler
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
-speaks the OpenAI API to every provider. Its `built-in functions
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions>`__ are
-tool calls with JSON Schema definitions. Its `plugins
+speaks the OpenAI API to every provider. Its `extensions
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/extension>`__ are
+installable tool calls whose JSON Schema definitions are generated from Pydantic models. Its `plugins
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__
 rewrite the system prompt when a prompt matches them. API keys are `encrypted Secrets
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__ and

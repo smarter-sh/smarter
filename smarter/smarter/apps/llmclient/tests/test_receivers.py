@@ -89,7 +89,7 @@ class TestLLMClientReceivers(SmarterTestBase):
             "llmclient_custom_domain_dns_saved",
             "llmclient_api_key_saved",
             "llmclient_plugin_saved",
-            "llmclient_functions_saved",
+            "llmclient_extensions_saved",
             "llmclient_requests_saved",
         ):
             for created in (True, False):

@@ -3391,9 +3391,9 @@
         "title": "LLMClientApiCustomDomain",
         "type": "object"
       },
-      "LLMClientApiFunction": {
+      "LLMClientApiExtension": {
         "additionalProperties": false,
-        "description": "A built-in function of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`.",
+        "description": "An extension of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientExtensions`.",
         "properties": {
           "createdAt": {
             "anyOf": [
@@ -3409,33 +3409,25 @@
             "description": "TimestampedModel.created_at.",
             "title": "Createdat"
           },
+          "extension": {
+            "description": "LLMClientExtensions.extension: the Extension's id.",
+            "title": "Extension",
+            "type": "integer"
+          },
           "id": {
             "description": "The row's primary key.",
             "title": "Id",
             "type": "integer"
           },
           "llmclient": {
-            "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+            "description": "LLMClientExtensions.llmclient: the LLMClient's id.",
             "title": "Llmclient",
             "type": "integer"
           },
           "name": {
-            "anyOf": [
-              {
-                "enum": [
-                  "get_current_weather",
-                  "date_calculator",
-                  "calculator"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "LLMClientFunctions.name.",
-            "title": "Name"
+            "description": "The extension's slug, e.g. weather.",
+            "title": "Name",
+            "type": "string"
           },
           "updatedAt": {
             "anyOf": [
@@ -3454,9 +3446,11 @@
         },
         "required": [
           "id",
+          "name",
+          "extension",
           "llmclient"
         ],
-        "title": "LLMClientApiFunction",
+        "title": "LLMClientApiExtension",
         "type": "object"
       },
       "LLMClientApiGuardrailRef": {
@@ -3540,7 +3534,7 @@
       },
       "LLMClientApiLLMClient": {
         "additionalProperties": false,
-        "description": "An LLMClient: a :class:`smarter.apps.llmclient.models.LLMClient`, with its related rows and its urls.\n\nIts ``functions``, ``plugins``, ``custom_domains`` and ``api_keys`` are inline, and its urls and\nhosts are computed, as the LLMClient's properties compute them for the platform that serves the\nrequest.",
+        "description": "An LLMClient: a :class:`smarter.apps.llmclient.models.LLMClient`, with its related rows and its urls.\n\nIts ``extensions``, ``plugins``, ``custom_domains`` and ``api_keys`` are inline, and its urls and\nhosts are computed, as the LLMClient's properties compute them for the platform that serves the\nrequest.",
         "properties": {
           "allowedOrigins": {
             "description": "LLMClient.allowed_origins: the CORS origins of its pages.",
@@ -3892,12 +3886,12 @@
             "description": "LLMClient.dns_verification_status.",
             "title": "Dnsverificationstatus"
           },
-          "functions": {
-            "description": "The LLMClient's built-in functions.",
+          "extensions": {
+            "description": "The LLMClient's extensions.",
             "items": {
-              "$ref": "#/components/schemas/LLMClientApiFunction"
+              "$ref": "#/components/schemas/LLMClientApiExtension"
             },
-            "title": "Functions",
+            "title": "Extensions",
             "type": "array"
           },
           "guardrails": {
@@ -4084,7 +4078,7 @@
             "title": "Tlscertificateissuancestatus"
           },
           "tools": {
-            "description": "Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails, in that order.",
+            "description": "Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and guardrails, in that order.",
             "items": {
               "$ref": "#/components/schemas/LLMClientApiTool"
             },
@@ -4181,7 +4175,7 @@
           "name",
           "userProfile",
           "canDelete",
-          "functions",
+          "extensions",
           "plugins",
           "mcpclients",
           "guardrails",
@@ -4296,17 +4290,17 @@
       },
       "LLMClientApiTool": {
         "additionalProperties": false,
-        "description": "Something that an LLMClient adds to a prompt: a function, plugin, MCPClient or guardrail.",
+        "description": "Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient or guardrail.",
         "properties": {
           "id": {
-            "description": "The link row's id: LLMClientFunctions, LLMClientPlugin, ... .id.",
+            "description": "The link row's id: LLMClientExtensions, LLMClientPlugin, ... .id.",
             "title": "Id",
             "type": "integer"
           },
           "kind": {
-            "description": "Function, or the linked resource's manifest kind.",
+            "description": "Extension, or the linked resource's manifest kind.",
             "enum": [
-              "Function",
+              "Extension",
               "Plugin",
               "MCPClient",
               "Guardrail"
@@ -4315,7 +4309,7 @@
             "type": "string"
           },
           "name": {
-            "description": "The function's or the linked resource's name.",
+            "description": "The extension's slug, or the linked resource's name.",
             "title": "Name",
             "type": "string"
           }
@@ -7002,10 +6996,10 @@
             "title": "Debug Mode",
             "type": "boolean"
           },
-          "functions": {
+          "extensions": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/PromptChatApiFunctionList"
+                "$ref": "#/components/schemas/PromptChatApiExtensionList"
               },
               {
                 "type": "null"
@@ -7159,6 +7153,27 @@
         "title": "PromptChatApiErrorResponse",
         "type": "object"
       },
+      "PromptChatApiExtensionList": {
+        "additionalProperties": true,
+        "description": "The LLMClient's extensions.\n\nThe list itself is returned only in the complete configuration.",
+        "properties": {
+          "extensions": {
+            "items": {
+              "$ref": "#/components/schemas/PromptChatApiLLMClientExtension"
+            },
+            "title": "Extensions",
+            "type": "array"
+          },
+          "meta_data": {
+            "$ref": "#/components/schemas/PromptChatApiListMetaData"
+          }
+        },
+        "required": [
+          "meta_data"
+        ],
+        "title": "PromptChatApiExtensionList",
+        "type": "object"
+      },
       "PromptChatApiFilePart": {
         "additionalProperties": true,
         "description": "A message's file part.",
@@ -7242,27 +7257,6 @@
           "arguments"
         ],
         "title": "PromptChatApiFunctionCall",
-        "type": "object"
-      },
-      "PromptChatApiFunctionList": {
-        "additionalProperties": true,
-        "description": "The LLMClient's built-in functions.\n\nThe list itself is returned only in the complete configuration.",
-        "properties": {
-          "functions": {
-            "items": {
-              "$ref": "#/components/schemas/PromptChatApiLLMClientFunction"
-            },
-            "title": "Functions",
-            "type": "array"
-          },
-          "meta_data": {
-            "$ref": "#/components/schemas/PromptChatApiListMetaData"
-          }
-        },
-        "required": [
-          "meta_data"
-        ],
-        "title": "PromptChatApiFunctionList",
         "type": "object"
       },
       "PromptChatApiHistory": {
@@ -7637,9 +7631,9 @@
         "title": "PromptChatApiLLMClient",
         "type": "object"
       },
-      "PromptChatApiLLMClientFunction": {
+      "PromptChatApiLLMClientExtension": {
         "additionalProperties": false,
-        "description": "A built-in function of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`.",
+        "description": "An extension of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientExtensions`.",
         "properties": {
           "created_at": {
             "anyOf": [
@@ -7655,33 +7649,30 @@
             "description": "TimestampedModel.created_at.",
             "title": "Created At"
           },
+          "enabled": {
+            "description": "Whether the Extension is enabled, so that its tools are offered.",
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "extension": {
+            "description": "LLMClientExtensions.extension: the Extension's id.",
+            "title": "Extension",
+            "type": "integer"
+          },
           "id": {
             "description": "The row's primary key.",
             "title": "Id",
             "type": "integer"
           },
           "llmclient": {
-            "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+            "description": "LLMClientExtensions.llmclient: the LLMClient's id.",
             "title": "Llmclient",
             "type": "integer"
           },
           "name": {
-            "anyOf": [
-              {
-                "enum": [
-                  "get_current_weather",
-                  "date_calculator",
-                  "calculator"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "LLMClientFunctions.name.",
-            "title": "Name"
+            "description": "The Extension's slug, e.g. weather.",
+            "title": "Name",
+            "type": "string"
           },
           "updated_at": {
             "anyOf": [
@@ -7696,13 +7687,29 @@
             "default": null,
             "description": "TimestampedModel.updated_at.",
             "title": "Updated At"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The Extension's installed version, e.g. 1.0.0.",
+            "title": "Version"
           }
         },
         "required": [
           "id",
-          "llmclient"
+          "llmclient",
+          "extension",
+          "name",
+          "enabled"
         ],
-        "title": "PromptChatApiLLMClientFunction",
+        "title": "PromptChatApiLLMClientExtension",
         "type": "object"
       },
       "PromptChatApiLLMClientPlugin": {
@@ -7884,9 +7891,9 @@
       },
       "PromptChatApiListMetaData": {
         "additionalProperties": true,
-        "description": "The counts of a list of the LLMClient's plugins or functions.",
+        "description": "The counts of a list of the LLMClient's plugins or extensions.",
         "properties": {
-          "functions_returned": {
+          "extensions_returned": {
             "anyOf": [
               {
                 "type": "integer"
@@ -7896,7 +7903,7 @@
               }
             ],
             "default": null,
-            "title": "Functions Returned"
+            "title": "Extensions Returned"
           },
           "plugins_returned": {
             "anyOf": [
@@ -7910,7 +7917,7 @@
             "default": null,
             "title": "Plugins Returned"
           },
-          "total_functions": {
+          "total_extensions": {
             "anyOf": [
               {
                 "type": "integer"
@@ -7920,7 +7927,7 @@
               }
             ],
             "default": null,
-            "title": "Total Functions"
+            "title": "Total Extensions"
           },
           "total_plugins": {
             "anyOf": [
@@ -13037,7 +13044,7 @@
             "$ref": "#/components/schemas/SAMLLMClientSpecConfig",
             "description": "LLMClient.spec.config[object]. The configuration for the LLMClient."
           },
-          "functions": {
+          "extensions": {
             "anyOf": [
               {
                 "items": {
@@ -13050,8 +13057,8 @@
               }
             ],
             "default": null,
-            "description": "LLMClient.spec.functions[list]. Optional. The built-in Smarter Functions to add to the LLMClient. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
-            "title": "Functions"
+            "description": "LLMClient.spec.extensions[list]. Optional. The slugs of the Extensions whose tools the LLMClient offers the LLM. Example: ['weather', 'calculator']. Extensions are Python packages that a platform administrator installs; each must be installed, enabled and available to your account. See https://docs.smarter.sh/ for more information.",
+            "title": "Extensions"
           },
           "guardrails": {
             "anyOf": [
@@ -13714,7 +13721,7 @@
       },
       "SAMLLMClientStylesButtons": {
         "additionalProperties": false,
-        "description": "``spec.config.styles.buttons``: the send and attach buttons, and the header's buttons.\n\nchatscope's ``Button``, class ``.cs-button``.",
+        "description": "``spec.config.styles.buttons``: the send and attach buttons, on the message input.\n\nThe header's buttons take the header's text color, ``conversationHeader.color``, so that\nthey contrast with the header, whose background is usually the opposite of the input's.\n\nchatscope's ``Button``, class ``.cs-button``.",
         "properties": {
           "color": {
             "anyOf": [
@@ -13726,7 +13733,7 @@
               }
             ],
             "default": null,
-            "description": "LLMClient.styles.buttons.color[str]. Optional. The color of the buttons' icons. chatscope's $button-color. Example: '#6ea9d7'.",
+            "description": "LLMClient.styles.buttons.color[str]. Optional. The color of the send and attach buttons' icons, on the message input. The header's buttons use conversationHeader.color, or this color if it is not set. chatscope's $button-color. Example: '#6ea9d7'.",
             "title": "Color"
           }
         },
@@ -13773,7 +13780,7 @@
               }
             ],
             "default": null,
-            "description": "LLMClient.styles.conversationHeader.color[str]. Optional. The color of the LLMClient's name. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
+            "description": "LLMClient.styles.conversationHeader.color[str]. Optional. The color of the LLMClient's name, and of the header's buttons: new chat, show or hide the Console, sandbox or production, and Docs. Choose a color that contrasts with backgroundColor. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
             "title": "Color"
           },
           "infoColor": {
@@ -23316,7 +23323,7 @@
     },
     "/llm-clients/{id}/": {
       "get": {
-        "description": "An LLMClient, with its functions, plugins, custom domains, api keys and urls. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "description": "An LLMClient, with its extensions, plugins, custom domains, api keys and urls. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
         "operationId": "llmclient_retrieve",
         "parameters": [
           {
@@ -23626,10 +23633,10 @@
         ]
       }
     },
-    "/llm-clients/{id}/functions": {
+    "/llm-clients/{id}/extensions": {
       "get": {
-        "description": "The built-in functions of an LLMClient. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
-        "operationId": "llmclient_function_list",
+        "description": "The extensions whose tools an LLMClient offers the LLM. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_extension_list",
         "parameters": [
           {
             "description": "The LLMClient's numeric id.",
@@ -23647,7 +23654,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/LLMClientApiFunction"
+                    "$ref": "#/components/schemas/LLMClientApiExtension"
                   },
                   "type": "array"
                 }
@@ -23666,16 +23673,16 @@
             "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
           }
         },
-        "summary": "An LLMClient's built-in functions",
+        "summary": "An LLMClient's extensions",
         "tags": [
           "llmclients"
         ]
       }
     },
-    "/llm-clients/{id}/functions/{function_id}": {
+    "/llm-clients/{id}/extensions/{extension_id}": {
       "get": {
-        "description": "A built-in function of an LLMClient, by the LLMClientFunctions' id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
-        "operationId": "llmclient_function_retrieve",
+        "description": "An extension of an LLMClient, by the LLMClientExtensions' id. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "operationId": "llmclient_extension_retrieve",
         "parameters": [
           {
             "description": "The LLMClient's numeric id.",
@@ -23687,9 +23694,9 @@
             }
           },
           {
-            "description": "The LLMClientFunctions' id.",
+            "description": "The LLMClientExtensions' id.",
             "in": "path",
-            "name": "function_id",
+            "name": "extension_id",
             "required": true,
             "schema": {
               "type": "integer"
@@ -23701,7 +23708,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LLMClientApiFunction"
+                  "$ref": "#/components/schemas/LLMClientApiExtension"
                 }
               }
             },
@@ -23718,7 +23725,7 @@
             "description": "An error, e.g. 404 for a row that does not exist, or 403 for a user who is not a superuser."
           }
         },
-        "summary": "A built-in function of an LLMClient",
+        "summary": "An extension of an LLMClient",
         "tags": [
           "llmclients"
         ]
