@@ -32,6 +32,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-api-testing`                  | You're testing the REST API by hand against the local dev server.                  |
 | `smarter-api-contract`                 | A SAM model, an example manifest or a cli route changes, or the contract is stale. |
 | `smarter-docstrings`                   | You're writing Python docstrings, which Sphinx publishes.                          |
+| `smarter-logging`                      | You're writing or changing a logger call.                                          |
 | `smarter-python-typing`                | You're writing type annotations, especially with `Any`.                            |
 | `smarter-sphinx-docs`                  | You're editing `docs/source`.                                                      |
 | `smarter-code-quality`                 | You're about to finish a change and need to run the pre-commit hooks.              |

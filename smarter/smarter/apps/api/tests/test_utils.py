@@ -52,6 +52,15 @@ class TestApplyManifest(TestAccountMixin):
         with patch(f"{utils.__name__}.httpx.post", return_value=self.response(httpx.codes.BAD_REQUEST)):
             self.assertFalse(utils.apply_manifest(manifest=manifest(self.name), username=self.admin_user.username))
 
+    def test_apply_manifest_deletes_the_key_when_the_request_raises(self):
+        """Test that the single-use api key is deleted even if the request fails, e.g. on a timeout."""
+        with (
+            patch(f"{utils.__name__}.httpx.post", side_effect=httpx.ConnectTimeout("timed out")),
+            self.assertRaises(httpx.ConnectTimeout),
+        ):
+            utils.apply_manifest(manifest=manifest(self.name), username=self.admin_user.username)
+        self.assertFalse(SmarterAuthToken.objects.filter(name="apply_manifest").exists())
+
     def test_apply_manifest_undecodable_response(self):
         with patch(f"{utils.__name__}.httpx.post", return_value=self.response(httpx.codes.OK, b"not json")):
             self.assertTrue(utils.apply_manifest(manifest=manifest(self.name), username=self.admin_user.username))

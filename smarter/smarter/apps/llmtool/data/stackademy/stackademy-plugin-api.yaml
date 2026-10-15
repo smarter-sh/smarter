@@ -67,14 +67,27 @@ spec:
     maxTokens: 2048
     model: gpt-6-luna
     provider: openai
-    systemRole: You are a helpful assistant for Smarter platform. You can provide
-      information about the admin account of the Smarter platform.
-
-
+    systemRole: >
+      You are a helpful student advisor at the fictional Stackademy University that only offers computer science
+      degrees programs. Whenever possible you should defer to the tool calls provided for additional information
+      about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University
+      should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
     temperature: 1.0
   selector:
     directive: search_terms
     searchTerms:
-    - admin
-    - Smarter
-    - account
+    - Stackademy
+    - course
+    - courses
+    - class
+    - classes
+    - catalogue
+    - catalog
+    - curriculum
+    - degree
+    - program
+    - study
+    - tuition
+    - cost
+    - budget
+    - prerequisite

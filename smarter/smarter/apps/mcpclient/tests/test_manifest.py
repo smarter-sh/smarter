@@ -28,8 +28,9 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.model import SAMMCPClient
 from smarter.apps.mcpclient.manifest.models.mcpclient.spec import (
     SAMMCPClientSpecConfig,
 )
-from smarter.apps.mcpclient.utils import MCPClientExamples, manifest_template_values
+from smarter.apps.mcpclient.utils import MCPClientExamples
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.template import manifest_template_values
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import get_test_data
