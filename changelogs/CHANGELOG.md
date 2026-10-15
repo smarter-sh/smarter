@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.26.2](https://github.com/smarter-sh/smarter/compare/v0.26.1...v0.26.2) (2026-10-15)
+
+### Bug Fixes
+
+* **provider:** survive broken dependents and describe shared providers ([f63d86e](https://github.com/smarter-sh/smarter/commit/f63d86ec1c0e46313b8eaed55a459afd43599d3b))
+
 ## [0.26.1](https://github.com/smarter-sh/smarter/compare/v0.26.0...v0.26.1) (2026-10-15)
 
 ### Bug Fixes
