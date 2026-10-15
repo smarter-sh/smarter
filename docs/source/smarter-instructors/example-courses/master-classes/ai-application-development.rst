@@ -58,7 +58,7 @@ lab, in six themes:
 - `smarter/smarter/apps/provider/services/text_completion/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/provider/services/text_completion>`__,
   the OpenAI-compatible prompt handler, with its tool call loop and system prompt.
 - `smarter/smarter/apps/prompt/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt>`__,
-  the chat API, its Pydantic contract, its built-in tool functions and its progress stream.
+  the chat API, its Pydantic contract and its progress stream.
 - `smarter/smarter/apps/secret/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/secret>`__
   and `smarter/smarter/apps/proxy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy>`__,
   where API keys are kept and how callers use them without seeing them.

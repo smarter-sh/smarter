@@ -1,7 +1,7 @@
-Smarter Extensions
-==================
+Smarter LLM Tool Extensions
+============================
 
-A Smarter Extension is a Python package that adds tools to the LLMs of a Smarter platform. It
+A Smarter LLM Tool Extension is a Python package that adds tools to the LLMs of a Smarter platform. It
 has its own tools, settings, documentation, assets and lifecycle, and a platform administrator
 installs it at run time, from the web console's Extensions page, by uploading it or from the Smarter Extension registry. See
 :doc:`extensibility` for how Extensions differ from Plugins, and
