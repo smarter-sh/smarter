@@ -211,14 +211,14 @@ class Command(SmarterCommand):
                 """Helper function to initialize a single provider model."""
 
                 try:
+                    # a new model starts active, and its verification, which saving it queues, decides
+                    # whether it stays so. An existing model keeps the is_active its last verification set.
+                    defaults = {"description": f"{model_name} model for {provider.name}.", "is_default": is_default}
                     ProviderModel.objects.update_or_create(
                         provider=provider,
                         name=model_name,
-                        defaults={
-                            "description": f"{model_name} model for {provider.name}.",
-                            "is_active": True,
-                            "is_default": is_default,
-                        },
+                        defaults=defaults,
+                        create_defaults={**defaults, "is_active": True},
                     )
                 # pylint: disable=broad-except
                 except Exception as e:
@@ -266,10 +266,20 @@ class Command(SmarterCommand):
 
             for model in models:
                 model_name = model.get("id") or model.get("name", "").removeprefix("models/")
-                if model_name:
-                    _initialize_provider_model(
-                        provider=provider, model_name=model_name, is_default=model_name == default_model
+                if not model_name:
+                    continue
+                # the Gemini api also lists models that cannot chat: embedding, video and question
+                # answering models, and Live models that only stream over a WebSocket. Their
+                # supportedGenerationMethods lack generateContent, which chat completions need.
+                generation_methods = model.get("supportedGenerationMethods")
+                if generation_methods is not None and "generateContent" not in generation_methods:
+                    self.stdout.write(
+                        f"{log_prefix} Skipping {model_name}, which does not support chat completions: {generation_methods}"
                     )
+                    continue
+                _initialize_provider_model(
+                    provider=provider, model_name=model_name, is_default=model_name == default_model
+                )
             self.stdout.write(
                 self.style.SUCCESS(f"{log_prefix} provider models initialized {len(models)} models successfully.")
             )
@@ -282,18 +292,23 @@ class Command(SmarterCommand):
 
         COMMON_DEFAULTS = {
             "user_profile": self.user_profile,
-            "status": ProviderStatus.VERIFIED,
-            "is_active": True,
-            "is_verified": True,
-            "is_deprecated": False,
-            "is_flagged": False,
-            "is_suspended": False,
             "contact_email": SMARTER_CONTACT_EMAIL,
             "contact_email_verified": timezone.now(),
             "support_email": SMARTER_CUSTOMER_SUPPORT_EMAIL,
             "support_email_verified": timezone.now(),
             "tos_accepted_at": timezone.now(),
             "tos_accepted_by": self.user_profile.user,
+        }
+        # a new built-in provider starts verified and active. An existing one keeps the status that its
+        # last verification, or an admin who deprecated, flagged or suspended it, set: every deploy runs
+        # this command, and must not re-enable a provider that failed verification.
+        CREATE_DEFAULTS = {
+            "status": ProviderStatus.VERIFIED,
+            "is_active": True,
+            "is_verified": True,
+            "is_deprecated": False,
+            "is_flagged": False,
+            "is_suspended": False,
         }
         # a missing key does not stop the provider from being created: the built-in LLMClients
         # and Proxies that use it must be applied. Its prompts fail, with instructions, until a key is set.
@@ -315,16 +330,18 @@ class Command(SmarterCommand):
                 return
 
         try:
+            defaults = {
+                **COMMON_DEFAULTS,
+                **provider_configuration,
+                # without a key, an API key Secret that was set otherwise, e.g. in the web console, is kept.
+                **({"api_key": secret} if secret else {}),
+                # the platform-wide default provider, e.g. for prompts that do not name one
+                "is_default": name == smarter_settings.llm_default_provider,
+            }
             provider, _ = Provider.objects.update_or_create(
                 name=name,
-                defaults={
-                    **COMMON_DEFAULTS,
-                    **provider_configuration,
-                    # without a key, an API key Secret that was set otherwise, e.g. in the web console, is kept.
-                    **({"api_key": secret} if secret else {}),
-                    # the platform-wide default provider, e.g. for prompts that do not name one
-                    "is_default": name == smarter_settings.llm_default_provider,
-                },
+                defaults=defaults,
+                create_defaults={**defaults, **CREATE_DEFAULTS},
             )
         # pylint: disable=broad-except
         except Exception as e:
@@ -337,14 +354,15 @@ class Command(SmarterCommand):
 
         if secret is None:
             # the models cannot be listed without a key, so only the default model is created.
+            defaults = {
+                "description": f"{provider_configuration['default_model']} model for {provider.name}.",
+                "is_default": True,
+            }
             ProviderModel.objects.update_or_create(
                 provider=provider,
                 name=provider_configuration["default_model"],
-                defaults={
-                    "description": f"{provider_configuration['default_model']} model for {provider.name}.",
-                    "is_active": True,
-                    "is_default": True,
-                },
+                defaults=defaults,
+                create_defaults={**defaults, "is_active": True},
             )
             return
 

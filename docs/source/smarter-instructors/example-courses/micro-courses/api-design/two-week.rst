@@ -10,7 +10,7 @@ and ReDoc pages generated from the code. Its clients are real and public: the Go
 <https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
 <https://github.com/smarter-sh/smarter-chat>`__ npm package, whose types are generated from the chat
 API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
-has drifted from the API it calls. There are six 30-minute recorded lectures and a 90-minute live
+tests every request it sends against a pinned copy of the API's OpenAPI document. There are six 30-minute recorded lectures and a 90-minute live
 session each week. Week 1 covers consuming an API, and week 2 covers designing, evolving and
 operating one. See :doc:`../course-formats` for the format, the grading scale and the course
 policies, and :doc:`../api-design` for an overview of the subject.

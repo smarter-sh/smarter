@@ -77,6 +77,10 @@ env:
   SMARTER_ENABLE_MANIFEST_DROPZONE: true
   SMARTER_ENABLE_PROXY: true
   SMARTER_ENABLE_VECTORSTORE: true
+  # The Smarter Extension registry's base64 Ed25519 public key. This is a
+  # public key, not a secret. An empty value disables the registry.
+  SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY: "i0kR0g3ZEf6YzyyjnQbIwq85D7QGwTrvzubYsw6sdtg="
+  SMARTER_EXTENSION_REGISTRY_URL: "https://smarter-sh.github.io/extensions-registry/index.json"
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"

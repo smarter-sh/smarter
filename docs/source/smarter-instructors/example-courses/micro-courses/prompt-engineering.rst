@@ -32,7 +32,9 @@ and eighteen `built-in guardrails
 Smarter also makes visible a point that most courses miss: a tool is used only after two
 decisions. Smarter :doc:`selects a plugin </smarter-resources/llmtool/nlp>` when the prompt matches
 one of its search terms, exactly, with a typo or as a synonym, and only then does the model decide,
-from the plugin's description, whether to call it.
+from the plugin's description, whether to call it. Installed
+:doc:`Extensions </smarter-framework/extensibility>`, such as the weather tool, skip the first
+decision: an LLMClient that lists one offers its tools on every prompt.
 
 **What the course covers.** How a language model reads a prompt: tokens, the context window, and
 system and user messages; the anatomy of a good system prompt, from persona to refusals; few-shot
@@ -46,7 +48,7 @@ Orchestrator; and designing, branding and deploying an assistant for a real audi
 
 - `llmclient/data/llm-clients/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
   the built-in LLMClients, especially ``simple``, ``customer_support`` and ``weather``.
-- `plugin/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__,
+- `llmtool/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__,
   the sample Static, Skill, Websearch and ImageSearch plugins.
 - `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
   the built-in guardrails, each a short manifest that a non-programmer can read.
