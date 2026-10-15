@@ -462,7 +462,7 @@ class Command(SmarterCommand):
         if is_missing_value(api_key):
             self.missing_api_key(
                 API_KEY_ENV_VAR,
-                "the get_current_weather() example function",
+                "the weather extension",
                 "https://developers.google.com/maps/documentation/geocoding/get-api-key",
             )
             return

@@ -31,7 +31,7 @@ from .const import CHAT_CONTRACT_V2, PUBLIC_LLMCLIENT_FIELDS, PUBLIC_META_DATA_F
 
 if TYPE_CHECKING:
     from smarter.apps.llmclient.models import (
-        LLMClientFunctions,
+        LLMClientExtensions,
         LLMClientPlugin,
         LLMClientRequests,
     )
@@ -70,13 +70,6 @@ PromptChatApiPluginClass = Literal["api", "skill", "sql", "static", "websearch",
 
 See ``PluginMeta.PLUGIN_CLASSES``.
 """
-
-PromptChatApiFunctionName = Literal["get_current_weather", "date_calculator", "calculator"]
-"""A built-in function's name: the choices of ``LLMClientFunctions.name``.
-
-See ``LLMClientFunctions.CHOICES``.
-"""
-
 
 V1_DEPRECATION = (
     "Version 1 of the Smarter Chat api contract is deprecated: use version 2, the default. "
@@ -429,28 +422,35 @@ class PromptChatApiLLMClientPlugin(PromptChatApiOrmModel):
         )
 
 
-class PromptChatApiLLMClientFunction(PromptChatApiOrmModel):
-    """A built-in function of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`."""
+class PromptChatApiLLMClientExtension(PromptChatApiOrmModel):
+    """An extension of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientExtensions`."""
 
-    llmclient: int = Field(..., description="LLMClientFunctions.llmclient: the LLMClient's id.")
-    name: Optional[PromptChatApiFunctionName] = Field(None, description="LLMClientFunctions.name.")
+    llmclient: int = Field(..., description="LLMClientExtensions.llmclient: the LLMClient's id.")
+    extension: int = Field(..., description="LLMClientExtensions.extension: the Extension's id.")
+    name: str = Field(..., description="The Extension's slug, e.g. weather.")
+    version: Optional[str] = Field(None, description="The Extension's installed version, e.g. 1.0.0.")
+    enabled: bool = Field(..., description="Whether the Extension is enabled, so that its tools are offered.")
 
     @classmethod
-    def from_model(cls, function: "LLMClientFunctions") -> "PromptChatApiLLMClientFunction":
+    def from_model(cls, link: "LLMClientExtensions") -> "PromptChatApiLLMClientExtension":
         """
-        The contract's model of a built-in function of the LLMClient.
+        The contract's model of an extension of the LLMClient.
 
-        :param function: The row.
-        :type function: smarter.apps.llmclient.models.LLMClientFunctions
+        :param link: The row, whose ``extension`` and its ``installed_version`` should be fetched with it.
+        :type link: smarter.apps.llmclient.models.LLMClientExtensions
         :returns: The model.
-        :rtype: PromptChatApiLLMClientFunction
+        :rtype: PromptChatApiLLMClientExtension
         """
+        extension = link.extension
         return cls(
-            id=function.pk,
-            created_at=function.created_at,
-            updated_at=function.updated_at,
-            llmclient=function.llmclient_id,  # type: ignore[attr-defined]
-            name=function.name,  # type: ignore[arg-type]
+            id=link.pk,
+            created_at=link.created_at,
+            updated_at=link.updated_at,
+            llmclient=link.llmclient_id,  # type: ignore[attr-defined]
+            extension=extension.pk,
+            name=extension.slug,
+            version=extension.installed_version.version if extension.installed_version else None,
+            enabled=extension.enabled,
         )
 
 
@@ -630,12 +630,12 @@ class PromptChatApiMetaData(PromptChatApiModel):
 
 
 class PromptChatApiListMetaData(PromptChatApiModel):
-    """The counts of a list of the LLMClient's plugins or functions."""
+    """The counts of a list of the LLMClient's plugins or extensions."""
 
     total_plugins: Optional[int] = None
     plugins_returned: Optional[int] = None
-    total_functions: Optional[int] = None
-    functions_returned: Optional[int] = None
+    total_extensions: Optional[int] = None
+    extensions_returned: Optional[int] = None
 
 
 class PromptChatApiPluginList(PromptChatApiModel):
@@ -648,14 +648,14 @@ class PromptChatApiPluginList(PromptChatApiModel):
     plugins: list[PromptChatApiLLMClientPlugin] = Field(default_factory=list)
 
 
-class PromptChatApiFunctionList(PromptChatApiModel):
-    """The LLMClient's built-in functions.
+class PromptChatApiExtensionList(PromptChatApiModel):
+    """The LLMClient's extensions.
 
     The list itself is returned only in the complete configuration.
     """
 
     meta_data: PromptChatApiListMetaData
-    functions: list[PromptChatApiLLMClientFunction] = Field(default_factory=list)
+    extensions: list[PromptChatApiLLMClientExtension] = Field(default_factory=list)
 
 
 @deprecated(V1_DEPRECATION)
@@ -667,11 +667,14 @@ class PromptChatApiLLMClientPluginV1(PromptChatApiOrmModel):
 
 
 @deprecated(V1_DEPRECATION)
-class PromptChatApiLLMClientFunctionV1(PromptChatApiOrmModel):
-    """A built-in function of the LLMClient, in version 1, whose ``llmclient`` is renamed ``chatbot``."""
+class PromptChatApiLLMClientExtensionV1(PromptChatApiOrmModel):
+    """An extension of the LLMClient, in version 1, whose ``llmclient`` is renamed ``chatbot``."""
 
-    chatbot: int = Field(..., description="LLMClientFunctions.llmclient: the LLMClient's id.")
-    name: Optional[PromptChatApiFunctionName] = None
+    chatbot: int = Field(..., description="LLMClientExtensions.llmclient: the LLMClient's id.")
+    extension: int
+    name: str
+    version: Optional[str] = None
+    enabled: bool
 
 
 @deprecated(V1_DEPRECATION)
@@ -683,11 +686,11 @@ class PromptChatApiPluginListV1(PromptChatApiModel):
 
 
 @deprecated(V1_DEPRECATION)
-class PromptChatApiFunctionListV1(PromptChatApiModel):
-    """The LLMClient's built-in functions, in version 1."""
+class PromptChatApiExtensionListV1(PromptChatApiModel):
+    """The LLMClient's extensions, in version 1."""
 
     meta_data: PromptChatApiListMetaData
-    functions: list[PromptChatApiLLMClientFunctionV1] = Field(default_factory=list)
+    extensions: list[PromptChatApiLLMClientExtensionV1] = Field(default_factory=list)
 
 
 class PromptChatApiConfigBase(PromptChatApiModel):
@@ -711,7 +714,7 @@ class PromptChatApiConfig(PromptChatApiConfigBase):
     llmclient: PromptChatApiLLMClient
     history: PromptChatApiHistory
     plugins: PromptChatApiPluginList
-    functions: Optional[PromptChatApiFunctionList] = None
+    extensions: Optional[PromptChatApiExtensionList] = None
 
     def public(self) -> "PromptChatApiConfig":
         """
@@ -721,7 +724,7 @@ class PromptChatApiConfig(PromptChatApiConfigBase):
 
         The LLMClient is reduced to :data:`~.const.PUBLIC_LLMCLIENT_FIELDS`, without e.g. its owner's
         profile, the history to the session's own messages, without the requests that Smarter sent to
-        the LLM, the meta data to :data:`~.const.PUBLIC_META_DATA_FIELDS`, and the plugins and functions
+        the LLM, the meta data to :data:`~.const.PUBLIC_META_DATA_FIELDS`, and the plugins and extensions
         to their counts.
 
         :returns: A new configuration.
@@ -742,8 +745,10 @@ class PromptChatApiConfig(PromptChatApiConfigBase):
                 **{key: meta_data[key] for key in PUBLIC_META_DATA_FIELDS if key in meta_data}
             ),
             plugins=PromptChatApiPluginList(meta_data=self.plugins.meta_data, plugins=[]),
-            functions=(
-                PromptChatApiFunctionList(meta_data=self.functions.meta_data, functions=[]) if self.functions else None
+            extensions=(
+                PromptChatApiExtensionList(meta_data=self.extensions.meta_data, extensions=[])
+                if self.extensions
+                else None
             ),
         )
 
@@ -768,7 +773,7 @@ class PromptChatApiConfigV1(PromptChatApiConfigBase):
     chatbot: PromptChatApiChatbotV1
     history: PromptChatApiHistoryV1
     plugins: PromptChatApiPluginListV1
-    functions: Optional[PromptChatApiFunctionListV1] = None
+    extensions: Optional[PromptChatApiExtensionListV1] = None
 
 
 class PromptChatApiConfigRequest(PromptChatApiModel):
@@ -977,20 +982,19 @@ __all__ = [
     "PromptChatApiHistoryV1",
     "PromptChatApiMessage",
     "PromptChatApiMetaData",
-    "PromptChatApiFunctionList",
+    "PromptChatApiExtensionList",
     "PromptChatApiLambdaResponseV1",
     "PromptChatApiLLMClient",
-    "PromptChatApiFunctionName",
-    "PromptChatApiLLMClientFunction",
+    "PromptChatApiLLMClientExtension",
     "PromptChatApiLLMClientPlugin",
     "PromptChatApiOrmModel",
     "PromptChatApiPluginClass",
     "PromptChatApiPluginList",
     "PromptChatApiPluginMeta",
     "PromptChatApiLLMClientPluginV1",
-    "PromptChatApiLLMClientFunctionV1",
+    "PromptChatApiLLMClientExtensionV1",
     "PromptChatApiPluginListV1",
-    "PromptChatApiFunctionListV1",
+    "PromptChatApiExtensionListV1",
     "PromptChatApiProgressEvent",
     "PromptChatApiProgressEventType",
     "PromptChatApiProgressResult",

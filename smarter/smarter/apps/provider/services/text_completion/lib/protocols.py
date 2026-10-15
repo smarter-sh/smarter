@@ -129,8 +129,6 @@ class SmarterChatHarnessProtocol(Protocol):
     :type data: Union[SmarterDictType, list]
     :param plugins: Optional list of plugins to use.
     :type plugins: Optional[List[PluginBase]]
-    :param functions: Optional list of function names to use.
-    :type functions: Optional[list[str]]
 
     :returns: The response data.
     :rtype: Union[SmarterDictType, list]
@@ -142,7 +140,6 @@ class SmarterChatHarnessProtocol(Protocol):
         prompt: Prompt,
         data: Union[SmarterDictType, list],
         plugins: Optional[List[PluginBase]] = None,
-        functions: Optional[list[str]] = None,
     ) -> SmarterChatCompletionResponseType: ...
 
 

@@ -12,7 +12,6 @@ from smarter.apps.llmclient.api.v1.urls import LLMClientApiV1ReverseViews as Nam
 from smarter.apps.llmclient.api.v1.views.views import (
     LLMClientAPIKeyView,
     LLMClientDeployView,
-    LLMClientFunctionsView,
     LLMClientPluginView,
     LLMClientView,
 )
@@ -20,10 +19,10 @@ from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientPlugin,
 )
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -115,12 +114,13 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         with patch.object(LLMClientAPIKey, "delete", side_effect=RuntimeError("database down")):
             self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    def test_function_delete_failure(self):
-        """A failed function delete is an internal error."""
-        function = LLMClientFunctions.objects.create(llmclient=self.llmclient, name="calculator")
-        self.addCleanup(LLMClientFunctions.objects.filter(pk=function.pk).delete)
-        url = self.url(Names.llmclient_functions_view_by_id, llmclient_id=self.llmclient.pk, function_id=function.pk)
-        with patch.object(LLMClientFunctions, "delete", side_effect=RuntimeError("database down")):
+    def test_extension_delete_failure(self):
+        """A failed extension delete is an internal error."""
+        extension = Extension.objects.create(slug="test-api-errors", display_name="Test Api Errors")
+        self.addCleanup(Extension.objects.filter(pk=extension.pk).delete)
+        link = LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
+        url = self.url(Names.llmclient_extension_view_by_id, llmclient_id=self.llmclient.pk, extension_id=link.pk)
+        with patch.object(LLMClientExtensions, "delete", side_effect=RuntimeError("database down")):
             self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def call_view(self, view_class, method: str, data=None, **kwargs):
@@ -180,7 +180,3 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.llmclient, api_key=token).exists())
         with patch.object(LLMClientAPIKey.objects, "create", side_effect=RuntimeError("database down")):
             self.assertStatus(self.call_view(LLMClientAPIKeyView, "post", **kwargs), HTTPStatus.BAD_REQUEST)
-
-    def test_function_post_is_not_implemented(self):
-        with self.assertRaises(NotImplementedError):
-            self.call_view(LLMClientFunctionsView, "post", llmclient_id=self.llmclient.pk)

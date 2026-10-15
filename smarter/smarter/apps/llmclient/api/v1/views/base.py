@@ -14,7 +14,6 @@ from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import (
     LLMClient,
-    LLMClientFunctions,
     LLMClientHelper,
     LLMClientPlugin,
 )
@@ -117,7 +116,6 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
 
     http_method_names: list[str] = ["get", "post", "options"]
     plugins: Optional[List[PluginBase]] = None
-    functions: Optional[list[str]] = None
     include_diagnostics: bool = False
     """
     Return the complete requests to and responses from the LLM, and the stack traces of errors.
@@ -487,14 +485,12 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
             )
 
         self.plugins = LLMClientPlugin().plugins(llmclient=self.llmclient)
-        self.functions = LLMClientFunctions().functions(llmclient=self.llmclient)
 
         if self.llmclient_helper.is_llmclient:
             logger.debug("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
             logger.debug("%s.dispatch(): llmclient=%s", self.formatted_class_name, self.llmclient)
             logger.debug("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
             logger.debug("%s.dispatch(): plugins=%s", self.formatted_class_name, self.plugins)
-            logger.debug("%s.dispatch(): functions=%s", self.formatted_class_name, self.functions)
             logger.debug("%s.dispatch(): name=%s", self.formatted_class_name, self.name)
             logger.debug("%s.dispatch(): data=%s", self.formatted_class_name, self.data)
             if self.session_key:
@@ -670,9 +666,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         contract = self.forced_contract or requested_contract(request)
 
         def complete() -> HttpResponse:
-            response = handler(
-                self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins, functions=self.functions  # type: ignore[union-attr]
-            )
+            response = handler(self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins)  # type: ignore[union-attr]
             if not self.include_diagnostics:
                 response = without_diagnostics(response)
             if contract == CHAT_CONTRACT_V2:

@@ -1705,6 +1705,54 @@ class Settings(BaseSettings):
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate plugin_max_data_results: {v}") from e
 
+    extension_registry_url: str = Field(
+        settings_defaults.EXTENSION_REGISTRY_URL,
+        description="The url of the Smarter Extension registry's signed index, index.json.",
+        examples=["https://smarter-sh.github.io/extensions-registry/index.json"],
+        title="Extension Registry URL",
+    )
+    """
+    The url of the Smarter Extension registry's index.
+
+    The registry lists the extensions that administrators may install from the Django admin
+    console, their versions, and their publishers' trust badges. The platform checks it daily
+    for updates to installed extensions. Its signature, at the same url with ``.sig``
+    appended, is verified with :attr:`extension_registry_public_key`.
+    :type: str
+    :default: Value from ``settings_defaults.EXTENSION_REGISTRY_URL``
+    """
+
+    @before_field_validator("extension_registry_url")
+    def validate_extension_registry_url(cls, v: Optional[str]) -> str:
+        """Validates the 'extension_registry_url' field: an https url, or the default if empty.
+
+        Args:
+            v (Optional[str]): the url.
+
+        Returns:
+            str: The validated url.
+        """
+        if v is None or str(v).strip() == "":
+            return settings_defaults.EXTENSION_REGISTRY_URL
+        v = str(v).strip()
+        if not v.startswith("https://"):
+            raise SmarterConfigurationError(f"extension_registry_url {v} must be an https url.")
+        return v
+
+    extension_registry_public_key: str = Field(
+        settings_defaults.EXTENSION_REGISTRY_PUBLIC_KEY,
+        description="The base64 Ed25519 public key that verifies the extension registry's index. Empty disables the registry.",
+        title="Extension Registry Public Key",
+    )
+    """
+    The Ed25519 public key, base64, that verifies the signature of the extension registry's index.
+
+    It is public, not a secret. While it is empty, the registry is disabled: extensions can
+    only be installed from uploaded archives, and updates are not checked.
+    :type: str
+    :default: Value from ``settings_defaults.EXTENSION_REGISTRY_PUBLIC_KEY``
+    """
+
     mcpserver_rate_limit: int = Field(
         settings_defaults.MCPSERVER_RATE_LIMIT,
         ge=0,

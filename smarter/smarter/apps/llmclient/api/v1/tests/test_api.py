@@ -13,11 +13,11 @@ from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientHelper,
     LLMClientPlugin,
 )
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 
@@ -43,7 +43,7 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
             Names.llmclient_plugin_list_view_by_id,
             Names.llmclient_api_key_list_view_by_id,
             Names.llmclient_custom_domain_list_view_by_id,
-            Names.llmclient_api_functions_by_id,
+            Names.llmclient_extension_list_view_by_id,
         ):
             with self.subTest(view=name):
                 response = self.api_client.get(self.url(name, llmclient_id=self.resource.pk))
@@ -54,7 +54,7 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
             Names.llmclient_plugin_view_by_id: {"plugin_id": 999999999},
             Names.llmclient_api_key_view_by_id: {"apikey_id": 999999999},
             Names.llmclient_custom_domain_view_by_id: {"customdomain_id": 999999999},
-            Names.llmclient_functions_view_by_id: {"function_id": 999999999},
+            Names.llmclient_extension_view_by_id: {"extension_id": 999999999},
         }
         for name, kwargs in cases.items():
             with self.subTest(view=name):
@@ -62,11 +62,11 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
                 self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:300])
 
     def test_sub_resource_lists(self):
-        """Test that the lists of the LLMClient's plugins, api keys, custom domains and functions are returned."""
+        """Test that the lists of the LLMClient's plugins, api keys, custom domains and extensions are returned."""
         self.assert_sub_resource_lists()
 
     def test_sub_resource_views_not_found(self):
-        """Test that an unknown plugin, api key, custom domain or function of the LLMClient is a 404."""
+        """Test that an unknown plugin, api key, custom domain or extension of the LLMClient is a 404."""
         self.assert_sub_resource_views()
 
     def test_custom_domain_attach_and_detach(self):
@@ -165,15 +165,26 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
         self.assertFalse(LLMClientAPIKey.objects.filter(pk=llmclient_api_key.pk).exists())
 
-    def test_function_view(self):
-        """Test that an LLMClient's function is returned and removed."""
-        function = LLMClientFunctions.objects.create(llmclient=self.resource, name="calculator")
-        url = self.url(Names.llmclient_functions_view_by_id, llmclient_id=self.resource.pk, function_id=function.pk)
+    def create_extension_link(self) -> LLMClientExtensions:
+        """Link a bare Extension to the resource, and delete it after the test."""
+        extension = Extension.objects.create(slug=f"test-api-{self.hash_suffix.lower()}", display_name="Test Api")
+        self.addCleanup(Extension.objects.filter(pk=extension.pk).delete)
+        return LLMClientExtensions.objects.create(llmclient=self.resource, extension=extension)
+
+    def test_extension_view(self):
+        """Test that an LLMClient's extension is returned and removed."""
+        link = self.create_extension_link()
+        url = self.url(Names.llmclient_extension_view_by_id, llmclient_id=self.resource.pk, extension_id=link.pk)
         response = self.api_client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+        self.assertEqual(response.json()["name"], link.extension.slug)
+        response = self.api_client.get(
+            self.url(Names.llmclient_extension_list_view_by_id, llmclient_id=self.resource.pk)
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
         response = self.api_client.delete(url)
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
-        self.assertFalse(LLMClientFunctions.objects.filter(pk=function.pk).exists())
+        self.assertFalse(LLMClientExtensions.objects.filter(pk=link.pk).exists())
 
     def test_get_another_users_llmclient(self):
         """Test that a superuser gets another user's LLMClient, whose owner the view then acts as."""
@@ -193,13 +204,12 @@ class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:300])
         self.assertTrue(LLMClient.objects.filter(name=name, user_profile=self.user_profile).exists())
 
-    def test_function_patch_not_implemented(self):
-        """Test that patching an LLMClient's function isn't implemented."""
-        function = LLMClientFunctions.objects.create(llmclient=self.resource, name="calculator")
-        self.addCleanup(LLMClientFunctions.objects.filter(pk=function.pk).delete)
-        url = self.url(Names.llmclient_functions_view_by_id, llmclient_id=self.resource.pk, function_id=function.pk)
-        with self.assertRaises(NotImplementedError):
-            self.api_client.patch(url, data={}, format="json")
+    def test_extension_patch_not_allowed(self):
+        """Test that an LLMClient's extension can't be patched: the manifest's spec.extensions links them."""
+        link = self.create_extension_link()
+        url = self.url(Names.llmclient_extension_view_by_id, llmclient_id=self.resource.pk, extension_id=link.pk)
+        response = self.api_client.patch(url, data={}, format="json")
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.content[:300])
 
     def test_default_api_llmclient_not_ready(self):
         """Test that the default api is a 400 when the LLMClient can't be initialized."""

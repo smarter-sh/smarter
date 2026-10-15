@@ -79,9 +79,9 @@ spec:
         color: '#f15a29'
       typingIndicator:
         color: '#f15a29'
-  functions:
+  extensions:
     - weather
-    - datemath
+    - date-calculator
     - stockprice
   plugins:
     - everlasting_gobstopper

@@ -445,8 +445,19 @@ class TestSkillSources(SmarterTestBase):
     # =========================================================================
     @skipUnless(GITHUB_AVAILABLE, "GitHub is not reachable, or its api rate limit is exhausted")
     def test_live_retrieve_anthropic_skill(self):
-        """Test retrieving a real skill from Anthropic's skills repository."""
-        skill = retrieve_skill(ANTHROPIC_SKILL_URL)
+        """
+        Test retrieving a real skill from Anthropic's skills repository.
+
+        GITHUB_AVAILABLE is decided when the module is imported, which can be long before
+        this test runs. GitHub answers a rate limited request, primary or secondary, with
+        403 or 429, and the repository is public, so either one skips the test.
+        """
+        try:
+            skill = retrieve_skill(ANTHROPIC_SKILL_URL)
+        except SkillSourceError as e:
+            if any(f"HTTP {status}" in str(e) for status in (403, 429)):
+                self.skipTest(f"GitHub rate limited the request: {e}")
+            raise
         self.assertEqual(skill.document.name, "brand-guidelines")
         self.assertTrue(skill.document.description)
         self.assertTrue(skill.document.body)

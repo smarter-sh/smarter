@@ -13,8 +13,7 @@ from smarter.apps.guardrail.manifest.models.guardrail.const import (
 from smarter.apps.llmclient.contract.models import (
     LLMClientApiCustomDomain,
     LLMClientApiDnsVerificationStatus,
-    LLMClientApiFunction,
-    LLMClientApiFunctionName,
+    LLMClientApiExtension,
     LLMClientApiKey,
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
@@ -26,20 +25,20 @@ from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientPlugin,
 )
 from smarter.apps.llmclient.serializers import (
     LLMClientAPIKeySerializer,
     LLMClientCustomDomainSerializer,
-    LLMClientFunctionsSerializer,
+    LLMClientExtensionsSerializer,
     LLMClientPluginSerializer,
     LLMClientSerializer,
 )
 from smarter.apps.llmtool.manifest.models.common.plugin.const import (
     MANIFEST_KIND as PLUGIN_KIND,
 )
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCPCLIENT_KIND,
 )
@@ -66,7 +65,9 @@ class TestLLMClientContractModels(TestAccountMixin):
         self.llmclient = LLMClient.objects.create(name=NAME, user_profile=self.user_profile)
         self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
         self.llmclient.tags.add("contract")
-        self.function = LLMClientFunctions.objects.create(llmclient=self.llmclient, name="calculator")
+        extension = Extension.objects.create(slug="contract-models", display_name="Contract Models")
+        self.addCleanup(Extension.objects.filter(pk=extension.pk).delete)
+        self.extension = LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
         plugin_meta = PluginMeta.objects.create(name=NAME, user_profile=self.user_profile, plugin_class="static")
         self.addCleanup(PluginMeta.objects.filter(pk=plugin_meta.pk).delete)
         self.plugin = LLMClientPlugin.objects.create(llmclient=self.llmclient, plugin_meta=plugin_meta)
@@ -98,7 +99,6 @@ class TestLLMClientContractModels(TestAccountMixin):
         cases = [
             (LLMClientApiDnsVerificationStatus, LLMClient, "dns_verification_status"),
             (LLMClientApiTlsCertificateIssuanceStatus, LLMClient, "tls_certificate_issuance_status"),
-            (LLMClientApiFunctionName, LLMClientFunctions, "name"),
             (LLMClientApiVerificationStatus, LLMClientCustomDomain, "verification_status"),
         ]
         for literal, model, field in cases:
@@ -106,9 +106,9 @@ class TestLLMClientContractModels(TestAccountMixin):
                 self.assertEqual(list(get_args(literal)), choices(model, field))
 
     def test_tool_kinds(self):
-        """A tool's kind is Function, or the manifest kind of a plugin, MCPClient or guardrail."""
+        """A tool's kind is Extension, or the manifest kind of a plugin, MCPClient or guardrail."""
         self.assertEqual(
-            list(get_args(LLMClientApiToolKind)), ["Function", PLUGIN_KIND, MCPCLIENT_KIND, GUARDRAIL_KIND]
+            list(get_args(LLMClientApiToolKind)), ["Extension", PLUGIN_KIND, MCPCLIENT_KIND, GUARDRAIL_KIND]
         )
 
     def test_llmclient_is_the_serializers_output(self):
@@ -118,13 +118,13 @@ class TestLLMClientContractModels(TestAccountMixin):
         """
         model = LLMClientApiLLMClient.from_model(self.llmclient)
         self.assert_is_serializers_output(model, LLMClientSerializer(self.llmclient), "defaultSystemRole")
-        self.assertEqual([function.name for function in model.functions], ["calculator"])
+        self.assertEqual([extension.name for extension in model.extensions], ["contract-models"])
         self.assertEqual([plugin.name for plugin in model.plugins], [NAME])
         self.assertEqual(model.mcpclients, [])
         self.assertEqual(model.guardrails, [])
         self.assertEqual(
             [(tool.id, tool.name, tool.kind) for tool in model.tools],
-            [(self.function.pk, "calculator", "Function"), (self.plugin.pk, NAME, PLUGIN_KIND)],
+            [(self.extension.pk, "contract-models", "Extension"), (self.plugin.pk, NAME, PLUGIN_KIND)],
         )
         self.assertEqual([api_key.id for api_key in model.api_keys], [self.api_key.pk])
         self.assertEqual(model.custom_domains, [])
@@ -141,7 +141,7 @@ class TestLLMClientContractModels(TestAccountMixin):
 
     def test_related_rows_are_the_serializers_output(self):
         self.assert_is_serializers_output(
-            LLMClientApiFunction.from_model(self.function), LLMClientFunctionsSerializer(self.function)
+            LLMClientApiExtension.from_model(self.extension), LLMClientExtensionsSerializer(self.extension)
         )
         self.assert_is_serializers_output(
             LLMClientApiPlugin.from_model(self.plugin), LLMClientPluginSerializer(self.plugin)
@@ -166,7 +166,7 @@ class TestLLMClientContractModels(TestAccountMixin):
         )
 
     def test_extra_fields_are_forbidden(self):
-        data = LLMClientApiFunction.from_model(self.function).model_dump(mode="json")
-        self.assertEqual(LLMClientApiFunction.model_validate(data).name, "calculator")
+        data = LLMClientApiExtension.from_model(self.extension).model_dump(mode="json")
+        self.assertEqual(LLMClientApiExtension.model_validate(data).name, "contract-models")
         with self.assertRaises(ValidationError):
-            LLMClientApiFunction.model_validate({**data, "secret": "x"})
+            LLMClientApiExtension.model_validate({**data, "secret": "x"})
