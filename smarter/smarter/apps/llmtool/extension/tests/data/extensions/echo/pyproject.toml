@@ -1,0 +1,44 @@
+[project]
+name = "smarter-extension-echo"
+version = "1.0.0"
+description = "Echoes what it is sent, to test Smarter Extensions."
+authors = [{ name = "Smarter Team", email = "test@example.com" }]
+license = "AGPL-3.0"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2"]
+
+[project.urls]
+Homepage = "https://example.com/echo"
+
+[tool.smarter]
+slug = "echo"
+package = "echo"
+display-name = "Echo"
+requires-smarter = ">=0.1"
+icon = "static/icon.svg"
+tools = ["echo.tools:Echo", "echo.tools:Fail", "echo.tools:Refuse", "echo.tools:Slow", "echo.tools:Unserializable"]
+lifecycle = "echo.lifecycle:Lifecycle"
+timeout = 2
+
+[[tool.smarter.settings]]
+name = "greeting"
+type = "string"
+default = "hello"
+description = "The word that each echo starts with."
+
+[[tool.smarter.settings]]
+name = "repeat"
+type = "integer"
+default = 1
+description = "How many times to repeat the text."
+
+[[tool.smarter.settings]]
+name = "api_key"
+type = "secret"
+required = true
+description = "A secret that the extension must have before it is enabled."
+
+[[tool.smarter.switches]]
+name = "verbose"
+description = "Adds the extension's version to each echo."
+default = false

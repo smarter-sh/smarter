@@ -81,7 +81,6 @@ spec:
         color: '#fca311'
       typingIndicator:
         color: '#fca311'
-  functions: []
   plugins:
     - sql_analyst
   mcpClients:

@@ -45,5 +45,3 @@ spec:
   plugins:
     - example_configuration
     - everlasting_gobstopper
-  functions:
-    - weather

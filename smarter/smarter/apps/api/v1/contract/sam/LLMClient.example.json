@@ -82,9 +82,10 @@
         "userAvatarUrl": null
       }
     },
-    "functions": [
-      "date_calculator",
-      "get_current_weather"
+    "extensions": [
+      "calculator",
+      "date-calculator",
+      "weather"
     ],
     "guardrails": [
       "pii_redaction_input",

@@ -57,6 +57,13 @@ reach the containers, which can drift far behind the host, by dozens of files
 and unapplied migrations. Celery tasks run in the workers, so a stale worker runs
 stale task code even when smarter-app is current.
 
+> **`make run` never returns.** It is `docker compose up`, attached to the
+> containers' logs. Run in a foreground Bash call, it blocks the agent until the
+> timeout or until someone stops the containers, and the user sees an agent
+> that is stuck. Always start `make run` (and `make build && make run`) with
+> `run_in_background: true`, then poll for the dev server as shown below. Never
+> give it a long foreground timeout instead: that is the same mistake.
+
 **Prefer a rebuild.** `make build && make run` rebuilds the images from the
 host's tree and restarts every container, in about 5 seconds when only source
 files changed. That beats copying files one at a time, and leaves no container

@@ -90,9 +90,9 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:developer-makefile")
         self.process_url(url)
 
-    def test_url_developer_weather_function(self) -> None:
-        """Test url for developer weather function."""
-        url = reverse(f"{namespace}:developer-weather-function")
+    def test_url_developer_extension_protocol(self) -> None:
+        """Test url for the developer extension protocol."""
+        url = reverse(f"{namespace}:developer-extension-protocol")
         self.process_url(url)
 
     def test_url_developer_requirements(self) -> None:

@@ -150,7 +150,6 @@ The following example shows the intended shape of an Anthropic llmclient manifes
          subdomain: null
        styles:
          appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
-     functions: []
      plugins: []
 
 This step is outside the main scope of this tutorial. The main objective here is adding the provider itself.

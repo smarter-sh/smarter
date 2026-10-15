@@ -724,7 +724,7 @@ class TestImageSearchPlugin(PluginTestBase):
         prompt identifies the tool by the opening words of its description.
         """
         weather = get_readonly_yaml_file(os.path.join(LLMCLIENTS_PATH, "llmclient-weather.yaml"))
-        self.assertIn("get_current_weather", weather["spec"]["functions"])
+        self.assertIn("weather", weather["spec"]["extensions"])
         self.assertIn("image_search", weather["spec"]["plugins"])
         system_role = weather["spec"]["config"]["prompt"]["defaultSystemRole"]
         self.assertIn(f'description begins "{WEATHER_IMAGE_SEARCH_DESCRIPTION}"', system_role)
