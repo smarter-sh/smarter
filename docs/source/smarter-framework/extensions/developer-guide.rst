@@ -26,6 +26,53 @@ An Extension does not define Django models, migrations, URL routes or Celery tas
 data, it can create SAM resources, such as Secrets, from its lifecycle hooks: see
 :doc:`lifecycle`.
 
+.. _extension-tool-protocol:
+
+The Tool Protocol
+-----------------
+
+Every tool, in every Extension, implements the same protocol: it is a subclass of
+:class:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool` that declares four things.
+
+``name``
+    The tool's name, unique within its Extension: letters, digits and underscores, starting with a
+    letter, at most 48 characters. The LLM sees it as ``ext_<slug>_<name>``.
+
+``arguments_model``
+    A Pydantic model of the tool's arguments. Its JSON Schema is the ``parameters`` of the tool
+    definition offered to the LLM, and the platform validates the LLM's arguments with it.
+
+The class docstring
+    The tool's description for the LLM. A tool can set ``description`` instead.
+
+``call(self, arguments, context) -> JsonValue``
+    Does the work. ``arguments`` is an instance of ``arguments_model``, already validated, and
+    ``context`` is an :class:`~smarter.apps.llmtool.extension.protocol.ExtensionContext`: the
+    Extension's settings, who called the tool, and a logger. It returns any JSON value, which is
+    the result that the LLM reads, or raises
+    :class:`~smarter.apps.llmtool.extension.protocol.ExtensionToolError` to tell the LLM why it
+    could not do what was asked.
+
+In return, the platform does everything else. It builds the OpenAI tool definition from the class,
+validates the arguments and returns validation errors to the LLM, creates a new instance of the tool
+for each call, enforces the ``timeout`` from ``pyproject.toml``, turns exceptions into
+``{"error": ...}`` results that the LLM can recover from, and sends the ``llm_tool_presented``,
+``llm_tool_requested`` and ``llm_tool_responded`` signals.
+
+The platform checks the protocol when it loads an Extension. A class listed in ``tools`` that is not
+a ``SmarterExtensionTool`` subclass, has an invalid name, has no ``arguments_model``, does not
+implement ``call()`` or has no description makes the Extension fail to load, with a message that
+names the problem. Each tool's
+:meth:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool.problems` gives the same
+answer, so a unit test can assert that it's empty before the Extension is ever installed: see
+:doc:`testing`.
+
+The protocol is a base class, not a :class:`typing.Protocol`, because the base class does part of
+the work. The tool definition and the validation of the LLM's arguments both come from the same
+Pydantic model, so what the LLM is told the tool accepts can never disagree with what it actually
+accepts. Writing a tool means filling in four declarations, not keeping a hand-written JSON
+definition in step with the code. The complete API is in :doc:`reference/protocol`.
+
 1. The Layout
 -------------
 
