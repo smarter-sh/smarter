@@ -51,7 +51,7 @@ holds only what applies to nearly every task.
 | `smarter/react/packages`              | npm workspace: one React app per console page, plus `smarter-common`     |
 | `docs/source`                         | Sphinx docs, published to docs.smarter.sh                                |
 | `skills/`                             | Agent Skills for developing this repository                              |
-| `.github/workflows/test.yml`          | CI (`python` and `react` jobs). Tests run on `main`, not on `alpha`      |
+| `.github/workflows/test.yml`          | CI (`python` and `react` jobs). Started by hand, not on push or PR       |
 
 Code never calls the AWS SDK directly. Go through the facade
 `smarter.apps.infrastructure.services.infrastructure` (`.dns`, `.certificates`,

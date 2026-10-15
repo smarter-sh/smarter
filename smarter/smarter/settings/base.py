@@ -13,13 +13,11 @@ Notes:
 """
 
 import ast
-import hashlib
 import logging
 import logging.config
 import math
 import os
 import re
-import secrets
 import subprocess
 import sys
 import time
@@ -613,7 +611,9 @@ SECRET_KEY = (
 The secret key for this Django installation.
 
 This is retrieved and validated
-from smarter_settings. If not set, a random key is generated and logged as a warning.
+from smarter_settings. If not set, a random key is generated and logged as a warning in the
+local environment. In every other environment, Smarter refuses to start without it. See
+``smarter_settings.require_secret_key()``.
 
 For production deployments the chain of custody should be:
 
@@ -625,12 +625,7 @@ See:
     - smarter_settings.secret_key
 """
 
-if SECRET_KEY == smarter_settings.default_missing_value:
-    random_string = secrets.token_urlsafe(64)
-    random_bytes = random_string.encode("utf-8")
-    hash_object = hashlib.sha256(random_bytes)
-    SECRET_KEY = hash_object.hexdigest()
-    logger.warning("SECRET_KEY not set. Using a randomized value.")
+smarter_settings.require_secret_key()
 
 logger.debug("PROJECT_ROOT: %s", PROJECT_ROOT)
 logger.debug("BASE_DIR: %s", BASE_DIR)
@@ -1411,11 +1406,17 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "smarter.lib.drf.throttling.SmarterAnonRateThrottle",
+        "smarter.lib.drf.throttling.SmarterUserRateThrottle",
+    ],
 }
 """
 The Django REST Framework configuration for Smarter, including default authentication classes,.
 
-permission classes, and parser classes.
+permission classes, parser classes and throttle classes. The throttle rates are
+``smarter_settings.throttle_rate_anon`` and ``smarter_settings.throttle_rate_user``.
+See :mod:`smarter.lib.drf.throttling`.
 
 Do not change these values unless you know what you are doing. Even then, it's probably a bad idea.
 

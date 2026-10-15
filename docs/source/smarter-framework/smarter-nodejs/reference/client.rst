@@ -198,7 +198,7 @@ The client, ``new Smarter({...})``, and its options. See :doc:`../configuration`
 
    The SDK's version.
 
-   :type: "0.0.0"
+   :type: "0.1.0"
 
 .. js:class:: SmarterOptions
 

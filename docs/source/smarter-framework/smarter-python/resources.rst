@@ -21,7 +21,9 @@ are for superusers only.
    * - ``client.llm_clients``
      - :doc:`LLMClients <../../smarter-resources/smarter-llmclient>`: ``prompt()``, ``chat()``,
        ``stream()``, ``config()``, their plugins, functions, api keys and custom domains, and
-       ``deploy()``. See :doc:`Prompts and Chat <chat>`.
+       ``deploy()``. An LLMClient's ``tools`` list everything that it adds to a prompt: its
+       functions, plugins, MCPClients (``mcpclients``) and guardrails (``guardrails``). See
+       :doc:`Prompts and Chat <chat>`.
    * - ``client.guardrails``
      - :doc:`Guardrails <../../smarter-resources/smarter-guardrail>`: ``evaluate()`` and ``events()``.
    * - ``client.mcp_clients``
