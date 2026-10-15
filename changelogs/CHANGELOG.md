@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.27.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.27.0-alpha.2...v0.27.0-alpha.3) (2026-10-15)
+
+### Features
+
+* **llmtool:** manage extensions in the web console, in React ([e353a68](https://github.com/smarter-sh/smarter/commit/e353a68a7cb04814a3550042688594f1fee54c47))
+
 ## [0.27.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.27.0-alpha.1...v0.27.0-alpha.2) (2026-10-15)
 
 ### Bug Fixes
