@@ -203,6 +203,46 @@ class MCPClient(MetaDataWithOwnershipModel):
         data = {field: getattr(self, field, None) for field in self.CONNECTION_FIELDS}
         return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()[:16]
 
+    DISCOVERED_FIELDS = (
+        "protocol_version",
+        "server_name",
+        "server_version",
+        "last_connected_at",
+        "last_error",
+    )
+    """The fields that describe the last connection, which a change of connection settings makes stale."""
+
+    def _connection_changed(self) -> bool:
+        """
+        Whether any of the :attr:`CONNECTION_FIELDS` differ from the saved row.
+
+        :returns: True if the MCPClient is saved and its connection settings changed, otherwise False.
+        """
+        if not self.pk:
+            return False
+        saved = type(self).objects.filter(pk=self.pk).first()
+        return saved is not None and saved.fingerprint != self.fingerprint
+
+    def save(self, *args, **kwargs):
+        """
+        Save the MCPClient, forgetting what it discovered if its connection settings changed.
+
+        Its status, tools and server details describe the last server that it connected to.
+        When, for example, its ``endpoint_url`` changes, they no longer describe its server,
+        so they are reset until the refresh that ``post_save`` queues connects to the new one.
+        Otherwise the console showed the old server's tools, and none of them were in a new
+        ``allowed_tools``.
+        """
+        if self._connection_changed():
+            self.status = MCPConnectionStatus.UNCONFIGURED
+            self.tools = []
+            for field in self.DISCOVERED_FIELDS:
+                setattr(self, field, None)
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = set(update_fields) | {"status", "tools", *self.DISCOVERED_FIELDS}
+        super().save(*args, **kwargs)
+
     @property
     def credential_name(self) -> Optional[str]:
         """The name of the credentials Secret, if any."""

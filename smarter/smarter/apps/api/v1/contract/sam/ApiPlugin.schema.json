@@ -422,7 +422,8 @@
           "type": "string"
         },
         "systemRole": {
-          "description": "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM how you want it to use the Plugin data that is returned.",
+          "description": "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM how you want it to use the Plugin data that is returned. The maximum length is 32768 characters.",
+          "maxLength": 32768,
           "title": "Systemrole",
           "type": "string"
         },

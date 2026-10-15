@@ -1,5 +1,7 @@
 """Command to create the Stackademy AI resources."""
 
+from typing import Optional
+
 from django.core.management import CommandError
 
 from smarter.apps.account.models import Account
@@ -11,9 +13,13 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_template
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}")
+
+API_CONNECTION_FILE_PATH = "smarter/apps/connection/data/sample-connections/smarter-test-api.yaml.tpl"
+"""The Stackademy ApiConnection, a manifest template whose ``baseUrl`` is the api of this platform."""
 
 
 class Command(SmarterCommand):
@@ -33,7 +39,7 @@ class Command(SmarterCommand):
     Api-based llmclient
     --------------------
     - Secret for ApiConnection
-    - ApiConnection
+    - ApiConnection, to this platform's Stackademy test api
     - Stackademy ApiPlugin
     - LLMClient using the Stackademy ApiPlugin
     """
@@ -79,12 +85,19 @@ class Command(SmarterCommand):
             username,
         )
 
-        def apply(file_path):
+        def apply(file_path: str):
 
+            # a manifest template, *.yaml.tpl, is filled in with the scheme and domain of this platform.
+            manifest: Optional[str] = None
+            if file_path.endswith(TEMPLATE_EXTENSION):
+                with open(file_path, encoding="utf-8") as f:
+                    manifest = render_manifest_template(f.read())
             try:
-                apply_manifest_v2(filespec=file_path, username=username, verbose=True)
+                applied = apply_manifest_v2(filespec=file_path, manifest=manifest, username=username, verbose=True)
             except Exception as e:
                 raise CommandError(f"Failed to apply manifest {file_path}: {str(e)}") from e
+            if not applied:
+                raise CommandError(f"Failed to apply manifest {file_path}.")
 
         try:
             logger.debug("%s - Creating Stackademy SQL Prompt Integration...", logger_prefix)
@@ -102,7 +115,7 @@ class Command(SmarterCommand):
             logger.debug("%s - Creating Stackademy Api LLMClient...", logger_prefix)
             api_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
-                "smarter/apps/connection/data/sample-connections/smarter-test-api.yaml",
+                API_CONNECTION_FILE_PATH,
                 "smarter/apps/llmtool/data/stackademy/stackademy-plugin-api.yaml",
                 "smarter/apps/llmtool/data/stackademy/stackademy-llmclient-api.yaml",
             ]
