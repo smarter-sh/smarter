@@ -44,7 +44,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    Smarter API Guardrail Manifest - Metadata class.
 
    .. py:attribute:: annotations
-      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$')], uuid.UUID, bytes, list, dict[str, Any]]]]
+      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', ascii_only=None)], uuid.UUID, bytes, list, dict[str, Any]]]]
 
       The manifest annotations.
 
@@ -86,6 +86,49 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
 
+.. py:class:: Action
+
+   Bases: :class:`enum.Enum`
+
+   Guardrail.spec.config.action[str]: what the guardrail does when it triggers.
+
+   One of: ['log', 'flag', 'redact', 'transform', 'block', 'escalate'].
+
+
+.. py:class:: Category
+
+   Bases: :class:`enum.Enum`
+
+   Guardrail.spec.config.category[str]: the risk the guardrail addresses.
+
+   One of: ['pii', 'secrets', 'prompt_injection', 'jailbreak', 'toxicity', 'self_harm', 'hallucination', 'off_topic', 'compliance', 'formatting', 'custom'].
+
+
+.. py:class:: Mode
+
+   Bases: :class:`enum.Enum`
+
+   Guardrail.spec.config.mode[str]: enforce, to take the action, or monitor, to only record what the action would have been.
+
+
+.. py:class:: Stage
+
+   Bases: :class:`enum.Enum`
+
+   Guardrail.spec.config.stage[str]: when the guardrail runs.
+
+   One of: ['input', 'output', 'both'].
+
+
+.. py:class:: Strategy
+
+   Bases: :class:`enum.Enum`
+
+   Guardrail.spec.config.strategy[str]: how the guardrail detects.
+
+   One of: ['regex', 'keyword', 'detector', 'semantic', 'moderation', 'llm_judge'].
+
+
 .. py:class:: SAMGuardrailSpecConfig
 
    Bases: :class:`smarter.models.sam.base.SAMModel`
@@ -93,7 +136,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    Smarter API Guardrail Manifest Guardrail.spec.config.
 
    .. py:attribute:: action
-      :type: str
+      :type: Action
 
       Guardrail.spec.config.action[str]: what the guardrail does when it triggers.
 
@@ -115,7 +158,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: category
-      :type: str | None
+      :type: smarter.models.sam.guardrail.Category | None
 
       Guardrail.spec.config.category[str]: the risk the guardrail addresses.
 
@@ -173,7 +216,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: mode
-      :type: str | None
+      :type: smarter.models.sam.guardrail.Mode | None
 
       Guardrail.spec.config.mode[str]: enforce, to take the action, or monitor, to only record what the action would have been.
 
@@ -227,7 +270,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: stage
-      :type: str
+      :type: Stage
 
       Guardrail.spec.config.stage[str]: when the guardrail runs.
 
@@ -235,7 +278,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: strategy
-      :type: str
+      :type: Strategy
 
       Guardrail.spec.config.strategy[str]: how the guardrail detects.
 
