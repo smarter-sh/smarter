@@ -3,6 +3,14 @@
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
 from .exceptions import PluginDataValueError
+from .extension import (
+    Extension,
+    ExtensionResource,
+    ExtensionSetting,
+    ExtensionSource,
+    ExtensionTrustBadge,
+    ExtensionVersion,
+)
 from .plugin_data_api import PluginDataApi
 from .plugin_data_base import PluginDataBase
 from .plugin_data_image_search import PluginDataImageSearch
@@ -38,6 +46,12 @@ PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
 
 
 __all__ = [
+    "Extension",
+    "ExtensionResource",
+    "ExtensionSetting",
+    "ExtensionSource",
+    "ExtensionTrustBadge",
+    "ExtensionVersion",
     "PluginDataBase",
     "PluginDataStatic",
     "PluginDataApi",

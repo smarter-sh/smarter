@@ -88,9 +88,9 @@
 - name: system_role_too_long
   path: spec.config.prompt.defaultSystemRole
   value: x
-  repeat: 2049
+  repeat: 32769
   status: 400
-  expect: ["prompt.defaultSystemRole", "at most 2048 characters"]
+  expect: ["prompt.defaultSystemRole", "at most 32768 characters"]
 
 # keys that the manifest does not define, e.g. misspellings, which must not be silently ignored
 - name: unknown_config_key
@@ -235,11 +235,11 @@
   value: [no_such_guardrail]
   status: 404
   expect: ["Guardrail no_such_guardrail not found"]
-- name: function_not_found
-  path: spec.functions
-  value: [no_such_function]
+- name: extension_not_found
+  path: spec.extensions
+  value: [no-such-extension]
   status: 404
-  expect: ["Function no_such_function not found", "Valid functions are"]
+  expect: ["Extension no-such-extension is not installed"]
 - name: api_key_not_found
   path: spec.apiKey
   value: no_such_key

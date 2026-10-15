@@ -36,11 +36,14 @@ the structured data defined in the Plugin manifest, and make it available to the
 
 **LLMTool Plugin Manifests**
 
-LLMTool Plugin technology provides two means of declaratively defining tools that can be leveraged
-by LLM's for tool calling: via a defined list of built-in functions, and via LLMTool Plugins that
-are based on any of a.) :doc:`static data <plugin/static>`, b.) :doc:`SQL queries <plugin/sql>`, or c.) :doc:`external APIs <plugin/api>`.
+An LLMClient's manifest declares the tools that it offers LLMs in two ways: by listing
+:doc:`Extensions <../../smarter-framework/smarter-extensions>`, Python packages that a platform
+administrator installs, in ``spec.extensions``, and by listing LLMTool Plugins, which are based on
+any of a.) :doc:`static data <plugin/static>`, b.) :doc:`SQL queries <plugin/sql>`, or c.)
+:doc:`external APIs <plugin/api>`, in ``spec.plugins``. See
+:doc:`../../smarter-framework/extensibility` for how the two differ.
 
-Here is an example Smarter LLMClient, configured to use both a function, ``get_current_weather`` and a
+Here is an example Smarter LLMClient, configured to use both an Extension, ``weather``, and a
 LLMTool Plugin, ``example_configuration``. The ``example_configuration`` Plugin is defined separately in the yaml file that follows.
 
 .. code-block:: yaml
@@ -58,7 +61,7 @@ LLMTool Plugin, ``example_configuration``. The ``example_configuration`` Plugin 
           defaultModel: gpt-6-luna
           defaultSystemRole: You are a helpful llmclient.
           provider: openai
-      functions:
-      - get_current_weather
+      extensions:
+      - weather
       plugins:
       - example_configuration

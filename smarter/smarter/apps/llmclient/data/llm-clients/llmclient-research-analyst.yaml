@@ -82,7 +82,6 @@ spec:
         color: '#6d4c41'
       typingIndicator:
         color: '#8d6e63'
-  functions: []
   plugins:
     - url_reader
     - anthropic_pdf

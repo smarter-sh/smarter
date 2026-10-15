@@ -90,10 +90,10 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
         self.assertEqual(llmclient.save.call_count, 2)
 
     def test_without_an_llmclient(self):
-        """Without an LLMClient there are no functions, plugins, api key or manifest dict."""
+        """Without an LLMClient there are no extensions, plugins, api key or manifest dict."""
         broker = self.broker
         self.patch_property("llmclient", None)
-        self.assertIsNone(broker.functions)
+        self.assertIsNone(broker.extensions)
         self.assertIsNone(broker.plugins)
         self.assertIsNone(broker.django_orm_to_manifest_dict())
 
@@ -149,13 +149,13 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
             with self.assertRaises(SAMLLMClientBrokerError):
                 broker.get(self.request, name=llmclient.name)
 
-    def test_cached_functions_plugins_and_api_key(self):
+    def test_cached_extensions_plugins_and_api_key(self):
         broker = self.broker
-        broker._functions = ["calculator"]
+        broker._extensions = ["calculator"]
         broker._plugins = ["a_plugin"]
         api_key = MagicMock()
         broker._llmclient_api_key = api_key
-        self.assertEqual(broker.functions, ["calculator"])
+        self.assertEqual(broker.extensions, ["calculator"])
         self.assertEqual(broker.plugins, ["a_plugin"])
         self.assertIs(broker.llmclient_api_key, api_key)
         broker._llmclient_api_key = None

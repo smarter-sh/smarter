@@ -149,6 +149,10 @@ class SettingsDefaults:
     )
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
     MCPSERVER_RATE_LIMIT: int = int(get_env("MCPSERVER_RATE_LIMIT", 1200))  # requests per minute, per client IP
+    EXTENSION_REGISTRY_URL: str = get_env(
+        "EXTENSION_REGISTRY_URL", "https://smarter-sh.github.io/extensions-registry/index.json"
+    )
+    EXTENSION_REGISTRY_PUBLIC_KEY: str = get_env("EXTENSION_REGISTRY_PUBLIC_KEY", "")
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),

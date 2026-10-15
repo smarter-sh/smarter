@@ -31,7 +31,6 @@ spec:
       subdomain: null
     styles:
       appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-  functions: []
   plugins: []
   mcpClients: []
   guardrails: []

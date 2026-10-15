@@ -26,11 +26,11 @@ Foundations
        `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
    * - 2. Python for AI applications
      - A calculator tool that parses an expression with ``ast`` and evaluates only the nodes it
-       allows; a date calculator; a weather function with enums and Pydantic models; and the
-       project's type aliases.
-     - `apps/prompt/functions/calculator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/functions/calculator.py>`__,
-       `apps/prompt/functions/date_calculator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/functions/date_calculator.py>`__,
-       `apps/prompt/functions/function_weather/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions/function_weather>`__,
+       allows; a date calculator; a weather tool with enums and Pydantic models, each an official
+       Smarter Extension; and the project's type aliases.
+     - `smarter-extension-calculator <https://github.com/smarter-sh/smarter-extension-calculator>`__,
+       `smarter-extension-date-calculator <https://github.com/smarter-sh/smarter-extension-date-calculator>`__,
+       `smarter-extension-weather <https://github.com/smarter-sh/smarter-extension-weather>`__,
        `lib/typing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/typing.py>`__
    * - 3. React for AI applications
      - Smarter Chat's main component, its API calls, its message helpers and its error
@@ -139,9 +139,9 @@ Making the LLM Do Things
        `commit 533f0c54c <https://github.com/smarter-sh/smarter/commit/533f0c54c421293a59bbdd94827d7b3abe83ee30>`__
        fixed SQL injection through a tool's arguments.
        :doc:`ADR 008 </adr/008-function-calling>`.
-     - `apps/prompt/functions/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions>`__,
+     - `apps/llmtool/extension/toolkit.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/toolkit.py>`__,
        `openai_compatible_chat_provider.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/lib/openai_compatible_chat_provider.py>`__
-       (``process_tool_call()``, ``handle_function_provided()``),
+       (``process_tool_call()``, ``handle_extensions()``),
        `apps/provider/services/text_completion/utils.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/services/text_completion/utils.py>`__
        (``pair_tool_messages()``),
        `apps/llmtool/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/sql.py>`__,

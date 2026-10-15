@@ -59,25 +59,24 @@ class DeveloperDocsMakefileView(TxtBaseView):
         """
 
 
-class DeveloperDocsWeatherFunctionView(TxtBaseView):
-    """Developer docs Weather function calling view."""
+class DeveloperDocsExtensionProtocolView(TxtBaseView):
+    """Developer docs Smarter Extension tool protocol view."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/home/smarter_user/smarter/smarter/apps/prompt/functions/function_weather/protocol.py"
-        self.title = "function_weather/protocol.py"
+        self.text_file = "/home/smarter_user/smarter/smarter/apps/llmtool/extension/protocol.py"
+        self.title = "llmtool/extension/protocol.py"
         self.leader = """
-        This is Smarter's implementation of the Python function 'get_current_weather()' referenced in
-        OpenAI API 'Function Calling' documentation: https://platform.openai.com/docs/guides/function-calling which
-        oddly, they neglected to implement. It uses the Google Maps API for geocoding
-        and the Open-Meteo API for weather data.
+        This is the protocol that the tools of a Smarter Extension implement. An Extension is an
+        installable Python package that adds tools to the LLMs of a Smarter platform, through the
+        function calling feature of OpenAI-compatible APIs:
+        https://platform.openai.com/docs/guides/function-calling.
 
-        Smarter's documentation refers to this function repeatedly. It returns the current weather in a
-        given location as a 24-hour forecast. The function is called by the OpenAI API 'function calling' feature
-        and returns a JSON object.
-
-        This example is foundational to how the Smarter platform implements its Plugin feature, which is an
-        abstraction layer enabling non-programmers to achieve the same kind of results.
+        A tool declares its name and the Pydantic model of its arguments, and implements call().
+        The platform generates the tool's definition for the LLM, validates the LLM's arguments,
+        runs the tool with a timeout, and returns its result, or its error, to the LLM. The
+        official weather extension, https://github.com/smarter-sh/smarter-extension-weather, is
+        the reference implementation.
         """
 
 

@@ -1,0 +1,218 @@
+{
+  "$defs": {
+    "RegistryExtension": {
+      "description": "An extension in the registry, with every released version.",
+      "properties": {
+        "slug": {
+          "description": "The extension's slug.",
+          "title": "Slug",
+          "type": "string"
+        },
+        "display_name": {
+          "description": "The extension's name.",
+          "title": "Display Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "A one-line description.",
+          "title": "Description",
+          "type": "string"
+        },
+        "publisher": {
+          "description": "The publisher's id.",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "homepage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The extension's website or repository.",
+          "title": "Homepage"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The extension's license.",
+          "title": "License"
+        },
+        "docs_rst": {
+          "default": "",
+          "description": "The extension's documentation, its package's docstring.",
+          "title": "Docs Rst",
+          "type": "string"
+        },
+        "versions": {
+          "items": {
+            "$ref": "#/$defs/RegistryVersion"
+          },
+          "title": "Versions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "slug",
+        "display_name",
+        "publisher"
+      ],
+      "title": "RegistryExtension",
+      "type": "object"
+    },
+    "RegistryPublisher": {
+      "description": "A publisher of extensions, and how far the Smarter team trusts them.",
+      "properties": {
+        "id": {
+          "description": "The publisher's id, e.g. smarter-sh.",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "The publisher's name.",
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The publisher's website.",
+          "title": "Url"
+        },
+        "badge": {
+          "default": "community",
+          "description": "The publisher's trust badge.",
+          "enum": [
+            "official",
+            "verified",
+            "community"
+          ],
+          "title": "Badge",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "RegistryPublisher",
+      "type": "object"
+    },
+    "RegistryVersion": {
+      "description": "One released version of an extension.",
+      "properties": {
+        "version": {
+          "description": "The version, e.g. 1.2.0.",
+          "title": "Version",
+          "type": "string"
+        },
+        "archive_url": {
+          "description": "Where to download the archive.",
+          "title": "Archive Url",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "The hex sha256 of the archive.",
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "requires_smarter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The Smarter versions it works with.",
+          "title": "Requires Smarter"
+        },
+        "released_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When it was released.",
+          "title": "Released At"
+        }
+      },
+      "required": [
+        "version",
+        "archive_url",
+        "sha256"
+      ],
+      "title": "RegistryVersion",
+      "type": "object"
+    }
+  },
+  "description": "The registry's index: every publisher, and every extension.",
+  "properties": {
+    "schema_version": {
+      "description": "The index format's version.",
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "generated_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "When the index was built.",
+      "title": "Generated At"
+    },
+    "publishers": {
+      "items": {
+        "$ref": "#/$defs/RegistryPublisher"
+      },
+      "title": "Publishers",
+      "type": "array"
+    },
+    "extensions": {
+      "items": {
+        "$ref": "#/$defs/RegistryExtension"
+      },
+      "title": "Extensions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version"
+  ],
+  "title": "Smarter Extension Registry Index",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

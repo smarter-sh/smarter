@@ -76,6 +76,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": OPERATIONAL,
     },
+    "check-extension-updates": {
+        "task": "smarter.apps.llmtool.tasks.check_extension_updates",
+        "schedule": timedelta(days=1),
+        "options": OPERATIONAL,
+    },
     "index-smarter-project": {
         "task": "smarter.apps.mcpserver.tasks.index_repositories",
         "schedule": timedelta(hours=1),

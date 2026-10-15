@@ -303,12 +303,12 @@ and ``PromptConfigView.config()`` derives the response from it:
    * - A workbench or platform api url, which finds the LLMClient by its id and checks that the user
        may read it, or the cli
      - The complete configuration: every LLMClient field (``LLMClientConfigSerializer``), the
-       session's diagnostic histories, and the lists of plugins and functions.
+       session's diagnostic histories, and the lists of plugins and extensions.
    * - A deployed LLMClient's own host, or custom domain
      - The public configuration, :meth:`PromptChatApiConfig.public() <smarter.apps.prompt.contract.models.PromptChatApiConfig.public>`:
        the LLMClient's public fields only (:data:`~smarter.apps.prompt.contract.const.PUBLIC_LLMCLIENT_FIELDS`,
        without e.g. its owner's profile), the session's own messages, the public ``meta_data`` fields,
-       and the plugins' and functions' counts, without their lists.
+       and the plugins' and extensions' counts, without their lists.
 
 Then, in version 2, the model is dumped as is; in version 1,
 :meth:`PromptChatApiConfig.to_v1() <smarter.apps.prompt.contract.models.PromptChatApiConfig.to_v1>` renames its keys.
@@ -340,7 +340,7 @@ Then, in version 2, the model is dumped as is; in version 1,
        "history": { "chat_history": [] },
        "meta_data": { "ready": true, "is_deployed": true },
        "plugins": { "meta_data": { "total_plugins": 1, "plugins_returned": 1 }, "plugins": [] },
-       "functions": { "meta_data": { "total_functions": 0, "functions_returned": 0 }, "functions": [] }
+       "extensions": { "meta_data": { "total_extensions": 0, "extensions_returned": 0 }, "extensions": [] }
      },
      "api": "smarter.sh/v1",
      "metadata": { "command": "prompt_config", "thing": "PromptConfig" }
@@ -361,8 +361,8 @@ the lists of the complete configuration are models of their Django ORM rows
      - Model, and its row
    * - ``plugins.plugins``
      - ``PromptChatApiLLMClientPlugin``: ``LLMClientPlugin``, with its ``PluginMeta``, without its owner
-   * - ``functions.functions``
-     - ``PromptChatApiLLMClientFunction``: ``LLMClientFunctions``
+   * - ``extensions.extensions``
+     - ``PromptChatApiLLMClientExtension``: ``LLMClientExtensions``, with its Extension's slug, version and state
    * - ``history.prompt_tool_call_history``
      - ``PromptChatApiPromptToolCall``: ``PromptToolCall``
    * - ``history.prompt_plugin_usage_history``
