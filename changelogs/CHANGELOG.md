@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.26.4](https://github.com/smarter-sh/smarter/compare/v0.26.3...v0.26.4) (2026-10-15)
+
+### Bug Fixes
+
+* **docker:** give collectstatic a throwaway SECRET_KEY at build time ([6b8ed83](https://github.com/smarter-sh/smarter/commit/6b8ed8315d40cbafd7f5ab8adf72657a4c27f867))
+
 ## [0.26.3](https://github.com/smarter-sh/smarter/compare/v0.26.2...v0.26.3) (2026-10-15)
 
 ### Bug Fixes
