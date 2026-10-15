@@ -1,15 +1,11 @@
 {% extends "admin/change_list.html" %}
-{% comment %}The Extensions page: the installed extensions, with buttons to browse the registry, upload an archive, and check for updates.{% endcomment %}
+{% comment %}The installed extensions, read-only. They are managed in the web console's Extensions pages.{% endcomment %}
 
 {% block object-tools-items %}
-  <li><a href="{% url 'restricted_admin_site:llmtool_extension_browse' %}" class="addlink">Browse extensions</a></li>
-  <li><a href="{% url 'restricted_admin_site:llmtool_extension_upload' %}" class="addlink">Upload extension</a></li>
-  {% if registry_enabled %}
-    <li>
-      <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_check_updates' %}" style="display:inline">
-        {% csrf_token %}
-        <button type="submit" class="button" style="border:0">Check for updates</button>
-      </form>
-    </li>
-  {% endif %}
+  <li><a href="{{ console_url }}" class="viewsitelink">Manage in the console</a></li>
+{% endblock %}
+
+{% block result_list %}
+  <p class="help">Browse the registry, install, configure, update and uninstall extensions in the <a href="{{ console_url }}">web console</a>.</p>
+  {{ block.super }}
 {% endblock %}

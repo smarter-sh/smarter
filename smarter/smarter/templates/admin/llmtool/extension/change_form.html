@@ -1,54 +1,16 @@
 {% extends "admin/change_form.html" %}
-{% comment %}An installed extension: its update banner, its actions, and its earlier versions, which it can be rolled back to.{% endcomment %}
+{% comment %}An installed extension, read-only. It is managed in its page in the web console.{% endcomment %}
 
 {% block object-tools-items %}
-  {% if extension and extension.installed_version %}
-    <li><a href="{% url 'restricted_admin_site:llmtool_extension_configure' extension.pk %}">Configure settings</a></li>
-    <li>
-      {% if extension.enabled %}
-        <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_disable' extension.pk %}" style="display:inline">
-          {% csrf_token %}<button type="submit" class="button" style="border:0">Disable</button>
-        </form>
-      {% else %}
-        <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_enable' extension.pk %}" style="display:inline">
-          {% csrf_token %}<button type="submit" class="button default" style="border:0">Enable</button>
-        </form>
-      {% endif %}
-    </li>
-  {% endif %}
+  {% if console_url %}<li><a href="{{ console_url }}" class="viewsitelink">Manage in the console</a></li>{% endif %}
   {{ block.super }}
 {% endblock %}
 
 {% block form_top %}
-  {% if extension.update_available %}
-    <div class="messagelist">
-      <div class="warning" style="padding:10px">
-        Version {{ extension.latest_version }} of {{ extension.display_name }} is available. You have {{ extension.installed_version.version }}.
-        <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_update' extension.pk %}" style="display:inline">
-          {% csrf_token %}<button type="submit" class="button default">Update to {{ extension.latest_version }}</button>
-        </form>
-      </div>
-    </div>
+  {% if original.update_available %}
+    <ul class="messagelist"><li class="warning">Version {{ original.latest_version }} of {{ original.display_name }} is available. Update it in the <a href="{{ console_url }}">console</a>.</li></ul>
   {% endif %}
-  {% if extension.error %}
-    <ul class="messagelist"><li class="error">{{ extension.error }}</li></ul>
-  {% endif %}
-{% endblock %}
-
-{% block after_related_objects %}
-  {{ block.super }}
-  {% if other_versions %}
-    <fieldset class="module aligned">
-      <h2>Roll back</h2>
-      {% for version in other_versions %}
-        <div class="form-row">
-          <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_rollback' extension.pk version.pk %}">
-            {% csrf_token %}
-            Version {{ version.version }}, installed {{ version.created_at|date:"Y-m-d H:i" }}
-            <button type="submit" class="button">Roll back to {{ version.version }}</button>
-          </form>
-        </div>
-      {% endfor %}
-    </fieldset>
+  {% if original.error %}
+    <ul class="messagelist"><li class="error">{{ original.error }}</li></ul>
   {% endif %}
 {% endblock %}

@@ -18,7 +18,7 @@ an account, and shared like any other resource. No code is written or installed.
 
 **Extensions** are code. A Python developer writes a package whose tools do whatever Python can
 do, packages it as a zip archive, and publishes it to the Smarter Extension registry. A platform
-administrator installs it at run time, from the Django admin console, much as a WordPress
+administrator installs it at run time, from the web console, much as a WordPress
 administrator installs a plugin. Every LLMClient on the platform can then list it.
 
 Plugins and Extensions Compared
@@ -39,7 +39,7 @@ Plugins and Extensions Compared
      - Python developers
    * - Installed by
      - Any user, with ``smarter apply``
-     - A platform superuser, from the admin console or the registry
+     - A platform superuser, from the web console, by upload or from the registry
    * - Scope
      - Owned by a user, shared within an account
      - Platform-wide, available to every account or to listed accounts
@@ -103,8 +103,8 @@ Where to Go Next
       :link: ../smarter-platform/extensions
       :link-type: doc
 
-      Install, configure, enable, update, roll back and uninstall Extensions, from the admin
-      console or the registry, and decide which accounts may use them.
+      Install, configure, enable, update, roll back and uninstall Extensions, from the web
+      console's Extensions pages, and decide which accounts may use them.
 
    .. grid-item-card:: Prompt engineers
       :link: ../smarter-resources/smarter-llmtool

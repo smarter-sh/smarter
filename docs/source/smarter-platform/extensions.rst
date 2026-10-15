@@ -2,10 +2,10 @@ Managing Extensions
 ===================
 
 Extensions are Python packages that add tools to the LLMs of a Smarter platform. Platform
-superusers install them at run time, from the Django admin console, without a redeploy, and
-every account's LLMClients can then list them in their manifests' ``spec.extensions``. See
-:doc:`../smarter-framework/extensibility` for how Extensions differ from Plugins, and
-:doc:`../smarter-framework/smarter-extensions` for how to build one.
+superusers install them at run time, from the web console's **Extensions** page, without a
+redeploy, and every account's LLMClients can then list them in their manifests'
+``spec.extensions``. See :doc:`../smarter-framework/extensibility` for how Extensions differ from
+Plugins, and :doc:`../smarter-framework/smarter-extensions` for how to build one.
 
 .. warning::
 
@@ -21,27 +21,33 @@ use the Extensions that are available to their account.
 The Extensions Page
 -------------------
 
-In the admin console, go to **LLMTool** › **Extensions**. The page lists the installed
-Extensions:
+In the web console, click **Extensions** in the sidebar (``/extensions/``). Superusers see it,
+with a count of the Extensions that have an update available. The page has two tabs.
 
-- **installed**: the version that runs.
-- **update**: a newer, compatible version that the registry offers, if any.
-- **trust**: the publisher's badge: *Official Smarter Extension*, *Verified Publisher*,
+**Installed** lists the installed Extensions:
+
+- **Version**: the version that runs, and a newer, compatible version that the registry offers,
+  if any.
+- **Trust**: the publisher's badge: *Official Smarter Extension*, *Verified Publisher*,
   *Community*, or *Unverified* for an uploaded archive.
-- **enabled**: whether LLMs are offered its tools.
-- **source**: *Registry* or *Upload*.
-- **error**: whether the last lifecycle step or load failed. Open the Extension to read the error.
+- **Source**: the Smarter Extension registry, or an uploaded archive.
+- **Enabled**: whether LLMs are offered its tools. The switch enables or disables it.
+- **Error**: whether the last lifecycle step or load failed. Open the Extension to read the error.
 
-Filter by any of these, or by **update available**. The buttons at the top of the page browse
-the registry, upload an archive, and check the registry for updates.
+Click an Extension's name to open its page. The buttons at the top of the page upload an archive,
+and check the registry for updates.
+
+The Django admin console's **LLMTool** › **Extensions** page lists the same Extensions,
+read-only, with a **Manage in the console** link to each one's page.
 
 Installing from the Registry
 ----------------------------
 
-**Browse extensions** lists every Extension in the Smarter Extension registry. Search them by
+**Browse the registry** lists every Extension in the Smarter Extension registry. Search them by
 name, description or publisher, or filter by trust badge. Each card shows the newest version that
-is compatible with your platform's Smarter version. **Details** shows an Extension's
-documentation before you install it.
+is compatible with your platform's Smarter version, and whether it is installed. **Details** shows
+an Extension's documentation and its versions before you install it, and installs a version that
+you choose.
 
 **Install** downloads the archive, checks it against the sha256 in the registry's signed index,
 and installs it:
@@ -52,7 +58,8 @@ and installs it:
 3. It saves the version, creates the Extension's waffle switches, applies the SAM resources that
    it ships, and runs its install hooks.
 
-A new Extension is installed **disabled**: configure its settings, then enable it.
+A new Extension is installed **disabled**, and its page opens: configure its settings, then enable
+it.
 
 The registry's index is signed. Smarter verifies the signature with the registry's public key,
 and refuses an index that doesn't match. Until the key is configured, the registry is disabled and
@@ -80,33 +87,46 @@ Trust Badges
 Uploading an Extension
 ----------------------
 
-**Upload extension** installs a ``.zip`` archive from your computer, for example an Extension that
-your own team built, or one that isn't in the registry. An uploaded Extension is badged
-*Unverified*, and is never updated from the registry, so that it can't be replaced by a registry
-package that happens to have the same slug.
+**Upload extension** installs a ``.zip`` archive from your computer, of at most 10 MB, for example
+an Extension that your own team built, or one that isn't in the registry. An uploaded Extension is
+badged *Unverified*, and is never updated from the registry, so that it can't be replaced by a
+registry package that happens to have the same slug.
+
+An Extension's Page
+-------------------
+
+An Extension's page (``/extensions/<slug>/``) shows its name, trust badge, version and state, with
+its **Enable** or **Disable** button, and any error. Its tabs:
+
+- **Overview**: its publisher, source, license, homepage, and documentation.
+- **Tools**: its tools, by the names that the LLM sees (``ext_<slug>_<tool>``), with their
+  descriptions and parameters.
+- **Settings**: the form of its settings. See `Configuring an Extension`_.
+- **Availability**: which accounts may use it. See `Availability`_.
+- **Versions**: every version that was installed. See `Rolling Back`_.
+- **Resources**: the SAM resources that it created, and its waffle switches
+  (``ext_<slug>_<name>``), with whether each is on. Turn them on and off in **Django Waffle** ›
+  **Switches**.
 
 Configuring an Extension
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open the Extension, and click **Configure settings**. The form is generated from the settings that
-the Extension declares. A setting may have a default, and a required setting must have a value
-before the Extension can be enabled.
+The **Settings** form is generated from the settings that the Extension declares. A setting may
+have a default, which an empty field restores, and a required setting must have a value before
+the Extension can be enabled. The page lists the required settings that are missing.
 
 A secret setting, such as an API key, is stored in a :doc:`Secret <../smarter-resources/smarter-secret>`.
-Either choose one of the platform administrator's Secrets, or type a value, which Smarter saves in
-a Secret named ``extension_<slug>_<setting>``. Secret values are encrypted at rest, and are never
+The form shows whether it is set, and the name of its Secret, never its value. Keep it, type a new
+value, which Smarter saves in a Secret named ``extension_<slug>_<setting>``, choose one of the
+platform administrator's Secrets, or clear it. Secret values are encrypted at rest, and are never
 shown again.
-
-The Extension's page also lists its tools, as the LLM sees them, its settings, its waffle
-switches (``ext_<slug>_<name>``, which you turn on and off in **Django Waffle** › **Switches**),
-the SAM resources that it created, and its documentation.
 
 Availability
 ~~~~~~~~~~~~
 
-By default, an Extension is available to every account. To restrict it, clear **All accounts**
-and choose the accounts that may use it. An LLMClient whose account may not use an Extension
-can't list it, and an LLMClient that already lists it no longer offers its tools.
+By default, every account may use an Extension. To restrict it, choose **Only these accounts may
+use it**, select the accounts, and click **Save availability**. An LLMClient whose account may not
+use an Extension can't list it, and an LLMClient that already lists it no longer offers its tools.
 
 Enabling and Disabling
 ----------------------
@@ -114,20 +134,17 @@ Enabling and Disabling
 **Enable** offers the Extension's tools to the LLMs of every LLMClient that lists it, from the
 next prompt, in every pod. **Disable** withdraws them, just as quickly, which makes it the
 Extension's kill switch. LLMClients that list a disabled Extension keep working without its tools,
-and their chat shows that it is disabled.
-
-You can also enable and disable several Extensions at once, with the actions on the Extensions
-page.
+and their chat shows that it is disabled. Both are on the Extension's page, and on the switch in
+its row of the **Installed** tab.
 
 Updates
 -------
 
 Like WordPress, Smarter knows when an update is available. Celery beat checks the registry once a
 day, and records the newest compatible version of each Extension installed from the registry.
-**Check for updates** on the Extensions page, or the *Check the registry for updates now* action,
-checks immediately.
+**Check for updates** on the Extensions page checks immediately.
 
-When an update is available, the Extension's page says so, with an **Update** button. An update
+When an update is available, the Extension's page says so, with an **Update to** button. An update
 runs the new version's upgrade hooks, keeps its settings and its enabled state, applies the SAM
 resources that the new version ships, and deletes those it no longer ships. If the new version
 needs a setting that isn't configured, the Extension is disabled until it is.
@@ -135,16 +152,16 @@ needs a setting that isn't configured, the Extension is disabled until it is.
 Rolling Back
 ~~~~~~~~~~~~
 
-Every version that was installed is kept. The Extension's page lists the earlier versions, each
-with a **Roll back** button, which makes that version the one that runs again.
+Every version that was installed is kept. The **Versions** tab lists them, each earlier one with a
+**Roll back to** button, which makes that version the one that runs again.
 
 Uninstalling an Extension
 -------------------------
 
-Delete the Extension, from its page or with the *Delete selected* action. Uninstalling runs its
-uninstall hooks, deletes the SAM resources and waffle switches that it created, its settings and
-its versions, and removes it from every LLMClient that lists it. The Secrets of its secret
-settings are kept.
+**Uninstall**, at the bottom of the Extension's page, asks you to confirm, then runs its uninstall
+hooks, deletes the SAM resources and waffle switches that it created, its settings and its
+versions, and removes it from every LLMClient that lists it. The Secrets of its secret settings
+are kept.
 
 When Something Goes Wrong
 -------------------------
