@@ -131,6 +131,7 @@ def complete_config() -> PromptChatApiConfig:
             "url_llmclient": "https://stackademy.3141-5926-5359.api.example.com/prompt/",
             "user_profile": {"user": {"username": "owner", "email": "owner@example.com"}, "account_number": "1"},
             "default_temperature": 0.5,
+            "total_tools": 3,
         },
         history={
             "chat_history": [{"role": "user", "content": "hi"}],
@@ -168,6 +169,7 @@ class TestChatConfigTransformations(SmarterTestBase):
         self.assertEqual(data["contract"], 2)
         self.assertNotIn("user_profile", data["llmclient"])
         self.assertNotIn("default_temperature", data["llmclient"])
+        self.assertEqual(data["llmclient"]["total_tools"], 3)
         self.assertEqual(data["llmclient"]["url_llmclient"], complete_config().llmclient.url_llmclient)
         self.assertEqual(data["history"], {"chat_history": [{"role": "user", "content": "hi"}]})
         self.assertEqual(data["meta_data"], {"ready": True, "is_deployed": True})
