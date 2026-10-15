@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.26.1](https://github.com/smarter-sh/smarter/compare/v0.26.0...v0.26.1) (2026-10-15)
+
+### Bug Fixes
+
+* **settings:** replace a placeholder SECRET_KEY with a random key ([1dafe28](https://github.com/smarter-sh/smarter/commit/1dafe28fb6c78cb411739d6fa1982e06875ec9d2))
+
 ## [0.26.0](https://github.com/smarter-sh/smarter/compare/v0.25.1...v0.26.0) (2026-10-15)
 
 ### Features
