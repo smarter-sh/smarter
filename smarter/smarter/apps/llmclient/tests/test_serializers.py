@@ -1,4 +1,4 @@
-"""Test :class:`smarter.apps.llmclient.serializers.LLMClientSerializer`'s tools of an LLMClient."""
+"""Test the tools of an LLMClient in :class:`smarter.apps.llmclient.serializers.LLMClientSerializer` and ``LLMClientConfigSerializer``."""
 
 from smarter.apps.guardrail.tests.base_classes import GuardrailTestBase
 from smarter.apps.llmclient.models import (
@@ -8,7 +8,10 @@ from smarter.apps.llmclient.models import (
     LLMClientMCPClients,
     LLMClientPlugin,
 )
-from smarter.apps.llmclient.serializers import LLMClientSerializer
+from smarter.apps.llmclient.serializers import (
+    LLMClientConfigSerializer,
+    LLMClientSerializer,
+)
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.mcpclient.tests.base_classes import MCPClientTestBase
 
@@ -57,7 +60,7 @@ class TestLLMClientSerializer(MCPClientTestBase, GuardrailTestBase):
         self.assertEqual(data["guardrails"], [{"id": self.guardrail_link.id, "name": self.guardrail.name}])
 
     def test_tools(self):
-        """Test that the tools are the extensions, plugins, mcpclients and guardrails, in that order."""
+        """Test that the tools are the extensions, plugins and mcpclients, in that order, without the guardrails."""
         data = LLMClientSerializer(self.llmclient).data
         self.assertEqual(
             data["tools"],
@@ -65,9 +68,13 @@ class TestLLMClientSerializer(MCPClientTestBase, GuardrailTestBase):
                 {"id": self.extension_link.id, "name": "test-serializers", "kind": "Extension"},
                 {"id": self.plugin.id, "name": self.plugin_meta.name, "kind": "Plugin"},
                 {"id": self.mcpclient_link.id, "name": self.mcpclient.name, "kind": "MCPClient"},
-                {"id": self.guardrail_link.id, "name": self.guardrail.name, "kind": "Guardrail"},
             ],
         )
+
+    def test_total_tools(self):
+        """Test that the chat configuration's total_tools counts the extensions, plugins and mcpclients."""
+        data = LLMClientConfigSerializer(self.llmclient).data
+        self.assertEqual(data["total_tools"], 3)
 
     def test_no_tools(self):
         llmclient = LLMClient.objects.create(name="test_serializers_no_tools", user_profile=self.user_profile)
@@ -76,3 +83,4 @@ class TestLLMClientSerializer(MCPClientTestBase, GuardrailTestBase):
         self.assertEqual(data["mcpclients"], [])
         self.assertEqual(data["guardrails"], [])
         self.assertEqual(data["tools"], [])
+        self.assertEqual(LLMClientConfigSerializer(llmclient).data["total_tools"], 0)

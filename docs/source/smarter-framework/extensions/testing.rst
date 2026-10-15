@@ -64,6 +64,18 @@ Mock the third-party services, so that the tests are fast and need no API keys:
         def test_invalid_arguments(self):
             self.assertIn("Invalid arguments", call_tool(GetWeather, {"unit": "KELVIN"})["error"])
 
+        def test_definition(self):
+            self.assertEqual(GetWeather.problems(), [])
+            self.assertEqual(GetWeather.parameters()["required"], ["location"])
+
+``test_definition`` checks the tool against the :ref:`tool protocol <extension-tool-protocol>`.
+:meth:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool.problems` runs the same checks
+that the platform runs when it loads the Extension, and returns a description of each problem: an
+invalid name, a missing ``arguments_model``, an unimplemented ``call()``, or no description. An empty
+list means the platform will load the tool. Checking
+:meth:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool.parameters`, the JSON Schema
+that the LLM is offered, catches an arguments model that makes the wrong fields required.
+
 Running the Tests
 -----------------
 
