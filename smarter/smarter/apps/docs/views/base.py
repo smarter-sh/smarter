@@ -2,6 +2,7 @@
 """Django REST framework base views for /docs/ brokered viewsets, manifest and schema."""
 
 import os
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
 
@@ -18,6 +19,12 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json, logging
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
@@ -43,6 +50,57 @@ class DocsError(SmarterException):
     @property
     def get_formatted_err_message(self):
         return "Smarter api docs error"
+
+
+class DocsBrokeredResponseError(DocsError):
+    """
+    The brokered smarter.sh/api view answered with an error.
+
+    :meth:`DocsBaseView.dispatch` turns it into an error page with the api's status code and
+    error description, e.g. a 404 for a resource that the user may not read, rather than a 500.
+
+    :param status_code: The api response's HTTP status code.
+    :param description: The ``error.description`` of the api's journaled error response, if any.
+    """
+
+    def __init__(self, status_code: int, description: Optional[str] = None):
+        self.status_code = status_code
+        self.description = description
+        super().__init__(f"Received non-200 response from brokered view: {status_code}: {description}")
+
+
+def brokered_error_description(content: bytes) -> Optional[str]:
+    """
+    Return the ``error.description`` of a smarter.sh/api journaled error response.
+
+    :param content: The response body.
+    :returns: The description, or None if the body is not a journaled error response.
+    """
+    try:
+        body = json.loads(content.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    error = body.get(SmarterJournalApiResponseKeys.ERROR) if isinstance(body, dict) else None
+    description = error.get("description") if isinstance(error, dict) else None
+    return str(description) if description else None
+
+
+def brokered_error_response(request: "HttpRequest", error: DocsBrokeredResponseError) -> HttpResponse:
+    """
+    Return the error page for an error response from a brokered smarter.sh/api view.
+
+    :param request: The original HTTP request.
+    :param error: The brokered view's error.
+    :returns: A 400, 403, 404 or 500 error page with the api's error description. A 500 page
+        gets no description, because a server error's description can contain internal details.
+    """
+    if error.status_code == HTTPStatus.NOT_FOUND:
+        return SmarterHttpResponseNotFound(request=request, error_message=error.description)
+    if error.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+        return SmarterHttpResponseForbidden(request=request, error_message=error.description)
+    if HTTPStatus.BAD_REQUEST <= error.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
+        return SmarterHttpResponseBadRequest(request=request, error_message=error.description)
+    return SmarterHttpResponseServerError(request=request)
 
 
 # ------------------------------------------------------------------------------
@@ -158,8 +216,9 @@ class DocsBaseView(SmarterAuthenticatedWebView):
                 request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
                 response.status_code if hasattr(response, "status_code") else "N/A",
             )
-            raise DocsError(
-                f"Received non-200 response from brokered view: {response.status_code}: {response.content if hasattr(response, 'content') else 'N/A'}"
+            raise DocsBrokeredResponseError(
+                status_code=response.status_code,
+                description=brokered_error_description(getattr(response, "content", b"")),
             )
 
         try:
@@ -229,7 +288,10 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         # checks for it will work correctly.
         request = self.set_is_internal_api_request(request, True)
 
-        return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
+        try:
+            return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
+        except DocsBrokeredResponseError as e:
+            return brokered_error_response(request, e)
 
     def put(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PUT method not supported for this view.")
