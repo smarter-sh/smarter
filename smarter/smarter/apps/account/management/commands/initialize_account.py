@@ -31,6 +31,7 @@ Typical usage is for system administrators to initialize platform resources or b
 from typing import Optional
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 
 from smarter.apps.account.models import Account, User
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -40,6 +41,7 @@ from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.formatted_text(__name__)
 
 
 class Command(SmarterCommand):
@@ -142,7 +144,17 @@ class Command(SmarterCommand):
 
         call_command("add_plugin_examples", username=username)
         call_command("deploy_example_llmclient", account_number=account_number)
-        call_command("deploy_builtin_llmclients", account_number=account_number)
+        try:
+            call_command("deploy_builtin_llmclients", account_number=account_number)
+        except CommandError as e:
+            # one built-in manifest that fails, e.g. for a Secret that this platform has not set,
+            # must not prevent the rest of the account's initialization.
+            logger.error(
+                "%s.initialize_account() deploy_builtin_llmclients failed for account %s: %s",
+                logger_prefix,
+                account_number,
+                e,
+            )
 
         # 5. Setup Stackademy AI resources, used for training and testing.
 

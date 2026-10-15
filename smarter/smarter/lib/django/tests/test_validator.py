@@ -1,5 +1,7 @@
 """Test the SmarterValidator class."""
 
+from unittest.mock import patch
+
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -34,6 +36,13 @@ class TestSmarterValidator(SmarterTestBase):
     def test_is_valid_snake_case(self):
         self.assertTrue(SmarterValidator.is_valid_snake_case("snake_case"))
         self.assertFalse(SmarterValidator.is_valid_snake_case("SnakeCase"))
+        self.assertFalse(SmarterValidator.is_valid_snake_case(""))
+
+    def test_is_valid_snake_case_logs_no_error(self):
+        """A value that is not snake case is an answer, not an error, so nothing is logged at ERROR."""
+        with patch("smarter.common.exceptions.logger") as exceptions_logger:
+            self.assertFalse(SmarterValidator.is_valid_snake_case("smarter-admin-key"))
+        exceptions_logger.error.assert_not_called()
 
     def test_validate_pascal_case(self):
         SmarterValidator.validate_pascal_case("Pascalcase")

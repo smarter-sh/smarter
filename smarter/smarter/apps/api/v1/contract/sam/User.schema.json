@@ -143,7 +143,7 @@
       "type": "object"
     },
     "SAMUserSpec": {
-      "description": "Smarter API User Manifest User.spec",
+      "description": "Smarter API User Manifest User.spec.",
       "properties": {
         "config": {
           "$ref": "#/$defs/SAMUserSpecConfig",
@@ -157,7 +157,7 @@
       "type": "object"
     },
     "SAMUserSpecConfig": {
-      "description": "Smarter API User Manifest User.spec.config",
+      "description": "Smarter API User Manifest User.spec.config.",
       "properties": {
         "email": {
           "description": "User.spec.configuration.email[str]. The email address of the User.",
