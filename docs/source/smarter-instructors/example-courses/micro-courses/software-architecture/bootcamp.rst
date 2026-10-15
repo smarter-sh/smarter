@@ -113,7 +113,7 @@ The file references in the lectures are listed in full under `Principles in the 
        ``infrastructure.dns``, ``.certificates``, ``.kubernetes`` and ``.email`` and swaps in an
        in-memory provider for tests; the
        :doc:`broker model </smarter-framework/smarter-broker-model>` and its registry of kinds;
-       extension points for new plugin types and new LLM providers. Data models: Django models
+       extension points for new plugin types, installable Extensions and new LLM providers. Data models: Django models
        for storage, Pydantic models for manifests and contracts
        (:doc:`ADR 031 </adr/031-pydantic-over-json>`), and the ownership base class that makes
        every resource belong to an account.

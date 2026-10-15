@@ -13,6 +13,7 @@ import io
 import wave
 
 import openai
+from openai import APIConnectionError, APIStatusError
 
 from smarter.apps.provider.models import ProviderModel, ProviderModelVerificationTypes
 from smarter.apps.provider.signals import (
@@ -42,6 +43,62 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 module_prefix = "smarter.apps.provider.verification.provider_model."
 
+VERIFICATION_MAX_COMPLETION_TOKENS = 1024
+"""
+The completion budget of the checks that read the model's answer.
+
+Reasoning models spend their budget on reasoning tokens first, and return no text at all when it
+runs out, so a budget of a few tokens fails them.
+"""
+
+INCONCLUSIVE_STATUS_CODES = (401, 402, 408, 429)
+"""Provider http status codes, besides 5xx, that describe the account or the provider rather than the model."""
+
+BILLING_ERROR_MARKERS = ("credit balance", "billing", "insufficient_quota", "exceeded your current quota")
+"""Text of a provider error that blames the account's credit or quota, whatever its status code."""
+
+
+class ProviderModelVerificationInconclusive(Exception):
+    """
+    Raised by a check when its provider's error says nothing about the model.
+
+    An invalid api key, an account without credit, a rate limit, a provider outage or a network error
+    makes every model of the provider fail, working or not. :func:`verify_provider_model` catches it,
+    and leaves the model's verifications and its ``is_active`` as they were.
+    """
+
+
+def raise_if_inconclusive(error: Exception) -> None:
+    """
+    Raise :class:`ProviderModelVerificationInconclusive` if ``error`` is about the account or the provider, not the model.
+
+    Anthropic, for example, reports an account without credit as a 400 ``invalid_request_error``,
+    so the error's text is checked as well as its status code.
+
+    :param error: The exception that a check's call to the provider raised.
+    :raises ProviderModelVerificationInconclusive: if the error does not show that the model fails the check.
+    """
+    if isinstance(error, APIConnectionError):
+        raise ProviderModelVerificationInconclusive(str(error)) from error
+    if isinstance(error, APIStatusError):
+        message = str(error).lower()
+        if (
+            error.status_code in INCONCLUSIVE_STATUS_CODES
+            or error.status_code >= 500
+            or any(marker in message for marker in BILLING_ERROR_MARKERS)
+        ):
+            raise ProviderModelVerificationInconclusive(str(error)) from error
+
+
+def completion_text(response) -> str:
+    """
+    Return the stripped text of a chat completion's first choice.
+
+    :param response: A chat completion.
+    :returns: The text, or an empty string when the message has none, as when a reasoning model runs out of tokens.
+    """
+    return (response.choices[0].message.content or "").strip()
+
 
 def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify streaming capabilities of the provider model."""
@@ -67,7 +124,8 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
         # Try to get the first chunk from the stream
         first_chunk = next(iter(response), None)
         success = first_chunk is not None
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error("Error during verify_model_streaming() for provider model %s", provider_model.name, exc_info=True)
         success = False
 
@@ -110,7 +168,8 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
             max_completion_tokens=10,
         )
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error("Error during verify_model_tools() for provider model %s", provider_model.name, exc_info=True)
         success = False
 
@@ -138,7 +197,8 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
             max_completion_tokens=5,
         )
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error("Error during verify_model_text_input() for provider model %s", provider_model.name, exc_info=True)
         success = False
 
@@ -180,7 +240,8 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
             max_completion_tokens=5,
         )
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_image_input() for provider model %s", provider_model.name, exc_info=True
         )
@@ -219,7 +280,8 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
         openai.audio.transcriptions.create(model="gpt-4o-transcribe", file=buffer)
 
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_audio_input() for provider model %s", provider_model.name, exc_info=True
         )
@@ -252,7 +314,8 @@ def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
             model=provider_model.name, training_file="file-xxxxxxxxxxxxxxxxxxxxxxx"  # Dummy file ID
         )
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_fine_tuning() for provider model %s", provider_model.name, exc_info=True
         )
@@ -329,7 +392,8 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
         # Attempt to generate an image with a simple prompt
         openai.images.generate(model=provider_model.name, prompt="A red apple on a table", n=1, size="256x256")
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_text_to_image() for provider model %s", provider_model.name, exc_info=True
         )
@@ -360,7 +424,8 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
             model=provider_model.name, input="Hello, this is a test.", voice="alloy"  # Use a default voice
         )
         success = True
-    except Exception:
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_text_to_audio() for provider model %s", provider_model.name, exc_info=True
         )
@@ -412,11 +477,20 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Translate this to Spanish: Hello"}],
-            max_completion_tokens=10,
+            max_completion_tokens=VERIFICATION_MAX_COMPLETION_TOKENS,
         )
-        content = response.choices[0].message.content.strip().lower()  # type: ignore
+        content = completion_text(response).lower()
         success = "hola" in content
-    except Exception:
+        if not success:
+            logger.error(
+                "%s provider model %s did not translate 'Hello' to Spanish. finish_reason: %s, response: %s",
+                prefix,
+                provider_model.name,
+                response.choices[0].finish_reason,
+                content[:200],
+            )
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_translation() for provider model %s", provider_model.name, exc_info=True
         )
@@ -451,11 +525,20 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": f"Summarize this into 10 words or less: {long_text}"}],
-            max_completion_tokens=30,
+            max_completion_tokens=VERIFICATION_MAX_COMPLETION_TOKENS,
         )
-        summary = response.choices[0].message.content.strip()  # type: ignore
-        success = len(summary.split()) <= 10
-    except Exception:
+        summary = completion_text(response)
+        success = 0 < len(summary.split()) <= 10
+        if not success:
+            logger.error(
+                "%s provider model %s did not summarize the text in 10 words or less. finish_reason: %s, response: %s",
+                prefix,
+                provider_model.name,
+                response.choices[0].finish_reason,
+                summary[:200],
+            )
+    except Exception as e:
+        raise_if_inconclusive(e)
         logger.error(
             "Error during verify_model_summarization() for provider model %s", provider_model.name, exc_info=True
         )
@@ -466,7 +549,15 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
 
 
 def verify_provider_model(provider_model_id, **kwargs):
-    """Top-level test bank on provider model."""
+    """
+    Run every check that the provider model's ``supports_*`` fields call for, then activate or deactivate it.
+
+    A model that passes every check is activated, and one that fails any is deactivated. When a check's
+    provider error is about the account or the provider rather than the model (see :func:`raise_if_inconclusive`),
+    the run stops and the model is left as it was.
+
+    :param provider_model_id: The id of the :class:`~smarter.apps.provider.models.ProviderModel` to verify.
+    """
 
     try:
         provider_model = ProviderModel.objects.get(id=provider_model_id)
@@ -492,32 +583,42 @@ def verify_provider_model(provider_model_id, **kwargs):
     # blackball method
     success: bool = True
 
-    if provider_model.supports_streaming:
-        success = success and verify_model_streaming(provider_model=provider_model)
-    if provider_model.supports_tools:
-        success = success and verify_model_tools(provider_model=provider_model)
-    if provider_model.supports_text_input:
-        success = success and verify_model_text_input(provider_model=provider_model)
-    if provider_model.supports_image_input:
-        success = success and verify_model_image_input(provider_model=provider_model)
-    if provider_model.supports_audio_input:
-        success = success and verify_model_audio_input(provider_model=provider_model)
-    if provider_model.supports_fine_tuning:
-        success = success and verify_model_fine_tuning(provider_model=provider_model)
-    if provider_model.supports_search:
-        success = success and verify_model_search(provider_model=provider_model)
-    if provider_model.supports_code_interpreter:
-        success = success and verify_model_code_interpreter(provider_model=provider_model)
-    if provider_model.supports_image_generation:
-        success = success and verify_model_text_to_image(provider_model=provider_model)
-    if provider_model.supports_audio_generation:
-        success = success and verify_model_text_to_audio(provider_model=provider_model)
-    if provider_model.supports_text_generation:
-        success = success and verify_model_text_to_text(provider_model=provider_model)
-    if provider_model.supports_translation:
-        success = success and verify_model_translation(provider_model=provider_model)
-    if provider_model.supports_summarization:
-        success = success and verify_model_summarization(provider_model=provider_model)
+    try:
+        if provider_model.supports_streaming:
+            success = success and verify_model_streaming(provider_model=provider_model)
+        if provider_model.supports_tools:
+            success = success and verify_model_tools(provider_model=provider_model)
+        if provider_model.supports_text_input:
+            success = success and verify_model_text_input(provider_model=provider_model)
+        if provider_model.supports_image_input:
+            success = success and verify_model_image_input(provider_model=provider_model)
+        if provider_model.supports_audio_input:
+            success = success and verify_model_audio_input(provider_model=provider_model)
+        if provider_model.supports_fine_tuning:
+            success = success and verify_model_fine_tuning(provider_model=provider_model)
+        if provider_model.supports_search:
+            success = success and verify_model_search(provider_model=provider_model)
+        if provider_model.supports_code_interpreter:
+            success = success and verify_model_code_interpreter(provider_model=provider_model)
+        if provider_model.supports_image_generation:
+            success = success and verify_model_text_to_image(provider_model=provider_model)
+        if provider_model.supports_audio_generation:
+            success = success and verify_model_text_to_audio(provider_model=provider_model)
+        if provider_model.supports_text_generation:
+            success = success and verify_model_text_to_text(provider_model=provider_model)
+        if provider_model.supports_translation:
+            success = success and verify_model_translation(provider_model=provider_model)
+        if provider_model.supports_summarization:
+            success = success and verify_model_summarization(provider_model=provider_model)
+    except ProviderModelVerificationInconclusive as e:
+        logger.warning(
+            "%s verification of provider model %s is inconclusive, so it remains %s. The provider said: %s",
+            formatted_text(module_prefix + "verify_provider_model()"),
+            provider_model.name,
+            "active" if provider_model.is_active else "inactive",
+            e,
+        )
+        return
 
     if success:
         provider_model.is_active = True

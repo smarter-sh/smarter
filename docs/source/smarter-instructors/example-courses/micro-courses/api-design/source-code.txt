@@ -103,10 +103,17 @@ The Clients
      - `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__,
        `smarter-chat <https://github.com/smarter-sh/smarter-chat>`__
    * - The Python SDK
-     - A small Python client, last updated in July 2025, which still calls LLMClients by their
-       former name, chatbots: a real example of a client that has drifted from its API.
+     - A typed client, published to PyPI as ``smarter-api``. It keeps a copy of the platform's
+       OpenAPI document, chat and journal contracts and SAM schemas, pinned to a platform release
+       and refreshed by a script, generates its manifest models from the schemas, and tests that
+       every request it sends matches an operation in the document. Until the copy is refreshed,
+       the SDK follows the release it was pinned to, so a breaking change on the platform reaches
+       it as a failing contract test.
      - `smarter-python <https://github.com/smarter-sh/smarter-python>`__,
-       `smarter/api/client.py <https://github.com/smarter-sh/smarter-python/blob/main/smarter/api/client.py>`__
+       `smarter/client.py <https://github.com/smarter-sh/smarter-python/blob/main/smarter/client.py>`__,
+       `scripts/sync-contracts.sh <https://github.com/smarter-sh/smarter-python/blob/main/scripts/sync-contracts.sh>`__,
+       `tests/test_contracts.py <https://github.com/smarter-sh/smarter-python/blob/main/tests/test_contracts.py>`__,
+       `ADR 022 <https://github.com/smarter-sh/smarter-python/blob/main/doc/adr/022-pinned-openapi.md>`__
    * - Validation in the editor
      - A VS Code extension that validates manifests against JSON Schemas.
        :doc:`/smarter-framework/vs-code-extension`.
