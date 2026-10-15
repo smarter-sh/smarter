@@ -3,6 +3,7 @@
 
 import datetime
 from typing import List, Optional, Type
+from urllib.parse import urljoin
 
 from django.http import HttpRequest
 
@@ -19,6 +20,7 @@ from smarter.apps.provider.manifest.models.provider.status import SAMProviderSta
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
 from smarter.apps.secret.models import Secret
+from smarter.common.conf import smarter_settings
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -149,13 +151,21 @@ class SAMProviderBroker(AbstractBroker):
         prefix it with the storage backend's base URL, which yields a bogus
         CDN URL under S3 and an invalid relative path under FileSystemStorage.
 
+        A stored logo's ``logo.url`` is absolute under S3, but a relative path
+        under FileSystemStorage (no AWS configured, as in CI). Join a relative
+        path onto ``smarter_settings.environment_url`` so the manifest always
+        carries an absolute URL.
+
         :returns: The logo URL, or `None` if the Provider has no logo.
         """
         if not self.provider or not self.provider.logo:
             return None
         if SmarterValidator.is_valid_url(self.provider.logo.name):
             return self.provider.logo.name
-        return self.provider.logo.url
+        url = self.provider.logo.url
+        if SmarterValidator.is_valid_url(url):
+            return url
+        return urljoin(smarter_settings.environment_url, url)
 
     def manifest_to_django_orm(self) -> SmarterDictType:
         """
