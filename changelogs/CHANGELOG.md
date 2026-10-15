@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.26.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.26.0-alpha.1...v0.26.0-alpha.2) (2026-10-15)
+
+### Bug Fixes
+
+* **llmclient:** add mcpclients, guardrails, tools to the api contract ([49ca0c9](https://github.com/smarter-sh/smarter/commit/49ca0c9605c2e27ae242f126b7349e06e244e6c0))
+
 ## [0.25.1](https://github.com/smarter-sh/smarter/compare/v0.25.0...v0.25.1) (2026-10-15)
 
 ### Bug Fixes
