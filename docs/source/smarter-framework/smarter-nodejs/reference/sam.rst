@@ -79,7 +79,7 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
 .. js:class:: SAMApiPlugin
 
-   Smarter API Manifest - ApiPlugin Model
+   Smarter API Manifest - ApiPlugin Model.
 
    .. js:attribute:: apiVersion
 
@@ -483,7 +483,7 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
 .. js:class:: SAMPlugin
 
-   Smarter API Manifest - Plugin
+   Smarter API Manifest - Plugin.
 
    .. js:attribute:: apiVersion
 
@@ -723,7 +723,7 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
 .. js:class:: SAMSqlPlugin
 
-   Smarter API Manifest - Sql Connection Model
+   Smarter API Manifest - Sql Connection Model.
 
    .. js:attribute:: apiVersion
 

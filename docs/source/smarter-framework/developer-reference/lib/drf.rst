@@ -27,6 +27,7 @@ For more information about DRF, see the `official Django REST framework document
     drf/signals
     drf/tasks
     drf/templatetags
+    drf/throttling
     drf/token-authentication
     drf/urls
     drf/view-helpers

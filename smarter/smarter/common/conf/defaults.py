@@ -237,11 +237,13 @@ class SettingsDefaults:
     PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", SMARTER_PLATFORM_DEFAULT_SUBDOMAIN)
 
     secret = get_env("SECRET_KEY", default=None, is_secret=True)
-    if secret is None:
+    SECRET_KEY_IS_GENERATED: bool = secret is None
+    if SECRET_KEY_IS_GENERATED:
         warnings.warn(
             "SECRET_KEY is not set. A new secret key will be generated. "
             "This may cause existing sessions and other cryptographic operations to become invalid. "
-            "You can safely disregard this warning if this is a new installation or test environment.",
+            "You can safely disregard this warning if this is a new installation or test environment. "
+            "Outside of the local environment, Smarter refuses to start without a SECRET_KEY.",
             UserWarning,
         )
         secret = base64.urlsafe_b64encode(os.urandom(32)).decode()
@@ -284,6 +286,10 @@ class SettingsDefaults:
 
     STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY", is_secret=True))
     STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY", is_secret=True))
+
+    # Django REST Framework throttle rates, e.g. 120/minute. "none" disables a throttle.
+    THROTTLE_RATE_ANON = get_env("THROTTLE_RATE_ANON", "120/minute")
+    THROTTLE_RATE_USER = get_env("THROTTLE_RATE_USER", "600/minute")
 
     VERBOSE_LOGGING: bool = bool_environment_variable("VERBOSE_LOGGING", False)
 
