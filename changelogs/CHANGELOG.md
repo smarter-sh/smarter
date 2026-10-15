@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.28.0](https://github.com/smarter-sh/smarter/compare/v0.27.1...v0.28.0) (2026-10-15)
+
+### Features
+
+* **infrastructure:** email the whole job log, attached or via S3 ([aaa4598](https://github.com/smarter-sh/smarter/commit/aaa45986ea99647a0f5f1270ada27fc641dc0e1e))
+* **llmclient:** send the llmclient's tool count in the chat config ([a8a2a48](https://github.com/smarter-sh/smarter/commit/a8a2a48cb3503ec7e1bef04c41b338f884eb4e37))
+
 ## [0.28.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.28.0-alpha.1...v0.28.0-alpha.2) (2026-10-15)
 
 ### Features
