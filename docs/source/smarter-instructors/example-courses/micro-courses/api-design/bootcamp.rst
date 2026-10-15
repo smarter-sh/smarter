@@ -11,7 +11,7 @@ and ReDoc pages generated from the code. Its clients are real and public: the Go
 <https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
 <https://github.com/smarter-sh/smarter-chat>`__ npm package, whose types are generated from the chat
 API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
-has drifted from the API it calls. Students call the API by hand, write a client, review the API
+tests every request it sends against a pinned copy of the API's OpenAPI document. Students call the API by hand, write a client, review the API
 against a style guide, and design an improvement that does not break existing clients. See
 :doc:`../course-formats` for the standard bootcamp day, the grading scale and the course policies,
 and :doc:`../api-design` for an overview of the subject.
@@ -93,7 +93,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        authentication, retries, timeouts, pagination and typed responses. A tour of how the Go
        `smarter-cli <https://github.com/smarter-sh/smarter-cli>`__ calls the API
        (`cmd/api.go <https://github.com/smarter-sh/smarter-cli/blob/main/cmd/api.go>`__), and of
-       the Python SDK, which still calls LLMClients chatbots.
+       the Python SDK, which learns what changed in the API when it refreshes its pinned copy of
+       the OpenAPI document and its contract tests fail.
    * - 6
      - 45
      - **Lecture 4: Chat APIs and streaming.** Smarter's

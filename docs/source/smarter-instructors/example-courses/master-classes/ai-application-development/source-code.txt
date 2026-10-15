@@ -132,8 +132,8 @@ Making the LLM Do Things
      - What to read
      - Where to look
    * - 10. Tool calls
-     - Tool factories that return JSON Schema definitions, the handler's tool call loop, and
-       plugins whose tools query a database or an API.
+     - Extension tools whose JSON Schema definitions are generated from Pydantic models, the
+       handler's tool call loop, and plugins whose tools query a database or an API.
        `Commit 5a378b47f <https://github.com/smarter-sh/smarter/commit/5a378b47fc8cae82d60f82875486528d1cce8ac8>`__
        (item 7) fixed the OpenAI 400 error for a ``tool`` message without its call, and
        `commit 533f0c54c <https://github.com/smarter-sh/smarter/commit/533f0c54c421293a59bbdd94827d7b3abe83ee30>`__

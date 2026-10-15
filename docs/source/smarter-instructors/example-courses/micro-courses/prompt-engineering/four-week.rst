@@ -124,8 +124,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Tools.** :doc:`Websearch </smarter-resources/llmtool/plugin/websearch>` and :doc:`API
        </smarter-resources/llmtool/plugin/api>` plugins. Smarter offers a plugin only when the prompt
        matches one of its ``searchTerms`` (exactly, with a typo, or as a synonym), and the model
-       then decides, from the plugin's description, whether to call it. Reading plugin selection and
-       tool calls in the Console.
+       then decides, from the plugin's description, whether to call it. Installed
+       :doc:`Extensions </smarter-framework/extensibility>`, such as the weather tool, are offered
+       on every prompt. Reading plugin selection and tool calls in the Console.
    * - 3
      - Live session 3
      - Review of Assignment 2. Students debug tool calls that do not happen, using the Console.
