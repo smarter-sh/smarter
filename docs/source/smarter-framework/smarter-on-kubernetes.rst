@@ -67,11 +67,14 @@ they can never delay the operational tasks that record prompt history, charges a
 The Helm chart also runs a Job, ``smarter-job-init``, on every install and upgrade. It migrates the
 database, initializes the platform, loads the example resources and deploys the built-in LLMClients.
 On a new cluster, that one Job queues a deployment for every built-in LLMClient at once.
-When it completes, it emails the end of its log, with credentials redacted, to the chart's
+When it completes, it emails its whole log, with credentials redacted, to the chart's
 ``databaseInit.notifyEmail``, or by default to the platform's admin, ``SMARTER_EMAIL_ADMIN``, with
-``manage.py email_job_log``. The email reports whether the Job succeeded. It is sent only when SMTP
-is configured (see :doc:`technologies/smtp`), and a Job that is killed, for example for running out
-of memory, sends none.
+``manage.py email_job_log``. The email reports whether the Job succeeded, and carries the log as an
+attachment. A log larger than 5 MB would exceed the SMTP server's message size limit, so it is saved
+instead to the platform's public S3 bucket, under ``job-logs/`` with an unguessable name, and the
+email links to its CDN URL. The email is sent only when SMTP is configured (see
+:doc:`technologies/smtp`), and a Job that is killed, for example for running out of memory, sends
+none.
 
 
 Docker and Kubernetes Compared
