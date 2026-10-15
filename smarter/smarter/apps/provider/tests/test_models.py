@@ -215,6 +215,23 @@ class TestVerificationModels(ProviderTestBase):
         verification.refresh_from_db()
         self.assertFalse(verification.is_valid)
 
+    def test_verifications_are_valid_as_soon_as_they_are_saved(self):
+        """Test that a successful verification saved within the last second, so 0 seconds old, is valid."""
+        model = ProviderModel.objects.create(provider=self.provider, name="test-just-saved")
+        for verification in (
+            ProviderVerification.objects.create(
+                provider=self.provider, verification_type=ProviderVerificationTypes.LOGO, is_successful=True
+            ),
+            ProviderModelVerification.objects.create(
+                provider_model=model, verification_type=ProviderModelVerificationTypes.TOOLS, is_successful=True
+            ),
+        ):
+            with self.subTest(verification=type(verification).__name__):
+                with patch.object(type(verification), "elapsed_updated", 0):
+                    self.assertTrue(verification.is_valid)
+                with patch.object(type(verification), "elapsed_updated", None):
+                    self.assertFalse(verification.is_valid)
+
     def test_next_verification(self):
         """Test that next_verification is a datetime."""
         verification = ProviderVerification.objects.create(
