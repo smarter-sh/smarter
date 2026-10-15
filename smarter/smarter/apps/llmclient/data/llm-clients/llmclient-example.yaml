@@ -70,8 +70,8 @@ spec:
         color: '#f15a29'
       typingIndicator:
         color: '#f15a29'
-  functions:
-    - get_current_weather
+  extensions:
+    - weather
   plugins:
     - everlasting_gobstopper
     - example_configuration

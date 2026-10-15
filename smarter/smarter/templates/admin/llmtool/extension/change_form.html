@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+{% comment %}An installed extension, read-only. It is managed in its page in the web console.{% endcomment %}
+
+{% block object-tools-items %}
+  {% if console_url %}<li><a href="{{ console_url }}" class="viewsitelink">Manage in the console</a></li>{% endif %}
+  {{ block.super }}
+{% endblock %}
+
+{% block form_top %}
+  {% if original.update_available %}
+    <ul class="messagelist"><li class="warning">Version {{ original.latest_version }} of {{ original.display_name }} is available. Update it in the <a href="{{ console_url }}">console</a>.</li></ul>
+  {% endif %}
+  {% if original.error %}
+    <ul class="messagelist"><li class="error">{{ original.error }}</li></ul>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,1126 @@
+{
+  "$defs": {
+    "AccountRef": {
+      "additionalProperties": false,
+      "description": "An account, for the extension's availability.",
+      "properties": {
+        "accountNumber": {
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "companyName": {
+          "title": "Companyname",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        }
+      },
+      "required": ["id", "accountNumber", "companyName"],
+      "title": "AccountRef",
+      "type": "object"
+    },
+    "AccountsResponse": {
+      "additionalProperties": false,
+      "description": "Every account, for the availability picker.",
+      "properties": {
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/AccountRef"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "required": ["objects"],
+      "title": "AccountsResponse",
+      "type": "object"
+    },
+    "ActionResponse": {
+      "additionalProperties": false,
+      "description": "The result of an action: what happened, and the extension as it now is, if it still exists.",
+      "properties": {
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtensionDetail"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": ["message", "extension"],
+      "title": "ActionResponse",
+      "type": "object"
+    },
+    "AvailabilityRequest": {
+      "additionalProperties": false,
+      "description": "A request to change which accounts may use an extension.",
+      "properties": {
+        "accountIds": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Accountids",
+          "type": "array"
+        },
+        "allAccounts": {
+          "title": "Allaccounts",
+          "type": "boolean"
+        }
+      },
+      "required": ["allAccounts"],
+      "title": "AvailabilityRequest",
+      "type": "object"
+    },
+    "ConfigureRequest": {
+      "additionalProperties": false,
+      "description": "A request to change some of an extension's settings. Settings that are left out don't change.",
+      "properties": {
+        "secrets": {
+          "additionalProperties": {
+            "$ref": "#/$defs/SecretInput"
+          },
+          "description": "Secret settings' values, by name.",
+          "title": "Secrets",
+          "type": "object"
+        },
+        "values": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": "Non-secret settings' values, by name; null resets one to its default.",
+          "title": "Values",
+          "type": "object"
+        }
+      },
+      "title": "ConfigureRequest",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "description": "Why a request failed.",
+      "properties": {
+        "error": {
+          "title": "Error",
+          "type": "string"
+        }
+      },
+      "required": ["error"],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "ExtensionDetail": {
+      "additionalProperties": false,
+      "description": "An installed extension, as its detail page shows it.",
+      "properties": {
+        "accounts": {
+          "description": "The accounts that may use it, when not all accounts may.",
+          "items": {
+            "$ref": "#/$defs/AccountRef"
+          },
+          "title": "Accounts",
+          "type": "array"
+        },
+        "allAccounts": {
+          "title": "Allaccounts",
+          "type": "boolean"
+        },
+        "availableSecrets": {
+          "description": "The platform admin's Secrets, for secret settings.",
+          "items": {
+            "$ref": "#/$defs/SecretRef"
+          },
+          "title": "Availablesecrets",
+          "type": "array"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "detailUrl": {
+          "description": "The url of the extension's detail page.",
+          "title": "Detailurl",
+          "type": "string"
+        },
+        "displayName": {
+          "title": "Displayname",
+          "type": "string"
+        },
+        "docsHtml": {
+          "default": "",
+          "description": "The extension's documentation, as HTML rendered safely.",
+          "title": "Docshtml",
+          "type": "string"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "error": {
+          "default": "",
+          "description": "The last error from loading the extension or running its lifecycle hooks.",
+          "title": "Error",
+          "type": "string"
+        },
+        "homepage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Homepage"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "installedVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Installedversion"
+        },
+        "latestCheckedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latestcheckedat"
+        },
+        "latestVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The newest compatible version in the registry.",
+          "title": "Latestversion"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        },
+        "loadError": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why the extension's code does not load, if it does not.",
+          "title": "Loaderror"
+        },
+        "missingSettings": {
+          "description": "Required settings that block enabling the extension.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Missingsettings",
+          "type": "array"
+        },
+        "publisher": {
+          "description": "The publisher's registry id, or an uploaded archive's authors.",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "resources": {
+          "items": {
+            "$ref": "#/$defs/ExtensionResource"
+          },
+          "title": "Resources",
+          "type": "array"
+        },
+        "settings": {
+          "items": {
+            "$ref": "#/$defs/ExtensionSetting"
+          },
+          "title": "Settings",
+          "type": "array"
+        },
+        "slug": {
+          "description": "The extension's slug, e.g. weather.",
+          "title": "Slug",
+          "type": "string"
+        },
+        "source": {
+          "enum": ["registry", "upload"],
+          "title": "Source",
+          "type": "string"
+        },
+        "switches": {
+          "items": {
+            "$ref": "#/$defs/ExtensionSwitch"
+          },
+          "title": "Switches",
+          "type": "array"
+        },
+        "tools": {
+          "items": {
+            "$ref": "#/$defs/ExtensionTool"
+          },
+          "title": "Tools",
+          "type": "array"
+        },
+        "trustBadge": {
+          "enum": ["official", "verified", "community", "unverified"],
+          "title": "Trustbadge",
+          "type": "string"
+        },
+        "trustBadgeLabel": {
+          "description": "The badge, as people read it, e.g. Official Smarter Extension.",
+          "title": "Trustbadgelabel",
+          "type": "string"
+        },
+        "updateAvailable": {
+          "title": "Updateavailable",
+          "type": "boolean"
+        },
+        "versions": {
+          "items": {
+            "$ref": "#/$defs/ExtensionVersionInfo"
+          },
+          "title": "Versions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "displayName",
+        "description",
+        "publisher",
+        "source",
+        "trustBadge",
+        "trustBadgeLabel",
+        "enabled",
+        "installedVersion",
+        "latestVersion",
+        "updateAvailable",
+        "latestCheckedAt",
+        "error",
+        "detailUrl",
+        "homepage",
+        "license",
+        "docsHtml",
+        "tools",
+        "loadError",
+        "settings",
+        "missingSettings",
+        "versions",
+        "resources",
+        "switches",
+        "allAccounts",
+        "accounts",
+        "availableSecrets"
+      ],
+      "title": "ExtensionDetail",
+      "type": "object"
+    },
+    "ExtensionDetailResponse": {
+      "additionalProperties": false,
+      "description": "An extension's detail page.",
+      "properties": {
+        "extension": {
+          "$ref": "#/$defs/ExtensionDetail"
+        }
+      },
+      "required": ["extension"],
+      "title": "ExtensionDetailResponse",
+      "type": "object"
+    },
+    "ExtensionListResponse": {
+      "additionalProperties": false,
+      "description": "The Extensions list: the installed extensions, and the state of the registry.",
+      "properties": {
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ExtensionSummary"
+          },
+          "title": "Objects",
+          "type": "array"
+        },
+        "registryEnabled": {
+          "description": "Whether the registry's public key is configured.",
+          "title": "Registryenabled",
+          "type": "boolean"
+        },
+        "updatesAvailable": {
+          "description": "How many installed extensions have an update in the registry.",
+          "title": "Updatesavailable",
+          "type": "integer"
+        }
+      },
+      "required": ["objects", "registryEnabled", "updatesAvailable"],
+      "title": "ExtensionListResponse",
+      "type": "object"
+    },
+    "ExtensionResource": {
+      "additionalProperties": false,
+      "description": "A SAM resource that an extension created.",
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "managed": {
+          "description": "Whether it came from the package's manifests/ directory.",
+          "title": "Managed",
+          "type": "boolean"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "owner": {
+          "description": "The username of the resource's owner.",
+          "title": "Owner",
+          "type": "string"
+        },
+        "version": {
+          "description": "The extension version that created or last applied it.",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": ["kind", "name", "owner", "version", "managed"],
+      "title": "ExtensionResource",
+      "type": "object"
+    },
+    "ExtensionSetting": {
+      "additionalProperties": false,
+      "description": "One of an extension's settings: its declaration, and its configured value.",
+      "properties": {
+        "choices": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Choices"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "isSet": {
+          "description": "Whether the setting has a configured value, or a Secret.",
+          "title": "Isset",
+          "type": "boolean"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        },
+        "secretId": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The id of a secret setting's Secret.",
+          "title": "Secretid"
+        },
+        "secretName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The name of a secret setting's Secret.",
+          "title": "Secretname"
+        },
+        "type": {
+          "enum": ["string", "integer", "float", "boolean", "url", "choice", "secret"],
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The configured value. Always null for a secret setting.",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "description",
+        "required",
+        "default",
+        "choices",
+        "value",
+        "secretId",
+        "secretName",
+        "isSet"
+      ],
+      "title": "ExtensionSetting",
+      "type": "object"
+    },
+    "ExtensionSummary": {
+      "additionalProperties": false,
+      "description": "An installed extension, as the Extensions list shows it.",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "detailUrl": {
+          "description": "The url of the extension's detail page.",
+          "title": "Detailurl",
+          "type": "string"
+        },
+        "displayName": {
+          "title": "Displayname",
+          "type": "string"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "error": {
+          "default": "",
+          "description": "The last error from loading the extension or running its lifecycle hooks.",
+          "title": "Error",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "installedVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Installedversion"
+        },
+        "latestCheckedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latestcheckedat"
+        },
+        "latestVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The newest compatible version in the registry.",
+          "title": "Latestversion"
+        },
+        "publisher": {
+          "description": "The publisher's registry id, or an uploaded archive's authors.",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "slug": {
+          "description": "The extension's slug, e.g. weather.",
+          "title": "Slug",
+          "type": "string"
+        },
+        "source": {
+          "enum": ["registry", "upload"],
+          "title": "Source",
+          "type": "string"
+        },
+        "trustBadge": {
+          "enum": ["official", "verified", "community", "unverified"],
+          "title": "Trustbadge",
+          "type": "string"
+        },
+        "trustBadgeLabel": {
+          "description": "The badge, as people read it, e.g. Official Smarter Extension.",
+          "title": "Trustbadgelabel",
+          "type": "string"
+        },
+        "updateAvailable": {
+          "title": "Updateavailable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "displayName",
+        "description",
+        "publisher",
+        "source",
+        "trustBadge",
+        "trustBadgeLabel",
+        "enabled",
+        "installedVersion",
+        "latestVersion",
+        "updateAvailable",
+        "latestCheckedAt",
+        "error",
+        "detailUrl"
+      ],
+      "title": "ExtensionSummary",
+      "type": "object"
+    },
+    "ExtensionSwitch": {
+      "additionalProperties": false,
+      "description": "A waffle switch that an extension owns.",
+      "properties": {
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "description": "The switch's full name, e.g. ext_weather_verbose.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": ["name", "description", "active"],
+      "title": "ExtensionSwitch",
+      "type": "object"
+    },
+    "ExtensionTool": {
+      "additionalProperties": false,
+      "description": "One of an extension's tools, as the LLM sees it.",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "functionName": {
+          "description": "The name the LLM sees, e.g. ext_weather_get_weather.",
+          "title": "Functionname",
+          "type": "string"
+        },
+        "name": {
+          "description": "The tool's name in the extension, e.g. get_weather.",
+          "title": "Name",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/JsonValue",
+          "description": "The JSON Schema of the tool's arguments."
+        }
+      },
+      "required": ["name", "functionName", "description", "parameters"],
+      "title": "ExtensionTool",
+      "type": "object"
+    },
+    "ExtensionVersionInfo": {
+      "additionalProperties": false,
+      "description": "One installed version of an extension.",
+      "properties": {
+        "createdAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Createdat"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "installedBy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The username of the superuser who installed it.",
+          "title": "Installedby"
+        },
+        "isInstalled": {
+          "description": "Whether it is the version that runs.",
+          "title": "Isinstalled",
+          "type": "boolean"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "sourceUrl": {
+          "title": "Sourceurl",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": ["id", "version", "sha256", "sourceUrl", "installedBy", "createdAt", "isInstalled"],
+      "title": "ExtensionVersionInfo",
+      "type": "object"
+    },
+    "InstallRequest": {
+      "additionalProperties": false,
+      "description": "A request to install, or update, an extension from the registry.",
+      "properties": {
+        "slug": {
+          "title": "Slug",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The version; the newest compatible version if null.",
+          "title": "Version"
+        }
+      },
+      "required": ["slug"],
+      "title": "InstallRequest",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "RegistryExtension": {
+      "additionalProperties": false,
+      "description": "An extension in the registry, as the Browse tab shows it.",
+      "properties": {
+        "action": {
+          "enum": ["install", "update", "installed", "uploaded", "incompatible"],
+          "title": "Action",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "detailUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The installed extension's detail page, if it is installed.",
+          "title": "Detailurl"
+        },
+        "displayName": {
+          "title": "Displayname",
+          "type": "string"
+        },
+        "docsHtml": {
+          "default": "",
+          "description": "The extension's documentation, as HTML rendered safely.",
+          "title": "Docshtml",
+          "type": "string"
+        },
+        "homepage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Homepage"
+        },
+        "installedVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Installedversion"
+        },
+        "latestVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The newest version compatible with this platform.",
+          "title": "Latestversion"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        },
+        "publisher": {
+          "description": "The publisher's name.",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "publisherUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisherurl"
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string"
+        },
+        "trustBadge": {
+          "enum": ["official", "verified", "community", "unverified"],
+          "title": "Trustbadge",
+          "type": "string"
+        },
+        "trustBadgeLabel": {
+          "title": "Trustbadgelabel",
+          "type": "string"
+        },
+        "versions": {
+          "description": "Every released version, newest first.",
+          "items": {
+            "$ref": "#/$defs/RegistryVersionInfo"
+          },
+          "title": "Versions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "slug",
+        "displayName",
+        "description",
+        "publisher",
+        "publisherUrl",
+        "trustBadge",
+        "trustBadgeLabel",
+        "homepage",
+        "license",
+        "docsHtml",
+        "latestVersion",
+        "versions",
+        "installedVersion",
+        "action",
+        "detailUrl"
+      ],
+      "title": "RegistryExtension",
+      "type": "object"
+    },
+    "RegistryRequest": {
+      "additionalProperties": false,
+      "description": "A request for the registry's extensions.",
+      "properties": {
+        "refresh": {
+          "default": false,
+          "description": "Whether to download the index again, rather than read the cache.",
+          "title": "Refresh",
+          "type": "boolean"
+        }
+      },
+      "title": "RegistryRequest",
+      "type": "object"
+    },
+    "RegistryResponse": {
+      "additionalProperties": false,
+      "description": "The registry's extensions, or why they cannot be listed.",
+      "properties": {
+        "enabled": {
+          "description": "Whether the registry's public key is configured.",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why the registry cannot be read, if it cannot.",
+          "title": "Error"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/RegistryExtension"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "required": ["enabled", "error", "objects"],
+      "title": "RegistryResponse",
+      "type": "object"
+    },
+    "RegistryVersionInfo": {
+      "additionalProperties": false,
+      "description": "A released version of a registry extension.",
+      "properties": {
+        "compatible": {
+          "description": "Whether it works with this platform's Smarter version.",
+          "title": "Compatible",
+          "type": "boolean"
+        },
+        "releasedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Releasedat"
+        },
+        "requiresSmarter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requiressmarter"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": ["version", "requiresSmarter", "releasedAt", "compatible"],
+      "title": "RegistryVersionInfo",
+      "type": "object"
+    },
+    "RollbackRequest": {
+      "additionalProperties": false,
+      "description": "A request to make an earlier version the one that runs.",
+      "properties": {
+        "versionId": {
+          "title": "Versionid",
+          "type": "integer"
+        }
+      },
+      "required": ["versionId"],
+      "title": "RollbackRequest",
+      "type": "object"
+    },
+    "SecretInput": {
+      "additionalProperties": false,
+      "description": "The new value of a secret setting: an existing Secret, a value to save in a new one, or neither, to clear it.",
+      "properties": {
+        "secretId": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "One of the platform admin's Secrets.",
+          "title": "Secretid"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A value, saved in the Secret extension_<slug>_<setting>.",
+          "title": "Value"
+        }
+      },
+      "title": "SecretInput",
+      "type": "object"
+    },
+    "SecretRef": {
+      "additionalProperties": false,
+      "description": "A Secret of the platform's admin, which a secret setting can use.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": ["id", "name"],
+      "title": "SecretRef",
+      "type": "object"
+    }
+  },
+  "$id": "https://smarter.sh/schemas/extension-console.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The requests and responses of the web console's Extensions pages. Generated from smarter.apps.llmtool.extension.contract; do not edit.",
+  "title": "Smarter Extension console api contract"
+}

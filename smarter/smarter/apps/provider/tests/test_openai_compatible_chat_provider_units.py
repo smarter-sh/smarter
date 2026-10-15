@@ -83,8 +83,8 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
     # tool_budget_refusal
     # -------------------------------------------------------------------------
     def test_budget_refusal_for_builtin_and_unknown_tools(self):
-        """Built-in functions and plugins that can't be found are never refused."""
-        self.assertIsNone(self.client.tool_budget_refusal("get_current_weather"))
+        """Extension tools and plugins that can't be found are never refused."""
+        self.assertIsNone(self.client.tool_budget_refusal("ext_weather_get_weather"))
         self.assertIsNone(self.client.tool_budget_refusal(f"{PLUGIN_PREFIX}_not_a_number"))
         self.assertIsNone(self.client.tool_budget_refusal(f"{PLUGIN_PREFIX}_2147483646"))
 
@@ -118,11 +118,19 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             self.assertEqual(self.client.tool_display_name(f"{PLUGIN_PREFIX}_0000000016"), "stackademy_sql")
         get.assert_called_once_with(pk=16)
 
-    def test_tool_display_name_of_unknown_plugins_and_builtin_functions(self):
-        """Built-in functions, and plugins that can't be found, keep their function names."""
+    def test_tool_display_name_of_unknown_tools(self):
+        """Unknown functions, and plugins that can't be found, keep their function names."""
         for name in ("calculator", f"{PLUGIN_PREFIX}_not_a_number", f"{PLUGIN_PREFIX}_2147483646"):
             with self.subTest(name=name):
                 self.assertEqual(self.client.tool_display_name(name), name)
+
+    def test_tool_display_name_of_an_extension_tool(self):
+        """An extension function is displayed as its tool's own name."""
+        self.client.extension_toolkit = MagicMock()
+        self.client.extension_toolkit.is_extension_function.return_value = True
+        self.client.extension_toolkit.tool_name_for.return_value = "get_weather"
+        self.addCleanup(setattr, self.client, "extension_toolkit", None)
+        self.assertEqual(self.client.tool_display_name("ext_weather_get_weather"), "get_weather")
 
     def test_tool_display_name_of_an_mcp_tool(self):
         """An MCP function is displayed as its MCP tool's name."""
@@ -313,17 +321,6 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             self.prep_first_request([{"type": "function", "function": "not a dict"}])
 
     # -------------------------------------------------------------------------
-    # handle_function_provided
-    # -------------------------------------------------------------------------
-    def test_builtin_functions_are_provided(self):
-        for function in ("get_current_weather", "date_calculator", "calculator", "not_a_builtin"):
-            self.client.handle_function_provided(function)
-        self.assertEqual(
-            sorted(self.client.available_functions), ["calculator", "date_calculator", "get_current_weather"]
-        )
-        self.assertEqual(len(self.client.tools), 3)
-
-    # -------------------------------------------------------------------------
     # guards
     # -------------------------------------------------------------------------
     def test_responses_need_a_chat_completion_message(self):
@@ -378,9 +375,28 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             self.addCleanup(patcher.stop)
         self.client.process_tool_call(self.tool_call(name))
 
-    def test_builtin_tool_call_with_a_json_response(self):
-        self.process("calculator", function=MagicMock(return_value={"result": 2}))
-        self.assertEqual(self.client.serialized_tool_calls[0]["function_name"], "calculator")
+    def extension_toolkit(self, result) -> MagicMock:
+        """Give the client an extension toolkit whose one tool, ext_calculator_calculator, returns ``result``."""
+        toolkit = MagicMock()
+        toolkit.is_extension_function.side_effect = lambda name: name == "ext_calculator_calculator"
+        toolkit.call.return_value = result
+        toolkit.extension_for.return_value = MagicMock(
+            pk=3, slug="calculator", installed_version=MagicMock(version="1.0.0")
+        )
+        toolkit.tool_name_for.return_value = "calculator"
+        self.client.extension_toolkit = toolkit
+        self.addCleanup(setattr, self.client, "extension_toolkit", None)
+        return toolkit
+
+    def test_extension_tool_call_with_a_json_response(self):
+        """An extension tool's result is returned to the LLM as JSON, and its extension is recorded."""
+        self.extension_toolkit({"result": 2})
+        self.process("ext_calculator_calculator")
+        serialized = self.client.serialized_tool_calls[0]
+        self.assertEqual(serialized["function_name"], "ext_calculator_calculator")
+        self.assertEqual(
+            serialized["smarter_extension"], {"id": 3, "slug": "calculator", "version": "1.0.0", "tool": "calculator"}
+        )
         self.assertEqual(self.append_message.call_args.kwargs["content"], json.dumps({"result": 2}))
 
     def test_tool_call_refused_by_a_budget(self):
@@ -396,8 +412,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             patch.object(module.llm_tool_requested, "send") as requested,
             patch.object(module.llm_tool_responded, "send") as responded,
         ):
-            self.process("calculator", function=MagicMock(return_value="2"))
-        display_name.assert_called_once_with("calculator")
+            self.extension_toolkit("2")
+            self.process("ext_calculator_calculator")
+        display_name.assert_called_once_with("ext_calculator_calculator")
         self.assertEqual(requested.call_args.kwargs["tool_name"], "Calculator")
         self.assertEqual(responded.call_args.kwargs["tool_name"], "Calculator")
 

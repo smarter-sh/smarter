@@ -73,10 +73,10 @@ Knowledge and Tools
        ImageSearchPlugin that lets the model show real pictures instead of inventing urls.
      - `websearch-research-assistant.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/websearch-research-assistant.yaml>`__,
        `image-search.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/image-search.yaml>`__
-   * - Built-in functions
-     - A calculator, a date calculator and a weather function that any LLMClient can list under
-       ``spec.functions``.
-     - `prompt/functions/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/functions>`__
+   * - Official extensions
+     - A calculator, a date calculator and a weather tool, installable Smarter Extensions that any
+       LLMClient can list under ``spec.extensions``.
+     - `smarter-extension-weather <https://github.com/smarter-sh/smarter-extension-weather>`__
 
 Safety, Cost and Evidence
 ~~~~~~~~~~~~~~~~~~~~~~~~~

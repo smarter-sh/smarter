@@ -89,6 +89,9 @@ class SmarterWaffleSwitches:
     INFRASTRUCTURE_LOGGING = "log_infrastructure"
     """Enables logging throughout the smarter.app.infrastructure namespace."""
 
+    EXTENSION_LOGGING = "log_extension"
+    """Enables logging within the smarter.apps.llmtool.extension namespace."""
+
     MCPCLIENT_LOGGING = "log_mcpclient"
     """Enables logging within the smarter.apps.mcpclient namespace."""
 
@@ -264,6 +267,11 @@ class SmarterWaffleSwitches:
         INFRASTRUCTURE_LOGGING: SmarterWaffleSwitch(
             name=INFRASTRUCTURE_LOGGING,
             comment="Enables logging throughout the smarter.app.infrastructure namespace.",
+            default=True,
+        ),
+        EXTENSION_LOGGING: SmarterWaffleSwitch(
+            name=EXTENSION_LOGGING,
+            comment="Enables logging throughout the smarter.apps.llmtool.extension namespace.",
             default=True,
         ),
         MCPCLIENT_LOGGING: SmarterWaffleSwitch(
