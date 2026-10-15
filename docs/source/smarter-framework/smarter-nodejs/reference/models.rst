@@ -763,6 +763,10 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: object[]
 
+   .. js:attribute:: guardrails
+
+      :type: object[]
+
    .. js:attribute:: hashedId
 
       :type: string | null | undefined
@@ -780,6 +784,10 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
    .. js:attribute:: manifestUrl
 
       :type: string | null | undefined
+
+   .. js:attribute:: mcpclients
+
+      :type: object[]
 
    .. js:attribute:: name
 
@@ -812,6 +820,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
    .. js:attribute:: tags
 
       :type: string[]
+
+   .. js:attribute:: tools
+
+      Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails, in that order.
+
+      :type: object[]
 
    .. js:attribute:: updatedAt
 
@@ -947,6 +961,34 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: string | null | undefined
 
+.. js:class:: LLMClientGuardrailRef
+
+   A guardrail of an LLMClient, by the link's id and the guardrail's name.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: id
+
+      :type: number
+
+   .. js:attribute:: name
+
+      :type: string | null | undefined
+
+.. js:class:: LLMClientMCPClientRef
+
+   An MCPClient of an LLMClient, by the link's id and the MCPClient's name.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: id
+
+      :type: number
+
+   .. js:attribute:: name
+
+      :type: string | null | undefined
+
 .. js:class:: LLMClientPlugin
 
    The association of a plugin with an LLMClient.
@@ -978,6 +1020,30 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
    .. js:attribute:: name
 
       :type: string | null | undefined
+
+.. js:class:: LLMClientTool
+
+   Something that an LLMClient adds to a prompt: a built-in function, plugin, MCPClient or guardrail.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: id
+
+      The id of the link row: the LLMClient's function, plugin, MCPClient or guardrail.
+
+      :type: number
+
+   .. js:attribute:: kind
+
+      ``Function``, or the linked resource's manifest kind: ``Plugin``, ``MCPClient`` or ``Guardrail``.
+
+      :type: string
+
+   .. js:attribute:: name
+
+      The function's name, or the linked resource's.
+
+      :type: string
 
 .. js:class:: LLMHost
 
