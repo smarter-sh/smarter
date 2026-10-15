@@ -11,6 +11,7 @@ Developer Guides
    guides/code-of-conduct
    guides/developer-guidelines
    guides/semantic-versioning
+   guides/getting-started-llm-provider
    guides/openai-api-getting-started-guide
    guides/openai-json-examples
    guides/claude-code
