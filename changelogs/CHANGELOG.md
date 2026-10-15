@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.27.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.27.0-alpha.1...v0.27.0-alpha.2) (2026-10-15)
+
+### Bug Fixes
+
+* **llmclient:** repair clone() and name extension tools in prompts ([1aa73c2](https://github.com/smarter-sh/smarter/commit/1aa73c2a0b8681995ca3abf21529941ab04feaf2))
+
 ## [0.27.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.26.5...v0.27.0-alpha.1) (2026-10-15)
 
 ### Features
