@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.26.0](https://github.com/smarter-sh/smarter/compare/v0.25.1...v0.26.0) (2026-10-15)
+
+### Features
+
+* **api:** add rate limiting and require SECRET_KEY outside local ([64e90bd](https://github.com/smarter-sh/smarter/commit/64e90bd6082dd1399a62532e2eb1d5a27c77f4fc))
+
 ## [0.26.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.26.0-alpha.1...v0.26.0-alpha.2) (2026-10-15)
 
 ### Bug Fixes
