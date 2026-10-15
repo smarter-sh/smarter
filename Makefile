@@ -28,7 +28,7 @@ SMARTER_CHAT_BRANCH ?= main
 SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 
 
-.PHONY: api-contract chat-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chat-contract extension-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -402,6 +402,15 @@ chat-contract: react-smarter-chat
 	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_EXAMPLE) smarter/$(CHAT_CONTRACT_EXAMPLE)
 	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
 	cd $(SMARTER_CHAT_DIR) && npm run contract:types
+
+# Regenerate the web console's Extensions api contract from its Pydantic models, in the smarter-app
+# container, copy it into @smarter/extension-console, and regenerate that package's TypeScript types.
+EXTENSION_CONTRACT_SCHEMA := smarter/apps/llmtool/extension/extension-console.schema.json
+extension-contract:
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_console_schema"
+	docker cp smarter-app:/home/smarter_user/smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/$(EXTENSION_CONTRACT_SCHEMA)
+	cp smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-extension-console/contract/extension-console.schema.json
+	cd smarter/react/packages/smarter-extension-console && npm run contract:types
 
 # Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
 # container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the

@@ -17,7 +17,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmclient.models import (
     LLMClient,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientGuardrails,
 )
 from smarter.lib import json
@@ -71,10 +71,10 @@ class TestLLMClientGuardrails(TestSAMBrokerBaseClass, GuardrailTestBase):
         return sorted(link.guardrail.name for link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient()))
 
     def test_apply_attaches(self):
-        """Test that applying the LLMClient attaches its Guardrails, and not as Functions."""
+        """Test that applying the LLMClient attaches its Guardrails, and not as Extensions."""
         self.apply()
         self.assertEqual(self.linked(), ["test_guardrail"])
-        self.assertFalse(LLMClientFunctions.objects.filter(llmclient=self.llmclient(), name="test_guardrail").exists())
+        self.assertFalse(LLMClientExtensions.objects.filter(llmclient=self.llmclient()).exists())
 
     def test_apply_is_idempotent(self):
         """Test that applying the same manifest again keeps the Guardrails attached."""

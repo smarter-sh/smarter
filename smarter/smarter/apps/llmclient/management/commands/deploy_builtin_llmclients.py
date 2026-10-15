@@ -18,6 +18,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.llmclient.manifest.models.llmclient.model import SAMLLMClient
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.tasks import deploy_default_api
+from smarter.apps.llmtool.models import Extension
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
@@ -174,6 +175,16 @@ class Command(SmarterCommand):
         )
 
         manifest_data = copy.deepcopy(SAMLoader(file_path=filespec).json_data or {})
+        missing = self.missing_extensions(manifest_data.get("spec", {}).get("extensions") or [])
+        if missing:
+            # extensions are installed by a superuser, or from the registry, which may not be reachable yet.
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Skipped {filespec}: it needs extensions that are not installed: {', '.join(missing)}. "
+                    "Install them from the Extensions page of the admin console, then run this command again."
+                )
+            )
+            return True
         manifest_data.setdefault("spec", {}).setdefault("config", {}).setdefault("prompt", {})["deployed"] = True
         manifest = SAMLoader(manifest=manifest_data)
         name = manifest_data.get("metadata", {}).get("name")
@@ -197,6 +208,13 @@ class Command(SmarterCommand):
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Error occurred while deploying llmclient: {e}"))
             return False
+
+    def missing_extensions(self, slugs: list[str]) -> list[str]:
+        """Return the slugs, of those that an llmclient manifest lists, of the extensions that are not installed."""
+        installed = set(
+            Extension.objects.filter(slug__in=slugs, installed_version__isnull=False).values_list("slug", flat=True)
+        )
+        return [slug for slug in slugs if slug not in installed]
 
     def handle(self, *args, **options):
         """Deploy built-in llmclients for an account."""

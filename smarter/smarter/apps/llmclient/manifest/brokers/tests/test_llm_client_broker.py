@@ -134,7 +134,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
             spec=SAMLLMClientSpec(
                 config=SAMLLMClientSpecConfig(**self.loader.manifest_spec["config"]),
                 plugins=[],
-                functions=[],
+                extensions=[],
                 apiKey=None,
             ),
         )
@@ -277,15 +277,15 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
             f"LLMClient annotations do not match manifest annotations. manifest: {manifest_annotations}, llmclient: {llmclient_annotations}",
         )
 
-        # self.broker.manifest.spec.functions is a list of strings or None.
-        # verify that llmclient.functions List[str] contains the same functions.
-        manifest_functions = set(self.broker.manifest.spec.functions or [])
-        django_orm_functions = set()
-        if isinstance(self.broker.functions, list):
-            django_orm_functions = set(self.broker.functions)
-        elif self.broker.functions is not None:
-            self.fail(f"broker.functions is of unexpected type: {type(self.broker.functions)}")
-        self.assertEqual(manifest_functions, django_orm_functions)
+        # self.broker.manifest.spec.extensions is a list of slugs or None.
+        # verify that broker.extensions List[str] contains the same slugs.
+        manifest_extensions = set(self.broker.manifest.spec.extensions or [])
+        django_orm_extensions = set()
+        if isinstance(self.broker.extensions, list):
+            django_orm_extensions = set(self.broker.extensions)
+        elif self.broker.extensions is not None:
+            self.fail(f"broker.extensions is of unexpected type: {type(self.broker.extensions)}")
+        self.assertEqual(manifest_extensions, django_orm_extensions)
 
         # self.broker.manifest.spec.plugins is a list of strings or None.
         # verify that llmclient.plugins List[str] contains the same plugins.

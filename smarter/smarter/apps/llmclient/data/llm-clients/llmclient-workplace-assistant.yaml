@@ -78,7 +78,6 @@ spec:
         color: '#00838f'
       typingIndicator:
         color: '#00838f'
-  functions: []
   plugins:
     - meeting_notes
     - anthropic_internal_comms

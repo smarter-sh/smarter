@@ -91,7 +91,6 @@ spec:
         color: '#f15a29'
       typingIndicator:
         color: '#f15a29'
-  functions: []
   plugins:
     # requires the tavily_api_key Secret. See plugins/plugin-smarter-websearch.yaml.
     - smarter_project_websearch

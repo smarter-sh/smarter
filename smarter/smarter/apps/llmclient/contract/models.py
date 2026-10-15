@@ -34,18 +34,12 @@ if TYPE_CHECKING:
         LLMClient,
         LLMClientAPIKey,
         LLMClientCustomDomain,
-        LLMClientFunctions,
+        LLMClientExtensions,
         LLMClientGuardrails,
         LLMClientMCPClients,
         LLMClientPlugin,
     )
 
-
-LLMClientApiFunctionName = Literal["get_current_weather", "date_calculator", "calculator"]
-"""A built-in function's name: the choices of ``LLMClientFunctions.name``.
-
-A test fails if the two differ.
-"""
 
 LLMClientApiDnsVerificationStatus = Literal["Verifying", "Not Verified", "Verified", "Failed"]
 """The choices of ``LLMClient.dns_verification_status``.
@@ -74,28 +68,30 @@ class LLMClientApiOrmModel(AccountApiModel):
     updated_at: Optional[datetime] = Field(None, description="TimestampedModel.updated_at.")
 
 
-class LLMClientApiFunction(LLMClientApiOrmModel):
-    """A built-in function of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`."""
+class LLMClientApiExtension(LLMClientApiOrmModel):
+    """An extension of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientExtensions`."""
 
-    name: Optional[LLMClientApiFunctionName] = Field(None, description="LLMClientFunctions.name.")
-    llmclient: int = Field(..., description="LLMClientFunctions.llmclient: the LLMClient's id.")
+    name: str = Field(..., description="The extension's slug, e.g. weather.")
+    extension: int = Field(..., description="LLMClientExtensions.extension: the Extension's id.")
+    llmclient: int = Field(..., description="LLMClientExtensions.llmclient: the LLMClient's id.")
 
     @classmethod
-    def from_model(cls, function: "LLMClientFunctions") -> "LLMClientApiFunction":
+    def from_model(cls, link: "LLMClientExtensions") -> "LLMClientApiExtension":
         """
-        The contract's model of a built-in function of an LLMClient.
+        The contract's model of an extension of an LLMClient.
 
-        :param function: The row.
-        :type function: smarter.apps.llmclient.models.LLMClientFunctions
+        :param link: The row, whose ``extension`` should be fetched with it.
+        :type link: smarter.apps.llmclient.models.LLMClientExtensions
         :returns: The model.
-        :rtype: LLMClientApiFunction
+        :rtype: LLMClientApiExtension
         """
         return cls(
-            id=function.pk,
-            created_at=function.created_at,
-            updated_at=function.updated_at,
-            name=function.name,  # type: ignore[arg-type]
-            llmclient=function.llmclient_id,  # type: ignore[attr-defined]
+            id=link.pk,
+            created_at=link.created_at,
+            updated_at=link.updated_at,
+            name=link.extension.slug,
+            extension=link.extension_id,  # type: ignore[attr-defined]
+            llmclient=link.llmclient_id,  # type: ignore[attr-defined]
         )
 
 
@@ -183,16 +179,16 @@ class LLMClientApiGuardrailRef(AccountApiModel):
         return cls(id=link.pk, name=link.guardrail.name)
 
 
-LLMClientApiToolKind = Literal["Function", "Plugin", "MCPClient", "Guardrail"]
-"""What adds a tool to an LLMClient's prompts: a built-in function, or the linked resource's manifest kind."""
+LLMClientApiToolKind = Literal["Extension", "Plugin", "MCPClient", "Guardrail"]
+"""What adds a tool to an LLMClient's prompts: an extension, or the linked resource's manifest kind."""
 
 
 class LLMClientApiTool(AccountApiModel):
-    """Something that an LLMClient adds to a prompt: a function, plugin, MCPClient or guardrail."""
+    """Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient or guardrail."""
 
-    id: int = Field(..., description="The link row's id: LLMClientFunctions, LLMClientPlugin, ... .id.")
-    name: str = Field(..., description="The function's or the linked resource's name.")
-    kind: LLMClientApiToolKind = Field(..., description="Function, or the linked resource's manifest kind.")
+    id: int = Field(..., description="The link row's id: LLMClientExtensions, LLMClientPlugin, ... .id.")
+    name: str = Field(..., description="The extension's slug, or the linked resource's name.")
+    kind: LLMClientApiToolKind = Field(..., description="Extension, or the linked resource's manifest kind.")
 
 
 class LLMClientApiKey(LLMClientApiOrmModel):
@@ -270,7 +266,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
     """
     An LLMClient: a :class:`smarter.apps.llmclient.models.LLMClient`, with its related rows and its urls.
 
-    Its ``functions``, ``plugins``, ``custom_domains`` and ``api_keys`` are inline, and its urls and
+    Its ``extensions``, ``plugins``, ``custom_domains`` and ``api_keys`` are inline, and its urls and
     hosts are computed, as the LLMClient's properties compute them for the platform that serves the
     request.
     """
@@ -286,13 +282,13 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
         ...,
         description="Whether the requesting user may delete the LLMClient now: they own it, and nothing depends on it.",
     )
-    functions: list[LLMClientApiFunction] = Field(..., description="The LLMClient's built-in functions.")
+    extensions: list[LLMClientApiExtension] = Field(..., description="The LLMClient's extensions.")
     plugins: list[LLMClientApiPluginRef] = Field(..., description="The LLMClient's plugins.")
     mcpclients: list[LLMClientApiMCPClientRef] = Field(..., description="The LLMClient's MCPClients.")
     guardrails: list[LLMClientApiGuardrailRef] = Field(..., description="The LLMClient's guardrails.")
     tools: list[LLMClientApiTool] = Field(
         ...,
-        description="Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and "
+        description="Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and "
         "guardrails, in that order.",
     )
     custom_domains: list[LLMClientApiCustomDomain] = Field(
@@ -361,14 +357,17 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
         from smarter.apps.llmclient.models import (
             LLMClientAPIKey,
             LLMClientCustomDomain,
-            LLMClientFunctions,
+            LLMClientExtensions,
             LLMClientGuardrails,
             LLMClientMCPClients,
             LLMClientPlugin,
         )
 
-        functions = [
-            LLMClientApiFunction.from_model(row) for row in LLMClientFunctions.objects.filter(llmclient=llmclient)
+        extensions = [
+            LLMClientApiExtension.from_model(row)
+            for row in LLMClientExtensions.objects.filter(llmclient=llmclient)
+            .select_related("extension")
+            .order_by("extension__slug")
         ]
         plugins = [
             LLMClientApiPluginRef.from_model(row)
@@ -385,7 +384,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
         tools = [
             LLMClientApiTool(id=item.id, name=item.name, kind=kind)
             for kind, items in (
-                ("Function", functions),
+                ("Extension", extensions),
                 ("Plugin", plugins),
                 ("MCPClient", mcpclients),
                 ("Guardrail", guardrails),
@@ -410,7 +409,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             annotations=llmclient.annotations,
             user_profile=AccountApiUserProfile.from_model(llmclient.user_profile),
             can_delete=user_can_delete(llmclient, LLMCLIENT_KIND, user),
-            functions=functions,
+            extensions=extensions,
             plugins=plugins,
             mcpclients=mcpclients,
             guardrails=guardrails,
@@ -462,7 +461,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
 LLMCLIENT_API_MODELS = (
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
-    LLMClientApiFunction,
+    LLMClientApiExtension,
     LLMClientApiKey,
     LLMClientApiCustomDomain,
 )
@@ -475,8 +474,7 @@ __all__ = [
     "LLMCLIENT_API_MODELS",
     "LLMClientApiCustomDomain",
     "LLMClientApiDnsVerificationStatus",
-    "LLMClientApiFunction",
-    "LLMClientApiFunctionName",
+    "LLMClientApiExtension",
     "LLMClientApiGuardrailRef",
     "LLMClientApiKey",
     "LLMClientApiLLMClient",

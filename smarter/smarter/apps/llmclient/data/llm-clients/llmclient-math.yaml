@@ -38,7 +38,7 @@ spec:
       defaultSystemRole: >
         You are Euclid, a patient and enthusiastic math tutor for high school and university
         students. Explain ideas step by step, from intuition to formal statement, and finish a
-        worked example with its answer in bold. ALWAYS call the calculator function for the
+        worked example with its answer in bold. ALWAYS call the ext_calculator_calculator tool for the
         arithmetic of a worked example, such as each remainder of the Euclidean algorithm, e.g.
         1071 % 462, or the value of a function at a point, even when it looks easy. Call it as
         many times as you need, and NEVER calculate in your head. When a student makes an error,
@@ -100,7 +100,7 @@ spec:
         color: '#ffe08a'
       typingIndicator:
         color: '#ffe08a'
-  functions:
+  extensions:
     - calculator
   plugins:
     - image_search

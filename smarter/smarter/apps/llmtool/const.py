@@ -42,3 +42,7 @@ class PluginCacheTtl(IntEnum):
 
     WEBSEARCH_ROBOTS_TXT = ONE_HOUR
     """The robots.txt files that a WebsearchPlugin obeys."""
+
+
+OFFICIAL_EXTENSIONS = ("calculator", "date-calculator", "weather")
+"""The slugs of the official Smarter Extensions, which ``manage.py add_builtin_extensions`` installs from the registry."""

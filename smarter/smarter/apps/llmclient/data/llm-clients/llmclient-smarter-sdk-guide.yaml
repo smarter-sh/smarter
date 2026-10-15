@@ -81,7 +81,6 @@ spec:
         color: '#0969da'
       typingIndicator:
         color: '#0969da'
-  functions: []
   plugins: []
   # The Smarter Project's SDKs, cli and documentation, through the platform's own Smarter Project
   # MCP server, one MCPClient per repository. They require no Secret.
