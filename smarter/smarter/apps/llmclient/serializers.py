@@ -7,9 +7,6 @@ from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
 )
-from smarter.apps.guardrail.manifest.models.guardrail.const import (
-    MANIFEST_KIND as GUARDRAIL_KIND,
-)
 from smarter.apps.llmclient.manifest.models.custom_domain.const import (
     MANIFEST_KIND as CUSTOM_DOMAIN_KIND,
 )
@@ -59,6 +56,7 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
     url_llmclient = serializers.ReadOnlyField()
     user_profile = UserProfileSerializer()
     default_system_role = serializers.SerializerMethodField()
+    total_tools = serializers.SerializerMethodField()
     annotations = serializers.JSONField()
 
     class Meta:
@@ -74,6 +72,16 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
 
     def get_default_system_role(self, obj: LLMClient):
         return obj.default_system_role_enhanced
+
+    def get_total_tools(self, obj: LLMClient) -> int:
+        """
+        The number of tools that the LLMClient adds to a prompt.
+
+        :param obj: The LLMClient.
+        :returns: The length of :meth:`LLMClientSerializer.get_tools`: its extensions, plugins and MCPClients.
+        :rtype: int
+        """
+        return len(LLMClientSerializer().get_tools(obj))
 
 
 class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):
@@ -307,10 +315,12 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
 
     def get_tools(self, obj: LLMClient):
         """
-        Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and guardrails.
+        The tools that the LLMClient offers the LLM: its extensions, plugins and MCPClients.
+
+        Guardrails are left out: they constrain a prompt, but the LLM can't call them.
 
         :param obj: The LLMClient.
-        :returns: One ``{"id", "name", "kind"}`` per extension, plugin, MCPClient and guardrail, in that
+        :returns: One ``{"id", "name", "kind"}`` per extension, plugin and MCPClient, in that
             order. ``id`` is the link row's id, and ``kind`` is ``Extension`` or the linked resource's
             manifest kind.
         :rtype: list[dict]
@@ -321,7 +331,6 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
                 ("Extension", self.get_extensions(obj)),
                 (PLUGIN_KIND, self.get_plugins(obj)),
                 (MCPCLIENT_KIND, self.get_mcpclients(obj)),
-                (GUARDRAIL_KIND, self.get_guardrails(obj)),
             )
             for item in items
             if item["name"]

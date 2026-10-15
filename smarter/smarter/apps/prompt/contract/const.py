@@ -74,6 +74,7 @@ PUBLIC_LLMCLIENT_FIELDS = (
     "app_placeholder",
     "app_info_url",
     "app_file_attachment",
+    "total_tools",
     "styles",
     "url_llmclient",
 )

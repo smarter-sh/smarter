@@ -36,6 +36,7 @@ from .base import InfrastructureService, refuse_in_unit_tests
 from .certificates import Certificate, CertificateService
 from .dns import DNSRecord, DNSService, DNSZone
 from .email import (
+    EmailAttachment,
     EmailService,
     InMemoryEmailService,
     SMTPEmailService,
@@ -103,6 +104,7 @@ __all__ = [
     "DNSRecord",
     "DNSService",
     "DNSZone",
+    "EmailAttachment",
     "EmailService",
     "InMemoryEmailService",
     "InfrastructureService",

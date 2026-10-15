@@ -60,7 +60,6 @@ export function makeObject(id: number, overrides: Partial<LLMClient> = {}): LLMC
       { id: 5, name: "example_configuration", kind: "Plugin" },
       { id: 4, name: "everlasting_gobstopper", kind: "Plugin" },
       { id: 3, name: "example_mcpclient", kind: "MCPClient" },
-      { id: 2, name: "example_guardrail", kind: "Guardrail" },
     ],
     customDomains: [],
     apiKeys: [],
