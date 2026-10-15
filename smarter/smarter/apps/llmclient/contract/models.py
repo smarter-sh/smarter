@@ -35,6 +35,8 @@ if TYPE_CHECKING:
         LLMClientAPIKey,
         LLMClientCustomDomain,
         LLMClientFunctions,
+        LLMClientGuardrails,
+        LLMClientMCPClients,
         LLMClientPlugin,
     )
 
@@ -143,6 +145,56 @@ class LLMClientApiPluginRef(AccountApiModel):
         return cls(id=plugin.pk, name=plugin.plugin_meta.name)
 
 
+class LLMClientApiMCPClientRef(AccountApiModel):
+    """An MCPClient of an LLMClient, in the LLMClient's own response: the LLMClientMCPClients' id, and the MCPClient's name."""
+
+    id: int = Field(..., description="LLMClientMCPClients.id.")
+    name: str = Field(..., description="The MCPClient's name, MCPClient.name.")
+
+    @classmethod
+    def from_model(cls, link: "LLMClientMCPClients") -> "LLMClientApiMCPClientRef":
+        """
+        The contract's reference to an MCPClient of an LLMClient.
+
+        :param link: The row, whose ``mcpclient`` should be fetched with it.
+        :type link: smarter.apps.llmclient.models.LLMClientMCPClients
+        :returns: The model.
+        :rtype: LLMClientApiMCPClientRef
+        """
+        return cls(id=link.pk, name=link.mcpclient.name)
+
+
+class LLMClientApiGuardrailRef(AccountApiModel):
+    """A Guardrail of an LLMClient, in the LLMClient's own response: the LLMClientGuardrails' id, and the Guardrail's name."""
+
+    id: int = Field(..., description="LLMClientGuardrails.id.")
+    name: str = Field(..., description="The Guardrail's name, Guardrail.name.")
+
+    @classmethod
+    def from_model(cls, link: "LLMClientGuardrails") -> "LLMClientApiGuardrailRef":
+        """
+        The contract's reference to a Guardrail of an LLMClient.
+
+        :param link: The row, whose ``guardrail`` should be fetched with it.
+        :type link: smarter.apps.llmclient.models.LLMClientGuardrails
+        :returns: The model.
+        :rtype: LLMClientApiGuardrailRef
+        """
+        return cls(id=link.pk, name=link.guardrail.name)
+
+
+LLMClientApiToolKind = Literal["Function", "Plugin", "MCPClient", "Guardrail"]
+"""What adds a tool to an LLMClient's prompts: a built-in function, or the linked resource's manifest kind."""
+
+
+class LLMClientApiTool(AccountApiModel):
+    """Something that an LLMClient adds to a prompt: a function, plugin, MCPClient or guardrail."""
+
+    id: int = Field(..., description="The link row's id: LLMClientFunctions, LLMClientPlugin, ... .id.")
+    name: str = Field(..., description="The function's or the linked resource's name.")
+    kind: LLMClientApiToolKind = Field(..., description="Function, or the linked resource's manifest kind.")
+
+
 class LLMClientApiKey(LLMClientApiOrmModel):
     """An api key of an LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientAPIKey`."""
 
@@ -236,6 +288,13 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
     )
     functions: list[LLMClientApiFunction] = Field(..., description="The LLMClient's built-in functions.")
     plugins: list[LLMClientApiPluginRef] = Field(..., description="The LLMClient's plugins.")
+    mcpclients: list[LLMClientApiMCPClientRef] = Field(..., description="The LLMClient's MCPClients.")
+    guardrails: list[LLMClientApiGuardrailRef] = Field(..., description="The LLMClient's guardrails.")
+    tools: list[LLMClientApiTool] = Field(
+        ...,
+        description="Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and "
+        "guardrails, in that order.",
+    )
     custom_domains: list[LLMClientApiCustomDomain] = Field(
         ..., description="The LLMClient's custom domain, as a list of none or one."
     )
@@ -303,9 +362,37 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             LLMClientAPIKey,
             LLMClientCustomDomain,
             LLMClientFunctions,
+            LLMClientGuardrails,
+            LLMClientMCPClients,
             LLMClientPlugin,
         )
 
+        functions = [
+            LLMClientApiFunction.from_model(row) for row in LLMClientFunctions.objects.filter(llmclient=llmclient)
+        ]
+        plugins = [
+            LLMClientApiPluginRef.from_model(row)
+            for row in LLMClientPlugin.objects.filter(llmclient=llmclient).select_related("plugin_meta")
+        ]
+        mcpclients = [
+            LLMClientApiMCPClientRef.from_model(row)
+            for row in LLMClientMCPClients.objects.filter(llmclient=llmclient).select_related("mcpclient")
+        ]
+        guardrails = [
+            LLMClientApiGuardrailRef.from_model(row)
+            for row in LLMClientGuardrails.objects.filter(llmclient=llmclient).select_related("guardrail")
+        ]
+        tools = [
+            LLMClientApiTool(id=item.id, name=item.name, kind=kind)
+            for kind, items in (
+                ("Function", functions),
+                ("Plugin", plugins),
+                ("MCPClient", mcpclients),
+                ("Guardrail", guardrails),
+            )
+            for item in items
+            if item.name
+        ]
         custom_domains = (
             LLMClientCustomDomain.objects.filter(id=llmclient.custom_domain_id)  # type: ignore[attr-defined]
             if llmclient.custom_domain_id  # type: ignore[attr-defined]
@@ -323,13 +410,11 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             annotations=llmclient.annotations,
             user_profile=AccountApiUserProfile.from_model(llmclient.user_profile),
             can_delete=user_can_delete(llmclient, LLMCLIENT_KIND, user),
-            functions=[
-                LLMClientApiFunction.from_model(row) for row in LLMClientFunctions.objects.filter(llmclient=llmclient)
-            ],
-            plugins=[
-                LLMClientApiPluginRef.from_model(row)
-                for row in LLMClientPlugin.objects.filter(llmclient=llmclient).select_related("plugin_meta")
-            ],
+            functions=functions,
+            plugins=plugins,
+            mcpclients=mcpclients,
+            guardrails=guardrails,
+            tools=tools,
             custom_domains=[LLMClientApiCustomDomain.from_model(row) for row in custom_domains],
             api_keys=[
                 LLMClientApiKey.from_model(row)
@@ -392,11 +477,15 @@ __all__ = [
     "LLMClientApiDnsVerificationStatus",
     "LLMClientApiFunction",
     "LLMClientApiFunctionName",
+    "LLMClientApiGuardrailRef",
     "LLMClientApiKey",
     "LLMClientApiLLMClient",
+    "LLMClientApiMCPClientRef",
     "LLMClientApiOrmModel",
     "LLMClientApiPlugin",
     "LLMClientApiPluginRef",
+    "LLMClientApiTool",
+    "LLMClientApiToolKind",
     "LLMClientApiTlsCertificateIssuanceStatus",
     "LLMClientApiVerificationStatus",
 ]
