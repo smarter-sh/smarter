@@ -256,6 +256,7 @@
           },
           "user_avatar_url": "user_avatar_url"
         },
+        "total_tools": 0,
         "url_llmclient": "url_llmclient",
         "version": "version"
       },
@@ -407,6 +408,7 @@
           },
           "user_avatar_url": "user_avatar_url"
         },
+        "total_tools": 0,
         "url_chatbot": "url_chatbot",
         "version": "version"
       },
