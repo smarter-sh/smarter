@@ -12,6 +12,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django.views import (
     SmarterAdminWebView,
     SmarterAuthenticatedCachedWebView,
+    SmarterOptionallyAuthenticatedApiView,
     SmarterView,
     SmarterWebTxtView,
     SmarterWebXmlView,
@@ -30,6 +31,11 @@ class OkAdminView(SmarterAdminWebView):
 class NotFoundCachedView(SmarterAuthenticatedCachedWebView):
     def get(self, request, *args, **kwargs):
         return HttpResponse("missing", status=HTTPStatus.NOT_FOUND)
+
+
+class OkOptionallyAuthenticatedApiView(SmarterOptionallyAuthenticatedApiView):
+    def post(self, request, *args, **kwargs):
+        return HttpResponse("api ok")
 
 
 class TestSmarterViews(TestAccountMixin):
@@ -78,6 +84,21 @@ class TestSmarterViews(TestAccountMixin):
         response = redirect_and_expire_cache("/login/")
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertEqual(response["Location"], "/login/")
+
+    def test_optionally_authenticated_api_view_is_throttled(self):
+        """Test that a throttled request gets 429 with Retry-After, and never reaches the handler."""
+        request = self.factory.post("/api/v1/llmclient/", HTTP_HOST="localhost:9357")
+        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        request.user = AnonymousUser()
+        view = OkOptionallyAuthenticatedApiView.as_view()
+        with patch(f"{MODULE}.throttle_wait", return_value=None):
+            self.assertEqual(view(request).content, b"api ok")
+        with patch(f"{MODULE}.throttle_wait", return_value=7):
+            response = view(request)
+        self.assertEqual(response.status_code, HTTPStatus.TOO_MANY_REQUESTS)
+        self.assertEqual(response["Retry-After"], "7")
+        self.assertIn(b"throttled", response.content)
+        self.assertIn("Cookie", response["Vary"])
 
 
 class TestSmarterCachePageByUser(TestAccountMixin):

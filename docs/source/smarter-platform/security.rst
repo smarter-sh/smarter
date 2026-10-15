@@ -44,6 +44,7 @@ Proprietary Security Features
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Smarter Sensitive File Blocking"/>
 
+- **API Rate Limiting**. Every api is rate limited, per authenticated user and, for anonymous clients, per IP address, including the apis that a deployed LLMClient/Agent serves to the pages that embed it. A client that exceeds its limit receives HTTP 429 Too Many Requests with a ``Retry-After`` header. The limits are ``SMARTER_THROTTLE_RATE_USER`` (default ``600/minute``) and ``SMARTER_THROTTLE_RATE_ANON`` (default ``120/minute``). Set either to ``none`` to disable it. See `smarter/lib/drf/throttling.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/throttling.py>`_
 - **Excessive 404 Protection**. Custom middleware (above DRF's rate-limiting) to protect against blind/random file access attempts. See `smarter/lib/django/middleware/excessive_404.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/excessive_404.py>`_
 - **Enhanced CSRF Protection**. Custom middleware to enhance CSRF protection for Smarter LLMClient/Agent API endpoints. See `smarter/lib/django/middleware/csrf.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/csrf.py>`_
 - **Enhanced CORS Protection**. Custom middleware to enhance CORS protection for Smarter LLMClient/Agent API endpoints. See `smarter/lib/django/middleware/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/cors.py>`_
@@ -71,7 +72,7 @@ Django Security Features
 - **Security Middleware** (custom and built-in). Implements various security measures through middleware components. See `Security Middleware <https://docs.djangoproject.com/en/stable/topics/security/#security-middlewares>`_
 - **Session Security**. Manages user session expiration and secure cookie settings. See `Session Security <https://docs.djangoproject.com/en/stable/topics/http/sessions/#security>`_
 - **Secure Cookie Settings**. Ensures cookies are transmitted securely and are protected from cross-site scripting. See `Cookie Security <https://docs.djangoproject.com/en/stable/ref/settings/#std-setting-SESSION_COOKIE_SECURE>`_
-- **Secret Key Management**. Handles the secure generation and storage of secret keys used for cryptographic signing. See `SECRET_KEY <https://docs.djangoproject.com/en/stable/ref/settings/#secret-key>`_
+- **Secret Key Management**. The secret key that signs sessions and password reset tokens comes from ``SMARTER_SECRET_KEY``. Outside of the local environment, Smarter refuses to start if it is missing or still a ``SET-ME`` placeholder, rather than generating a different random key in every pod. See `SECRET_KEY <https://docs.djangoproject.com/en/stable/ref/settings/#secret-key>`_
 - **Password Validation**. Enforces strong password policies to enhance account security. See `Password Validation <https://docs.djangoproject.com/en/stable/topics/auth/passwords/#password-validation>`_. The default password policy configuration is as follows:
 
   .. code-block:: python
