@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.28.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.27.1...v0.28.0-alpha.1) (2026-10-15)
+
+### Features
+
+* **infrastructure:** email the whole job log, attached or via S3 ([aaa4598](https://github.com/smarter-sh/smarter/commit/aaa45986ea99647a0f5f1270ada27fc641dc0e1e))
+
 ## [0.27.1](https://github.com/smarter-sh/smarter/compare/v0.27.0...v0.27.1) (2026-10-15)
 
 ### Bug Fixes
