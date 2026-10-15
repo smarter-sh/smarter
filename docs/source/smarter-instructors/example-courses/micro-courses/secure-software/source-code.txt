@@ -67,11 +67,20 @@ Secrets and Outbound Requests
        every resolved address public, no credentials in URLs, every redirect re-validated,
        bounded responses and timeouts. Its docstring states the remaining DNS rebinding window
        honestly.
-     - `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
+     - `llmtool/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
    * - MCP servers
      - The same checks on every request to an MCP server, and no stdio transport, which would
        run a command on the Smarter server.
      - `mcpclient/connection.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/connection.py>`__
+   * - Third-party code
+     - Extensions are Python packages that run inside the platform, unsandboxed. Archives are
+       validated before import: size, file count, expanded size, links and path traversal. The
+       registry's index is signed with Ed25519 and verified on every read, each downloaded archive
+       is checked against its signed sha256, and each publisher has a trust badge that only the
+       Smarter team can change. :doc:`/smarter-platform/extensions`.
+     - `llmtool/extension/archive.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/archive.py>`__,
+       `llmtool/extension/registry.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/registry.py>`__,
+       `extensions-registry <https://github.com/smarter-sh/extensions-registry>`__
    * - Never cache a security check
      - The rule that ``validate_public_url()`` must resolve DNS fresh before every request, and
        why caching it would widen the rebinding window to the cache lifetime.

@@ -52,8 +52,8 @@ see them and argue about them:
 **What the course covers.** The anatomy of an AI application, and how each part appears as a
 Smarter resource; models and prompts for applications, including structured output; retrieval:
 embeddings, chunking, top-k, citations and measuring retrieval quality; structured data, and the
-safe patterns for letting a model answer from a database; tools, function calling and plugin
-selection; the Model Context Protocol, and trusting an MCP server; tool safety and prompt
+safe patterns for letting a model answer from a database; tools, function calling, plugin
+selection and installed Extensions; the Model Context Protocol, and trusting an MCP server; tool safety and prompt
 injection through retrieved content; orchestration, from workflows to agents; evaluation with test
 sets, rubrics and LLM judges; and the production concerns of guardrails, budgets, cost accounting,
 the journal and deployment.
@@ -65,7 +65,7 @@ the journal and deployment.
   especially ``customer_support``, ``research_analyst`` and ``data_analyst``.
 - `mcpclient/data/mcpclients/
   <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
-  and `plugin/data/
+  and `llmtool/data/
   <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data>`__.
 - `vectorstore/data/vectorstores/
   <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__,
