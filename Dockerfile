@@ -288,11 +288,17 @@ ARG DOCKER_COLLECT_STATIC_FILES=true
 WORKDIR /home/smarter_user/smarter
 ENV DOCKER_COLLECT_STATIC_FILES=${DOCKER_COLLECT_STATIC_FILES}
 
+# collectstatic loads the full Django settings, which refuse to start outside of
+# the local environment without SECRET_KEY. collectstatic signs nothing, so it gets
+# a throwaway random key that exists only for this RUN step and is never written to
+# the image. The real key is still supplied at runtime.
+
 RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
       if [ ! -d "smarter/static/react" ] || [ -z "$(ls -A smarter/static/react)" ]; then \
         echo "Error: smarter/static/react is missing or empty" >&2; ls -lha smarter/static; exit 1; \
       fi; \
-      python manage.py collectstatic --noinput; \
+      SMARTER_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+        python manage.py collectstatic --noinput; \
     else \
       echo "Skipping collectstatic"; \
     fi
