@@ -6,11 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.26.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.25.0...v0.26.0-alpha.1) (2026-10-14)
+## [0.25.1](https://github.com/smarter-sh/smarter/compare/v0.25.0...v0.25.1) (2026-10-15)
 
-### Features
+### Bug Fixes
 
-* **api:** add rate limiting and require SECRET_KEY outside local ([64e90bd](https://github.com/smarter-sh/smarter/commit/64e90bd6082dd1399a62532e2eb1d5a27c77f4fc))
+* **llmclient:** add mcpclients, guardrails, tools to the api contract ([49ca0c9](https://github.com/smarter-sh/smarter/commit/49ca0c9605c2e27ae242f126b7349e06e244e6c0))
 
 ## [0.25.0](https://github.com/smarter-sh/smarter/compare/v0.24.1...v0.25.0) (2026-10-14)
 
