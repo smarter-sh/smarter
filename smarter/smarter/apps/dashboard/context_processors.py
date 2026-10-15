@@ -92,6 +92,7 @@ from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.urls import LLMClientReverseNames
 from smarter.apps.llmhost.urls import LLMHostReverseNames
+from smarter.apps.llmtool.extension.urls import ExtensionReverseNames
 from smarter.apps.llmtool.models import (
     PluginMeta,
 )
@@ -156,6 +157,7 @@ def sidebar_context() -> SmarterDictType:
             "infrastructure_resources": reverse(
                 InfrastructureReverseNames.namespace, InfrastructureReverseNames.listview
             ),
+            "extensions": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
             "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
@@ -204,14 +206,25 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
     ``swagger_docs``, ``redoc``, ``openapi``, ``json_schemas``, ``account``, ``admin``.
 
-    :param request: The incoming HTTP request (not used directly; required by
-        the Django context-processor protocol).
+    For a superuser, ``extension_updates`` is also the number of installed extensions for which
+    the registry offers an update, which the Extensions link shows as a badge. It is counted on
+    each request, rather than cached with the urls.
+
+    :param request: The incoming HTTP request, whose user decides whether the update count is added.
     :type request: HttpRequest
-    :returns: A dict with a single ``"sidebar"`` key mapping destination names
-        to their resolved URL strings.
+    :returns: A dict with a ``"sidebar"`` key mapping destination names
+        to their resolved URL strings, and for a superuser, ``"extension_updates"``.
     :rtype: SmarterDictType
     """
-    return sidebar_context()
+    context = sidebar_context()
+    user = getattr(request, "user", None)
+    if getattr(user, "is_superuser", False):
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmtool.models import Extension
+
+        extensions = Extension.objects.select_related("installed_version").exclude(latest_version="")
+        context = {**context, "extension_updates": sum(1 for extension in extensions if extension.update_available)}
+    return context
 
 
 def base(request: "HttpRequest") -> SmarterDictType:

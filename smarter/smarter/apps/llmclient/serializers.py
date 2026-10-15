@@ -30,7 +30,7 @@ from .models import (
     LLMClientAPIKey,
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientGuardrails,
     LLMClientMCPClients,
     LLMClientPlugin,
@@ -232,10 +232,13 @@ class LLMClientGuardrailMiniSerializer(SmarterCamelCaseSerializer):
     name = serializers.CharField(source="guardrail.name", read_only=True)
 
 
-class LLMClientFunctionsSerializer(SmarterCamelCaseSerializer):
+class LLMClientExtensionsSerializer(SmarterCamelCaseSerializer):
+    """An Extension of an LLMClient: the link row, and the Extension's slug as its name."""
+
+    name = serializers.CharField(source="extension.slug", read_only=True)
 
     class Meta:
-        model = LLMClientFunctions
+        model = LLMClientExtensions
         fields = "__all__"
 
     def get_fields(self):
@@ -249,7 +252,7 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
     hashed_id = serializers.SerializerMethodField()
     url_llmclient = serializers.ReadOnlyField()
     user_profile = UserProfileSerializer()
-    functions = serializers.SerializerMethodField()
+    extensions = serializers.SerializerMethodField()
     plugins = serializers.SerializerMethodField()
     mcpclients = serializers.SerializerMethodField()
     guardrails = serializers.SerializerMethodField()
@@ -286,9 +289,9 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
             field.read_only = True
         return fields
 
-    def get_functions(self, obj: LLMClient):
-        qs = LLMClientFunctions.objects.filter(llmclient=obj)
-        return LLMClientFunctionsSerializer(qs, many=True).data
+    def get_extensions(self, obj: LLMClient):
+        qs = LLMClientExtensions.objects.filter(llmclient=obj).select_related("extension").order_by("extension__slug")
+        return LLMClientExtensionsSerializer(qs, many=True).data
 
     def get_plugins(self, obj: LLMClient):
         qs = LLMClientPlugin.objects.filter(llmclient=obj).select_related("plugin_meta")
@@ -304,18 +307,18 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
 
     def get_tools(self, obj: LLMClient):
         """
-        Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails.
+        Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and guardrails.
 
         :param obj: The LLMClient.
-        :returns: One ``{"id", "name", "kind"}`` per function, plugin, MCPClient and guardrail, in that
-            order. ``id`` is the link row's id, and ``kind`` is ``Function`` or the linked resource's
+        :returns: One ``{"id", "name", "kind"}`` per extension, plugin, MCPClient and guardrail, in that
+            order. ``id`` is the link row's id, and ``kind`` is ``Extension`` or the linked resource's
             manifest kind.
         :rtype: list[dict]
         """
         return [
             {"id": item["id"], "name": item["name"], "kind": kind}
             for kind, items in (
-                ("Function", self.get_functions(obj)),
+                ("Extension", self.get_extensions(obj)),
                 (PLUGIN_KIND, self.get_plugins(obj)),
                 (MCPCLIENT_KIND, self.get_mcpclients(obj)),
                 (GUARDRAIL_KIND, self.get_guardrails(obj)),
@@ -399,7 +402,7 @@ __all__ = [
     "LLMClientPluginMiniSerializer",
     "LLMClientMCPClientMiniSerializer",
     "LLMClientGuardrailMiniSerializer",
-    "LLMClientFunctionsSerializer",
+    "LLMClientExtensionsSerializer",
     "LLMClientCustomDomainSerializer",
     "LLMClientCustomDomainListSerializer",
 ]

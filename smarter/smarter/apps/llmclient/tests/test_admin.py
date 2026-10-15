@@ -8,15 +8,15 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.apps.llmclient.models import (
     LLMClient,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientPlugin,
 )
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 
 
 class TestLLMClientChildAdmins(TestAccountMixin):
     """
-    Test the LLMClientPlugin and LLMClientFunctions admins.
+    Test the LLMClientPlugin and LLMClientExtensions admins.
 
     They list the records of the user's own LLMClients, and not those of another
     account's LLMClients.
@@ -43,13 +43,15 @@ class TestLLMClientChildAdmins(TestAccountMixin):
         cls.other_plugin = LLMClientPlugin.objects.create(
             llmclient=cls.other_llmclient, plugin_meta=cls.other_plugin_meta
         )
-        cls.function = LLMClientFunctions.objects.create(llmclient=cls.llmclient, name="calculator")
-        cls.other_function = LLMClientFunctions.objects.create(llmclient=cls.other_llmclient, name="calculator")
+        cls.extension = Extension.objects.create(slug="test-admin", display_name="Test Admin")
+        cls.link = LLMClientExtensions.objects.create(llmclient=cls.llmclient, extension=cls.extension)
+        cls.other_link = LLMClientExtensions.objects.create(llmclient=cls.other_llmclient, extension=cls.extension)
 
     @classmethod
     def tearDownClass(cls):
         LLMClient.objects.filter(pk__in=[cls.llmclient.pk, cls.other_llmclient.pk]).delete()
         PluginMeta.objects.filter(pk__in=[cls.plugin_meta.pk, cls.other_plugin_meta.pk]).delete()
+        Extension.objects.filter(pk=cls.extension.pk).delete()
         super().tearDownClass()
 
     def queryset(self, model, user):
@@ -65,9 +67,9 @@ class TestLLMClientChildAdmins(TestAccountMixin):
         self.assertNotIn(self.other_plugin, qs)
         self.assertFalse(self.queryset(LLMClientPlugin, AnonymousUser()).exists())
 
-    def test_llmclient_functions_admin(self):
-        """Test that the LLMClientFunctions admin lists the user's records only."""
-        qs = self.queryset(LLMClientFunctions, self.non_admin_user)
-        self.assertIn(self.function, qs)
-        self.assertNotIn(self.other_function, qs)
-        self.assertFalse(self.queryset(LLMClientFunctions, AnonymousUser()).exists())
+    def test_llmclient_extensions_admin(self):
+        """Test that the LLMClientExtensions admin lists the user's records only."""
+        qs = self.queryset(LLMClientExtensions, self.non_admin_user)
+        self.assertIn(self.link, qs)
+        self.assertNotIn(self.other_link, qs)
+        self.assertFalse(self.queryset(LLMClientExtensions, AnonymousUser()).exists())

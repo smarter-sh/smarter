@@ -1,0 +1,9 @@
+[project]
+name = "smarter-extension-broken"
+version = "1.0.0"
+description = "An extension whose code does not import."
+
+[tool.smarter]
+slug = "broken"
+package = "broken"
+tools = ["broken.tools:Nothing"]

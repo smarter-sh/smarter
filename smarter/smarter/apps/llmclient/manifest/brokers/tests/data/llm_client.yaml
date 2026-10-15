@@ -53,5 +53,5 @@ spec:
       outgoingMessage:
         backgroundColor: tomato
         color: "#fff"
-  functions: null
+  extensions: null
   plugins: null

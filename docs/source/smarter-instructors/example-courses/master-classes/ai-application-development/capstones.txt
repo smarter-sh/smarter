@@ -67,15 +67,14 @@ Capstone B: A New Built-in Tool for Smarter
 **Learning objective.** Add an AI feature to a large production codebase, end to end, following
 the patterns that the codebase already uses.
 
-Students add a built-in function to their fork of Smarter, beside the calculator, the date
-calculator and the weather function: a tool factory that returns its JSON Schema definition, the
-function itself, with its arguments validated as untrusted input, its registration in
-``LLMClientFunctions`` and in the handler, a system prompt note that tells the LLM when to use it,
-and tests that run the tool call loop with a fake LLM. An LLMClient manifest uses the function,
-and a Vite single-page app of their own, built from ``@chatscope/chat-ui-kit-react``, talks to
-that LLMClient's prompt API. A capstone
-that proposes its function to Smarter itself must be agreed with the maintainers in a GitHub issue
-first.
+Students build a Smarter Extension, modeled on the official weather extension: a
+``pyproject.toml`` manifest, a tool whose Pydantic arguments model is its JSON Schema definition,
+with its arguments validated as untrusted input, any settings it needs, a system prompt note that
+tells the LLM when to use it, and tests that run the tool call loop with a fake LLM. They install
+it on their platform, an LLMClient manifest lists it under ``spec.extensions``, and a Vite
+single-page app of their own, built from ``@chatscope/chat-ui-kit-react``, talks to that
+LLMClient's prompt API. A capstone that proposes its extension to the Smarter registry follows the
+registry's publishing guide.
 
 **What students turn in:**
 

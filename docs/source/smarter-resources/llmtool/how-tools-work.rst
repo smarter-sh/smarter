@@ -117,8 +117,9 @@ Function tool example
 ------------------------
 
 Let's look at an end-to-end tool calling flow for a function tool that calls ``get_current_weather``.
-As it happens, The Smarter Project implements this exact tool as part of its code base.
-See :doc:`get_current_weather() <../prompt/functions/get-current-weather>`
+As it happens, The Smarter Project implements this tool, as ``get_weather``, in its official weather
+:doc:`Extension <../../smarter-framework/smarter-extensions>`. See the
+:doc:`Extension developer guide <../../smarter-framework/extensions/developer-guide>`.
 
 Defining functions
 ------------------------

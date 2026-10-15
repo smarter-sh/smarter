@@ -27,6 +27,7 @@ The Smarter platform's fundamental building blocks to this extent are:
    smarter-platform/installation
    smarter-platform/smarter-web-console
    smarter-platform/django-admin
+   smarter-platform/extensions
    smarter-platform/prerequisites
    smarter-platform/trouble-shooting
    smarter-platform/cloud-infrastructure

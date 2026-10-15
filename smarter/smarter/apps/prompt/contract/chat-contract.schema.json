@@ -372,10 +372,10 @@
           "title": "Debug Mode",
           "type": "boolean"
         },
-        "functions": {
+        "extensions": {
           "anyOf": [
             {
-              "$ref": "#/$defs/PromptChatApiFunctionList"
+              "$ref": "#/$defs/PromptChatApiExtensionList"
             },
             {
               "type": "null"
@@ -502,10 +502,10 @@
           "title": "Debug Mode",
           "type": "boolean"
         },
-        "functions": {
+        "extensions": {
           "anyOf": [
             {
-              "$ref": "#/$defs/PromptChatApiFunctionListV1"
+              "$ref": "#/$defs/PromptChatApiExtensionListV1"
             },
             {
               "type": "null"
@@ -611,6 +611,49 @@
       "title": "PromptChatApiErrorResponse",
       "type": "object"
     },
+    "PromptChatApiExtensionList": {
+      "additionalProperties": true,
+      "description": "The LLMClient's extensions.\n\nThe list itself is returned only in the complete configuration.",
+      "properties": {
+        "extensions": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiLLMClientExtension"
+          },
+          "title": "Extensions",
+          "type": "array"
+        },
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiListMetaData"
+        }
+      },
+      "required": [
+        "meta_data"
+      ],
+      "title": "PromptChatApiExtensionList",
+      "type": "object"
+    },
+    "PromptChatApiExtensionListV1": {
+      "additionalProperties": true,
+      "deprecated": true,
+      "description": "The LLMClient's extensions, in version 1.",
+      "properties": {
+        "extensions": {
+          "items": {
+            "$ref": "#/$defs/PromptChatApiLLMClientExtensionV1"
+          },
+          "title": "Extensions",
+          "type": "array"
+        },
+        "meta_data": {
+          "$ref": "#/$defs/PromptChatApiListMetaData"
+        }
+      },
+      "required": [
+        "meta_data"
+      ],
+      "title": "PromptChatApiExtensionListV1",
+      "type": "object"
+    },
     "PromptChatApiFailureV1": {
       "additionalProperties": true,
       "deprecated": true,
@@ -713,49 +756,6 @@
         "arguments"
       ],
       "title": "PromptChatApiFunctionCall",
-      "type": "object"
-    },
-    "PromptChatApiFunctionList": {
-      "additionalProperties": true,
-      "description": "The LLMClient's built-in functions.\n\nThe list itself is returned only in the complete configuration.",
-      "properties": {
-        "functions": {
-          "items": {
-            "$ref": "#/$defs/PromptChatApiLLMClientFunction"
-          },
-          "title": "Functions",
-          "type": "array"
-        },
-        "meta_data": {
-          "$ref": "#/$defs/PromptChatApiListMetaData"
-        }
-      },
-      "required": [
-        "meta_data"
-      ],
-      "title": "PromptChatApiFunctionList",
-      "type": "object"
-    },
-    "PromptChatApiFunctionListV1": {
-      "additionalProperties": true,
-      "deprecated": true,
-      "description": "The LLMClient's built-in functions, in version 1.",
-      "properties": {
-        "functions": {
-          "items": {
-            "$ref": "#/$defs/PromptChatApiLLMClientFunctionV1"
-          },
-          "title": "Functions",
-          "type": "array"
-        },
-        "meta_data": {
-          "$ref": "#/$defs/PromptChatApiListMetaData"
-        }
-      },
-      "required": [
-        "meta_data"
-      ],
-      "title": "PromptChatApiFunctionListV1",
       "type": "object"
     },
     "PromptChatApiHistory": {
@@ -1207,9 +1207,9 @@
       "title": "PromptChatApiLLMClient",
       "type": "object"
     },
-    "PromptChatApiLLMClientFunction": {
+    "PromptChatApiLLMClientExtension": {
       "additionalProperties": false,
-      "description": "A built-in function of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientFunctions`.",
+      "description": "An extension of the LLMClient: a :class:`smarter.apps.llmclient.models.LLMClientExtensions`.",
       "properties": {
         "created_at": {
           "anyOf": [
@@ -1225,33 +1225,30 @@
           "description": "TimestampedModel.created_at.",
           "title": "Created At"
         },
+        "enabled": {
+          "description": "Whether the Extension is enabled, so that its tools are offered.",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "extension": {
+          "description": "LLMClientExtensions.extension: the Extension's id.",
+          "title": "Extension",
+          "type": "integer"
+        },
         "id": {
           "description": "The row's primary key.",
           "title": "Id",
           "type": "integer"
         },
         "llmclient": {
-          "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+          "description": "LLMClientExtensions.llmclient: the LLMClient's id.",
           "title": "Llmclient",
           "type": "integer"
         },
         "name": {
-          "anyOf": [
-            {
-              "enum": [
-                "get_current_weather",
-                "date_calculator",
-                "calculator"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "LLMClientFunctions.name.",
-          "title": "Name"
+          "description": "The Extension's slug, e.g. weather.",
+          "title": "Name",
+          "type": "string"
         },
         "updated_at": {
           "anyOf": [
@@ -1266,22 +1263,38 @@
           "default": null,
           "description": "TimestampedModel.updated_at.",
           "title": "Updated At"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The Extension's installed version, e.g. 1.0.0.",
+          "title": "Version"
         }
       },
       "required": [
         "id",
-        "llmclient"
+        "llmclient",
+        "extension",
+        "name",
+        "enabled"
       ],
-      "title": "PromptChatApiLLMClientFunction",
+      "title": "PromptChatApiLLMClientExtension",
       "type": "object"
     },
-    "PromptChatApiLLMClientFunctionV1": {
+    "PromptChatApiLLMClientExtensionV1": {
       "additionalProperties": false,
       "deprecated": true,
-      "description": "A built-in function of the LLMClient, in version 1, whose ``llmclient`` is renamed ``chatbot``.",
+      "description": "An extension of the LLMClient, in version 1, whose ``llmclient`` is renamed ``chatbot``.",
       "properties": {
         "chatbot": {
-          "description": "LLMClientFunctions.llmclient: the LLMClient's id.",
+          "description": "LLMClientExtensions.llmclient: the LLMClient's id.",
           "title": "Chatbot",
           "type": "integer"
         },
@@ -1299,27 +1312,22 @@
           "description": "TimestampedModel.created_at.",
           "title": "Created At"
         },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "extension": {
+          "title": "Extension",
+          "type": "integer"
+        },
         "id": {
           "description": "The row's primary key.",
           "title": "Id",
           "type": "integer"
         },
         "name": {
-          "anyOf": [
-            {
-              "enum": [
-                "get_current_weather",
-                "date_calculator",
-                "calculator"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Name"
+          "title": "Name",
+          "type": "string"
         },
         "updated_at": {
           "anyOf": [
@@ -1334,13 +1342,28 @@
           "default": null,
           "description": "TimestampedModel.updated_at.",
           "title": "Updated At"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
         }
       },
       "required": [
         "id",
-        "chatbot"
+        "chatbot",
+        "extension",
+        "name",
+        "enabled"
       ],
-      "title": "PromptChatApiLLMClientFunctionV1",
+      "title": "PromptChatApiLLMClientExtensionV1",
       "type": "object"
     },
     "PromptChatApiLLMClientPlugin": {
@@ -1663,9 +1686,9 @@
     },
     "PromptChatApiListMetaData": {
       "additionalProperties": true,
-      "description": "The counts of a list of the LLMClient's plugins or functions.",
+      "description": "The counts of a list of the LLMClient's plugins or extensions.",
       "properties": {
-        "functions_returned": {
+        "extensions_returned": {
           "anyOf": [
             {
               "type": "integer"
@@ -1675,7 +1698,7 @@
             }
           ],
           "default": null,
-          "title": "Functions Returned"
+          "title": "Extensions Returned"
         },
         "plugins_returned": {
           "anyOf": [
@@ -1689,7 +1712,7 @@
           "default": null,
           "title": "Plugins Returned"
         },
-        "total_functions": {
+        "total_extensions": {
           "anyOf": [
             {
               "type": "integer"
@@ -1699,7 +1722,7 @@
             }
           ],
           "default": null,
-          "title": "Total Functions"
+          "title": "Total Extensions"
         },
         "total_plugins": {
           "anyOf": [

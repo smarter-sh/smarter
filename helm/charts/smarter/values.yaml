@@ -261,6 +261,7 @@ hpa:
 # -----------------------------------------------------------------------------
 databaseInit:
   enabled: true   # post-install/post-upgrade Job: create db + user, migrate, initialize platform
+  notifyEmail: "" # the Job emails its log here when it completes. Empty: smarter_settings.email_admin
 
 databaseScheduledBackup:
   enabled: true

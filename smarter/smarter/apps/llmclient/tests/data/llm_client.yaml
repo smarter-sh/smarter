@@ -44,5 +44,3 @@ spec:
   plugins:
     - example_configuration
     - everlasting_gobstopper
-  functions:
-    - get_current_weather

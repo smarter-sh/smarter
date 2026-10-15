@@ -30,23 +30,12 @@ from smarter.apps.guardrail.services import (
     PipelineDisposition,
     PipelineResult,
 )
+from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
 from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.apps.mcpclient.toolkit import MCPToolkit
-from smarter.apps.prompt.functions.calculator import (
-    calculator,
-    calculator_tool_factory,
-)
-from smarter.apps.prompt.functions.date_calculator import (
-    date_calculator,
-    date_calculator_tool_factory,
-)
-from smarter.apps.prompt.functions.function_weather import (
-    get_current_weather,
-    weather_tool_factory,
-)
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.receivers import (
     llm_tool_presented,
@@ -180,6 +169,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     """The MCP tools of the current prompt.
 
     See :meth:`handle_mcp_clients`.
+    """
+
+    extension_toolkit: Optional[ExtensionToolkit] = None
+    """The extension tools of the current prompt.
+
+    See :meth:`handle_extensions`.
     """
 
     guardrail_pipeline: Optional[GuardrailPipeline] = None
@@ -606,9 +601,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self, function_name: str, function_args: str, extra_resource_locators: Optional[list[str]] = None
     ) -> None:
         """
-        Handle a built-in tool call.
+        Handle a tool call by a function, an MCP server or an extension.
 
-        example: get_current_weather()
+        example: ext_weather_get_weather()
 
         :param function_name: The name of the tool function called.
         :type function_name: str
@@ -713,8 +708,16 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if budget_refusal is not None:
             # a budget forbids charges to the plugin or MCP server, so the LLM is told why instead.
             function_response = budget_refusal
-        elif function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
-            function_response = function_to_call(tool_call=tool_call)
+        elif self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
+            extension = self.extension_toolkit.extension_for(function_name)
+            function_response = self.extension_toolkit.call(function_name, function_args)
+            if extension is not None:
+                serialized_tool_call[_InternalKeys.SMARTER_EXTENSION_KEY] = {
+                    "id": extension.pk,
+                    "slug": extension.slug,
+                    "version": extension.installed_version.version if extension.installed_version else None,
+                    "tool": self.extension_toolkit.tool_name_for(function_name),
+                }
 
         elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
             mcpclient = self.mcp_toolkit.mcpclient_for(function_name)
@@ -801,8 +804,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         A plugin's function name is symbolic, e.g. ``smarter_plugin_0000000016``, so its
         PluginMeta's name is returned instead. An MCP function's name is prefixed with its
-        server's number, so the MCP tool's own name is returned instead. Anything else, e.g.
-        a built-in function, or a plugin that can't be found, is returned as is.
+        server's number, so the MCP tool's own name is returned instead, and likewise an
+        extension tool's name is returned without its ``ext_<slug>_`` prefix. Anything else,
+        e.g. a plugin that can't be found, is returned as is.
 
         :param function_name: The function name that the LLM called.
         :type function_name: str
@@ -812,6 +816,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
             function = self.mcp_toolkit.functions.get(function_name)
             return getattr(function, "tool_name", None) or function_name
+        if self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
+            return self.extension_toolkit.tool_name_for(function_name) or function_name
         if function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             try:
                 return PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1])).name or function_name
@@ -1039,37 +1045,59 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 content=f"Smarter could not use the {name} MCP server: {error}",
             )
 
-    def handle_function_provided(self, function: str) -> None:
+    def handle_extensions(self) -> None:
         """
-        Handle a function being provided.
+        Offer the LLM the tools of the LLMClient's extensions.
 
-        :param function: The name of the function that was provided.
-        :type function: str
+        The LLMClient's extensions, listed in its manifest's ``spec.extensions``, are loaded
+        into an :class:`~smarter.apps.llmtool.extension.toolkit.ExtensionToolkit`, whose
+        tools are added to the request. An extension that is disabled, not available to the
+        LLMClient's account, or whose code does not load, is skipped, and reported in a
+        Smarter message.
 
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.handle_function_provided() called with function: %s.", self.formatted_class_name, function)
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmclient.models import LLMClientExtensions
+
+        self.extension_toolkit = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None:
+            return
+        extensions = LLMClientExtensions.extensions_for(llmclient)
+        if not extensions:
+            return
+        logger.debug(
+            "%s.handle_extensions() loading extensions: %s",
+            self.formatted_class_name,
+            [extension.slug for extension in extensions],
+        )
+        self.extension_toolkit = ExtensionToolkit(
+            extensions,
+            account=getattr(llmclient.user_profile, "account", None),
+            user_profile=self.user_profile if isinstance(self.user_profile, UserProfile) else None,
+            llmclient=llmclient,
+        ).load()
         if self.tools is None:
             self.tools = []
         if self.available_functions is None:
             self.available_functions = {}
-
-        if function == get_current_weather.__name__:
-            weather_tool = weather_tool_factory()  # FIX NOTE: seems like this should be weather_tool_factory
-            self.tools.append(weather_tool)
-            self.available_functions[get_current_weather.__name__] = get_current_weather
-            llm_tool_presented.send(sender=self.handle_function_provided, tool=weather_tool, plugin=None)
-        elif function == date_calculator.__name__:
-            date_calculator_tool = date_calculator_tool_factory()
-            self.tools.append(date_calculator_tool)
-            self.available_functions[date_calculator.__name__] = date_calculator
-            llm_tool_presented.send(sender=self.handle_function_provided, tool=date_calculator_tool, plugin=None)
-        elif function == calculator.__name__:
-            calculator_tool = calculator_tool_factory()
-            self.tools.append(calculator_tool)
-            self.available_functions[calculator.__name__] = calculator
-            llm_tool_presented.send(sender=self.handle_function_provided, tool=calculator_tool, plugin=None)
+        for tool in self.extension_toolkit.tools:
+            self.tools.append(tool)
+            self.available_functions[tool["function"]["name"]] = self.extension_toolkit.call
+            llm_tool_presented.send(sender=self.handle_extensions, tool=tool, plugin=None)
+        if self.extension_toolkit.loaded:
+            names = ", ".join(extension.slug for extension in self.extension_toolkit.loaded)
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+                content=f"Smarter added the tools of these extensions: {names}",
+            )
+        for slug, error in self.extension_toolkit.errors.items():
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_ERROR_KEY,
+                content=f"Smarter could not use the {slug} extension: {error}",
+            )
 
     def handle_completion(self) -> SmarterDictType:
         """
@@ -1161,7 +1189,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         prompt: Prompt,
         data: Union[SmarterDictType, list],
         plugins: Optional[list[PluginBase]] = None,
-        functions: Optional[list[str]] = None,
     ) -> SmarterChatCompletionResponseType:
         """
         Process a prompt prompt request and invoke the appropriate OpenAI-compatible API endpoint.
@@ -1170,7 +1197,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         - Validating input and internal state.
         - Initializing or updating the message thread.
-        - Selecting and configuring plugins and/or functions (collectively, tool calls) for the LLM.
+        - Selecting and configuring the tools of the LLMClient's plugins, MCPClients and extensions.
         - Preparing and sending requests to the OpenAI API (or compatible provider).
         - Handling tool calls and plugin responses.
         - Managing billing, logging, and signal dispatch.
@@ -1197,8 +1224,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         :param plugins: A list of plugin instances to be considered for selection and presentation to the LLM.
         :type plugins: Optional[list[PluginBase]]
-        :param functions: A list of predefined function definitions for tool calls.
-        :type functions: Optional[list[str]]
 
         :returns: An HTTP response dictionary (or list) containing the LLM's output, tool call results, and metadata.
         :rtype: SmarterChatCompletionResponseType
@@ -1226,18 +1251,16 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 prompt=chat_instance,
                 data=request_data,
                 plugins=[plugin1, plugin2],
-                functions=[function_definition_1, function_definition_2],
                 user_profile=current_user
             )
         """
         plugins_list = [plugin.name for plugin in plugins] if plugins else []
         logger.debug(
-            "%s.handler() called with user_profile=%s, prompt=%s, plugins=%s, functions=%s",
+            "%s.handler() called with user_profile=%s, prompt=%s, plugins=%s",
             self.formatted_class_name,
             user_profile,
             prompt,
             plugins_list,
-            functions,
         )
         self._chat = prompt
         self.user_profile = user_profile
@@ -1253,7 +1276,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             )
         self.data = data  # type: ignore[assignment]
         self.plugins = plugins
-        self.functions = functions
 
         prompt_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
         # the status and the message of an error, e.g. a 400 from the LLM provider, if any.
@@ -1310,10 +1332,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             # add the tools and instructions of the llmclient's MCP servers
             self.handle_mcp_clients()
 
-            # add all functions that are included in the llmclient definition
-            if self.functions:
-                for function in self.functions:
-                    self.handle_function_provided(function)
+            # add the tools of the llmclient's extensions
+            self.handle_extensions()
 
             self.prep_first_request()
             completions_kwargs = {

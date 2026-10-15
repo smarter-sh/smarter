@@ -148,6 +148,13 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize providers: %s", e)
 
         try:
+            # after initialize_providers, whose Secrets, e.g. google_maps_api_key, configure the extensions.
+            # Before deploy_builtin_llmclients, whose built-in LLMClients list the official extensions.
+            call_command("add_builtin_extensions")
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to install the official extensions: %s", e)
+
+        try:
             # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
             call_command("add_builtin_proxies")
         except Exception as e:

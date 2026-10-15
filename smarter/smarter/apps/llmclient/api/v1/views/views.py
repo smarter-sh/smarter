@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 from smarter.apps.llmclient.contract.models import (
     LLMClientApiCustomDomain,
-    LLMClientApiFunction,
+    LLMClientApiExtension,
     LLMClientApiKey,
     LLMClientApiLLMClient,
     LLMClientApiPlugin,
@@ -23,13 +23,13 @@ from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientPlugin,
 )
 from smarter.apps.llmclient.serializers import (
     LLMClientAPIKeySerializer,
     LLMClientCustomDomainSerializer,
-    LLMClientFunctionsSerializer,
+    LLMClientExtensionsSerializer,
     LLMClientPluginSerializer,
     LLMClientSerializer,
 )
@@ -393,34 +393,27 @@ class LLMClientCustomDomainListView(ListViewBase):
 
 
 ###############################################################################
-# LLMClientFunctions views
+# LLMClientExtensions views
 ###############################################################################
 
 
-class LLMClientFunctionsView(ViewBase):
-    """LLMClientFunctions view for smarter api."""
+class LLMClientExtensionsView(ViewBase):
+    """LLMClientExtensions view for smarter api."""
 
-    serializer_class = LLMClientFunctionsSerializer
+    serializer_class = LLMClientExtensionsSerializer
 
-    def get(self, request: Request, llmclient_id: int, function_id: int):
+    def get(self, request: Request, llmclient_id: int, extension_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        function = get_object_or_404(LLMClientFunctions, pk=function_id, llmclient=llmclient)
-        return Response(LLMClientApiFunction.from_model(function).model_dump(mode="json"), status=HTTPStatus.OK)
+        link = get_object_or_404(
+            LLMClientExtensions.objects.select_related("extension"), pk=extension_id, llmclient=llmclient
+        )
+        return Response(LLMClientApiExtension.from_model(link).model_dump(mode="json"), status=HTTPStatus.OK)
 
-    def post(self, request: Request, llmclient_id: int):
-        # llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        raise NotImplementedError("Not implemented")
-
-    def patch(self, request: Request, llmclient_id: int, function_id: int):
-        # llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        # function = get_object_or_404(LLMClientFunctions, pk=function_id, llmclient=llmclient)
-        raise NotImplementedError("Not implemented")
-
-    def delete(self, request: Request, llmclient_id: int, function_id: int):
+    def delete(self, request: Request, llmclient_id: int, extension_id: int):
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        function = get_object_or_404(LLMClientFunctions, pk=function_id, llmclient=llmclient)
+        link = get_object_or_404(LLMClientExtensions, pk=extension_id, llmclient=llmclient)
         try:
-            function.delete()
+            link.delete()
         except Exception as e:
             return JsonResponse(
                 {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
@@ -428,13 +421,17 @@ class LLMClientFunctionsView(ViewBase):
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 
 
-class LLMClientFunctionsListView(ListViewBase):
-    """LLMClientFunctions list view for smarter api."""
+class LLMClientExtensionsListView(ListViewBase):
+    """LLMClientExtensions list view for smarter api."""
 
-    serializer_class = LLMClientFunctionsSerializer
-    contract_model = LLMClientApiFunction
+    serializer_class = LLMClientExtensionsSerializer
+    contract_model = LLMClientApiExtension
 
     def get_queryset(self, *args, **kwargs):
         llmclient_id = self.kwargs.get("llmclient_id")
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
-        return LLMClientFunctions.objects.filter(llmclient=llmclient)
+        return (
+            LLMClientExtensions.objects.filter(llmclient=llmclient)
+            .select_related("extension")
+            .order_by("extension__slug")
+        )

@@ -73,7 +73,6 @@ spec:
         color: '#ff7043'
       typingIndicator:
         color: '#ff7043'
-  functions: []
   plugins: []
   guardrails:
     - prompt_injection_keyword_input
