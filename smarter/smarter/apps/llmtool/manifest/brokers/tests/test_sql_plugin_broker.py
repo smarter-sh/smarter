@@ -15,7 +15,12 @@ from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
 )
 from smarter.apps.llmtool.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.llmtool.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
-from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
+from smarter.apps.llmtool.models import (
+    PluginDataSql,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
 from smarter.apps.llmtool.plugin.sql import SqlPlugin
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
@@ -277,6 +282,31 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         self.assertEqual(self.broker.manifest.spec.prompt.systemRole, self.broker.plugin.plugin_prompt.system_role)
         self.assertEqual(self.broker.manifest.spec.prompt.model, self.broker.plugin.plugin_prompt.model)
         self.assertEqual(self.broker.manifest.spec.prompt.temperature, self.broker.plugin.plugin_prompt.temperature)
+
+    def test_apply_updates_the_prompt_and_selector_of_an_existing_plugin(self):
+        """
+        Test that applying a changed manifest to an existing plugin saves its new prompt and selector.
+
+        A plugin is saved three times by one apply, and the last save, after the plugin was
+        reinitialized, read the PluginPrompt and PluginSelector from a cache that held them as
+        they were before the apply, and wrote them back over the rows.
+        """
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+
+        manifest = json.loads(json.dumps(self.loader.json_data))
+        manifest["spec"]["prompt"]["model"] = "gpt-4.1-mini"
+        manifest["spec"]["prompt"]["temperature"] = 0.25
+        manifest["spec"]["selector"] = {"directive": "search_terms", "searchTerms": ["courses"]}
+        broker = self.SAMBrokerClass(request=self.request, loader=SAMLoader(manifest=json.dumps(manifest)))
+        response = broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+
+        plugin_meta = PluginMeta.objects.get(name=manifest["metadata"]["name"], user_profile=self.user_profile)
+        prompt = PluginPrompt.objects.get(plugin=plugin_meta)
+        self.assertEqual(prompt.model, "gpt-4.1-mini")
+        self.assertEqual(prompt.temperature, 0.25)
+        self.assertEqual(PluginSelector.objects.get(plugin=plugin_meta).search_terms, ["courses"])
 
     def test_plugin(self):
         """Test that the plugin property returns a SqlPlugin instance."""

@@ -16,7 +16,7 @@ A Plugin that uses a remote REST API server to retrieve its return data.
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-api.yaml.tpl
     :language: yaml
     :caption: 2.) Example Smarter API Connection Manifest
 

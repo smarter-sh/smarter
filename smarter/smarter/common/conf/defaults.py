@@ -188,7 +188,7 @@ class SettingsDefaults:
         warnings.warn(
             "FERNET_ENCRYPTION_KEY is not set. "
             "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
-            "You can safely disregard this warning if this is a new installation or test environment.",
+            "You can safely disregard this warning if this is a new installation, test environment or CI-CD process.",
             UserWarning,
         )
         fernet = generate_fernet_encryption_key()

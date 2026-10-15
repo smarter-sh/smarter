@@ -1,8 +1,10 @@
 """Initialize 3rd party providers."""
 
 import base64
+from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urljoin
 
 import requests
@@ -32,6 +34,39 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
+
+ANTHROPIC_VERSION = "2023-06-01"
+"""The Anthropic API version that the models api requires, in its anthropic-version header."""
+
+
+def bearer_auth_headers(api_key: str) -> dict[str, str]:
+    """
+    The headers that authenticate to an OpenAI compatible models api.
+
+    :param api_key: the provider's api key.
+    :returns: an Authorization header with the key as a Bearer token.
+    """
+    return {"Authorization": f"Bearer {api_key}"}
+
+
+def anthropic_auth_headers(api_key: str) -> dict[str, str]:
+    """
+    The headers that authenticate to Anthropic's models api, which rejects a request without anthropic-version.
+
+    :param api_key: the Anthropic api key.
+    :returns: the x-api-key and anthropic-version headers.
+    """
+    return {"x-api-key": api_key, "anthropic-version": ANTHROPIC_VERSION}
+
+
+def googleai_auth_headers(api_key: str) -> dict[str, str]:
+    """
+    The headers that authenticate to the Gemini api, which treats a Bearer token as an OAuth 2 token.
+
+    :param api_key: the Gemini api key.
+    :returns: the x-goog-api-key header.
+    """
+    return {"x-goog-api-key": api_key}
 
 
 class Command(SmarterCommand):
@@ -131,6 +166,8 @@ class Command(SmarterCommand):
         provider_configuration: SmarterDictType,
         logo_filename: str,
         provider_api_url: str,
+        auth_headers: Callable[[str], dict[str, str]] = bearer_auth_headers,
+        models_params: Optional[dict[str, str]] = None,
     ):
         """
         Initialize a provider and its models.
@@ -138,11 +175,17 @@ class Command(SmarterCommand):
         - create/update api key secret
         - create/update provider
         - create/update provider models
+
+        :param auth_headers: returns the headers that authenticate to the provider's models api, given its key.
+        :param models_params: query parameters for the models api, e.g. a page size.
         """
 
         def _initialize_provider_models(provider: Provider, bearer_token: str, default_model: str):
             """
-            Initialize models by fetching them from the OpenAI compatible API end point.
+            Initialize models by fetching them from the provider's models api end point.
+
+            OpenAI compatible apis, and Anthropic's, list models in ``data``, with an ``id``.
+            The Gemini api lists them in ``models``, with a ``name`` such as ``models/gemini-2.5-flash``.
 
             Example response::
 
@@ -162,7 +205,7 @@ class Command(SmarterCommand):
             self.stdout.write("-" * 80)
             end_point = "models"
             url = urljoin(provider.base_url, end_point)
-            headers = {"Authorization": f"Bearer {bearer_token}"}
+            headers = auth_headers(bearer_token)
 
             def _initialize_provider_model(provider: Provider, model_name: str, is_default: bool = False):
                 """Helper function to initialize a single provider model."""
@@ -185,7 +228,7 @@ class Command(SmarterCommand):
 
             try:
                 self.stdout.write(f"{log_prefix} Fetching provider models from {url}")
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, params=models_params, timeout=10)
             except requests.RequestException as e:
                 self.stdout.write(self.style.ERROR(f"{log_prefix} Failed to fetch provider models. Error: {e}"))
                 return
@@ -211,7 +254,10 @@ class Command(SmarterCommand):
 
             # some providers (e.g. Together AI) return a bare list rather than {"object": "list", "data": [...]}
             response_json = response.json()
-            models = response_json if isinstance(response_json, list) else response_json.get("data", [])
+            if isinstance(response_json, list):
+                models = response_json
+            else:
+                models = response_json.get("data") or response_json.get("models") or []
             if len(models) == 0:
                 self.stdout.write(self.style.WARNING(f"{log_prefix} No provider models found."))
                 return
@@ -219,7 +265,7 @@ class Command(SmarterCommand):
             self.stdout.write(f"{log_prefix} Found {len(models)} provider models.")
 
             for model in models:
-                model_name = model.get("id")
+                model_name = model.get("id") or model.get("name", "").removeprefix("models/")
                 if model_name:
                     _initialize_provider_model(
                         provider=provider, model_name=model_name, is_default=model_name == default_model
@@ -329,6 +375,9 @@ class Command(SmarterCommand):
             },
             logo_filename="anthropic-logo.svg",
             provider_api_url="https://platform.claude.com/docs/en/api/overview",
+            auth_headers=anthropic_auth_headers,
+            # the models api returns 20 models per page by default.
+            models_params={"limit": "1000"},
         )
 
     def initialize_cohere(self):
@@ -398,6 +447,9 @@ class Command(SmarterCommand):
             },
             logo_filename="google-ai.png",
             provider_api_url="https://aistudio.google.com/app/apikey",
+            auth_headers=googleai_auth_headers,
+            # the models api returns 50 models per page by default.
+            models_params={"pageSize": "1000"},
         )
 
     def initialize_google_maps(self):

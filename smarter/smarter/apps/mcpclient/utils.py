@@ -4,58 +4,24 @@ import io
 import os
 import re
 from pathlib import Path
-from string import Template
 from typing import Iterator, Optional, Union
-from urllib.parse import urlparse
 
 import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.secret.models import Secret
-from smarter.common.conf import smarter_settings
 from smarter.common.const import PYTHON_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_template
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING])
 
 MANIFEST_EXTENSION = ".yaml"
-TEMPLATE_EXTENSION = ".yaml.tpl"
-
-
-def manifest_template_values() -> dict[str, str]:
-    """
-    Return the values that fill in the built-in MCPClient manifest templates, ``*.yaml.tpl``.
-
-    The templates are :class:`string.Template` strings, so that an MCPClient can name the
-    platform that applies it, e.g. the Smarter Project MCP server of that platform:
-
-    - ``environment_platform_scheme``: ``https``, or ``http`` in local development, from
-      ``smarter_settings.environment_url``.
-    - ``environment_platform_domain``: ``smarter_settings.environment_platform_domain``,
-      e.g. ``alpha.platform.example.com``, or ``localhost:9357`` in local development.
-
-    :returns: The values, by placeholder name.
-    """
-    return {
-        "environment_platform_scheme": urlparse(str(smarter_settings.environment_url)).scheme or "https",
-        "environment_platform_domain": str(smarter_settings.environment_platform_domain),
-    }
-
-
-def render_manifest_template(template: str) -> str:
-    """
-    Fill in a manifest template with :func:`manifest_template_values`.
-
-    :param template: The template.
-    :returns: The manifest.
-    :raises KeyError: If the template names a placeholder that has no value.
-    """
-    return Template(template).substitute(manifest_template_values())
 
 
 class MCPClientExample:

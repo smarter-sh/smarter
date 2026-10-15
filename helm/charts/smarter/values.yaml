@@ -276,6 +276,12 @@ externalDatabase:
 mysql:
   enabled: false
   nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
+  primary:
+    # Smarter stores emoji and other 4-byte characters (prompts, manifests,
+    # chat history), which need utf8mb4. The Bitnami chart's default my.cnf sets
+    # character-set-server=UTF8, which is the 3-byte utf8mb3. Command-line flags
+    # take precedence over my.cnf.
+    extraFlags: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -320,6 +326,12 @@ mariadb:
   enabled: true
   nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
   primary:
+    # Smarter stores emoji and other 4-byte characters (prompts, manifests,
+    # chat history), which need utf8mb4. The Bitnami chart's default my.cnf sets
+    # character-set-server=UTF8, which is the 3-byte utf8mb3. Command-line flags
+    # take precedence over my.cnf. The init Job also converts any existing
+    # utf8mb3 tables, with manage.py convert_database_charset.
+    extraFlags: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     resources:
