@@ -106,7 +106,7 @@ Every field is described in :doc:`pyproject-reference`.
 3. The Documentation
 --------------------
 
-The package's module docstring is the Extension's documentation. The admin console shows it on
+The package's module docstring is the Extension's documentation. The web console shows it on
 the Extension's page, and the registry shows it to administrators before they install it. Write
 it in reStructuredText, for the administrator who decides whether to install the Extension and
 then configures it:
@@ -438,8 +438,8 @@ Install it on your development platform, and configure its secret setting:
 
     python manage.py install_extension dist/weather-1.0.0.zip
 
-Then, in the admin console, open **LLMTool** › **Extensions** › **Weather**, configure
-``google_maps_api_key``, and enable it. List it in an LLMClient:
+Then, in the web console, open **Extensions** › **Weather**, set ``google_maps_api_key`` on
+the **Settings** tab, and enable it. List it in an LLMClient:
 
 .. code-block:: yaml
 

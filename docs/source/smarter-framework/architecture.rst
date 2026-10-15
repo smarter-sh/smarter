@@ -150,7 +150,7 @@ three groups:
 LLMs reach everything they don't already know through tools, and Smarter can be extended with
 new tools in two ways: Plugins, YAML manifests that configure one of the ``llmtool`` app's
 built-in tool patterns, and Extensions, Python packages in ``llmtool.extension`` that platform
-superusers install at run time, from the admin console or the signed Smarter Extension registry.
+superusers install at run time, from the web console's Extensions page, by upload or from the signed Smarter Extension registry.
 MCP servers, through the ``mcpclient`` app, are a third source of tools. See :doc:`extensibility`.
 
 The ``infrastructure`` app is the only part of Smarter that talks to the cloud.
