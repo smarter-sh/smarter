@@ -21,7 +21,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
 from smarter.apps.provider.management.commands import initialize_providers
 from smarter.apps.provider.management.commands.initialize_providers import Command
-from smarter.apps.provider.models import Provider, ProviderModel
+from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.secret.models import Secret
 from smarter.lib import json
 
@@ -86,6 +86,52 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertTrue(models.get(name="model-b").is_default)
         self.addCleanup(provider.logo.delete, save=False)
 
+    def test_provider_keeps_its_verification_when_initialized_again(self):
+        """Test that a new provider is created verified and active, and that initializing again, as each deploy does, leaves a provider that failed verification, or that an admin suspended, disabled."""
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        provider = Provider.objects.get(name=self.name)
+        self.addCleanup(provider.logo.delete, save=False)
+        self.assertEqual(provider.status, ProviderStatus.VERIFIED)
+        self.assertTrue(provider.is_active)
+        self.assertTrue(provider.is_verified)
+
+        # the provider failed verification, and an admin suspended it.
+        Provider.objects.filter(pk=provider.pk).update(
+            status=ProviderStatus.FAILED, is_active=False, is_verified=False, is_suspended=True, description="stale"
+        )
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        provider.refresh_from_db()
+        self.assertEqual(provider.status, ProviderStatus.FAILED)
+        self.assertFalse(provider.is_active)
+        self.assertFalse(provider.is_verified)
+        self.assertTrue(provider.is_suspended)
+        self.assertEqual(provider.description, "a test provider")
+
+    def test_models_keep_is_active_when_initialized_again(self):
+        """Test that new models are created active, and that initializing again, as each deploy does, leaves an existing model's is_active, which its verification set, as it was."""
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        provider = Provider.objects.get(name=self.name)
+        self.addCleanup(provider.logo.delete, save=False)
+        models = ProviderModel.objects.filter(provider=provider)
+        self.assertTrue(all(models.values_list("is_active", flat=True)))
+
+        # the models failed verification.
+        models.update(is_active=False, description="stale")
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        self.assertFalse(any(models.values_list("is_active", flat=True)))
+        self.assertEqual(models.get(name="model-a").description, f"model-a model for {provider.name}.")
+
+        # without an api key, only the default model is initialized, and it too keeps its is_active.
+        with patch.dict(os.environ, {}), patch.object(initialize_providers.requests, "get") as get:
+            os.environ.pop(ENV_VAR, None)
+            self.initialize()
+            get.assert_not_called()
+        self.assertFalse(models.get(name="model-b").is_active)
+
     def test_provider_auth_headers(self):
         """Test the headers with which each provider authenticates to its models api."""
         self.assertEqual(
@@ -128,9 +174,18 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertEqual(get.call_args.kwargs["params"], {"limit": "1000"})
 
     def test_gemini_models_response(self):
-        """Test that the Gemini api's models, listed in models with a models/ prefixed name, are created."""
+        """Test that the Gemini api's chat models, listed in models with a models/ prefixed name, are created, and its other models are not."""
         response = MagicMock(status_code=200)
-        response.json.return_value = {"models": [{"name": "models/gemini-a"}, {"name": "models/model-b"}, {}]}
+        response.json.return_value = {
+            "models": [
+                {"name": "models/gemini-a", "supportedGenerationMethods": ["generateContent", "countTokens"]},
+                {"name": "models/model-b"},
+                {},
+                {"name": "models/gemini-embedding", "supportedGenerationMethods": ["embedContent", "countTokens"]},
+                {"name": "models/gemini-live", "supportedGenerationMethods": ["bidiGenerateContent"]},
+                {"name": "models/veo", "supportedGenerationMethods": ["predictLongRunning"]},
+            ]
+        }
         with patch.object(initialize_providers.requests, "get", return_value=response):
             self.initialize()
         provider = Provider.objects.get(name=self.name)

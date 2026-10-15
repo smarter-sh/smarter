@@ -98,7 +98,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        </smarter-resources/llmtool/plugin/websearch>` and :doc:`API
        </smarter-resources/llmtool/plugin/api>` plugins. Smarter offers a plugin only when the prompt
        matches one of its ``searchTerms``, and the model then decides, from the plugin's
-       description, whether to call it.
+       description, whether to call it. Installed :doc:`Extensions
+       </smarter-framework/extensibility>`, such as the weather tool, are offered on every prompt.
    * - 2
      - Lecture 6 (30 min)
      - **When prompts are not enough.** Prompt injection and jailbreaks. Why a
