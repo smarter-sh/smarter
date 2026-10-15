@@ -44,7 +44,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    Smarter API Plugin Manifest - common Metadata class.
 
    .. py:attribute:: annotations
-      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$')], uuid.UUID, bytes, list, dict[str, Any]]]]
+      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', ascii_only=None)], uuid.UUID, bytes, list, dict[str, Any]]]]
 
       The manifest annotations.
 
@@ -240,6 +240,33 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
 
+.. py:class:: Freshness
+
+   Bases: :class:`enum.Enum`
+
+   WebsearchPlugin.spec.search.freshness[str]: by default, restrict results to those published within the last ['day', 'week', 'month', 'year'].
+
+   The LLM can override this per search.
+
+
+.. py:class:: Provider
+
+   Bases: :class:`enum.Enum`
+
+   WebsearchPlugin.spec.search.provider[str]: the web search API.
+
+   One of: ['brave', 'tavily']
+
+
+.. py:class:: SafeSearch
+
+   Bases: :class:`enum.Enum`
+
+   WebsearchPlugin.spec.search.safeSearch[str]: adult content filtering.
+
+   One of: ['off', 'moderate', 'strict']
+
+
 .. py:class:: WebsearchSearch
 
    Bases: :class:`smarter.models.sam.base.SAMModel`
@@ -261,7 +288,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: freshness
-      :type: str | None
+      :type: smarter.models.sam.websearchplugin.Freshness | None
 
       WebsearchPlugin.spec.search.freshness[str]: by default, restrict results to those published within the last ['day', 'week', 'month', 'year'].
 
@@ -281,7 +308,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: provider
-      :type: str
+      :type: Provider
 
       WebsearchPlugin.spec.search.provider[str]: the web search API.
 
@@ -289,7 +316,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: safeSearch
-      :type: str | None
+      :type: smarter.models.sam.websearchplugin.SafeSearch | None
 
       WebsearchPlugin.spec.search.safeSearch[str]: adult content filtering.
 

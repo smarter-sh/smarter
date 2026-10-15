@@ -37,6 +37,24 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
 
+.. py:class:: ApiFormat
+
+   Bases: :class:`enum.Enum`
+
+   LLMHost.spec.engine.apiFormat[str]: the wire protocol.
+
+   One of: ['openai_compatible', 'huggingface', 'ollama_native', 'custom'].
+
+
+.. py:class:: Name
+
+   Bases: :class:`enum.Enum`
+
+   LLMHost.spec.engine.name[str]: the inference server.
+
+   One of: ['vllm', 'tgi', 'sglang', 'llama_cpp', 'ollama', 'tei', 'custom'].
+
+
 .. py:class:: SAMLLMHostEngineConfig
 
    Bases: :class:`smarter.models.sam.base.SAMModel`
@@ -48,7 +66,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    ``env`` are passed to the engine as they are, for everything else.
 
    .. py:attribute:: apiFormat
-      :type: str | None
+      :type: smarter.models.sam.llmhost.ApiFormat | None
 
       LLMHost.spec.engine.apiFormat[str]: the wire protocol.
 
@@ -108,7 +126,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: name
-      :type: str
+      :type: Name
 
       LLMHost.spec.engine.name[str]: the inference server.
 
@@ -174,7 +192,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    Smarter API LLMHost Manifest - Metadata class.
 
    .. py:attribute:: annotations
-      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$')], uuid.UUID, bytes, list, dict[str, Any]]]]
+      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', ascii_only=None)], uuid.UUID, bytes, list, dict[str, Any]]]]
 
       The manifest annotations.
 
@@ -214,6 +232,33 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
       Example: 0.1.0
 
+
+
+.. py:class:: Quantization
+
+   Bases: :class:`enum.Enum`
+
+   LLMHost.spec.model.quantization[str]: the weights' precision.
+
+   One of: ['none', 'fp32', 'fp16', 'bf16', 'fp8', 'mxfp4', 'int8', 'int4', 'gguf', 'awq', 'gptq'].
+
+
+.. py:class:: Source
+
+   Bases: :class:`enum.Enum`
+
+   LLMHost.spec.model.source[str]: where the weights come from.
+
+   One of: ['huggingface', 'ollama', 's3', 'url', 'pvc'].
+
+
+.. py:class:: Task
+
+   Bases: :class:`enum.Enum`
+
+   LLMHost.spec.model.task[str]: what the model does.
+
+   One of: ['text-generation', 'embedding'].
 
 
 .. py:class:: SAMLLMHostModelCapabilities
@@ -529,6 +574,13 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
 
+.. py:class:: AccessMode
+
+   Bases: :class:`enum.Enum`
+
+   LLMHost.spec.storage.accessMode[str]: One of: ['ReadWriteOnce', 'ReadWriteMany', 'ReadOnlyMany'].
+
+
 .. py:class:: SAMLLMHostStorage
 
    Bases: :class:`smarter.models.sam.base.SAMModel`
@@ -539,7 +591,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    cluster's storage class provisions its PersistentVolume.
 
    .. py:attribute:: accessMode
-      :type: str | None
+      :type: smarter.models.sam.llmhost.AccessMode | None
 
       LLMHost.spec.storage.accessMode[str]: One of: ['ReadWriteOnce', 'ReadWriteMany', 'ReadOnlyMany'].
 
@@ -624,7 +676,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: quantization
-      :type: str | None
+      :type: smarter.models.sam.llmhost.Quantization | None
 
       LLMHost.spec.model.quantization[str]: the weights' precision.
 
@@ -654,7 +706,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: source
-      :type: str | None
+      :type: smarter.models.sam.llmhost.Source | None
 
       LLMHost.spec.model.source[str]: where the weights come from.
 
@@ -662,7 +714,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
 
    .. py:attribute:: task
-      :type: str | None
+      :type: smarter.models.sam.llmhost.Task | None
 
       LLMHost.spec.model.task[str]: what the model does.
 
