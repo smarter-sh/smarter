@@ -82,7 +82,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-def memoized_dependencies(func: Callable[..., List["AbstractBroker"]]) -> Callable[..., List["AbstractBroker"]]:
+def memoized_dependencies(func: Callable[..., List["SAMDependency"]]) -> Callable[..., List["SAMDependency"]]:
     """Memoize a broker's :meth:`AbstractBroker.dependencies` for the life of the broker instance.
 
     The dependencies are queried, and their brokers built, once per broker instance.
@@ -100,18 +100,60 @@ def memoized_dependencies(func: Callable[..., List["AbstractBroker"]]) -> Callab
                 ...
 
     :param func: The broker's ``dependencies()`` method.
-    :type func: Callable[..., List[AbstractBroker]]
+    :type func: Callable[..., List[SAMDependency]]
     :return: The memoized method.
-    :rtype: Callable[..., List[AbstractBroker]]
+    :rtype: Callable[..., List[SAMDependency]]
     """
 
     @wraps(func)
-    def wrapper(self: "AbstractBroker") -> List["AbstractBroker"]:
+    def wrapper(self: "AbstractBroker") -> List["SAMDependency"]:
         if self._dependencies is None:
             self._dependencies = func(self)
         return self._dependencies
 
     return wrapper
+
+
+class SAMDependencyReference:
+    """The kind, name and owner of a dependent resource whose broker could not be initialized.
+
+    :meth:`AbstractBroker.dependency_broker` returns one when a dependent resource's broker
+    raises during initialization, for example a plugin whose stored model was later removed
+    from the list of valid models. It keeps the dependency visible, so that
+    :meth:`AbstractBroker.verify_no_dependencies` still refuses to delete the resource it
+    depends on, and ``describe`` still lists it in ``status.dependencies``.
+
+    Example:
+
+    .. code-block:: python
+
+        dependency = SAMDependencyReference(kind="Plugin", name="everlasting_gobstopper", user_profile=user_profile)
+        print(dependency.kind, dependency.name, dependency.account)
+
+    :param kind: The SAM kind of the resource, e.g. ``SAMKinds.STATIC_PLUGIN.value``.
+    :type kind: str
+    :param name: The resource's manifest name.
+    :type name: str
+    :param user_profile: The resource's owner.
+    :type user_profile: Optional[UserProfile]
+    """
+
+    def __init__(self, kind: str, name: str, user_profile: Optional[UserProfile]):
+        self.kind = kind
+        self.name = name
+        self.user_profile = user_profile
+
+    @property
+    def account(self) -> Optional[Account]:
+        """The account of the resource's owner, if it has one."""
+        return self.user_profile.account if self.user_profile else None
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(kind={self.kind}, name={self.name}, user_profile={self.user_profile})"
+
+
+SAMDependency = Union["AbstractBroker", SAMDependencyReference]
+"""A resource that depends on another: its broker, or a reference to it when its broker fails to initialize."""
 
 
 class AbstractBroker(ABC, SmarterRequestMixin):
@@ -163,7 +205,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _orm_instance: Optional[MetaDataWithOwnershipModel] = None
     _ready: bool = False
     _is_ready_abstract_broker: bool = False
-    _dependencies: Optional[List["AbstractBroker"]] = None
+    _dependencies: Optional[List[SAMDependency]] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -1489,7 +1531,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
-    def dependencies(self) -> List["AbstractBroker"]:
+    def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this resource.
 
         A resource depends on this resource when it refers to it, so that deleting this resource
@@ -1507,8 +1549,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 print(dependency.kind, dependency.name)
             # LLMClient smarter_example
 
-        :return: A broker for each resource that depends on this resource, or an empty list.
-        :rtype: List[AbstractBroker]
+        :return: A broker for each resource that depends on this resource, or an empty list. See
+            :meth:`dependency_broker` for the :class:`SAMDependencyReference` it returns in place of a
+            broker that fails to initialize.
+        :rtype: List[SAMDependency]
         """
         raise SAMBrokerErrorNotImplemented(message="dependencies() not implemented", thing=self.thing)
 
@@ -1518,11 +1562,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         instance: models.Model,
         name: Optional[str] = None,
         user_profile: Optional[UserProfile] = None,
-    ) -> "AbstractBroker":
+    ) -> SAMDependency:
         """Return a broker for a resource that depends on this resource.
 
         The broker is initialized from the ORM, for the resource's own owner, which may be
-        another user than this broker's.
+        another user than this broker's. A broker can fail to initialize when the resource's
+        stored data no longer validates, e.g. a plugin whose model was removed from the list of
+        valid models. One broken dependent must not break the resource it depends on, so this
+        returns a :class:`SAMDependencyReference` with the resource's kind, name and owner instead.
 
         :param kind: The SAM kind of the resource, e.g. ``SAMKinds.LLM_CLIENT.value``.
         :type kind: str
@@ -1532,8 +1579,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :type name: Optional[str]
         :param user_profile: The resource's owner. Defaults to ``instance.user_profile``.
         :type user_profile: Optional[UserProfile]
-        :return: A broker for the resource.
-        :rtype: AbstractBroker
+        :return: A broker for the resource, or a reference to it if its broker fails to initialize.
+        :rtype: SAMDependency
+        :raises SAMBrokerInternalError: If no broker is registered for ``kind``.
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.brokers import Brokers
@@ -1541,22 +1589,32 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         broker_class = Brokers.get_broker(kind)
         if broker_class is None:
             raise SAMBrokerInternalError(f"No broker for kind {kind}", thing=self.thing)
-        return broker_class(
-            None,
-            name=name or getattr(instance, "name"),
-            kind=kind,
-            user_profile=user_profile or getattr(instance, "user_profile"),
-        )
+        name = name or getattr(instance, "name")
+        user_profile = user_profile or getattr(instance, "user_profile")
+        try:
+            return broker_class(None, name=name, kind=kind, user_profile=user_profile)
+        # any error in the dependent's own data. pylint: disable=W0718
+        except Exception as e:
+            logger.warning(
+                "%s.dependency_broker() could not initialize the broker of %s %s, which depends on %s %s: %s",
+                self.abstract_broker_logger_prefix,
+                kind,
+                name,
+                self.kind,
+                self.name,
+                e,
+            )
+            return SAMDependencyReference(kind=kind, name=name, user_profile=user_profile)
 
-    def dependency_brokers(self, kind: str, instances: Iterable[models.Model]) -> List["AbstractBroker"]:
+    def dependency_brokers(self, kind: str, instances: Iterable[models.Model]) -> List[SAMDependency]:
         """Return a broker for each resource that depends on this resource.
 
         :param kind: The SAM kind of the resources, e.g. ``SAMKinds.LLM_CLIENT.value``.
         :type kind: str
         :param instances: The resources' Django ORM instances.
         :type instances: Iterable[models.Model]
-        :return: A broker for each resource, without duplicates.
-        :rtype: List[AbstractBroker]
+        :return: A broker, or a reference, for each resource, without duplicates. See :meth:`dependency_broker`.
+        :rtype: List[SAMDependency]
         """
         unique = {instance.pk: instance for instance in instances}
         return [self.dependency_broker(kind, instance) for instance in unique.values()]
@@ -1586,7 +1644,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 command=command,
             )
 
-    def visible_dependencies(self, dependencies: Optional[List["AbstractBroker"]] = None) -> List["AbstractBroker"]:
+    def visible_dependencies(self, dependencies: Optional[List[SAMDependency]] = None) -> List[SAMDependency]:
         """Return the dependencies that the authenticated user may read.
 
         A dependency may belong to another account, e.g. an LLMClient that uses a built-in
@@ -1594,9 +1652,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         own account.
 
         :param dependencies: The dependencies to filter. Defaults to :meth:`dependencies`.
-        :type dependencies: Optional[List[AbstractBroker]]
+        :type dependencies: Optional[List[SAMDependency]]
         :return: The dependencies that the authenticated user may read.
-        :rtype: List[AbstractBroker]
+        :rtype: List[SAMDependency]
         """
         dependencies = self.dependencies() if dependencies is None else dependencies
         if self.user is not None and getattr(self.user, "is_superuser", False):
@@ -1939,7 +1997,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if command == SmarterJournalCliCommands.DESCRIBE and isinstance(data.get(SAMKeys.STATUS.value), dict):
             try:
                 data[SAMKeys.STATUS.value]["dependencies"] = self.dependencies_status()
-            except SAMBrokerError as e:
+            except (SAMBrokerError, SAMValidationError) as e:
                 logger.warning(
                     "%s.json_response_ok() could not add the dependencies of %s %s to its status: %s",
                     self.abstract_broker_logger_prefix,
@@ -2196,7 +2254,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return retval
 
     def readable_by_name(
-        self, model_class: Type[MetaDataWithOwnershipModel], owned: Optional[MetaDataWithOwnershipModel]
+        self,
+        model_class: Type[MetaDataWithOwnershipModel],
+        owned: Optional[MetaDataWithOwnershipModel],
+        name: Optional[str] = None,
     ) -> Optional[MetaDataWithOwnershipModel]:
         """
         Return the resource to describe: the user's own, or else one with this name that the user may read.
@@ -2208,15 +2269,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         :param model_class: The resource's Django model.
         :param owned: The user's own resource of this name, if any.
+        :param name: The resource's name. Defaults to the broker's name.
         :returns: The resource, or None if the user may read none of this name.
         """
         if owned is not None:
             return owned
-        if not self.name or not self.user_profile:
+        name = name or self.name
+        if not name or not self.user_profile:
             return None
         return (
             model_class.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
-            .filter(name=self.name)
+            .filter(name=name)
             .order_by("pk")
             .first()
         )

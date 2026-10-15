@@ -4,9 +4,16 @@ Test the Provider dashboard views: the React list page, its list, clone, delete 
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
+from http import HTTPStatus
+from unittest.mock import patch
+
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.caching import (
     invalidate_all_cached_providers_for_user_profile,
+)
+from smarter.apps.provider.manifest.brokers.provider import (
+    SAMProviderBroker,
+    SAMProviderBrokerError,
 )
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.urls import ProviderReverseNames
@@ -34,3 +41,9 @@ class TestProviderViews(ResourceViewsTestMixin, TestAccountMixin):
 
     def test_rename(self):
         super().test_rename()
+
+    def test_detail_reports_a_describe_error(self):
+        """A describe error is shown with the api's status and description, rather than as a 500."""
+        with patch.object(SAMProviderBroker, "describe", side_effect=SAMProviderBrokerError("describe is broken")):
+            response = self.client.get(self.url(self.detail_view_name, hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])
