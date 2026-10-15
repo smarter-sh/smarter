@@ -48,13 +48,13 @@ Django apps, which run on Linux.
     │ 2. THIRD-PARTY DJANGO APPS AND FRAMEWORKS                                            │
     │                                                                                      │
     │ ┌───────────────┐ ┌──────────────┐ ┌─────────────┐ ┌──────────────┐ ┌───────────────┐│
-    │ │ DRF           │ │ knox         │ │ taggit      │ │ waffle       │ │ Celery        ││
-    │ │ REST views,   │ │ API-key      │ │ resource    │ │ feature      │ │ async tasks,  ││
-    │ │ serializers   │ │ token auth   │ │ tags        │ │ flags and    │ │ beat (redbeat,││
+    │ │ DRF           │ │ knox         │ │ Pydantic    │ │ waffle       │ │ Celery        ││
+    │ │ REST views,   │ │ API-key      │ │ data        │ │ feature      │ │ async tasks,  ││
+    │ │ serializers   │ │ token auth   │ │ models      │ │ flags and    │ │ beat (redbeat,││
     │ │ (+ drf_yasg)  │ │              │ │             │ │ switches     │ │ django_celery_││
     │ └───────────────┘ └──────────────┘ └─────────────┘ └──────────────┘ │ beat)         ││
     │                                                                     └───────────────┘│
-    │ also: django_hosts · corsheaders · social_django · storages · Pydantic               │
+    │ also: django_hosts · corsheaders · social_django · storages · taggit                 │
     │                                                                                      │
     │ Django  (admin, auth, contenttypes, sessions, messages, staticfiles, ...)            │
     └───────────────────────────────────────────┬──────────────────────────────────────────┘
@@ -86,6 +86,9 @@ Third-Party Django Apps
 
 Smarter builds on Django and a short list of well-established third-party apps:
 
+- `Pydantic <https://docs.pydantic.dev/>`__ validates the YAML manifests of every
+  resource and provides the models that brokers use to implement the
+  :doc:`Smarter API <smarter-api>`.
 - `Django REST Framework <https://www.django-rest-framework.org/>`__ (DRF)
   provides the views and serializers of the :doc:`Smarter API <smarter-api>`.
 - `knox <https://jazzband.github.io/django-rest-knox/>`__ provides the token
