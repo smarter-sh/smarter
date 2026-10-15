@@ -676,14 +676,18 @@ class SAMProviderBroker(AbstractBroker):
         """
         Describe the Smarter API Provider manifest by retrieving the corresponding Django ORM `Provider` model instance.
 
+        The Provider is the account's own, or else one with this name that the user may read, e.g.
+        a built-in Provider that the Smarter admin shares with every account. See
+        :meth:`smarter.lib.manifest.broker.AbstractBroker.readable_by_name`.
+
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments, including the username to describe.
+        :param kwargs: Additional keyword arguments, including the name of the Provider to describe.
 
         :returns: A `SmarterJournaledJsonResponse` containing the user manifest data.
 
         :raises: :class:`SAMBrokerErrorNotFound`
-           If the provider with the specified name does not exist or is not associated with the account.
+           If the user may read no provider with the specified name.
         :raises: :class:`SAMProviderBrokerError`
            If serialization fails for the provider.
         """
@@ -691,12 +695,12 @@ class SAMProviderBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
 
         name = self.name or kwargs.get("name")
-        try:
-            self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
-        except Provider.DoesNotExist as e:
+        owned = Provider.objects.filter(user_profile__account=self.account, name=name).first() if name else None
+        self._provider = self.readable_by_name(Provider, owned, name=name)  # type: ignore[assignment]
+        if not self._provider:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
-            ) from e
+            )
 
         if self.provider:
             try:
