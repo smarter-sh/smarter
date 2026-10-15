@@ -933,7 +933,12 @@ class LLMClient(MetaDataWithOwnershipModel):
         """
         Clone the LLMClient instance, creating a new instance with the same configuration.
 
+        The clone has the same plugins, MCPClients, guardrails and extensions, except those that
+        its owner may not use: see :meth:`clone_links`.
+
         :param new_name: Optional new name for the cloned LLMClient. If not provided, the name will be suffixed with "-copy".
+        :param new_version: Optional new version for the cloned LLMClient.
+        :param user_profile: Optional owner of the cloned LLMClient; this LLMClient's owner if not provided.
         :returns: The cloned LLMClient instance.
         :rtype: LLMClient
         """
@@ -948,35 +953,63 @@ class LLMClient(MetaDataWithOwnershipModel):
         )
 
         cloned_llmclient = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)  # type: ignore
-        pk = cloned_llmclient.pk
-
-        from .llmclient_extension import LLMClientExtensions
-
-        for link in LLMClientExtensions.objects.filter(llmclient=self):
-            LLMClientExtensions.objects.get_or_create(llmclient=cloned_llmclient, extension=link.extension)
-            logger.debug("%s.clone() cloned extension %s to LLMClient id: %s", logger_prefix, link.extension, pk)
-
-        try:
-            from .llmclient_plugin import LLMClientPlugin
-
-            new_llmclient_plugin = LLMClientPlugin.objects.get(llmclient_id=pk)
-            logger.debug(
-                "%s.clone() found LLMClientPlugin for LLMClient id: %s. Cloning related LLMClientPlugin.",
-                logger_prefix,
-                pk,
-            )
-            new_llmclient_plugin.pk = pk
-            new_llmclient_plugin.save()
-            logger.debug("%s.clone() cloned LLMClientPlugin for LLMClient id: %s", logger_prefix, pk)
-        except LLMClientPlugin.DoesNotExist:
-            logger.debug(
-                "%s.clone() did not find LLMClientPlugin for LLMClient id: %s. Skipping cloning of related LLMClientPlugin.",
-                logger_prefix,
-                pk,
-            )
+        self.clone_links(cloned_llmclient, logger_prefix)  # type: ignore[arg-type]
 
         logger.debug("%s.clone() completed Returning cloned instance %s", logger_prefix, cloned_llmclient)
         return cloned_llmclient  # type: ignore[return-value]
+
+    def clone_links(self, clone: "LLMClient", logger_prefix: str) -> None:
+        """
+        Link a clone of this LLMClient to the same plugins, MCPClients, guardrails and extensions.
+
+        A clone may belong to another user, e.g. a built-in LLMClient of the Smarter admin that a
+        user clones into their own account. It is linked only to the resources that its owner
+        may use, as ``smarter apply`` would allow: plugins, MCPClients and guardrails that its
+        owner may read, and extensions that are available to its owner's account.
+
+        :param clone: The clone, which has no links yet.
+        :param logger_prefix: The prefix of log messages.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .llmclient_extension import LLMClientExtensions
+        from .llmclient_guardrail import LLMClientGuardrails
+        from .llmclient_mcpclient import LLMClientMCPClients
+        from .llmclient_plugin import LLMClientPlugin
+
+        user = clone.user_profile.user
+        links = (
+            (LLMClientPlugin, "plugin_meta"),
+            (LLMClientMCPClients, "mcpclient"),
+            (LLMClientGuardrails, "guardrail"),
+        )
+        for link_model, field in links:
+            for link in link_model.objects.filter(llmclient=self).select_related(field):
+                resource = getattr(link, field)
+                readable = type(resource).objects.filter(pk=resource.pk).with_read_permission_for(user)  # type: ignore[attr-defined]
+                if not readable.exists():
+                    logger.warning(
+                        "%s.clone_links() did not link %s %s to LLMClient %s: its owner may not use it.",
+                        logger_prefix,
+                        field,
+                        resource,
+                        clone.pk,
+                    )
+                    continue
+                link_model.objects.get_or_create(llmclient=clone, **{field: resource})
+                logger.debug("%s.clone_links() linked %s %s to LLMClient %s", logger_prefix, field, resource, clone.pk)
+        for link in LLMClientExtensions.objects.filter(llmclient=self).select_related("extension"):
+            if not link.extension.is_available_to(clone.user_profile.account):
+                logger.warning(
+                    "%s.clone_links() did not link extension %s to LLMClient %s: it is not available to its account.",
+                    logger_prefix,
+                    link.extension.slug,
+                    clone.pk,
+                )
+                continue
+            LLMClientExtensions.objects.get_or_create(llmclient=clone, extension=link.extension)
+            logger.debug(
+                "%s.clone_links() linked extension %s to LLMClient %s", logger_prefix, link.extension, clone.pk
+            )
 
 
 __all__ = ["LLMClient"]

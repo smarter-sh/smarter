@@ -854,7 +854,7 @@
     },
     "SAMLLMClientStylesButtons": {
       "additionalProperties": false,
-      "description": "``spec.config.styles.buttons``: the send and attach buttons, and the header's buttons.\n\nchatscope's ``Button``, class ``.cs-button``.",
+      "description": "``spec.config.styles.buttons``: the send and attach buttons, on the message input.\n\nThe header's buttons take the header's text color, ``conversationHeader.color``, so that\nthey contrast with the header, whose background is usually the opposite of the input's.\n\nchatscope's ``Button``, class ``.cs-button``.",
       "properties": {
         "color": {
           "anyOf": [
@@ -866,7 +866,7 @@
             }
           ],
           "default": null,
-          "description": "LLMClient.styles.buttons.color[str]. Optional. The color of the buttons' icons. chatscope's $button-color. Example: '#6ea9d7'.",
+          "description": "LLMClient.styles.buttons.color[str]. Optional. The color of the send and attach buttons' icons, on the message input. The header's buttons use conversationHeader.color, or this color if it is not set. chatscope's $button-color. Example: '#6ea9d7'.",
           "title": "Color"
         }
       },
@@ -913,7 +913,7 @@
             }
           ],
           "default": null,
-          "description": "LLMClient.styles.conversationHeader.color[str]. Optional. The color of the LLMClient's name. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
+          "description": "LLMClient.styles.conversationHeader.color[str]. Optional. The color of the LLMClient's name, and of the header's buttons: new chat, show or hide the Console, sandbox or production, and Docs. Choose a color that contrasts with backgroundColor. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.",
           "title": "Color"
         },
         "infoColor": {
