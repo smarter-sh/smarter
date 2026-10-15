@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.27.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.27.1-alpha.1...v0.27.1-alpha.2) (2026-10-15)
+
+### Bug Fixes
+
+* **provider:** keep verification state across deploys ([19905f5](https://github.com/smarter-sh/smarter/commit/19905f5cc4a17ea00c204995254ed6457ed0ab1a))
+
 ## [0.27.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.27.0...v0.27.1-alpha.1) (2026-10-15)
 
 ### Bug Fixes
