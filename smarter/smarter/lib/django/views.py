@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
@@ -23,6 +23,7 @@ from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.throttling import throttle_wait
 from smarter.lib.typing import SmarterDictType
 
 
@@ -554,6 +555,9 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
     - **No login redirect.** An anonymous request reaches the subclass's ``dispatch()``.
     - **CSRF exempt.** Its clients send api keys or no credentials, not the web console's session.
     - **Never cached**, and responses vary by ``Cookie``, so that one client's data is never served to another.
+    - **Rate limited**, as Django REST Framework views are, by :func:`smarter.lib.drf.throttling.throttle_wait`:
+      per user if authenticated, otherwise per IP address. A throttled request receives
+      :meth:`throttled_response`, before the subclass's handler runs.
 
     It initializes :class:`~smarter.lib.django.request.SmarterRequestMixin` with the request, as
     :class:`SmarterAuthenticatedWebView` does, so the request's account, user and user profile are set
@@ -627,6 +631,29 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         verbose_logger.debug(
             "%s.dispatch() called with request: %s, user: %s", self.formatted_class_name, request, request.user
         )
-        response = super().dispatch(request, *args, **kwargs)
+        wait = throttle_wait(request, self)
+        if wait is not None:
+            response = self.throttled_response(request, wait)
+        else:
+            response = super().dispatch(request, *args, **kwargs)
         patch_vary_headers(response, ["Cookie"])
+        return response
+
+    # pylint: disable=unused-argument
+    def throttled_response(self, request: HttpRequest, wait: int) -> HttpResponse:
+        """
+        Return the response to a request that exceeded its rate limit.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param wait: The number of seconds to wait before retrying.
+        :type wait: int
+        :return: HTTP 429 Too Many Requests, with a ``Retry-After`` header.
+        :rtype: HttpResponse
+        """
+        response = JsonResponse(
+            {"detail": f"Request was throttled. Expected available in {wait} seconds."},
+            status=HTTPStatus.TOO_MANY_REQUESTS,
+        )
+        response["Retry-After"] = str(wait)
         return response
