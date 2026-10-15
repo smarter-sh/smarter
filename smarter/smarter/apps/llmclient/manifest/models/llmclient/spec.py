@@ -12,12 +12,15 @@ from smarter.apps.llmclient.manifest.models.llmclient.styles import (
 )
 from smarter.common.conf import settings_defaults
 from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.lib.manifest.system_role import (
+    SMARTER_MAX_SYSTEM_ROLE_LENGTH,
+    warn_if_long_system_role,
+)
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 ORIGIN_PATTERN = re.compile(r"^https?://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$")
 """An origin, as browsers send it in the ``Origin`` header: a scheme, a host and an optional port."""
-SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
 class SAMLLMClientCustomDomain(AbstractSAMSpecBase):
@@ -73,8 +76,8 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
     )
     defaultSystemRole: Optional[str] = Field(
         None,
-        max_length=SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH,
-        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the llmclient. This defaults to the following value:\n{settings_defaults.LLM_DEFAULT_SYSTEM_ROLE}.\nThe system prompt is the first message in the conversation and is used to set the context for the llmclient. It is important to keep this prompt short, as it is included in the token count for each message. The maximum length of the system prompt is {SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH} characters.",
+        max_length=SMARTER_MAX_SYSTEM_ROLE_LENGTH,
+        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the llmclient. This defaults to the following value:\n{settings_defaults.LLM_DEFAULT_SYSTEM_ROLE}.\nThe system prompt is the first message in the conversation and is used to set the context for the llmclient. It is sent with every prompt, so its tokens count towards every turn's cost. The maximum length of the system prompt is {SMARTER_MAX_SYSTEM_ROLE_LENGTH} characters.",
     )
     defaultTemperature: Optional[float] = Field(
         None,
@@ -125,6 +128,21 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
             "wildcard. Example: ['https://www.example.com', 'http://localhost:5173']."
         ),
     )
+
+    @field_validator("defaultSystemRole")
+    @classmethod
+    def validate_default_system_role(cls, value: Optional[str]) -> Optional[str]:
+        """
+        Log a warning for a ``defaultSystemRole`` that is unusually long.
+
+        :param value: The system role.
+        :type value: Optional[str]
+        :returns: The system role, unchanged.
+        :rtype: Optional[str]
+        """
+        if value is None:
+            return value
+        return warn_if_long_system_role(value, f"{cls.class_identifier}.defaultSystemRole")
 
     @field_validator("allowedOrigins")
     @classmethod

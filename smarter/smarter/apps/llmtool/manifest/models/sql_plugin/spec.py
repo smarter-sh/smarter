@@ -17,7 +17,6 @@ from .const import MANIFEST_KIND
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
-SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])

@@ -8,7 +8,10 @@ Test :mod:`smarter.apps.mcpclient.models`.
     be documented.
 """
 
+from unittest import mock
+
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from smarter.apps.mcpclient.manifest.enum import (
     SAMMCPClientAuthType,
@@ -78,6 +81,44 @@ class TestMCPClientModel(MCPClientTestBase):
         self.assertEqual(mcpclient.fingerprint, fingerprint)
         mcpclient.headers = {"X-Other": "1"}
         self.assertNotEqual(mcpclient.fingerprint, fingerprint)
+
+    def test_connection_change_forgets_the_last_connection(self):
+        """
+        Test that changing a connection setting resets what the MCPClient discovered, and that other changes do not.
+
+        Changing an MCPClient's endpoint left the old server's tools and status in place until
+        the refresh that saving queues, which showed tools that were no longer offered.
+        """
+        mcpclient = self.new_mcpclient("test_mcpclient_connection_change")
+        connected = {
+            "status": MCPConnectionStatus.CONNECTED,
+            "tools": ["old_tool"],
+            "server_name": "Old Server",
+            "server_version": "1.0",
+            "protocol_version": "2025-03-26",
+            "last_connected_at": timezone.now(),
+        }
+        MCPClient.objects.filter(pk=mcpclient.pk).update(**connected)
+        mcpclient.refresh_from_db()
+
+        with mock.patch("smarter.apps.mcpclient.receivers.refresh_mcpclient"):
+            mcpclient.description = "a new description"
+            mcpclient.save()
+            mcpclient.refresh_from_db()
+            self.assertEqual(mcpclient.status, MCPConnectionStatus.CONNECTED)
+            self.assertEqual(mcpclient.tools, ["old_tool"])
+
+            mcpclient.endpoint_url = "https://new.example.com/mcp"
+            mcpclient.save(update_fields=["endpoint_url"])
+        mcpclient.refresh_from_db()
+        self.assertEqual(mcpclient.status, MCPConnectionStatus.UNCONFIGURED)
+        self.assertEqual(mcpclient.tools, [])
+        for field in MCPClient.DISCOVERED_FIELDS:
+            self.assertIsNone(getattr(mcpclient, field), field)
+
+    def test_unsaved_mcpclient_connection_is_unchanged(self):
+        """Test that a new MCPClient, which has no saved row, is not reset."""
+        self.assertFalse(MCPClient(name="unsaved")._connection_changed())  # pylint: disable=protected-access
 
     def test_credentials(self):
         """Test credential_name, and that deleting the Secret clears credentials rather than deleting the MCPClient."""

@@ -18,12 +18,15 @@ from smarter.common.conf import settings_defaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
+from smarter.lib.manifest.system_role import (
+    SMARTER_MAX_SYSTEM_ROLE_LENGTH,
+    warn_if_long_system_role,
+)
 
 from .const import MANIFEST_KIND
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
-SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 8192  # this is actually the overall max token count for OpenAI chatGPT-4
 
 
 class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
@@ -114,10 +117,12 @@ class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
     )
     systemRole: str = Field(
         ...,
+        max_length=SMARTER_MAX_SYSTEM_ROLE_LENGTH,
         description=(
             f"{class_identifier}.systemRole[str]. Required. The system role that the {MANIFEST_KIND} will use for the LLM "
             "text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM "
-            f"how you want it to use the {MANIFEST_KIND} data that is returned."
+            f"how you want it to use the {MANIFEST_KIND} data that is returned. "
+            f"The maximum length is {SMARTER_MAX_SYSTEM_ROLE_LENGTH} characters."
         ),
     )
     model: str = Field(
@@ -165,16 +170,12 @@ class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
 
     @field_validator("systemRole")
     def validate_systemrole(cls, v) -> str:
-        if re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, v):
-            return v
-        err_desc_me_name = SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+        """
+        Log a warning for a ``systemRole`` that is unusually long.
 
-        if len(v) > SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH:  # replace MAX_LENGTH with your maximum length
-            raise SAMValidationError(
-                f"{cls.class_identifier}.{err_desc_me_name} exceeds maximum length of {SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH}"
-            )
-
-        return v
+        Its maximum length is the field's ``max_length``, which Pydantic checks before this runs.
+        """
+        return warn_if_long_system_role(v, f"{cls.class_identifier}.{SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value}")
 
     @field_validator("model")
     def validate_model(cls, v) -> str:
