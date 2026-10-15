@@ -1,0 +1,64 @@
+"""Install the official Smarter Extensions from the registry."""
+
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.llmtool.const import OFFICIAL_EXTENSIONS
+from smarter.apps.llmtool.extension import registry
+from smarter.apps.llmtool.extension.installer import ExtensionInstaller
+from smarter.apps.llmtool.extension.manifest import ExtensionSettingType
+from smarter.apps.llmtool.models import Extension
+from smarter.apps.secret.models import Secret
+from smarter.lib.django.management.base import SmarterCommand
+
+
+class Command(SmarterCommand):
+    """Django manage.py add_builtin_extensions command."""
+
+    help = (
+        "Install, or update, the official Smarter Extensions from the registry, and enable those whose required "
+        "settings can be configured. Does nothing while the registry is disabled."
+    )
+
+    def configure(self, installer: ExtensionInstaller, extension: Extension) -> None:
+        """
+        Configure each unset secret setting whose name is the name of one of the platform admin's Secrets.
+
+        ``initialize_providers`` creates the platform's Secrets, e.g. ``google_maps_api_key``, which
+        the weather extension's setting of the same name then uses.
+        """
+        manifest = extension.installed_version.parsed_manifest  # type: ignore[union-attr]
+        owner = smarter_cached_objects.smarter_admin_user_profile
+        values = {}
+        for spec in manifest.smarter.settings:
+            secret = Secret.objects.filter(user_profile=owner, name=spec.name).first()
+            if spec.type == ExtensionSettingType.SECRET and secret is not None and not extension.settings.filter(name=spec.name).exists():  # type: ignore[attr-defined]
+                values[spec.name] = secret
+        if values:
+            installer.configure(extension, values)
+
+    def handle(self, *args, **options):
+        self.handle_begin()
+        if not registry.is_enabled():
+            self.stdout.write(self.style.WARNING("The extension registry is disabled: no extensions were installed."))
+            self.handle_completed_success()
+            return
+        installer = ExtensionInstaller(user=smarter_cached_objects.smarter_admin)
+        failed = []
+        for slug in OFFICIAL_EXTENSIONS:
+            try:
+                existing = Extension.objects.filter(slug=slug).first()
+                if existing is not None and existing.source != "registry":
+                    self.stdout.write(self.style.WARNING(f"Skipped {slug}: it was installed from an uploaded archive."))
+                    continue
+                extension = registry.install_from_registry(slug, user=smarter_cached_objects.smarter_admin)
+                self.configure(installer, extension)
+                if not extension.enabled:
+                    installer.enable(extension)
+                self.stdout.write(f"Installed and enabled {slug} {extension.installed_version.version}.")  # type: ignore[union-attr]
+            # pylint: disable=broad-except
+            except Exception as e:
+                failed.append(f"{slug}: {e}")
+        if failed:
+            self.stdout.write(
+                self.style.WARNING("Official extensions that were not installed and enabled:\n" + "\n".join(failed))
+            )
+        self.handle_completed_success()

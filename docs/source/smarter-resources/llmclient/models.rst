@@ -10,7 +10,7 @@ Models
    models/llmclient-api-key
    models/llmclient-custom-domain
    models/custom-domain-dns
-   models/llmclient-functions
+   models/llmclient-extensions
    models/llmclient-guardrails
    models/llmclient-mcpclients
    models/llmclient-plugin

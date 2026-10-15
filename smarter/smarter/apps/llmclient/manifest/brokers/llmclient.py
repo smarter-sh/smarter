@@ -34,12 +34,12 @@ from smarter.apps.llmclient.manifest.models.llmclient.styles import (
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientGuardrails,
     LLMClientMCPClients,
     LLMClientPlugin,
 )
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.llmtool.utils import get_plugin_examples_by_name
 from smarter.apps.mcpclient.models import MCPClient
@@ -112,7 +112,7 @@ class SAMLLMClientBroker(AbstractBroker):
     - Transforming data between Django ORM models and Pydantic models to enable
       seamless conversion between database and API representations.
     - Coordinating composite models, such as LLMClient, LLMClientAPIKey,
-      LLMClientPlugin, and LLMClientFunctions, to ensure all components of an llmclient
+      LLMClientPlugin, and LLMClientExtensions, to ensure all components of an llmclient
       are synchronized according to the manifest specification.
     - Ensuring atomic and consistent application of changes using Django's
       transaction management.
@@ -128,7 +128,7 @@ class SAMLLMClientBroker(AbstractBroker):
     _pydantic_model: Type[SAMLLMClient] = SAMLLMClient
     deployable = True
     _llmclient: Optional[LLMClient] = None
-    _functions: Optional[List[str]] = None
+    _extensions: Optional[List[str]] = None
     _plugins: Optional[List[str]] = None
     _llmclient_api_key: Optional[LLMClientAPIKey] = None
     _name: Optional[str] = None
@@ -231,7 +231,7 @@ class SAMLLMClientBroker(AbstractBroker):
         .. note::
 
             The returned LLMClient object is essential for linking related resources such as API keys,
-            plugins, and functions, and for performing updates or queries on the llmclient's state.
+            plugins, and extensions, and for performing updates or queries on the llmclient's state.
 
         .. admonition:: FIX NOTE
 
@@ -292,31 +292,23 @@ class SAMLLMClientBroker(AbstractBroker):
         return self._llmclient
 
     @property
-    def functions(self) -> Optional[List[str]]:
+    def extensions(self) -> Optional[List[str]]:
         """
-        Provides access to the Django ORM model class representing LLMClient functions.
+        The slugs of the Extensions linked to the LLMClient that this broker manages.
 
-        This property retrieves a list of the names of the ``LLMClientFunctions`` Django ORM model
-        objects that are linked to the LLMClient managed by this broker.
-        The functions define the capabilities and operations
-        that the LLMClient can perform, as specified in the manifest.
-
-        If the functions have already been retrieved and cached, they are returned immediately.
-        Otherwise, the property attempts to fetch the functions from the database using the
-        current LLMClient instance. If no functions are found, ``None`` is returned.
-
-        :returns: A list of names of ``LLMClientFunctions`` instances associated with the LLMClient, or ``None`` if no functions exist.
+        :returns: The slugs, or ``None`` if there is no LLMClient.
         :rtype: Optional[List[str]]
         """
-        if self._functions:
-            return self._functions
+        if self._extensions:
+            return self._extensions
         if not self.llmclient:
             return None
-
-        queryset = LLMClientFunctions.objects.filter(llmclient=self.llmclient)
-        self._functions = list(queryset.values_list("name", flat=True))
-
-        return self._functions
+        self._extensions = list(
+            LLMClientExtensions.objects.filter(llmclient=self.llmclient)
+            .order_by("extension__slug")
+            .values_list("extension__slug", flat=True)
+        )
+        return self._extensions
 
     @property
     def plugins(self) -> Optional[List[str]]:
@@ -439,7 +431,7 @@ class SAMLLMClientBroker(AbstractBroker):
         """
         Transform the Django ORM LLMClient model instance into a dictionary compatible with the Smarter API LLMClient manifest format.
 
-        This method converts the current LLMClient ORM model and its related resources (plugins, functions, API key)
+        This method converts the current LLMClient ORM model and its related resources (plugins, extensions, API key)
         into a dictionary structure that matches the expected schema for a Pydantic manifest. The conversion includes
         renaming fields from snake_case to camelCase, removing internal-only fields, and assembling metadata, spec,
         and status sections as required by the manifest.
@@ -494,8 +486,11 @@ class SAMLLMClientBroker(AbstractBroker):
         plugins = LLMClientPlugin.objects.filter(llmclient=self.llmclient)
         plugin_names = [plugin.plugin_meta.name for plugin in plugins]
 
-        functions = LLMClientFunctions.objects.filter(llmclient=self.llmclient)
-        function_names = [function.name for function in functions]
+        extension_slugs = list(
+            LLMClientExtensions.objects.filter(llmclient=self.llmclient)
+            .order_by("extension__slug")
+            .values_list("extension__slug", flat=True)
+        )
 
         mcpclient_names = [
             link.mcpclient.name
@@ -523,7 +518,7 @@ class SAMLLMClientBroker(AbstractBroker):
         spec = SAMLLMClientSpec(
             config=spec_config,
             plugins=plugin_names,
-            functions=function_names,
+            extensions=extension_slugs or None,
             guardrails=guardrail_names or None,
             mcpClients=mcpclient_names or None,
             apiKey=api_key,
@@ -683,7 +678,7 @@ class SAMLLMClientBroker(AbstractBroker):
         We should invalidate
         any cached objects that are related to the LLMClient when any mutation
         occurs. In this case, we need to invalidate the LLMClient cache itself,
-        but also any related objects such as the plugins, functions and
+        but also any related objects such as the plugins, extensions and
         api keys.
 
         .. returns: None
@@ -696,16 +691,12 @@ class SAMLLMClientBroker(AbstractBroker):
         LLMClient.get_cached_object(pk=self.llmclient.id, invalidate=True)  # type: ignore
 
         # 2.) invalidate anything else in which the llmclient is part of. this could
-        # include listviews, the plugins, functions and api keys.
+        # include listviews, the plugins, extensions and api keys.
         # -----------------------------
         LLMClient.get_cached_objects(user_profile=self.user_profile, invalidate=True)
 
         # 3.) invalidate all children of LLMClient
         # -----------------------------
-        llmclient_functions = LLMClientFunctions.objects.filter(llmclient=self.llmclient)
-        for llmclient_function in llmclient_functions:
-            LLMClientFunctions.get_cached_object(pk=llmclient_function.id, invalidate=True)  # type: ignore
-
         llmclient_plugins = LLMClientPlugin.objects.filter(llmclient=self.llmclient)
         for llmclient_plugin in llmclient_plugins:
             LLMClientPlugin.get_cached_object(pk=llmclient_plugin.id, invalidate=True)  # type: ignore
@@ -805,7 +796,7 @@ class SAMLLMClientBroker(AbstractBroker):
         spec = SAMLLMClientSpec(
             config=config,
             plugins=get_plugin_examples_by_name(),
-            functions=["date_calculator", "get_current_weather"],
+            extensions=["calculator", "date-calculator", "weather"],
             guardrails=["pii_redaction_input", "prompt_injection_keyword_input", "moderation_output"],
             mcpClients=["deepwiki"],
             apiKey="snake_case_api_key_name",
@@ -897,7 +888,7 @@ class SAMLLMClientBroker(AbstractBroker):
         the save() command. These fields are defined in the readonly_fields list.
 
         LLMClient is a composite model that includes the LLMClient, LLMClientAPIKey,
-        LLMClientPlugin and LLMClientFunctions models. All of these are represented
+        LLMClientPlugin and LLMClientExtensions models. All of these are represented
         in the manifest spec and are created or updated as needed.
 
         .. note::
@@ -1069,32 +1060,34 @@ class SAMLLMClientBroker(AbstractBroker):
                             self.llmclient.name,
                         )
 
-            # LLMClientFunctions: add what's missing, remove what's in the model but not in the manifest
+            # LLMClientExtensions: add what's missing, remove what's in the model but not in the manifest
             # -------------
-            for function in LLMClientFunctions.objects.filter(llmclient=self.llmclient):
-                if function.name not in self.manifest.spec.functions:
-                    function.delete()
+            extension_slugs = self.manifest.spec.extensions or []
+            for link in LLMClientExtensions.objects.filter(llmclient=self.llmclient).select_related("extension"):
+                if link.extension.slug not in extension_slugs:
+                    link.delete()
                     logger.debug(
-                        "%s.apply() Detached Function %s from LLMClient %s",
+                        "%s.apply() detached Extension %s from LLMClient %s",
                         self.formatted_class_name,
-                        function.name,
+                        link.extension.slug,
                         self.llmclient.name,
                     )
-            if self.manifest.spec.functions:
-                for function in self.manifest.spec.functions:
-                    if function not in LLMClientFunctions.choices_list():
-                        return self.json_response_err_notfound(
-                            command=command,
-                            message=f"Function {function} not found. Valid functions are: {LLMClientFunctions.choices_list()}",
-                        )
-                    _, created = LLMClientFunctions.objects.get_or_create(llmclient=self.llmclient, name=function)
-                    if created:
-                        logger.debug(
-                            "%s.apply() attached Function %s to LLMClient %s",
-                            self.formatted_class_name,
-                            function,
-                            self.llmclient.name,
-                        )
+            for extension_slug in extension_slugs:
+                extension = self.resolve_extension(extension_slug)
+                if extension is None:
+                    raise SAMBrokerErrorNotFound(
+                        f"Extension {extension_slug} is not installed, or not available to {self.user_profile}",
+                        thing=self.kind,
+                        command=command,
+                    )
+                _, created = LLMClientExtensions.objects.get_or_create(llmclient=self.llmclient, extension=extension)
+                if created:
+                    logger.debug(
+                        "%s.apply() attached Extension %s to LLMClient %s",
+                        self.formatted_class_name,
+                        extension.slug,
+                        self.llmclient.name,
+                    )
 
             # LLMClientGuardrails: add what's missing, remove what's in the model but not in the manifest
             # -------------
@@ -1157,6 +1150,23 @@ class SAMLLMClientBroker(AbstractBroker):
             # done! return the response. Django will take care of committing the transaction
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.command_result())
+
+    def resolve_extension(self, slug: str) -> Optional[Extension]:
+        """
+        Return the installed Extension with the slug ``slug``, if this broker's user's account may use it.
+
+        An extension that is disabled may still be listed: its tools are offered once an
+        administrator enables it.
+
+        :param slug: The Extension's slug.
+        :returns: The Extension, or ``None`` if it is not installed or not available to the user's account.
+        :rtype: Optional[Extension]
+        """
+        extension = Extension.objects.filter(slug=slug, installed_version__isnull=False).first()
+        if extension is None:
+            return None
+        account = self.user_profile.account if self.user_profile else None
+        return extension if extension.is_available_to(account) else None
 
     def resolve_guardrail(self, name: str) -> Optional[Guardrail]:
         """

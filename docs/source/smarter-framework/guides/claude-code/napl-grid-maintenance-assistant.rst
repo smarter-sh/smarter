@@ -254,7 +254,6 @@ Create a file named ``napl-grid-assistant-llmclient.yaml``:
          appPlaceholder: "Enter an equipment ID or describe your maintenance query..."
      plugins:
        - napl_equipment_history
-     functions: []
 
 Step 8: Apply the LLMClient
 ----------------------------

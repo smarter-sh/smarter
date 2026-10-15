@@ -83,7 +83,6 @@ spec:
         color: '#4b2aad'
       typingIndicator:
         color: '#12b886'
-  functions: []
   plugins:
     - brand_voice_support_replies
     - url_reader

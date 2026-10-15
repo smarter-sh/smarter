@@ -68,4 +68,3 @@ spec:
         color: '#fca311'
   plugins:
     - stackademy_api
-  functions: []

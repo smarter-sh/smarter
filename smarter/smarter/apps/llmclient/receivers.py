@@ -18,7 +18,7 @@ from .models import (
     LLMClientAPIKey,
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
-    LLMClientFunctions,
+    LLMClientExtensions,
     LLMClientPlugin,
     LLMClientRequests,
     invalidate_cached_llmclient_by_hosts,
@@ -169,14 +169,14 @@ def llmclient_plugin_saved(sender, instance: LLMClientPlugin, created: bool, **k
         logger.info("%s - updated %s", prefix, instance.plugin_meta.name)
 
 
-@receiver(post_save, sender=LLMClientFunctions)
-def llmclient_functions_saved(sender, instance: LLMClientFunctions, created: bool, **kwargs):
-    """Log creation or update of LLMClientFunctions."""
-    prefix = logging.formatted_text(f"{module_prefix}.llmclient_functions_saved()")
+@receiver(post_save, sender=LLMClientExtensions)
+def llmclient_extensions_saved(sender, instance: LLMClientExtensions, created: bool, **kwargs):
+    """Log creation or update of LLMClientExtensions."""
+    prefix = logging.formatted_text(f"{module_prefix}.llmclient_extensions_saved()")
     if created:
-        logger.info("%s - created %s", prefix, instance.name)
+        logger.info("%s - created %s", prefix, instance.extension.slug)
     else:
-        logger.info("%s - updated %s", prefix, instance.name)
+        logger.info("%s - updated %s", prefix, instance.extension.slug)
 
 
 @receiver(post_save, sender=LLMClientRequests)

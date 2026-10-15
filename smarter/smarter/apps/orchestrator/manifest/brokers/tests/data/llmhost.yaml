@@ -37,5 +37,5 @@ spec:
     dnsVerificationStatus: Not Verified
     orchestrator: openai
     subdomain: null
-  functions: null
+  extensions: null
   plugins: null

@@ -11,17 +11,6 @@ from pydantic import SecretStr
 
 from smarter.apps.account.models import charge_authorization
 from smarter.apps.llmtool.plugin.base import PluginBase
-from smarter.apps.prompt.functions.calculator import (
-    calculator,
-)
-from smarter.apps.prompt.functions.date_calculator import (
-    date_calculator,
-    date_calculator_tool_factory,
-)
-from smarter.apps.prompt.functions.function_weather import (
-    get_current_weather,
-    weather_tool_factory,
-)
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.signals import (
     llm_provider_initialized,
@@ -79,7 +68,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         - Provides a unified interface for prompt providers, supporting both OpenAI-compatible and proprietary Smarter features.
         - Handles message thread management, including system prompts, user/assistant messages, and plugin/tool messages.
-        - Supports built-in tools (e.g., weather, date calculator) and plugin integration.
+        - Supports tools from plugins, MCPClients and extensions.
         - Manages provider_name configuration, validation, and readiness checks.
         - Tracks token usage and charge insertion for billing/auditing.
 
@@ -177,7 +166,6 @@ class SmarterChatProviderBase(ChatDbMixin):
         default_temperature: Optional[float] = smarter_settings.llm_default_temperature,
         default_max_tokens: Optional[int] = smarter_settings.llm_default_max_tokens,
         valid_chat_completion_models: Optional[list[str]] = None,
-        add_built_in_tools: Optional[bool] = False,
         **kwargs,
     ):
         """
@@ -201,8 +189,6 @@ class SmarterChatProviderBase(ChatDbMixin):
         :type default_max_tokens: int
         :param valid_chat_completion_models: A list of valid prompt completion models for the provider_name.
         :type valid_chat_completion_models: list[str]
-        :param add_built_in_tools: Whether to add built-in tools (weather and date calculator) to the provider_name.
-        :type add_built_in_tools: bool
         """
         super().__init__(
             provider=provider,
@@ -264,18 +250,10 @@ class SmarterChatProviderBase(ChatDbMixin):
         self._default_max_completion_tokens = default_max_tokens
         self._valid_chat_completion_models = valid_chat_completion_models
 
-        weather_tool = weather_tool_factory()
-        date_calculator_tool = date_calculator_tool_factory()
-        self.tools = [weather_tool, date_calculator_tool] if add_built_in_tools else None
-        self.available_functions = (
-            {
-                get_current_weather.__name__: get_current_weather,
-                date_calculator.__name__: date_calculator,
-                calculator.__name__: calculator,
-            }
-            if add_built_in_tools
-            else {}
-        )
+        # the tools offered to the LLM, and the callables of their functions, by function name. They
+        # are added per prompt, by the llmclient's plugins, MCPClients and extensions.
+        self.tools = None
+        self.available_functions = {}
 
         llm_provider_initialized.send(sender=self)
 

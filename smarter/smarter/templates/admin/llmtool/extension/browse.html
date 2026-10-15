@@ -1,0 +1,61 @@
+{% extends "admin/base_site.html" %}
+{% comment %}The registry's extensions, with their trust badges and their state on this platform.{% endcomment %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'restricted_admin_site:index' %}">Home</a> &rsaquo;
+  <a href="{% url 'restricted_admin_site:llmtool_extension_changelist' %}">Extensions</a> &rsaquo; Browse
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if error %}
+    <ul class="messagelist"><li class="error">{{ error }}</li></ul>
+  {% else %}
+    <form method="get" style="margin-bottom:16px">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search extensions" style="width:320px">
+      <select name="badge">
+        <option value="">Any publisher</option>
+        <option value="official" {% if badge == "official" %}selected{% endif %}>Official Smarter Extensions</option>
+        <option value="verified" {% if badge == "verified" %}selected{% endif %}>Verified Publishers</option>
+        <option value="community" {% if badge == "community" %}selected{% endif %}>Community</option>
+      </select>
+      <input type="submit" value="Search">
+    </form>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      {% for card in cards %}
+        <div class="module" style="padding:12px">
+          <h3 style="margin-top:0">
+            <a href="{% url 'restricted_admin_site:llmtool_extension_browse_detail' card.entry.slug %}">{{ card.entry.display_name }}</a>
+            {{ card.badge }}
+          </h3>
+          <p>{{ card.entry.description }}</p>
+          <p class="help">
+            By {% if card.publisher %}{{ card.publisher.name }}{% else %}{{ card.entry.publisher }}{% endif %}
+            {% if card.entry.license %} &middot; {{ card.entry.license }}{% endif %}
+            {% if card.entry.homepage %} &middot; <a href="{{ card.entry.homepage }}" rel="noopener" target="_blank">homepage</a>{% endif %}
+          </p>
+          {% if not card.latest %}
+            <p class="help">Not compatible with this version of Smarter.</p>
+          {% elif card.installed %}
+            {% if card.installed.installed_version.version != card.latest.version and card.installed.source == "registry" %}
+              <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_install' card.entry.slug %}">
+                {% csrf_token %}<button type="submit" class="button default">Update to {{ card.latest.version }}</button>
+              </form>
+            {% else %}
+              <p><a href="{% url 'restricted_admin_site:llmtool_extension_change' card.installed.pk %}">Installed ({{ card.installed.installed_version.version }})</a></p>
+            {% endif %}
+          {% else %}
+            <form method="post" action="{% url 'restricted_admin_site:llmtool_extension_install' card.entry.slug %}">
+              {% csrf_token %}<button type="submit" class="button default">Install {{ card.latest.version }}</button>
+            </form>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p>No extensions match.</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

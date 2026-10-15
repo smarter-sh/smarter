@@ -79,7 +79,6 @@ spec:
         color: '#f15a29'
       typingIndicator:
         color: '#f15a29'
-  functions: []
   plugins: []
   # every repository of The Smarter Project, through the platform's own Smarter Project MCP server.
   # It requires no Secret.

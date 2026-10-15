@@ -12,8 +12,8 @@ from .views.views import (
     LLMClientAPIKeyView,
     LLMClientCustomDomainListView,
     LLMClientCustomDomainView,
-    LLMClientFunctionsListView,
-    LLMClientFunctionsView,
+    LLMClientExtensionsListView,
+    LLMClientExtensionsView,
     LLMClientListView,
     LLMClientPluginListView,
     LLMClientPluginView,
@@ -79,9 +79,8 @@ class LLMClientApiV1ReverseViews:
     llmclient_api_key_view_by_id = to_snake_case(LLMClientAPIKeyView.__name__) + BY_ID
     llmclient_custom_domain_list_view_by_id = to_snake_case(LLMClientCustomDomainListView.__name__) + BY_ID
     llmclient_custom_domain_view_by_id = to_snake_case(LLMClientCustomDomainView.__name__) + BY_ID
-    llmclient_api_functions_by_id = to_snake_case(LLMClientFunctionsListView.__name__) + BY_ID
-    llmclient_functions_view_by_id = to_snake_case(LLMClientFunctionsView.__name__) + BY_ID
-    llmclient_function_plugin_list_view_by_id = to_snake_case(LLMClientPluginListView.__name__) + BY_ID
+    llmclient_extension_list_view_by_id = to_snake_case(LLMClientExtensionsListView.__name__) + BY_ID
+    llmclient_extension_view_by_id = to_snake_case(LLMClientExtensionsView.__name__) + BY_ID
 
 
 urlpatterns = [
@@ -138,19 +137,14 @@ urlpatterns = [
         name=LLMClientApiV1ReverseViews.llmclient_custom_domain_view_by_id,
     ),
     path(
-        "<int:llmclient_id>/functions",
-        LLMClientFunctionsListView.as_view(),
-        name=LLMClientApiV1ReverseViews.llmclient_api_functions_by_id,
+        "<int:llmclient_id>/extensions",
+        LLMClientExtensionsListView.as_view(),
+        name=LLMClientApiV1ReverseViews.llmclient_extension_list_view_by_id,
     ),
     path(
-        "<int:llmclient_id>/functions/<int:function_id>",
-        LLMClientFunctionsView.as_view(),
-        name=LLMClientApiV1ReverseViews.llmclient_functions_view_by_id,
-    ),
-    path(
-        "<int:llmclient_id>/functions/<int:function_id>/plugins",
-        LLMClientPluginListView.as_view(),
-        name=LLMClientApiV1ReverseViews.llmclient_function_plugin_list_view_by_id,
+        "<int:llmclient_id>/extensions/<int:extension_id>",
+        LLMClientExtensionsView.as_view(),
+        name=LLMClientApiV1ReverseViews.llmclient_extension_view_by_id,
     ),
     # --------------------------------------------------------------------------
     # paths by hashed_id
