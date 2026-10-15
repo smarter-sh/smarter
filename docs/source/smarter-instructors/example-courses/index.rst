@@ -1,7 +1,7 @@
 Free Course Designs
 ===================
 
-Smarter comes with 20 complete, ready-to-teach course designs, from prompt engineering for
+Smarter comes with 21 complete, ready-to-teach course designs, from prompt engineering for
 non-programmers to Kubernetes for platform engineers. Like Smarter itself, they are free and open
 source, published with Smarter's source code under the same license, with no license fees, no
 seat counts and no sign-up forms. Each course design comes with turnkey course plans, with schedules,
@@ -11,7 +11,7 @@ take a plan, set the dates, and teach it. Paths in the courses are relative to t
 
 The course designs come in two kinds:
 
-- :doc:`micro-courses`: 18 short courses, each on one subject, for students who are new to it.
+- :doc:`micro-courses`: 19 short courses, each on one subject, for students who are new to it.
   Every micro course comes with plans in three formats: an eight-hour classroom bootcamp of
   45-minute lectures and labs, a two-week online course with six hours of instruction, and a
   four-week online course with twelve. Each online format pairs 30-minute recorded lectures with

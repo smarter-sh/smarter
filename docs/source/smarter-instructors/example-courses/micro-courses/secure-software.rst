@@ -26,6 +26,14 @@ students can read, test and try to break:
   that keeps provider keys on the server.
 - **Least privilege for tools.** SQL Plugins that run a fixed, parameterized query, and MCP
   clients that offer only the tools on an allow list.
+- **A software supply chain for third-party code.** :doc:`Extensions
+  </smarter-framework/extensibility>` run unsandboxed, with the platform's own access, so the
+  `registry client
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/registry.py>`__
+  verifies an Ed25519-signed index and every archive's sha256, the `archive
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/archive.py>`__
+  is checked for zip bombs and path traversal before anything is imported, and administrators see
+  each publisher's trust badge before they install.
 - **Classic defenses too.** Hashed API keys, querysets filtered by owner, CSRF protection, CORS
   limited to each LLMClient's allowed origins, middleware that blocks scanners, a non-root
   container with read-only application files, and Calico network policies in
@@ -53,7 +61,7 @@ scanning and code review; and responsible disclosure and incident response.
 
 - `guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail>`__,
   its built-in guardrails, strategies and pipeline.
-- `plugin/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
+- `llmtool/plugin/safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
   and `mcpclient/connection.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/connection.py>`__.
 - `lib/django/middleware/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/middleware>`__
   and `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__.

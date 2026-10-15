@@ -293,8 +293,8 @@ Capstone A: A Full Threat Model and Security Review
 **Learning objective.** Carry out a professional-quality security review of a real application
 feature, from threat model to verified findings.
 
-Students pick a feature of Smarter that crosses trust boundaries, such as API plugins, MCP clients
-or the chat API, and produce a threat model, a code review of the relevant modules, tests of the
+Students pick a feature of Smarter that crosses trust boundaries, such as API plugins, MCP clients,
+Extensions or the chat API, and produce a threat model, a code review of the relevant modules, tests of the
 key mitigations, and a findings report.
 
 **What students turn in:**

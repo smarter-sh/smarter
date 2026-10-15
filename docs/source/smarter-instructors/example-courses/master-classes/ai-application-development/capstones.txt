@@ -61,25 +61,27 @@ the whole stack runs with ``docker compose up`` from a clean clone.
      - Clear and on time.
      - Overruns, or the stack does not start.
 
-Capstone B: A New Built-in Tool for Smarter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Capstone B: A New Tool for Smarter, as an Extension
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Learning objective.** Add an AI feature to a large production codebase, end to end, following
-the patterns that the codebase already uses.
+**Learning objective.** Add an AI feature to a production platform, end to end, through its
+extension framework, following the patterns of its official Extensions.
 
 Students build a Smarter Extension, modeled on the official weather extension: a
 ``pyproject.toml`` manifest, a tool whose Pydantic arguments model is its JSON Schema definition,
-with its arguments validated as untrusted input, any settings it needs, a system prompt note that
-tells the LLM when to use it, and tests that run the tool call loop with a fake LLM. They install
+with its arguments validated as untrusted input, any settings it needs, a system prompt that
+tells the LLM when to use it, and tests that call the tool as the platform does, with
+``call_tool()``, and no LLM. They install
 it on their platform, an LLMClient manifest lists it under ``spec.extensions``, and a Vite
 single-page app of their own, built from ``@chatscope/chat-ui-kit-react``, talks to that
-LLMClient's prompt API. A capstone that proposes its extension to the Smarter registry follows the
-registry's publishing guide.
+LLMClient's prompt API. A capstone that proposes its extension to the Smarter registry agrees this
+with the maintainers in an issue first, and follows
+:doc:`/smarter-framework/extensions/publishing`.
 
 **What students turn in:**
 
-- A pull request against their fork, with the pre-commit hooks passing and at least 90% coverage
-  of the new code.
+- The Extension's Git repository, with ``validate_extension`` passing and at least 90% test
+  coverage.
 - The LLMClient manifest, and the single-page app's repository.
 - A one-page design note: the tool's definition, how its arguments are checked, and what the LLM
   does with a malformed call.
@@ -101,12 +103,13 @@ registry's publishing guide.
      - Vague descriptions, so the LLM never calls it.
    * - Implementation
      - 25
-     - Arguments validated, errors returned to the LLM as results, registered where the other
-       functions are.
-     - Trusts the arguments, or raises into the handler.
+     - Arguments validated as untrusted, failures raised as ``ExtensionToolError`` so that the LLM
+       can recover, listed in the LLMClient's ``spec.extensions``.
+     - Trusts the arguments, or lets unexpected exceptions escape.
    * - Tests
      - 20
-     - Tool call loop tested with a fake LLM, including a malformed call; 90% coverage.
+     - Tool tested with ``call_tool()``, including malformed arguments; services mocked; 90%
+       coverage.
      - Tests that call the paid API.
    * - Front end
      - 15
@@ -114,8 +117,8 @@ registry's publishing guide.
      - The workbench only.
    * - Design note and quality
      - 15
-     - Hooks pass, docstrings, code that reads like the code around it, and a clear note.
-     - Hooks skipped.
+     - Docstrings, code that reads like the official Extensions' code, and a clear note.
+     - Undocumented code.
    * - Walkthrough
      - 10
      - Clear and on time.

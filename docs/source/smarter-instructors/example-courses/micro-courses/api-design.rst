@@ -39,8 +39,12 @@ and packages for macOS, Linux and Windows; the React web console; the
 `@smarter.sh/ui-chat <https://github.com/smarter-sh/smarter-chat>`__ npm package, whose TypeScript
 types are generated from the chat contract; the
 `smarter-vscode-yaml <https://github.com/smarter-sh/smarter-vscode-yaml>`__ editor extension; and a
-`Python SDK <https://github.com/smarter-sh/smarter-python>`__, last updated in July 2025, which
-still calls LLMClients by their former name, a real case of a client drifting from its API.
+typed `Python SDK <https://github.com/smarter-sh/smarter-python>`__, which keeps a copy of the
+platform's OpenAPI document and contracts, pinned to a platform release, and tests every request
+it sends against them. Its `ADR 022
+<https://github.com/smarter-sh/smarter-python/blob/main/doc/adr/022-pinned-openapi.md>`__ explains
+why: the CLI once shipped two broken commands, for routes the platform had renamed, with every
+unit test passing.
 
 Smarter also has honest gaps to review. It does not configure DRF throttling, relying on budgets
 and on middleware that blocks probing clients, and it returns 403 rather than 401 for a bad API

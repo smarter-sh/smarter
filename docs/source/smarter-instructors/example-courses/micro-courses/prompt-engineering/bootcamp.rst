@@ -108,6 +108,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        </smarter-resources/llmtool/plugin/api>` plugins for action. Two decisions decide whether a
        tool is used: Smarter offers a plugin only when the prompt matches one of its
        ``searchTerms``, and the model then calls it or not, guided by the plugin's description.
+       Installed :doc:`Extensions </smarter-framework/extensibility>`, such as the weather tool,
+       are offered on every prompt.
    * - 7
      - 45
      - **Lab 3: Experiments.** Run the test sheet at temperature 0 and 1, and on two models, and
