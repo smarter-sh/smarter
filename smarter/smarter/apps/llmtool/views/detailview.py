@@ -51,7 +51,7 @@ class PluginDetailView(DocsBaseView):
 
     **Example usage**::
 
-        GET /plugin/detail/?name=my_plugin&kind=custom
+        GET /llm-tools/detail/?name=my_plugin&kind=custom
     """
 
     template_path = "common/manifest_detail.html"

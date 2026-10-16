@@ -1,0 +1,28 @@
+.getting-started-progress .progress-bar {
+  background: linear-gradient(90deg, #17c653 0%, #1b84ff 100%);
+  border-radius: inherit;
+}
+
+.getting-started-step {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 2px solid var(--bs-primary);
+  border-radius: 50%;
+  background-color: var(--bs-primary-light);
+  color: var(--bs-primary);
+  font-weight: 700;
+}
+
+.getting-started-step-done {
+  border-color: var(--bs-success);
+  background-color: var(--bs-success);
+  color: #ffffff;
+}
+
+.getting-started-step-done i {
+  color: #ffffff;
+}

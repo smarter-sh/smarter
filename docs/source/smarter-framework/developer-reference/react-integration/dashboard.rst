@@ -2,7 +2,7 @@ Dashboard React Component
 ===================================
 
 The Dashboard React component provides a modern, interactive, and highly modular
-interface for visualizing key resources, service health, certifications, tools,
+interface for visualizing key resources, service health, instructor resources, tools,
 and community contributions — all in one unified view. Unlike traditional Django
 templates, which render static HTML on the server, this React-based dashboard
 delivers a dynamic, real-time user experience with seamless updates and responsive
@@ -13,7 +13,7 @@ more engaging dashboard that’s both flexible and future-proof compared to clas
 server-rendered solutions.
 
 Another key advantage of this dashboard is that each sub-component—such as
-MyResources, ServiceHealth, CertificateProgram, and others—connects to its own
+MyResources, ServiceHealth, BudgetAlerts, and others—connects to its own
 dedicated API data source. This autonomy allows each widget to independently
 manage when and how it fetches or refreshes its data, optimizing both
 performance and user experience. For example, components can trigger updates

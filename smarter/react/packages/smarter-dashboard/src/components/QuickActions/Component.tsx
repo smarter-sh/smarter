@@ -1,8 +1,9 @@
 /**
  * QuickActions dashboard widget.
  *
- * This component renders a grid of links to the web console pages that users
- * visit most. The links come from the backend so that console URLs are not
+ * This component renders a compact grid of links to the web console pages
+ * that users visit most, one line each, with each link's description as its
+ * tooltip. The links come from the backend so that console URLs are not
  * hard-coded here.
  *
  * :param sessionContext: Session context used for authenticated requests.
@@ -48,7 +49,7 @@ function QuickActions({ sessionContext, apiUrl }: QuickActionsProps) {
           {error && <div className="text-danger fs-7">Failed to load quick actions: {error}</div>}
           {!data && !error && <Loading />}
           {data && (
-            <div className="row g-3">
+            <div className="row g-2">
               {data.map((action) => {
                 const external = action.url.startsWith("http");
                 return (
@@ -57,13 +58,11 @@ function QuickActions({ sessionContext, apiUrl }: QuickActionsProps) {
                       href={action.url}
                       target={external ? "_blank" : undefined}
                       rel={external ? "noopener noreferrer" : undefined}
-                      className="quick-action d-flex align-items-center bg-gray-100 bg-opacity-70 rounded-2 px-3 py-3 h-100"
+                      title={action.description}
+                      className="quick-action d-flex align-items-center bg-gray-100 bg-opacity-70 rounded-2 px-3 py-2 h-100"
                     >
-                      <i className={`ki-outline ${action.icon} fs-2 text-primary me-3`}></i>
-                      <span>
-                        <span className="d-block text-gray-800 fw-bold fs-7">{action.name}</span>
-                        <span className="d-block text-gray-500 fs-8">{action.description}</span>
-                      </span>
+                      <i className={`ki-outline ${action.icon} fs-3 text-primary me-2`}></i>
+                      <span className="text-gray-800 fw-bold fs-7 text-truncate">{action.name}</span>
                     </a>
                   </div>
                 );

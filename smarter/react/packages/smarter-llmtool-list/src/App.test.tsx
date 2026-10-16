@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { ownedObjects, sessionContext, sharedObjects } from "@/mocks/fixtures";
+import { extensionObjects, ownedObjects, sessionContext, sharedObjects } from "@/mocks/fixtures";
 import { listErrorHandlers, listHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
@@ -17,8 +17,29 @@ describe("App", () => {
     expect(await screen.findByRole("row", { name: new RegExp(ownedObjects[0].name) })).toBeInTheDocument();
     expect(screen.queryByRole("row", { name: new RegExp(sharedObjects[0].name) })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Shared LLMTools" }));
+    await user.click(screen.getByRole("button", { name: "Shared Tool Plugins" }));
     expect(await screen.findByRole("row", { name: new RegExp(sharedObjects[0].name) })).toBeInTheDocument();
+  });
+
+  it("lists the extensions available to you, read-only", async () => {
+    server.use(...listHandlers());
+    const user = userEvent.setup();
+    render(<App sessionContext={sessionContext} />);
+    await screen.findByRole("row", { name: new RegExp(ownedObjects[0].name) });
+
+    await user.click(screen.getByRole("button", { name: "Extensions" }));
+    for (const extension of extensionObjects) {
+      expect(await screen.findByRole("row", { name: new RegExp(extension.displayName) })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("row", { name: new RegExp(ownedObjects[0].name) })).not.toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search" })).toHaveAttribute("placeholder", "Search Extensions");
+    // read-only: no operations, for any user.
+    expect(screen.queryByRole("columnheader", { name: "Operations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Actions" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
+    expect(screen.getByRole("heading", { name: extensionObjects[0].displayName })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Actions" })).not.toBeInTheDocument();
   });
 
   it("shows cards in the thumbnail view", async () => {
