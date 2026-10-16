@@ -2,10 +2,11 @@
  * Dashboard root layout component.
  *
  * This component composes the main dashboard view by arranging budget alerts,
- * resource, service health, quick action, onboarding, activity and usage
- * widgets into responsive Bootstrap grid sections, followed by the static
- * informational widgets: new features, certification, tooling, hosting and
- * contribution.
+ * resource, service health, quick action, extensions, onboarding, activity,
+ * usage and budget widgets into responsive Bootstrap grid sections, followed
+ * by the static informational widgets: new features, instructor resources,
+ * SDKs, integrations, the CLI, the VS Code extension, the MCP server, hosting
+ * and contribution.
  *
  * :param myResourcesApiUrl: API endpoint used by the MyResources widget.
  * :type myResourcesApiUrl: str
@@ -40,13 +41,16 @@ import "@/components/Dashboard/styles.css";
 import MyResources from "@/components/MyResources/Component";
 import ServiceHealth from "@/components/ServiceHealth/Component";
 import QuickActions from "@/components/QuickActions/Component";
-import CertificateProgram from "@/components/CertificateProgram/Component";
+import Instructors from "@/components/Instructors/Component";
 import VSCodeExtension from "@/components/VSCodeExtension/Component";
+import Extensions from "@/components/Extensions/Component";
+import McpServer from "@/components/McpServer/Component";
 import WhatsNew from "@/components/WhatsNew/Component";
 import GettingStarted from "@/components/GettingStarted/Component";
 import RecentActivity from "@/components/RecentActivity/Component";
 import BudgetAlerts from "@/components/BudgetAlerts/Component";
 import Sdk from "@/components/Sdk/Component";
+import Integrations from "@/components/Integrations/Component";
 import Cli from "@/components/Cli/Component";
 import SelfHost from "@/components/SelfHost/Component";
 import Contribute from "@/components/Contribute/Component";
@@ -69,7 +73,7 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
                 <ServiceHealth apiUrl={appContext.serviceHealthApiUrl} />
                 <QuickActions sessionContext={appContext.sessionContext} apiUrl={appContext.quickActionsApiUrl} />
               </div>
-              <VSCodeExtension />
+              <Extensions />
             </div>
           </div>
 
@@ -81,29 +85,42 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
             </div>
           </div>
 
-          <div className="row g-5 g-xl-10">
-            <div className="col-xl-12 mb-5 mb-xl-10">
-              <UserCharges sessionContext={appContext.sessionContext} apiUrl={appContext.chargesApiUrl} />
-            </div>
+          <div className="row g-5 g-xl-10 align-items-stretch">
+            <UserCharges
+              sessionContext={appContext.sessionContext}
+              apiUrl={appContext.chargesApiUrl}
+              className={appContext.budgetsApiUrl ? "col-xl-6" : "col-xl-12"}
+            />
+            {appContext.budgetsApiUrl && (
+              <BudgetVsActual
+                sessionContext={appContext.sessionContext}
+                apiUrl={appContext.budgetsApiUrl}
+                className="col-xl-6"
+              />
+            )}
           </div>
-
-          {appContext.budgetsApiUrl && (
-            <div className="row g-5 g-xl-10">
-              <BudgetVsActual sessionContext={appContext.sessionContext} apiUrl={appContext.budgetsApiUrl} />
-            </div>
-          )}
 
           {/* static widgets */}
           <div className="row g-5 g-xl-10">
             <div className="col-xl-6 mb-5 mb-xl-10">
               <WhatsNew />
             </div>
-            <CertificateProgram />
+            <Instructors />
           </div>
 
           <div className="row g-5 g-xl-10 align-items-stretch">
             <Sdk />
+            <Integrations />
             <Cli />
+          </div>
+
+          <div className="row g-5 g-xl-10 align-items-stretch">
+            <div className="col-xl-8 mb-5 mb-xl-10">
+              <VSCodeExtension />
+            </div>
+            <div className="col-xl-4 mb-5 mb-xl-10">
+              <McpServer />
+            </div>
           </div>
 
           <div className="row g-5 g-xl-10 align-items-stretch">

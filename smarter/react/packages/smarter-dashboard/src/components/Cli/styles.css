@@ -1,0 +1,76 @@
+.cli-card {
+  background-color: #1e1e2e;
+}
+
+.cli-terminal {
+  border-radius: 0.75rem;
+  background-color: #11111b;
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.cli-terminal-bar {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  background-color: #2a2a3c;
+}
+
+.cli-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+}
+
+.cli-dot-red {
+  background-color: #ff5f56;
+}
+
+.cli-dot-yellow {
+  background-color: #ffbd2e;
+}
+
+.cli-dot-green {
+  background-color: #27c93f;
+}
+
+.cli-terminal-body {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: transparent;
+  color: #cdd6f4;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cli-prompt {
+  color: #a6e3a1;
+  font-weight: 600;
+}
+
+.cli-comment {
+  color: #6c7086;
+}
+
+.cli-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  vertical-align: text-bottom;
+  background-color: #cdd6f4;
+  animation: cli-blink 1s step-end infinite;
+}
+
+@keyframes cli-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cli-cursor {
+    animation: none;
+  }
+}

@@ -6,7 +6,8 @@
  * llmclient, API response, and session context data structures.
  *
  * Exports:
- *   - TabKey: Type for tab keys ("owned" | "shared").
+ *   - TabKey: Type for tab keys ("owned", "shared", or another slug of the list api).
+ *   - Tab, Tabs: A TabbedListView's tabs, each of which may have its own object type and views.
  *   - Pagination, ListQuery, ListPage: Types for a page of a list api, and the request for it.
  *   - Sorting: The sort of a list view's columns, which the list api sorts by.
  *   - Plugin: Type for plugin objects.
@@ -18,12 +19,12 @@
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
 
-export type TabKey = "owned" | "shared";
-
-export type Tabs = {
-  key: TabKey;
-  label: string;
-}[];
+/**
+ * The key of a TabbedListView's tab, which is also the slug of the list api that loads it:
+ * <ApiUrl><key>/. Most lists have the two ownership tabs, "owned" and "shared". A list may add
+ * others, e.g. the LLMTool list's "extensions".
+ */
+export type TabKey = "owned" | "shared" | (string & {});
 
 /** The description of a page of a list api's objects, as smarter.lib.django.pagination returns it. */
 export type Pagination = {
@@ -81,7 +82,7 @@ export type UserProfile = {
   };
 };
 
-type ListViewBaseProps<TObject, TSessionContext> = {
+export type ListViewBaseProps<TObject, TSessionContext> = {
   isLoading: boolean;
   ghostRows: number;
   sessionContext: TSessionContext;
@@ -90,7 +91,7 @@ type ListViewBaseProps<TObject, TSessionContext> = {
   sorting?: Sorting;
 };
 
-type CardViewBaseProps<TObject, TSessionContext> = {
+export type CardViewBaseProps<TObject, TSessionContext> = {
   sessionContext: TSessionContext;
   objects: TObject[];
   onRequery: () => void;
@@ -107,6 +108,22 @@ export type SessionContext = {
   smarterRequestId: string;
   smarterCapabilities?: string[];
 };
+
+/**
+ * A tab of a TabbedListView. A tab whose objects are of another type than the list's, e.g. the
+ * read-only Extensions tab of the LLMTool list, supplies its own ListView, CardView, and the name
+ * of its object type, for the search box. Its ListView and CardView are typed with `never`
+ * objects, so that a component of any object type may be given.
+ */
+export type Tab = {
+  key: TabKey;
+  label: string;
+  objectTypeName?: string;
+  ListView?: React.ComponentType<ListViewBaseProps<never, SessionContext>>;
+  CardView?: React.ComponentType<CardViewBaseProps<never, SessionContext>>;
+};
+
+export type Tabs = Tab[];
 
 export type TabbedViewContext<TObject> = {
   objectType: TObject;
