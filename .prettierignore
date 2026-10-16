@@ -1,1 +1,4 @@
 #.github/actions/send-mail/action.yml
+
+# Archived slide decks: the exact markup each deck was built from.
+presentations/*/source/
