@@ -22,6 +22,7 @@ from smarter.apps.llmtool.models import (
     PluginSelector,
 )
 from smarter.apps.llmtool.plugin.sql import SqlPlugin
+from smarter.apps.llmtool.signals import plugin_updated
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
@@ -287,9 +288,9 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         """
         Test that applying a changed manifest to an existing plugin saves its new prompt and selector.
 
-        A plugin is saved three times by one apply, and the last save, after the plugin was
-        reinitialized, read the PluginPrompt and PluginSelector from a cache that held them as
-        they were before the apply, and wrote them back over the rows.
+        A plugin used to be saved three times by one apply, and the last save, after the plugin
+        was reinitialized, read the PluginPrompt and PluginSelector from a cache that held them
+        as they were before the apply, and wrote them back over the rows.
         """
         response = self.broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
@@ -307,6 +308,23 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         self.assertEqual(prompt.model, "gpt-4.1-mini")
         self.assertEqual(prompt.temperature, 0.25)
         self.assertEqual(PluginSelector.objects.get(plugin=plugin_meta).search_terms, ["courses"])
+
+    def test_apply_writes_the_plugin_once(self):
+        """Test that applying a manifest to an existing plugin updates it once, not once per create() and save()."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        updates = []
+
+        def handler(sender, plugin, **kwargs):
+            updates.append(plugin)
+
+        plugin_updated.connect(handler, weak=False)
+        self.addCleanup(plugin_updated.disconnect, handler)
+        broker = self.SAMBrokerClass(request=self.request, loader=SAMLoader(manifest=json.dumps(self.loader.json_data)))
+        response = broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assertEqual(len(updates), 1)
+        self.assertTrue(broker.plugin.persisted)
 
     def test_plugin(self):
         """Test that the plugin property returns a SqlPlugin instance."""

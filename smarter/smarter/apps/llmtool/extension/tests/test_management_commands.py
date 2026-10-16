@@ -105,18 +105,29 @@ class TestAddBuiltinExtensions(RegistryTestMixin):
     """Test installing the official extensions from a registry."""
 
     def test_add_builtin_extensions(self):
-        """Official extensions are installed and configured from the platform's Secrets; failures are reported."""
+        """Official extensions are installed and configured from the platform's Secrets."""
         secret = self.secret("api_key")
-        with patch(
-            "smarter.apps.llmtool.management.commands.add_builtin_extensions.OFFICIAL_EXTENSIONS", ("echo", "nope")
-        ):
+        with patch("smarter.apps.llmtool.management.commands.add_builtin_extensions.OFFICIAL_EXTENSIONS", ("echo",)):
             output = run("add_builtin_extensions")
         extension = Extension.objects.get(slug="echo")
         self.assertTrue(extension.enabled)
         self.assertEqual(ExtensionSetting.objects.get(extension=extension, name="api_key").secret, secret)
         self.assertIn("Installed and enabled echo 1.1.0", output)
-        self.assertIn("nope: ", output)
         self.assertEqual(OFFICIAL_EXTENSIONS, ("calculator", "date-calculator", "weather"))
+
+    def test_failure_exits(self):
+        """An official extension that cannot be installed doesn't stop the others, and then exits with code 1."""
+        self.secret("api_key")  # echo's required setting, without which it cannot be enabled
+        output = io.StringIO()
+        with patch(
+            "smarter.apps.llmtool.management.commands.add_builtin_extensions.OFFICIAL_EXTENSIONS", ("nope", "echo")
+        ):
+            with self.assertRaises(SystemExit) as raised:
+                call_command("add_builtin_extensions", stdout=output, stderr=io.StringIO())
+        self.assertEqual(raised.exception.code, 1)
+        self.assertTrue(Extension.objects.get(slug="echo").enabled)
+        self.assertIn("Installed and enabled echo 1.1.0", output.getvalue())
+        self.assertIn("nope: ", output.getvalue())
 
     def test_skips_uploads(self):
         """An official slug that was installed from an upload is left alone."""

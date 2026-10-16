@@ -251,6 +251,11 @@ class TestApplicationEntryPoints(SmarterTestBase):
             self.assertEqual(schedule["refresh-llmhost-status"]["options"], module.INFRASTRUCTURE)
             self.assertEqual(schedule["sync-infrastructure-inventory"]["options"], module.INFRASTRUCTURE)
             self.assertEqual(schedule["aggregate-charges"]["options"], module.OPERATIONAL)
+            # beat sends a task by its registered name, which a typo would silently break.
+            from smarter.apps.llmclient.tasks import delete_orphan_dns_records
+
+            self.assertEqual(schedule["delete-orphan-dns-records"]["task"], delete_orphan_dns_records.name)
+            self.assertEqual(schedule["delete-orphan-dns-records"]["options"], module.INFRASTRUCTURE)
             for entry in schedule.values():
                 self.assertTrue(entry["task"].startswith("smarter.apps."))
         finally:

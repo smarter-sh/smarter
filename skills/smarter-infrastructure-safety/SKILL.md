@@ -94,6 +94,12 @@ install the fakes in `setUpClass`, and reset them in `tearDownClass`.
   domain's A record onto platform or LLMClient hosts took production offline
   once. `verify_dns_configuration` now copies the platform domain's record, and
   never overwrites an existing child record.
+- **`local.smarter.sh` and `api.local.smarter.sh` are proxy records for local
+  testing.** Their A records alias the CloudFront distribution, not the platform
+  load balancer, on purpose. `verify_dns_configuration` warns that they don't
+  point at the platform domain's A record, and leaves them unchanged. That
+  warning is expected in every environment, including production. Don't "fix"
+  these records, and don't report the warning as a problem.
 - **Local development uses the `smarter-local` namespace only.** The EKS cluster
   is shared with the deployed environments (`smarter-ubc-alpha`,
   `smarter-ubc-prod`, ...) and unrelated tenants. Don't run `kubectl` against
