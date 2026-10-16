@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.30.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.30.0-alpha.2...v0.30.0-alpha.3) (2026-10-16)
+
+### Features
+
+* **i18n:** translate the web console into spanish and french ([b4958e4](https://github.com/smarter-sh/smarter/commit/b4958e45f50f9adee50877ee6fcd6e4bf2825e58))
+
 ## [0.30.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.30.0-alpha.1...v0.30.0-alpha.2) (2026-10-16)
 
 ### Features
