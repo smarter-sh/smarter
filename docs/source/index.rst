@@ -462,3 +462,10 @@ MCPClient, and four guardrails, and it contains no code.
    external-links/manifest-reference
    external-links/json-schemas
    external-links/youtube
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Contents:
+
+   add_llm_provider
+   onboarding_developers

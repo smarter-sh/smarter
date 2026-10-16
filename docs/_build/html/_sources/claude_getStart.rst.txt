@@ -1,0 +1,160 @@
+.. _getting-started-claude-code:
+
+Getting Started: Using Claude Code with Smarter
+===============================================
+
+Goal
+----
+
+We will use Claude Code with Smarter to write and test a small Python
+function, with every request routed through NAPL's own Smarter platform
+instead of going straight to Anthropic.
+
+Prerequisites
+-------------
+
+You are expected to be comfortable with:
+
+- A command line (PowerShell, bash, or zsh) and environment variables.
+- Python and ``pytest``, and Node.js/npm (Claude Code is installed with npm).
+- REST concepts: base URLs, API keys, HTTP status codes.
+
+Setup
+-----
+
+- Your existing Smarter login.
+- Node.js 18 or later.
+- An empty project folder with Python and ``pytest`` available.
+- An Anthropic provider already registered in Smarter. This is a one-time
+  administrator task described in :ref:`howto-adding-anthropic-llm-provider`.
+  To check, run ``smarter get proxies`` and look for ``anthropic`` in the
+  list. If it is missing, ask your Smarter administrator to complete that
+  how-to first.
+- The name of the model your administrator registered. This guide assumes
+  ``claude-sonnet-4-6``.
+
+.. danger::
+
+   Never commit API keys to version control.
+
+Concept Overview
+----------------
+
+Four names are easy to mix up, so fix them first:
+
+- **Claude** is the family of models (for example Sonnet and Opus).
+- **Anthropic** is the *provider* that hosts those models behind an API.
+- **Claude Code** is a coding agent that runs in your terminal. It is a
+  *client* of the Anthropic API, not a model.
+- **Smarter** sits in the middle and governs access.
+
+Smarter exposes Anthropic to you through a **Proxy**. You keep using
+Anthropic's own tooling, but you point it at a Smarter URL and authenticate
+with a *Smarter* API key. Smarter adds the real Anthropic key (stored as a
+Secret), forwards the request, and records token usage against you and your
+account. The Anthropic key never reaches your machine, and administrators
+can revoke or limit your access without touching Anthropic.
+
+.. code-block:: text
+
+   Claude Code ──Smarter API key──▶ Smarter Proxy ──Anthropic key──▶ Anthropic API
+
+Step-by-Step
+------------
+
+**Step 1. Create a Smarter API key.**
+In the Smarter web console, open **API Keys** and create a key for yourself.
+Copy it immediately. This is the only key you will give Claude Code.
+
+**Step 2. Install Claude Code.**
+
+.. code-block:: bash
+
+   npm install -g @anthropic-ai/claude-code
+   claude --version
+
+**Step 3. Point Claude Code at Smarter.** Claude Code reads its endpoint and
+credentials from environment variables. Use the Proxy URL, which stops at the
+proxy name, *without* ``/v1``, because the client adds that itself.
+
+.. code-block:: bash
+
+   # macOS / Linux
+   export ANTHROPIC_BASE_URL="https://<your-smarter-host>/api/v1/proxy/anthropic"
+   export ANTHROPIC_API_KEY="<your Smarter API key>"
+   export ANTHROPIC_MODEL="claude-sonnet-4-6"
+
+.. code-block:: powershell
+
+   # Windows PowerShell
+   $env:ANTHROPIC_BASE_URL = "https://<your-smarter-host>/api/v1/proxy/anthropic"
+   $env:ANTHROPIC_API_KEY  = "<your Smarter API key>"
+   $env:ANTHROPIC_MODEL    = "claude-sonnet-4-6"
+
+Use the model name your administrator registered. To make these settings
+permanent, add them to your shell profile.
+
+**Step 4. Start Claude Code.**
+
+.. code-block:: bash
+
+   mkdir leap-year-demo && cd leap-year-demo
+   claude
+
+If Claude Code asks whether to use the custom API key, approve it.
+
+Proof of Concept
+----------------
+
+At the Claude Code prompt, enter:
+
+.. code-block:: text
+
+   Create leap_year.py with a function is_leap_year(year), and
+   test_leap_year.py with pytest tests covering 1900, 2000, 2024 and 2023.
+   Then run the tests.
+
+Approve the file writes when prompted. You should see Claude Code create both
+files and run ``pytest``, ending with output similar to:
+
+.. code-block:: text
+
+   ======================== 4 passed in 0.02s ========================
+
+That result proves the whole chain works: Claude Code reached Claude through
+your Smarter Proxy using only your Smarter key.
+
+Troubleshooting
+---------------
+
+**401 Unauthorized.**
+   The Smarter API key is missing, mistyped, or revoked. Check that
+   ``ANTHROPIC_API_KEY`` is set *in the shell where you started* ``claude``,
+   and that it holds the Smarter key, not an Anthropic ``sk-ant-`` key.
+
+**404 ``proxy_not_found``.**
+   The URL is wrong. It must end in ``/api/v1/proxy/anthropic``. Do not add
+   ``/v1`` or ``/v1/messages``.
+
+**Model not found.**
+   ``ANTHROPIC_MODEL`` does not match the model your administrator
+   registered. Names are case-sensitive.
+
+**403 ``path_not_allowed``.**
+   The request used a path the Proxy does not permit. The built-in Anthropic
+   Proxy allows only ``v1/messages``, ``v1/messages/count_tokens`` and
+   ``v1/models``. Ask your administrator before widening it.
+
+**402 ``budget_exceeded``.**
+   A Smarter budget has locked further charges for you, your team, or the
+   Proxy. Contact your administrator.
+
+**503 ``proxy_misconfigured``.**
+   The Proxy has no usable Anthropic key. This is an administrator problem,
+   so report it. They can use the troubleshooting section of
+   :ref:`howto-adding-anthropic-llm-provider`.
+
+.. seealso::
+
+   - `Smarter Proxy <https://docs.smarter.sh/smarter-resources/smarter-proxy.html>`__
+   - `Smarter CLI <https://docs.smarter.sh/smarter-framework/smarter-cli.html>`__

@@ -1,0 +1,1691 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smarter &amp; Claude is Jean-Claude Van Damme - Getting Started Guide &mdash; Smarter Documentation v0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_contributors.css?v=fe9086e2" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css?v=a0a71c94" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=3960652c" />
+
+  
+    <link rel="canonical" href="https://docs.example.com/smarter-framework/guides/claude-code/Getting-Started-With-Jean-Claude.html" />
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Smarter API Manifests (SAM)" href="../../smarter-manifests.html" />
+    <link rel="prev" title="Getting Started with Claude Code as a Coding Assistant" href="getting-started-claude-code-as-coding-assistant.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Smarter Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html">Quick Start Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#install-docker-desktop">1. Install Docker Desktop.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#clone-the-repository">2. Clone the Repository.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#prepare-your-environment-file">3. Prepare Your Environment File.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#initialize-the-application">4. Initialize the Application.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#start-the-application">5. Start the Application.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#log-in">6. Log In.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#download-the-smarter-command-line-interface">7. Download the Smarter Command-Line Interface.</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../smarter-platform.html">Platform Administration Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html">Quick Start Guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#install-docker-desktop">1. Install Docker Desktop.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#clone-the-repository">2. Clone the Repository.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#prepare-your-environment-file">3. Prepare Your Environment File.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#initialize-the-application">4. Initialize the Application.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#start-the-application">5. Start the Application.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#log-in">6. Log In.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/quick-start.html#download-the-smarter-command-line-interface">7. Download the Smarter Command-Line Interface.</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/installation/production-deployment.html">Production Deployment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/production-deployment.html#i-infrastructure">I. Infrastructure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/production-deployment.html#ii-reactjs-component">II. ReactJS Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/production-deployment.html#iii-smarter-platform-application">III. Smarter Platform Application</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/installation/production-deployment.html#trouble-shooting">Trouble Shooting</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../developer-setup.html">Developer Setup Guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#launch-the-smarter-platform">Launch the Smarter Platform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#work-with-source-code">Work With Source Code</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#good-coding-best-practices">Good Coding Best Practices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#repository-setup">Repository Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#docker-setup">Docker Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#python-setup">Python Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#keen-bootstrap-theme-setup">Keen Bootstrap Theme Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#aws-cloud-infrastructure">AWS Cloud Infrastructure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html">Smarter Web Console</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#ai-resource-authors">AI Resource Authors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#console-dashboard">Console Dashboard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#ai-resource-lists">AI Resource Lists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#llm-prompt-workbench">LLM Prompt Workbench</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#manifest-drop-zone">Manifest Drop Zone</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#llm-provider-api-passthrough-tool">LLM Provider API Passthrough Tool</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#live-server-logs">Live Server Logs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#complete-rest-api-reference">Complete REST API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#administrators">Administrators</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/smarter-web-console.html#django-admin-console">Django Admin Console</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/django-admin.html">Django Admin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/prerequisites.html">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/trouble-shooting.html">Trouble Shooting &amp; FAQ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/cloud-infrastructure.html">Cloud Infrastructure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/cloud-infrastructure.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/cloud-infrastructure.html#resources-created">Resources Created</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/url-patterns.html">URL Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/url-patterns.html#example-url-patterns">Example URL Patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/account-management.html">Account Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/account-management.html#creating-accounts">Creating Accounts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/user-management.html">User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/cli.html">Smarter CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/api-keys.html">API Keys</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/api-keys.html#creating-api-keys">Creating API Keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/api-keys.html#managing-api-keys">Managing API Keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/api-keys.html#configuration-options">Configuration Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/api-keys.html#using-api-keys">Using API Keys</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/api-keys.html#smarter-chat-react-component">Smarter Chat React Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/api-keys.html#smarter-command-line-interface">Smarter Command-line Interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html">How-To: Adding an LLM Provider to Smarter</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#goal">Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#supported-providers">Supported Providers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#setup">Setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-1-get-an-api-key">Step 1: Get an API Key</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-2-add-the-key-to-smarter">Step 2: Add the Key to Smarter</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#concept-overview">Concept Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-by-step-create-and-apply-a-provider-manifest">Step-by-Step: Create and Apply a Provider Manifest</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-3-generate-a-starting-template">Step 3: Generate a Starting Template</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-4-write-the-provider-manifests">Step 4: Write the Provider Manifests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-5-apply-both-manifests">Step 5: Apply Both Manifests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#step-6-confirm-both-providers-are-active">Step 6: Confirm Both Providers are Active</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#proof-of-concept">Proof of Concept</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/adding-an-llm-provider.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/cost-accounting.html">Cost Accounting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/smarter-journal.html">Smarter Journal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/smarter-journal.html#enabling-the-smarter-journal">Enabling the Smarter Journal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/smarter-journal.html#django-log">Django Log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/smarter-journal.html#application-logs">Application Logs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/configuration.html">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#aws-infrastructure-configuration">1. AWS Infrastructure Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#django-settings">2. Django Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#asynchronous-task-queue-configuration">3. Asynchronous Task Queue Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#beat-scheduler-configuration">4. Beat Scheduler Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#helm-chart-configuration">5. Helm Chart Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#dockerfile-configuration">6. Dockerfile Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#github-actions-secrets-configuration">7. GitHub Actions Secrets Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#secrets-management">8. Secrets Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#logging-configuration">9. Logging Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#database-configuration">10. Database Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#email-notification-configuration">11.   Email/Notification Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#static-media-files-configuration">1.   Static &amp; Media Files Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/configuration.html#smarter-settings-class-reference">13. Smarter Settings Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/security.html">Security</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#firewall">Firewall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#application-security">Application Security</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/security.html#proprietary-security-features">Proprietary Security Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/security.html#django-security-features">Django Security Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#secure-remote-access">Secure Remote Access</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-platform/security.html#smarter-authentication">Smarter Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#audit-logging">Audit Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#malware-protection">Malware Protection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#user-management">User management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#data-encryption">Data Encryption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/security.html#security-updates">Security Updates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/backup-and-restore.html">Backup and Restore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/updates.html">Updates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/troubleshooting.html">Trouble Shooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-platform/troubleshooting.html#where-to-go-for-help">Where to go for Help</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-platform/security-faq.html">Security FAQ</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../smarter-resources.html">Smarter AI Resource Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-account.html">Smarter Account</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-account.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-account.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-account.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/commands.html">manage.py Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/models.html">Account Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/receivers.html">Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/resources.html">Smarter Resources - Account</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/sam.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/account/utils.html">Utils</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-authtoken.html">Smarter Authtoken</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-authtoken.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-authtoken.html#id1">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-authtoken.html#technical-reference">Technical Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-connection.html">Smarter Connection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-connection.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-connection.html#example-manifest">Example Manifest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-connection.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/manifest.html">Manifest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/receivers.html">Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/resources.html">SAM Resources</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/templatetags.html">React Integration Template Tag</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/urls.html">URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/connection/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html">Smarter Guardrail</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#how-it-works">How It Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#the-manifest">The Manifest</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#strategies">Strategies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#actions">Actions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#modes-and-failure">Modes and Failure</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#built-in-guardrails">Built-in Guardrails</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#security-notes">Security Notes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-guardrail.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/admin.html">Django Admin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/caching.html">Caching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/exceptions.html">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/management.html">Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/manifest.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/receivers.html">Signal Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/services.html">Services</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/utils.html">Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/guardrail/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html">Smarter LLM Client</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#example-manifest">Example Manifest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/models.html">Models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/sam.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/react-ui.html">React UI</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/helper.html">LLMClientHelper Class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/kubernetes-ingress.html">Kubernetes Ingress</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/management-commands.html">Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/middleware.html">Middleware</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/tasks.html">Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/urls.html">URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmclient/utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#sandbox-mode">Sandbox Mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#deploying">Deploying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#updating">Updating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#deleting">Deleting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#testing">Testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#monitoring">Monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#scaling">Scaling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmclient.html#trouble-shooting">Trouble Shooting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-llmhost.html">Smarter LLM Host</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmhost.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-llmhost.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/management.html">Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/manifest.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/llmhost/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html">Smarter MCP Client</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#how-it-works">How It Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#the-manifest">The Manifest</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#authentication">Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#security">Security</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#example-manifests">Example Manifests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-mcpclient.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/caching.html">Caching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/connection.html">MCP Server Connections</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/exceptions.html">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/manifest.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/receivers.html">Signal Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/toolkit.html">Prompt Toolkit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/mcpclient/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-orchestrator.html">Smarter Orchestrator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-orchestrator.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-orchestrator.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/management.html">Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/manifest.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/orchestrator/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-plugin.html">Smarter Plugin</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-plugin.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-plugin.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-plugin.html#example-manifest">Example Manifest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-plugin.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/caching.html">Caching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/how-it-works.html">How it Works</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/how-tools-work.html">How LLM Tool Calling Works</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/resource-types.html">Plugin Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/management.html">Django Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/manifests.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/nlp.html">Natural Language Processing (NLP)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/receivers.html">Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/templatetags.html">React Integration Template Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/utils.html">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/plugin/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-prompt.html">Smarter Prompt</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-prompt.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-prompt.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-prompt.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/example-config.html">Example Prompt Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/example-request.html">Example Prompt Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/example-response.html">Example Prompt Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/manifest.html">Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/functions.html">Smarter Prompt Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/management.html">Django Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/templatetags.html">Prompt Templatetags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/urls.html">Urls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/prompt/views.html">Prompt Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-provider.html">Smarter Provider</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-provider.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-provider.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/management.html">Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/manifest.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/services.html">Services</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/utils.html">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/verification.html">Verification</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/provider/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-proxy.html">Smarter Proxy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-proxy.html#overview">Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-secret.html">Smarter Secret</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-secret.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-secret.html#technical-reference">Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/api.html">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/admin.html">Django Admin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/caching.html">Caching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/manifest.html">Smarter API Manifests (SAM)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/receivers.html">Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/resources.html">Secret Resources</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/serializers.html">DRF Serializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/templatetags.html">React Integration Template Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/urls.html">Urls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/secret/views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch.html">Smarter Vectorsearch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/api.html">API Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/api.html#smarter.apps.vectorsearch.api.v1.views.base.VectorsearchApiBaseViewSet"><code class="docutils literal notranslate"><span class="pre">VectorsearchApiBaseViewSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/const.html">Const</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/management.html">Management Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/manifest.html">Smarter API Manifests (SAM)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/manifest/enum.html">Enumerations Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/manifest/models.html">Pydantic Models</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/models.html">Django ORM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/models.html#smarter.apps.vectorsearch.models.Vectorsearch"><code class="docutils literal notranslate"><span class="pre">Vectorsearch</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/models.html#smarter.apps.vectorsearch.models.VectorsearchSearchType"><code class="docutils literal notranslate"><span class="pre">VectorsearchSearchType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/serializers.html">DRF Serializers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/serializers.html#smarter.apps.vectorsearch.serializers.VectorsearchSerializer"><code class="docutils literal notranslate"><span class="pre">VectorsearchSerializer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/signals.html">Signals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/signals.html#smarter.apps.vectorsearch.signals.vectorsearch_called"><code class="docutils literal notranslate"><span class="pre">vectorsearch_called</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/tasks.html">Asynchronous Tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/views.html">Views</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/views/api.html">API View</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/views/listview.html">ListView</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorsearch/views/detailview.html">Detail View</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore.html">Smarter VectorStore</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/backends.html">Vectorstore Backends</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/backends/base.html">Vectorstore Backend Base Class</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/backends/pinecone.html">Vectorstore Pinecone Backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/backends/qdrant.html">Vectorstore Qdrant Backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/backends/weaviate.html">Vectorstore Weaviate Backend</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html">Vectorstor ORM Models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html#smarter.apps.vectorstore.models.EmbeddingsInterface"><code class="docutils literal notranslate"><span class="pre">EmbeddingsInterface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html#smarter.apps.vectorstore.models.IndexModelInterface"><code class="docutils literal notranslate"><span class="pre">IndexModelInterface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html#smarter.apps.vectorstore.models.VectorstoreBackendKind"><code class="docutils literal notranslate"><span class="pre">VectorstoreBackendKind</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html#smarter.apps.vectorstore.models.VectorstoreInterface"><code class="docutils literal notranslate"><span class="pre">VectorstoreInterface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html#smarter.apps.vectorstore.models.VectorstoreMeta"><code class="docutils literal notranslate"><span class="pre">VectorstoreMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/models.html#smarter.apps.vectorstore.models.VectorstoreStatus"><code class="docutils literal notranslate"><span class="pre">VectorstoreStatus</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html">Vectorstore Receivers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html#smarter.apps.vectorstore.receivers.account_post_delete"><code class="docutils literal notranslate"><span class="pre">account_post_delete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html#smarter.apps.vectorstore.receivers.account_post_save"><code class="docutils literal notranslate"><span class="pre">account_post_save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html#smarter.apps.vectorstore.receivers.handle_load_failed"><code class="docutils literal notranslate"><span class="pre">handle_load_failed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html#smarter.apps.vectorstore.receivers.handle_load_started"><code class="docutils literal notranslate"><span class="pre">handle_load_started()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html#smarter.apps.vectorstore.receivers.handle_load_success"><code class="docutils literal notranslate"><span class="pre">handle_load_success()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/receivers.html#smarter.apps.vectorstore.receivers.should_log"><code class="docutils literal notranslate"><span class="pre">should_log()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/serializers.html">Vectorstore Serializers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/serializers.html#smarter.apps.vectorstore.serializers.VectorstoreSerializer"><code class="docutils literal notranslate"><span class="pre">VectorstoreSerializer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/services.html">Vectorstore Services</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/services.html#smarter.apps.vectorstore.service.VectorstoreService"><code class="docutils literal notranslate"><span class="pre">VectorstoreService</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/signals.html">Vectorstore Signals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/signals.html#smarter.apps.vectorstore.signals.connected"><code class="docutils literal notranslate"><span class="pre">connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/signals.html#smarter.apps.vectorstore.signals.load_failed"><code class="docutils literal notranslate"><span class="pre">load_failed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/signals.html#smarter.apps.vectorstore.signals.load_started"><code class="docutils literal notranslate"><span class="pre">load_started</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/signals.html#smarter.apps.vectorstore.signals.load_success"><code class="docutils literal notranslate"><span class="pre">load_success</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/tasks.html">Vectorstore Asynchronous Tasks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../smarter-resources/smarter-vectorstore/tasks.html#smarter.apps.vectorstore.tasks.should_log"><code class="docutils literal notranslate"><span class="pre">should_log()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../smarter-framework.html">Smarter Development Framework</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../getting-started.html">Getting Started</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../guides.html">Developer Guides</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../developer-setup.html">Developer Setup Guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#launch-the-smarter-platform">Launch the Smarter Platform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#work-with-source-code">Work With Source Code</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#good-coding-best-practices">Good Coding Best Practices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#repository-setup">Repository Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#docker-setup">Docker Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#python-setup">Python Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#keen-bootstrap-theme-setup">Keen Bootstrap Theme Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-setup.html#aws-cloud-infrastructure">AWS Cloud Infrastructure</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../contributing.html">Contributing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../contributing.html#how-to-contribute">How to Contribute</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../developer-feature-checklist.html">New Feature Checklist</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../developer-feature-checklist.html#django-checklist">Django Checklist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-feature-checklist.html#smarter-sam-checklist">Smarter / SAM Checklist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-feature-checklist.html#style-guide-checklist">Style Guide Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../documentation.html">Documentation Style Guide &amp; Technical Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../documentation.html#style-guide">Style Guide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../documentation.html#tips-for-writing-good-documentation">Tips for Writing Good Documentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../documentation.html#documentation-build-process">Documentation Build Process</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../12-factor-app.html">12-Factor App</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../code-of-conduct.html">Code of Conduct</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#purpose">1. Purpose</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#open-source-citizenship">2. Open Source Citizenship</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#expected-behavior">3. Expected Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#unacceptable-behavior">4. Unacceptable Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#enforcement">5. Enforcement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#scope">6. Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#our-responsibilities">7. Our Responsibilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../code-of-conduct.html#attribution">Attribution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../developer-guidelines.html">Developer Guidelines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../developer-guidelines.html#new-feature-checklist">New Feature Checklist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-guidelines.html#unit-testing">Unit Testing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-guidelines.html#pydantic">Pydantic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-guidelines.html#automations">Automations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../developer-guidelines.html#linters-and-formatters">Linters and Formatters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../semantic-versioning.html">Semantic Versioning Guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../semantic-versioning.html#commit-message-format">Commit Message format</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../openai-api-getting-started-guide.html">OpenAI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../openai-json-examples.html">OpenAI JSON Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../openai-json-examples.html#environment-variables">Environment Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../openai-json-examples.html#logging">Logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../openai-json-examples.html#event-dump">event dump</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="../claude-code.html">Claude Code</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="claude-code-getting-started-guide.html">Getting Started with Claude Code on Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="claude-code-getting-started.html">Getting Started with Claude-Powered Coding in Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="getting-started-with-claude-code.html">Getting Started with Claude Code on the Smarter Platform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="napl-grid-maintenance-assistant.html">NAPL Grid Maintenance Assistant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l4"><a class="reference internal" href="getting-started-claude-code.html">Getting Started with Claude Code in Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="claude-code-with-smarter.html">Claude Code with Smarter: Adding Anthropic and Getting Started</a></li>
+<li class="toctree-l4"><a class="reference internal" href="claude-code-with-smarter.html#part-1-adding-anthropic-as-an-llm-provider">Part 1 — Adding Anthropic as an LLM Provider</a></li>
+<li class="toctree-l4"><a class="reference internal" href="claude-code-with-smarter.html#part-2-getting-started-claude-code-for-napl-programmers">Part 2 — Getting Started: Claude Code for NAPL Programmers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="getting-started-with-claude-code-2.html">How-To: Add Anthropic as an LLM Provider in Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="getting-started-claude-code-with-smarter.html">Getting Started with Claude Code in Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="adding-anthropic-provider.html">Adding an Anthropic Provider to Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="getting-started-claude-code-mtran.html">Getting Started: Using Claude Code with Smarter at NAPL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="smarter-claude-plugin.html">Smarter Claude Code Plugin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="napl-adding-llm-provider.html">How-To: Adding Anthropic as an LLM Provider to Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="getting-started-claude-code-as-coding-assistant.html">Getting Started with Claude Code as a Coding Assistant</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Smarter &amp; Claude is Jean-Claude Van Damme - Getting Started Guide</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../smarter-manifests.html">Smarter API Manifests (SAM)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/example-manifest.html">Example SAM Manifest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/enum.html">SAM Enumerations Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html">SAM Pydantic Base Classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html#smarter.lib.manifest.models.AbstractSAMBase"><code class="docutils literal notranslate"><span class="pre">AbstractSAMBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html#smarter.lib.manifest.models.AbstractSAMMetadataBase"><code class="docutils literal notranslate"><span class="pre">AbstractSAMMetadataBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html#smarter.lib.manifest.models.AbstractSAMSpecBase"><code class="docutils literal notranslate"><span class="pre">AbstractSAMSpecBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html#smarter.lib.manifest.models.AbstractSAMStatusBase"><code class="docutils literal notranslate"><span class="pre">AbstractSAMStatusBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html#smarter.lib.manifest.models.SmarterBasePydanticModel"><code class="docutils literal notranslate"><span class="pre">SmarterBasePydanticModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/pydantic-models.html#smarter.lib.manifest.models.VALID_ANNOTATION_VALUE_TYPES_SET"><code class="docutils literal notranslate"><span class="pre">VALID_ANNOTATION_VALUE_TYPES_SET</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/sam-loader.html">SAMLoader Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/sam-loader.html#smarter.lib.manifest.loader.SAMLoader"><code class="docutils literal notranslate"><span class="pre">SAMLoader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/sam-loader.html#smarter.lib.manifest.loader.SAMLoaderError"><code class="docutils literal notranslate"><span class="pre">SAMLoaderError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/sam-loader.html#smarter.lib.manifest.loader.validate_key"><code class="docutils literal notranslate"><span class="pre">validate_key()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/controller.html">SAM AbstractController Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/controller.html#smarter.lib.manifest.controller.AbstractController"><code class="docutils literal notranslate"><span class="pre">AbstractController</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/broker-model.html">SAM Broker Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/error-handling.html">SAM Error Handling</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/error-handling.html#smarter.lib.manifest.exceptions.SAMBadRequestError"><code class="docutils literal notranslate"><span class="pre">SAMBadRequestError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/error-handling.html#smarter.lib.manifest.exceptions.SAMExceptionBase"><code class="docutils literal notranslate"><span class="pre">SAMExceptionBase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/error-handling.html#smarter.lib.manifest.exceptions.SAMValidationError"><code class="docutils literal notranslate"><span class="pre">SAMValidationError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-manifests/validation-strategy.html">SAM Validation Strategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-manifests/validation-strategy.html#validation-strategy">Validation Strategy</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../smarter-broker-model.html">Smarter Broker Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker"><code class="docutils literal notranslate"><span class="pre">AbstractBroker</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.ORMMetaModelClass"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.ORMMetaModelClass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.ORMModelClass"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.ORMModelClass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.SAMModelClass"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.SAMModelClass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.SerializerClass"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.SerializerClass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.abstract_broker_logger_cache_invalidation_prefix"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.abstract_broker_logger_cache_invalidation_prefix</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.abstract_broker_logger_prefix"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.abstract_broker_logger_prefix</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.abstract_broker_ready_state"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.abstract_broker_ready_state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.api_version"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.api_version</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.apply"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.cache_invalidations"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.cache_invalidations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.clean_cli_param"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.clean_cli_param()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.created"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.created</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.delete"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.delete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.deploy"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.deploy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.describe"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.describe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.example_manifest"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.example_manifest()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.formatted_class_name"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.formatted_class_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.formatted_class_name_cache_invalidations"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.formatted_class_name_cache_invalidations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.get"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.get_model_titles"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.get_model_titles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.get_or_create_secret"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.get_or_create_secret()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.is_ready_abstract_broker"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.is_ready_abstract_broker</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.is_valid"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.is_valid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.json_response_err"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.json_response_err()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.json_response_err_notfound"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.json_response_err_notfound()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.json_response_err_notimplemented"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.json_response_err_notimplemented()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.json_response_err_notready"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.json_response_err_notready()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.json_response_err_readonly"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.json_response_err_readonly()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.json_response_ok"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.json_response_ok()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.kind"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.kind</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.kind_setter"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.kind_setter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.loader"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.loader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.log_abstract_broker_state"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.log_abstract_broker_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.logs"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.logs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.manifest"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.manifest</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.manifest_setter"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.manifest_setter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.manifest_to_django_orm"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.manifest_to_django_orm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.name"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.name_cached_property_setter"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.name_cached_property_setter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.orm_instance"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.orm_instance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.orm_meta_instance"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.orm_meta_instance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.orm_meta_instance_setter"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.orm_meta_instance_setter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.params"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.prompt"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.prompt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.ready"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.ready</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.ready_state"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.ready_state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.request"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.request</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.schema"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.schema()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.set_and_verify_name_param"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.set_and_verify_name_param()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.thing"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.thing</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.to_json"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.to_json()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.undeploy"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.undeploy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker.uri"><code class="docutils literal notranslate"><span class="pre">AbstractBroker.uri</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.ORMModelClass"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.ORMModelClass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.SerializerClass"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.SerializerClass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.__init__"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.delete"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.delete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.deploy"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.deploy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.describe"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.describe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.example_manifest"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.example_manifest()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.get"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.logs"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.logs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.manifest"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.manifest</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.prompt"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.prompt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.BrokerNotImplemented.undeploy"><code class="docutils literal notranslate"><span class="pre">BrokerNotImplemented.undeploy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-broker-model.html#smarter.lib.manifest.broker.abstract_broker_class.should_log"><code class="docutils literal notranslate"><span class="pre">should_log()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../smarter-api.html">Smarter API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/documentation.html">API Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/cli.html">CLI URLs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/cli.html#endpoints">Endpoints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/cli.html#url-patterns">URL Patterns</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/cli.html#base-class-reference">Base Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/chat.html">Prompt (Chat) URLS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/chat.html#endpoints">Endpoints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/chat.html#url-patterns">URL Patterns</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/chat.html#promptconfigview-class-reference">PromptConfigView Class Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/chat.html#defaultllmclientapiview-class-reference">DefaultLLMClientApiView Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/authentication.html">Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/error-handling.html">CLI Error Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/logging.html">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/rate-limiting.html">Rate Limiting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/smarter-journal.html">Journal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-api/code.html">Class Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/code/cli.html">CLI</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/code/commands.html">Management Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/code/enum.html">Enumerations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/code/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-api/code/urls.html">URLS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../smarter-cli.html">Smarter CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-cli.html#installation">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-cli.html#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-cli.html#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-cli.html#related-api-endpoints">Related API endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../smarter-cli.html#manifest-spec">Manifest Spec</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-cli.html#kind">Kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-cli.html#broker-model">Broker Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../smarter-cli.html#controller-model">Controller Model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../vs-code-extension.html">VS Code Extension</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../vs-code-extension.html#features">Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../vs-code-extension.html#getting-started">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../vs-code-extension.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../vs-code-extension.html#json-schemas">JSON Schemas</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer-reference.html">Developer Technical Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/react-integration.html">Django-React Integration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/react-integration.html#request-lifecycle">Request Lifecycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/react-integration.html#an-example-the-terminal-application-component">An Example: The Terminal Application Component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/react-integration.html#build-deployment-and-ci-cd-considerations">Build, Deployment, and CI/CD Considerations</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-journal.html">Smarter Journal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-journal.html#journal-technical-references">Journal Technical References</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-enum.html">Smarter Enumeration Classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-enum.html#smarter.common.enum.SmarterEnumAbstract"><code class="docutils literal notranslate"><span class="pre">SmarterEnumAbstract</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-mixins.html">Smarter Mixins</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/mixins/helper.html">Smarter Helper Mixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/mixins/account.html">Smarter Account Mixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/mixins/request.html">Smarter Request Mixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/mixins/middleware.html">Smarter Middleware Mixin</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-settings.html">Smarter Settings</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-settings.html#smarter.common.conf.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-utils.html">Smarter Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-utils.html#technical-references">Technical References</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-devops.html">Smarter Devops Guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/devops/build.html">Build</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/devops/test.html">Test</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/devops/deploy.html">Deploy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/devops/ci-cd.html">CI/CD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/smarter-dashboard.html">Smarter Dashboard App</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/admin.html">Django Admin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/const.html">Const</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/context_processors.html">Context Processors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/models.html">Django ORM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/receivers.html">Dashboard Receivers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/signals.html">Signals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/templatetags.html">Dashboard Templatetags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/urls.html">Urls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/smarter-dashboard/views.html">Views</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer-reference/lib.html">Smarter Framework Library</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/django.html">Django</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/drf.html">Django Rest Framework</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/caching.html">Smarter Caching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/json.html">Smarter Json Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/celery-config.html">Smarter Celery Config Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/journal.html">Smarter Journal Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/logging.html">Smarter Logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/openai.html">Smarter OpenAI Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/social-core.html">Smarter Social Core Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer-reference/lib/unittest.html">Smarter Unit Test Library</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../technologies.html">Technologies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/aws.html">Amazon Web Services (AWS)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/aws.html#terraform">Terraform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/aws.html#aws-helper-classes">AWS Helper Classes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/docker.html">Docker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#what-is-docker">What is Docker?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#why-use-docker">Why Use Docker?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#smarter-and-docker">Smarter and Docker</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#getting-started-with-docker">Getting Started with Docker</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#key-docker-concepts">Key Docker Concepts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#basic-commands">Basic Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/docker.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/kubernetes.html">Kubernetes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/kubernetes.html#kubernetes-helper-classes">Kubernetes Helper Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/kubernetes.html#helm-chart">Helm Chart</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/opentelemetry.html">OpenTelemetry Compatibility</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#motivation">Motivation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#what-opentelemetry-compatible-means-for-smarter">What “OpenTelemetry Compatible” means for Smarter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#proposed-architecture">Proposed architecture</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#ui-surface-proposed-not-finalized">UI surface (proposed, not finalized)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#open-questions">Open questions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/opentelemetry.html#related-links">Related links</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/python.html">Python</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/python.html#coding-style">Coding Style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/python.html#type-hinting">Type Hinting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/python.html#documentation">Documentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/python.html#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/python.html#dependabot-configuration-for-python-dependencies">Dependabot Configuration for Python Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/pydantic.html">Pydantic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../technologies/smtp.html">SMTP Email Support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/smtp.html#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/smtp.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../technologies/smtp.html#technical-reference">Technical Reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../adr.html">ADR</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/000-intro.html">ADR Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/000-intro.html#guidelines-for-writing-adrs">Guidelines for Writing ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/001-django.html">ADR-001: Django</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/001-django.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/001-django.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/001-django.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/001-django.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/001-django.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/001-django.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/002-docker.html">ADR-002: Docker</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/002-docker.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/002-docker.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/002-docker.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/002-docker.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/002-docker.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/002-docker.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/003-kubernetes.html">ADR-003: Kubernetes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/003-kubernetes.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/003-kubernetes.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/003-kubernetes.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/003-kubernetes.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/003-kubernetes.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/003-kubernetes.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/004-12-factor.html">ADR-004: 12-Factor App</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/004-12-factor.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/004-12-factor.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/004-12-factor.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/004-12-factor.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/004-12-factor.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/004-12-factor.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/005-manifests.html">ADR-005: Manifests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/005-manifests.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/005-manifests.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/005-manifests.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/005-manifests.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/005-manifests.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/005-manifests.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/006-rest-api.html">ADR-006: Rest API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/006-rest-api.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/006-rest-api.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/006-rest-api.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/006-rest-api.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/006-rest-api.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/006-rest-api.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/007-settings.html">ADR-007: Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/007-settings.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/007-settings.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/007-settings.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/007-settings.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/007-settings.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/007-settings.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/008-function-calling.html">ADR-008: Function Calling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/008-function-calling.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/008-function-calling.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/008-function-calling.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/008-function-calling.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/008-function-calling.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/008-function-calling.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/009-async-tasks.html">ADR-009: Async Tasks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/009-async-tasks.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/009-async-tasks.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/009-async-tasks.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/009-async-tasks.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/009-async-tasks.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/009-async-tasks.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/010-management-commands.html">ADR-010: Management Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/010-management-commands.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/010-management-commands.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/010-management-commands.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/010-management-commands.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/010-management-commands.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/010-management-commands.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/011-logging.html">ADR-011: Logging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/011-logging.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/011-logging.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/011-logging.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/011-logging.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/011-logging.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/011-logging.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/012-error-handling.html">ADR-012: Error Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/012-error-handling.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/012-error-handling.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/012-error-handling.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/012-error-handling.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/012-error-handling.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/012-error-handling.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/013-testing.html">ADR-013: Testing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/013-testing.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/013-testing.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/013-testing.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/013-testing.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/013-testing.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/013-testing.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/014-ci-cd.html">ADR-014: CI/CD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/014-ci-cd.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/014-ci-cd.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/014-ci-cd.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/014-ci-cd.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/014-ci-cd.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/014-ci-cd.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/015-dependency-management.html">ADR-015: Dependency Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/015-dependency-management.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/015-dependency-management.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/015-dependency-management.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/015-dependency-management.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/015-dependency-management.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/015-dependency-management.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/016-security.html">ADR-016: Security</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/016-security.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/016-security.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/016-security.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/016-security.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/016-security.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/016-security.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/017-database.html">ADR-017: Database</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/017-database.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/017-database.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/017-database.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/017-database.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/017-database.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/017-database.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/018-caching.html">ADR-018: Caching</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/018-caching.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/018-caching.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/018-caching.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/018-caching.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/018-caching.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/018-caching.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/019-react.html">ADR-019: React</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/019-react.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/019-react.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/019-react.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/019-react.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/019-react.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/019-react.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/020-semantic-versioning.html">ADR-020: Semantic Versioning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/020-semantic-versioning.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/020-semantic-versioning.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/020-semantic-versioning.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/020-semantic-versioning.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/020-semantic-versioning.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/020-semantic-versioning.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/021-internationalization.html">ADR-021: Internationalization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/021-internationalization.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/021-internationalization.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/021-internationalization.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/021-internationalization.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/021-internationalization.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/021-internationalization.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/022-feature-flags.html">ADR-022: Feature Flags</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/022-feature-flags.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/022-feature-flags.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/022-feature-flags.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/022-feature-flags.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/022-feature-flags.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/022-feature-flags.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/023-api-versioning.html">ADR-023: API Versioning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/023-api-versioning.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/023-api-versioning.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/023-api-versioning.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/023-api-versioning.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/023-api-versioning.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/023-api-versioning.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/024-broker-model.html">ADR-024: Broker Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/024-broker-model.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/024-broker-model.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/024-broker-model.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/024-broker-model.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/024-broker-model.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/024-broker-model.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/025-templates.html">ADR-025: Django Templates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/025-templates.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/025-templates.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/025-templates.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/025-templates.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/025-templates.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/025-templates.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/026-keen.html">ADR-026: Keen Bootstrap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/026-keen.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/026-keen.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/026-keen.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/026-keen.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/026-keen.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/026-keen.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/027-annotations.html">ADR-027: Python Annotations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/027-annotations.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/027-annotations.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/027-annotations.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/027-annotations.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/027-annotations.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/027-annotations.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/028-code-quality.html">ADR-028: Code Quality</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/028-code-quality.html#status">Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/028-code-quality.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/028-code-quality.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/028-code-quality.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/028-code-quality.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/028-code-quality.html#related-adrs">Related ADRs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../adr/029-docstrings.html">ADR 029: Docstring Style</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/029-docstrings.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/029-docstrings.html#alternatives-considered">Alternatives Considered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/029-docstrings.html#decision">Decision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/029-docstrings.html#consequences">Consequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../adr/029-docstrings.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributors.html">Contributors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributors.html#github-repositories">GitHub Repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributors.html#core-contributors">Core Contributors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributors.html#community-contributors">Community Contributors</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-links/support-smarter.html">Support Smarter!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-links/swagger.html">Swagger API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-links/manifest-reference.html">Smarter Manifest Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-links/json-schemas.html">Smarter Json Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-links/youtube.html">Smarter on YouTube</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Smarter Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../smarter-framework.html">Smarter Development Framework</a></li>
+          <li class="breadcrumb-item"><a href="../../guides.html">Developer Guides</a></li>
+          <li class="breadcrumb-item"><a href="../claude-code.html">Claude Code</a></li>
+      <li class="breadcrumb-item active">Smarter &amp; Claude is Jean-Claude Van Damme - Getting Started Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/smarter-framework/guides/claude-code/Getting-Started-With-Jean-Claude.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="smarter-claude-is-jean-claude-van-damme-getting-started-guide">
+<h1>Smarter &amp; Claude is Jean-Claude Van Damme - Getting Started Guide<a class="headerlink" href="#smarter-claude-is-jean-claude-van-damme-getting-started-guide" title="Link to this heading"></a></h1>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#goal" id="id5">Goal</a></p></li>
+<li><p><a class="reference internal" href="#prerequisites" id="id6">Prerequisites</a></p></li>
+<li><p><a class="reference internal" href="#setup" id="id7">Setup</a></p>
+<ul>
+<li><p><a class="reference internal" href="#step-1-install-the-smarter-cli" id="id8">Step 1: Install the Smarter CLI</a></p></li>
+<li><p><a class="reference internal" href="#step-2-create-and-set-a-smarter-api-key" id="id9">Step 2: Create and Set a Smarter API Key</a></p></li>
+<li><p><a class="reference internal" href="#step-3-configure-the-cli" id="id10">Step 3: Configure the CLI</a></p></li>
+<li><p><a class="reference internal" href="#step-4-obtain-an-anthropic-api-key" id="id11">Step 4: Obtain an Anthropic API Key</a></p></li>
+<li><p><a class="reference internal" href="#step-5-add-the-anthropic-key-to-smarter-s-environment" id="id12">Step 5: Add the Anthropic Key to Smarter’s Environment</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#concept-overview" id="id13">Concept Overview</a></p>
+<ul>
+<li><p><a class="reference internal" href="#provider" id="id14">Provider</a></p></li>
+<li><p><a class="reference internal" href="#provider-manifest" id="id15">Provider Manifest</a></p></li>
+<li><p><a class="reference internal" href="#llmclient" id="id16">LLMClient</a></p></li>
+<li><p><a class="reference internal" href="#provider-vs-model-identifiers" id="id17">Provider vs. Model Identifiers</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#step-by-step-create-and-apply-provider-manifests" id="id18">Step-by-Step: Create and Apply Provider Manifests</a></p>
+<ul>
+<li><p><a class="reference internal" href="#step-6-generate-a-starting-template" id="id19">Step 6: Generate a Starting Template</a></p></li>
+<li><p><a class="reference internal" href="#step-7-write-the-provider-manifests" id="id20">Step 7: Write the Provider Manifests</a></p></li>
+<li><p><a class="reference internal" href="#step-8-apply-the-manifests" id="id21">Step 8: Apply the Manifests</a></p></li>
+<li><p><a class="reference internal" href="#step-9-confirm-both-providers-are-active" id="id22">Step 9: Confirm Both Providers are Active</a></p></li>
+<li><p><a class="reference internal" href="#step-10-send-your-first-prompt" id="id23">Step 10: Send Your First Prompt</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#proof-of-concept" id="id24">Proof of Concept</a></p></li>
+<li><p><a class="reference internal" href="#troubleshooting" id="id25">Troubleshooting</a></p>
+<ul>
+<li><p><a class="reference internal" href="#startup-error-api-key-not-found" id="id26">Startup error: “API key not found”</a></p></li>
+<li><p><a class="reference internal" href="#provider-status-verification-failed" id="id27">Provider status: “verification failed”</a></p></li>
+<li><p><a class="reference internal" href="#apply-error-model-not-found" id="id28">Apply error: “Model not found”</a></p></li>
+<li><p><a class="reference internal" href="#manifest-validation-errors" id="id29">Manifest validation errors</a></p></li>
+<li><p><a class="reference internal" href="#not-authenticated-when-using-the-cli" id="id30">“Not authenticated” when using the CLI</a></p></li>
+<li><p><a class="reference internal" href="#slow-or-timed-out-responses" id="id31">Slow or timed-out responses</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="goal">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Goal</a><a class="headerlink" href="#goal" title="Link to this heading"></a></h2>
+<p>Use the Smarter CLI to register Anthropic as an LLM provider, apply a
+provider manifest, verify connectivity, and send your first prompt to a
+Claude-backed llmclient — all in under fifteen minutes.</p>
+</section>
+<section id="prerequisites">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Prerequisites</a><a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>An active Smarter account.</p></li>
+<li><p>Smarter v0.11.0 or later, running and accessible.</p></li>
+<li><p>Comfort working in a terminal (Bash, Zsh, or PowerShell).</p></li>
+<li><p>Basic understanding of YAML syntax and REST APIs.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial assumes you can already log in to the Smarter web console.
+If you cannot, contact your organization’s Smarter administrator.</p>
+</div>
+<ul class="simple">
+<li><p>An active Anthropic account with API access and a valid API key.</p></li>
+</ul>
+</section>
+<section id="setup">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Setup</a><a class="headerlink" href="#setup" title="Link to this heading"></a></h2>
+<section id="step-1-install-the-smarter-cli">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Step 1: Install the Smarter CLI</a><a class="headerlink" href="#step-1-install-the-smarter-cli" title="Link to this heading"></a></h3>
+<p>Follow the installation instructions in <a class="reference internal" href="../../smarter-cli.html"><span class="doc">Smarter CLI</span></a>
+to download the binary for your operating system and add it to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p>Confirm the installation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>version
+</pre></div>
+</div>
+<p>You should see output similar to <code class="docutils literal notranslate"><span class="pre">smarter</span> <span class="pre">v0.11.x</span> <span class="pre">(build</span> <span class="pre">...)</span></code>.</p>
+</section>
+<section id="step-2-create-and-set-a-smarter-api-key">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Step 2: Create and Set a Smarter API Key</a><a class="headerlink" href="#step-2-create-and-set-a-smarter-api-key" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Log in to the Smarter web console.</p></li>
+<li><p>Click your profile icon (top-right) and select <strong>API Keys</strong>.</p></li>
+<li><p>Click <strong>Create API Key</strong>, give it a descriptive name (e.g.
+<code class="docutils literal notranslate"><span class="pre">my-admin-key</span></code>), and copy the value immediately — it will not be
+shown again.</p></li>
+</ol>
+<p>Export the key so subsequent commands pick it up automatically:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">SMARTER_API_KEY</span><span class="o">=</span>your-api-key-here
+</pre></div>
+</div>
+</section>
+<section id="step-3-configure-the-cli">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Step 3: Configure the CLI</a><a class="headerlink" href="#step-3-configure-the-cli" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>configure
+</pre></div>
+</div>
+<p>When prompted, provide the target environment (e.g. <code class="docutils literal notranslate"><span class="pre">prod</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha</span></code>) and
+the API key from Step 2. Run a quick health check to make sure everything is
+connected:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>status
+</pre></div>
+</div>
+<p>A successful response confirms the platform is reachable and your credentials
+are valid.</p>
+</section>
+<section id="step-4-obtain-an-anthropic-api-key">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Step 4: Obtain an Anthropic API Key</a><a class="headerlink" href="#step-4-obtain-an-anthropic-api-key" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Sign in at <a class="reference external" href="https://console.anthropic.com/">https://console.anthropic.com/</a>.</p></li>
+<li><p>Navigate to <strong>Settings → API Keys → Create Key</strong>.</p></li>
+<li><p>Give the key a descriptive name (e.g. <code class="docutils literal notranslate"><span class="pre">smarter-prod</span></code>) and copy it
+immediately — Anthropic will not display it again.</p></li>
+</ol>
+<p>For full details on API key management, authentication, and rate limits, see
+the <a class="reference external" href="https://platform.claude.com/docs/en/home">Claude API documentation</a>.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Never commit API keys to version control. Store them only in environment
+variables or a secrets manager.</p>
+</div>
+</section>
+<section id="step-5-add-the-anthropic-key-to-smarter-s-environment">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Step 5: Add the Anthropic Key to Smarter’s Environment</a><a class="headerlink" href="#step-5-add-the-anthropic-key-to-smarter-s-environment" title="Link to this heading"></a></h3>
+<p>Open the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file at the root of your Smarter deployment and add:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">SMARTER_ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</pre></div>
+</div>
+<p>Restart the application so the new credential is loaded:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>restart
+</pre></div>
+</div>
+</section>
+</section>
+<section id="concept-overview">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Concept Overview</a><a class="headerlink" href="#concept-overview" title="Link to this heading"></a></h2>
+<p>Smarter manages every resource — providers, llmclients, plugins — through
+declarative YAML manifests applied via the CLI. This pattern is deliberately
+modeled on Kubernetes. These files are called <strong>SAM</strong> (Smarter API Manifests).</p>
+<section id="provider">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Provider</a><a class="headerlink" href="#provider" title="Link to this heading"></a></h3>
+<p>A <strong>Provider</strong> represents an external LLM backend (e.g. Anthropic, OpenAI,
+GoogleAI). Smarter uses the provider definition to know which API to call,
+which credentials to use, and which model to target.</p>
+</section>
+<section id="provider-manifest">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Provider Manifest</a><a class="headerlink" href="#provider-manifest" title="Link to this heading"></a></h3>
+<p>A Provider manifest has four top-level sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">apiVersion</span></code>: Always <code class="docutils literal notranslate"><span class="pre">smarter.sh/v1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>: Set to <code class="docutils literal notranslate"><span class="pre">Provider</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code>: Name, description, and version of this resource.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spec</span></code>: The provider configuration — which backend and which model.</p></li>
+</ul>
+<p>When you apply a manifest, Smarter registers the provider and immediately runs
+<strong>verification</strong>: it calls the provider’s API, confirms the model is reachable,
+and marks the provider active.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Built-in providers (OpenAI, GoogleAI, MetaAI) are registered automatically
+during deployment and only require their <code class="docutils literal notranslate"><span class="pre">SMARTER_*</span></code> environment variable.
+Anthropic is an <strong>additional provider</strong> and requires both the environment
+variable <em>and</em> a manifest.</p>
+</div>
+</section>
+<section id="llmclient">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">LLMClient</a><a class="headerlink" href="#llmclient" title="Link to this heading"></a></h3>
+<p>A <strong>LLMClient</strong> is a named resource that bundles a provider, a model, a system
+prompt, and optional data plugins. End users interact with llmclients, not
+providers directly.</p>
+</section>
+<section id="provider-vs-model-identifiers">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Provider vs. Model Identifiers</a><a class="headerlink" href="#provider-vs-model-identifiers" title="Link to this heading"></a></h3>
+<p>Each manifest registers <strong>one model</strong> under a provider backend. To offer
+multiple Claude models (e.g. Opus and Sonnet), create one manifest per model.
+Model identifiers are case-sensitive and must match the strings published by
+Anthropic exactly.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 40.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Manifest Name</p></th>
+<th class="head"><p>Model Identifier</p></th>
+<th class="head"><p>Best For</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">anthropic-opus</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">claude-opus-4-5</span></code></p></td>
+<td><p>Complex reasoning, code generation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">anthropic-sonnet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">claude-sonnet-4-6</span></code></p></td>
+<td><p>Balanced speed and quality</p></td>
+</tr>
+</tbody>
+</table>
+<p>For the full list of available Claude models and their capabilities, see the
+<a class="reference external" href="https://platform.claude.com/docs/en/home">Claude API documentation</a>.</p>
+</section>
+</section>
+<section id="step-by-step-create-and-apply-provider-manifests">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Step-by-Step: Create and Apply Provider Manifests</a><a class="headerlink" href="#step-by-step-create-and-apply-provider-manifests" title="Link to this heading"></a></h2>
+<section id="step-6-generate-a-starting-template">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Step 6: Generate a Starting Template</a><a class="headerlink" href="#step-6-generate-a-starting-template" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>manifest<span class="w"> </span>provider
+</pre></div>
+</div>
+<p>This prints a valid example manifest to stdout. Use it as a reference while
+authoring your own files.</p>
+</section>
+<section id="step-7-write-the-provider-manifests">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Step 7: Write the Provider Manifests</a><a class="headerlink" href="#step-7-write-the-provider-manifests" title="Link to this heading"></a></h3>
+<p>Create one manifest per model. The example below registers both Claude Opus
+and Claude Sonnet so you can compare their responses side-by-side in the
+Workbench.</p>
+<p><code class="docutils literal notranslate"><span class="pre">anthropic-opus.yaml</span></code> — higher capability, best for complex reasoning:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smarter.sh/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Provider</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic-opus</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Anthropic Claude Opus 4 — high-capability model</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0.0</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">provider</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">claude-opus-4-5</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">anthropic-sonnet.yaml</span></code> — faster and more cost-efficient:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smarter.sh/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Provider</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic-sonnet</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Anthropic Claude Sonnet 4 — balanced speed and quality</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0.0</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">provider</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">claude-sonnet-4-6</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Model identifiers are case-sensitive and must match the provider’s published
+names exactly. For the full <code class="docutils literal notranslate"><span class="pre">spec</span></code> field reference, see
+<a class="reference internal" href="../../../smarter-resources/provider/manifest.html"><span class="doc">Smarter API Manifests (SAM)</span></a>.</p>
+</div>
+</section>
+<section id="step-8-apply-the-manifests">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Step 8: Apply the Manifests</a><a class="headerlink" href="#step-8-apply-the-manifests" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>anthropic-opus.yaml
+smarter<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>anthropic-sonnet.yaml
+</pre></div>
+</div>
+<p>Smarter registers each provider and begins verification checks automatically.</p>
+</section>
+<section id="step-9-confirm-both-providers-are-active">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Step 9: Confirm Both Providers are Active</a><a class="headerlink" href="#step-9-confirm-both-providers-are-active" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>describe<span class="w"> </span>provider<span class="w"> </span>anthropic-opus
+smarter<span class="w"> </span>describe<span class="w"> </span>provider<span class="w"> </span>anthropic-sonnet
+</pre></div>
+</div>
+<p>Look for a <code class="docutils literal notranslate"><span class="pre">status</span></code> section in each output showing that verification has
+passed. If it shows <code class="docutils literal notranslate"><span class="pre">pending</span></code>, wait 30 seconds and run the command again —
+verification is asynchronous.</p>
+<p>You can also confirm in the web console: <strong>Providers</strong> in the left sidebar
+should list both <code class="docutils literal notranslate"><span class="pre">anthropic-opus</span></code> and <code class="docutils literal notranslate"><span class="pre">anthropic-sonnet</span></code> with active
+status.</p>
+</section>
+<section id="step-10-send-your-first-prompt">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Step 10: Send Your First Prompt</a><a class="headerlink" href="#step-10-send-your-first-prompt" title="Link to this heading"></a></h3>
+<p>List available llmclients to find one configured with an Anthropic provider:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>get<span class="w"> </span>llmclients
+</pre></div>
+</div>
+<p>Start an interactive session:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>chat<span class="w"> </span>&lt;llmclient-name&gt;
+</pre></div>
+</div>
+<p>Type a prompt and press Enter. For example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Write a Python function that validates an email address using a regex pattern.
+Include a Sphinx-compatible docstring.
+</pre></div>
+</div>
+<p>Expected response (approximate):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_email</span><span class="p">(</span><span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate an email address against a standard pattern.</span>
+
+<span class="sd">    :param address: The email address string to validate.</span>
+<span class="sd">    :type address: str</span>
+<span class="sd">    :returns: ``True`` if the address matches the pattern, ``False`` otherwise.</span>
+<span class="sd">    :rtype: bool</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; validate_email(&quot;user@example.com&quot;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; validate_email(&quot;not-an-email&quot;)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$&quot;</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">address</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="proof-of-concept">
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Proof of Concept</a><a class="headerlink" href="#proof-of-concept" title="Link to this heading"></a></h2>
+<p>Run the following sequence end to end to verify your setup is complete:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>smarter<span class="w"> </span>status<span class="w">                              </span><span class="c1"># platform is reachable</span>
+smarter<span class="w"> </span>get<span class="w"> </span>providers<span class="w">                       </span><span class="c1"># anthropic-opus and anthropic-sonnet listed</span>
+smarter<span class="w"> </span>describe<span class="w"> </span>provider<span class="w"> </span>anthropic-opus<span class="w">    </span><span class="c1"># verified: true, active: true</span>
+smarter<span class="w"> </span>describe<span class="w"> </span>provider<span class="w"> </span>anthropic-sonnet<span class="w">  </span><span class="c1"># verified: true, active: true</span>
+smarter<span class="w"> </span>chat<span class="w"> </span>&lt;llmclient-name&gt;
+</pre></div>
+</div>
+<p>Expected <code class="docutils literal notranslate"><span class="pre">describe</span></code> output for each provider:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smarter.sh/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Provider</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic-opus</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Anthropic Claude Opus 4 — high-capability model</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0.0</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">provider</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">claude-opus-4-5</span>
+<span class="nt">status</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">verified</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">active</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">last_verified</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2026-04-06T00:00:00Z&quot;</span>
+</pre></div>
+</div>
+<p>Both providers showing <code class="docutils literal notranslate"><span class="pre">verified:</span> <span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">active:</span> <span class="pre">true</span></code> confirms that
+Smarter has a live connection to the Anthropic API and both models are ready
+for use in llmclients and the Workbench.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>With both providers registered, create two llmclients — one backed by Opus,
+one by Sonnet — and compare their responses to the same prompt in the
+Workbench. This is a practical way to evaluate cost vs. quality trade-offs
+before committing to a model for production.</p>
+</div>
+</section>
+<section id="troubleshooting">
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">Troubleshooting</a><a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="startup-error-api-key-not-found">
+<h3><a class="toc-backref" href="#id26" role="doc-backlink">Startup error: “API key not found”</a><a class="headerlink" href="#startup-error-api-key-not-found" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">SMARTER_ANTHROPIC_API_KEY</span></code> variable is missing from <code class="docutils literal notranslate"><span class="pre">.env</span></code> or the
+application has not been restarted. Double-check the variable name (it is
+case-sensitive) and run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">restart</span></code>.</p>
+</section>
+<section id="provider-status-verification-failed">
+<h3><a class="toc-backref" href="#id27" role="doc-backlink">Provider status: “verification failed”</a><a class="headerlink" href="#provider-status-verification-failed" title="Link to this heading"></a></h3>
+<p>The API key is invalid, expired, or has been revoked. Generate a new key at
+<a class="reference external" href="https://console.anthropic.com/">console.anthropic.com</a> and update <code class="docutils literal notranslate"><span class="pre">.env</span></code>.
+See the <a class="reference external" href="https://platform.claude.com/docs/en/home">Claude API documentation</a>
+for guidance on key rotation.</p>
+</section>
+<section id="apply-error-model-not-found">
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">Apply error: “Model not found”</a><a class="headerlink" href="#apply-error-model-not-found" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">model</span></code> value in your manifest does not match the provider’s published
+identifier. Model identifiers are case-sensitive. Run
+<code class="docutils literal notranslate"><span class="pre">smarter</span> <span class="pre">manifest</span> <span class="pre">provider</span></code> to compare your file against a known-good
+template, and consult the
+<a class="reference external" href="https://platform.claude.com/docs/en/home">Claude API documentation</a> for
+current model names.</p>
+</section>
+<section id="manifest-validation-errors">
+<h3><a class="toc-backref" href="#id29" role="doc-backlink">Manifest validation errors</a><a class="headerlink" href="#manifest-validation-errors" title="Link to this heading"></a></h3>
+<p>YAML indentation is almost always the cause. Run <code class="docutils literal notranslate"><span class="pre">smarter</span> <span class="pre">manifest</span> <span class="pre">provider</span></code>
+to view a valid template and compare it against your file. Install the
+<a class="reference external" href="https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest">Smarter YAML extension</a>
+in VS Code for autocomplete and live validation.</p>
+</section>
+<section id="not-authenticated-when-using-the-cli">
+<h3><a class="toc-backref" href="#id30" role="doc-backlink">“Not authenticated” when using the CLI</a><a class="headerlink" href="#not-authenticated-when-using-the-cli" title="Link to this heading"></a></h3>
+<p>Run <code class="docutils literal notranslate"><span class="pre">smarter</span> <span class="pre">configure</span></code> and re-enter your Smarter API key. You can also pass
+it inline with <code class="docutils literal notranslate"><span class="pre">--api_key</span></code>.</p>
+</section>
+<section id="slow-or-timed-out-responses">
+<h3><a class="toc-backref" href="#id31" role="doc-backlink">Slow or timed-out responses</a><a class="headerlink" href="#slow-or-timed-out-responses" title="Link to this heading"></a></h3>
+<p>Run <code class="docutils literal notranslate"><span class="pre">smarter</span> <span class="pre">status</span></code>. If the platform is healthy, the delay is on
+Anthropic’s side — wait a minute and retry. For persistent issues, check the
+<a class="reference external" href="https://status.anthropic.com/">Claude API status page</a>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../smarter-cli.html"><span class="doc">Smarter CLI</span></a></p></li>
+<li><p><a class="reference internal" href="../../../smarter-platform/api-keys.html"><span class="doc">API Keys</span></a></p></li>
+<li><p><a class="reference internal" href="../../../smarter-resources/smarter-provider.html"><span class="doc">Smarter Provider</span></a></p></li>
+<li><p><a class="reference internal" href="../../../smarter-resources/provider/manifest.html"><span class="doc">Smarter API Manifests (SAM)</span></a></p></li>
+<li><p><a class="reference internal" href="../../../smarter-resources/provider/api.html"><span class="doc">API Reference</span></a></p></li>
+<li><p><a class="reference internal" href="../../../external-links/swagger.html"><span class="doc">Swagger API Documentation</span></a></p></li>
+<li><p><a class="reference external" href="https://platform.claude.com/docs/en/home">Claude API Documentation</a></p></li>
+<li><p><a class="reference external" href="https://console.anthropic.com/">Anthropic Console</a></p></li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+    <a
+      href="getting-started-claude-code-as-coding-assistant.html"
+      class="btn btn-neutral float-left"
+      title="Getting Started with Claude Code as a Coding Assistant"
+      accesskey="p"
+      rel="prev"
+      ><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a
+    >
+    <a
+      href="../../smarter-manifests.html"
+      class="btn btn-neutral float-right"
+      title="Smarter API Manifests (SAM)"
+      accesskey="n"
+      rel="next"
+      >Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span
+    ></a>
+  </div>
+
+  <hr />
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 - 2026
+      <a href="https://lawrencemcdaniel.com" target="_blank" rel="noopener noreferrer"
+        >Lawrence P. McDaniel</a
+      >.
+      <a href="https://smarter.sh" target="_blank" rel="noopener noreferrer"
+        >The Smarter Project</a
+      >.
+      <span class="lastupdated">Last updated October-2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+  <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.  
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

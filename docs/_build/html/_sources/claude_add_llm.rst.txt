@@ -1,0 +1,204 @@
+.. _howto-adding-anthropic-llm-provider:
+
+How-To: Adding Anthropic as an LLM Provider
+===========================================
+
+Goal
+----
+
+Register Anthropic as an LLM provider in Smarter, with the Claude Sonnet
+model, so that Smarter resources and Claude Code can use it.
+
+This is a one-time task for a Smarter administrator. Programmers who want to
+use the provider from Claude Code should follow
+:ref:`getting-started-claude-code` afterwards.
+
+Prerequisites
+-------------
+
+- Comfort with the command line and with reading and writing YAML.
+- A basic idea of how REST APIs use API keys.
+- Familiarity with Kubernetes-style manifests is helpful but not required.
+
+Setup
+-----
+
+Before you start, make sure you have:
+
+- Smarter v0.11.0 or later, running and reachable.
+- An administrator account on the Smarter web console.
+- The Smarter CLI installed and logged in. See the
+  `Smarter CLI documentation <https://docs.smarter.sh/smarter-framework/smarter-cli.html>`__.
+- Shell access to the Smarter deployment, so you can edit ``.env``.
+- An editor. VS Code with the Smarter YAML extension gives validation and
+  auto-completion for manifests.
+- An Anthropic account at `console.anthropic.com <https://console.anthropic.com/>`__.
+
+To create the Anthropic key, sign in to the console, go to
+**Settings → API Keys → Create Key**, give it a descriptive name such as
+``smarter-napl-prod``, and copy the value straight away. It is shown only
+once.
+
+.. danger::
+
+   Never commit API keys to version control.
+
+Concept Overview
+----------------
+
+Smarter has two kinds of LLM provider:
+
+- **Built-in providers** (OpenAI, GoogleAI, MetaAI) are registered
+  automatically at deployment. They only need an API key in ``.env``.
+- **Additional providers**, including Anthropic, need *both* an API key in
+  ``.env`` *and* a Provider manifest applied with the CLI.
+
+Smarter manages every resource the same way: you write a YAML file called a
+Smarter API Manifest (SAM) and apply it with the CLI. A manifest has four
+parts:
+
+- ``apiVersion``: always ``smarter.sh/v1``.
+- ``kind``: ``Provider`` for this task.
+- ``metadata``: the resource's name, description and version.
+- ``spec``: the configuration. For a provider, this is which backend and
+  which model.
+
+When you apply a Provider manifest, Smarter calls the provider's API, checks
+that the model is reachable, and marks the provider verified. Each manifest
+registers one model, so a second Claude model means a second manifest.
+
+The data points you need are:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 40
+
+   * - Data point
+     - Where it goes
+     - Value for this example
+   * - Anthropic API key
+     - ``SMARTER_ANTHROPIC_API_KEY`` in ``.env``
+     - ``sk-ant-...`` (from the Anthropic console)
+   * - Resource name
+     - ``metadata.name``
+     - ``anthropic-sonnet``
+   * - Description and version
+     - ``metadata.description``, ``metadata.version``
+     - Free text, and ``1.0.0``
+   * - Provider name
+     - ``spec.provider.name``
+     - ``anthropic``
+   * - Model identifier
+     - ``spec.provider.model``
+     - ``claude-sonnet-4-6``
+
+.. note::
+
+   Claude Code is a coding agent that *calls* Claude models through
+   Anthropic's API. It is not a model, so it is not registered here. You
+   register the provider and the model it will use.
+
+Step-by-Step
+------------
+
+**Step 1. Add the key to Smarter.**
+Add the key to the ``.env`` file at the root of the Smarter deployment, then
+restart so it is loaded:
+
+.. code-block:: bash
+
+   SMARTER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxx
+   make restart
+
+**Step 2. Generate a template.**
+
+.. code-block:: bash
+
+   smarter manifest provider
+
+The output is a valid example manifest. Keep it as a reference for the next
+step.
+
+**Step 3. Write the manifest.** Save this as ``anthropic-sonnet.yaml``:
+
+.. code-block:: yaml
+
+   apiVersion: smarter.sh/v1
+   kind: Provider
+   metadata:
+     name: anthropic-sonnet
+     description: Anthropic Claude Sonnet, for NAPL custom programming
+     version: 1.0.0
+   spec:
+     provider:
+       name: anthropic
+       model: claude-sonnet-4-6
+
+.. note::
+
+   Model identifiers are case-sensitive and must match Anthropic's published
+   names exactly. Check `Anthropic's documentation <https://docs.anthropic.com/>`__
+   for the current list.
+
+**Step 4. Apply the manifest.**
+
+.. code-block:: bash
+
+   smarter apply -f anthropic-sonnet.yaml
+
+Smarter registers the provider and starts its verification checks.
+
+**Step 5. Confirm the provider is active.**
+
+.. code-block:: bash
+
+   smarter describe provider anthropic-sonnet
+
+Look for the ``status`` section. Verification runs asynchronously, so if it
+shows ``pending``, wait 30 seconds and run the command again. You can also
+open **Providers** in the web console sidebar and check that
+``anthropic-sonnet`` is listed as active.
+
+Proof of Concept
+----------------
+
+The output of ``smarter describe provider anthropic-sonnet`` should echo your
+manifest and end with a ``status`` block like this:
+
+.. code-block:: yaml
+
+   status:
+     verified: true
+     active: true
+
+``verified: true`` means Smarter made a live call to Anthropic with your key
+and confirmed the model is ready for use.
+
+Troubleshooting
+---------------
+
+**Startup error: "API key not found".**
+   ``SMARTER_ANTHROPIC_API_KEY`` is missing from ``.env``, or Smarter has not
+   been restarted since you added it. Run ``make restart``.
+
+**Provider status shows "verification failed".**
+   The Anthropic key is invalid or has been revoked. Create a new key in the
+   Anthropic console, update ``.env``, and restart.
+
+**Apply error: "Model not found".**
+   The ``model`` value does not match Anthropic's identifier. Identifiers are
+   case-sensitive, so copy the name exactly.
+
+**Manifest validation errors.**
+   The cause is almost always YAML indentation. Compare your file with the
+   output of ``smarter manifest provider``.
+
+**Status stays ``pending``.**
+   Verification is asynchronous. Wait 30 seconds and describe the provider
+   again before investigating further.
+
+.. seealso::
+
+   - `Smarter Provider <https://docs.smarter.sh/smarter-resources/smarter-provider.html>`__
+   - `Smarter API Manifests <https://docs.smarter.sh/smarter-resources/provider/manifest.html>`__
+   - `Anthropic API documentation <https://docs.anthropic.com/>`__

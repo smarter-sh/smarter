@@ -1,0 +1,9 @@
+Smarter AWS S3 Helper
+=======================
+
+.. autoclass:: smarter.common.helpers.aws.s3.AWSSimpleStorageSystem
+
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: __init__
