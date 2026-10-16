@@ -8,7 +8,9 @@ description: Use whenever the user asks you to "write a git commit" (or a commit
 ## The rule: write, never execute
 
 "Write a git commit", in any wording or tone, means **output the command as
-text**. It never means run it.
+text**. It never means run it. Frustrated or emphatic phrasing ("THAT IS NOT A
+GIT COMMIT", all caps, profanity) still asks for the command text. Agents have
+broken this rule in exactly that situation.
 
 - Never execute `git commit`, `git add`, `git reset`, `git restore --staged`,
   `git push`, `git stash`, or any other git command that writes. The user stages

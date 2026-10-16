@@ -96,6 +96,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     redis-tools \
     libncurses6 \
     groff \
+    gettext \
     less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -220,6 +221,18 @@ COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llmclient/data/ ./data/manifests/
 RUN mkdir -p /home/smarter_user/smarter/staticfiles
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
+
+# Compile the web console's translations, smarter/locale/<language>/LC_MESSAGES/*.po, to the
+# .mo files that Django reads. Only the .po files are committed, and .dockerignore leaves out
+# any .mo files on the host. This must run before the permissions stage, which makes every
+# directory read-only outside of the local environment, so compilemessages could not write the
+# .mo files there. compilemessages loads the Django settings, which refuse to start outside of
+# the local environment without SECRET_KEY, so it gets a throwaway random key that exists only
+# for this RUN step, as collectstatic does below.
+WORKDIR /home/smarter_user/smarter
+RUN SMARTER_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+      python manage.py compilemessages --ignore=react --ignore=node_modules --ignore=static --ignore=staticfiles
+WORKDIR /home/smarter_user/
 
 ################################# permissions #######################################
 # This stage is for setting file permissions for the smarter_user. We want to approach

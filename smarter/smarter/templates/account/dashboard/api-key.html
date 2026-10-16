@@ -1,13 +1,13 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block dashboard_title %}Account Settings{% endblock %}
+{% block dashboard_title %}{% translate "Account Settings" %}{% endblock %}
 
     {% block dashboard_title_breadcrumbs %}
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/dashboard/account/dashboard/api-keys/" class="text-muted text-hover-primary">API Keys</a>
+        <a href="/dashboard/account/dashboard/api-keys/" class="text-muted text-hover-primary">{% translate "API Keys" %}</a>
       </li>
     {% endblock %}
 
@@ -19,7 +19,7 @@
     <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_apikey_details" aria-expanded="true" aria-controls="kt_apikey_details">
       <!--begin::Card title-->
       <div class="card-title m-0">
-        <h3 class="fw-bold m-0">New API Key</h3>
+        <h3 class="fw-bold m-0">{% translate "New API Key" %}</h3>
       </div>
       <!--end::Card title-->
     </div>
@@ -48,7 +48,7 @@
                 type="text"
                 name="{{ account_apikeys.apikey_form.description.name }}"
                 class="form-control form-control-lg form-control-solid"
-                placeholder="A description for this API key. Be concise ..."
+                placeholder="{% translate "A description for this API key. Be concise ..." %}"
                 value="{% if account_apikeys.apikey_form.description.value != None %}{{ account_apikeys.apikey_form.description.value }}{% endif %}"
                  />
 
@@ -69,8 +69,8 @@
                   name="{{ account_apikeys.apikey_form.is_active.name }}"
                   class="form-select form-select-solid form-select-lg fw-semibold fs-6 text-gray-700"
               >
-                  <option value="True" {% if account_apikeys.apikey_form.is_active.value != None and account_apikeys.apikey_form.is_active.value == True %}selected{% endif %}>True</option>
-                  <option value="False" {% if account_apikeys.apikey_form.is_active.value != None and account_apikeys.apikey_form.is_active.value == False %}selected{% endif %}>False</option>
+                  <option value="True" {% if account_apikeys.apikey_form.is_active.value != None and account_apikeys.apikey_form.is_active.value == True %}selected{% endif %}>{% translate "True" %}</option>
+                  <option value="False" {% if account_apikeys.apikey_form.is_active.value != None and account_apikeys.apikey_form.is_active.value == False %}selected{% endif %}>{% translate "False" %}</option>
               </select>
             </div>
             <!--end::Col-->
@@ -81,8 +81,8 @@
           <div class="row mb-6">
             <!--begin::Label-->
             <label class="col-lg-4 col-form-label fw-semibold fs-6">
-              <span class="">API Key</span>
-              <span class="ms-1" data-bs-toggle="tooltip" title="We will only show this value once. Store your api key value in a safe location.">
+              <span class="">{% translate "API Key" %}</span>
+              <span class="ms-1" data-bs-toggle="tooltip" title="{% translate "We will only show this value once. Store your api key value in a safe location." %}">
                 <i class="ki-duotone ki-information-5 text-gray-500 fs-6">
                   <span class="path1"></span>
                   <span class="path2"></span>
@@ -117,12 +117,12 @@
             id="kt_apikey_form_cancel_btn"
             type="reset"
             class="btn btn-light btn-active-light-primary me-2"
-            >Cancel</button>
+            >{% translate "Cancel" %}</button>
           <button
             id="kt_apikey_form_save_btn"
             type="submit"
             class="btn btn-primary"
-            >Save</button>
+            >{% translate "Save" %}</button>
         </div>
         <!--end::Actions-->
       </form>

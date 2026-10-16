@@ -1,0 +1,30 @@
+<section id="plan-for" data-transition="fade" style="background:#F6F4EE;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1F5F66">Due diligence</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:400;line-height:1.1;color:#14213D">Maturity, and the gaps to plan for</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:32px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FDFCF9;border:1px solid #DDD8CC;border-top:8px solid #1F5F66;border-radius:16px;padding:40px">
+<h3 style="font-size:32px;font-weight:700;color:#14213D">Where it stands</h3>
+<ul style="font-size:26px;line-height:1.5;color:#4A5568">
+<li>Open source since 2024; release v0.29, pre-1.0</li>
+<li>Semantic-versioned releases and changelogs</li>
+<li>Automated tests in CI, with published coverage</li>
+<li>Container images patched at least monthly</li>
+<li>Full documentation at docs.smarter.sh</li>
+<li>In teaching use at UBC</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FDFCF9;border:1px solid #DDD8CC;border-top:8px solid #E3A63B;border-radius:16px;padding:40px">
+<h3 style="font-size:32px;font-weight:700;color:#14213D">Plan for</h3>
+<ul style="font-size:26px;line-height:1.5;color:#4A5568">
+<li><b>Enterprise SSO:</b> Google and GitHub sign-in today; SAML or OIDC needs integration work</li>
+<li><b>Cloud:</b> automated provisioning is AWS only</li>
+<li><b>Support:</b> community and partners; no vendor SLA</li>
+<li><b>Perimeter:</b> WAF, storage encryption and malware scanning come from your cloud</li>
+</ul>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;flex-direction:row;justify-content:space-between"><p style="font-size:24px;color:#4A5568">Smarter for IT Leadership</p><p style="font-size:24px;color:#4A5568">14</p></div>
+<aside>About 2 minutes. Say this before they ask; it builds credibility. Smarter is a real, actively maintained platform, but it is pre-1.0 and community supported. Four things an enterprise should plan for. First, identity: sign-in today is Google or GitHub OAuth plus local accounts. Single sign-on with Okta, Entra ID or another SAML or OIDC provider requires integration work; the authentication backends are configurable, so it is an engineering task rather than a redesign. Second, the Terraform automation targets AWS; on another cloud you supply Kubernetes, DNS and certificates yourself. Third, there is no vendor support desk or SLA; support comes from GitHub, the documentation and hosting partners. Fourth, Smarter relies on your cloud for perimeter controls such as WAF, volume encryption and malware scanning.</aside>
+</section>

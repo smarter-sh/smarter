@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
     {% block root %}
 			<!--begin::Page bg image-->
@@ -20,11 +20,11 @@
 							</div>
 							<!--end::Logo-->
 							<!--begin::Title-->
-							<h1 class="fw-bolder text-gray-900 mb-5">Welcome to Smarter!</h1>
+							<h1 class="fw-bolder text-gray-900 mb-5">{% translate "Welcome to Smarter!" %}</h1>
 							<!--end::Title-->
 							<!--begin::Text-->
-							<div class="fw-semibold fs-6 text-gray-500 mb-7">This is your opportunity to take prompt engineering
-							<br />to the next level!</div>
+							<div class="fw-semibold fs-6 text-gray-500 mb-7">{% blocktranslate trimmed %}This is your opportunity to take prompt engineering
+							<br />to the next level!{% endblocktranslate %}</div>
 							<!--end::Text-->
 							<!--begin::Illustration-->
 							<div class="mb-0">
@@ -34,7 +34,7 @@
 							<!--end::Illustration-->
 							<!--begin::Link-->
 							<div class="mb-0">
-								<a href="{% url 'console_home' %}" class="btn btn-sm btn-primary">Go To Dashboard</a>
+								<a href="{% url 'console_home' %}" class="btn btn-sm btn-primary">{% translate "Go To Dashboard" %}</a>
 							</div>
 							<!--end::Link-->
 						</div>

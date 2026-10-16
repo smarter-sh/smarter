@@ -5,7 +5,7 @@
  * the error message of a failed request. An empty url skips the request.
  */
 import { useEffect, useState } from "react";
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
@@ -23,7 +23,8 @@ export default function useDashboardApi<T>(sessionContext: SessionContext, url: 
     let cancelled = false;
     fetchDjangoUrl(sessionContext, url, JSON.stringify({}))
       .then(async (response) => {
-        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        if (!response.ok)
+          throw new Error(interpolate(gettext("Request failed: %(status)s"), { status: response.status }));
         return (await response.json()) as T;
       })
       .then((data) => {

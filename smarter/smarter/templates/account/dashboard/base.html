@@ -1,5 +1,5 @@
 {% extends 'dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block canonical %}
 <link rel="canonical" href="/account/" />
@@ -18,7 +18,7 @@
 									<div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
 										<!--begin::Title-->
 
-                    <h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">{% block dashboard_title %}Account Overview{% endblock %}</h1>
+                    <h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">{% block dashboard_title %}{% translate "Account Overview" %}{% endblock %}</h1>
 
 										<!--end::Title-->
 										<!--begin::Breadcrumb-->
@@ -26,12 +26,12 @@
                       {% block dashboard_title_breadcrumbs %}
 											<!--begin::Item-->
 											<li class="breadcrumb-item text-muted">
-												<a href="{% url 'console_home' %}" class="text-muted text-hover-primary">Home</a>
+												<a href="{% url 'console_home' %}" class="text-muted text-hover-primary">{% translate "Home" %}</a>
 											</li>
 											<!--end::Item-->
 											<!--begin::Item-->
 											<li class="breadcrumb-item text-muted">
-												<a href="/dashboard/account/dashboard/overview/" class="text-muted text-hover-primary">Account</a>
+												<a href="/dashboard/account/dashboard/overview/" class="text-muted text-hover-primary">{% translate "Account" %}</a>
 											</li>
 											<!--end::Item-->
                       {% endblock %}
@@ -49,10 +49,10 @@
                         name="shortcut_select"
                         data-control="select2"
                         class="form-select form-select-sm bg-body border-body w-175px">
-												<option id="shortcut_option_user" value="user" selected="selected">New User</option>
-												<option id="shortcut_option_api_key" value="api_key">New API Key</option>
-												<option id="shortcut_option_secret" value="secret">New Secret</option>
-												<option id="shortcut_option_payment_method" value="payment_method">New Payment Method</option>
+												<option id="shortcut_option_user" value="user" selected="selected">{% translate "New User" %}</option>
+												<option id="shortcut_option_api_key" value="api_key">{% translate "New API Key" %}</option>
+												<option id="shortcut_option_secret" value="secret">{% translate "New Secret" %}</option>
+												<option id="shortcut_option_payment_method" value="payment_method">{% translate "New Payment Method" %}</option>
 											</select>
                       <!-- TO DO: make this dynamic based on drop-down selection -->
 											<a
@@ -83,47 +83,47 @@
 										<ul class="nav flex-wrap border-transparent">
 											<!--begin::Nav item Overview-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/overview/">Overview</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/overview/">{% translate "Overview" %}</a>
 											</li>
 											<!--end::Nav item Overview-->
 											<!--begin::Nav item Settings-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/settings/">Settings</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/settings/">{% translate "Settings" %}</a>
 											</li>
 											<!--end::Nav item Settings-->
 											<!--begin::Nav item Users-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/users/">Users</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/users/">{% translate "Users" %}</a>
 											</li>
 											<!--end::Nav item Users-->
 											<!--begin::Nav item Activity-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/activity/">Activity</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/activity/">{% translate "Activity" %}</a>
 											</li>
 											<!--end::Nav item Activity-->
 											<!--begin::Nav item Billing-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/billing/">Billing</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/billing/">{% translate "Billing" %}</a>
 											</li>
 											<!--end::Nav item Billing-->
 											<!--begin::Nav item Statements-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/statements/">Statements</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/statements/">{% translate "Statements" %}</a>
 											</li>
 											<!--end::Nav item Statements-->
 											<!--begin::Nav item API Keys-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/api-keys/">API Keys</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/api-keys/">{% translate "API Keys" %}</a>
 											</li>
 											<!--end::Nav item API Keys-->
 											<!--begin::Nav item Secrets-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/secrets/">Secrets</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/secrets/">{% translate "Secrets" %}</a>
 											</li>
 											<!--end::Nav item Secrets-->
 											<!--begin::Nav item Logs-->
 											<li class="nav-item my-1">
-												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/logs/">Logs</a>
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/logs/">{% translate "Logs" %}</a>
 											</li>
 											<!--end::Nav item Logs-->
 										</ul>

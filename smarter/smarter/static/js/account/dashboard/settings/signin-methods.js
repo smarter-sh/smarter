@@ -62,10 +62,10 @@ var KTAccountSettingsSigninMethods = function () {
                     emailaddress: {
                         validators: {
                             notEmpty: {
-                                message: 'Email is required'
+                                message: gettext('Email is required')
                             },
                             emailAddress: {
-                                message: 'The value is not a valid email address'
+                                message: gettext('The value is not a valid email address')
                             }
                         }
                     },
@@ -73,7 +73,7 @@ var KTAccountSettingsSigninMethods = function () {
                     confirmemailpassword: {
                         validators: {
                             notEmpty: {
-                                message: 'Password is required'
+                                message: gettext('Password is required')
                             }
                         }
                     }
@@ -95,10 +95,10 @@ var KTAccountSettingsSigninMethods = function () {
             validation.validate().then(function (status) {
                 if (status == 'Valid') {
                     swal.fire({
-                        text: "Sent password reset. Please check your email",
+                        text: gettext("Sent password reset. Please check your email"),
                         icon: "success",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: gettext("Ok, got it!"),
                         customClass: {
                             confirmButton: "btn font-weight-bold btn-light-primary"
                         }
@@ -109,10 +109,10 @@ var KTAccountSettingsSigninMethods = function () {
                     });
                 } else {
                     swal.fire({
-                        text: "Sorry, looks like there are some errors detected, please try again.",
+                        text: gettext("Sorry, looks like there are some errors detected, please try again."),
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: gettext("Ok, got it!"),
                         customClass: {
                             confirmButton: "btn font-weight-bold btn-light-primary"
                         }
@@ -139,7 +139,7 @@ var KTAccountSettingsSigninMethods = function () {
                     currentpassword: {
                         validators: {
                             notEmpty: {
-                                message: 'Current Password is required'
+                                message: gettext('Current Password is required')
                             }
                         }
                     },
@@ -147,7 +147,7 @@ var KTAccountSettingsSigninMethods = function () {
                     newpassword: {
                         validators: {
                             notEmpty: {
-                                message: 'New Password is required'
+                                message: gettext('New Password is required')
                             }
                         }
                     },
@@ -155,13 +155,13 @@ var KTAccountSettingsSigninMethods = function () {
                     confirmpassword: {
                         validators: {
                             notEmpty: {
-                                message: 'Confirm Password is required'
+                                message: gettext('Confirm Password is required')
                             },
                             identical: {
                                 compare: function() {
                                     return passwordForm.querySelector('[name="newpassword"]').value;
                                 },
-                                message: 'The password and its confirm are not the same'
+                                message: gettext('The password and its confirm are not the same')
                             }
                         }
                     },
@@ -183,10 +183,10 @@ var KTAccountSettingsSigninMethods = function () {
             validation.validate().then(function (status) {
                 if (status == 'Valid') {
                     swal.fire({
-                        text: "Sent password reset. Please check your email",
+                        text: gettext("Sent password reset. Please check your email"),
                         icon: "success",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: gettext("Ok, got it!"),
                         customClass: {
                             confirmButton: "btn font-weight-bold btn-light-primary"
                         }
@@ -197,10 +197,10 @@ var KTAccountSettingsSigninMethods = function () {
                     });
                 } else {
                     swal.fire({
-                        text: "Sorry, looks like there are some errors detected, please try again.",
+                        text: gettext("Sorry, looks like there are some errors detected, please try again."),
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: gettext("Ok, got it!"),
                         customClass: {
                             confirmButton: "btn font-weight-bold btn-light-primary"
                         }

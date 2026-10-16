@@ -2,6 +2,7 @@
  * Small components that both of the Extensions pages use.
  */
 import type { ReactNode } from "react";
+import { gettext } from "@smarter/common";
 
 /** The Bootstrap badge color of each trust badge. */
 const BADGE_CLASSES: Record<string, string> = {
@@ -14,7 +15,10 @@ const BADGE_CLASSES: Record<string, string> = {
 /** A publisher's trust badge, e.g. "Official Smarter Extension". */
 export function TrustBadge({ badge, label }: { badge: string; label: string }) {
   return (
-    <span className={`badge ${BADGE_CLASSES[badge] ?? "badge-light-secondary"}`} title="The publisher's trust badge">
+    <span
+      className={`badge ${BADGE_CLASSES[badge] ?? "badge-light-secondary"}`}
+      title={gettext("The publisher's trust badge")}
+    >
       {label}
     </span>
   );
@@ -29,13 +33,13 @@ export function Notice({ notice, onClose }: { notice: NoticeState; onClose: () =
   return (
     <div className={`alert alert-${notice.kind} d-flex align-items-start justify-content-between`} role="alert">
       <span>{notice.text}</span>
-      <button type="button" className="btn-close ms-4" aria-label="Dismiss" onClick={onClose} />
+      <button type="button" className="btn-close ms-4" aria-label={gettext("Dismiss")} onClick={onClose} />
     </div>
   );
 }
 
 /** A spinner, inside a button whose action is running. */
-export function Spinner({ label = "Working" }: { label?: string }) {
+export function Spinner({ label = gettext("Working") }: { label?: string }) {
   return <span className="spinner-border spinner-border-sm me-2" role="status" aria-label={label} />;
 }
 
@@ -45,7 +49,7 @@ export function Spinner({ label = "Working" }: { label?: string }) {
  */
 export function Documentation({
   html,
-  empty = "This extension has no documentation.",
+  empty = gettext("This extension has no documentation."),
 }: {
   html: string;
   empty?: string;

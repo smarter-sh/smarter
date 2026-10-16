@@ -4,7 +4,7 @@
  * Used to display a list of available authtokens.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { AuthToken, AuthTokenListViewProps, AuthTokenCardViewProps } from "@/lib/Types";
@@ -12,8 +12,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your AuthTokens" },
-  { key: "shared" as TabKey, label: "Shared AuthTokens" },
+  { key: "owned" as TabKey, label: gettext("Your AuthTokens") },
+  { key: "shared" as TabKey, label: gettext("Shared AuthTokens") },
 ];
 
 // Set the TabbedViewContext generic object type to AuthToken,
@@ -38,11 +38,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "AuthTokens";
+  const title = gettext("AuthTokens");
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-framework/developer-reference/lib/drf/models.html";
-  const helpText =
-    "Smarter Authtokens are a Django REST Framework API authentication token that can be associated with any Smarter resource, rather than being limited to a user account. This allows access to be scoped precisely: individual users and services can each be issued a token limited to a specific resource, rather than sharing one broad credential across an entire integration.";
+  const helpText = gettext(
+    "Smarter Authtokens are a Django REST Framework API authentication token that can be associated with any Smarter resource, rather than being limited to a user account. This allows access to be scoped precisely: individual users and services can each be issued a token limited to a specific resource, rather than sharing one broad credential across an entire integration.",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="authtoken-list">

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
       {% block root %}
 			<!--begin::Page bg image-->
@@ -20,7 +20,7 @@
 							</div>
 							<!--end::Logo-->
 							<!--begin::Title-->
-							<h1 class="fw-bolder text-gray-900 mb-7">Smarter Is Launching Soon</h1>
+							<h1 class="fw-bolder text-gray-900 mb-7">{% translate "Smarter Is Launching Soon" %}</h1>
 							<!--end::Title-->
 							<!--begin::Counter-->
 							<!--(uncomment to display coming soon counter)
@@ -49,7 +49,7 @@
 							<!--end::Counter-->
 							<!--begin::Text-->
               <div class="fw-semibold fs-6 text-gray-500 mb-7">
-                An enterprise class plugin-based AI chat solution
+                {% translate "An enterprise class plugin-based AI chat solution" %}
               </div>
 							<!--end::Text-->
 							<!--begin::Form-->
@@ -63,15 +63,15 @@
 								<div class="fv-row text-start">
 									<div class="d-flex flex-column flex-md-row justify-content-center gap-3">
 										<!--end::Input=-->
-										<input type="text" placeholder="Email" name="email" autocomplete="off" class="form-control" />
+										<input type="text" placeholder="{% translate "Email" %}" name="email" autocomplete="off" class="form-control" />
 										<!--end::Input=-->
 										<!--begin::Submit-->
 										<button class="btn btn-primary text-nowrap" id="kt_coming_soon_submit">
 											<!--begin::Indicator label-->
-											<span class="indicator-label">Notify Me</span>
+											<span class="indicator-label">{% translate "Notify Me" %}</span>
 											<!--end::Indicator label-->
 											<!--begin::Indicator progress-->
-											<span class="indicator-progress">Please wait...
+											<span class="indicator-progress">{% translate "Please wait..." %}
 											<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
 											<!--end::Indicator progress-->
 										</button>

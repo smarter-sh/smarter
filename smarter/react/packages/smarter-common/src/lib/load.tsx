@@ -1,6 +1,7 @@
 import { loggerPrefix } from "./const";
 import type { ListPage, ListQuery, Pagination, SessionContext } from "./Types";
 import fetchDjangoUrl from "./django";
+import { gettext, interpolate } from "./i18n";
 import { setCookieForUrl } from "../components/TabbedListView/cookie";
 
 type LoadApiResponse<TObject> = {
@@ -55,7 +56,7 @@ const getErrorMessage = (status: number, responseBody: unknown): string => {
     return responseBody.error;
   }
 
-  return `Failed to load objects (${status})`;
+  return interpolate(gettext("Failed to load objects (%(status)s)"), { status });
 };
 
 /**
@@ -93,7 +94,7 @@ export const load = async <TObject,>(
       !("objects" in responseBody) ||
       !Array.isArray(responseBody.objects)
     ) {
-      throw new Error("Invalid response payload: expected objects array.");
+      throw new Error(gettext("Invalid response payload: expected objects array."));
     }
 
     const payload = responseBody as LoadApiResponse<TObject>;
@@ -101,7 +102,7 @@ export const load = async <TObject,>(
     return { objects: payload.objects, pagination: payload.pagination ?? null };
   } catch (error) {
     console.error(loggerPrefix, "load(): Error loading objects:", error);
-    onError(error instanceof Error ? error.message : "Unable to load objects.");
+    onError(error instanceof Error ? error.message : gettext("Unable to load objects."));
     return { objects: [], pagination: null };
   }
 };

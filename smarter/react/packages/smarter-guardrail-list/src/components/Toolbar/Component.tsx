@@ -26,7 +26,7 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Guardrail } from "@/lib/Types";
@@ -44,17 +44,19 @@ interface NameModalProps {
 const ModalClone = ({ guardrail, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone Guardrail" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Clone Guardrail")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Clone guardrail <strong>{guardrail?.name}</strong> to a new resource owned by you.
+        {interpolateNodes(gettext("Clone guardrail %(name)s to a new resource owned by you."), {
+          name: <strong>{guardrail?.name}</strong>,
+        })}
       </p>
       <p>
-        <em>Provide the new name for the cloned guardrail.</em>
+        <em>{gettext("Provide the new name for the cloned guardrail.")}</em>
       </p>
       <input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Enter new guardrail name"
+        placeholder={gettext("Enter new guardrail name")}
       />
     </Modal>
   );
@@ -64,17 +66,15 @@ const ModalClone = ({ guardrail, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ guardrail, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(guardrail?.name || "");
   return (
-    <Modal show title="Rename Guardrail" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Rename Guardrail")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>{interpolateNodes(gettext("Rename guardrail %(name)s."), { name: <strong>{guardrail?.name}</strong> })}</p>
       <p>
-        Rename guardrail <strong>{guardrail?.name}</strong>.
-      </p>
-      <p>
-        <em>Provide the new name for the guardrail.</em>
+        <em>{gettext("Provide the new name for the guardrail.")}</em>
       </p>
       <input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Enter new guardrail name"
+        placeholder={gettext("Enter new guardrail name")}
       />
     </Modal>
   );
@@ -92,12 +92,14 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete Guardrail" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title={gettext("Delete Guardrail")} onOk={onOk} onCancel={onCancel}>
     <p>
-      Are you sure you want to delete guardrail <strong>{guardrail?.name}</strong>?
+      {interpolateNodes(gettext("Are you sure you want to delete guardrail %(name)s?"), {
+        name: <strong>{guardrail?.name}</strong>,
+      })}
     </p>
     <p>
-      <em>Data is not recoverable.</em>
+      <em>{gettext("Data is not recoverable.")}</em>
     </p>
   </Modal>
 );
@@ -114,11 +116,13 @@ const ModalError = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="❌ Error" onClose={onClose}>
+  <Modal show={show} title={gettext("❌ Error")} onClose={onClose}>
     <p>
-      An error occurred while performing the operation on guardrail <strong>{guardrail?.name}</strong>.
+      {interpolateNodes(gettext("An error occurred while performing the operation on guardrail %(name)s."), {
+        name: <strong>{guardrail?.name}</strong>,
+      })}
     </p>
-    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>{gettext("An unknown error occurred.")}</em>}</p>
   </Modal>
 );
 
@@ -134,15 +138,39 @@ const ModalConfirmation = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="✅ Success" onClose={onClose}>
+  <Modal show={show} title={gettext("✅ Success")} onClose={onClose}>
     <p>
       {message} <strong>{guardrail?.name}</strong>.
     </p>
     <p>
-      <em>Operation completed successfully.</em>
+      <em>{gettext("Operation completed successfully.")}</em>
     </p>
   </Modal>
 );
+
+/**
+ * The messages that report the result of an action. Each is a whole sentence, so that it can be
+ * translated.
+ */
+const actionMessages = (verb: string) => {
+  switch (verb) {
+    case "clone":
+      return {
+        failed: gettext("Failed to clone guardrail (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully cloned guardrail"),
+      };
+    case "rename":
+      return {
+        failed: gettext("Failed to rename guardrail (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully renamed guardrail"),
+      };
+    default:
+      return {
+        failed: gettext("Failed to delete guardrail (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully deleted guardrail"),
+      };
+  }
+};
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -176,13 +204,18 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(`Failed to ${verb} guardrail (${response.status}): ${data.error || response.statusText}`);
+          throw new Error(
+            interpolate(actionMessages(verb).failed, {
+              status: response.status,
+              error: data.error || response.statusText,
+            }),
+          );
         }
         return data;
       })
       .then((data) => {
         console.debug(loggerPrefix, `Successfully ${verb}d guardrail:`, data);
-        setSuccessMessage(`Successfully ${verb}d guardrail`);
+        setSuccessMessage(actionMessages(verb).succeeded);
         // clone and rename return the resulting guardrail; delete returns a message.
         setModal({ type: "confirmation", guardrail: data && data.id ? (data as Guardrail) : target });
       })
@@ -195,11 +228,11 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
 
   return (
     <>
-      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label={gettext("Actions")}>
         <a
           href={guardrail.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Chat: Open the guardrail workbench"
+          title={gettext("Chat: Open the guardrail workbench")}
           tabIndex={0}
         >
           <i className="bi bi-chat-dots md-teal" />
@@ -207,7 +240,7 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
         <a
           href={guardrail.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Edit: Open the YAML manifest that defines this guardrail resource"
+          title={gettext("Edit: Open the YAML manifest that defines this guardrail resource")}
           tabIndex={0}
         >
           <i className="bi bi-pencil-square md-blue" />
@@ -215,7 +248,7 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Clone: Clone this guardrail resource to a new resource owned by you"
+          title={gettext("Clone: Clone this guardrail resource to a new resource owned by you")}
           onClick={() => setModal({ type: "clone", guardrail })}
           tabIndex={0}
         >
@@ -224,7 +257,7 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Rename: Rename this guardrail resource"
+          title={gettext("Rename: Rename this guardrail resource")}
           onClick={() => setModal({ type: "rename", guardrail })}
           tabIndex={0}
         >
@@ -235,8 +268,10 @@ export const Toolbar = ({ sessionContext, guardrail, onRequery }: ToolbarProps) 
           className="btn btn-icon btn-sm border"
           title={
             guardrail.canDelete === false
-              ? "Delete: You can't delete this guardrail, because other resources depend on it, or you don't have permission to delete it"
-              : "Delete: Delete this guardrail resource"
+              ? gettext(
+                  "Delete: You can't delete this guardrail, because other resources depend on it, or you don't have permission to delete it",
+                )
+              : gettext("Delete: Delete this guardrail resource")
           }
           onClick={() => setModal({ type: "delete", guardrail })}
           disabled={guardrail.canDelete === false}

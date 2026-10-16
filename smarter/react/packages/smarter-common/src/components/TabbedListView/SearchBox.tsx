@@ -1,3 +1,4 @@
+import { gettext } from "../../lib/i18n";
 interface SearchBoxProps {
   value: string;
   onChange: (value: string) => void;
@@ -15,7 +16,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange, placehold
       type="search"
       className="form-control form-control-sm ps-9"
       placeholder={placeholder}
-      aria-label="Search"
+      aria-label={gettext("Search")}
       value={value}
       onChange={(event) => onChange(event.target.value)}
     />

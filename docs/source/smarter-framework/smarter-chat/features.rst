@@ -131,6 +131,25 @@ All of the html that the chat renders from messages is sanitized with
 `DOMPurify <https://github.com/cure53/DOMPurify>`__, so nothing in a message can run a script.
 
 
+Languages
+---------
+
+The chat's own text, such as its buttons, its labels, the "is typing" indicator and the errors that
+it displays, is in English, Spanish, French or Brazilian Portuguese, the same languages as the web
+console. It uses the
+language that the page that hosts it asks for (the ``language`` prop, or the embed script's
+``language`` option), or else the page's own language, from its ``<html lang>`` attribute, or else
+the browser's. In the workbench, that is the language that you chose in the web console's user
+menu. A regional variant gets its language (``es-MX`` gets Spanish, which is Latin American
+Spanish, and ``pt`` or ``pt-PT`` gets Brazilian Portuguese), and any other language gets English.
+
+The LLMClient's own text, which its manifest sets (its name, welcome message, example prompts and
+placeholder), is displayed as it is, and so is the conversation: write them in your users'
+language, and the LLM answers in the language that it is asked in. The Console's JSON, its
+simulated terminal, and Smarter's progress messages are in English.
+
+
+
 The Console
 -----------
 

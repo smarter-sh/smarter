@@ -13,6 +13,7 @@ import type { Monaco } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
 
 import { yamlKeys } from "@/lib/validation";
+import { gettext, interpolate } from "@smarter/common";
 
 /** The paths of the locked fields. */
 export const LOCKED_PATHS: string[][] = [
@@ -23,7 +24,9 @@ export const LOCKED_PATHS: string[][] = [
   ["status"],
 ];
 
-const LOCKED_MESSAGE = "This field identifies this resource and cannot be changed here. Also, status is read-only.";
+const LOCKED_MESSAGE = gettext(
+  "This field identifies this resource and cannot be changed here. Also, status is read-only.",
+);
 
 type MessageController = { showMessage?: (message: string, position: monaco.IPosition) => void };
 
@@ -61,7 +64,12 @@ export function useLockedFields(editor: monaco.editor.IStandaloneCodeEditor | nu
               options: {
                 inlineClassName: "manifest-editor-locked",
                 stickiness: monacoInstance.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-                hoverMessage: { value: `**${path.join(".")}** is locked. ${LOCKED_MESSAGE}` },
+                hoverMessage: {
+                  value: interpolate(gettext("%(field)s is locked. %(reason)s"), {
+                    field: `**${path.join(".")}**`,
+                    reason: LOCKED_MESSAGE,
+                  }),
+                },
               },
             },
           ];

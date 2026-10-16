@@ -28,7 +28,7 @@ SMARTER_CHAT_BRANCH ?= main
 SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 
 
-.PHONY: api-contract chat-contract extension-contract llmtool-list-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chat-contract extension-contract llmtool-list-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -402,6 +402,18 @@ chat-contract: react-smarter-chat
 	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
 	cd $(SMARTER_CHAT_DIR) && npm run contract:types
 
+# Regenerate the web console's message catalogs, smarter/smarter/locale/<language>/LC_MESSAGES/django.po
+# (Django templates and Python) and djangojs.po (the React apps), for every language in settings.LANGUAGES,
+# or only LANGUAGE=<code>, and compile them, in the smarter-app container. Translations already in the
+# .po files are kept. Run make build first, so that the container has the current templates and code.
+I18N_LOCALE_DIR := smarter/locale
+i18n-messages:
+	cd smarter/react && npm run i18n:extract
+	docker cp smarter/react/i18n/messages.js smarter-app:/home/smarter_user/smarter/react/i18n/messages.js
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py update_console_messages $(if $(LANGUAGE),--language $(LANGUAGE),)"
+	mkdir -p smarter/$(I18N_LOCALE_DIR)
+	docker cp smarter-app:/home/smarter_user/smarter/$(I18N_LOCALE_DIR)/. smarter/$(I18N_LOCALE_DIR)/
+
 # Regenerate the web console's Extensions api contract from its Pydantic models, in the smarter-app
 # container, copy it into @smarter/extension-console, and regenerate that package's TypeScript types.
 EXTENSION_CONTRACT_SCHEMA := smarter/apps/llmtool/extension/extension-console.schema.json
@@ -513,6 +525,7 @@ help:
 	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
 	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
 	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
+	@echo 'i18n-messages          - Regenerate and compile the web console translations (.po), optionally LANGUAGE=<code>'
 	@echo 'llmtool-list-contract  - Regenerate the LLMTool list Extensions tab contract schema, and its React types'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'

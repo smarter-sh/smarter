@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!--begin:Menu item Login-->
 {% if not user.is_authenticated %}
 <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
@@ -6,7 +6,7 @@
   <!--begin:Menu link Login-->
   <a href="{% url 'login_view' %}" class="menu-link">
     <span class="menu-link">
-      <span class="menu-title">Login</span>
+      <span class="menu-title">{% translate "Login" %}</span>
       <span class="menu-arrow d-lg-none"></span>
     </span>
   </a>
@@ -21,7 +21,7 @@
   <!--begin:Menu link Logout-->
   <a href="{% url 'logout_view' %}" class="menu-link">
     <span class="menu-link">
-      <span class="menu-title">Logout</span>
+      <span class="menu-title">{% translate "Logout" %}</span>
       <span class="menu-arrow d-lg-none"></span>
     </span>
   </a>

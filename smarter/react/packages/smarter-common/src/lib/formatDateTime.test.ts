@@ -24,6 +24,25 @@ describe("formatDateTime", () => {
     expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe("1 day ago");
   });
 
+  it("formats a relative time in the language of the page", () => {
+    const lang = document.documentElement.lang;
+    try {
+      const spanish = "hace 1 día"; // codespell:ignore
+      document.documentElement.lang = "es";
+      expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe(spanish);
+      document.documentElement.lang = "fr";
+      expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe("il y a 1 jour");
+      for (const code of ["pt-br", "pt-BR"]) {
+        document.documentElement.lang = code;
+        expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe("há 1 dia");
+      }
+      document.documentElement.lang = "es-MX";
+      expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe(spanish);
+    } finally {
+      document.documentElement.lang = lang;
+    }
+  });
+
   it("says never for an update at its creation", () => {
     expect(formatDateTime("2026-06-01T12:00:02Z", "relative", "2026-06-01T12:00:00Z")).toBe("never");
   });

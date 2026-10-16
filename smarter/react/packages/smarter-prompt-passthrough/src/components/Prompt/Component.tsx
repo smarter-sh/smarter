@@ -21,7 +21,7 @@
 import { useEffect, useEffectEvent, useState } from "react";
 import type * as monaco from "monaco-editor";
 
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
@@ -140,7 +140,7 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
     <>
       <div className="row d-flex mb-3">
         <div className="col-lg-12">
-          <h3 className="mt-4 p-4">LLM Provider API Passthrough</h3>
+          <h3 className="mt-4 p-4">{gettext("LLM Provider API Passthrough")}</h3>
           <ul className="nav nav-tabs" role="tablist">
             <li className="nav-item" role="presentation">
               <button
@@ -150,7 +150,7 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
                 role="tab"
                 aria-selected={activeTab === "request"}
               >
-                Request
+                {gettext("Request")}
               </button>
             </li>
             <li className="nav-item" role="presentation">
@@ -161,7 +161,7 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
                 role="tab"
                 aria-selected={activeTab === "response"}
               >
-                Response
+                {gettext("Response")}
               </button>
             </li>
           </ul>
