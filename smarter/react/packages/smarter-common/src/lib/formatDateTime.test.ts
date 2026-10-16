@@ -32,6 +32,12 @@ describe("formatDateTime", () => {
       expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe(spanish);
       document.documentElement.lang = "fr";
       expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe("il y a 1 jour");
+      for (const code of ["pt-br", "pt-BR"]) {
+        document.documentElement.lang = code;
+        expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe("há 1 dia");
+      }
+      document.documentElement.lang = "es-MX";
+      expect(formatDateTime("2026-06-14T12:00:00Z", "relative", "2026-06-01T12:00:00Z")).toBe(spanish);
     } finally {
       document.documentElement.lang = lang;
     }

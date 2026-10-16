@@ -19,6 +19,8 @@ spec:
   apiKey: null
   config:
     prompt:
+      allowedOrigins:
+        - https://smarter.sh
       appAssistant: Euclid
       appExamplePrompts:
         - Derive the quadratic formula, step by step.

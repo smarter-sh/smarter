@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.utils.translation import to_locale
 
 from smarter.apps.dashboard.management.commands import update_console_messages
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -34,7 +35,7 @@ class TestUpdateConsoleMessages(SmarterTestBase):
         """It updates django.po from the project, djangojs.po from react/i18n, then compiles them."""
         calls = self.run_command()
         project_root = Path(settings.PROJECT_ROOT).resolve()
-        languages = [code for code, _ in settings.LANGUAGES]
+        languages = [to_locale(code) for code, _ in settings.LANGUAGES]
 
         self.assertEqual([name for name, _, _ in calls], ["makemessages", "makemessages", "compilemessages"])
 
@@ -58,6 +59,13 @@ class TestUpdateConsoleMessages(SmarterTestBase):
         calls = self.run_command("--language", "es")
         for _, kwargs, _ in calls:
             self.assertEqual(kwargs["locale"], ["es"])
+
+    def test_regional_language_becomes_its_locale_name(self):
+        """A regional language code is passed on as its locale name, which is its catalogs' directory."""
+        self.assertIn("pt_BR", [to_locale(code) for code, _ in settings.LANGUAGES])
+        calls = self.run_command("--language", "pt-br")
+        for _, kwargs, _ in calls:
+            self.assertEqual(kwargs["locale"], ["pt_BR"])
 
     def test_no_compile(self):
         """--no-compile skips compilemessages."""

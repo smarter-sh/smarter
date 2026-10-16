@@ -73,15 +73,23 @@ gitignored and the Dockerfile compiles it.
    `django.conf.locale.LANG_INFO` knows. The language menu calls `get_language_info_list`, which describes
    an unknown regional code such as `es-419` as its generic language (`code: "es"`), so the menu would
    post `es` back. That's why Latin American Spanish is the generic `es`.
-   A regional code (`es-MX`) is only needed alongside a second variant of the same language.
-2. `DATE_FNS_LOCALES` in `smarter-common/src/lib/formatDateTime.tsx`: add e.g. `es` from `date-fns/locale`.
+   A regional code (`es-MX`) is only needed alongside a second variant of the same language, or when
+   LANG_INFO only knows the regional one: Brazilian Portuguese is `pt-br`. Its catalogs live in
+   `locale/pt_BR` (the locale name, `to_locale("pt-br")`); `update_console_messages` converts the codes,
+   and `make i18n-messages LANGUAGE=pt-br` works. LocaleMiddleware gives `pt-br` to `pt` and `pt-PT` too.
+2. `DATE_FNS_LOCALES` in `smarter-common/src/lib/formatDateTime.tsx`: add e.g. `es` from `date-fns/locale`,
+   or `"pt-br": ptBR` for a regional code (the key is the lowercase `<html lang>`).
 3. Rebuild the containers, `make i18n-messages`.
 4. Fill in every `msgstr` of the new `django.po` and `djangojs.po`. Keep `%(name)s` placeholders and
    the HTML inside `blocktranslate` messages exactly; plural entries need every `msgstr[n]`.
    Check with `msgfmt --check -o /dev/null <file>.po` on the host. `test_message_catalogs_are_translated`
    fails on an empty `msgstr` or a `#, fuzzy` flag (makemessages marks a new catalog's header fuzzy).
    The two domains share many msgids: translate the distinct set once (polib in a scratch script works
-   well) and write it into both files, so the same text reads the same everywhere.
+   well) and write it into both files, so the same text reads the same everywhere. About 360 msgids
+   differ only by resource kind (`Clone %(kind)s`'s per-kind variants: clone, delete, rename, ready,
+   failed to ...): generate those from one rule per pattern and a kind → (noun, gender) table, rather
+   than by hand. Follow the existing catalogs: CamelCase kinds stay English (LLMClient, AuthToken), common
+   nouns are translated (secret, connection, orchestrator, provider, budget, vectorstore).
 5. Rebuild, then check a page with `curl -H "Accept-Language: es" localhost:9357/login/`, and the
    catalog with `curl -b django_language=es localhost:9357/jsi18n/`.
 6. `test_lists_every_language_in_its_own_name` already covers a second language in the menu.
