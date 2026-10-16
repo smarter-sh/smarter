@@ -454,6 +454,12 @@ MCPClient, and four guardrails, and it contains no code.
    contributors
 
 .. toctree::
+    :maxdepth: 1
+    :caption: How To
+  
+    howto/adding-a-llm-provider
+
+.. toctree::
    :maxdepth: 1
    :caption: External Resources
 
