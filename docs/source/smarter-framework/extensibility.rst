@@ -36,7 +36,9 @@ an account, and shared like any other resource. No code is written or installed.
 way that its packaged and delivered to the LLM is. A Python developer writes a package whose tools do whatever Python can
 do, packages it as a zip archive, and publishes it to the Smarter Extension registry. A platform
 administrator installs it at run time, from the web console, much as a WordPress
-administrator installs a plugin. Every LLMClient on the platform can then list it.
+administrator installs a plugin. Every LLMClient on the platform can then list it, and every
+user sees the Extensions that their account may use, read-only, on the **Extensions** tab of the
+web console's **LLMTools** page.
 
 **MCP servers** are someone else's entirely, but Smarter supports this popular protocol.
 Many services already publish their tools through the

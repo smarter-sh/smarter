@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { delay, http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
@@ -15,6 +15,34 @@ describe("MyResources", () => {
     render(<MyResources apiUrl={apiUrl} />);
     expect(await screen.findByRole("link", { name: "1 pending" })).toBeInTheDocument();
     expect(screen.getByText(/^\s*deployment$/)).toBeInTheDocument();
+  });
+
+  it("counts your MCPClients, and links to their list", async () => {
+    server.use(http.post(apiUrl, () => HttpResponse.json(myResources)));
+    render(<MyResources apiUrl={apiUrl} />);
+    const link = await screen.findByRole("link", { name: /MCPClients/ });
+    expect(link).toHaveAttribute("href", myResources.mcpclients_url);
+    expect(link).toHaveTextContent(String(myResources.mcpclients_qty));
+    expect(screen.queryByText("Connections")).not.toBeInTheDocument();
+  });
+
+  it("counts the other kinds in a compact grid, each linked to its list", async () => {
+    server.use(http.post(apiUrl, () => HttpResponse.json(myResources)));
+    render(<MyResources apiUrl={apiUrl} />);
+    const more = await screen.findByRole("list", { name: "More resources" });
+    const guardrails = within(more).getByRole("link", { name: /Guardrails/ });
+    expect(guardrails).toHaveAttribute("href", myResources.guardrails_url);
+    expect(guardrails).toHaveTextContent(String(myResources.guardrails_qty));
+    expect(within(more).getAllByRole("link")).toHaveLength(6);
+    expect(within(more).getByRole("link", { name: /Extensions/ })).toHaveAttribute("target", "_blank");
+  });
+
+  it("hides a kind that the platform has turned off", async () => {
+    server.use(http.post(apiUrl, () => HttpResponse.json({ ...myResources, vectorstores_url: null })));
+    render(<MyResources apiUrl={apiUrl} />);
+    const more = await screen.findByRole("list", { name: "More resources" });
+    expect(within(more).queryByRole("link", { name: /VectorStores/ })).not.toBeInTheDocument();
+    expect(within(more).getAllByRole("link")).toHaveLength(5);
   });
 
   it("counts nothing for a response without counts", async () => {

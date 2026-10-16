@@ -25,9 +25,39 @@ const DOCS_BASE_URL = "https://docs.smarter.sh";
 
 const FEATURES: Feature[] = [
   {
+    name: "Extensions",
+    version: "0.27",
+    description: "Install signed, third-party LLM tools from the Smarter Extension registry",
+    docsPath: "smarter-platform/extensions.html",
+  },
+  {
+    name: "Smarter MCP Server",
+    version: "0.24",
+    description: "Answers about The Smarter Project, from its own code and docs, for any MCP client",
+    docsPath: "smarter-platform/smarter-project-mcp-server.html",
+  },
+  {
+    name: "OpenAPI",
+    version: "0.22",
+    description: "An OpenAPI document and JSON Schemas for the Smarter api, served by every platform",
+    docsPath: "smarter-framework/smarter-openapi.html",
+  },
+  {
+    name: "Themable Chat",
+    version: "0.21",
+    description: "Brand your LLMClient's chat with your own logo, colors, fonts and avatar",
+    docsPath: "smarter-resources/llmclient/styles.html",
+  },
+  {
+    name: "ImageSearchPlugin",
+    version: "0.19",
+    description: "Let LLMs find and show images from the web",
+    docsPath: "smarter-resources/llmtool/plugin/image-search.html",
+  },
+  {
     name: "Infrastructure Manager",
     version: "0.18",
-    description: "Manage and monitor your cloud infrastructure from the web console.",
+    description: "Manage and monitor your cloud infrastructure from the web console",
     docsPath: "smarter-framework/technologies/infrastructure.html",
   },
   {
@@ -65,30 +95,6 @@ const FEATURES: Feature[] = [
     version: "0.16",
     description: "Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone",
     docsPath: "smarter-resources/smarter-vectorstore.html",
-  },
-  {
-    name: "WebsearchPlugin",
-    version: "0.16",
-    description: "Let LLMs search the web using services like Tavily",
-    docsPath: "smarter-resources/llmtool/plugin/websearch.html",
-  },
-  {
-    name: "Guardrails",
-    version: "0.15",
-    description: "Manifest-declared guardrails that screen LLM prompts",
-    docsPath: "smarter-resources/smarter-guardrail.html",
-  },
-  {
-    name: "MCPClient",
-    version: "0.15",
-    description: "Connect LLMs to remote Model Context Protocol servers",
-    docsPath: "smarter-resources/smarter-mcpclient.html",
-  },
-  {
-    name: "SkillPlugin",
-    version: "0.15",
-    description: "Agent Skills (SKILL.md), inline or sourced from GitHub",
-    docsPath: "smarter-resources/llmtool/plugin/skill.html",
   },
 ];
 

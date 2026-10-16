@@ -15,8 +15,8 @@ The context processors in this module serve the following purposes:
 
 - **Dashboard Context**: Supplies user-specific and application-wide metadata,
     such as the current user's email, username, role flags, product version, and
-    resource counts (e.g., llmclients, plugins, API keys, custom domains, connections,
-    and secrets). This enables the dashboard to display personalized and up-to-date
+    resource counts (e.g., llmclients, plugins, API keys, custom domains, MCPClients,
+    secrets, guardrails, vectorstores, LLMHosts and extensions). This enables the dashboard to display personalized and up-to-date
     information for each authenticated user.
 
 - **Branding Context**: Provides organization-specific branding details, including
@@ -58,6 +58,7 @@ detailed API documentation, refer to the generated documentation for each functi
 from http import HTTPStatus
 from typing import Optional
 
+from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
 
 from smarter.__version__ import __version__
@@ -65,21 +66,35 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.connection.models import ConnectionBase
-from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientCustomDomain,
 )
+from smarter.apps.llmclient.urls import LLMClientReverseNames
+from smarter.apps.llmhost.models import LLMHost
+from smarter.apps.llmhost.urls import LLMHostReverseNames
+from smarter.apps.llmtool.extension.urls import ExtensionReverseNames
 from smarter.apps.llmtool.models import (
+    Extension,
     PluginMeta,
 )
 from smarter.apps.llmtool.urls import PluginReverseNames
+from smarter.apps.mcpclient.caching import (
+    get_cached_mcpclients_available_to_user_profile,
+    invalidate_cached_mcpclients_available_to_user_profile,
+)
+from smarter.apps.mcpclient.urls import MCPClientReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.secret.models import Secret
+from smarter.apps.secret.urls import SecretReverseNames
+from smarter.apps.vectorstore.models import VectorstoreMeta
+from smarter.apps.vectorstore.urls import VectorstoreReverseNames
+from smarter.common.conf import smarter_settings
 from smarter.common.utils.decorators import snake_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -90,6 +105,8 @@ from smarter.lib.django.views import (
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
+
+EXTENSIONS_DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html"
 
 
 def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -263,28 +280,32 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     return _get_custom_domains(user_profile.id)  # type: ignore
 
 
-def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+def get_mcpclients(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
-    Returns the total number of API and SQL connections associated with the specified user.
+    Returns the total number of MCPClients available to the specified user.
 
-    This function queries the database for all API and SQL connection records linked to the user's account. The resulting count is used to display the user's available connections on the dashboard.
+    This function counts the MCPClients that the user owns, and those shared with
+    them. The resulting count is used to display the user's available MCPClients
+    on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user_profile: UserProfile instance. The user profile whose connections are to be counted.
+    :param user_profile: UserProfile instance. The user profile whose MCPClients are to be counted.
     :type user_profile: UserProfile
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-    :return: The number of API and SQL connections belonging to the user.
+    :return: The number of MCPClients available to the user.
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_connections() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("%s.get_mcpclients() called without user_profile. Returning 0.", logger_prefix)
         return 0
 
-    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.user) or []
-    logger.debug("%s.get_connections() retrieved and cached connections count: %s", logger_prefix, len(retval))
-    return len(retval)
+    if invalidate:
+        invalidate_cached_mcpclients_available_to_user_profile(user_profile=user_profile)
+    retval = get_cached_mcpclients_available_to_user_profile(user_profile=user_profile).count()
+    logger.debug("%s.get_mcpclients() retrieved and cached MCPClients count: %s", logger_prefix, retval)
+    return retval
 
 
 def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -331,6 +352,105 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
     return len(retval)
 
 
+def get_guardrails(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of guardrails associated with the specified user's profile.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: The user profile whose guardrails are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of guardrails belonging to the user profile.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_guardrails() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
+    return Guardrail.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
+
+
+def get_vectorstores(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of vectorstores associated with the specified user's profile.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: The user profile whose vectorstores are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of vectorstores belonging to the user profile.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_vectorstores() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
+    return VectorstoreMeta.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
+
+
+def get_llmhosts(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of LLMHosts associated with the specified user's profile.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: The user profile whose LLMHosts are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of LLMHosts belonging to the user profile.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_llmhosts() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
+    return LLMHost.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
+
+
+def get_extensions(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the number of enabled extensions that the specified user's account may use.
+
+    An extension is available to an account when it is available to every
+    account, or to that account in particular. See
+    :meth:`smarter.apps.llmtool.models.Extension.is_available_to`.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: The user profile whose account's extensions are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of enabled extensions available to the user's account.
+    :rtype: int
+    """
+
+    @cache_results()
+    def _get_extensions(account_id: int) -> int:
+        retval = (
+            Extension.objects.filter(enabled=True)
+            .filter(Q(all_accounts=True) | Q(accounts__id=account_id))
+            .distinct()
+            .count()
+        )
+        logger.debug("%s.get_extensions() retrieved and cached extensions count: %s", logger_prefix, retval)
+        return retval
+
+    if not user_profile:
+        logger.warning("%s.get_extensions() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
+    if invalidate:
+        _get_extensions.invalidate(user_profile.account_id)  # type: ignore
+
+    return _get_extensions(user_profile.account_id)  # type: ignore
+
+
 # pylint: disable=W0613
 class MyResourcesView(SmarterAuthenticatedWebView):
     """API view for the "My Resources" React component on the dashboard."""
@@ -356,10 +476,33 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                 "llmclients_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "plugins_qty": get_plugins(user_profile=user_profile),
                 "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
-                "connections_qty": get_connections(user_profile=user_profile),
-                "connections_url": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                "mcpclients_qty": get_mcpclients(user_profile=user_profile),
+                "mcpclients_url": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
                 "providers_qty": get_providers(user_profile=user_profile),
                 "providers_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+                "guardrails_qty": get_guardrails(user_profile=user_profile),
+                "guardrails_url": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
+                "secrets_qty": get_secrets(user_profile=user_profile),
+                "secrets_url": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+                "vectorstores_qty": get_vectorstores(user_profile=user_profile),
+                "vectorstores_url": (
+                    reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview)
+                    if smarter_settings.enable_vectorstore
+                    else None
+                ),
+                "custom_domains_qty": get_custom_domains(user_profile=user_profile),
+                "custom_domains_url": reverse(
+                    LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
+                ),
+                "llmhosts_qty": get_llmhosts(user_profile=user_profile),
+                "llmhosts_url": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
+                "extensions_qty": get_extensions(user_profile=user_profile),
+                # only superusers may open the console's Extensions page.
+                "extensions_url": (
+                    reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview)
+                    if user.is_superuser
+                    else EXTENSIONS_DOCS_URL
+                ),
             }
             logger.debug("%s.post() cached context %s", self.formatted_class_name, logging.formatted_json(retval))
             return retval
