@@ -76,3 +76,6 @@ yarn-error.log
 # Misc
 **/*.sqlite3
 *.sqlite3
+
+# Compiled message catalogs: the Dockerfile compiles the committed .po files.
+**/locale/**/*.mo
