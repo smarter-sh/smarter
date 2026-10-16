@@ -20,6 +20,7 @@ from smarter.apps.account.views.dashboard.dashboard import (
     OverviewView,
     StatementsView,
 )
+from smarter.apps.account.views.dashboard.profile_image import ProfileImageView
 from smarter.apps.account.views.dashboard.settings import SettingsView
 from smarter.apps.account.views.dashboard.users import UsersView, UserView
 
@@ -47,6 +48,7 @@ class DashboardNamedUrls:
     ACCOUNT_API_KEY_NEW = "dashboard_account_api_key_new"
     ACCOUNT_DASHBOARD_OVERVIEW = "dashboard_account_dashboard_overview"
     ACCOUNT_LOGS = "dashboard_account_logs"
+    ACCOUNT_PROFILE_IMAGE = "dashboard_account_profile_image"
     ACCOUNT_BILLING = "dashboard_account_billing"
     ACCOUNT_BILLING_PAYMENT_METHODS = "dashboard_account_billing_payment_methods"
     ACCOUNT_BILLING_PAYMENT_METHOD = "dashboard_account_billing_payment_method"
@@ -68,6 +70,7 @@ urlpatterns = [
     ),
     path("overview/", OverviewView.as_view(), name=DashboardNamedUrls.ACCOUNT_DASHBOARD_OVERVIEW),
     path("settings/", SettingsView.as_view(), name=DashboardNamedUrls.ACCOUNT_SETTINGS),
+    path("profile-image/", ProfileImageView.as_view(), name=DashboardNamedUrls.ACCOUNT_PROFILE_IMAGE),
     path("activity/", ActivityView.as_view(), name=DashboardNamedUrls.ACCOUNT_ACTIVITY),
     path("logs/", LogsView.as_view(), name=DashboardNamedUrls.ACCOUNT_LOGS),
     # users

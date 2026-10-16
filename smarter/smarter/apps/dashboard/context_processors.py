@@ -71,12 +71,16 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
 
+from django.templatetags.static import static
+
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,
     UserProfile,
     get_resolved_user,
 )
+from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
+from smarter.apps.account.utils import get_cached_avatar_url
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.dropzone.urls import DropzoneReverseNames
@@ -294,9 +298,6 @@ def base(request: "HttpRequest") -> SmarterDictType:
                 "is_proxy_enabled": smarter_settings.enable_proxy,
                 "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
                 "is_file_drop_zone_enabled": smarter_settings.enable_dropzone_manifest_apply,
-                "profile_image_url": (
-                    user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
-                ),
                 "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
                 "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
                 "product_name": SMARTER_PRODUCT_NAME,
@@ -312,7 +313,20 @@ def base(request: "HttpRequest") -> SmarterDictType:
 
     context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
     # not cached, so that the sidebar's Server Logs item follows its waffle switch as soon as it changes.
-    context = {**context, "dashboard": {**context["dashboard"], "is_enabled_server_logs": server_logs_enabled()}}
+    # not cached with the rest, so that a newly uploaded profile image shows at once. get_cached_avatar_url() has its own cache.
+    profile_image_url = (
+        get_cached_avatar_url(user_id=resolved_user.id)  # type: ignore[union-attr]
+        if user_profile
+        else static(DEFAULT_PROFILE_IMAGE)
+    )
+    context = {
+        **context,
+        "dashboard": {
+            **context["dashboard"],
+            "is_enabled_server_logs": server_logs_enabled(),
+            "profile_image_url": profile_image_url,
+        },
+    }
     return context
 
 

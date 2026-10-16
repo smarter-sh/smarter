@@ -12,7 +12,7 @@ from social_django.middleware import SocialAuthExceptionMiddleware
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.account.utils import get_cached_avatar_url, smarter_cached_objects
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 
@@ -142,7 +142,10 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
     else:
         logger.debug("%s.user_details() No changes detected for user: %s", logger_prefix, user)
 
-    profile_image_url = kwargs.get("response", {}).get("picture")
+    # Google and LinkedIn (OpenID Connect) send the image as `picture`, GitHub as `avatar_url`.
+    # The user's own uploaded image, UserProfile.profile_image, takes precedence over this one.
+    response = kwargs.get("response") or {}
+    profile_image_url = response.get("picture") or response.get("avatar_url")
     if not profile_image_url:
         return None
 
@@ -150,13 +153,13 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
 
     # Validate the profile image URL by making a HEAD request
     try:
-        response = requests.head(profile_image_url, timeout=1)
-        if response.status_code != 200:
+        head = requests.head(profile_image_url, timeout=1)
+        if head.status_code != 200:
             logger.error(
                 "%s.user_details() Failed to fetch profile image from URL: %s. Status code: %s",
                 logger_prefix,
                 profile_image_url,
-                response.status_code,
+                head.status_code,
             )
             return None
         logger.debug("%s.user_details() Successfully validated profile image URL: %s", logger_prefix, profile_image_url)
@@ -178,6 +181,7 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
     if user_profile.profile_image_url is None or user_profile.profile_image_url != profile_image_url:
         user_profile.profile_image_url = profile_image_url
         user_profile.save()
+        get_cached_avatar_url(user_id=user.id, invalidate=True)
         logger.info("%s.user_details() Updated profile image URL for user: %s", logger_prefix, user)
 
 
