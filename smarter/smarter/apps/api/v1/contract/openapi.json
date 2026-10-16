@@ -471,6 +471,19 @@
             "title": "Name",
             "type": "string"
           },
+          "profileImage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UserProfile.profile_image: the url of the image that the user uploaded, which takes precedence.",
+            "title": "Profileimage"
+          },
           "profileImageUrl": {
             "anyOf": [
               {
@@ -481,7 +494,7 @@
               }
             ],
             "default": null,
-            "description": "UserProfile.profile_image_url.",
+            "description": "UserProfile.profile_image_url: the image that the oauth provider supplied.",
             "title": "Profileimageurl"
           },
           "tags": {
