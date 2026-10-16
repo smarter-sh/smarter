@@ -1,5 +1,7 @@
 """Test cases for the cache decorators."""
 
+from unittest.mock import patch
+
 from smarter.lib.cache import cache_results
 from smarter.lib.cache.lazy_cache import LazyCache
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -175,6 +177,51 @@ class TestCacheResults(SmarterTestBase):
         square.invalidate(4)
         self.assertEqual(square(4), 16)
         self.assertEqual(len(calls), 2)
+
+    def test_cache_invalidate_cached_none(self):
+        """Invalidate() reports a cached None as None, not as the sentinel string that stores it."""
+        calls = []
+
+        @cache_results(timeout=60)
+        def nothing(x):
+            calls.append(x)
+
+        self.assertIsNone(nothing(1))
+        self.assertIsNone(nothing(1))
+        self.assertEqual(len(calls), 1)
+        with self.assertLogs("smarter.lib.cache.decorators", level="INFO") as logs:
+            nothing.invalidate(1)
+        self.assertIn("invalidated None", "\n".join(logs.output))
+        self.assertIsNone(nothing(1))
+        self.assertEqual(len(calls), 2)
+
+    def test_cache_invalidate_missing_entry(self):
+        """Invalidate() of an entry that is not cached deletes nothing, and logs no invalidation."""
+
+        @cache_results(timeout=60)
+        def never_called(x):
+            return x
+
+        with patch("smarter.lib.cache.decorators.lazy_cache.delete") as delete:
+            never_called.invalidate(1)
+        delete.assert_not_called()
+
+    def test_cache_invalidate_reads_once(self):
+        """Invalidate() reads the entry once, so that one that expires mid-call is not reported as a cached None."""
+
+        @cache_results(timeout=60)
+        def double(x):
+            return 2 * x
+
+        double(1)
+        with (
+            patch("smarter.lib.cache.decorators.lazy_cache.has_key", return_value=True) as has_key,
+            patch("smarter.lib.cache.decorators.lazy_cache.get", side_effect=lambda key, default=None: default),
+            patch("smarter.lib.cache.decorators.lazy_cache.delete") as delete,
+        ):
+            double.invalidate(1)
+        has_key.assert_not_called()
+        delete.assert_not_called()
 
     def test_cache_different_args(self):
         calls = []

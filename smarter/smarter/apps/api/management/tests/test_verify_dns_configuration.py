@@ -25,12 +25,12 @@ def settings(environment: str) -> MagicMock:
         environment=environment,
         root_domain="example.com",
         root_platform_domain="platform.example.com",
-        root_api_domain="api.example.com",
+        root_api_domain="api.platform.example.com",
         root_proxy_domain="proxy.example.com",
         proxy_api_domain="api.proxy.example.com",
         environment_platform_domain="alpha.platform.example.com",
-        environment_api_domain="alpha.api.example.com",
-        all_domains=["example.com", "api.example.com"],
+        environment_api_domain="alpha.api.platform.example.com",
+        all_domains=["example.com", "api.platform.example.com"],
     )
 
 
@@ -71,13 +71,18 @@ class TestVerifyDnsConfiguration(CommandTestBase):
     def test_aws_environment(self):
         """Test that every domain is verified, and delegated from its parent, in a cloud environment."""
         output = self.run_in(SmarterEnvironments.ALPHA)
-        self.assertIn("alpha.api.example.com", output)
+        self.assertIn("alpha.api.platform.example.com", output)
         self.assert_delegated("platform.example.com", "example.com")
         self.assert_delegated("proxy.example.com", "example.com")
         self.assert_delegated("api.proxy.example.com", "proxy.example.com")
-        self.assert_delegated("api.example.com", "example.com")
+        self.assert_delegated("api.platform.example.com", "platform.example.com")
         self.assert_delegated("alpha.platform.example.com", "platform.example.com")
-        self.assert_delegated("alpha.api.example.com", "api.example.com")
+        self.assert_delegated("alpha.api.platform.example.com", "api.platform.example.com")
+        root_zone = self.dns.get_zone("example.com")
+        self.assertIsNone(
+            self.dns.get_record(root_zone.id, "api.platform.example.com", "NS"),
+            "the root zone must not delegate the api domain, which is below the delegated platform domain",
+        )
 
     def test_idempotent(self):
         """Test that a second run verifies what the first created, rather than creating it again."""
@@ -97,10 +102,10 @@ class TestVerifyDnsConfiguration(CommandTestBase):
         provider = InMemoryProvider()
         provider.dns.add_zone("example.com", a_record=cdn)
         provider.dns.add_zone("platform.example.com", a_record=LOAD_BALANCER)
-        provider.dns.add_zone("api.example.com", a_record=LOAD_BALANCER)
+        provider.dns.add_zone("api.platform.example.com", a_record=LOAD_BALANCER)
         self.use(provider)
         self.run_in(SmarterEnvironments.ALPHA)
-        for domain in ("platform.example.com", "api.example.com"):
+        for domain in ("platform.example.com", "api.platform.example.com"):
             zone = provider.dns.get_zone(domain)
             self.assertEqual(provider.dns.get_record(zone.id, domain, "A").values, LOAD_BALANCER, domain)
 
@@ -113,11 +118,42 @@ class TestVerifyDnsConfiguration(CommandTestBase):
         self.use(provider)
         self.dns = provider.dns
         self.run_in(SmarterEnvironments.ALPHA)
-        self.assert_delegated("api.example.com", "example.com")
+        self.assert_delegated("api.platform.example.com", "platform.example.com")
         self.assert_delegated("proxy.example.com", "example.com")
-        self.assert_delegated("alpha.api.example.com", "api.example.com")
+        self.assert_delegated("alpha.api.platform.example.com", "api.platform.example.com")
         root_zone = provider.dns.get_zone("example.com")
         self.assertEqual(provider.dns.get_record(root_zone.id, "example.com", "A").values, cdn)
+
+    def test_a_record_pointing_elsewhere_is_reported_not_verified(self):
+        """
+        Test that a child zone whose A record points elsewhere, e.g. at a CDN, is reported, rather than verified.
+
+        Its delegation is still verified, and its A record is left unchanged.
+        """
+        cdn = ["198.51.100.1"]
+        provider = InMemoryProvider()
+        provider.dns.add_zone("example.com", a_record=LOAD_BALANCER)
+        provider.dns.add_zone("platform.example.com", a_record=LOAD_BALANCER)
+        provider.dns.add_zone("proxy.example.com", a_record=cdn)
+        self.use(provider)
+        output = self.run_in(SmarterEnvironments.ALPHA)
+
+        self.assertIn("does not point at the platform's load balancer. Left it unchanged.", output)
+        self.assertNotIn("verified A record for proxy.example.com", output)
+        self.assertIn("verified A record for platform.example.com", output)
+        summary = [line for line in output.splitlines() if "verified platform level DNS infrastructure" in line]
+        self.assertEqual(len(summary), 1)
+        verified = summary[0].split("following domains: ", 1)[1].strip().split(", ")
+        self.assertNotIn("proxy.example.com", verified)
+        self.assertIn("api.proxy.example.com", verified)
+        self.assertIn(
+            "A record left unchanged because it does not point at the platform's load balancer: proxy.example.com",
+            output,
+        )
+        zone = provider.dns.get_zone("proxy.example.com")
+        self.assertEqual(provider.dns.get_record(zone.id, "proxy.example.com", "A").values, cdn)
+        root_zone = provider.dns.get_zone("example.com")
+        self.assertIsNotNone(provider.dns.get_record(root_zone.id, "proxy.example.com", "NS"))
 
     def test_local_environment(self):
         """Test that only the proxy domains are verified in the local environment."""
@@ -125,7 +161,7 @@ class TestVerifyDnsConfiguration(CommandTestBase):
         self.assertIn("proxy.example.com", output)
         self.assert_delegated("api.proxy.example.com", "proxy.example.com")
         self.assertIsNone(self.dns.get_zone("platform.example.com"))
-        self.assertIsNone(self.dns.get_zone("api.example.com"))
+        self.assertIsNone(self.dns.get_zone("api.platform.example.com"))
 
     def test_cloud_not_configured(self):
         """Test that the command does nothing when the cloud provider is not configured."""
