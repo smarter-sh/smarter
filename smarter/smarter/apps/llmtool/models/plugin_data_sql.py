@@ -157,7 +157,7 @@ class PluginDataSql(PluginDataBase):
         placeholders = re.findall(r"{(.*?)}", self.sql_query) or []
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
-        logger.info(
+        logger.debug(
             "%s.validate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
             self.formatted_class_name,
             self.sql_query,

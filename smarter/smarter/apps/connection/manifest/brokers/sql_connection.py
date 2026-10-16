@@ -559,6 +559,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
+            if not name:
+                # a connection need not use a proxy.
+                return None
             self._proxy_password_secret = Secret.objects.get(
                 user_profile=self.user_profile,
                 name=name,

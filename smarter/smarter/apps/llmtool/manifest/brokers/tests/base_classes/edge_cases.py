@@ -10,7 +10,9 @@ from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib.manifest.broker import SAMBrokerError, SAMBrokerErrorNotReady
 
 
-def fake_plugin_class(base: type, ready: bool = True, create_error=None, save_error=None) -> type:
+def fake_plugin_class(
+    base: type, ready: bool = True, create_error=None, save_error=None, persisted: bool = False
+) -> type:
     """
     Return a subclass of a plugin class whose instances skip all initialization.
 
@@ -36,6 +38,7 @@ def fake_plugin_class(base: type, ready: bool = True, create_error=None, save_er
             return True
 
     FakePlugin.ready = ready  # type: ignore[attr-defined]
+    FakePlugin.persisted = persisted  # type: ignore[attr-defined]
     FakePlugin.create = MagicMock(side_effect=create_error)  # type: ignore[attr-defined]
     FakePlugin.save = MagicMock(side_effect=save_error)  # type: ignore[attr-defined]
     FakePlugin.delete = MagicMock()  # type: ignore[attr-defined]
@@ -142,15 +145,15 @@ class PluginBrokerEdgeCasesMixin:
         with self.assertRaises(SAMPluginBrokerError):  # type: ignore[attr-defined]
             broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
 
-    def test_apply_creates_and_saves_an_unready_plugin(self):
-        """Apply() creates, then saves, a plugin that wasn't ready."""
+    def test_apply_creates_an_unready_plugin(self):
+        """Apply() creates a plugin that wasn't ready, and doesn't save it again, because create() wrote it."""
         plugin = self._fake_plugin(ready=False)
         broker = self._ready_broker(plugin=plugin, plugin_meta=self._plugin_meta())
         type(plugin).create = MagicMock(side_effect=lambda: setattr(type(plugin), "ready", True))
         response = broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
         self.assertEqual(response.status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
         type(plugin).create.assert_called_once()
-        type(plugin).save.assert_called_once()
+        type(plugin).save.assert_not_called()
 
     def test_apply_reports_a_create_failure(self):
         """Apply() returns an error response when create() raises."""
@@ -159,13 +162,14 @@ class PluginBrokerEdgeCasesMixin:
         response = broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
         self.assertGreaterEqual(response.status_code, HTTPStatus.BAD_REQUEST)  # type: ignore[attr-defined]
 
-    def test_apply_reports_a_save_failure(self):
-        """Apply() returns an error response when save() raises."""
-        plugin = self._fake_plugin(ready=False, save_error=ValueError("save failed"))
+    def test_apply_does_not_write_a_persisted_plugin_again(self):
+        """Apply() neither creates nor saves a plugin whose constructor already wrote its manifest."""
+        plugin = self._fake_plugin(ready=True, persisted=True)
         broker = self._ready_broker(plugin=plugin, plugin_meta=self._plugin_meta())
-        type(plugin).create = MagicMock(side_effect=lambda: setattr(type(plugin), "ready", True))
         response = broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
-        self.assertGreaterEqual(response.status_code, HTTPStatus.BAD_REQUEST)  # type: ignore[attr-defined]
+        self.assertEqual(response.status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
+        type(plugin).create.assert_not_called()
+        type(plugin).save.assert_not_called()
 
     def test_apply_reports_a_plugin_that_never_becomes_ready(self):
         """Apply() returns an error response when the plugin isn't ready after create()."""
