@@ -1,6 +1,7 @@
 import logging
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
@@ -96,8 +97,12 @@ class Command(SmarterCommand):
             last_name="User",
         )
 
-        # Initialize Smarter platform components.
+        # Initialize Smarter platform components. A failure of most steps is logged, and the next step
+        # runs. A failure in ``fatal`` is also logged, and makes this command exit with code 1 once every
+        # step has run, so that the init job fails.
         # ---------------------------------------------------------------------
+        fatal: list[str] = []
+
         try:
             call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
         except Exception as e:
@@ -152,7 +157,9 @@ class Command(SmarterCommand):
             # Before deploy_builtin_llmclients, whose built-in LLMClients list the official extensions.
             call_command("add_builtin_extensions")
         except (Exception, SystemExit) as e:
+            # fatal: the built-in LLMClients that use a missing official extension are not deployed.
             logger.error("Failed to install the official extensions: %s", e)
+            fatal.append("add_builtin_extensions")
 
         try:
             # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
@@ -195,4 +202,9 @@ class Command(SmarterCommand):
         except (Exception, SystemExit) as e:
             logger.error("Failed to sync the infrastructure inventory: %s", e)
 
+        if fatal:
+            self.handle_completed_failure(
+                err=CommandError(f"initialize_platform completed, but these steps failed: {', '.join(fatal)}")
+            )
+            return
         self.handle_completed_success()

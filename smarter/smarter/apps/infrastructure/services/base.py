@@ -171,14 +171,24 @@ class InfrastructureService(ABC, SmarterHelperMixin):
             self.send(billable_resource_creating, resource_type=resource_type, resource_name=resource_name)
         return resource
 
-    def created_resource(self, resource: SmarterDictType, resource_id: Optional[str] = None) -> None:
-        """Send the signal that follows the creation of a resource."""
+    def created_resource(
+        self, resource: SmarterDictType, resource_id: Optional[str] = None, reconciled: bool = False
+    ) -> None:
+        """
+        Send the signal that follows the creation of a resource.
+
+        :param resource: The resource's signal arguments, from :meth:`creating_resource`.
+        :param resource_id: The provider's id of the resource.
+        :param reconciled: True when the ledger records a resource that already exists, e.g. a node
+            that the cluster's autoscaler added, rather than one that this service created.
+        """
         signal = billable_resource_created if resource["billable"] else resource_created
         self.send(
             signal,
             resource_type=resource["resource_type"],
             resource_name=resource["resource_name"],
             resource_id=resource_id,
+            reconciled=reconciled,
         )
 
     def destroying_resource(
@@ -204,14 +214,21 @@ class InfrastructureService(ABC, SmarterHelperMixin):
             )
         return resource
 
-    def destroyed_resource(self, resource: SmarterDictType) -> None:
-        """Send the signal that follows the destruction of a resource."""
+    def destroyed_resource(self, resource: SmarterDictType, reconciled: bool = False) -> None:
+        """
+        Send the signal that follows the destruction of a resource.
+
+        :param resource: The resource's signal arguments, from :meth:`destroying_resource`.
+        :param reconciled: True when the ledger records that a resource no longer exists, rather
+            than that this service destroyed it.
+        """
         signal = billable_resource_destroyed if resource["billable"] else resource_destroyed
         self.send(
             signal,
             resource_type=resource["resource_type"],
             resource_name=resource["resource_name"],
             resource_id=resource["resource_id"],
+            reconciled=reconciled,
         )
 
     # --------------------------------------------------------------------------

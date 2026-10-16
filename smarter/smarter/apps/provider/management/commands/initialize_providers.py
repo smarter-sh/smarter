@@ -207,8 +207,8 @@ class Command(SmarterCommand):
             url = urljoin(provider.base_url, end_point)
             headers = auth_headers(bearer_token)
 
-            def _initialize_provider_model(provider: Provider, model_name: str, is_default: bool = False):
-                """Helper function to initialize a single provider model."""
+            def _initialize_provider_model(provider: Provider, model_name: str, is_default: bool = False) -> bool:
+                """Initialize a single provider model, and return whether it was saved."""
 
                 try:
                     # a new model starts active, and its verification, which saving it queues, decides
@@ -220,11 +220,13 @@ class Command(SmarterCommand):
                         defaults=defaults,
                         create_defaults={**defaults, "is_active": True},
                     )
+                    return True
                 # pylint: disable=broad-except
                 except Exception as e:
                     self.stdout.write(
                         self.style.ERROR(f"{log_prefix} Failed to initialize provider model {model_name}. Error: {e}")
                     )
+                    return False
 
             try:
                 self.stdout.write(f"{log_prefix} Fetching provider models from {url}")
@@ -264,6 +266,7 @@ class Command(SmarterCommand):
 
             self.stdout.write(f"{log_prefix} Found {len(models)} provider models.")
 
+            initialized = 0
             for model in models:
                 model_name = model.get("id") or model.get("name", "").removeprefix("models/")
                 if not model_name:
@@ -277,11 +280,14 @@ class Command(SmarterCommand):
                         f"{log_prefix} Skipping {model_name}, which does not support chat completions: {generation_methods}"
                     )
                     continue
-                _initialize_provider_model(
+                if _initialize_provider_model(
                     provider=provider, model_name=model_name, is_default=model_name == default_model
-                )
+                ):
+                    initialized += 1
             self.stdout.write(
-                self.style.SUCCESS(f"{log_prefix} provider models initialized {len(models)} models successfully.")
+                self.style.SUCCESS(
+                    f"{log_prefix} initialized {initialized} of the {len(models)} provider models successfully."
+                )
             )
 
         self.echo_banner(name)
