@@ -153,7 +153,7 @@ image on an isolated network:
    `~/.aws`, so it holds no credentials.
 4. Run each `docker-init` step separately (`reset_cache`, `migrate`,
    `initialize_platform`, `add_plugin_examples`, `create_stackademy`,
-   `deploy_builtin_llmclients`, `deploy_example_llmclient`), recording each exit
+   `deploy_builtin_llmclients`), recording each exit
    code, with two Celery workers (default and infrastructure queues) on the same
    network.
 5. The logs are huge with `DEBUG_MODE=true`: strip the ANSI codes, and grep for
