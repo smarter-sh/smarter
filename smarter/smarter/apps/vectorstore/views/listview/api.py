@@ -52,6 +52,10 @@ SORT_FIELDS = {
 class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
     """The vectorstores that the user owns, those shared with them, or both."""
 
+    def get(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
+        """Return the same json as a POST, so that the list api can be browsed."""
+        return self.post(request, *args, **kwargs)
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
         ownership_filter = kwargs.get("ownership_filter") or SmarterResourceOwnershipFilterEnum.ALL
         if request.GET.get("invalidate_cache", "false").lower() == "true":

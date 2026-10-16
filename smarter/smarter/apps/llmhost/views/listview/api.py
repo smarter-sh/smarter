@@ -76,6 +76,10 @@ class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
         class_name = f"{__name__}.{LLMHostListApiView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
+    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
+        """Return the same json as a POST, so that the list api can be browsed."""
+        return self.post(request, *args, **kwargs)
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[LLMHost]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
@@ -332,6 +336,10 @@ class LLMHostComputeListApiView(SmarterAuthenticatedNeverCachedWebView):
         """Returns a formatted string of the class name for logging purposes."""
         class_name = f"{__name__}.{LLMHostComputeListApiView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
+
+    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
+        """Return the same json as a POST, so that the list api can be browsed."""
+        return self.post(request, *args, **kwargs)
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[LLMHostCompute]
