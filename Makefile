@@ -28,7 +28,7 @@ SMARTER_CHAT_BRANCH ?= main
 SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 
 
-.PHONY: api-contract chat-contract extension-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chat-contract extension-contract llmtool-list-contract all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -411,6 +411,15 @@ extension-contract:
 	cp smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-extension-console/contract/extension-console.schema.json
 	cd smarter/react/packages/smarter-extension-console && npm run contract:types
 
+# Regenerate the LLMTool list's Extensions tab api contract from its Pydantic models, in the
+# smarter-app container, copy it into @smarter/llmtool-list, and regenerate that package's TypeScript types.
+LLMTOOL_LIST_CONTRACT_SCHEMA := smarter/apps/llmtool/views/listview/extension-list.schema.json
+llmtool-list-contract:
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_list_schema"
+	docker cp smarter-app:/home/smarter_user/smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA)
+	cp smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmtool-list/contract/extension-list.schema.json
+	cd smarter/react/packages/smarter-llmtool-list && npm run contract:types
+
 # Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
 # container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
@@ -504,6 +513,7 @@ help:
 	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
 	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
 	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
+	@echo 'llmtool-list-contract  - Regenerate the LLMTool list Extensions tab contract schema, and its React types'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'

@@ -1,0 +1,148 @@
+.selfhost-card {
+  background:
+    radial-gradient(circle at 15% 110%, rgba(36, 150, 237, 0.35) 0%, rgba(36, 150, 237, 0) 50%),
+    radial-gradient(circle at 95% 0%, rgba(132, 79, 186, 0.35) 0%, rgba(132, 79, 186, 0) 45%),
+    linear-gradient(135deg, #0b1d3a 0%, #1c325e 100%);
+  overflow: hidden;
+}
+
+.selfhost-eyebrow {
+  align-self: flex-start;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background-color: rgba(36, 150, 237, 0.2);
+  color: #7cc4ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.selfhost-underline {
+  border-color: #2496ed !important;
+  opacity: 0.8;
+}
+
+.selfhost-lede {
+  max-width: 70%;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.selfhost-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The path that joins the three steps, behind their logos. */
+.selfhost-steps::before {
+  position: absolute;
+  top: 28px;
+  right: 16.66%;
+  left: 16.66%;
+  border-top: 2px dashed rgba(255, 255, 255, 0.3);
+  content: "";
+}
+
+.selfhost-step-link {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: 0 0.25rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.selfhost-logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 0.75rem;
+  border-radius: 1rem;
+  background-color: #ffffff;
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.35);
+}
+
+.selfhost-logo img {
+  width: 30px;
+  height: 30px;
+}
+
+.selfhost-number {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid #1c325e;
+  border-radius: 50%;
+  background-color: #2496ed;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.selfhost-where {
+  color: #7cc4ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.selfhost-name {
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.selfhost-description {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.selfhost-step-link:hover .selfhost-name {
+  color: #7cc4ff;
+}
+
+.selfhost-btn {
+  background-color: #2496ed;
+  color: #ffffff;
+}
+
+.selfhost-btn:hover {
+  background-color: #1a7bc7;
+  color: #ffffff;
+}
+
+.selfhost-license {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 575.98px) {
+  .selfhost-lede {
+    max-width: none;
+  }
+
+  .selfhost-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .selfhost-steps::before {
+    display: none;
+  }
+}
