@@ -1,5 +1,6 @@
 """Test the web console's internationalization: settings, urls, templates and message catalogs."""
 
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -14,6 +15,8 @@ from smarter.apps.dashboard.templatetags.smarter_i18n import to_locale
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 TEMPLATES_DIR = Path(settings.BASE_DIR) / "templates"
+UNTRANSLATED = re.compile(r'^msgstr(\[\d+\])? ""\n(?!")', re.MULTILINE)
+"""An empty msgstr that has no continuation lines, i.e. an untranslated message."""
 
 
 class TestI18nSettings(SmarterTestBase):
@@ -45,6 +48,26 @@ class TestI18nSettings(SmarterTestBase):
                 po = locale_dir / code / "LC_MESSAGES" / f"{domain}.po"
                 self.assertTrue(po.is_file(), f"{po} is missing: run make i18n-messages")
 
+    def test_spanish_and_french_are_available(self):
+        """The console is translated into Spanish, under the generic es code, and French."""
+        codes = [code for code, _ in settings.LANGUAGES]
+        self.assertIn("es", codes)
+        self.assertIn("fr", codes)
+
+    def test_message_catalogs_are_translated(self):
+        """Every message of every language but English is translated, and none is fuzzy."""
+        locale_dir = Path(settings.LOCALE_PATHS[0])
+        for code, _ in settings.LANGUAGES:
+            if code == settings.LANGUAGE_CODE:
+                continue
+            for domain in ("django", "djangojs"):
+                po = locale_dir / code / "LC_MESSAGES" / f"{domain}.po"
+                with self.subTest(catalog=f"{code}/{domain}.po"):
+                    text = po.read_text(encoding="utf-8")
+                    # The header is the one msgstr whose msgid is empty, and it is never empty itself.
+                    self.assertEqual(UNTRANSLATED.findall(text), [], f"{po} has untranslated messages")
+                    self.assertNotIn("#, fuzzy", text)
+
 
 class TestI18nTemplates(SmarterTestBase):
     """Test that the web console's templates compile, and mark their text for translation."""
@@ -65,6 +88,10 @@ class TestI18nTemplates(SmarterTestBase):
         self.assertEqual(template.render({}), "Sign In")
         with translation.override("en"):
             self.assertEqual(template.render({}), "Sign In")
+        with translation.override("es"):
+            self.assertEqual(template.render({}), "Iniciar sesión")
+        with translation.override("fr"):
+            self.assertEqual(template.render({}), "Se connecter")
 
 
 class TestI18nViews(TestAccountMixin):
@@ -103,6 +130,34 @@ class TestI18nViews(TestAccountMixin):
         content = response.content.decode()
         self.assertIn('<html lang="en"', content)
         self.assertEqual(response.headers.get("Content-Language"), "en")
+
+    def test_any_spanish_variant_gets_spanish(self):
+        """A browser that asks for a regional variant of Spanish gets the Spanish catalogs."""
+        for accept_language in ("es-MX", "es-419", "es-AR,es;q=0.9,en;q=0.8"):
+            with self.subTest(accept_language=accept_language):
+                response = self.client.get(reverse("login_view"), headers={"accept-language": accept_language})
+                self.assertEqual(response.status_code, 200)
+                content = response.content.decode()
+                self.assertIn('<html lang="es"', content)
+                self.assertIn("Iniciar sesión", content)
+
+    def test_french_page(self):
+        """A browser that asks for French gets the French catalogs."""
+        response = self.client.get(reverse("login_view"), headers={"accept-language": "fr-CA"})
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('<html lang="fr"', content)
+        self.assertIn("Se connecter", content)
+
+    def test_javascript_catalog_in_the_chosen_language(self):
+        """The JavaScript catalog serves the djangojs messages of the language cookie's language."""
+        for code, translated in (("es", "Tus secretos"), ("fr", "Vos secrets")):
+            with self.subTest(language=code):
+                self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = code
+                response = self.client.get(reverse("javascript-catalog"))
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(translated, response.content.decode())
+        del self.client.cookies[settings.LANGUAGE_COOKIE_NAME]
 
     def test_pages_load_the_javascript_catalog(self):
         """Pages load the JavaScript catalog before their own scripts."""

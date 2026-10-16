@@ -1,0 +1,1858 @@
+# Latin American Spanish messages of the Smarter web console: the Django templates and Python code.
+# Don't edit the msgids here: change the source, then run `make i18n-messages`.
+# This file is distributed under the same license as the Smarter package (AGPL-3.0).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Smarter web console\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-16 19:41+0000\n"
+"PO-Revision-Date: 2026-10-16 20:00+0000\n"
+"Last-Translator: The Smarter Project\n"
+"Language-Team: Latin American Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "User not found. Please log in to activate your account."
+msgstr "Usuario no encontrado. Inicia sesión para activar tu cuenta."
+
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "Activate your account."
+msgstr "Activa tu cuenta."
+
+#: smarter/apps/account/views/authentication/account_views.py
+#: smarter/apps/account/views/password_management.py
+msgid "Invalid password reset link. User does not exist."
+msgstr ""
+"Enlace de restablecimiento de contraseña no válido. El usuario no existe."
+
+#: smarter/apps/account/views/authentication/login_view.py
+msgid "Username and/or password do not match."
+msgstr "El nombre de usuario o la contraseña no coinciden."
+
+#: smarter/apps/account/views/authentication/login_view.py
+#, python-format
+msgid "Invalid login attempt. Unknown user %(email)s"
+msgstr "Intento de inicio de sesión no válido. Usuario desconocido %(email)s"
+
+#: smarter/apps/account/views/authentication/login_view.py
+#, python-format
+msgid "An unknown error occurred %(error)s"
+msgstr "Ocurrió un error desconocido %(error)s"
+
+#: smarter/apps/account/views/authentication/login_view.py
+msgid "Received invalid responses."
+msgstr "Se recibieron respuestas no válidas."
+
+#: smarter/apps/account/views/password_management.py
+msgid "Email address is invalid."
+msgstr "La dirección de correo electrónico no es válida."
+
+#: smarter/apps/account/views/password_management.py
+msgid "Reset your password"
+msgstr "Restablece tu contraseña"
+
+#: smarter/apps/account/views/password_management.py
+msgid "Email sent."
+msgstr "Correo enviado."
+
+#: smarter/apps/account/views/password_management.py
+msgid "Missing uidb64 or token in URL."
+msgstr "Falta uidb64 o el token en la URL."
+
+#: smarter/apps/account/views/password_management.py
+msgid "input form is invalid."
+msgstr "el formulario no es válido."
+
+#: smarter/apps/account/views/password_management.py
+msgid "Passwords do not match."
+msgstr "Las contraseñas no coinciden."
+
+#: smarter/apps/dashboard/views/views/coming_soon.py
+msgid "We'll notify you when the launch date nears."
+msgstr "Te avisaremos cuando se acerque la fecha de lanzamiento."
+
+#: smarter/apps/dashboard/views/views/coming_soon.py
+#, python-format
+msgid "%(email)s is already in our contact list. We'll keep you updated."
+msgstr ""
+"%(email)s ya está en nuestra lista de contactos. Te mantendremos al tanto."
+
+#: smarter/lib/social_core/backends/multitenant.py
+msgid "Your subscription is not active. Please check your payment status."
+msgstr "Tu suscripción no está activa. Revisa el estado de tu pago."
+
+#: smarter/templates/400.html
+msgid "Bad Request"
+msgstr "Solicitud incorrecta"
+
+#: smarter/templates/400.html
+msgid "Forbidden."
+msgstr "Prohibido."
+
+#: smarter/templates/400.html smarter/templates/403.html
+#: smarter/templates/404.html smarter/templates/500.html
+msgid "Return Home"
+msgstr "Volver al inicio"
+
+#: smarter/templates/403.html
+msgid "Permission Denied"
+msgstr "Permiso denegado"
+
+#: smarter/templates/403.html
+msgid "Permission Denied."
+msgstr "Permiso denegado."
+
+#: smarter/templates/404.html
+msgid "Oops!"
+msgstr "¡Ups!"
+
+#: smarter/templates/404.html
+msgid "The page you requested was not found."
+msgstr "No se encontró la página que solicitaste."
+
+#: smarter/templates/500.html
+msgid "System Error"
+msgstr "Error del sistema"
+
+#: smarter/templates/500.html
+msgid "A system error has occurred."
+msgstr "Ocurrió un error del sistema."
+
+#: smarter/templates/account/account-deactivated.html
+msgid "Your account is deactivated"
+msgstr "Tu cuenta está desactivada"
+
+#: smarter/templates/account/account-deactivated.html
+msgid ""
+"Sorry to see you go! We hope to see you back soon. <br />We'll keep the "
+"lights on for you."
+msgstr ""
+"¡Lamentamos que te vayas! Esperamos verte pronto de nuevo. <br />Te dejaremos"
+" las luces encendidas."
+
+#: smarter/templates/account/account-deactivated.html
+msgid "Go to Home Page"
+msgstr "Ir a la página de inicio"
+
+#: smarter/templates/account/account-inactive.html
+msgid "Your Account is Inactive."
+msgstr "Tu cuenta está inactiva."
+
+#: smarter/templates/account/account-inactive.html
+#: smarter/templates/account/activation.html
+msgid ""
+"Look for an email from us with instructions on how to activate your account."
+msgstr "Busca un correo nuestro con instrucciones para activar tu cuenta."
+
+#: smarter/templates/account/account-inactive.html
+#: smarter/templates/account/authentication/social-auth-already-associated.html
+#: smarter/templates/cms/base/menu/authentication.html
+msgid "Login"
+msgstr "Iniciar sesión"
+
+#: smarter/templates/account/activation.html
+msgid "Activate Your Account."
+msgstr "Activa tu cuenta."
+
+#: smarter/templates/account/activation.html
+msgid "Didn't receive an email?"
+msgstr "¿No recibiste el correo?"
+
+#: smarter/templates/account/activation.html
+msgid "Try Again"
+msgstr "Intentar de nuevo"
+
+#: smarter/templates/account/activation.html
+msgid "Skip for now"
+msgstr "Omitir por ahora"
+
+#: smarter/templates/account/authentication/base.html
+#: smarter/templates/account/dashboard/overview.html
+msgid "Learn more"
+msgstr "Más información"
+
+#: smarter/templates/account/authentication/base.html
+#: smarter/templates/dashboard/footer.html
+msgid "Legal"
+msgstr "Legal"
+
+#: smarter/templates/account/authentication/base.html
+msgid "Plans"
+msgstr "Planes"
+
+#: smarter/templates/account/authentication/base.html
+msgid "Contact Us"
+msgstr "Contáctanos"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+msgid "Activate Your Account"
+msgstr "Activa tu cuenta"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+msgid ""
+"Click on the link below or copy and paste it into your browser's address bar."
+msgstr ""
+"Haz clic en el siguiente enlace o cópialo y pégalo en la barra de direcciones"
+" de tu navegador."
+
+#: smarter/templates/account/authentication/email/account-activation.html
+msgid "Thank you for using Smarter!"
+msgstr "¡Gracias por usar Smarter!"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+msgid "Activate Account"
+msgstr "Activar cuenta"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+msgid "If you require assistance"
+msgstr "Si necesitas ayuda"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+#: smarter/templates/account/authentication/email/password-reset.html
+#, python-format
+msgid "Call our customer care number: %(phone)s"
+msgstr "Llama a nuestro número de atención al cliente: %(phone)s"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+#: smarter/templates/account/authentication/email/password-reset.html
+#, python-format
+msgid "Email: %(email)s"
+msgstr "Correo: %(email)s"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+#: smarter/templates/account/authentication/email/password-reset.html
+msgid "Contact:"
+msgstr "Contacto:"
+
+#: smarter/templates/account/authentication/email/account-activation.html
+#: smarter/templates/account/authentication/email/password-reset.html
+#, python-format
+msgid "Office Hours: %(hours)s"
+msgstr "Horario de atención: %(hours)s"
+
+#: smarter/templates/account/authentication/email/password-reset.html
+msgid "Smarter Logo"
+msgstr "Logotipo de Smarter"
+
+#: smarter/templates/account/authentication/email/password-reset.html
+msgid "Reset Your Password"
+msgstr "Restablece tu contraseña"
+
+#: smarter/templates/account/authentication/email/password-reset.html
+msgid ""
+"We received a request to reset your password. If you didn't make the request,"
+" just ignore this email. Otherwise, you can reset your password using the "
+"link below."
+msgstr ""
+"Recibimos una solicitud para restablecer tu contraseña. Si no la hiciste, "
+"simplemente ignora este correo. De lo contrario, puedes restablecer tu "
+"contraseña con el siguiente enlace."
+
+#: smarter/templates/account/authentication/email/password-reset.html
+msgid "This link will expire in 24 hours, so be sure to use it right away."
+msgstr "Este enlace vence en 24 horas, así que úsalo de inmediato."
+
+#: smarter/templates/account/authentication/email/password-reset.html
+#, python-format
+msgid "Thank you for being part of %(product_name)s!"
+msgstr "¡Gracias por ser parte de %(product_name)s!"
+
+#: smarter/templates/account/authentication/email/password-reset.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Reset Password"
+msgstr "Restablecer contraseña"
+
+#: smarter/templates/account/authentication/email/password-reset.html
+msgid "Or, talk to a human!"
+msgstr "¡O habla con una persona!"
+
+#: smarter/templates/account/authentication/new-password.html
+msgid "Password Reset"
+msgstr "Restablecimiento de contraseña"
+
+#: smarter/templates/account/authentication/new-password.html
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Password"
+msgstr "Contraseña"
+
+#: smarter/templates/account/authentication/new-password.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Use 8 or more characters with a mix of letters, numbers & symbols."
+msgstr "Usa 8 o más caracteres combinando letras, números y símbolos."
+
+#: smarter/templates/account/authentication/new-password.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Repeat Password"
+msgstr "Repite la contraseña"
+
+#: smarter/templates/account/authentication/new-password.html
+#: smarter/templates/account/authentication/password-reset-request.html
+msgid "Submit"
+msgstr "Enviar"
+
+#: smarter/templates/account/authentication/new-password.html
+#: smarter/templates/account/authentication/password-reset-request.html
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/coming-soon.html
+msgid "Please wait..."
+msgstr "Espera un momento..."
+
+#: smarter/templates/account/authentication/password-confirmation.html
+msgid "Password is changed"
+msgstr "Se cambió la contraseña"
+
+#: smarter/templates/account/authentication/password-confirmation.html
+msgid "Time to get back to work!"
+msgstr "¡Es hora de volver al trabajo!"
+
+#: smarter/templates/account/authentication/password-confirmation.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Sign in"
+msgstr "Iniciar sesión"
+
+#: smarter/templates/account/authentication/password-reset-request.html
+#: smarter/templates/account/authentication/sign-in.html
+msgid "Forgot Password ?"
+msgstr "¿Olvidaste tu contraseña?"
+
+#: smarter/templates/account/authentication/password-reset-request.html
+msgid "Enter your email to reset your password."
+msgstr "Ingresa tu correo para restablecer tu contraseña."
+
+#: smarter/templates/account/authentication/password-reset-request.html
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/account/dashboard/user.html
+#: smarter/templates/account/dashboard/users.html
+#: smarter/templates/coming-soon.html
+msgid "Email"
+msgstr "Correo electrónico"
+
+#: smarter/templates/account/authentication/password-reset-request.html
+#: smarter/templates/account/dashboard/api-key.html
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/account/dashboard/user.html
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Sign In"
+msgstr "Iniciar sesión"
+
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Sign in with Google"
+msgstr "Iniciar sesión con Google"
+
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Sign in with GitHub"
+msgstr "Iniciar sesión con GitHub"
+
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Or with email"
+msgstr "O con correo electrónico"
+
+#: smarter/templates/account/authentication/sign-in.html
+msgid "Not a Member yet?"
+msgstr "¿Aún no eres miembro?"
+
+#: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Sign up"
+msgstr "Regístrate"
+
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Sign Up"
+msgstr "Registrarse"
+
+#: smarter/templates/account/authentication/sign-up.html
+msgid "I Accept the <a href=\"#\" class=\"ms-1 link-primary\">Terms</a>"
+msgstr "Acepto los <a href=\"#\" class=\"ms-1 link-primary\">Términos</a>"
+
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Already have an Account?"
+msgstr "¿Ya tienes una cuenta?"
+
+#: smarter/templates/account/authentication/social-auth-already-associated.html
+msgid "Social Account Already Associated"
+msgstr "La cuenta social ya está asociada"
+
+#: smarter/templates/account/authentication/social-auth-already-associated.html
+msgid ""
+"The social account you tried to associate is already linked to another user "
+"on this platform."
+msgstr ""
+"La cuenta social que intentaste asociar ya está vinculada a otro usuario de "
+"esta plataforma."
+
+#: smarter/templates/account/dashboard/activity.html
+msgid "Account Activity"
+msgstr "Actividad de la cuenta"
+
+#: smarter/templates/account/dashboard/activity.html
+#: smarter/templates/account/dashboard/base.html
+msgid "Activity"
+msgstr "Actividad"
+
+#: smarter/templates/account/dashboard/api-key.html
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/account/dashboard/user.html
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Account Settings"
+msgstr "Configuración de la cuenta"
+
+#: smarter/templates/account/dashboard/api-key.html
+#: smarter/templates/account/dashboard/api-keys.html
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/dashboard/sidebar.html
+msgid "API Keys"
+msgstr "Claves de API"
+
+#: smarter/templates/account/dashboard/api-key.html
+#: smarter/templates/account/dashboard/base.html
+msgid "New API Key"
+msgstr "Nueva clave de API"
+
+#: smarter/templates/account/dashboard/api-key.html
+msgid "A description for this API key. Be concise ..."
+msgstr "Una descripción de esta clave de API. Sé breve..."
+
+#: smarter/templates/account/dashboard/api-key.html
+msgid "True"
+msgstr "Verdadero"
+
+#: smarter/templates/account/dashboard/api-key.html
+msgid "False"
+msgstr "Falso"
+
+#: smarter/templates/account/dashboard/api-key.html
+msgid "API Key"
+msgstr "Clave de API"
+
+#: smarter/templates/account/dashboard/api-key.html
+msgid ""
+"We will only show this value once. Store your api key value in a safe "
+"location."
+msgstr ""
+"Solo mostraremos este valor una vez. Guarda tu clave de API en un lugar "
+"seguro."
+
+#: smarter/templates/account/dashboard/api-key.html
+msgid "Save"
+msgstr "Guardar"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Account API Keys"
+msgstr "Claves de API de la cuenta"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "API Key Management"
+msgstr "Administración de claves de API"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Live Mode"
+msgstr "Modo en vivo"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid ""
+"You're in sandbox mode. Your API keys can presently only be used for testing "
+"purposes, and can only be used by authenticated users in your account. Switch"
+" to live mode when you're ready to go to production. <a class=\"fw-bold\" "
+"href=\"#\">Learn More</a>."
+msgstr ""
+"Estás en modo de pruebas. Por ahora tus claves de API solo pueden usarse para"
+" pruebas, y solo por usuarios autenticados de tu cuenta. Cambia al modo en "
+"vivo cuando estés listo para pasar a producción. <a class=\"fw-bold\" "
+"href=\"#\">Más información</a>."
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "How to setup your API"
+msgstr "Cómo configurar tu API"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid ""
+"Watch this 5-minute how-to video on getting your API setup <br />for "
+"production use."
+msgstr ""
+"Mira este video de 5 minutos sobre cómo configurar tu API <br />para "
+"producción."
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Watch Now"
+msgstr "Ver ahora"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Best Practices"
+msgstr "Buenas prácticas"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid ""
+"Follow these best practices to ensure your Smarter API is secure and "
+"reliable. <br />This includes setting up rate limits, monitoring usage, doing"
+" security"
+msgstr ""
+"Sigue estas buenas prácticas para que tu API de Smarter sea segura y "
+"confiable. <br />Esto incluye configurar límites de solicitudes, monitorear "
+"el uso y hacer controles de seguridad"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Learn"
+msgstr "Aprender"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Description"
+msgstr "Descripción"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Secret Key"
+msgstr "Clave secreta"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Created"
+msgstr "Creada"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Last Used"
+msgstr "Último uso"
+
+#: smarter/templates/account/dashboard/api-keys.html
+#: smarter/templates/account/dashboard/users.html
+msgid "Never"
+msgstr "Nunca"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Deactivate"
+msgstr "Desactivar"
+
+#: smarter/templates/account/dashboard/api-keys.html
+msgid "Activate"
+msgstr "Activar"
+
+#: smarter/templates/account/dashboard/api-keys.html
+#: smarter/templates/account/dashboard/billing.html
+msgid "Delete"
+msgstr "Eliminar"
+
+#: smarter/templates/account/dashboard/base.html
+msgid "Account Overview"
+msgstr "Resumen de la cuenta"
+
+#: smarter/templates/account/dashboard/base.html
+msgid "Home"
+msgstr "Inicio"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/dashboard/sidebar.html
+msgid "Account"
+msgstr "Cuenta"
+
+#: smarter/templates/account/dashboard/base.html
+msgid "New User"
+msgstr "Nuevo usuario"
+
+#: smarter/templates/account/dashboard/base.html
+msgid "New Secret"
+msgstr "Nuevo secreto"
+
+#: smarter/templates/account/dashboard/base.html
+msgid "New Payment Method"
+msgstr "Nuevo método de pago"
+
+#: smarter/templates/account/dashboard/base.html
+msgid "Overview"
+msgstr "Resumen"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/account/dashboard/user.html
+#: smarter/templates/dashboard/sidebar.html
+msgid "Settings"
+msgstr "Configuración"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/account/dashboard/users.html
+msgid "Users"
+msgstr "Usuarios"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/account/dashboard/billing.html
+msgid "Billing"
+msgstr "Facturación"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/account/dashboard/statements.html
+msgid "Statements"
+msgstr "Estados de cuenta"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/dashboard/sidebar.html
+msgid "Secrets"
+msgstr "Secretos"
+
+#: smarter/templates/account/dashboard/base.html
+#: smarter/templates/account/dashboard/logs.html
+msgid "Logs"
+msgstr "Registros"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Account Billing"
+msgstr "Facturación de la cuenta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Payment Methods"
+msgstr "Métodos de pago"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Credit / Debit Card"
+msgstr "Tarjeta de crédito / débito"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Paypal"
+msgstr "PayPal"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "My Cards"
+msgstr "Mis tarjetas"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Primary"
+msgstr "Principal"
+
+#: smarter/templates/account/dashboard/billing.html
+#, python-format
+msgid "Expires %(card_expiration_month)s/%(card_expiration_year)s"
+msgstr "Vence %(card_expiration_month)s/%(card_expiration_year)s"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/account/dashboard/user.html
+msgid "Edit"
+msgstr "Editar"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Important"
+msgstr "Importante"
+
+#: smarter/templates/account/dashboard/billing.html
+#, python-format
+msgid ""
+"Please review our <a href=\"https://%(smarter_marketing_site_url)s/terms-of-"
+"service/\" class=\"fw-bold me-1\">Terms of Service</a> before adding <br "
+"/>your new payment card."
+msgstr ""
+"Revisa nuestros <a href=\"https://%(smarter_marketing_site_url)s/terms-of-"
+"service/\" class=\"fw-bold me-1\">Términos del servicio</a> antes de agregar "
+"<br />tu nueva tarjeta de pago."
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Add Card"
+msgstr "Agregar tarjeta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "My Paypal"
+msgstr "Mi PayPal"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid ""
+"To use PayPal as your payment method, you will need to make pre-payments each"
+" month before your bill is due."
+msgstr ""
+"Para usar PayPal como método de pago, deberás hacer pagos anticipados cada "
+"mes antes de la fecha de vencimiento de tu factura."
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Select an option"
+msgstr "Selecciona una opción"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Pay with Paypal"
+msgstr "Pagar con PayPal"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Billing Addresses"
+msgstr "Direcciones de facturación"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Address 1"
+msgstr "Dirección 1"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "New Address"
+msgstr "Nueva dirección"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Tax Location"
+msgstr "Ubicación fiscal"
+
+#: smarter/templates/account/dashboard/billing.html
+#, python-format
+msgid "United States - 10%% VAT <br /> <a class=\"fw-bold\" href=\"#\">More Info</a>"
+msgstr ""
+"Estados Unidos - 10%% IVA <br /> <a class=\"fw-bold\" href=\"#\">Más "
+"información</a>"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Add New Card"
+msgstr "Agregar nueva tarjeta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Name On Card"
+msgstr "Nombre en la tarjeta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Specify a card holder's name"
+msgstr "Indica el nombre del titular de la tarjeta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Full name"
+msgstr "Nombre completo"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Card Number"
+msgstr "Número de tarjeta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "xxxx xxxx xxxx xxxx"
+msgstr "xxxx xxxx xxxx xxxx"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Expiration Date"
+msgstr "Fecha de vencimiento"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Month"
+msgstr "Mes"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Year"
+msgstr "Año"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "CVV"
+msgstr "CVV"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Enter a card CVV code"
+msgstr "Ingresa el código CVV de la tarjeta"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid ""
+"<span class=\"indicator-label\">Submit</span> <span class=\"indicator-"
+"progress\">Please wait... <span class=\"spinner-border spinner-border-sm "
+"align-middle ms-2\"></span></span>"
+msgstr ""
+"<span class=\"indicator-label\">Enviar</span> <span class=\"indicator-"
+"progress\">Espera un momento... <span class=\"spinner-border spinner-border-"
+"sm align-middle ms-2\"></span></span>"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Add New Address"
+msgstr "Agregar nueva dirección"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Warning"
+msgstr "Advertencia"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Updating address may affect your <a href=\"#\">Tax Location</a>"
+msgstr ""
+"Actualizar la dirección puede afectar tu <a href=\"#\">ubicación fiscal</a>"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/user.html
+msgid "First name"
+msgstr "Nombre"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/user.html
+msgid "Last name"
+msgstr "Apellido"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/overview.html
+msgid "Country"
+msgstr "País"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Your payment statements may very based on selected country"
+msgstr "Tus estados de cuenta pueden variar según el país seleccionado"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Country..."
+msgstr "Selecciona un país..."
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Address Line 1"
+msgstr "Dirección, línea 1"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Address Line 2"
+msgstr "Dirección, línea 2"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "City"
+msgstr "Ciudad"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "State / Province"
+msgstr "Estado / Provincia"
+
+#: smarter/templates/account/dashboard/billing.html
+msgid "Post Code"
+msgstr "Código postal"
+
+#: smarter/templates/account/dashboard/billing.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Discard"
+msgstr "Descartar"
+
+#: smarter/templates/account/dashboard/logs.html
+msgid "Account Logs"
+msgstr "Registros de la cuenta"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Profile Details"
+msgstr "Datos del perfil"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Full Name"
+msgstr "Nombre completo"
+
+#: smarter/templates/account/dashboard/overview.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Company"
+msgstr "Empresa"
+
+#: smarter/templates/account/dashboard/overview.html
+#: smarter/templates/account/dashboard/settings.html
+msgid "Contact Phone"
+msgstr "Teléfono de contacto"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Phone number must be active"
+msgstr "El número de teléfono debe estar activo"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid ""
+"<span class=\"fw-bold fs-6 text-gray-800 me-2\">044 3276 454 935</span> <span"
+" class=\"badge badge-success\">Verified</span>"
+msgstr ""
+"<span class=\"fw-bold fs-6 text-gray-800 me-2\">044 3276 454 935</span> <span"
+" class=\"badge badge-success\">Verificado</span>"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Company Site"
+msgstr "Sitio web de la empresa"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Country of origination"
+msgstr "País de origen"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Germany"
+msgstr "Alemania"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Allow Changes"
+msgstr "Permitir cambios"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Yes"
+msgstr "Sí"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "We need your attention!"
+msgstr "¡Necesitamos tu atención!"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid ""
+"Your payment was declined. To start using tools, please <a class=\"fw-bold\" "
+"href=\"/dashboard/account/dashboard/billing/\">Add Payment Method</a>."
+msgstr ""
+"Se rechazó tu pago. Para empezar a usar las herramientas, <a class=\"fw-"
+"bold\" href=\"/dashboard/account/dashboard/billing/\">agrega un método de "
+"pago</a>."
+
+#: smarter/templates/account/dashboard/overview.html
+msgid ""
+"<span class=\"card-label fw-bold text-gray-900\">Top Selling "
+"Categories</span> <span class=\"text-gray-500 pt-2 fw-semibold fs-6\">8k "
+"social visitors</span>"
+msgstr ""
+"<span class=\"card-label fw-bold text-gray-900\">Categorías más "
+"vendidas</span> <span class=\"text-gray-500 pt-2 fw-semibold fs-6\">8 mil "
+"visitantes de redes sociales</span>"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Quick Actions"
+msgstr "Acciones rápidas"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "New Ticket"
+msgstr "Nuevo ticket"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "New Customer"
+msgstr "Nuevo cliente"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "<span class=\"menu-title\">New Group</span> <span class=\"menu-arrow\"></span>"
+msgstr ""
+"<span class=\"menu-title\">Nuevo grupo</span> <span class=\"menu-"
+"arrow\"></span>"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Admin Group"
+msgstr "Grupo de administradores"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Staff Group"
+msgstr "Grupo de personal"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Member Group"
+msgstr "Grupo de miembros"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "New Contact"
+msgstr "Nuevo contacto"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Generate Reports"
+msgstr "Generar informes"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid ""
+"Have you tried <br />the <span class=\"fw-bolder\">Mobile Application "
+"?</span>"
+msgstr "¿Ya probaste <br />la <span class=\"fw-bolder\">aplicación móvil?</span>"
+
+#: smarter/templates/account/dashboard/overview.html
+msgid "Try now"
+msgstr "Pruébala ahora"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Account Details"
+msgstr "Datos de la cuenta"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Account Number"
+msgstr "Número de cuenta"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "We will use this legal name for invoices and contracts."
+msgstr "Usaremos esta razón social en facturas y contratos."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Company name"
+msgstr "Nombre de la empresa"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Legal name of your company, for invoicing and contractual purposes."
+msgstr "Razón social de tu empresa, para facturación y contratos."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Address"
+msgstr "Dirección"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Address 2"
+msgstr "Dirección 2"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "State"
+msgstr "Estado"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Postal Code"
+msgstr "Código postal"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Country"
+msgstr "Selecciona un país"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a country..."
+msgstr "Selecciona un país..."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Phone number"
+msgstr "Número de teléfono"
+
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Language"
+msgstr "Idioma"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Language"
+msgstr "Selecciona un idioma"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a language..."
+msgstr "Selecciona un idioma..."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Language..."
+msgstr "Selecciona un idioma..."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Time Zone"
+msgstr "Zona horaria"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Timezone"
+msgstr "Selecciona una zona horaria"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a timezone.."
+msgstr "Selecciona una zona horaria..."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Timezone.."
+msgstr "Selecciona una zona horaria..."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Currency"
+msgstr "Moneda"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a Currency"
+msgstr "Selecciona una moneda"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Select a currency.."
+msgstr "Selecciona una moneda..."
+
+#: smarter/templates/account/dashboard/settings.html
+#: smarter/templates/account/dashboard/user.html
+msgid "Save Changes"
+msgstr "Guardar cambios"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Sign-in Method"
+msgstr "Método de inicio de sesión"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Email Address"
+msgstr "Dirección de correo electrónico"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Enter New Email Address"
+msgstr "Ingresa la nueva dirección de correo"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Confirm Password"
+msgstr "Confirmar contraseña"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Update Email"
+msgstr "Actualizar correo"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Change Email"
+msgstr "Cambiar correo"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Current Password"
+msgstr "Contraseña actual"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "New Password"
+msgstr "Nueva contraseña"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Confirm New Password"
+msgstr "Confirmar nueva contraseña"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Password must be at least 8 character and contain symbols"
+msgstr "La contraseña debe tener al menos 8 caracteres e incluir símbolos"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Update Password"
+msgstr "Actualizar contraseña"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Secure Your Account"
+msgstr "Protege tu cuenta"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid ""
+"Two-factor authentication adds an extra layer of security to your account. To"
+" log in, in addition you'll need to provide a 6 digit code"
+msgstr ""
+"La autenticación de dos factores agrega una capa adicional de seguridad a tu "
+"cuenta. Para iniciar sesión, también deberás ingresar un código de 6 dígitos"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Enable"
+msgstr "Habilitar"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Connected Accounts"
+msgstr "Cuentas conectadas"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid ""
+"Two-factor authentication adds an extra layer of security to your account. To"
+" log in, in you'll need to provide a 4 digit amazing code. <a href=\"#\" "
+"class=\"fw-bold\">Learn More</a>"
+msgstr ""
+"La autenticación de dos factores agrega una capa adicional de seguridad a tu "
+"cuenta. Para iniciar sesión, deberás ingresar un código de 4 dígitos. <a "
+"href=\"#\" class=\"fw-bold\">Más información</a>"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Google"
+msgstr "Google"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Plan properly your workflow"
+msgstr "Planifica bien tu flujo de trabajo"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Github"
+msgstr "GitHub"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Keep eye on on your Repositories"
+msgstr "No pierdas de vista tus repositorios"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Slack"
+msgstr "Slack"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Integrate Projects Discussions"
+msgstr "Integra las conversaciones de tus proyectos"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Email Preferences"
+msgstr "Preferencias de correo"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Successful Payments"
+msgstr "Pagos exitosos"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Receive a notification for every successful payment."
+msgstr "Recibe una notificación por cada pago exitoso."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Payouts"
+msgstr "Pagos salientes"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Receive a notification for every initiated payout."
+msgstr "Recibe una notificación por cada pago saliente iniciado."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Fee Collection"
+msgstr "Cobro de comisiones"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Receive a notification each time you collect a fee from sales"
+msgstr "Recibe una notificación cada vez que cobres una comisión por ventas"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Customer Payment Dispute"
+msgstr "Disputa de pago de un cliente"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid ""
+"Receive a notification if a payment is disputed by a customer and for dispute"
+" purposes."
+msgstr ""
+"Recibe una notificación si un cliente disputa un pago y para fines de la "
+"disputa."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Refund Alerts"
+msgstr "Alertas de reembolso"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid ""
+"Receive a notification if a payment is stated as risk by the Finance "
+"Department."
+msgstr ""
+"Recibe una notificación si el Departamento de Finanzas marca un pago como "
+"riesgoso."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Invoice Payments"
+msgstr "Pagos de facturas"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid ""
+"Receive a notification if a customer sends an incorrect amount to pay their "
+"invoice."
+msgstr ""
+"Recibe una notificación si un cliente envía un monto incorrecto para pagar su"
+" factura."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Webhook API Endpoints"
+msgstr "Endpoints de API de webhooks"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Receive notifications for consistently failing webhook API endpoints."
+msgstr ""
+"Recibe notificaciones de los endpoints de API de webhooks que fallan "
+"constantemente."
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Notifications"
+msgstr "Notificaciones"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Phone"
+msgstr "Teléfono"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Billing Updates"
+msgstr "Novedades de facturación"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "New Team Members"
+msgstr "Nuevos miembros del equipo"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Completed Projects"
+msgstr "Proyectos completados"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Newsletters"
+msgstr "Boletines"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "Deactivate Account"
+msgstr "Desactivar cuenta"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "You Are Deactivating Your Account"
+msgstr "Estás desactivando tu cuenta"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid ""
+"For extra security, this requires you to confirm your email or phone number "
+"when you reset yousignr password. <br /> <a class=\"fw-bold\" "
+"href=\"#\">Learn more</a>"
+msgstr ""
+"Por seguridad, deberás confirmar tu correo o número de teléfono al "
+"restablecer tu contraseña. <br /> <a class=\"fw-bold\" href=\"#\">Más "
+"información</a>"
+
+#: smarter/templates/account/dashboard/settings.html
+msgid "I confirm my account deactivation"
+msgstr "Confirmo la desactivación de mi cuenta"
+
+#: smarter/templates/account/dashboard/statements.html
+msgid "Account Statements"
+msgstr "Estados de cuenta"
+
+#: smarter/templates/account/dashboard/user.html
+msgid "Create New User"
+msgstr "Crear nuevo usuario"
+
+#: smarter/templates/account/dashboard/user.html
+#: smarter/templates/account/dashboard/users.html
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: smarter/templates/account/dashboard/user.html
+msgid "Your data remains private."
+msgstr "Tus datos siguen siendo privados."
+
+#: smarter/templates/account/dashboard/user.html
+msgid "Email address"
+msgstr "Dirección de correo electrónico"
+
+#: smarter/templates/account/dashboard/user.html
+msgid "First Name"
+msgstr "Nombre"
+
+#: smarter/templates/account/dashboard/user.html
+msgid "Last Name"
+msgstr "Apellido"
+
+#: smarter/templates/account/dashboard/user.html
+#: smarter/templates/account/dashboard/users.html
+msgid "Admin"
+msgstr "Administrador"
+
+#: smarter/templates/account/dashboard/users.html
+msgid "Account Users"
+msgstr "Usuarios de la cuenta"
+
+#: smarter/templates/account/dashboard/users.html
+msgid "First"
+msgstr "Nombre"
+
+#: smarter/templates/account/dashboard/users.html
+msgid "Last"
+msgstr "Apellido"
+
+#: smarter/templates/account/dashboard/users.html
+msgid "Last Login"
+msgstr "Último inicio de sesión"
+
+#: smarter/templates/account/welcome.html
+msgid "Welcome to Smarter!"
+msgstr "¡Te damos la bienvenida a Smarter!"
+
+#: smarter/templates/account/welcome.html
+msgid ""
+"This is your opportunity to take prompt engineering <br />to the next level!"
+msgstr ""
+"¡Esta es tu oportunidad de llevar la ingeniería de prompts <br />al siguiente"
+" nivel!"
+
+#: smarter/templates/account/welcome.html
+msgid "Go To Dashboard"
+msgstr "Ir al panel"
+
+#: smarter/templates/admin/base_site.html
+msgid "Django site admin"
+msgstr "Sitio de administración de Django"
+
+#: smarter/templates/admin/base_site.html
+msgid "Django administration"
+msgstr "Administración de Django"
+
+#: smarter/templates/cms/base.html smarter/templates/dashboard/sidebar.html
+#: smarter/templates/docs/json-schemas.html
+msgid "Documentation"
+msgstr "Documentación"
+
+#: smarter/templates/cms/base/footer.html
+msgid "The Smarter Project"
+msgstr "The Smarter Project"
+
+#: smarter/templates/cms/base/footer.html
+#: smarter/templates/dashboard/footer.html
+msgid "About"
+msgstr "Acerca de"
+
+#: smarter/templates/cms/base/footer.html
+#: smarter/templates/dashboard/footer.html
+msgid "Support"
+msgstr "Soporte"
+
+#: smarter/templates/cms/base/footer.html
+msgid "Sales"
+msgstr "Ventas"
+
+#: smarter/templates/cms/base/header.html
+#: smarter/templates/dashboard/header.html
+msgid "Show sidebar menu"
+msgstr "Mostrar el menú lateral"
+
+#: smarter/templates/cms/base/header.html
+#: smarter/templates/dashboard/navbar.html
+msgid "Show header menu"
+msgstr "Mostrar el menú del encabezado"
+
+#: smarter/templates/cms/base/menu/api.html
+msgid "API"
+msgstr "API"
+
+#: smarter/templates/cms/base/menu/api.html
+msgid "Swagger"
+msgstr "Swagger"
+
+#: smarter/templates/cms/base/menu/api.html
+#: smarter/templates/dashboard/sidebar.html
+msgid "Redoc"
+msgstr "Redoc"
+
+#: smarter/templates/cms/base/menu/api.html
+#: smarter/templates/dashboard/sidebar.html
+msgid "OpenAPI Contract"
+msgstr "Contrato OpenAPI"
+
+#: smarter/templates/cms/base/menu/authentication.html
+msgid "Logout"
+msgstr "Cerrar sesión"
+
+#: smarter/templates/cms/base/menu/cli.html
+#: smarter/templates/docs/base/sidebar/widget-cli.html
+msgid "CLI"
+msgstr "CLI"
+
+#: smarter/templates/cms/base/menu/json-schemas.html
+msgid "Schemas"
+msgstr "Esquemas"
+
+#: smarter/templates/cms/base/menu/manifests.html
+msgid "Manifests"
+msgstr "Manifiestos"
+
+#: smarter/templates/coming-soon.html
+msgid "Smarter Is Launching Soon"
+msgstr "Smarter se lanza pronto"
+
+#: smarter/templates/coming-soon.html
+msgid "An enterprise class plugin-based AI chat solution"
+msgstr "Una solución de chat con IA basada en plugins, de nivel empresarial"
+
+#: smarter/templates/coming-soon.html
+msgid "Notify Me"
+msgstr "Avísame"
+
+#: smarter/templates/dashboard/email-added.html
+#, python-format
+msgid "We added %(email)s to our mailing list."
+msgstr "Agregamos %(email)s a nuestra lista de correo."
+
+#: smarter/templates/dashboard/email-added.html
+msgid "You're All Set!"
+msgstr "¡Todo listo!"
+
+#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
+msgid "Light"
+msgstr "Claro"
+
+#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
+msgid "Dark"
+msgstr "Oscuro"
+
+#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
+msgid "System"
+msgstr "Sistema"
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Superuser"
+msgstr "Superusuario"
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Staff"
+msgstr "Personal"
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Sign Out"
+msgstr "Cerrar sesión"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Workbench"
+msgstr "Área de trabajo"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Dashboard"
+msgstr "Panel"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Apply Manifest"
+msgstr "Aplicar manifiesto"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Prompt Passthrough"
+msgstr "Prompt directo"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Server Logs"
+msgstr "Registros del servidor"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Resources"
+msgstr "Recursos"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Connections"
+msgstr "Conexiones"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Custom Domains"
+msgstr "Dominios personalizados"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Budgets"
+msgstr "Presupuestos"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Guardrails"
+msgstr "Guardrails"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Clients"
+msgstr "Clientes LLM"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Hosts"
+msgstr "Hosts LLM"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Host Compute"
+msgstr "Cómputo de hosts LLM"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "MCP Clients"
+msgstr "Clientes MCP"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Orchestrators"
+msgstr "Orquestadores"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Tools"
+msgstr "Herramientas LLM"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Providers"
+msgstr "Proveedores"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Proxies"
+msgstr "Proxies"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Vectorsearches"
+msgstr "Búsquedas vectoriales"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Vectorstores"
+msgstr "Almacenes vectoriales"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Read the Docs"
+msgstr "Leer la documentación"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Project Web Site"
+msgstr "Sitio web del proyecto"
+
+#: smarter/templates/dashboard/sidebar.html
+#: smarter/templates/docs/manifests.html
+msgid "Example Manifests"
+msgstr "Manifiestos de ejemplo"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Swagger Api Docs"
+msgstr "Documentación de la API en Swagger"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Json Schemas"
+msgstr "Esquemas JSON"
+
+#: smarter/templates/dashboard/sidebar.html
+#, python-format
+msgid "GitHub Change Log %(version)s"
+msgstr "Registro de cambios en GitHub %(version)s"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Extensions"
+msgstr "Extensiones"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Updates available"
+msgstr "Actualizaciones disponibles"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Infrastructure Resources"
+msgstr "Recursos de infraestructura"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Django Admin"
+msgstr "Administración de Django"
+
+#: smarter/templates/docs/base/sidebar/stay-connected.html
+msgid "Stay <br> Connected"
+msgstr "Mantente <br> conectado"
+
+#: smarter/templates/docs/base/sidebar/widget-npm.html
+msgid "NPM React Chat Component"
+msgstr "Componente de chat de React en NPM"
+
+#: smarter/templates/docs/base/sidebar/widget-pypi.html
+msgid "PyPi Package"
+msgstr "Paquete de PyPI"
+
+#: smarter/templates/docs/base/sidebar/widget-vscode.html
+msgid "VS Code Extension"
+msgstr "Extensión de VS Code"
+
+#: smarter/templates/docs/json-schemas.html
+msgid "smarter.sh/v1 Manifest JSON Schemas"
+msgstr "Esquemas JSON de manifiestos smarter.sh/v1"
+
+#: smarter/templates/docs/json-schemas.html
+msgid "We've already obsessed over the details. Why should you?"
+msgstr "Nosotros ya nos obsesionamos con los detalles. ¿Para qué hacerlo tú?"
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"The smarter.sh/v1 published JSON Schemas are a rock solid foundation for your"
+" OEM product. Leverage our JSON Schemas to turn your OEM product into your "
+"customers' Rock of Gibralter. Smarter takes care of the details for you. The "
+"only thing you have to do is to take advantage of our own attention to "
+"detail."
+msgstr ""
+"Los esquemas JSON publicados de smarter.sh/v1 son una base sólida como una "
+"roca para tu producto OEM. Aprovecha nuestros esquemas JSON para convertir tu"
+" producto OEM en el Peñón de Gibraltar de tus clientes. Smarter se encarga de"
+" los detalles por ti. Lo único que tienes que hacer es aprovechar nuestra "
+"propia atención al detalle."
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"Check out our <a "
+"href=\"https://marketplace.visualstudio.com/items?itemName=Querium.smarter-"
+"manifest\" target=\"_blank\">VS Code extension</a> for Smarter manifests to "
+"get an idea of what you can create our published json schemas. This extension"
+" provides a rich editing experience for Smarter yaml manifest files, "
+"including syntax highlighting, autocompletion, context sensitive micro help, "
+"and validation against the JSON schema."
+msgstr ""
+"Consulta nuestra <a "
+"href=\"https://marketplace.visualstudio.com/items?itemName=Querium.smarter-"
+"manifest\" target=\"_blank\">extensión de VS Code</a> para manifiestos de "
+"Smarter y date una idea de lo que puedes crear con nuestros esquemas JSON "
+"publicados. Esta extensión ofrece una experiencia de edición completa para "
+"los archivos de manifiesto YAML de Smarter, con resaltado de sintaxis, "
+"autocompletado, ayuda contextual y validación contra el esquema JSON."
+
+#: smarter/templates/docs/json-schemas.html
+msgid "Validation"
+msgstr "Validación"
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"Leverage our JSON Schemas to validate your inbound requests against our data "
+"models. There's no better way to maximize your product's resiliency than by "
+"building on top of the JSON Schemas that we publish for all of our models."
+msgstr ""
+"Aprovecha nuestros esquemas JSON para validar tus solicitudes entrantes "
+"contra nuestros modelos de datos. No hay mejor manera de maximizar la "
+"resiliencia de tu producto que construir sobre los esquemas JSON que "
+"publicamos para todos nuestros modelos."
+
+#: smarter/templates/docs/json-schemas.html
+msgid "Data Modeling"
+msgstr "Modelado de datos"
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"Our JSON Schemas act as a blueprint for your application's data models, "
+"ensuring consistency and correctness across different parts of your "
+"customers' systems."
+msgstr ""
+"Nuestros esquemas JSON funcionan como un plano para los modelos de datos de "
+"tu aplicación y garantizan la coherencia y la exactitud en las distintas "
+"partes de los sistemas de tus clientes."
+
+#: smarter/templates/docs/json-schemas.html
+msgid "Code Generation"
+msgstr "Generación de código"
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"Confidently and dynamically generate code for your data bindings, reducing "
+"the need to manually code data validations, and most importantly of all, "
+"reducing the potential for human error."
+msgstr ""
+"Genera con confianza y de forma dinámica el código de tus enlaces de datos, "
+"reduce la necesidad de programar validaciones a mano y, sobre todo, reduce la"
+" posibilidad de errores humanos."
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"Providing a clear specification of the JSON data format, which helps in "
+"understanding the structure and purpose of the data."
+msgstr ""
+"Ofrece una especificación clara del formato de datos JSON, que ayuda a "
+"entender la estructura y el propósito de los datos."
+
+#: smarter/templates/docs/json-schemas.html
+msgid "IDE Extension Development"
+msgstr "Desarrollo de extensiones para IDE"
+
+#: smarter/templates/docs/json-schemas.html
+msgid ""
+"Smarter JSON Schemas speed the development of IDE add-ons and extensions, "
+"like for VS Code for example. Use our JSON Schemas to create in-editor "
+"Smarter extensions for syntax auto-completion, tooltips, and error "
+"highlighting."
+msgstr ""
+"Los esquemas JSON de Smarter aceleran el desarrollo de complementos y "
+"extensiones para IDE, por ejemplo para VS Code. Usa nuestros esquemas JSON "
+"para crear extensiones de Smarter dentro del editor con autocompletado de "
+"sintaxis, información emergente y resaltado de errores."
+
+#: smarter/templates/docs/json-schemas.html
+msgid "smarter.sh/v1 JSON Schemas"
+msgstr "Esquemas JSON de smarter.sh/v1"
+
+#: smarter/templates/docs/manifests.html
+msgid "Smarter Manifests"
+msgstr "Manifiestos de Smarter"
+
+#: smarter/templates/docs/manifests.html
+msgid "A Human-to-Cloud Interface"
+msgstr "Una interfaz entre las personas y la nube"
+
+#: smarter/templates/docs/manifests.html
+msgid ""
+"In a word, cloud is <strong>COMPLICATED</strong>. Add data science, "
+"artificial intelligence and your customer's demands to that and, well, things"
+" get messy. Introduce Smarter Manifests: a better, simpler, cleaner way to "
+"manage your AI resources in the cloud. Smarter Manifests are very much "
+"inspired by Kubernetes manifests. In fact, we did everything in our power to "
+"make ours resemble theirs theirs in every way possible. Because, why mess "
+"with perfection?"
+msgstr ""
+"En una palabra, la nube es <strong>COMPLICADA</strong>. Súmale ciencia de "
+"datos, inteligencia artificial y las exigencias de tus clientes y, bueno, "
+"todo se enreda. Te presentamos los manifiestos de Smarter: una forma mejor, "
+"más simple y más limpia de administrar tus recursos de IA en la nube. Los "
+"manifiestos de Smarter están muy inspirados en los manifiestos de Kubernetes."
+" De hecho, hicimos todo lo posible para que los nuestros se parezcan a los "
+"suyos en todos los sentidos. Porque, ¿para qué cambiar algo perfecto?"
+
+#: smarter/templates/docs/manifests.html
+msgid "Anatomy of a Manifest Document"
+msgstr "Anatomía de un manifiesto"
+
+#: smarter/templates/docs/manifests.html
+msgid ""
+"A Smarter Manifest is a <a "
+"href=\"https://en.wikipedia.org/wiki/YAML\">YAML</a> document that describes "
+"a resource that makes up your AI solution. It has four main parts: "
+"<code>apiVersion</code>, <code>kind</code>, <code>spec</code> and "
+"<code>status</code>. Each of these section plays a specific role in the "
+"lifecycle of your AI resources. The <code>apiVersion</code> identifies the "
+"Manifest document to the Smarter API. The <code>kind</code> identifies the "
+"type of resource being described. The <code>spec</code> section contains the "
+"configuration of the resource. And lastly, the <code>status</code> section "
+"contains read-only data about the state of resource. Here is the layout of a "
+"generic Manifest:"
+msgstr ""
+"Un manifiesto de Smarter es un documento <a "
+"href=\"https://en.wikipedia.org/wiki/YAML\">YAML</a> que describe un recurso "
+"de tu solución de IA. Tiene cuatro partes principales: "
+"<code>apiVersion</code>, <code>kind</code>, <code>spec</code> y "
+"<code>status</code>. Cada una cumple un papel específico en el ciclo de vida "
+"de tus recursos de IA. <code>apiVersion</code> identifica el manifiesto ante "
+"la API de Smarter. <code>kind</code> identifica el tipo de recurso que se "
+"describe. La sección <code>spec</code> contiene la configuración del recurso."
+" Por último, la sección <code>status</code> contiene datos de solo lectura "
+"sobre el estado del recurso. Esta es la estructura de un manifiesto genérico:"
+
+#: smarter/templates/docs/manifests.html
+msgid ""
+"You use the Smarter CLI to apply your Manifests. The Smarter CLI reads your "
+"Manifests, and then creates and executes a work plan to create, update, or "
+"delete your AI resources, to synchronize the state of the resources in your "
+"account with those of your Manifest(s). It's a simple and powerful way to "
+"manage your AI cloud resources."
+msgstr ""
+"Usas la CLI de Smarter para aplicar tus manifiestos. La CLI de Smarter lee "
+"tus manifiestos y luego crea y ejecuta un plan de trabajo para crear, "
+"actualizar o eliminar tus recursos de IA, de modo que el estado de los "
+"recursos de tu cuenta coincida con el de tus manifiestos. Es una forma simple"
+" y poderosa de administrar tus recursos de IA en la nube."
+
+#: smarter/templates/docs/manifests.html
+msgid "Usage"
+msgstr "Uso"
+
+#: smarter/templates/docs/manifests.html
+msgid ""
+"Here's an example of how you would apply a Manifest using the Smarter CLI: "
+"<code>smarter apply -f my-manifest.yaml</code>"
+msgstr ""
+"Este es un ejemplo de cómo aplicar un manifiesto con la CLI de Smarter: "
+"<code>smarter apply -f my-manifest.yaml</code>"
+
+#: smarter/templates/docs/manifests.html
+msgid "Design, Train, Test, Deploy"
+msgstr "Diseña, entrena, prueba e implementa"
+
+#: smarter/templates/docs/manifests.html
+msgid ""
+"A Smarter Manifest describes, in a human-readle format, the resources that "
+"makeup your LLMClient solution. You use manifests to creates, manage, deploy,"
+" and destroy your AI resources. Manifests are simple text files in YAML "
+"format. Start with an example manifest, here or from the Smarter CLI. Tweak "
+"it to suit your needs. Then use the Smarter CLI to apply it. That's it! It "
+"doesn't get any simpler."
+msgstr ""
+"Un manifiesto de Smarter describe, en un formato legible para las personas, "
+"los recursos que conforman tu solución LLMClient. Usas los manifiestos para "
+"crear, administrar, implementar y destruir tus recursos de IA. Los "
+"manifiestos son archivos de texto simples en formato YAML. Empieza con un "
+"manifiesto de ejemplo, de aquí o de la CLI de Smarter. Ajústalo a tus "
+"necesidades. Luego aplícalo con la CLI de Smarter. ¡Eso es todo! No hay nada "
+"más simple."
+
+#: smarter/templates/docs/manifests.html
+msgid "There are nearly two dozen kinds of Smarter resources."
+msgstr "Hay casi dos docenas de tipos de recursos de Smarter."
+
+#: smarter/templates/docs/manifests.html
+msgid "smarter.sh/v1 Specification"
+msgstr "Especificación smarter.sh/v1"
+
+#: smarter/templates/docs/manifests.html
+msgid ""
+"We published technical specifications for all of our manifests, so that other"
+" platforms can adopt these, making your AI resources cross-platform "
+"compatible. Additionally, this opens up the potential for a marketplace of AI"
+" resources, where you can share your manifests with others, and where third "
+"party developers can create exciting new value-added services for the Smarter"
+" platform."
+msgstr ""
+"Publicamos especificaciones técnicas de todos nuestros manifiestos para que "
+"otras plataformas puedan adoptarlas y así tus recursos de IA sean compatibles"
+" entre plataformas. Además, esto abre la posibilidad de un mercado de "
+"recursos de IA, donde puedes compartir tus manifiestos con otras personas y "
+"donde desarrolladores externos pueden crear nuevos servicios de valor "
+"agregado para la plataforma Smarter."
+
+#: smarter/templates/docs/manifests.html
+msgid "Learn More"
+msgstr "Más información"
+
+#: smarter/templates/docs/openapi.html
+msgid "Smarter OpenAPI Contract"
+msgstr "Contrato OpenAPI de Smarter"
+
+#: smarter/templates/docs/openapi.html
+msgid ""
+"The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api,"
+" and the REST reads. Generate a client or an SDK from it, in any language. "
+"Authorize with an api key, as <code>Token &lt;api key&gt;</code>, to try the "
+"operations against this platform."
+msgstr ""
+"El documento OpenAPI 3.1 tipado de la API de Smarter: la API de la CLI, la "
+"API de chat y las lecturas REST. Genera a partir de él un cliente o un SDK, "
+"en cualquier lenguaje. Autorízate con una clave de API, como <code>Token "
+"&lt;api key&gt;</code>, para probar las operaciones en esta plataforma."
+
+#: smarter/templates/docs/openapi.html
+msgid "Download openapi.json"
+msgstr "Descargar openapi.json"
+
+#: smarter/templates/docs/openapi.html
+msgid "SAM JSON Schemas"
+msgstr "Esquemas JSON de SAM"
+
+#: smarter/templates/docs/openapi.html
+msgid "About the contract"
+msgstr "Acerca del contrato"
