@@ -11,7 +11,11 @@ Every signal has the arguments ``service``, the name of the service, e.g. ``dns`
 the name of the cloud provider, e.g. ``aws``, plus those listed.
 
 Resource signals also have ``resource_type``, e.g. ``dns.zone``, and ``resource_name``,
-e.g. ``example.com``, and ``resource_id`` once the provider has assigned one.
+e.g. ``example.com``, and ``resource_id`` once the provider has assigned one. The created and
+destroyed signals also have ``reconciled``, which is True when the inventory
+(:mod:`smarter.apps.infrastructure.services.inventory`) records a resource that it found, or
+found gone, e.g. a node that the cluster's autoscaler added, rather than one that a service
+created or destroyed.
 
 Example::
 
