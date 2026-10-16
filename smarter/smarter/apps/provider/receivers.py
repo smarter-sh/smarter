@@ -262,21 +262,21 @@ def log_provider_save(sender, instance: Provider, created: bool, **kwargs):
 
 @receiver(post_save, sender=ProviderModel)
 def provider_model_save(sender, instance: ProviderModel, created: bool, **kwargs):
-    """Log when a completion model is saved."""
+    """Log when a provider model, of any kind, e.g. a chat, embedding or speech model, is saved."""
     prefix = get_prefix("provider_model_save")
     # pylint: disable=W0212
     supports_fields = [f.name for f in instance._meta.fields if f.name.startswith("supports_")]
 
     # determine whether we need to run verifications
     if created:
-        logger.info("%s Created Completion Model: %s for Provider: %s", prefix, instance.name, instance.provider.name)
+        logger.info("%s Created ProviderModel: %s for Provider: %s", prefix, instance.name, instance.provider.name)
         model_verification_requested.send(
             sender=ProviderModel,
             instance=instance,
             provider=instance.provider,
         )
     else:
-        logger.info("%s Updated Completion Model: %s for Provider: %s", prefix, instance.name, instance.provider.name)
+        logger.info("%s Updated ProviderModel: %s for Provider: %s", prefix, instance.name, instance.provider.name)
         try:
             old_instance = sender.objects.get(pk=instance.pk)
             for field in supports_fields:

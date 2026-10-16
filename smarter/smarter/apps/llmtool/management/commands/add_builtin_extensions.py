@@ -3,6 +3,7 @@
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmtool.const import OFFICIAL_EXTENSIONS
 from smarter.apps.llmtool.extension import registry
+from smarter.apps.llmtool.extension.exceptions import SmarterExtensionInstallError
 from smarter.apps.llmtool.extension.installer import ExtensionInstaller
 from smarter.apps.llmtool.extension.manifest import ExtensionSettingType
 from smarter.apps.llmtool.models import Extension
@@ -15,7 +16,8 @@ class Command(SmarterCommand):
 
     help = (
         "Install, or update, the official Smarter Extensions from the registry, and enable those whose required "
-        "settings can be configured. Does nothing while the registry is disabled."
+        "settings can be configured. Does nothing while the registry is disabled. Exits with code 1 if an official "
+        "extension could not be installed and enabled, e.g. because it is not compatible with this platform."
     )
 
     def configure(self, installer: ExtensionInstaller, extension: Extension) -> None:
@@ -58,7 +60,10 @@ class Command(SmarterCommand):
             except Exception as e:
                 failed.append(f"{slug}: {e}")
         if failed:
-            self.stdout.write(
-                self.style.WARNING("Official extensions that were not installed and enabled:\n" + "\n".join(failed))
-            )
+            # the built-in LLMClients that use a missing official extension are skipped, so a deployment
+            # without one is broken: report every failure, then exit 1 so that the init job fails.
+            message = "Official extensions that were not installed and enabled:\n" + "\n".join(failed)
+            self.stdout.write(self.style.ERROR(message))
+            self.handle_completed_failure(err=SmarterExtensionInstallError(message))
+            return
         self.handle_completed_success()

@@ -871,7 +871,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
 
         try:
-            self.plugin.create()
+            # a plugin constructed with a manifest has already written itself.
+            if not self.plugin.persisted:
+                self.plugin.create()
         except Exception as e:
             logger.error(
                 "%s.apply() failed to create %s %s",
@@ -883,10 +885,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return self.json_response_err(command=command, e=e)
 
         if self.plugin.ready:
-            try:
-                self.plugin.save()
-            except Exception as e:
-                return self.json_response_err(command=command, e=e)
+            # create() wrote every row of the plugin, so there is nothing left to save.
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.command_result())
         try:

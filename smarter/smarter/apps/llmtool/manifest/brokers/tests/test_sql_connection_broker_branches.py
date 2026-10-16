@@ -62,9 +62,24 @@ class TestSqlConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
         broker._proxy_password_secret = cached
         self.assertIs(broker.proxy_password_secret, cached)
         broker._proxy_password_secret = None
+        manifest = MagicMock()
+        manifest.spec.connection.proxyPassword = "proxy_password"
+        self.patch_property("manifest", manifest)
         found = MagicMock()
         with patch(f"{MODULE}.Secret.objects.get", return_value=found):
             self.assertIs(broker.proxy_password_secret, found)
+
+    def test_proxy_password_secret_is_optional(self):
+        """A connection without a proxy has no proxy password Secret, which is not worth a warning."""
+        broker = self.broker
+        broker._proxy_password_secret = None
+        manifest = MagicMock()
+        manifest.spec.connection.proxyPassword = None
+        self.patch_property("manifest", manifest)
+        with patch(f"{MODULE}.Secret.objects.get") as get, patch(f"{MODULE}.logger") as logger:
+            self.assertIsNone(broker.proxy_password_secret)
+        get.assert_not_called()
+        logger.warning.assert_not_called()
 
     def test_connection_without_a_name(self):
         broker = self.broker

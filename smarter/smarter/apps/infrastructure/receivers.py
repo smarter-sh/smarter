@@ -105,13 +105,23 @@ def handle_billable_resource_created(
     sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs
 ):
     """Log that a billable resource was created, and record it in the ledger."""
-    logger.warning(
-        "%s created billable %s %s (%s)",
-        _prefix("billable_resource_created", service, provider),
-        resource_type,
-        resource_name,
-        resource_id,
-    )
+    if kwargs.get("reconciled"):
+        # the inventory found it, or found it gone: no service created it.
+        logger.info(
+            "%s found billable %s %s (%s), which already exists, and recorded it in the ledger",
+            _prefix("billable_resource_created", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
+    else:
+        logger.warning(
+            "%s created billable %s %s (%s)",
+            _prefix("billable_resource_created", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
     _record(True, service, provider, resource_type, resource_name, resource_id, billable=True)
 
 
@@ -134,39 +144,69 @@ def handle_billable_resource_destroyed(
     sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs
 ):
     """Log that a billable resource was destroyed, and record it in the ledger."""
-    logger.warning(
-        "%s destroyed billable %s %s (%s)",
-        _prefix("billable_resource_destroyed", service, provider),
-        resource_type,
-        resource_name,
-        resource_id,
-    )
+    if kwargs.get("reconciled"):
+        # the inventory found it, or found it gone: no service destroyed it.
+        logger.info(
+            "%s found that billable %s %s (%s) no longer exists, and recorded it in the ledger",
+            _prefix("billable_resource_destroyed", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
+    else:
+        logger.warning(
+            "%s destroyed billable %s %s (%s)",
+            _prefix("billable_resource_destroyed", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
     _record(False, service, provider, resource_type, resource_name, resource_id, billable=True)
 
 
 @receiver(resource_created, dispatch_uid="infrastructure_resource_created")
 def handle_resource_created(sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs):
     """Log that a resource was created or updated, and record it in the ledger."""
-    logger.info(
-        "%s created %s %s (%s)",
-        _prefix("resource_created", service, provider),
-        resource_type,
-        resource_name,
-        resource_id,
-    )
+    if kwargs.get("reconciled"):
+        # the inventory found it, or found it gone: no service created it.
+        logger.info(
+            "%s found %s %s (%s), which already exists, and recorded it in the ledger",
+            _prefix("resource_created", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
+    else:
+        logger.info(
+            "%s created %s %s (%s)",
+            _prefix("resource_created", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
     _record(True, service, provider, resource_type, resource_name, resource_id, billable=False)
 
 
 @receiver(resource_destroyed, dispatch_uid="infrastructure_resource_destroyed")
 def handle_resource_destroyed(sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs):
     """Log that a resource was destroyed, and record it in the ledger."""
-    logger.info(
-        "%s destroyed %s %s (%s)",
-        _prefix("resource_destroyed", service, provider),
-        resource_type,
-        resource_name,
-        resource_id,
-    )
+    if kwargs.get("reconciled"):
+        # the inventory found it, or found it gone: no service destroyed it.
+        logger.info(
+            "%s found that %s %s (%s) no longer exists, and recorded it in the ledger",
+            _prefix("resource_destroyed", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
+    else:
+        logger.info(
+            "%s destroyed %s %s (%s)",
+            _prefix("resource_destroyed", service, provider),
+            resource_type,
+            resource_name,
+            resource_id,
+        )
     _record(False, service, provider, resource_type, resource_name, resource_id, billable=False)
 
 

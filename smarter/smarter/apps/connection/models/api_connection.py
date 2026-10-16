@@ -143,10 +143,15 @@ class ApiConnection(ConnectionBase):
             return False
 
     def test_connection(self) -> bool:
-        """Test the API connection by making a simple GET request to the root domain."""
+        """
+        Report the API connection as working, without testing it.
+
+        An api's root path is rarely a meaningful endpoint, so a request to it would not show
+        whether the plugin's endpoints work. This is called whenever the connection is saved.
+        """
         try:
-            logger.warning(
-                "%s.test_connection() called for %s with auth method %s but we didn't actually test it.",
+            logger.debug(
+                "%s.test_connection() assumes that %s, with auth method %s, works: it is not tested.",
                 self.formatted_class_name,
                 self.name,
                 self.auth_method,

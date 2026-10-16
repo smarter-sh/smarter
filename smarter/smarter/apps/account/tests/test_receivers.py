@@ -82,3 +82,18 @@ class TestUserProfileReceivers(TestAccountMixin):
         self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [user_profile])
         user_profile.delete()
         self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [])
+
+
+class TestAccountPostSave(TestAccountMixin):
+    """Test that account_post_save() logs the Account without its contact details, which are personal data."""
+
+    def test_contact_details_are_not_logged(self):
+        self.account.phone_number = "+1 (555) 010-0199"
+        self.account.address1 = "1 Logging Lane"
+        self.account.postal_code = "00000"
+        with patch("smarter.apps.account.receivers.logger") as logger:
+            self.account.save()
+        logged = " ".join(str(arg) for call in logger.mock_calls for arg in call.args)
+        self.assertIn(self.account.account_number, logged)
+        for value in (self.account.phone_number, self.account.address1, self.account.postal_code):
+            self.assertNotIn(value, logged)
