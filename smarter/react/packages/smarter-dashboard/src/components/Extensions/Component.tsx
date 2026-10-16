@@ -5,7 +5,7 @@
  * that add tools to a platform's LLMs, installed by superusers from the
  * signed Smarter Extension registry without a redeploy, and listed in an
  * LLMClient's ``spec.extensions``. It shows the three official extensions
- * with their trust badge, a manifest that uses one, and links to the
+ * with their trust badge and a link to its GitHub repository, a manifest that uses one, and links to the
  * documentation, the registry, and the guide to building an extension.
  *
  * :returns: A JSX fragment containing the Extensions widget.
@@ -99,17 +99,24 @@ function Extensions() {
             <div className="col-md-6">
               <ul className="extensions-list" aria-label="Official extensions">
                 {EXTENSIONS.map((extension) => (
-                  <li key={extension.slug} className="extensions-item">
-                    <span className="extensions-icon">
-                      <i className={`ki-outline ${extension.icon} fs-2`}></i>
-                    </span>
-                    <span className="extensions-text">
-                      <span className="extensions-name">
-                        {extension.name}
-                        <span className="extensions-badge">Official</span>
+                  <li key={extension.slug}>
+                    <a
+                      href={`https://github.com/smarter-sh/smarter-extension-${extension.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="extensions-item"
+                    >
+                      <span className="extensions-icon">
+                        <i className={`ki-outline ${extension.icon} fs-2`}></i>
                       </span>
-                      <span className="extensions-description">{extension.description}</span>
-                    </span>
+                      <span className="extensions-text">
+                        <span className="extensions-name">
+                          {extension.name}
+                          <span className="extensions-badge">Official</span>
+                        </span>
+                        <span className="extensions-description">{extension.description}</span>
+                      </span>
+                    </a>
                   </li>
                 ))}
               </ul>
