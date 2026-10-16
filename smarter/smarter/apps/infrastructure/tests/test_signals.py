@@ -186,6 +186,21 @@ class TestReceivers(InfrastructureTestBase):
             self.send(email_failed, subject="s", recipients=["a@example.com"], error="e")
             self.assertEqual(logger.error.call_count, 4)
 
+    def test_reconciled_is_logged_as_found(self):
+        """A resource that the inventory found, or found gone, is logged as info, and still recorded."""
+        with patch(f"{RECEIVERS}.logger") as logger:
+            for signal, name in ((billable_resource_created, "node-billable"), (resource_created, "node-free")):
+                self.send(signal, reconciled=True, resource_type="kubernetes.node", resource_name=name, resource_id="i")
+            for signal, name in ((billable_resource_destroyed, "node-billable"), (resource_destroyed, "node-free")):
+                self.send(signal, reconciled=True, resource_type="kubernetes.node", resource_name=name, resource_id="i")
+        logger.warning.assert_not_called()
+        self.assertEqual(logger.info.call_count, 4)
+        messages = [c.args[0] for c in logger.info.call_args_list]
+        self.assertTrue(all("found" in m and "created" not in m and "destroyed" not in m for m in messages))
+        for name, billable in (("node-billable", True), ("node-free", False)):
+            row = InfrastructureResource.objects.get(provider="test", resource_name=name)
+            self.assertEqual((row.status, row.billable), (InfrastructureResource.Status.DESTROYED, billable))
+
 
 class TestAdmin(InfrastructureTestBase):
     """Test that the ledger is in the admin, read-only."""

@@ -66,6 +66,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": INFRASTRUCTURE,
     },
+    "delete-orphan-dns-records": {
+        "task": "smarter.apps.llmclient.tasks.delete_orphan_dns_records.delete_orphan_dns_records",
+        "schedule": timedelta(days=1),
+        "options": INFRASTRUCTURE,
+    },
     "sync-infrastructure-inventory": {
         "task": "smarter.apps.infrastructure.tasks.sync_infrastructure_inventory",
         "schedule": timedelta(minutes=15),

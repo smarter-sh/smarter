@@ -24,6 +24,7 @@ from smarter.apps.infrastructure.services.inventory import (
 from smarter.apps.infrastructure.signals import (
     billable_resource_created,
     billable_resource_destroyed,
+    billable_resource_destroying,
     resource_created,
     resource_destroyed,
 )
@@ -218,6 +219,18 @@ class TestSyncInventory(InventoryTestBase):
         self.assertEqual(
             free, {"kubernetes.addon", "kubernetes.nodegroup", "kubernetes.ingress", "kubernetes.certificate"}
         )
+
+    def test_sync_signals_are_reconciled(self):
+        """The ledger catching up with the cluster is not a service creating or destroying something."""
+        events = self.capture(billable_resource_created, resource_created)
+        sync_inventory()
+        self.assertTrue(events)
+        self.assertTrue(all(kwargs["reconciled"] for _, kwargs in events))
+        events = self.capture(billable_resource_destroying, billable_resource_destroyed, resource_destroyed)
+        self.kubernetes.items["node"] = []
+        sync_inventory()
+        self.assertEqual(self.sent(events, billable_resource_destroying), [])
+        self.assertTrue(self.sent(events, billable_resource_destroyed)[0]["reconciled"])
 
     def test_sync_is_idempotent(self):
         sync_inventory()

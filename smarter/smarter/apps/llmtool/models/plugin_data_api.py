@@ -238,12 +238,12 @@ class PluginDataApi(PluginDataBase):
                 ) from e
 
     def validate_all_placeholders_in_parameters(self) -> None:
-        """Validate that all placeholders in the SQL query string are present in the parameters."""
+        """Validate that all placeholders in the endpoint, e.g. ``{city}`` in ``v1/weather/{city}/``, are parameters."""
         placeholders = re.findall(r"{(.*?)}", self.endpoint) or []
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
-        logger.info(
-            "%s.validate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
+        logger.debug(
+            "%s.validate_all_placeholders_in_parameters() Validating the placeholders of the endpoint: %s\n properties: %s, placeholders: %s",
             self.formatted_class_name,
             self.endpoint,
             properties,

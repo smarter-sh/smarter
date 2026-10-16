@@ -216,11 +216,15 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
     UserProfile.get_cached_objects(invalidate=True, user=user)
 
 
+# an Account's contact details are personal data, which the logs must not hold.
+ACCOUNT_CONTACT_FIELDS = ("phone_number", "address1", "address2", "city", "state", "postal_code")
+
+
 @receiver(post_save, sender=Account)
 def account_post_save(sender: Account, instance: Account, created, **kwargs):
     """Signal receiver for created/saved of Account model."""
     model_prefix = logging.formatted_text(f"{module_prefix}.account_post_save()")
-    account_json = json.dumps(model_to_dict(instance))
+    account_json = json.dumps(model_to_dict(instance, exclude=ACCOUNT_CONTACT_FIELDS))
     if created:
         logger.info("%s Account created: %s", model_prefix, account_json)
     else:
