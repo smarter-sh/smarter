@@ -102,7 +102,7 @@ project = "Smarter Documentation"
 # pylint: disable=redefined-builtin
 copyright = f"2023 - {datetime.now().year}"
 author = AUTHOR
-release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0", "--always"], text=True).strip()
 
 
 try:
