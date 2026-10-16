@@ -542,7 +542,7 @@ snowballstemmer==3.1.1
     # via sphinx
 social-auth-app-django==6.1.0
     # via -r smarter/requirements/in/base.in
-social-auth-core==5.2.0
+social-auth-core==5.0.2
     # via social-auth-app-django
 soupsieve==2.10
     # via beautifulsoup4
