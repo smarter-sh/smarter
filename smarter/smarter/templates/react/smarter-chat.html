@@ -1,5 +1,5 @@
 {% extends "dashboard/base.html" %}
-{% load static %}
+{% load static i18n %}
 {% load react_smarter_chat %}
 
 {% block style_extra %}
@@ -19,7 +19,7 @@
 {% block dashboard_content %}
   {{ block.super }}
 
-  <section aria-label="Chat with your AI assistant" class="smarter-chat-section">
+  <section aria-label="{% translate "Chat with your AI assistant" %}" class="smarter-chat-section">
     <div
       id="{{ smarter_chat.root_id }}"
       style="height: 88vh;"

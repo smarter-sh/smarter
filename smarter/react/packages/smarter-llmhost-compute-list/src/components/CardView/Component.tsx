@@ -25,6 +25,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: LLMHostComputeCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -49,27 +50,27 @@ function CardView({ sessionContext, objects, onRequery }: LLMHostComputeCardView
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", compute.id, "number")}
-                    {renderDetailRow("Description", compute.description)}
-                    {renderDetailRow("Instance Type", compute.instanceType)}
-                    {renderDetailRow("GPUs", formatGpus(compute))}
-                    {renderDetailRow("CPU and Memory", formatCpuMemory(compute))}
-                    {renderDetailRow("Price per Node", formatPrice(compute))}
-                    {renderDetailRow("Node Group", compute.nodegroupName)}
-                    {renderDetailRow("Node Group Status", compute.nodegroupStatus)}
-                    {renderDetailRow("Nodes", formatNodes(compute))}
-                    {renderDetailRow("Status Message", compute.statusMessage)}
-                    {renderDetailRow("Last Reconciled", compute.lastReconciledAt, "dateTime")}
-                    {renderDetailRow("LLMHosts", compute.llmhostCount, "number")}
-                    {renderDetailRow("Manifest URL", compute.manifestUrl, "url")}
-                    {renderDetailRow("Owner", compute.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", compute.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", compute.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", compute.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", compute.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", compute.version)}
-                    {renderDetailRow("Tags", compute.tags, "str[]")}
-                    {renderDetailRow("Annotations", compute.annotations, "json")}
+                    {renderDetailRow(gettext("ID"), compute.id, "number")}
+                    {renderDetailRow(gettext("Description"), compute.description)}
+                    {renderDetailRow(gettext("Instance Type"), compute.instanceType)}
+                    {renderDetailRow(gettext("GPUs"), formatGpus(compute))}
+                    {renderDetailRow(gettext("CPU and Memory"), formatCpuMemory(compute))}
+                    {renderDetailRow(gettext("Price per Node"), formatPrice(compute))}
+                    {renderDetailRow(gettext("Node Group"), compute.nodegroupName)}
+                    {renderDetailRow(gettext("Node Group Status"), compute.nodegroupStatus)}
+                    {renderDetailRow(gettext("Nodes"), formatNodes(compute))}
+                    {renderDetailRow(gettext("Status Message"), compute.statusMessage)}
+                    {renderDetailRow(gettext("Last Reconciled"), compute.lastReconciledAt, "dateTime")}
+                    {renderDetailRow(gettext("LLMHosts"), compute.llmhostCount, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), compute.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), compute.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), compute.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), compute.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), compute.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), compute.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), compute.version)}
+                    {renderDetailRow(gettext("Tags"), compute.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), compute.annotations, "json")}
                   </tbody>
                 </table>
               </div>

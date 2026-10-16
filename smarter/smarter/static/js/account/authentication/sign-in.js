@@ -28,17 +28,17 @@ var KTSigninGeneral = (function () {
           validators: {
             regexp: {
               regexp: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "The value is not a valid email address",
+              message: gettext("The value is not a valid email address"),
             },
             notEmpty: {
-              message: "Email address is required",
+              message: gettext("Email address is required"),
             },
           },
         },
         password: {
           validators: {
             notEmpty: {
-              message: "The password is required",
+              message: gettext("The password is required"),
             },
           },
         },
@@ -93,10 +93,10 @@ var KTSigninGeneral = (function () {
                 }
                 if (response.status === 401) {
                   var div = document.querySelector("#error-message");
-                  div.innerHTML = "incorrect username or password.";
+                  div.textContent = gettext("incorrect username or password.");
                 } else if (response.status === 403) {
                   var div = document.querySelector("#error-message");
-                  div.innerHTML = "user not found.";
+                  div.textContent = gettext("user not found.");
                 } else {
                   throw new Error(`HTTP error status: ${response.status}`);
                 }
@@ -108,10 +108,10 @@ var KTSigninGeneral = (function () {
         } else {
           // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
           Swal.fire({
-            text: "Sorry, looks like there are some errors detected, please try again.",
+            text: gettext("Sorry, looks like there are some errors detected, please try again."),
             icon: "error",
             buttonsStyling: false,
-            confirmButtonText: "Ok, got it!",
+            confirmButtonText: gettext("Ok, got it!"),
             customClass: {
               confirmButton: "btn btn-primary",
             },

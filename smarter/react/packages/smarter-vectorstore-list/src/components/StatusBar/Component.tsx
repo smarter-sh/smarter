@@ -11,6 +11,7 @@
  */
 import type { Vectorstore } from "@/lib/Types";
 import { STATUS_BADGES } from "@/lib/format";
+import { gettext, interpolate } from "@smarter/common";
 
 interface StatusbarProps {
   vectorstore: Vectorstore;
@@ -26,19 +27,28 @@ export const StatusBar = ({ vectorstore }: StatusbarProps) => {
         {badge.label}
       </span>
       {!vectorstore.isActive && (
-        <span className="status-icon" title="Inactive: it may not be used.">
+        <span className="status-icon" title={gettext("Inactive: it may not be used.")}>
           <i className="bi bi-pause-circle text-secondary" />
         </span>
       )}
       {vectorstore.deletionProtection && (
-        <span className="status-icon" title="Deletion protection: its database cannot be destroyed.">
+        <span className="status-icon" title={gettext("Deletion protection: its database cannot be destroyed.")}>
           <i className="bi bi-shield-lock text-primary" />
         </span>
       )}
       {maintenance.snapshots !== false && (
         <span
           className="status-icon"
-          title={`Scheduled snapshots: ${vectorstore.snapshotCount} kept${vectorstore.lastSnapshotAt ? `, the last at ${vectorstore.lastSnapshotAt}` : ""}.`}
+          title={
+            vectorstore.lastSnapshotAt
+              ? interpolate(gettext("Scheduled snapshots: %(snapshotCount)s kept, the last at %(lastSnapshotAt)s."), {
+                  snapshotCount: vectorstore.snapshotCount,
+                  lastSnapshotAt: vectorstore.lastSnapshotAt,
+                })
+              : interpolate(gettext("Scheduled snapshots: %(snapshotCount)s kept."), {
+                  snapshotCount: vectorstore.snapshotCount,
+                })
+          }
         >
           <i className="bi bi-clock-history text-info" />
         </span>

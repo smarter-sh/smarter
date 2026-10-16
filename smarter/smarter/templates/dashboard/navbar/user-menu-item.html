@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 <div class="app-navbar-item ms-2 ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
   <!--begin::Menu wrapper-->
@@ -28,11 +28,11 @@
           <div class="fw-bold d-flex align-items-center fs-5">
             {{ dashboard.username }} {% if dashboard.is_superuser %}
             <span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2"
-              >Superuser</span
+              >{% translate "Superuser" %}</span
             >
             {% else %} {% if dashboard.is_staff %}
             <span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2"
-              >Staff</span
+              >{% translate "Staff" %}</span
             >
             {% endif %} {% endif %}
           </div>
@@ -50,7 +50,12 @@
     <!--begin::Menu separator-->
     <div class="separator my-2"></div>
     <!--end::Menu separator-->
-    <!--begin::Menu item-->
+    {% get_current_language as CURRENT_LANGUAGE %}
+    {% get_available_languages as AVAILABLE_LANGUAGES %}
+    {% get_language_info_list for AVAILABLE_LANGUAGES as languages %}
+    {% if languages|length > 1 %}
+    {% get_language_info for CURRENT_LANGUAGE as current_language %}
+    <!--begin::Menu item Language: lists settings.LANGUAGES, each in its own name, and posts the choice to set_language-->
     <div
       class="menu-item px-5"
       data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
@@ -59,52 +64,41 @@
     >
       <a href="#" class="menu-link px-5">
         <span class="menu-title position-relative"
-          >Language
+          >{% translate "Language" %}
           <span
             class="fs-8 rounded bg-light px-3 py-2 position-absolute translate-middle-y top-50 end-0"
-            >English
-            <img
-              class="w-15px h-15px rounded-1 ms-2"
-              src="{% static 'assets/media/flags/united-states.svg' %}"
-              alt="" /></span
+            lang="{{ current_language.code }}"
+            >{{ current_language.name_local|capfirst }}</span
         ></span>
       </a>
       <!--begin::Menu sub-->
       <div class="menu-sub menu-sub-dropdown w-175px py-4">
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a href="#" class="menu-link d-flex px-5 active">
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                src="{% static 'assets/media/flags/united-states.svg' %}"
-                alt=""
-              /> </span
-            >English</a
-          >
-        </div>
-        <!--end::Menu item-->
-        <!--begin::Menu item-->
-        <div class="menu-item px-3">
-          <a href="#" class="menu-link d-flex px-5">
-            <span class="symbol symbol-20px me-4">
-              <img
-                class="rounded-1"
-                src="{% static 'assets/media/flags/mexico.svg' %}"
-                alt=""
-              /> </span
-            >Spanish</a
-          >
-        </div>
-        <!--end::Menu item-->
+        <form action="{% url 'set_language' %}" method="post">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+          {% for language in languages %}
+          <div class="menu-item px-3">
+            <button
+              type="submit"
+              name="language"
+              value="{{ language.code }}"
+              lang="{{ language.code }}"
+              class="menu-link d-flex px-5 w-100 border-0 bg-transparent{% if language.code == current_language.code %} active{% endif %}"
+            >
+              {{ language.name_local|capfirst }}
+            </button>
+          </div>
+          {% endfor %}
+        </form>
       </div>
       <!--end::Menu sub-->
     </div>
-    <!--end::Menu item-->
+    <!--end::Menu item Language-->
+    {% endif %}
     <!--begin::Menu item-->
     <div class="menu-item px-5 my-1">
       <a href="/dashboard/account/dashboard/settings/" class="menu-link px-5"
-        >Account Settings</a
+        >{% translate "Account Settings" %}</a
       >
     </div>
     <!--end::Menu item-->
@@ -112,13 +106,13 @@
     {% if user.is_authenticated %}
     <div class="menu-item px-5">
       <a href="{{ account_authentication.logout_url }}" class="menu-link px-5"
-        >Sign Out</a
+        >{% translate "Sign Out" %}</a
       >
     </div>
     {% else %}
     <div class="menu-item px-5">
       <a href="{{ account_authentication.login_url }}" class="menu-link px-5"
-        >Sign In</a
+        >{% translate "Sign In" %}</a
       >
     </div>
     {% endif %}

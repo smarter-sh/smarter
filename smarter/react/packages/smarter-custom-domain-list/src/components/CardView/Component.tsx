@@ -21,6 +21,7 @@ import { StatusBar, VerificationBadge } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: CustomDomainCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -46,27 +47,27 @@ function CardView({ sessionContext, objects, onRequery }: CustomDomainCardViewPr
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", customDomain.id, "number")}
-                    {renderDetailRow("Manifest URL", customDomain.manifestUrl, "url")}
-                    {renderDetailRow("Owner", customDomain.userProfile?.user?.username)}
-                    {renderDetailRow("Account Number", customDomain.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Domain", customDomain.domainName)}
-                    {renderDetailRow("Verification Status", customDomain.verificationStatus)}
-                    {renderDetailRow("Verified", customDomain.verifiedAt, "dateTime")}
-                    {renderDetailRow("Verification Message", customDomain.verificationMessage)}
-                    {renderDetailRow("AWS Hosted Zone ID", customDomain.awsHostedZoneId)}
-                    {renderDetailRow("LLMClient", customDomain.llmclient?.name)}
-                    {renderDetailRow("LLMClient Owner", customDomain.llmclient?.owner)}
-                    {renderDetailRow("LLMClient Deployed", customDomain.llmclient?.deployed, "bool")}
-                    {renderDetailRow("LLMClient URL", customDomain.llmclient?.url, "url")}
-                    {renderDetailRow("Created", customDomain.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", customDomain.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", customDomain.version)}
-                    {renderDetailRow("Description", customDomain.description)}
-                    {renderDetailRow("Tags", customDomain.tags, "str[]")}
-                    {renderDetailRow("Annotations", customDomain.annotations, "json")}
+                    {renderDetailRow(gettext("ID"), customDomain.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), customDomain.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), customDomain.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Account Number"), customDomain.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Domain"), customDomain.domainName)}
+                    {renderDetailRow(gettext("Verification Status"), customDomain.verificationStatus)}
+                    {renderDetailRow(gettext("Verified"), customDomain.verifiedAt, "dateTime")}
+                    {renderDetailRow(gettext("Verification Message"), customDomain.verificationMessage)}
+                    {renderDetailRow(gettext("AWS Hosted Zone ID"), customDomain.awsHostedZoneId)}
+                    {renderDetailRow(gettext("LLMClient"), customDomain.llmclient?.name)}
+                    {renderDetailRow(gettext("LLMClient Owner"), customDomain.llmclient?.owner)}
+                    {renderDetailRow(gettext("LLMClient Deployed"), customDomain.llmclient?.deployed, "bool")}
+                    {renderDetailRow(gettext("LLMClient URL"), customDomain.llmclient?.url, "url")}
+                    {renderDetailRow(gettext("Created"), customDomain.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), customDomain.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), customDomain.version)}
+                    {renderDetailRow(gettext("Description"), customDomain.description)}
+                    {renderDetailRow(gettext("Tags"), customDomain.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), customDomain.annotations, "json")}
                     {renderDetailRow(
-                      "DNS Records",
+                      gettext("DNS Records"),
                       customDomain.dnsRecords?.map(
                         (record) => `${record.name} ${record.ttl ?? ""} ${record.type} ${record.value}`,
                       ),

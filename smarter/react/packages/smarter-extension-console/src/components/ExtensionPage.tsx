@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { formatDateTime } from "@smarter/common";
+import { formatDateTime, gettext, interpolate, interpolateNodes } from "@smarter/common";
 
 import { Documentation, Fact, Notice, Spinner, TrustBadge } from "@/components/common";
 import type { NoticeState } from "@/components/common";
@@ -16,12 +16,12 @@ import type { AccountRef, ActionResponse, ConsoleContext, ExtensionDetail } from
 type Tab = "overview" | "tools" | "settings" | "availability" | "versions" | "resources";
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: "overview", label: "Overview" },
-  { key: "tools", label: "Tools" },
-  { key: "settings", label: "Settings" },
-  { key: "availability", label: "Availability" },
-  { key: "versions", label: "Versions" },
-  { key: "resources", label: "Resources" },
+  { key: "overview", label: gettext("Overview") },
+  { key: "tools", label: gettext("Tools") },
+  { key: "settings", label: gettext("Settings") },
+  { key: "availability", label: gettext("Availability") },
+  { key: "versions", label: gettext("Versions") },
+  { key: "resources", label: gettext("Resources") },
 ];
 
 type Props = {
@@ -81,7 +81,12 @@ export default function ExtensionPage({
 
   const uninstall = async () => {
     if (!extension) return;
-    const question = `Uninstall ${extension.displayName}? Its settings, versions, waffle switches and the resources it created are deleted, and every LLMClient that lists it stops offering its tools.`;
+    const question = interpolate(
+      gettext(
+        "Uninstall %(displayName)s? Its settings, versions, waffle switches and the resources it created are deleted, and every LLMClient that lists it stops offering its tools.",
+      ),
+      { displayName: extension.displayName },
+    );
     if (!confirm(question)) return;
     const result = await run("uninstall", () => api.uninstall(context, slug));
     if (result) navigate(context.listUrl);
@@ -91,7 +96,11 @@ export default function ExtensionPage({
     return (
       <section className="mt-5 mb-5 container" id="extension-page">
         <Notice notice={notice} onClose={() => setNotice(null)} />
-        {loadFailed ? <a href={context.listUrl}>Back to Extensions</a> : <p className="text-muted">Loading...</p>}
+        {loadFailed ? (
+          <a href={context.listUrl}>{gettext("Back to Extensions")}</a>
+        ) : (
+          <p className="text-muted">{gettext("Loading...")}</p>
+        )}
       </section>
     );
   }
@@ -100,16 +109,20 @@ export default function ExtensionPage({
     <section className="mt-5 mb-5 container" id="extension-page">
       <a href={context.listUrl} className="text-muted fs-7">
         <i className="ki-outline ki-arrow-left fs-6 me-1" />
-        Extensions
+        {gettext("Extensions")}
       </a>
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-3 mb-5">
         <div>
           <h1 className="fs-2 fw-bold mb-1">{extension.displayName}</h1>
           <div className="d-flex flex-wrap align-items-center gap-2 text-muted">
-            <span>{extension.installedVersion ? `Version ${extension.installedVersion}` : "Not installed"}</span>
+            <span>
+              {extension.installedVersion
+                ? interpolate(gettext("Version %(installedVersion)s"), { installedVersion: extension.installedVersion })
+                : gettext("Not installed")}
+            </span>
             <TrustBadge badge={extension.trustBadge} label={extension.trustBadgeLabel} />
             <span className={`badge ${extension.enabled ? "badge-light-success" : "badge-light"}`}>
-              {extension.enabled ? "Enabled" : "Disabled"}
+              {extension.enabled ? gettext("Enabled") : gettext("Disabled")}
             </span>
           </div>
         </div>
@@ -119,7 +132,9 @@ export default function ExtensionPage({
           disabled={busy !== null || (!extension.enabled && extension.missingSettings.length > 0)}
           title={
             !extension.enabled && extension.missingSettings.length > 0
-              ? `Configure ${extension.missingSettings.join(", ")} first.`
+              ? interpolate(gettext("Configure %(missingSettings)s first."), {
+                  missingSettings: extension.missingSettings.join(", "),
+                })
               : undefined
           }
           onClick={() =>
@@ -127,7 +142,7 @@ export default function ExtensionPage({
           }
         >
           {busy === "toggle" ? <Spinner /> : null}
-          {extension.enabled ? "Disable" : "Enable"}
+          {extension.enabled ? gettext("Disable") : gettext("Enable")}
         </button>
       </div>
 
@@ -135,8 +150,14 @@ export default function ExtensionPage({
       {extension.updateAvailable ? (
         <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-3">
           <span>
-            Version {extension.latestVersion} of {extension.displayName} is available. You have{" "}
-            {extension.installedVersion}.
+            {interpolateNodes(
+              gettext("Version %(latestVersion)s of %(displayName)s is available. You have %(installedVersion)s."),
+              {
+                latestVersion: extension.latestVersion,
+                displayName: extension.displayName,
+                installedVersion: extension.installedVersion,
+              },
+            )}
           </span>
           <button
             type="button"
@@ -144,18 +165,24 @@ export default function ExtensionPage({
             disabled={busy !== null}
             onClick={() => void run("update", () => api.update(context, slug))}
           >
-            {busy === "update" ? <Spinner label="Updating" /> : null}
-            Update to {extension.latestVersion}
+            {busy === "update" ? <Spinner label={gettext("Updating")} /> : null}
+            {interpolateNodes(gettext("Update to %(latestVersion)s"), { latestVersion: extension.latestVersion })}
           </button>
         </div>
       ) : null}
       {extension.error ? <div className="alert alert-danger">{extension.error}</div> : null}
       {extension.loadError ? (
-        <div className="alert alert-danger">The extension's code does not load: {extension.loadError}</div>
+        <div className="alert alert-danger">
+          {interpolateNodes(gettext("The extension's code does not load: %(loadError)s"), {
+            loadError: extension.loadError,
+          })}
+        </div>
       ) : null}
       {!extension.enabled && extension.missingSettings.length > 0 ? (
         <div className="alert alert-info">
-          Configure {extension.missingSettings.join(", ")} on the Settings tab, then enable the extension.
+          {interpolateNodes(gettext("Configure %(missingSettings)s on the Settings tab, then enable the extension."), {
+            missingSettings: extension.missingSettings.join(", "),
+          })}
         </div>
       ) : null}
 
@@ -201,7 +228,14 @@ export default function ExtensionPage({
           extension={extension}
           busy={busy}
           onRollback={(versionId, version) => {
-            if (confirm(`Roll ${extension.displayName} back to version ${version}?`))
+            if (
+              confirm(
+                interpolate(gettext("Roll %(displayName)s back to version %(version)s?"), {
+                  displayName: extension.displayName,
+                  version,
+                }),
+              )
+            )
               void run(`rollback:${versionId}`, () => api.rollback(context, slug, versionId));
           }}
         />
@@ -211,9 +245,11 @@ export default function ExtensionPage({
       <div className="card card-bordered border-danger mt-10">
         <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
           <div>
-            <h2 className="fs-5 fw-bold text-danger mb-1">Uninstall</h2>
+            <h2 className="fs-5 fw-bold text-danger mb-1">{gettext("Uninstall")}</h2>
             <p className="text-muted mb-0">
-              Deletes the extension, its settings and versions, and the waffle switches and resources it created.
+              {gettext(
+                "Deletes the extension, its settings and versions, and the waffle switches and resources it created.",
+              )}
             </p>
           </div>
           <button
@@ -222,8 +258,8 @@ export default function ExtensionPage({
             disabled={busy !== null}
             onClick={() => void uninstall()}
           >
-            {busy === "uninstall" ? <Spinner label="Uninstalling" /> : null}
-            Uninstall {extension.displayName}
+            {busy === "uninstall" ? <Spinner label={gettext("Uninstalling")} /> : null}
+            {interpolateNodes(gettext("Uninstall %(displayName)s"), { displayName: extension.displayName })}
           </button>
         </div>
       </div>
@@ -236,23 +272,23 @@ function Overview({ extension }: { extension: ExtensionDetail }) {
   return (
     <>
       <dl className="row mb-8">
-        <Fact label="Slug">
+        <Fact label={gettext("Slug")}>
           <code>{extension.slug}</code>
         </Fact>
-        <Fact label="Publisher">{extension.publisher || "Unknown"}</Fact>
-        <Fact label="Source">
-          {extension.source === "registry" ? "The Smarter Extension registry" : "An uploaded archive"}
+        <Fact label={gettext("Publisher")}>{extension.publisher || gettext("Unknown")}</Fact>
+        <Fact label={gettext("Source")}>
+          {extension.source === "registry" ? gettext("The Smarter Extension registry") : gettext("An uploaded archive")}
         </Fact>
-        {extension.license ? <Fact label="License">{extension.license}</Fact> : null}
+        {extension.license ? <Fact label={gettext("License")}>{extension.license}</Fact> : null}
         {extension.homepage ? (
-          <Fact label="Homepage">
+          <Fact label={gettext("Homepage")}>
             <a href={extension.homepage} target="_blank" rel="noopener noreferrer">
               {extension.homepage}
             </a>
           </Fact>
         ) : null}
         {extension.latestCheckedAt ? (
-          <Fact label="Updates checked">{formatDateTime(extension.latestCheckedAt, "date")}</Fact>
+          <Fact label={gettext("Updates checked")}>{formatDateTime(extension.latestCheckedAt, "date")}</Fact>
         ) : null}
       </dl>
       <Documentation html={extension.docsHtml} />
@@ -265,7 +301,7 @@ function Tools({ extension }: { extension: ExtensionDetail }) {
   if (extension.tools.length === 0)
     return (
       <p className="text-muted">
-        {extension.loadError ? "The tools can't be listed." : "This extension has no tools."}
+        {extension.loadError ? gettext("The tools can't be listed.") : gettext("This extension has no tools.")}
       </p>
     );
   return (
@@ -278,7 +314,7 @@ function Tools({ extension }: { extension: ExtensionDetail }) {
             </h3>
             <p className="text-gray-700">{tool.description}</p>
             <details>
-              <summary className="text-primary">Parameters</summary>
+              <summary className="text-primary">{gettext("Parameters")}</summary>
               <pre className="bg-light p-4 rounded mt-2 fs-7">{JSON.stringify(tool.parameters, null, 2)}</pre>
             </details>
           </div>
@@ -345,7 +381,7 @@ function Availability({
           onChange={() => setAllAccounts(true)}
         />
         <label className="form-check-label" htmlFor="availability-all">
-          Every account may use it
+          {gettext("Every account may use it")}
         </label>
       </div>
       <div className="form-check mb-5">
@@ -358,20 +394,20 @@ function Availability({
           onChange={() => setAllAccounts(false)}
         />
         <label className="form-check-label" htmlFor="availability-some">
-          Only these accounts may use it
+          {gettext("Only these accounts may use it")}
         </label>
       </div>
       {!allAccounts ? (
         <div className="mb-5" style={{ maxWidth: 520 }}>
           {error ? <div className="alert alert-danger">{error}</div> : null}
-          {accounts === null && !error ? <p className="text-muted">Loading the accounts...</p> : null}
+          {accounts === null && !error ? <p className="text-muted">{gettext("Loading the accounts...")}</p> : null}
           {accounts !== null ? (
             <>
               <input
                 type="search"
                 className="form-control form-control-sm mb-3"
-                placeholder="Filter accounts"
-                aria-label="Filter accounts"
+                placeholder={gettext("Filter accounts")}
+                aria-label={gettext("Filter accounts")}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
@@ -391,14 +427,16 @@ function Availability({
                   </div>
                 ))}
               </div>
-              <div className="form-text">{selected.size} selected.</div>
+              <div className="form-text">
+                {interpolateNodes(gettext("%(size)s selected."), { size: selected.size })}
+              </div>
             </>
           ) : null}
         </div>
       ) : null}
       <button type="submit" className="btn btn-primary" disabled={busy}>
-        {busy ? <Spinner label="Saving" /> : null}
-        Save availability
+        {busy ? <Spinner label={gettext("Saving")} /> : null}
+        {gettext("Save availability")}
       </button>
     </form>
   );
@@ -419,10 +457,10 @@ function Versions({
       <table className="table table-row-dashed align-middle gs-0 gy-3">
         <thead className="table-light">
           <tr className="fw-bold text-muted">
-            <th>Version</th>
-            <th>Installed</th>
-            <th className="d-none d-md-table-cell">By</th>
-            <th className="d-none d-lg-table-cell">sha256</th>
+            <th>{gettext("Version")}</th>
+            <th>{gettext("Installed")}</th>
+            <th className="d-none d-md-table-cell">{gettext("By")}</th>
+            <th className="d-none d-lg-table-cell">{gettext("sha256")}</th>
             <th />
           </tr>
         </thead>
@@ -431,7 +469,9 @@ function Versions({
             <tr key={version.id}>
               <td>
                 {version.version}
-                {version.isInstalled ? <span className="badge badge-light-success ms-2">Running</span> : null}
+                {version.isInstalled ? (
+                  <span className="badge badge-light-success ms-2">{gettext("Running")}</span>
+                ) : null}
               </td>
               <td>{version.createdAt ? formatDateTime(version.createdAt, "date") : ""}</td>
               <td className="d-none d-md-table-cell">{version.installedBy ?? ""}</td>
@@ -446,8 +486,8 @@ function Versions({
                     disabled={busy !== null}
                     onClick={() => onRollback(version.id, version.version)}
                   >
-                    {busy === `rollback:${version.id}` ? <Spinner label="Rolling back" /> : null}
-                    Roll back to {version.version}
+                    {busy === `rollback:${version.id}` ? <Spinner label={gettext("Rolling back")} /> : null}
+                    {interpolateNodes(gettext("Roll back to %(version)s"), { version: version.version })}
                   </button>
                 ) : null}
               </td>
@@ -463,32 +503,35 @@ function Versions({
 function Resources({ extension }: { extension: ExtensionDetail }) {
   return (
     <>
-      <h2 className="fs-5 fw-bold mb-3">Waffle switches</h2>
+      <h2 className="fs-5 fw-bold mb-3">{gettext("Waffle switches")}</h2>
       {extension.switches.length === 0 ? (
-        <p className="text-muted mb-8">This extension has no waffle switches.</p>
+        <p className="text-muted mb-8">{gettext("This extension has no waffle switches.")}</p>
       ) : (
         <ul className="mb-8">
           {extension.switches.map((item) => (
             <li key={item.name}>
               <code>{item.name}</code> <span className="text-muted">{item.description}</span>{" "}
               <span className={`badge ${item.active ? "badge-light-success" : "badge-light"}`}>
-                {item.active ? "On" : "Off"}
+                {item.active ? gettext("On") : gettext("Off")}
               </span>
             </li>
           ))}
         </ul>
       )}
-      <h2 className="fs-5 fw-bold mb-3">Resources it created</h2>
+      <h2 className="fs-5 fw-bold mb-3">{gettext("Resources it created")}</h2>
       {extension.resources.length === 0 ? (
-        <p className="text-muted">This extension has created no resources.</p>
+        <p className="text-muted">{gettext("This extension has created no resources.")}</p>
       ) : (
         <ul>
           {extension.resources.map((resource) => (
             <li key={`${resource.kind}:${resource.name}`}>
               {resource.kind} <code>{resource.name}</code>{" "}
               <span className="text-muted">
-                owned by {resource.owner}, from version {resource.version}
-                {resource.managed ? "" : ", by a lifecycle hook"}
+                {interpolateNodes(gettext("owned by %(owner)s, from version %(version)s"), {
+                  owner: resource.owner,
+                  version: resource.version,
+                })}
+                {resource.managed ? "" : gettext(", by a lifecycle hook")}
               </span>
             </li>
           ))}

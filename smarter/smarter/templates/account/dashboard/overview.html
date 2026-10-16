@@ -1,5 +1,5 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block canonical %}
 <link rel="canonical" href="/account/overview/" />
@@ -12,7 +12,7 @@
   <div class="card-header cursor-pointer">
     <!--begin::Card title-->
     <div class="card-title m-0">
-      <h3 class="fw-bold m-0">Profile Details</h3>
+      <h3 class="fw-bold m-0">{% translate "Profile Details" %}</h3>
     </div>
     <!--end::Card title-->
   </div>
@@ -22,7 +22,7 @@
     <!--begin::Row-->
     <div class="row mb-7">
       <!--begin::Label-->
-      <label class="col-lg-4 fw-semibold text-muted">Full Name</label>
+      <label class="col-lg-4 fw-semibold text-muted">{% translate "Full Name" %}</label>
       <!--end::Label-->
       <!--begin::Col-->
       <div class="col-lg-8">
@@ -34,7 +34,7 @@
     <!--begin::Input group-->
     <div class="row mb-7">
       <!--begin::Label-->
-      <label class="col-lg-4 fw-semibold text-muted">Company</label>
+      <label class="col-lg-4 fw-semibold text-muted">{% translate "Company" %}</label>
       <!--end::Label-->
       <!--begin::Col-->
       <div class="col-lg-8 fv-row">
@@ -46,8 +46,8 @@
     <!--begin::Input group-->
     <div class="row mb-7">
       <!--begin::Label-->
-      <label class="col-lg-4 fw-semibold text-muted">Contact Phone
-      <span class="ms-1" data-bs-toggle="tooltip" title="Phone number must be active">
+      <label class="col-lg-4 fw-semibold text-muted">{% translate "Contact Phone" %}
+      <span class="ms-1" data-bs-toggle="tooltip" title="{% translate "Phone number must be active" %}">
         <i class="ki-duotone ki-information fs-7">
           <span class="path1"></span>
           <span class="path2"></span>
@@ -57,8 +57,8 @@
       <!--end::Label-->
       <!--begin::Col-->
       <div class="col-lg-8 d-flex align-items-center">
-        <span class="fw-bold fs-6 text-gray-800 me-2">044 3276 454 935</span>
-        <span class="badge badge-success">Verified</span>
+        {% blocktranslate trimmed %}<span class="fw-bold fs-6 text-gray-800 me-2">044 3276 454 935</span>
+        <span class="badge badge-success">Verified</span>{% endblocktranslate %}
       </div>
       <!--end::Col-->
     </div>
@@ -66,7 +66,7 @@
     <!--begin::Input group-->
     <div class="row mb-7">
       <!--begin::Label-->
-      <label class="col-lg-4 fw-semibold text-muted">Company Site</label>
+      <label class="col-lg-4 fw-semibold text-muted">{% translate "Company Site" %}</label>
       <!--end::Label-->
       <!--begin::Col-->
       <div class="col-lg-8">
@@ -78,8 +78,8 @@
     <!--begin::Input group-->
     <div class="row mb-7">
       <!--begin::Label-->
-      <label class="col-lg-4 fw-semibold text-muted">Country
-      <span class="ms-1" data-bs-toggle="tooltip" title="Country of origination">
+      <label class="col-lg-4 fw-semibold text-muted">{% translate "Country" %}
+      <span class="ms-1" data-bs-toggle="tooltip" title="{% translate "Country of origination" %}">
         <i class="ki-duotone ki-information fs-7">
           <span class="path1"></span>
           <span class="path2"></span>
@@ -89,7 +89,7 @@
       <!--end::Label-->
       <!--begin::Col-->
       <div class="col-lg-8">
-        <span class="fw-bold fs-6 text-gray-800">Germany</span>
+        <span class="fw-bold fs-6 text-gray-800">{% translate "Germany" %}</span>
       </div>
       <!--end::Col-->
     </div>
@@ -97,11 +97,11 @@
     <!--begin::Input group-->
     <div class="row mb-10">
       <!--begin::Label-->
-      <label class="col-lg-4 fw-semibold text-muted">Allow Changes</label>
+      <label class="col-lg-4 fw-semibold text-muted">{% translate "Allow Changes" %}</label>
       <!--begin::Label-->
       <!--begin::Label-->
       <div class="col-lg-8">
-        <span class="fw-semibold fs-6 text-gray-800">Yes</span>
+        <span class="fw-semibold fs-6 text-gray-800">{% translate "Yes" %}</span>
       </div>
       <!--begin::Label-->
     </div>
@@ -119,9 +119,9 @@
       <div class="d-flex flex-stack flex-grow-1">
         <!--begin::Content-->
         <div class="fw-semibold">
-          <h4 class="text-gray-900 fw-bold">We need your attention!</h4>
-          <div class="fs-6 text-gray-700">Your payment was declined. To start using tools, please
-          <a class="fw-bold" href="/dashboard/account/dashboard/billing/">Add Payment Method</a>.</div>
+          <h4 class="text-gray-900 fw-bold">{% translate "We need your attention!" %}</h4>
+          <div class="fs-6 text-gray-700">{% blocktranslate trimmed %}Your payment was declined. To start using tools, please
+          <a class="fw-bold" href="/dashboard/account/dashboard/billing/">Add Payment Method</a>.{% endblocktranslate %}</div>
         </div>
         <!--end::Content-->
       </div>
@@ -142,8 +142,8 @@
       <div class="card-header flex-nowrap pt-5">
         <!--begin::Title-->
         <h3 class="card-title align-items-start flex-column">
-          <span class="card-label fw-bold text-gray-900">Top Selling Categories</span>
-          <span class="text-gray-500 pt-2 fw-semibold fs-6">8k social visitors</span>
+          {% blocktranslate trimmed %}<span class="card-label fw-bold text-gray-900">Top Selling Categories</span>
+          <span class="text-gray-500 pt-2 fw-semibold fs-6">8k social visitors</span>{% endblocktranslate %}
         </h3>
         <!--end::Title-->
         <!--begin::Toolbar-->
@@ -161,7 +161,7 @@
           <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px" data-kt-menu="true">
             <!--begin::Menu item-->
             <div class="menu-item px-3">
-              <div class="menu-content fs-6 text-gray-900 fw-bold px-3 py-4">Quick Actions</div>
+              <div class="menu-content fs-6 text-gray-900 fw-bold px-3 py-4">{% translate "Quick Actions" %}</div>
             </div>
             <!--end::Menu item-->
             <!--begin::Menu separator-->
@@ -169,37 +169,37 @@
             <!--end::Menu separator-->
             <!--begin::Menu item-->
             <div class="menu-item px-3">
-              <a href="#" class="menu-link px-3">New Ticket</a>
+              <a href="#" class="menu-link px-3">{% translate "New Ticket" %}</a>
             </div>
             <!--end::Menu item-->
             <!--begin::Menu item-->
             <div class="menu-item px-3">
-              <a href="#" class="menu-link px-3">New Customer</a>
+              <a href="#" class="menu-link px-3">{% translate "New Customer" %}</a>
             </div>
             <!--end::Menu item-->
             <!--begin::Menu item-->
             <div class="menu-item px-3" data-kt-menu-trigger="hover" data-kt-menu-placement="right-start">
               <!--begin::Menu item-->
               <a href="#" class="menu-link px-3">
-                <span class="menu-title">New Group</span>
-                <span class="menu-arrow"></span>
+                {% blocktranslate trimmed %}<span class="menu-title">New Group</span>
+                <span class="menu-arrow"></span>{% endblocktranslate %}
               </a>
               <!--end::Menu item-->
               <!--begin::Menu sub-->
               <div class="menu-sub menu-sub-dropdown w-175px py-4">
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
-                  <a href="#" class="menu-link px-3">Admin Group</a>
+                  <a href="#" class="menu-link px-3">{% translate "Admin Group" %}</a>
                 </div>
                 <!--end::Menu item-->
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
-                  <a href="#" class="menu-link px-3">Staff Group</a>
+                  <a href="#" class="menu-link px-3">{% translate "Staff Group" %}</a>
                 </div>
                 <!--end::Menu item-->
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
-                  <a href="#" class="menu-link px-3">Member Group</a>
+                  <a href="#" class="menu-link px-3">{% translate "Member Group" %}</a>
                 </div>
                 <!--end::Menu item-->
               </div>
@@ -208,7 +208,7 @@
             <!--end::Menu item-->
             <!--begin::Menu item-->
             <div class="menu-item px-3">
-              <a href="#" class="menu-link px-3">New Contact</a>
+              <a href="#" class="menu-link px-3">{% translate "New Contact" %}</a>
             </div>
             <!--end::Menu item-->
             <!--begin::Menu separator-->
@@ -217,7 +217,7 @@
             <!--begin::Menu item-->
             <div class="menu-item px-3">
               <div class="menu-content px-3 py-3">
-                <a class="btn btn-primary btn-sm px-4" href="#">Generate Reports</a>
+                <a class="btn btn-primary btn-sm px-4" href="#">{% translate "Generate Reports" %}</a>
               </div>
             </div>
             <!--end::Menu item-->
@@ -246,9 +246,9 @@
         <!--begin::Heading-->
         <div class="mb-2">
           <!--begin::Title-->
-          <h1 class="fw-semibold text-gray-800 text-center lh-lg">Have you tried
+          <h1 class="fw-semibold text-gray-800 text-center lh-lg">{% blocktranslate trimmed %}Have you tried
           <br />the
-          <span class="fw-bolder">Mobile Application ?</span></h1>
+          <span class="fw-bolder">Mobile Application ?</span>{% endblocktranslate %}</h1>
           <!--end::Title-->
           <!--begin::Illustration-->
           <div class="py-10 text-center">
@@ -261,10 +261,10 @@
         <!--begin::Links-->
         <div class="text-center mb-1">
           <!--begin::Link-->
-          <a class="btn btn-sm btn-primary me-2" href="https://{{ branding.smarter_marketing_site_url }}/" target="_blank">Try now</a>
+          <a class="btn btn-sm btn-primary me-2" href="https://{{ branding.smarter_marketing_site_url }}/" target="_blank">{% translate "Try now" %}</a>
           <!--end::Link-->
           <!--begin::Link-->
-          <a class="btn btn-sm btn-light" href="https://{{ branding.smarter_marketing_site_url }}/" target="_blank">Learn more</a>
+          <a class="btn btn-sm btn-light" href="https://{{ branding.smarter_marketing_site_url }}/" target="_blank">{% translate "Learn more" %}</a>
           <!--end::Link-->
         </div>
         <!--end::Links-->

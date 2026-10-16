@@ -41,7 +41,7 @@ var KTAccountAPIKeys = function () {
           text: JSON.stringify(error.response.data),
           icon: "error",
           buttonsStyling: false,
-          confirmButtonText: "Dismiss",
+          confirmButtonText: gettext("Dismiss"),
           customClass: {
             confirmButton: "btn btn-primary",
           },
@@ -88,7 +88,7 @@ var KTAccountAPIKeys = function () {
           text: JSON.stringify(error.response.data),
           icon: "error",
           buttonsStyling: false,
-          confirmButtonText: "Dismiss",
+          confirmButtonText: gettext("Dismiss"),
           customClass: {
             confirmButton: "btn btn-primary",
           },
@@ -196,11 +196,11 @@ var KTAccountAPIKeys = function () {
           sandboxCheckBox.click(function() {
             var sandboxMode = sandboxCheckBox.is(':checked');
             if (sandboxMode) {
-              sandboxLabel.text('Live Mode');
+              sandboxLabel.text(gettext('Live Mode'));
               sandboxNotice.attr('style', 'display: none !important');
             }
             else {
-              sandboxLabel.text('Sandbox Mode');
+              sandboxLabel.text(gettext('Sandbox Mode'));
               sandboxNotice.attr('style', 'display: block !important');
             }
 

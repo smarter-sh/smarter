@@ -20,7 +20,7 @@
  *     <MyResources apiUrl="https://customer.smarter.sh/dashboard/api/my-resources" />
  */
 import { useEffect, useState } from "react";
-import { Loading } from "@smarter/common";
+import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
 import { loggerPrefix } from "@/const";
 
 import "@/components/MyResources/styles.css";
@@ -55,12 +55,12 @@ interface MyResourcesData {
 
 /** The kinds in the compact grid below the large tiles: [label, icon, count key, url key]. */
 const MORE_RESOURCES: [string, string, keyof MyResourcesData, keyof MyResourcesData][] = [
-  ["Guardrails", "ki-shield-tick", "guardrails_qty", "guardrails_url"],
-  ["Secrets", "ki-lock", "secrets_qty", "secrets_url"],
-  ["VectorStores", "ki-data", "vectorstores_qty", "vectorstores_url"],
-  ["Custom Domains", "ki-route", "custom_domains_qty", "custom_domains_url"],
-  ["LLMHosts", "ki-technology-4", "llmhosts_qty", "llmhosts_url"],
-  ["Extensions", "ki-element-plus", "extensions_qty", "extensions_url"],
+  [gettext("Guardrails"), "ki-shield-tick", "guardrails_qty", "guardrails_url"],
+  [gettext("Secrets"), "ki-lock", "secrets_qty", "secrets_url"],
+  [gettext("VectorStores"), "ki-data", "vectorstores_qty", "vectorstores_url"],
+  [gettext("Custom Domains"), "ki-route", "custom_domains_qty", "custom_domains_url"],
+  [gettext("LLMHosts"), "ki-technology-4", "llmhosts_qty", "llmhosts_url"],
+  [gettext("Extensions"), "ki-element-plus", "extensions_qty", "extensions_url"],
 ];
 
 function MyResources({ apiUrl }: MyResourcesProps) {
@@ -84,7 +84,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
         });
 
         if (!res.ok) {
-          throw new Error("Request failed: " + res.status);
+          throw new Error(interpolate(gettext("Request failed: %(status)s"), { status: res.status }));
         }
 
         const json = (await res.json()) as MyResourcesData;
@@ -93,7 +93,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
       } catch (err) {
         console.error(loggerPrefix, "Error loading My Resources:", err);
         if (err instanceof DOMException && err.name === "AbortError") return;
-        setError(err instanceof Error ? err.message : "Unknown error");
+        setError(err instanceof Error ? err.message : gettext("Unknown error"));
       } finally {
         setLoading(false);
       }
@@ -109,12 +109,12 @@ function MyResources({ apiUrl }: MyResourcesProps) {
   const my_resources_mcpclients = data?.mcpclients_qty ?? 0;
   const my_resources_providers = data?.providers_qty ?? 0;
 
-  if (error) return <div>Failed to load resources: {error}</div>;
+  if (error) return <div>{interpolateNodes(gettext("Failed to load resources: %(error)s"), { error })}</div>;
 
   return (
     <>
       {/* begin::Col */}
-      <section id="my-resources" aria-label="My Resources" className="col-xl-4 mb-xl-10">
+      <section id="my-resources" aria-label={gettext("My Resources")} className="col-xl-4 mb-xl-10">
         {/* begin::Lists Widget 19 */}
         <div className="card card-flush h-xl-100">
           {/* begin::Heading */}
@@ -133,17 +133,19 @@ function MyResources({ apiUrl }: MyResourcesProps) {
 
             {/* begin::Title */}
             <h3 className="card-title align-items-start flex-column text-white pt-15">
-              <span className="fw-bold fs-2x mb-3">My Resources</span>
+              <span className="fw-bold fs-2x mb-3">{gettext("My Resources")}</span>
               <div className="fs-4 text-white">
                 {my_resources_pending_deployments > 0 && (
                   <>
-                    <span className="opacity-75">You have</span>{" "}
+                    <span className="opacity-75">{gettext("You have")}</span>{" "}
                     <span className="position-relative d-inline-block">
                       {loading ? (
                         <Loading />
                       ) : (
                         <a href={data?.llmclients_url} className="link-white opacity-75-hover fw-bold d-block mb-1">
-                          {my_resources_pending_deployments} pending
+                          {interpolateNodes(gettext("%(my_resources_pending_deployments)s pending"), {
+                            my_resources_pending_deployments,
+                          })}
                         </a>
                       )}
                       <span className="position-absolute opacity-50 bottom-0 start-0 border-2 border-body border-bottom w-100"></span>
@@ -191,7 +193,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                           </span>
                         )}
                         {/* end::Number */}
-                        <span className="text-gray-500 fw-semibold fs-6">LLM Clients</span>
+                        <span className="text-gray-500 fw-semibold fs-6">{gettext("LLM Clients")}</span>
                       </div>
                       {/* end::Workbench */}
                     </div>
@@ -227,7 +229,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         )}
                         {/* end::Number */}
                         {/* begin::Desc */}
-                        <span className="text-gray-500 fw-semibold fs-6">Tools</span>
+                        <span className="text-gray-500 fw-semibold fs-6">{gettext("Tools")}</span>
                         {/* end::Desc */}
                       </div>
                     </a>
@@ -264,7 +266,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         )}
                         {/* end::Number */}
                         {/* begin::Desc */}
-                        <span className="text-gray-500 fw-semibold fs-6">MCPClients</span>
+                        <span className="text-gray-500 fw-semibold fs-6">{gettext("MCPClients")}</span>
                         {/* end::Desc */}
                       </div>
                     </a>
@@ -301,7 +303,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         )}
                         {/* end::Number */}
                         {/* begin::Desc */}
-                        <span className="text-gray-500 fw-semibold fs-6">LLM Providers</span>
+                        <span className="text-gray-500 fw-semibold fs-6">{gettext("LLM Providers")}</span>
                         {/* end::Desc */}
                       </div>
                     </a>
@@ -314,7 +316,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
               {/* end::Row */}
               {/* begin::More */}
               {data && (
-                <ul className="my-resources-more" aria-label="More resources">
+                <ul className="my-resources-more" aria-label={gettext("More resources")}>
                   {MORE_RESOURCES.filter(([, , , urlKey]) => data[urlKey]).map(([label, icon, qtyKey, urlKey]) => {
                     const url = String(data[urlKey]);
                     const external = url.startsWith("http");

@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: MCPClientCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,21 +54,21 @@ function CardView({ sessionContext, objects, onRequery }: MCPClientCardViewProps
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", mcpclient.id, "number")}
-                    {renderDetailRow("Status", mcpclient.status)}
-                    {renderDetailRow("Manifest URL", mcpclient.manifestUrl, "url")}
-                    {renderDetailRow("Endpoint URL", mcpclient.endpointUrl, "url")}
-                    {renderDetailRow("Owner", mcpclient.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", mcpclient.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", mcpclient.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", mcpclient.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", mcpclient.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", mcpclient.version)}
-                    {renderDetailRow("Description", mcpclient.description)}
-                    {renderDetailRow("Tags", mcpclient.tags, "str[]")}
-                    {renderDetailRow("Annotations", mcpclient.annotations, "json")}
-                    {renderDetailRow("Ready", mcpclient.ready, "bool")}
-                    {renderDetailRow("RFC 1034 Compliant Name", mcpclient.rfc1034CompliantName)}
+                    {renderDetailRow(gettext("ID"), mcpclient.id, "number")}
+                    {renderDetailRow(gettext("Status"), mcpclient.status)}
+                    {renderDetailRow(gettext("Manifest URL"), mcpclient.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Endpoint URL"), mcpclient.endpointUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), mcpclient.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), mcpclient.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), mcpclient.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), mcpclient.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), mcpclient.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), mcpclient.version)}
+                    {renderDetailRow(gettext("Description"), mcpclient.description)}
+                    {renderDetailRow(gettext("Tags"), mcpclient.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), mcpclient.annotations, "json")}
+                    {renderDetailRow(gettext("Ready"), mcpclient.ready, "bool")}
+                    {renderDetailRow(gettext("RFC 1034 Compliant Name"), mcpclient.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

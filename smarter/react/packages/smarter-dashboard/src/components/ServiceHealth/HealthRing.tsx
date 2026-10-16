@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { gettext, interpolate } from "@smarter/common";
 
 interface HealthRingProps {
   value: number;
@@ -41,7 +42,13 @@ export default function HealthRing({
   const dashOffset = circumference * (1 - animatedValue / 100);
 
   return (
-    <div className="service-health-ring" role="img" aria-label={`Service health ${Math.round(clampedValue)} percent`}>
+    <div
+      className="service-health-ring"
+      role="img"
+      aria-label={interpolate(gettext("Service health %(clampedValue)s percent"), {
+        clampedValue: Math.round(clampedValue),
+      })}
+    >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="service-health-ring__svg">
         <circle
           cx={size / 2}

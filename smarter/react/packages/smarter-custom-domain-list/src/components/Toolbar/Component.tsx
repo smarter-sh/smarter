@@ -27,7 +27,7 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { CustomDomain } from "@/lib/Types";
@@ -45,17 +45,19 @@ interface NameModalProps {
 const ModalClone = ({ customDomain, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone Custom Domain" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Clone Custom Domain")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Clone custom domain <strong>{customDomain?.name}</strong> to a new resource owned by you.
+        {interpolateNodes(gettext("Clone custom domain %(name)s to a new resource owned by you."), {
+          name: <strong>{customDomain?.name}</strong>,
+        })}
       </p>
       <p>
-        <em>Provide the new name for the cloned custom domain.</em>
+        <em>{gettext("Provide the new name for the cloned custom domain.")}</em>
       </p>
       <input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Enter new custom domain name"
+        placeholder={gettext("Enter new custom domain name")}
       />
     </Modal>
   );
@@ -65,17 +67,17 @@ const ModalClone = ({ customDomain, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ customDomain, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(customDomain?.name || "");
   return (
-    <Modal show title="Rename Custom Domain" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Rename Custom Domain")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Rename custom domain <strong>{customDomain?.name}</strong>.
+        {interpolateNodes(gettext("Rename custom domain %(name)s."), { name: <strong>{customDomain?.name}</strong> })}
       </p>
       <p>
-        <em>Provide the new name for the custom domain.</em>
+        <em>{gettext("Provide the new name for the custom domain.")}</em>
       </p>
       <input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Enter new custom domain name"
+        placeholder={gettext("Enter new custom domain name")}
       />
     </Modal>
   );
@@ -93,12 +95,14 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete Custom Domain" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title={gettext("Delete Custom Domain")} onOk={onOk} onCancel={onCancel}>
     <p>
-      Are you sure you want to delete custom domain <strong>{customDomain?.name}</strong>?
+      {interpolateNodes(gettext("Are you sure you want to delete custom domain %(name)s?"), {
+        name: <strong>{customDomain?.name}</strong>,
+      })}
     </p>
     <p>
-      <em>Data is not recoverable.</em>
+      <em>{gettext("Data is not recoverable.")}</em>
     </p>
   </Modal>
 );
@@ -115,11 +119,13 @@ const ModalError = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="❌ Error" onClose={onClose}>
+  <Modal show={show} title={gettext("❌ Error")} onClose={onClose}>
     <p>
-      An error occurred while performing the operation on custom domain <strong>{customDomain?.name}</strong>.
+      {interpolateNodes(gettext("An error occurred while performing the operation on custom domain %(name)s."), {
+        name: <strong>{customDomain?.name}</strong>,
+      })}
     </p>
-    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>{gettext("An unknown error occurred.")}</em>}</p>
   </Modal>
 );
 
@@ -135,12 +141,12 @@ const ModalConfirmation = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="✅ Success" onClose={onClose}>
+  <Modal show={show} title={gettext("✅ Success")} onClose={onClose}>
     <p>
       {message} <strong>{customDomain?.name}</strong>.
     </p>
     <p>
-      <em>Operation completed successfully.</em>
+      <em>{gettext("Operation completed successfully.")}</em>
     </p>
   </Modal>
 );
@@ -174,6 +180,30 @@ const ToolbarLink = ({
       <i className={icon} />
     </button>
   );
+
+/**
+ * The messages that report the result of an action. Each is a whole sentence, so that it can be
+ * translated.
+ */
+const actionMessages = (verb: string) => {
+  switch (verb) {
+    case "clone":
+      return {
+        failed: gettext("Failed to clone custom domain (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully cloned custom domain"),
+      };
+    case "rename":
+      return {
+        failed: gettext("Failed to rename custom domain (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully renamed custom domain"),
+      };
+    default:
+      return {
+        failed: gettext("Failed to delete custom domain (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully deleted custom domain"),
+      };
+  }
+};
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -210,13 +240,18 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(`Failed to ${verb} custom domain (${response.status}): ${data.error || response.statusText}`);
+          throw new Error(
+            interpolate(actionMessages(verb).failed, {
+              status: response.status,
+              error: data.error || response.statusText,
+            }),
+          );
         }
         return data;
       })
       .then((data) => {
         console.debug(loggerPrefix, `Successfully ${verb}d custom domain:`, data);
-        setSuccessMessage(`Successfully ${verb}d custom domain`);
+        setSuccessMessage(actionMessages(verb).succeeded);
         // clone and rename return the resulting customDomain; delete returns a message.
         setModal({ type: "confirmation", customDomain: data && data.id ? (data as CustomDomain) : target });
       })
@@ -229,28 +264,30 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
 
   return (
     <>
-      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label={gettext("Actions")}>
         <ToolbarLink
           href={customDomain.llmclient?.sandboxUrl}
-          title={`Open: Open LLMClient ${customDomain.llmclient?.name} in the workbench`}
-          disabledTitle="Open: No LLMClient uses this custom domain"
+          title={interpolate(gettext("Open: Open LLMClient %(name)s in the workbench"), {
+            name: customDomain.llmclient?.name,
+          })}
+          disabledTitle={gettext("Open: No LLMClient uses this custom domain")}
           icon="bi bi-chat-dots md-teal"
         />
         <a
           href={customDomain.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Edit: Open the YAML manifest that defines this custom domain"
+          title={gettext("Edit: Open the YAML manifest that defines this custom domain")}
           tabIndex={0}
         >
           <i className="bi bi-pencil-square md-blue" />
         </a>
         <ToolbarLink
           href={customDomain.verificationStatus === "Verified" ? customDomain.llmclient?.url : null}
-          title={`Visit: ${customDomain.llmclient?.url}`}
+          title={interpolate(gettext("Visit: %(url)s"), { url: customDomain.llmclient?.url })}
           disabledTitle={
             customDomain.llmclient
-              ? "Visit: The custom domain is not verified yet"
-              : "Visit: No LLMClient uses this custom domain"
+              ? gettext("Visit: The custom domain is not verified yet")
+              : gettext("Visit: No LLMClient uses this custom domain")
           }
           icon="bi bi-box-arrow-up-right md-green"
           external
@@ -258,7 +295,7 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Clone: Clone this custom domain to a new resource owned by you"
+          title={gettext("Clone: Clone this custom domain to a new resource owned by you")}
           onClick={() => setModal({ type: "clone", customDomain })}
           tabIndex={0}
         >
@@ -267,7 +304,7 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Rename: Rename this custom domain"
+          title={gettext("Rename: Rename this custom domain")}
           onClick={() => setModal({ type: "rename", customDomain })}
           tabIndex={0}
         >
@@ -278,8 +315,10 @@ export const Toolbar = ({ sessionContext, customDomain, onRequery }: ToolbarProp
           className="btn btn-icon btn-sm border"
           title={
             customDomain.canDelete === false
-              ? "Delete: You can't delete this custom domain, because an LLMClient uses it, or you don't have permission to delete it"
-              : "Delete: Delete this custom domain"
+              ? gettext(
+                  "Delete: You can't delete this custom domain, because an LLMClient uses it, or you don't have permission to delete it",
+                )
+              : gettext("Delete: Delete this custom domain")
           }
           onClick={() => setModal({ type: "delete", customDomain })}
           disabled={customDomain.canDelete === false}

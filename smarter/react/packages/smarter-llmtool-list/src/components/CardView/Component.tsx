@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: LLMToolCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,31 +54,31 @@ function CardView({ sessionContext, objects, onRequery }: LLMToolCardViewProps) 
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", llmtool.id, "number")}
-                    {renderDetailRow("Manifest URL", llmtool.manifestUrl, "url")}
-                    {renderDetailRow("Owner", llmtool.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", llmtool.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", llmtool.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", llmtool.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", llmtool.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", llmtool.version)}
-                    {renderDetailRow("Description", llmtool.description)}
-                    {renderDetailRow("LLMTool Class", llmtool.pluginClass)}
-                    {renderDetailRow("Tags", llmtool.tags, "str[]")}
-                    {renderDetailRow("Annotations", llmtool.annotations, "json")}
+                    {renderDetailRow(gettext("ID"), llmtool.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), llmtool.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), llmtool.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), llmtool.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), llmtool.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), llmtool.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), llmtool.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), llmtool.version)}
+                    {renderDetailRow(gettext("Description"), llmtool.description)}
+                    {renderDetailRow(gettext("LLMTool Class"), llmtool.pluginClass)}
+                    {renderDetailRow(gettext("Tags"), llmtool.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), llmtool.annotations, "json")}
 
-                    {renderDetailRow("Selector Directive", llmtool.selector.directive)}
-                    {renderDetailRow("Selector Search Terms", llmtool.selector.searchTerms ?? [], "str[]")}
+                    {renderDetailRow(gettext("Selector Directive"), llmtool.selector.directive)}
+                    {renderDetailRow(gettext("Selector Search Terms"), llmtool.selector.searchTerms ?? [], "str[]")}
 
-                    {renderDetailRow("Prompt Provider", llmtool.prompt.provider)}
-                    {renderDetailRow("Prompt System Role", llmtool.prompt.systemRole)}
-                    {renderDetailRow("Prompt Model", llmtool.prompt.model)}
-                    {renderDetailRow("Prompt Temperature", llmtool.prompt.temperature, "number")}
-                    {renderDetailRow("Prompt Max Tokens", llmtool.prompt.maxTokens, "number")}
+                    {renderDetailRow(gettext("Prompt Provider"), llmtool.prompt.provider)}
+                    {renderDetailRow(gettext("Prompt System Role"), llmtool.prompt.systemRole)}
+                    {renderDetailRow(gettext("Prompt Model"), llmtool.prompt.model)}
+                    {renderDetailRow(gettext("Prompt Temperature"), llmtool.prompt.temperature, "number")}
+                    {renderDetailRow(gettext("Prompt Max Tokens"), llmtool.prompt.maxTokens, "number")}
 
-                    {renderDetailRow("Static Data", llmtool.staticData, "json")}
-                    {renderDetailRow("SQL Data", llmtool.sqlData, "json")}
-                    {renderDetailRow("API Data", llmtool.apiData, "json")}
+                    {renderDetailRow(gettext("Static Data"), llmtool.staticData, "json")}
+                    {renderDetailRow(gettext("SQL Data"), llmtool.sqlData, "json")}
+                    {renderDetailRow(gettext("API Data"), llmtool.apiData, "json")}
                   </tbody>
                 </table>
               </div>

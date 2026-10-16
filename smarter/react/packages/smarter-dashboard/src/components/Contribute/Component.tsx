@@ -14,24 +14,30 @@
  *     <Contribute />
  */
 import "@/components/Contribute/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
-const WAYS_TO_HELP = ["Fix a bug", "Improve the docs", "Write a test", "Build an extension"];
+const WAYS_TO_HELP = [
+  gettext("Fix a bug"),
+  gettext("Improve the docs"),
+  gettext("Write a test"),
+  gettext("Build an extension"),
+];
 
 const BADGES = [
   {
     href: "https://github.com/smarter-sh/smarter/releases",
     src: "https://img.shields.io/github/v/release/smarter-sh/smarter?style=flat&color=ea580c",
-    alt: "Latest Release",
+    alt: gettext("Latest Release"),
   },
   {
     href: "https://github.com/smarter-sh/smarter/stargazers",
     src: "https://img.shields.io/github/stars/smarter-sh/smarter?style=flat&color=ea580c",
-    alt: "GitHub Stars",
+    alt: gettext("GitHub Stars"),
   },
   {
     href: "https://github.com/smarter-sh/smarter/network/members",
     src: "https://img.shields.io/github/forks/smarter-sh/smarter?style=flat&color=ea580c",
-    alt: "GitHub Forks",
+    alt: gettext("GitHub Forks"),
   },
 ];
 
@@ -41,7 +47,7 @@ function Contribute() {
       {/* begin::Engage widget 4 */}
       <section
         id="contribute"
-        aria-label="Contribute"
+        aria-label={gettext("Contribute")}
         className="card border-transparent h-100 contribute-card"
         data-bs-theme="light"
       >
@@ -56,18 +62,28 @@ function Contribute() {
           {/* end::Illustration */}
           {/* begin::Title */}
           <div className="position-relative fs-2x fw-bold text-gray-900 mb-2 z-index-2">
-            Contribute to{" "}
-            <span className="position-relative d-inline-block">
-              Smarter
-              <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 contribute-underline"></span>
-            </span>
+            {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+            {interpolateNodes(gettext("Contribute to %(span)s"), {
+              span: (
+                <span className="position-relative d-inline-block">
+                  {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                  {interpolateNodes(gettext("Smarter%(span)s"), {
+                    span: (
+                      <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 contribute-underline"></span>
+                    ),
+                  })}
+                </span>
+              ),
+            })}
           </div>
           <p className="text-gray-700 fs-6 mb-5 z-index-2 contribute-lede">
-            Start small, learn by doing, and help improve Smarter while you discover how real Python projects work.
+            {gettext(
+              "Start small, learn by doing, and help improve Smarter while you discover how real Python projects work.",
+            )}
           </p>
           {/* end::Title */}
           {/* begin::Ways to help */}
-          <ul className="contribute-chips z-index-2" aria-label="Ways to help">
+          <ul className="contribute-chips z-index-2" aria-label={gettext("Ways to help")}>
             {WAYS_TO_HELP.map((way) => (
               <li key={way} className="contribute-chip">
                 {way}
@@ -93,14 +109,14 @@ function Contribute() {
               target="_blank"
               className="btn btn-sm fw-semibold me-2 contribute-btn"
             >
-              Contributing guide
+              {gettext("Contributing guide")}
             </a>
             <a
               href="https://github.com/smarter-sh/smarter/issues"
               target="_blank"
               className="btn btn-sm btn-light fw-semibold"
             >
-              Open issues
+              {gettext("Open issues")}
             </a>
           </div>
           {/* end::Action */}

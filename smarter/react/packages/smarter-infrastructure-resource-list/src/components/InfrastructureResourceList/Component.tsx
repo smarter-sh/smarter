@@ -7,7 +7,7 @@
  * is written by the platform, so the list is read-only.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loading, fetchDjangoUrl, formatDateTime } from "@smarter/common";
+import { fetchDjangoUrl, formatDateTime, gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import type {
@@ -45,15 +45,15 @@ function SummaryTile({ label, value, className }: { label: string; value: number
 
 function Summary({ summary }: { summary: InfrastructureResourceSummary }) {
   return (
-    <div className="row g-3 mb-5" aria-label="Summary">
-      <SummaryTile label="Active" value={summary.active} />
+    <div className="row g-3 mb-5" aria-label={gettext("Summary")}>
+      <SummaryTile label={gettext("Active")} value={summary.active} />
       <SummaryTile
-        label="Active and billable"
+        label={gettext("Active and billable")}
         value={summary.activeBillable}
         className={summary.activeBillable > 0 ? "infrastructure-summary-billable" : ""}
       />
-      <SummaryTile label="Destroyed" value={summary.destroyed} />
-      <SummaryTile label="Total" value={summary.total} />
+      <SummaryTile label={gettext("Destroyed")} value={summary.destroyed} />
+      <SummaryTile label={gettext("Total")} value={summary.total} />
     </div>
   );
 }
@@ -73,17 +73,17 @@ function ResourceRow({ resource }: { resource: InfrastructureResource }) {
       </td>
       <td>
         {resource.billable ? (
-          <span className="badge badge-light-warning">Billable</span>
+          <span className="badge badge-light-warning">{gettext("Billable")}</span>
         ) : (
-          <span className="text-muted">No</span>
+          <span className="text-muted">{gettext("No")}</span>
         )}
       </td>
       <td>
         {resource.status === "active" ? (
-          <span className="badge badge-light-success">Active</span>
+          <span className="badge badge-light-success">{gettext("Active")}</span>
         ) : (
           <span className="badge badge-light" title={resource.destroyedAt ?? ""}>
-            Destroyed
+            {gettext("Destroyed")}
           </span>
         )}
       </td>
@@ -109,46 +109,50 @@ function Pagination({
   return (
     <div className="d-flex flex-wrap gap-3 align-items-center justify-content-between">
       <div className="text-muted fs-7">
-        Showing {first.toLocaleString()}–{last.toLocaleString()} of {count.toLocaleString()} resources
+        {interpolateNodes(gettext("Showing %(first)s–%(last)s of %(count)s resources"), {
+          first: first.toLocaleString(),
+          last: last.toLocaleString(),
+          count: count.toLocaleString(),
+        })}
       </div>
       <div className="d-flex flex-wrap gap-3 align-items-center">
         <select
           className="form-select form-select-sm w-auto"
-          aria-label="Rows per page"
+          aria-label={gettext("Rows per page")}
           value={pageSize}
           onChange={(event) => onPageSize(Number(event.target.value))}
         >
           {pageSizes.map((size) => (
             <option key={size} value={size}>
-              {size} per page
+              {interpolateNodes(gettext("%(size)s per page"), { size })}
             </option>
           ))}
         </select>
-        <nav aria-label="Pagination">
+        <nav aria-label={gettext("Pagination")}>
           <ul className="pagination pagination-sm mb-0">
             <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
               <button type="button" className="page-link" disabled={page <= 1} onClick={() => onPage(1)}>
-                First
+                {gettext("First")}
               </button>
             </li>
             <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
               <button type="button" className="page-link" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-                Previous
+                {gettext("Previous")}
               </button>
             </li>
             <li className="page-item active" aria-current="page">
               <span className="page-link">
-                Page {page} of {numPages}
+                {interpolateNodes(gettext("Page %(page)s of %(numPages)s"), { page, numPages })}
               </span>
             </li>
             <li className={`page-item ${page >= numPages ? "disabled" : ""}`}>
               <button type="button" className="page-link" disabled={page >= numPages} onClick={() => onPage(page + 1)}>
-                Next
+                {gettext("Next")}
               </button>
             </li>
             <li className={`page-item ${page >= numPages ? "disabled" : ""}`}>
               <button type="button" className="page-link" disabled={page >= numPages} onClick={() => onPage(numPages)}>
-                Last
+                {gettext("Last")}
               </button>
             </li>
           </ul>
@@ -182,7 +186,12 @@ export default function InfrastructureResourceList({ sessionContext }: { session
       .then(async (response) => {
         if (!response.ok) {
           const body = await response.json().catch(() => null);
-          throw new Error(body?.error || `Failed to load the infrastructure resources (${response.status}).`);
+          throw new Error(
+            body?.error ||
+              interpolate(gettext("Failed to load the infrastructure resources (%(status)s)."), {
+                status: response.status,
+              }),
+          );
         }
         const result = (await response.json()) as InfrastructureResourceListResponse;
         if (request !== latestRequest.current) return;
@@ -222,21 +231,21 @@ export default function InfrastructureResourceList({ sessionContext }: { session
             <div className="d-flex flex-wrap gap-3 align-items-center mb-4">
               <select
                 className="form-select form-select-sm w-auto"
-                aria-label="Status"
+                aria-label={gettext("Status")}
                 value={filters.status}
                 onChange={(event) => setFilter("status", event.target.value as StatusFilter)}
               >
-                <option value="active">Active</option>
-                <option value="destroyed">Destroyed</option>
-                <option value="all">All</option>
+                <option value="active">{gettext("Active")}</option>
+                <option value="destroyed">{gettext("Destroyed")}</option>
+                <option value="all">{gettext("All")}</option>
               </select>
               <select
                 className="form-select form-select-sm w-auto"
-                aria-label="Type"
+                aria-label={gettext("Type")}
                 value={filters.resourceType}
                 onChange={(event) => setFilter("resourceType", event.target.value)}
               >
-                <option value="">All types</option>
+                <option value="">{gettext("All types")}</option>
                 {choices.resourceTypes.map((resourceType) => (
                   <option key={resourceType} value={resourceType}>
                     {resourceType}
@@ -245,11 +254,11 @@ export default function InfrastructureResourceList({ sessionContext }: { session
               </select>
               <select
                 className="form-select form-select-sm w-auto"
-                aria-label="Provider"
+                aria-label={gettext("Provider")}
                 value={filters.provider}
                 onChange={(event) => setFilter("provider", event.target.value)}
               >
-                <option value="">All providers</option>
+                <option value="">{gettext("All providers")}</option>
                 {choices.providers.map((provider) => (
                   <option key={provider} value={provider}>
                     {provider}
@@ -265,26 +274,26 @@ export default function InfrastructureResourceList({ sessionContext }: { session
                   onChange={(event) => setFilter("billableOnly", event.target.checked)}
                 />
                 <label className="form-check-label" htmlFor="infrastructure-billable-only">
-                  Billable only
+                  {gettext("Billable only")}
                 </label>
               </div>
               <input
                 type="search"
                 className="form-control form-control-sm w-auto"
-                placeholder="Search"
-                aria-label="Search"
+                placeholder={gettext("Search")}
+                aria-label={gettext("Search")}
                 value={filters.text}
                 onChange={(event) => setFilter("text", event.target.value)}
               />
               <button type="button" className="btn btn-sm btn-light ms-auto" onClick={load}>
-                <i className="bi bi-arrow-clockwise" /> Refresh
+                <i className="bi bi-arrow-clockwise" /> {gettext("Refresh")}
               </button>
             </div>
             {resources.length === 0 ? (
               <div className="text-muted p-4">
                 {data.summary.total === 0
-                  ? "The platform has not recorded any cloud resources yet."
-                  : "No resources match the filters."}
+                  ? gettext("The platform has not recorded any cloud resources yet.")
+                  : gettext("No resources match the filters.")}
               </div>
             ) : (
               <>
@@ -292,12 +301,12 @@ export default function InfrastructureResourceList({ sessionContext }: { session
                   <table className="table table-striped table-hover align-middle border">
                     <thead className="table-light">
                       <tr>
-                        <th>Resource</th>
-                        <th>Type</th>
-                        <th>Provider / service</th>
-                        <th>Billable</th>
-                        <th>Status</th>
-                        <th className="d-none d-lg-table-cell">Created</th>
+                        <th>{gettext("Resource")}</th>
+                        <th>{gettext("Type")}</th>
+                        <th>{gettext("Provider / service")}</th>
+                        <th>{gettext("Billable")}</th>
+                        <th>{gettext("Status")}</th>
+                        <th className="d-none d-lg-table-cell">{gettext("Created")}</th>
                       </tr>
                     </thead>
                     <tbody>

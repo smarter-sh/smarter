@@ -632,6 +632,11 @@ class ImageSearchPlugin(PluginBase):
         blocked domains are not, since Brave returns no results for some queries with several
         ``-site:`` operators: :py:meth:`filtered_images` removes their images instead.
 
+        Brave's handling of ``site:`` operators is inconsistent. In live tests,
+        ``giraffe (site:a.org OR site:b.org)`` returned no results, while the same query with
+        five OR'ed sites, or with the two sites not in parentheses, returned 20. Relevance also
+        drops as more allowed domains are OR'ed together, so keep the allowed list short.
+
         Responses are cached for the plugin's ``cacheTtl`` seconds, keyed on the exact query
         parameters sent to Brave, so the plugin's filters, which Smarter applies afterwards,
         are never part of the key. Failed requests are never cached.

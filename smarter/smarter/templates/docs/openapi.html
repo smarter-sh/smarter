@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,7 +11,7 @@
     <meta property="og:title" content="Smarter OpenAPI Contract" />
     <meta property="og:url" content="{{ branding.og_url }}" />
     <meta property="og:site_name" content="Smarter" />
-    <title>Smarter OpenAPI Contract</title>
+    <title>{% translate "Smarter OpenAPI Contract" %}</title>
     <link rel="icon" href="{% static 'images/logo/favicon256x256.png' %}" type="image/png" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
@@ -33,19 +33,19 @@
     {% include 'cms/base/header.html' %}
 
     <div class="openapi-intro">
-      <h1 class="fs-2x text-gray-900 mb-4">Smarter OpenAPI Contract</h1>
+      <h1 class="fs-2x text-gray-900 mb-4">{% translate "Smarter OpenAPI Contract" %}</h1>
       <p class="fs-5 text-gray-700">
-        The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api, and the REST
+        {% blocktranslate trimmed %}The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api, and the REST
         reads. Generate a client or an SDK from it, in any language. Authorize with an api key, as
-        <code>Token &lt;api key&gt;</code>, to try the operations against this platform.
+        <code>Token &lt;api key&gt;</code>, to try the operations against this platform.{% endblocktranslate %}
       </p>
       <p class="fs-5">
-        <a href="{% url 'docs:openapi-json' %}" download="openapi.json">Download openapi.json</a>
+        <a href="{% url 'docs:openapi-json' %}" download="openapi.json">{% translate "Download openapi.json" %}</a>
         &nbsp;·&nbsp;
-        <a href="{% url 'docs:json_schemas' %}">SAM JSON Schemas</a>
+        <a href="{% url 'docs:json_schemas' %}">{% translate "SAM JSON Schemas" %}</a>
         &nbsp;·&nbsp;
         <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-api/api-contract.html" target="_blank"
-          >About the contract</a
+          >{% translate "About the contract" %}</a
         >
       </p>
     </div>

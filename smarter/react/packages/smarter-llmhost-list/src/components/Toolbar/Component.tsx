@@ -26,7 +26,7 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { LLMHost } from "@/lib/Types";
@@ -44,14 +44,20 @@ interface NameModalProps {
 const ModalClone = ({ llmhost, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone LLMHost" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Clone LLMHost")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Clone llmhost <strong>{llmhost?.name}</strong> to a new resource owned by you.
+        {interpolateNodes(gettext("Clone llmhost %(name)s to a new resource owned by you."), {
+          name: <strong>{llmhost?.name}</strong>,
+        })}
       </p>
       <p>
-        <em>Provide the new name for the cloned llmhost.</em>
+        <em>{gettext("Provide the new name for the cloned llmhost.")}</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new llmhost name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={gettext("Enter new llmhost name")}
+      />
     </Modal>
   );
 };
@@ -60,14 +66,16 @@ const ModalClone = ({ llmhost, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ llmhost, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(llmhost?.name || "");
   return (
-    <Modal show title="Rename LLMHost" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Rename LLMHost")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>{interpolateNodes(gettext("Rename llmhost %(name)s."), { name: <strong>{llmhost?.name}</strong> })}</p>
       <p>
-        Rename llmhost <strong>{llmhost?.name}</strong>.
+        <em>{gettext("Provide the new name for the llmhost.")}</em>
       </p>
-      <p>
-        <em>Provide the new name for the llmhost.</em>
-      </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new llmhost name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={gettext("Enter new llmhost name")}
+      />
     </Modal>
   );
 };
@@ -84,12 +92,14 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete LLMHost" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title={gettext("Delete LLMHost")} onOk={onOk} onCancel={onCancel}>
     <p>
-      Are you sure you want to delete llmhost <strong>{llmhost?.name}</strong>?
+      {interpolateNodes(gettext("Are you sure you want to delete llmhost %(name)s?"), {
+        name: <strong>{llmhost?.name}</strong>,
+      })}
     </p>
     <p>
-      <em>Data is not recoverable.</em>
+      <em>{gettext("Data is not recoverable.")}</em>
     </p>
   </Modal>
 );
@@ -106,11 +116,13 @@ const ModalError = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="❌ Error" onClose={onClose}>
+  <Modal show={show} title={gettext("❌ Error")} onClose={onClose}>
     <p>
-      An error occurred while performing the operation on llmhost <strong>{llmhost?.name}</strong>.
+      {interpolateNodes(gettext("An error occurred while performing the operation on llmhost %(name)s."), {
+        name: <strong>{llmhost?.name}</strong>,
+      })}
     </p>
-    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>{gettext("An unknown error occurred.")}</em>}</p>
   </Modal>
 );
 
@@ -126,15 +138,39 @@ const ModalConfirmation = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="✅ Success" onClose={onClose}>
+  <Modal show={show} title={gettext("✅ Success")} onClose={onClose}>
     <p>
       {message} <strong>{llmhost?.name}</strong>.
     </p>
     <p>
-      <em>Operation completed successfully.</em>
+      <em>{gettext("Operation completed successfully.")}</em>
     </p>
   </Modal>
 );
+
+/**
+ * The messages that report the result of an action. Each is a whole sentence, so that it can be
+ * translated.
+ */
+const actionMessages = (verb: string) => {
+  switch (verb) {
+    case "clone":
+      return {
+        failed: gettext("Failed to clone llmhost (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully cloned llmhost"),
+      };
+    case "rename":
+      return {
+        failed: gettext("Failed to rename llmhost (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully renamed llmhost"),
+      };
+    default:
+      return {
+        failed: gettext("Failed to delete llmhost (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully deleted llmhost"),
+      };
+  }
+};
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -168,13 +204,18 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(`Failed to ${verb} llmhost (${response.status}): ${data.error || response.statusText}`);
+          throw new Error(
+            interpolate(actionMessages(verb).failed, {
+              status: response.status,
+              error: data.error || response.statusText,
+            }),
+          );
         }
         return data;
       })
       .then((data) => {
         console.debug(loggerPrefix, `Successfully ${verb}d llmhost:`, data);
-        setSuccessMessage(`Successfully ${verb}d llmhost`);
+        setSuccessMessage(actionMessages(verb).succeeded);
         // clone and rename return the resulting llmhost; delete returns a message.
         setModal({ type: "confirmation", llmhost: data && data.id ? (data as LLMHost) : target });
       })
@@ -187,11 +228,11 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
 
   return (
     <>
-      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label={gettext("Actions")}>
         <a
           href={llmhost.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Chat: Open the llmhost workbench"
+          title={gettext("Chat: Open the llmhost workbench")}
           tabIndex={0}
         >
           <i className="bi bi-chat-dots md-teal" />
@@ -199,7 +240,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
         <a
           href={llmhost.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Edit: Open the YAML manifest that defines this llmhost resource"
+          title={gettext("Edit: Open the YAML manifest that defines this llmhost resource")}
           tabIndex={0}
         >
           <i className="bi bi-pencil-square md-blue" />
@@ -207,7 +248,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Clone: Clone this llmhost resource to a new resource owned by you"
+          title={gettext("Clone: Clone this llmhost resource to a new resource owned by you")}
           onClick={() => setModal({ type: "clone", llmhost })}
           tabIndex={0}
         >
@@ -216,7 +257,7 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Rename: Rename this llmhost resource"
+          title={gettext("Rename: Rename this llmhost resource")}
           onClick={() => setModal({ type: "rename", llmhost })}
           tabIndex={0}
         >
@@ -227,8 +268,10 @@ export const Toolbar = ({ sessionContext, llmhost, onRequery }: ToolbarProps) =>
           className="btn btn-icon btn-sm border"
           title={
             llmhost.canDelete === false
-              ? "Delete: You can't delete this llmhost, because other resources depend on it, or you don't have permission to delete it"
-              : "Delete: Delete this llmhost resource"
+              ? gettext(
+                  "Delete: You can't delete this llmhost, because other resources depend on it, or you don't have permission to delete it",
+                )
+              : gettext("Delete: Delete this llmhost resource")
           }
           onClick={() => setModal({ type: "delete", llmhost })}
           disabled={llmhost.canDelete === false}

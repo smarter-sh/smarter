@@ -8,3 +8,4 @@ Dashboard Templatetags
    templatetags/react_dashboard
    templatetags/react_prompt_passthrough
    templatetags/react_terminal_emulator
+   templatetags/smarter_i18n
