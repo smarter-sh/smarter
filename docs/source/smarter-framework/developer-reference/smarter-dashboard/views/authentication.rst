@@ -9,4 +9,5 @@ Dashboard Authentication Views
    authentication/account_views
    authentication/login_view
    authentication/logout_view
+   authentication/profile_image
    authentication/social_auth
