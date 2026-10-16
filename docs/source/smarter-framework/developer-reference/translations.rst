@@ -4,10 +4,12 @@ Translations
 The Smarter web console is translated with `gettext <https://www.gnu.org/software/gettext/>`__, the
 same way as Django itself. English is the source language of every message and the default. Each
 other language is a pair of ``.po`` message catalogs, which a translator fills in. The console is
-translated into Spanish and French. The Spanish catalogs are written in Latin American Spanish, under
-the generic ``es`` code, so that a browser that asks for any variant of Spanish (``es-MX``,
-``es-419``, ``es-ES``) gets them. Django's ``LANG_INFO`` has no ``es-419``, so the language menu
-would describe an ``es-419`` language as ``es``, and post ``es`` back. The console's
+translated into Spanish, French and Brazilian Portuguese. The Spanish catalogs are written in Latin
+American Spanish, under the generic ``es`` code, so that a browser that asks for any variant of
+Spanish (``es-MX``, ``es-419``, ``es-ES``) gets them. Django's ``LANG_INFO`` has no ``es-419``, so
+the language menu would describe an ``es-419`` language as ``es``, and post ``es`` back. Brazilian
+Portuguese is Django's regional ``pt-br`` code, whose catalogs are in the ``pt_BR`` directory, the
+locale name of the code. A browser that asks for ``pt``, ``pt-BR`` or ``pt-PT`` gets it. The console's
 Django templates, its Python views, its React apps and its plain JavaScript all share this one
 pipeline, so a translator works with one set of files, in one format. The documentation at
 docs.smarter.sh, and the Smarter api's responses, are not translated.
@@ -133,17 +135,21 @@ After changing marked text, regenerate the catalogs, with the containers running
 command in the ``smarter-app`` container, which runs ``makemessages`` for both domains and every
 language in ``settings.LANGUAGES``, keeping the translations already in the ``.po`` files, then
 ``compilemessages``. It copies the catalogs back to the host. Commit the changed ``.po`` files and
-``messages.js``. ``make i18n-messages LANGUAGE=es`` updates one language.
+``messages.js``. ``make i18n-messages LANGUAGE=es`` updates one language, and so does
+``LANGUAGE=pt-br``, whose catalogs the command writes to ``locale/pt_BR``.
 
 Adding a Language
 -----------------
 
 1. Add the language to ``LANGUAGES`` in ``smarter/smarter/settings/base.py``, e.g.
-   ``("es", "Spanish")``.
+   ``("es", "Spanish")``. Use a code that Django's ``django.conf.locale.LANG_INFO`` knows, such as
+   ``es`` or ``pt-br``, so that the language menu posts back the code that it lists.
 2. Add its `date-fns <https://date-fns.org/>`__ locale to ``DATE_FNS_LOCALES`` in
-   ``smarter-common/src/lib/formatDateTime.tsx``, for relative times such as "3 minutes ago".
+   ``smarter-common/src/lib/formatDateTime.tsx``, for relative times such as "3 minutes ago". A
+   regional code is its lowercase key, e.g. ``"pt-br": ptBR``.
 3. Rebuild the containers, then run ``make i18n-messages``. It creates
-   ``smarter/smarter/locale/es/LC_MESSAGES/django.po`` and ``djangojs.po``.
+   ``smarter/smarter/locale/es/LC_MESSAGES/django.po`` and ``djangojs.po``, or
+   ``locale/pt_BR/LC_MESSAGES/`` for ``pt-br``.
 4. Translate every ``msgstr``, with a ``.po`` editor such as `Poedit <https://poedit.net/>`__, or by
    hand. Keep each ``%(name)s`` placeholder, and the HTML in ``blocktranslate`` messages.
 5. Rebuild the containers, which compile the catalogs. The language menu appears in the console's

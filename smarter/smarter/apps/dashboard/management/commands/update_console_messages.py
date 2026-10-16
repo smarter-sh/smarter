@@ -5,6 +5,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
+from django.utils.translation import to_locale
 
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -31,7 +32,8 @@ class Command(SmarterCommand):
     Regenerates ``smarter/smarter/locale/<language>/LC_MESSAGES/django.po``, from the Django
     templates and Python code, and ``djangojs.po``, from the React apps' messages in
     ``react/i18n/messages.js``, for each language in ``settings.LANGUAGES``, then compiles
-    them to ``.mo`` files. Translations already in the ``.po`` files are kept.
+    them to ``.mo`` files. A regional language code is written to its locale name's directory,
+    e.g. ``pt-br`` to ``locale/pt_BR``. Translations already in the ``.po`` files are kept.
 
     Run ``npm run i18n:extract`` in ``smarter/react`` first, or ``make i18n-messages``, which
     does both.
@@ -47,7 +49,10 @@ class Command(SmarterCommand):
             "--language",
             action="append",
             dest="languages",
-            help="A language to update, e.g. es. Repeat it for more than one. Default: every language in settings.LANGUAGES.",
+            help=(
+                "A language to update, e.g. es or pt-br. Repeat it for more than one. "
+                "Default: every language in settings.LANGUAGES."
+            ),
         )
         parser.add_argument(
             "--no-compile",
@@ -58,6 +63,9 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         self.handle_begin()
         languages = options["languages"] or [code for code, _ in settings.LANGUAGES]
+        # makemessages and compilemessages take locale names, which are also the catalogs' directory
+        # names: pt-br is pt_BR.
+        languages = [to_locale(language) for language in languages]
         project_root = Path(settings.PROJECT_ROOT)
         cwd = os.getcwd()
         try:

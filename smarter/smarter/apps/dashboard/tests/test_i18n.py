@@ -45,14 +45,21 @@ class TestI18nSettings(SmarterTestBase):
         locale_dir = Path(settings.LOCALE_PATHS[0])
         for code, _ in settings.LANGUAGES:
             for domain in ("django", "djangojs"):
-                po = locale_dir / code / "LC_MESSAGES" / f"{domain}.po"
+                po = locale_dir / to_locale(code) / "LC_MESSAGES" / f"{domain}.po"
                 self.assertTrue(po.is_file(), f"{po} is missing: run make i18n-messages")
 
-    def test_spanish_and_french_are_available(self):
-        """The console is translated into Spanish, under the generic es code, and French."""
+    def test_spanish_french_and_portuguese_are_available(self):
+        """The console is translated into Spanish, under the generic es code, French and Brazilian Portuguese."""
         codes = [code for code, _ in settings.LANGUAGES]
         self.assertIn("es", codes)
         self.assertIn("fr", codes)
+        self.assertIn("pt-br", codes)
+
+    def test_languages_are_known_to_django(self):
+        """Every language is in Django's LANG_INFO, so the language menu posts back the same code."""
+        for code, _ in settings.LANGUAGES:
+            with self.subTest(language=code):
+                self.assertEqual(translation.get_language_info(code)["code"], code)
 
     def test_message_catalogs_are_translated(self):
         """Every message of every language but English is translated, and none is fuzzy."""
@@ -61,7 +68,7 @@ class TestI18nSettings(SmarterTestBase):
             if code == settings.LANGUAGE_CODE:
                 continue
             for domain in ("django", "djangojs"):
-                po = locale_dir / code / "LC_MESSAGES" / f"{domain}.po"
+                po = locale_dir / to_locale(code) / "LC_MESSAGES" / f"{domain}.po"
                 with self.subTest(catalog=f"{code}/{domain}.po"):
                     text = po.read_text(encoding="utf-8")
                     # The header is the one msgstr whose msgid is empty, and it is never empty itself.
@@ -92,6 +99,8 @@ class TestI18nTemplates(SmarterTestBase):
             self.assertEqual(template.render({}), "Iniciar sesión")
         with translation.override("fr"):
             self.assertEqual(template.render({}), "Se connecter")
+        with translation.override("pt-br"):
+            self.assertEqual(template.render({}), "Entrar")
 
 
 class TestI18nViews(TestAccountMixin):
@@ -149,9 +158,26 @@ class TestI18nViews(TestAccountMixin):
         self.assertIn('<html lang="fr"', content)
         self.assertIn("Se connecter", content)
 
+    def test_any_portuguese_variant_gets_brazilian_portuguese(self):
+        """A browser that asks for any variant of Portuguese gets the Brazilian Portuguese catalogs."""
+        for accept_language in ("pt-BR", "pt", "pt-PT,pt;q=0.9,en;q=0.8"):
+            with self.subTest(accept_language=accept_language):
+                response = self.client.get(reverse("login_view"), headers={"accept-language": accept_language})
+                self.assertEqual(response.status_code, 200)
+                content = response.content.decode()
+                self.assertIn('<html lang="pt-br"', content)
+                self.assertIn('content="pt_BR" property="og:locale"', content)
+                self.assertIn("Entrar", content)
+
+    def test_set_language_to_brazilian_portuguese(self):
+        """The language menu's pt-br choice is accepted, and stored as pt-br."""
+        response = self.client.post(reverse("set_language"), {"language": "pt-br", "next": "/dashboard/"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "pt-br")
+
     def test_javascript_catalog_in_the_chosen_language(self):
         """The JavaScript catalog serves the djangojs messages of the language cookie's language."""
-        for code, translated in (("es", "Tus secretos"), ("fr", "Vos secrets")):
+        for code, translated in (("es", "Tus secretos"), ("fr", "Vos secrets"), ("pt-br", "Seus segredos")):
             with self.subTest(language=code):
                 self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = code
                 response = self.client.get(reverse("javascript-catalog"))
