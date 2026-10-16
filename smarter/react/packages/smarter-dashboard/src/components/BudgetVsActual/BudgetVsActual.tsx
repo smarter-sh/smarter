@@ -9,15 +9,22 @@ const BudgetVsActualChart = lazy(() => import("@/components/BudgetVsActual/Chart
 interface BudgetVsActualProps {
   sessionContext: SessionContext;
   apiUrl: string;
+  /** The card's grid column classes, so that the dashboard can set its width. */
+  className?: string;
 }
 
 /** A dashboard card with the budget versus actual chart of the budgets that apply to the user. */
-function BudgetVsActual({ sessionContext, apiUrl }: BudgetVsActualProps) {
+function BudgetVsActual({ sessionContext, apiUrl, className = "col-xl-12" }: BudgetVsActualProps) {
   return (
-    <div id="budget-vs-actual" aria-label="Budget vs Actual" className="col-xl-12 mb-5 mb-xl-10">
-      <div className="card border-transparent" data-bs-theme="light">
-        <div className="card-body d-flex flex-column ps-xl-15 h-100">
-          <h6 className="text-muted opacity-75-hover w-100 my-4 fs-3 fw-bold">Budget vs Actual</h6>
+    <div id="budget-vs-actual" aria-label="Budget vs Actual" className={`${className} mb-5 mb-xl-10`}>
+      <div className="card border-transparent h-100" data-bs-theme="light">
+        <div className="card-header border-0 pt-5">
+          <h3 className="card-title align-items-start flex-column">
+            <span className="card-label fw-bold text-gray-900">Budget vs Actual</span>
+            <span className="text-muted mt-1 fw-semibold fs-7">Your spending against each budget&apos;s limit</span>
+          </h3>
+        </div>
+        <div className="card-body d-flex flex-column pt-3">
           <Suspense fallback={null}>
             <BudgetVsActualChart sessionContext={sessionContext} apiUrl={apiUrl} />
           </Suspense>

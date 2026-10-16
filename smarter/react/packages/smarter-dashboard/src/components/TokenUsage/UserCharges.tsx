@@ -10,19 +10,27 @@ const TokenUsageChart = lazy(() => import("@/components/TokenUsage/Chart"));
 interface UserUsageProps {
   sessionContext: SessionContext;
   apiUrl: string;
+  /** The card's grid column classes, so that the dashboard can set its width. */
+  className?: string;
 }
 
-function UserCharges({ sessionContext, apiUrl }: UserUsageProps) {
+function UserCharges({ sessionContext, apiUrl, className = "col-xl-12" }: UserUsageProps) {
   console.debug("apiUrl", apiUrl);
   return (
     <>
-      <div id="user-usage" aria-label="User Usage" className="col-xl-12 mb-5 mb-xl-10">
+      <div id="user-usage" aria-label="User Usage" className={`${className} mb-5 mb-xl-10`}>
         {/* begin::User Usage */}
-        <div className="card border-transparent" data-bs-theme="light">
+        <div className="card border-transparent h-100" data-bs-theme="light">
+          {/* begin::Header */}
+          <div className="card-header border-0 pt-5">
+            <h3 className="card-title align-items-start flex-column">
+              <span className="card-label fw-bold text-gray-900">Token Usage</span>
+              <span className="text-muted mt-1 fw-semibold fs-7">Tokens your LLM requests used, over time</span>
+            </h3>
+          </div>
+          {/* end::Header */}
           {/* begin::Body */}
-          <div className="card-body d-flex flex-column ps-xl-15 h-100">
-            {/* begin::Title */}
-            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">Token Usage</h6>
+          <div className="card-body d-flex flex-column pt-3">
             <Suspense fallback={null}>
               <TokenUsageChart sessionContext={sessionContext} apiUrl={apiUrl} />
             </Suspense>

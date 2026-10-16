@@ -4,15 +4,28 @@
  */
 import { http, HttpResponse } from "msw";
 
-import type { LLMTool } from "@/lib/Types";
+import type { Extension, LLMTool } from "@/lib/Types";
 
-import { ACTIONS_URL as BASE, API_URL, makeObject, ownedObjects, sharedObjects } from "./fixtures";
+import {
+  ACTIONS_URL as BASE,
+  API_URL,
+  extensionObjects,
+  extensionPage,
+  makeObject,
+  ownedObjects,
+  sharedObjects,
+} from "./fixtures";
 
-/** The list api: the owned and shared objects. */
-export function listHandlers(owned: LLMTool[] = ownedObjects, shared: LLMTool[] = sharedObjects) {
+/** The list api: the owned and shared objects, and the extensions of the read-only Extensions tab. */
+export function listHandlers(
+  owned: LLMTool[] = ownedObjects,
+  shared: LLMTool[] = sharedObjects,
+  extensions: Extension[] = extensionObjects,
+) {
   return [
     http.post(`${API_URL}owned/`, () => HttpResponse.json({ objects: owned })),
     http.post(`${API_URL}shared/`, () => HttpResponse.json({ objects: shared })),
+    http.post(`${API_URL}extensions/`, () => HttpResponse.json(extensionPage(extensions))),
   ];
 }
 

@@ -1,0 +1,56 @@
+.contribute-card {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 60%, #fed7aa 100%);
+  overflow: hidden;
+}
+
+.contribute-illustration {
+  opacity: 0.95;
+}
+
+.contribute-underline {
+  border-color: #ea580c !important;
+  opacity: 0.6;
+}
+
+.contribute-lede {
+  max-width: 55%;
+}
+
+.contribute-chips,
+.contribute-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 60%;
+  list-style: none;
+  padding-left: 0;
+}
+
+.contribute-chips {
+  margin-bottom: 1.25rem;
+}
+
+.contribute-badges {
+  margin-bottom: 0;
+}
+
+.contribute-chip {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #9a3412;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 0.25rem 0.75rem rgba(234, 88, 12, 0.12);
+}
+
+.contribute-btn {
+  background-color: #ea580c;
+  color: #ffffff;
+}
+
+.contribute-btn:hover {
+  background-color: #c2410c;
+  color: #ffffff;
+}

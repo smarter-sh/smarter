@@ -1,0 +1,154 @@
+.extensions-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.14) 0%, rgba(124, 58, 237, 0) 45%),
+    linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+  overflow: hidden;
+}
+
+.extensions-eyebrow {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background-color: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.extensions-underline {
+  border-color: #7c3aed !important;
+  opacity: 0.5;
+}
+
+.extensions-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  color: var(--bs-gray-800);
+  font-size: 0.9rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.extensions-steps li {
+  display: flex;
+  align-items: center;
+}
+
+.extensions-step-number {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.6rem;
+  border-radius: 50%;
+  background-color: #7c3aed;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.extensions-btn {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+.extensions-btn:hover {
+  background-color: #6d28d9;
+  color: #ffffff;
+}
+
+.extensions-link {
+  color: #6d28d9;
+}
+
+.extensions-link:hover {
+  color: #4c1d95;
+}
+
+.extensions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.extensions-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #ede9fe;
+  border-radius: 0.85rem;
+  background-color: #ffffff;
+  box-shadow: 0 0.4rem 1rem rgba(76, 29, 149, 0.08);
+}
+
+.extensions-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.7rem;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+}
+
+.extensions-icon i {
+  color: #ffffff;
+}
+
+.extensions-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.extensions-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--bs-gray-900);
+  font-weight: 700;
+}
+
+.extensions-badge {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background-color: #dcfce7;
+  color: #15803d;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.extensions-description {
+  color: var(--bs-gray-600);
+  font-size: 0.8rem;
+}
+
+.extensions-manifest {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background-color: #1e1e2e;
+  color: #cdd6f4;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.extensions-key {
+  color: #89b4fa;
+}
+
+.extensions-str {
+  color: #a6e3a1;
+}

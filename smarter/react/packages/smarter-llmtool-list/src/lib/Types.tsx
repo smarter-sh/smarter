@@ -11,6 +11,8 @@
  * Exports:
  *   - TabKey: Type for tab keys ("user" | "shared").
  *   - LLMTool: Type for LLMTool objects.
+ *   - Extension, ExtensionListPage: The Extension objects of the read-only Extensions tab, and a
+ *     page of them, generated from the backend's contract (see src/contract.gen.ts).
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:
@@ -105,6 +107,32 @@ export interface LLMToolListViewProps {
   ghostRows: number;
   sessionContext: SessionContext;
   objects: LLMTool[];
+  onRequery: () => void;
+  sorting?: Sorting;
+}
+
+// ----------------------------------------------------------------------------
+// Extension Definition
+// ----------------------------------------------------------------------------
+/**
+ * An installed Smarter Extension that the user's account may use, as the read-only Extensions
+ * tab lists it, and a page of them: the api's contract, generated from the backend's Pydantic
+ * models (smarter.apps.llmtool.views.listview.contract). See src/contract.gen.ts.
+ */
+export type { ExtensionListItem as Extension, ExtensionListPage } from "@/contract.gen";
+import type { ExtensionListItem as Extension } from "@/contract.gen";
+
+export interface ExtensionCardViewProps {
+  sessionContext: SessionContext;
+  objects: Extension[];
+  onRequery: () => void;
+}
+
+export interface ExtensionListViewProps {
+  isLoading: boolean;
+  ghostRows: number;
+  sessionContext: SessionContext;
+  objects: Extension[];
   onRequery: () => void;
   sorting?: Sorting;
 }
