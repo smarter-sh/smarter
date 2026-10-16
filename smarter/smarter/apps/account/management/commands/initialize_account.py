@@ -143,7 +143,6 @@ class Command(SmarterCommand):
         # 4. Add builtin plugin examples and deploy llmclients.
 
         call_command("add_plugin_examples", username=username)
-        call_command("deploy_example_llmclient", account_number=account_number)
         try:
             call_command("deploy_builtin_llmclients", account_number=account_number)
         except CommandError as e:
