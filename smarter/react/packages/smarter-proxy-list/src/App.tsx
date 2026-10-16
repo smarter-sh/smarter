@@ -4,7 +4,7 @@
  * Used to display a list of available proxies.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Proxy, ProxyListViewProps, ProxyCardViewProps } from "@/lib/Types";
@@ -12,8 +12,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your Proxies" },
-  { key: "shared" as TabKey, label: "Shared Proxies" },
+  { key: "owned" as TabKey, label: gettext("Your Proxies") },
+  { key: "shared" as TabKey, label: gettext("Shared Proxies") },
 ];
 
 // Set the TabbedViewContext generic object type to Proxy,
@@ -38,11 +38,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Proxies";
+  const title = gettext("Proxies");
   const icon = "ki-data";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-proxy.html";
-  const helpText =
-    "A Proxy gives passthrough access to an LLM provider's API, e.g. OpenAI's or Anthropic's, with an API key that Smarter keeps as a Secret. Use the provider's own SDK, with the Proxy's URL as its base URL and a Smarter API key in place of the provider's: requests and responses pass through unchanged, the provider's API key is never exposed, and token usage is charged to your account.";
+  const helpText = gettext(
+    "A Proxy gives passthrough access to an LLM provider's API, e.g. OpenAI's or Anthropic's, with an API key that Smarter keeps as a Secret. Use the provider's own SDK, with the Proxy's URL as its base URL and a Smarter API key in place of the provider's: requests and responses pass through unchanged, the provider's API key is never exposed, and token usage is charged to your account.",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="proxy-list">

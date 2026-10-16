@@ -18,6 +18,7 @@ import { ExtensionStatusBar } from "@/components/ExtensionStatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function ExtensionCardView({ objects }: ExtensionCardViewProps) {
   console.debug(loggerPrefix, "Rendering ExtensionCardView with objects:", objects);
@@ -37,18 +38,18 @@ function ExtensionCardView({ objects }: ExtensionCardViewProps) {
                 <h5 className="card-title mb-3 text-primary fw-bold text-center">{extension.displayName}</h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", extension.id, "number")}
-                    {renderDetailRow("Slug", extension.slug)}
-                    {renderDetailRow("Version", extension.version)}
-                    {renderDetailRow("Description", extension.description)}
-                    {renderDetailRow("Publisher", extension.publisher)}
-                    {renderDetailRow("Trust Badge", extension.trustBadgeLabel)}
-                    {renderDetailRow("Source", extension.source)}
-                    {renderDetailRow("Enabled", extension.enabled, "bool")}
-                    {renderDetailRow("License", extension.license)}
-                    {renderDetailRow("Homepage", extension.homepage, "url")}
-                    {renderDetailRow("Installed", extension.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", extension.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("ID"), extension.id, "number")}
+                    {renderDetailRow(gettext("Slug"), extension.slug)}
+                    {renderDetailRow(gettext("Version"), extension.version)}
+                    {renderDetailRow(gettext("Description"), extension.description)}
+                    {renderDetailRow(gettext("Publisher"), extension.publisher)}
+                    {renderDetailRow(gettext("Trust Badge"), extension.trustBadgeLabel)}
+                    {renderDetailRow(gettext("Source"), extension.source)}
+                    {renderDetailRow(gettext("Enabled"), extension.enabled, "bool")}
+                    {renderDetailRow(gettext("License"), extension.license)}
+                    {renderDetailRow(gettext("Homepage"), extension.homepage, "url")}
+                    {renderDetailRow(gettext("Installed"), extension.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), extension.updatedAt, "dateTime")}
                   </tbody>
                 </table>
               </div>

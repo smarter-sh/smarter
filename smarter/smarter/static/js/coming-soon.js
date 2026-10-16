@@ -7,7 +7,7 @@ function emailAdded(nextPage) {
     text: "",
     icon: "success",
     buttonsStyling: false,
-    confirmButtonText: "Added",
+    confirmButtonText: gettext("Added"),
     customClass: {
         confirmButton: "btn btn-primary"
     }
@@ -44,10 +44,10 @@ var KTSignupComingSoon = function() {
                         validators: {
                             regexp: {
                                 regexp: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                message: 'The value is not a valid email address',
+                                message: gettext('The value is not a valid email address'),
                             },
 							notEmpty: {
-								message: 'Email address is required'
+								message: gettext('Email address is required')
 							}
 						}
 					}
@@ -130,10 +130,10 @@ var KTSignupComingSoon = function() {
                 } else {
                     // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                     Swal.fire({
-                        text: "Sorry, looks like there are some errors detected, please try again.",
+                        text: gettext("Sorry, looks like there are some errors detected, please try again."),
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: gettext("Ok, got it!"),
                         customClass: {
                             confirmButton: "btn btn-primary"
                         }

@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,50 +54,50 @@ function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps)
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", provider.id, "number")}
-                    {renderDetailRow("Status", provider.status)}
-                    {renderDetailRow("Manifest URL", provider.manifestUrl, "url")}
-                    {renderDetailRow("Base URL", provider.baseUrl, "url")}
-                    {renderDetailRow("Owner", provider.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", provider.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", provider.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", provider.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", provider.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", provider.version)}
-                    {renderDetailRow("Default Model", provider.defaultModel)}
-                    {renderDetailRow("Connectivity Test Path", provider.connectivityTestPath)}
-                    {renderDetailRow("Description", provider.description)}
-                    {renderDetailRow("Tags", provider.tags, "str[]")}
-                    {renderDetailRow("Annotations", provider.annotations, "json")}
-                    {renderDetailRow("Ready", provider.ready, "bool")}
-                    {renderDetailRow("Is Default", provider.isDefault, "bool")}
-                    {renderDetailRow("Is Active", provider.isActive, "bool")}
-                    {renderDetailRow("Is Verified", provider.isVerified, "bool")}
-                    {renderDetailRow("Is Featured", provider.isFeatured, "bool")}
-                    {renderDetailRow("Is Deprecated", provider.isDeprecated, "bool")}
-                    {renderDetailRow("Is Flagged", provider.isFlagged, "bool")}
-                    {renderDetailRow("Is Suspended", provider.isSuspended, "bool")}
-                    {renderDetailRow("Logo", provider.logo, "url")}
-                    {renderDetailRow("Website", provider.websiteUrl, "url")}
-                    {renderDetailRow("Docs URL", provider.docsUrl, "url")}
-                    {renderDetailRow("Terms Of Service URL", provider.termsOfServiceUrl, "url")}
-                    {renderDetailRow("Privacy Policy URL", provider.privacyPolicyUrl, "url")}
-                    {renderDetailRow("Contact Email", provider.contactEmail)}
-                    {renderDetailRow("Contact Email Verified", provider.contactEmailVerified, "dateTime")}
-                    {renderDetailRow("Support Email", provider.supportEmail)}
-                    {renderDetailRow("Support Email Verified", provider.supportEmailVerified, "dateTime")}
-                    {renderDetailRow("Ownership Requested", provider.ownershipRequested, "json")}
-                    {renderDetailRow("Expires At", provider.expiresAt, "dateTime")}
-                    {renderDetailRow("Last Accessed", provider.lastAccessed, "dateTime")}
-                    {renderDetailRow("API Key", provider.apiKey, "json")}
-                    {renderDetailRow("Is Official Provider", provider.isOfficialProvider, "bool")}
-                    {renderDetailRow("TOS Accepted", provider.tosAccepted, "bool")}
-                    {renderDetailRow("TOS Accepted At", provider.tosAcceptedAt, "dateTime")}
+                    {renderDetailRow(gettext("ID"), provider.id, "number")}
+                    {renderDetailRow(gettext("Status"), provider.status)}
+                    {renderDetailRow(gettext("Manifest URL"), provider.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Base URL"), provider.baseUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), provider.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), provider.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), provider.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), provider.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), provider.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), provider.version)}
+                    {renderDetailRow(gettext("Default Model"), provider.defaultModel)}
+                    {renderDetailRow(gettext("Connectivity Test Path"), provider.connectivityTestPath)}
+                    {renderDetailRow(gettext("Description"), provider.description)}
+                    {renderDetailRow(gettext("Tags"), provider.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), provider.annotations, "json")}
+                    {renderDetailRow(gettext("Ready"), provider.ready, "bool")}
+                    {renderDetailRow(gettext("Is Default"), provider.isDefault, "bool")}
+                    {renderDetailRow(gettext("Is Active"), provider.isActive, "bool")}
+                    {renderDetailRow(gettext("Is Verified"), provider.isVerified, "bool")}
+                    {renderDetailRow(gettext("Is Featured"), provider.isFeatured, "bool")}
+                    {renderDetailRow(gettext("Is Deprecated"), provider.isDeprecated, "bool")}
+                    {renderDetailRow(gettext("Is Flagged"), provider.isFlagged, "bool")}
+                    {renderDetailRow(gettext("Is Suspended"), provider.isSuspended, "bool")}
+                    {renderDetailRow(gettext("Logo"), provider.logo, "url")}
+                    {renderDetailRow(gettext("Website"), provider.websiteUrl, "url")}
+                    {renderDetailRow(gettext("Docs URL"), provider.docsUrl, "url")}
+                    {renderDetailRow(gettext("Terms Of Service URL"), provider.termsOfServiceUrl, "url")}
+                    {renderDetailRow(gettext("Privacy Policy URL"), provider.privacyPolicyUrl, "url")}
+                    {renderDetailRow(gettext("Contact Email"), provider.contactEmail)}
+                    {renderDetailRow(gettext("Contact Email Verified"), provider.contactEmailVerified, "dateTime")}
+                    {renderDetailRow(gettext("Support Email"), provider.supportEmail)}
+                    {renderDetailRow(gettext("Support Email Verified"), provider.supportEmailVerified, "dateTime")}
+                    {renderDetailRow(gettext("Ownership Requested"), provider.ownershipRequested, "json")}
+                    {renderDetailRow(gettext("Expires At"), provider.expiresAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Accessed"), provider.lastAccessed, "dateTime")}
+                    {renderDetailRow(gettext("API Key"), provider.apiKey, "json")}
+                    {renderDetailRow(gettext("Is Official Provider"), provider.isOfficialProvider, "bool")}
+                    {renderDetailRow(gettext("TOS Accepted"), provider.tosAccepted, "bool")}
+                    {renderDetailRow(gettext("TOS Accepted At"), provider.tosAcceptedAt, "dateTime")}
                     {renderDetailRow(
-                      "TOS Accepted By",
+                      gettext("TOS Accepted By"),
                       provider.tosAcceptedBy ? provider.tosAcceptedBy.username : null,
                     )}
-                    {renderDetailRow("RFC 1034 Compliant Name", provider.rfc1034CompliantName)}
+                    {renderDetailRow(gettext("RFC 1034 Compliant Name"), provider.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

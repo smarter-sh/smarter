@@ -5,7 +5,7 @@
  * and charts its budget versus the actual spending of the last 12 billing periods.
  */
 import { useEffect, useMemo, useState } from "react";
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext, interpolate, interpolateNodes } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import BudgetChart from "@/components/BudgetVsActual/BudgetChart";
@@ -43,7 +43,11 @@ function Usage({
   const over = percent !== null && percent >= 100;
   return (
     <span className={`badge ${over ? "badge-light-danger" : "badge-light-success"} me-2 fs-7`}>
-      {label}: {formatAmount(actual, status.unit)} of {formatAmount(limit, status.unit)}
+      {interpolateNodes(gettext("%(label)s: %(amount)s of %(amount2)s"), {
+        label,
+        amount: formatAmount(actual, status.unit),
+        amount2: formatAmount(limit, status.unit),
+      })}
       {percent !== null ? ` (${percent}%)` : ""}
     </span>
   );
@@ -87,9 +91,10 @@ export default function BudgetVsActualChart({
       });
   }, [sessionContext, apiUrl, status]);
 
-  if (statuses === null && !errMessage) return <div style={{ fontSize: "0.85rem", opacity: 0.6 }}>Loading…</div>;
+  if (statuses === null && !errMessage)
+    return <div style={{ fontSize: "0.85rem", opacity: 0.6 }}>{gettext("Loading…")}</div>;
   if (statuses !== null && statuses.length === 0) {
-    return <div className="text-muted">No budgets apply to you, or to your resources.</div>;
+    return <div className="text-muted">{gettext("No budgets apply to you, or to your resources.")}</div>;
   }
 
   return (
@@ -111,14 +116,14 @@ export default function BudgetVsActualChart({
           {status && (
             <>
               <Usage
-                label={`This ${status.period}`}
+                label={interpolate(gettext("This %(period)s"), { period: status.period })}
                 actual={status.periodic_actual}
                 limit={status.periodic_limit}
                 percent={status.periodic_percent}
                 status={status}
               />
               <Usage
-                label="Total"
+                label={gettext("Total")}
                 actual={status.absolute_actual}
                 limit={status.absolute_limit}
                 percent={status.absolute_percent}
@@ -126,10 +131,10 @@ export default function BudgetVsActualChart({
               />
               {status.is_locked && (
                 <span className="badge badge-danger fs-7" title={status.lock_reason ?? ""}>
-                  Blocked
+                  {gettext("Blocked")}
                 </span>
               )}
-              {status.is_expired && <span className="badge badge-light fs-7">Ended</span>}
+              {status.is_expired && <span className="badge badge-light fs-7">{gettext("Ended")}</span>}
             </>
           )}
         </div>

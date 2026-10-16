@@ -18,7 +18,7 @@
  *     <RecentActivity sessionContext={sessionContext} apiUrl="/dashboard/api/activity/" />
  */
 import type { SessionContext } from "@smarter/common";
-import { Loading } from "@smarter/common";
+import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
 import "@/components/RecentActivity/styles.css";
@@ -51,7 +51,7 @@ function ActivityRow({ item }: { item: ActivityItem }) {
       </td>
       <td className="fw-bold text-gray-800 fs-7">{item.thing}</td>
       <td className={`fs-7 ${failed ? "text-danger" : "text-gray-600"}`}>
-        {item.message ?? `HTTP ${item.status_code}`}
+        {item.message ?? interpolate(gettext("HTTP %(status_code)s"), { status_code: item.status_code })}
       </td>
     </tr>
   );
@@ -62,15 +62,19 @@ function RecentActivity({ sessionContext, apiUrl }: RecentActivityProps) {
 
   let body;
   if (error) {
-    body = <div className="text-danger fs-7">Failed to load recent activity: {error}</div>;
+    body = (
+      <div className="text-danger fs-7">
+        {interpolateNodes(gettext("Failed to load recent activity: %(error)s"), { error })}
+      </div>
+    );
   } else if (!data) {
     body = <Loading />;
   } else if (data.items.length === 0) {
     body = (
       <div className="text-muted fs-7">
         {data.journal_enabled
-          ? "No recent activity. Apply, deploy or delete a manifest and it will show here."
-          : "Activity journaling is turned off (waffle switch enable_journal)."}
+          ? gettext("No recent activity. Apply, deploy or delete a manifest and it will show here.")
+          : gettext("Activity journaling is turned off (waffle switch enable_journal).")}
       </div>
     );
   } else {
@@ -88,11 +92,11 @@ function RecentActivity({ sessionContext, apiUrl }: RecentActivityProps) {
   }
 
   return (
-    <section id="recent-activity" aria-label="Recent Activity" className="card border-transparent">
+    <section id="recent-activity" aria-label={gettext("Recent Activity")} className="card border-transparent">
       <div className="card-header border-0 pt-5">
         <h3 className="card-title align-items-start flex-column">
-          <span className="card-label fw-bold text-gray-900">Recent Activity</span>
-          <span className="text-muted mt-1 fw-semibold fs-7">Your latest manifest commands</span>
+          <span className="card-label fw-bold text-gray-900">{gettext("Recent Activity")}</span>
+          <span className="text-muted mt-1 fw-semibold fs-7">{gettext("Your latest manifest commands")}</span>
         </h3>
       </div>
       <div className="card-body pt-3">{body}</div>

@@ -28,7 +28,7 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { Loading, SortableHeader } from "@smarter/common";
+import { gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { Proxy, ProxyListViewProps } from "@/lib/Types";
@@ -45,7 +45,7 @@ import "@/components/ListView/styles.css";
  * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
  */
 const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
+  return <span className="text-muted fw-semibold">{gettext("Loading...")}</span>;
 };
 
 /**
@@ -59,15 +59,15 @@ const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
     <thead className="table-light border-bottom-2">
       <tr className="">
         <SortableHeader column="name" sorting={sorting} className=" p-1">
-          Name
+          {gettext("Name")}
         </SortableHeader>
         <SortableHeader column="providerName" sorting={sorting} className="">
-          Provider
+          {gettext("Provider")}
         </SortableHeader>
-        <th className="d-none d-lg-table-cell">Provider API</th>
-        <th className="d-none d-lg-table-cell">API Key</th>
-        <th className="d-none d-md-table-cell">Status</th>
-        <th className="">Operations</th>
+        <th className="d-none d-lg-table-cell">{gettext("Provider API")}</th>
+        <th className="d-none d-lg-table-cell">{gettext("API Key")}</th>
+        <th className="d-none d-md-table-cell">{gettext("Status")}</th>
+        <th className="">{gettext("Operations")}</th>
       </tr>
     </thead>
   );

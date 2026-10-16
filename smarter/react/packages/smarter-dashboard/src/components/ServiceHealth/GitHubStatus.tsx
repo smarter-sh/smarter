@@ -1,3 +1,4 @@
+import { gettext } from "@smarter/common";
 export default function GitHubStatus() {
   return (
     <div className="row">
@@ -8,7 +9,7 @@ export default function GitHubStatus() {
           href="https://github.com/smarter-sh/smarter/actions/workflows/build.yml"
         >
           <img
-            alt="Build Status"
+            alt={gettext("Build Status")}
             src="https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main"
             style={{ maxWidth: "100%" }}
           />
@@ -21,7 +22,7 @@ export default function GitHubStatus() {
           href="https://github.com/smarter-sh/smarter/actions/workflows/test.yml"
         >
           <img
-            alt="Test Status"
+            alt={gettext("Test Status")}
             src="https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main"
             style={{ maxWidth: "100%" }}
           />
@@ -34,7 +35,7 @@ export default function GitHubStatus() {
           href="https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml"
         >
           <img
-            alt="Release Status"
+            alt={gettext("Release Status")}
             src="https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main"
             style={{ maxWidth: "100%" }}
           />
@@ -43,7 +44,7 @@ export default function GitHubStatus() {
       <div className="col-4">
         <a target="_blank" rel="noopener noreferrer" href="https://codecov.io/gh/smarter-sh/smarter">
           <img
-            alt="Codecov"
+            alt={gettext("Codecov")}
             src="https://img.shields.io/codecov/c/github/smarter-sh/smarter/main?flag=python&logo=codecov"
             style={{ maxWidth: "100%" }}
           />

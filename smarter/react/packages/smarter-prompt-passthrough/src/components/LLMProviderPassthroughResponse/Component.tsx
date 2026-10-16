@@ -20,6 +20,7 @@ import SuccessEmoji from "@/components/LLMProviderPassthroughResponse/status_suc
 import FailureEmoji from "@/components/LLMProviderPassthroughResponse/status_failure";
 import WorkingEmoji from "@/components/LLMProviderPassthroughResponse/status_working";
 import ReadyEmoji from "@/components/LLMProviderPassthroughResponse/status_ready";
+import { gettext, interpolateNodes } from "@smarter/common";
 import {
   failure_style,
   ready_style,
@@ -42,7 +43,7 @@ function LLMProviderPassthroughResponse({
   if (isProcessing) {
     status_style = working_style;
     status_emoji = <WorkingEmoji />;
-    status_text = "(prompting LLM...)";
+    status_text = gettext("(prompting LLM...)");
   } else if (apiResponse) {
     const isSuccess = apiResponse.status >= 200 && apiResponse.status < 300;
 
@@ -56,10 +57,14 @@ function LLMProviderPassthroughResponse({
       <div className="card shadow-sm">
         <div className="card-header d-flex justify-content-center align-items-center">
           <h3 className="mb-0">
-            HTTP Response Body{" "}
-            <span style={status_style}>
-              {status_text} {status_emoji}
-            </span>
+            {/* Translators: %(span)s is the request's status, e.g. (prompting LLM...), and an emoji. */}
+            {interpolateNodes(gettext("HTTP Response Body %(span)s"), {
+              span: (
+                <span style={status_style}>
+                  {status_text} {status_emoji}
+                </span>
+              ),
+            })}
           </h3>
         </div>
         <div className="card-body">

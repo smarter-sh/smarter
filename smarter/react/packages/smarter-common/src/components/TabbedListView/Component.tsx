@@ -85,6 +85,7 @@ import { getCookieForUrl } from "./cookie";
 import { PaginationControls } from "./PaginationControls";
 import { SearchBox } from "./SearchBox";
 import { TabNav } from "./TabNavigation";
+import { gettext, interpolate } from "../../lib/i18n";
 
 type TabbedListViewProps<TObject> = {
   sessionContext: SessionContext;
@@ -318,7 +319,14 @@ export default function TabbedListView<TObject>({
       <div className="m-0 p-0 card-body list-view">
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pe-3">
           <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
-          <SearchBox value={searchInput} onChange={setSearchInput} placeholder={`Search ${objectTypeName}s`} />
+          <SearchBox
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder={
+              // Translators: objects is the plural of a resource kind's name, e.g. secrets.
+              interpolate(gettext("Search %(objects)s"), { objects: `${objectTypeName}s` })
+            }
+          />
         </div>
 
         {viewMode === "list" ? (

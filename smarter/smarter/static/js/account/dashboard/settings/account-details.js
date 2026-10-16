@@ -44,56 +44,56 @@ var KTAccountDetails = function () {
                     fname: {
                         validators: {
                             notEmpty: {
-                                message: 'First name is required'
+                                message: gettext('First name is required')
                             }
                         }
                     },
                     lname: {
                         validators: {
                             notEmpty: {
-                                message: 'Last name is required'
+                                message: gettext('Last name is required')
                             }
                         }
                     },
                     company: {
                         validators: {
                             notEmpty: {
-                                message: 'Company name is required'
+                                message: gettext('Company name is required')
                             }
                         }
                     },
                     phone: {
                         validators: {
                             notEmpty: {
-                                message: 'Contact phone number is required'
+                                message: gettext('Contact phone number is required')
                             }
                         }
                     },
                     country: {
                         validators: {
                             notEmpty: {
-                                message: 'Please select a country'
+                                message: gettext('Please select a country')
                             }
                         }
                     },
                     timezone: {
                         validators: {
                             notEmpty: {
-                                message: 'Please select a timezone'
+                                message: gettext('Please select a timezone')
                             }
                         }
                     },
                     'communication[]': {
                         validators: {
                             notEmpty: {
-                                message: 'Please select at least one communication method'
+                                message: gettext('Please select at least one communication method')
                             }
                         }
                     },
                     language: {
                         validators: {
                             notEmpty: {
-                                message: 'Please select a language'
+                                message: gettext('Please select a language')
                             }
                         }
                     },
@@ -164,7 +164,7 @@ var KTAccountDetails = function () {
                       text: JSON.stringify(error.response.data),
                       icon: "error",
                       buttonsStyling: false,
-                      confirmButtonText: "Dismiss",
+                      confirmButtonText: gettext("Dismiss"),
                       customClass: {
                         confirmButton: "btn btn-primary",
                       },

@@ -17,6 +17,21 @@ describe("Extensions", () => {
     );
   });
 
+  it("links each official extension to its GitHub repository", () => {
+    render(<Extensions />);
+    const official = screen.getByRole("list", { name: "Official extensions" });
+    for (const [name, slug] of [
+      [/Weather/, "weather"],
+      [/^Calculator/, "calculator"],
+      [/Date Calculator/, "date-calculator"],
+    ] as const) {
+      expect(within(official).getByRole("link", { name })).toHaveAttribute(
+        "href",
+        `https://github.com/smarter-sh/smarter-extension-${slug}`,
+      );
+    }
+  });
+
   it("links to the documentation, the registry and the guide to building one", () => {
     render(<Extensions />);
     for (const [name, href] of [

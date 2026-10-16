@@ -16,6 +16,7 @@
  *     <McpServer />
  */
 import "@/components/McpServer/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 /** The server's path, on this platform's own domain. */
 const MCP_SERVER_PATH = "/api/v1/mcp/smarter-project/";
@@ -26,23 +27,31 @@ function McpServer() {
   const serverUrl = `${window.location.origin}${MCP_SERVER_PATH}`;
   return (
     <>
-      <section id="mcp-server" aria-label="MCP Server" className="card border-transparent h-100 mcp-card">
+      <section id="mcp-server" aria-label={gettext("MCP Server")} className="card border-transparent h-100 mcp-card">
         <div className="card-body d-flex flex-column ps-xl-15 h-100">
-          <span className="mcp-eyebrow">Smarter MCP Server</span>
+          <span className="mcp-eyebrow">{gettext("Smarter MCP Server")}</span>
           <div className="fs-2x fw-bold mt-3 mb-2 mcp-headline">
-            Ask your{" "}
-            <span className="position-relative d-inline-block">
-              AI assistant
-              <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 mcp-underline"></span>
-            </span>
+            {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+            {interpolateNodes(gettext("Ask your %(span)s"), {
+              span: (
+                <span className="position-relative d-inline-block">
+                  {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                  {interpolateNodes(gettext("AI assistant%(span)s"), {
+                    span: (
+                      <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 mcp-underline"></span>
+                    ),
+                  })}
+                </span>
+              ),
+            })}
           </div>
           <p className="fs-6 mb-5 mcp-lede">
-            This platform answers questions about itself from its own code and docs, for any MCP client.
+            {gettext("This platform answers questions about itself from its own code and docs, for any MCP client.")}
           </p>
-          <pre className="mcp-command" aria-label="Add this platform's MCP server to Claude Code">
+          <pre className="mcp-command" aria-label={gettext("Add this platform's MCP server to Claude Code")}>
             <span className="mcp-prompt">$ </span>claude mcp add --transport http smarter-project {serverUrl}
           </pre>
-          <ul className="mcp-tools" aria-label="Tools">
+          <ul className="mcp-tools" aria-label={gettext("Tools")}>
             {TOOLS.map((tool) => (
               <li key={tool}>{tool}</li>
             ))}
@@ -53,7 +62,7 @@ function McpServer() {
               target="_blank"
               className="btn btn-sm fw-semibold mcp-btn"
             >
-              Documentation
+              {gettext("Documentation")}
             </a>
           </div>
         </div>

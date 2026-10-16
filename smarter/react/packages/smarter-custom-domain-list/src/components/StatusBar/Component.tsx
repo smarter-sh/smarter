@@ -12,6 +12,7 @@
  *   <StatusBar customDomain={customDomain} />
  */
 import type { CustomDomain } from "@/lib/Types";
+import { gettext, interpolate, ngettext } from "@smarter/common";
 interface StatusbarProps {
   customDomain: CustomDomain;
 }
@@ -24,19 +25,28 @@ export const StatusBar = ({ customDomain }: StatusbarProps) => {
       {/* LLMClient */}
       <span
         className="status-icon"
-        title={llmclient ? `LLMClient: ${llmclient.name}` : "No LLMClient uses this domain"}
+        title={
+          llmclient
+            ? interpolate(gettext("LLMClient: %(name)s"), { name: llmclient.name })
+            : gettext("No LLMClient uses this domain")
+        }
       >
         <i className={llmclient ? "bi bi-robot text-info" : "bi bi-robot text-secondary"} />
       </span>
       {/* Deployed */}
       <span
         className="status-icon"
-        title={llmclient?.deployed ? "Deployed: the LLMClient is deployed" : "Not deployed"}
+        title={llmclient?.deployed ? gettext("Deployed: the LLMClient is deployed") : gettext("Not deployed")}
       >
         <i className={llmclient?.deployed ? "bi bi-cloud-check text-success" : "bi bi-cloud text-secondary"} />
       </span>
       {/* DNS Records */}
-      <span className="status-icon" title={`${recordCount} DNS record${recordCount === 1 ? "" : "s"}`}>
+      <span
+        className="status-icon"
+        title={interpolate(ngettext("%(recordCount)s DNS record", "%(recordCount)s DNS records", recordCount), {
+          recordCount,
+        })}
+      >
         <i className="bi bi-globe" /> <small>{recordCount}</small>
       </span>
     </div>

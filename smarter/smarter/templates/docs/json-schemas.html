@@ -1,5 +1,5 @@
 {% extends 'docs/base.html' %}
-{% load static custom_filters %}
+{% load static custom_filters i18n %}
 
 
 {% block docs_content %}
@@ -12,13 +12,13 @@
     <!--begin::Heading-->
     <div class="mb-10">
       <!--begin::Title-->
-      <h1 class="fs-2x text-gray-900 mb-6">smarter.sh/v1 Manifest JSON Schemas</h1>
+      <h1 class="fs-2x text-gray-900 mb-6">{% translate "smarter.sh/v1 Manifest JSON Schemas" %}</h1>
       <!--end::Title-->
-      <h2>We've already obsessed over the details. Why should you?</h2>
-      <p>The smarter.sh/v1 published JSON Schemas are a rock solid foundation for your OEM product. Leverage our JSON Schemas to turn your OEM product into your customers' Rock of Gibralter. Smarter takes care of the details for you. The only thing you have to do is to take advantage of our own attention to detail.</p>
+      <h2>{% translate "We've already obsessed over the details. Why should you?" %}</h2>
+      <p>{% translate "The smarter.sh/v1 published JSON Schemas are a rock solid foundation for your OEM product. Leverage our JSON Schemas to turn your OEM product into your customers' Rock of Gibralter. Smarter takes care of the details for you. The only thing you have to do is to take advantage of our own attention to detail." %}</p>
       <p>
-        Check out our <a href="https://marketplace.visualstudio.com/items?itemName=Querium.smarter-manifest" target="_blank">VS Code extension</a> for Smarter manifests to get an idea of what you can create our published json schemas.
-        This extension provides a rich editing experience for Smarter yaml manifest files, including syntax highlighting, autocompletion, context sensitive micro help, and validation against the JSON schema.
+        {% blocktranslate trimmed %}Check out our <a href="https://marketplace.visualstudio.com/items?itemName=Querium.smarter-manifest" target="_blank">VS Code extension</a> for Smarter manifests to get an idea of what you can create our published json schemas.
+        This extension provides a rich editing experience for Smarter yaml manifest files, including syntax highlighting, autocompletion, context sensitive micro help, and validation against the JSON schema.{% endblocktranslate %}
       </p>
     </div>
     <!--end::Heading-->
@@ -29,16 +29,16 @@
         <!--begin::heading-1-->
         <div id="validations" class="col-md-6">
           <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
-            <h3 class="mt-6 mb-6">Validation</h3>
-            <p>Leverage our JSON Schemas to validate your inbound requests against our data models. There's no better way to maximize your product's resiliency than by building on top of the JSON Schemas that we publish for all of our models.</p>
+            <h3 class="mt-6 mb-6">{% translate "Validation" %}</h3>
+            <p>{% translate "Leverage our JSON Schemas to validate your inbound requests against our data models. There's no better way to maximize your product's resiliency than by building on top of the JSON Schemas that we publish for all of our models." %}</p>
           </div>
         </div>
         <!--end::heading-1-->
         <!--begin::heading-2-->
         <div id="data-modeling" class="col-md-6">
           <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
-            <h3 class="mt-6 mb-6">Data Modeling</h3>
-            <p>Our JSON Schemas act as a blueprint for your application's data models, ensuring consistency and correctness across different parts of your customers' systems.</p>
+            <h3 class="mt-6 mb-6">{% translate "Data Modeling" %}</h3>
+            <p>{% translate "Our JSON Schemas act as a blueprint for your application's data models, ensuring consistency and correctness across different parts of your customers' systems." %}</p>
           </div>
         </div>
         <!--end::heading-2-->
@@ -49,16 +49,16 @@
         <!--begin::heading-3-->
         <div id="code-generation" class="col-md-6">
           <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
-            <h3 class="mt-6 mb-6">Code Generation</h3>
-            <p>Confidently and dynamically generate code for your data bindings, reducing the need to manually code data validations, and most importantly of all, reducing the potential for human error.</p>
+            <h3 class="mt-6 mb-6">{% translate "Code Generation" %}</h3>
+            <p>{% translate "Confidently and dynamically generate code for your data bindings, reducing the need to manually code data validations, and most importantly of all, reducing the potential for human error." %}</p>
           </div>
         </div>
         <!--end::heading-3-->
         <!--begin::heading-4-->
         <div id="heading-4" class="col-md-6">
           <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
-            <h3 class="mt-6 mb-6">Documentation</h3>
-            <p>Providing a clear specification of the JSON data format, which helps in understanding the structure and purpose of the data.</p>
+            <h3 class="mt-6 mb-6">{% translate "Documentation" %}</h3>
+            <p>{% translate "Providing a clear specification of the JSON data format, which helps in understanding the structure and purpose of the data." %}</p>
           </div>
         </div>
         <!--end::heading-4-->
@@ -67,14 +67,14 @@
       <!--begin::heading-4-->
       <div id="heading-5" class="col-md-6">
         <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
-          <h3 class="mt-6 mb-6">IDE Extension Development</h3>
-          <p>Smarter JSON Schemas speed the development of IDE add-ons and extensions, like for VS Code for example. Use our JSON Schemas to create in-editor Smarter extensions for syntax auto-completion, tooltips, and error highlighting.</p>
+          <h3 class="mt-6 mb-6">{% translate "IDE Extension Development" %}</h3>
+          <p>{% translate "Smarter JSON Schemas speed the development of IDE add-ons and extensions, like for VS Code for example. Use our JSON Schemas to create in-editor Smarter extensions for syntax auto-completion, tooltips, and error highlighting." %}</p>
         </div>
       </div>
       <!--end::heading-5-->
       <!--begin::heading-6-->
       <div id="heading-3" class="row">
-        <h3 class="mt-6 mb-6">smarter.sh/v1 JSON Schemas</h3>
+        <h3 class="mt-6 mb-6">{% translate "smarter.sh/v1 JSON Schemas" %}</h3>
           <!--begin::Manifests-->
           <div class="row">
             {% for schema in schemas %}

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
     {% block root %}
 			<!--begin::Page bg image-->
@@ -20,16 +20,16 @@
 							</div>
 							<!--end::Logo-->
 							<!--begin::Title-->
-							<h1 class="fw-bolder text-gray-900 mb-5">Your Account is Inactive.</h1>
+							<h1 class="fw-bolder text-gray-900 mb-5">{% translate "Your Account is Inactive." %}</h1>
 							<!--end::Title-->
 							<!--begin::Action-->
 							<div class="mb-11">
-								<p>Look for an email from us with instructions on how to activate your account.</p>
+								<p>{% translate "Look for an email from us with instructions on how to activate your account." %}</p>
 							</div>
 							<!--end::Action-->
 							<!--begin::Link-->
 							<div class="mb-11">
-								<a href="{% url 'account:account_login' %}" class="btn btn-sm btn-primary">Login</a>
+								<a href="{% url 'account:account_login' %}" class="btn btn-sm btn-primary">{% translate "Login" %}</a>
 							</div>
 							<!--end::Link-->
 							<!--begin::Illustration-->

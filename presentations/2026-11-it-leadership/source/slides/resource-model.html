@@ -1,0 +1,16 @@
+<section id="resource-model" data-transition="fade" style="background:#F6F4EE;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1F5F66">The big picture</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:400;line-height:1.1;color:#14213D">Everything is a declared resource</h2>
+</div>
+<table style="font-family:'IBM Plex Sans', Arial, sans-serif;font-size:26px;color:#14213D;padding:18px 24px">
+<tr style="background:#14213D"><th style="width:26%;color:#F6F4EE">Layer</th><th style="width:50%;color:#F6F4EE">Resource kinds</th><th style="width:24%;color:#F6F4EE">Typically owned by</th></tr>
+<tr style="background:#FDFCF9"><td>Access &amp; governance</td><td>Account, User, Secret, Budget, Proxy, API key</td><td>Infrastructure, security</td></tr>
+<tr style="background:#F6F4EE"><td>Model connectivity</td><td>Provider, LLMHost, LLMClient, Orchestrator, Custom Domain</td><td>Architecture, infrastructure</td></tr>
+<tr style="background:#FDFCF9"><td>Extensibility &amp; trust</td><td>Plugin (API, SQL, web search, skill), Connection, MCPClient, Vectorstore, Guardrail</td><td>Development, security</td></tr>
+<tr style="background:#F6F4EE"><td>Conversation</td><td>Prompt: history, tool calls, guardrail results, cost</td><td>Support, analysts</td></tr>
+</table>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Each resource has an owner and an account, is created from a manifest, and is managed through one API.</p>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;flex-direction:row;justify-content:space-between"><p style="font-size:24px;color:#4A5568">Smarter for IT Leadership</p><p style="font-size:24px;color:#4A5568">5</p></div>
+<aside>About 2 minutes. This is the idea behind the phrase “AI resources.” Every capability in Smarter is a typed resource, the way a Kubernetes cluster has Deployments, Services and Secrets. The layers matter for governance: Access and Governance resources set the boundaries; everything else operates inside them. And they map naturally onto your organization: infrastructure and security own the top layer, developers mostly work in the middle, and support and analysts work with the conversation records at the bottom. Because every Prompt links back through the guardrails, tools and model that produced it to the account and budget that authorized it, the whole stack is auditable end to end.</aside>
+</section>

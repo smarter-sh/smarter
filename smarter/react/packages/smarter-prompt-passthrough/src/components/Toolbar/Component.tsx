@@ -19,6 +19,7 @@ function ToolbarButton({ onClick, title, iconClass }: ToolbarButtonProps) {
 }
 import { useState } from "react";
 import type * as monaco from "monaco-editor";
+import { gettext } from "@smarter/common";
 
 interface ToolbarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null;
@@ -49,7 +50,7 @@ function CopyiedMessage({ show_copied }: CopyiedMessageProps) {
     transition: "opacity 0.2s",
   };
 
-  return <>{show_copied && <div style={showCopiedMessageStyle}>Copied to clipboard</div>}</>;
+  return <>{show_copied && <div style={showCopiedMessageStyle}>{gettext("Copied to clipboard")}</div>}</>;
 }
 
 function Toolbar({ editor }: ToolbarProps) {
@@ -134,13 +135,13 @@ function Toolbar({ editor }: ToolbarProps) {
 
   return (
     <div className="d-flex gap-2 mb-3 flex-wrap align-items-center position-relative">
-      <ToolbarButton onClick={handleFileNew} title="File New" iconClass="ki-duotone ki-document fs-2" />
-      <ToolbarButton onClick={handleFileOpen} title="File Open" iconClass="ki-duotone ki-folder fs-2" />
-      <ToolbarButton onClick={handleFileSave} title="File Save" iconClass="ki-duotone ki-disk fs-2" />
-      <ToolbarButton onClick={handleFormat} title="Format JSON" iconClass="ki-duotone ki-code fs-2" />
-      <ToolbarButton onClick={handleUndo} title="Undo" iconClass="ki-duotone ki-arrow-circle-left fs-2" />
-      <ToolbarButton onClick={handleRedo} title="Redo" iconClass="ki-duotone ki-arrow-circle-right fs-2" />
-      <ToolbarButton onClick={handleCopy} title="Copy JSON" iconClass={`ki-duotone ${copyIcon} fs-2`} />
+      <ToolbarButton onClick={handleFileNew} title={gettext("File New")} iconClass="ki-duotone ki-document fs-2" />
+      <ToolbarButton onClick={handleFileOpen} title={gettext("File Open")} iconClass="ki-duotone ki-folder fs-2" />
+      <ToolbarButton onClick={handleFileSave} title={gettext("File Save")} iconClass="ki-duotone ki-disk fs-2" />
+      <ToolbarButton onClick={handleFormat} title={gettext("Format JSON")} iconClass="ki-duotone ki-code fs-2" />
+      <ToolbarButton onClick={handleUndo} title={gettext("Undo")} iconClass="ki-duotone ki-arrow-circle-left fs-2" />
+      <ToolbarButton onClick={handleRedo} title={gettext("Redo")} iconClass="ki-duotone ki-arrow-circle-right fs-2" />
+      <ToolbarButton onClick={handleCopy} title={gettext("Copy JSON")} iconClass={`ki-duotone ${copyIcon} fs-2`} />
       <CopyiedMessage show_copied={showCopied} />
     </div>
   );

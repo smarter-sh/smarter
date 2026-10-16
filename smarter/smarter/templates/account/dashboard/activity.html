@@ -1,13 +1,13 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block dashboard_title %}Account Activity{% endblock %}
+{% block dashboard_title %}{% translate "Account Activity" %}{% endblock %}
 
     {% block dashboard_title_breadcrumbs %}
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/dashboard/account/dashboard/activity/" class="text-muted text-hover-primary">Activity</a>
+        <a href="/dashboard/account/dashboard/activity/" class="text-muted text-hover-primary">{% translate "Activity" %}</a>
       </li>
     {% endblock %}
 

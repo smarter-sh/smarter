@@ -4,7 +4,7 @@
  * Every endpoint is a POST, relative to the api's root (ConsoleContext.apiUrl). A failure is an
  * ApiError, whose message is the api's {"error": "..."}, meant for the person who tried the action.
  */
-import { fetchDjangoUrl, getCookie } from "@smarter/common";
+import { fetchDjangoUrl, getCookie, gettext, interpolate } from "@smarter/common";
 
 import type {
   AccountsResponse,
@@ -36,7 +36,10 @@ export function errorText(error: unknown): string {
 /** The error message of a failed response. */
 function errorMessage(data: unknown, response: Response): string {
   if (data && typeof data === "object" && "error" in data && typeof data.error === "string") return data.error;
-  return `The request failed: ${response.status} ${response.statusText}`.trim();
+  return interpolate(gettext("The request failed: %(status)s %(statusText)s"), {
+    status: response.status,
+    statusText: response.statusText,
+  }).trim();
 }
 
 /** Parse a response, and throw an ApiError if it failed. */

@@ -1,3 +1,4 @@
+import { gettext } from "@smarter/common";
 /** The response of the Smarter API to an applied manifest: the parts that the modal shows. */
 export type ApplyResult = {
   message?: string | null;
@@ -29,9 +30,9 @@ export default function DropZoneModal({ open, title, data, isError = false, onCl
 
   const result = typeof data === "string" ? null : data;
   const response = {
-    name: result?.data?.data?.metadata?.name ?? "Unknown",
-    version: result?.data?.data?.metadata?.version ?? "Unknown",
-    description: result?.data?.data?.metadata?.description ?? "No description provided",
+    name: result?.data?.data?.metadata?.name ?? gettext("Unknown"),
+    version: result?.data?.data?.metadata?.version ?? gettext("Unknown"),
+    description: result?.data?.data?.metadata?.description ?? gettext("No description provided"),
     message: result?.message ?? null,
   };
 
@@ -62,7 +63,7 @@ export default function DropZoneModal({ open, title, data, isError = false, onCl
       >
         <button
           type="button"
-          aria-label="Close"
+          aria-label={gettext("Close")}
           onClick={onClose}
           style={{
             position: "absolute",
@@ -95,13 +96,13 @@ export default function DropZoneModal({ open, title, data, isError = false, onCl
             }}
           >
             <div>
-              <strong>Name:</strong> {response.name}
+              <strong>{gettext("Name:")}</strong> {response.name}
             </div>
             <div>
-              <strong>Version:</strong> {response.version}
+              <strong>{gettext("Version:")}</strong> {response.version}
             </div>
             <div>
-              <strong>Description:</strong> {response.description}
+              <strong>{gettext("Description:")}</strong> {response.description}
             </div>
           </div>
         )}

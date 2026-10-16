@@ -9,11 +9,13 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAdminWebView,
     SmarterAuthenticatedCachedWebView,
     SmarterOptionallyAuthenticatedApiView,
     SmarterView,
+    SmarterWebHtmlView,
     SmarterWebTxtView,
     SmarterWebXmlView,
     redirect_and_expire_cache,
@@ -65,6 +67,19 @@ class TestSmarterViews(TestAccountMixin):
         self.assertEqual(view.remove_comments("<p><!-- x -->a</p>"), "<p>a</p>")
         response = view.render_clean_html(self.request(), template_path="not/a/template.html")
         self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def test_missing_template_is_a_server_error(self):
+        """Test that a view whose template is missing answers 500, not a 200 whose body is the error's repr."""
+        html = SmarterWebHtmlView.as_view(template_path="not/a/template.html")(self.request())
+        self.assertEqual(html.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        txt = SmarterWebTxtView.as_view(template_path="not/a/template.txt")(self.request())
+        self.assertEqual(txt.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def test_reverse_is_not_cached(self):
+        """Test that reverse() follows the URLconf, rather than a path cached by an earlier release."""
+        with patch("smarter.lib.django.shortcuts.django_reverse", return_value="/plugin/"):
+            self.assertEqual(reverse("llmtool", "plugin_list_view"), "/plugin/")
+        self.assertEqual(reverse("llmtool", "plugin_list_view"), "/llm-tools/")
 
     def test_admin_view(self):
         """Test that an anonymous user is sent to the login page, a mortal to the admin login, and staff get in."""
