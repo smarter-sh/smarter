@@ -135,6 +135,7 @@ class PluginBase(ABC, AccountMixin):
     SAMPluginType = SAMPluginCommon
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _manifest: Optional[SAMPluginType] = None
+    _persisted_manifest: Optional[SAMPluginType] = None
     _pydantic_model: Optional[Type[SAMPluginType]] = SAMPluginType
 
     _plugin_meta: Optional[PluginMeta] = None
@@ -1336,6 +1337,17 @@ class PluginBase(ABC, AccountMixin):
 
         return retval
 
+    @property
+    def persisted(self) -> bool:
+        """
+        Whether :meth:`create` or :meth:`update` has written the current manifest to the database.
+
+        A plugin that is constructed with a manifest creates, or updates, itself. A manifest broker
+        checks this, so that applying a manifest writes the plugin once, rather than once in the
+        constructor and again in ``apply()``.
+        """
+        return self._manifest is not None and self._persisted_manifest is self._manifest
+
     def create(self):
         """
         Create a plugin from either yaml or a dictionary.
@@ -1409,6 +1421,7 @@ class PluginBase(ABC, AccountMixin):
                     self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin=plugin_meta))
+        self._persisted_manifest = self._manifest
 
         return True
 
@@ -1484,6 +1497,7 @@ class PluginBase(ABC, AccountMixin):
                 )
 
         transaction.on_commit(committed)
+        self._persisted_manifest = self._manifest
 
         return True
 

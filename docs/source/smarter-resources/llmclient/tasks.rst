@@ -8,6 +8,7 @@ Tasks
    tasks/create_llmclient_request
    tasks/create_custom_domain_dns_record
    tasks/delete_default_api
+   tasks/delete_orphan_dns_records
    tasks/deploy_custom_api
    tasks/deploy_default_api
    tasks/destroy_domain_a_record

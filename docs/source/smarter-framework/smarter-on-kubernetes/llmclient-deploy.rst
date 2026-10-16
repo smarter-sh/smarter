@@ -310,6 +310,17 @@ Secret.
 As a safety check, it refuses to delete anything for a hostname that is not of the form
 ``<name>.<account number>.<API domain>`` of the LLMClient's own account, and logs an error instead.
 
+If ``delete_default_api`` fails, or never runs, the A record outlives its LLMClient. Celery Beat runs
+the task ``delete_orphan_dns_records`` daily, in the AWS environments only. It deletes the A records,
+in the API domain's zone, whose name is exactly ``<label>.<account number>.<API domain>`` and which
+no LLMClient or LLMHost uses, deployed or not, at most 50 per run. Another environment's hosts in the
+same zone, e.g. ``stackademy.3141-5926-5359.alpha.api.platform.example.com``, have more labels, and
+are never touched. To see what it would delete, run:
+
+.. code-block:: console
+
+   python manage.py delete_orphan_dns_records --dry-run
+
 Neither undeploying nor deleting removes the **custom host's** A record and Ingress. See
 :doc:`operations` for how to find and remove them.
 
