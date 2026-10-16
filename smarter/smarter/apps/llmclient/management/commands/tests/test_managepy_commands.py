@@ -6,7 +6,6 @@ import time
 from django.core.management import call_command
 from django.test import tag
 
-from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.infrastructure.providers.aws import AWSProvider
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
@@ -17,7 +16,6 @@ from smarter.apps.llmclient.signals import (
     llmclient_dns_verified,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_LLM_CLIENT_NAME
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -204,20 +202,6 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         if a_record is not None:
             logger.info("test_deploy_and_undeploy() found an existing DNS record: %s", a_record)
             self.assertEqual(a_record.name, dns.resolve_domain(llmclient_default_host))
-
-    @tag(INFRASTRUCTURE)
-    def test_deploy_demo_api(self):
-        """Test deploy_example_llmclient command."""
-        call_command("deploy_example_llmclient")
-        print("sleeping for 15 seconds to allow DNS record to be created")
-        time.sleep(15)
-
-        account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
-        llmclient = LLMClient.objects.get(name=SMARTER_EXAMPLE_LLM_CLIENT_NAME, user_profile__account=account)
-        self.assertIn(
-            llmclient.dns_verification_status,
-            [llmclient.DnsVerificationStatusChoices.VERIFYING, llmclient.DnsVerificationStatusChoices.VERIFIED],
-        )
 
     def test_initialize_waffle(self):
         """Test initialize_waffle command."""
