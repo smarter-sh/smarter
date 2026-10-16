@@ -221,7 +221,13 @@ class AccountApiProfile(AccountApiModel):
     annotations: MetaDataApiAnnotations = Field(None, description="MetaDataModel.annotations.")
     user: AccountApiUserDetail = Field(..., description="UserProfile.user.")
     account: AccountApiAccount = Field(..., description="UserProfile.account.")
-    profile_image_url: Optional[str] = Field(None, description="UserProfile.profile_image_url.")
+    profile_image_url: Optional[str] = Field(
+        None, description="UserProfile.profile_image_url: the image that the oauth provider supplied."
+    )
+    profile_image: Optional[str] = Field(
+        None,
+        description="UserProfile.profile_image: the url of the image that the user uploaded, which takes precedence.",
+    )
     is_test: bool = Field(..., description="UserProfile.is_test: whether a test created it.")
 
     @classmethod
@@ -247,6 +253,7 @@ class AccountApiProfile(AccountApiModel):
             user=AccountApiUserDetail.from_model(user_profile.user),
             account=AccountApiAccount.from_model(user_profile.account),
             profile_image_url=user_profile.profile_image_url,
+            profile_image=user_profile.avatar_url if user_profile.profile_image else None,
             is_test=user_profile.is_test,
         )
 

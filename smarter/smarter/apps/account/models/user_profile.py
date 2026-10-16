@@ -2,7 +2,9 @@
 """Account UserProfile model."""
 
 import os
+import uuid
 from typing import Any, Optional, TypeVar, overload
+from urllib.parse import urljoin
 
 # django stuff
 from django.contrib.auth.models import User
@@ -10,14 +12,17 @@ from django.db import models
 from django.db.models import Manager, QuerySet
 from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
+from django.templatetags.static import static
 
 # our stuff
 from smarter.apps.account.signals import new_user_created
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .account import Account
@@ -40,6 +45,28 @@ return the correct model type.
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
+
+DEFAULT_PROFILE_IMAGE = "images/avatars/default-profile.svg"
+"""The static file shown for a user who has neither uploaded a profile image nor received one via oauth."""
+
+
+def profile_image_upload_to(instance: "UserProfile", filename: str) -> str:
+    """
+    Return the storage path of an uploaded profile image.
+
+    The file is renamed to a random uuid, keeping only its extension, so that the
+    public url of the image reveals nothing about the user or the original file,
+    and a new upload never collides with, or is cached as, an earlier one.
+
+    :param instance: The UserProfile that the image belongs to.
+    :type instance: UserProfile
+    :param filename: The name of the uploaded file.
+    :type filename: str
+    :returns: The path within the default storage, e.g. ``account/profile_images/<uuid>.png``.
+    :rtype: str
+    """
+    extension = os.path.splitext(filename)[1].lower()
+    return f"account/profile_images/{uuid.uuid4().hex}{extension}"
 
 
 class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
@@ -267,6 +294,8 @@ class UserProfile(MetaDataModel):
 
     :param user: ForeignKey to :class:`django.contrib.auth.models.User`. The user associated with this profile.
     :param account: ForeignKey to :class:`Account`. The related Smarter account.
+    :param profile_image_url: URLField. The profile image that the oauth provider supplied at login.
+    :param profile_image: ImageField. The profile image that the user uploaded. Takes precedence over ``profile_image_url``.
     :param is_test: Boolean. Indicates if this profile is for testing purposes.
 
     .. important::
@@ -299,9 +328,44 @@ class UserProfile(MetaDataModel):
     profile_image_url = models.URLField(
         blank=True, null=True, help_text="URL to the user's profile image, provided via oauth."
     )
+    profile_image = models.ImageField(
+        upload_to=profile_image_upload_to,
+        blank=True,
+        null=True,
+        help_text="The user's own profile image, uploaded in the web console. Takes precedence over profile_image_url.",
+    )
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
+
+    @property
+    def avatar_url(self) -> str:
+        """
+        Return the url of the image that represents this user in the web console.
+
+        In order of precedence: the image that the user uploaded, the image that
+        the oauth provider (Google, GitHub, LinkedIn) supplied at login, and the
+        default profile image.
+
+        An uploaded image's ``url`` is absolute under S3, but a relative path
+        under FileSystemStorage (no AWS configured), which is joined onto
+        ``smarter_settings.environment_url``.
+
+        :returns: An absolute url, or the static url of the default profile image.
+        :rtype: str
+
+        **Example usage**::
+
+            <img src="{{ user_profile.avatar_url }}" />
+        """
+        if self.profile_image:
+            url = self.profile_image.url
+            if SmarterValidator.is_valid_url(url):
+                return url
+            return urljoin(smarter_settings.environment_url, url)
+        if self.profile_image_url:
+            return self.profile_image_url
+        return static(DEFAULT_PROFILE_IMAGE)
 
     @property
     def cached_user(self) -> User:
