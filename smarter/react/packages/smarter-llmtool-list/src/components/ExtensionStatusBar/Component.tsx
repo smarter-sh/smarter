@@ -10,6 +10,7 @@
  *   <ExtensionStatusBar extension={extension} />
  */
 import type { Extension } from "@/lib/Types";
+import { gettext } from "@smarter/common";
 
 interface ExtensionStatusBarProps {
   extension: Extension;
@@ -30,8 +31,8 @@ export const ExtensionStatusBar = ({ extension }: ExtensionStatusBarProps) => {
         className="status-icon"
         title={
           extension.enabled
-            ? "Enabled: its tools are offered to LLMs"
-            : "Disabled: its tools are offered once an administrator enables it"
+            ? gettext("Enabled: its tools are offered to LLMs")
+            : gettext("Disabled: its tools are offered once an administrator enables it")
         }
       >
         <i className={extension.enabled ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
@@ -43,7 +44,11 @@ export const ExtensionStatusBar = ({ extension }: ExtensionStatusBarProps) => {
       {/* Source */}
       <span
         className="status-icon"
-        title={extension.source === "registry" ? "Installed from the extension registry" : "Installed from an upload"}
+        title={
+          extension.source === "registry"
+            ? gettext("Installed from the extension registry")
+            : gettext("Installed from an upload")
+        }
       >
         <i className={extension.source === "registry" ? "bi bi-cloud-download" : "bi bi-upload"} />
       </span>

@@ -30,6 +30,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 /** A comma-separated list of the names of an llmclient's plugins, MCPClients or guardrails. */
 const names = (items?: Array<{ name: string }>) =>
@@ -70,44 +71,49 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
                     {renderDetailRow(
-                      "Hashed ID",
+                      gettext("Hashed ID"),
                       llmclient.hashedId,
                       "string",
-                      "Unique identifier for the llmclient, used in URLs and API calls",
+                      gettext("Unique identifier for the llmclient, used in URLs and API calls"),
                     )}
                     {renderDetailRow(
-                      "Authentication Required",
+                      gettext("Authentication Required"),
                       llmclient.isAuthenticationRequired,
                       "bool",
-                      "Indicates whether one or more active API keys are attached to this llmclient",
+                      gettext("Indicates whether one or more active API keys are attached to this llmclient"),
                     )}
-                    {renderDetailRow("Status", llmclient.deployed ? "Deployed" : "Not deployed")}
-                    {renderDetailRow("Ready", llmclient.ready, "bool")}
-                    {renderDetailRow("Owner", llmclient.userProfile?.user?.username)}
                     {renderDetailRow(
-                      "Can Delete",
+                      gettext("Status"),
+                      llmclient.deployed ? gettext("Deployed") : gettext("Not deployed"),
+                    )}
+                    {renderDetailRow(gettext("Ready"), llmclient.ready, "bool")}
+                    {renderDetailRow(gettext("Owner"), llmclient.userProfile?.user?.username)}
+                    {renderDetailRow(
+                      gettext("Can Delete"),
                       llmclient.canDelete,
                       "bool",
-                      "False if other resources depend on this llmclient, or you may not delete it.",
+                      gettext("False if other resources depend on this llmclient, or you may not delete it."),
                     )}
-                    {renderDetailRow("Created", llmclient.createdAt, "dateTime")}
-                    {renderDetailRow("Last updated", llmclient.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", llmclient.version)}
-                    {renderDetailRow("Description", llmclient.description)}
+                    {renderDetailRow(gettext("Created"), llmclient.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last updated"), llmclient.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), llmclient.version)}
+                    {renderDetailRow(gettext("Description"), llmclient.description)}
                     {renderDetailRow(
-                      "Tags",
+                      gettext("Tags"),
                       llmclient.tags,
                       "str[]",
-                      "User-defined list of search tags for categorizing the llmclient.",
+                      gettext("User-defined list of search tags for categorizing the llmclient."),
                     )}
                     {renderDetailRow(
-                      "Annotations",
+                      gettext("Annotations"),
                       llmclient.annotations,
                       "json",
-                      "User-defined list of key-value pairs for informational or platform extensibility purposes.",
+                      gettext(
+                        "User-defined list of key-value pairs for informational or platform extensibility purposes.",
+                      ),
                     )}
                     {renderDetailRow(
-                      "Functions",
+                      gettext("Functions"),
                       Array.isArray(llmclient.functions)
                         ? llmclient.functions
                             .map((f) => f?.name + "()" || "")
@@ -115,108 +121,124 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                             .join(", ")
                         : "",
                       "string",
-                      "Comma-separated list of function names attached to this llmclient.",
+                      gettext("Comma-separated list of function names attached to this llmclient."),
                     )}
                     {renderDetailRow(
-                      "Plugins",
+                      gettext("Plugins"),
                       names(llmclient.plugins),
                       "string",
-                      "Comma-separated list of plugin names attached to this llmclient.",
+                      gettext("Comma-separated list of plugin names attached to this llmclient."),
                     )}
                     {renderDetailRow(
-                      "MCP Clients",
+                      gettext("MCP Clients"),
                       names(llmclient.mcpclients),
                       "string",
-                      "Comma-separated list of the MCPClients whose MCP servers' tools this llmclient offers the LLM.",
+                      gettext(
+                        "Comma-separated list of the MCPClients whose MCP servers' tools this llmclient offers the LLM.",
+                      ),
                     )}
                     {renderDetailRow(
-                      "Guardrails",
+                      gettext("Guardrails"),
                       names(llmclient.guardrails),
                       "string",
-                      "Comma-separated list of the guardrails that check this llmclient's prompts and replies.",
+                      gettext(
+                        "Comma-separated list of the guardrails that check this llmclient's prompts and replies.",
+                      ),
                     )}
                     {renderDetailRow(
-                      "Custom Domains",
+                      gettext("Custom Domains"),
                       llmclient.customDomains?.length ? JSON.stringify(llmclient.customDomains) : undefined,
                     )}
                     {renderDetailRow(
-                      "API Keys",
+                      gettext("API Keys"),
                       llmclient.apiKeys?.length ? JSON.stringify(llmclient.apiKeys) : undefined,
                     )}
                     {renderDetailRow(
-                      "RFC1034 Name",
+                      gettext("RFC1034 Name"),
                       llmclient.rfc1034CompliantName,
                       null,
-                      "RFC 1034 compliant name derived from the llmclient name, used for subdomain generation",
+                      gettext("RFC 1034 compliant name derived from the llmclient name, used for subdomain generation"),
                     )}
-                    {renderDetailRow("Default System Role", llmclient.defaultSystemRole)}
-                    {renderDetailRow("Base API Domain", llmclient.baseApiDomain)}
-                    {renderDetailRow("Base Default Host", llmclient.baseDefaultHost)}
-                    {renderDetailRow("Default Host", llmclient.defaultHost)}
-                    {renderDetailRow("Base Default URL", llmclient.defaultUrl, "url")}
-                    {renderDetailRow("Custom Host", llmclient.customHost, null, "Custom host set by the user, if any.")}
+                    {renderDetailRow(gettext("Default System Role"), llmclient.defaultSystemRole)}
+                    {renderDetailRow(gettext("Base API Domain"), llmclient.baseApiDomain)}
+                    {renderDetailRow(gettext("Base Default Host"), llmclient.baseDefaultHost)}
+                    {renderDetailRow(gettext("Default Host"), llmclient.defaultHost)}
+                    {renderDetailRow(gettext("Base Default URL"), llmclient.defaultUrl, "url")}
                     {renderDetailRow(
-                      "Custom URL",
+                      gettext("Custom Host"),
+                      llmclient.customHost,
+                      null,
+                      gettext("Custom host set by the user, if any."),
+                    )}
+                    {renderDetailRow(
+                      gettext("Custom URL"),
                       llmclient.customUrl,
                       "url",
-                      "Custom domain and base URL set by the user, if any.",
+                      gettext("Custom domain and base URL set by the user, if any."),
                     )}
-                    {renderDetailRow("Sandbox Host", llmclient.sandboxHost)}
-                    {renderDetailRow("Base Sandbox URL", llmclient.sandboxUrl, "url")}
-                    {renderDetailRow("Hostname", llmclient.hostname)}
+                    {renderDetailRow(gettext("Sandbox Host"), llmclient.sandboxHost)}
+                    {renderDetailRow(gettext("Base Sandbox URL"), llmclient.sandboxUrl, "url")}
+                    {renderDetailRow(gettext("Hostname"), llmclient.hostname)}
                     {renderDetailRow(
-                      "Base URL",
+                      gettext("Base URL"),
                       llmclient.url,
                       "url",
-                      "Note that the base URL does not resolve to a working endpoint. Add '/chat' or '/config' to this URL.",
+                      gettext(
+                        "Note that the base URL does not resolve to a working endpoint. Add '/chat' or '/config' to this URL.",
+                      ),
                     )}
                     {renderDetailRow(
-                      "URL LLMClient",
+                      gettext("URL LLMClient"),
                       llmclient.urlLlmclient,
                       "url",
-                      "POST only endpoint for llmclient interactions.",
+                      gettext("POST only endpoint for llmclient interactions."),
                     )}
                     {renderDetailRow(
-                      "URL Chat Config",
+                      gettext("URL Chat Config"),
                       llmclient.urlChatConfig,
                       "url",
-                      "POST only endpoint for llmclient configuration retrieval.",
+                      gettext("POST only endpoint for llmclient configuration retrieval."),
                     )}
-                    {renderDetailRow("URL Chatapp", llmclient.urlChatapp, "url")}
-                    {renderDetailRow("Manifest URL", llmclient.manifestUrl, "url")}
-                    {renderDetailRow("Provider", llmclient.provider)}
-                    {renderDetailRow("Model", llmclient.defaultModel)}
-                    {renderDetailRow("Temperature", llmclient.defaultTemperature, "number")}
-                    {renderDetailRow("Max Tokens", llmclient.defaultMaxTokens, "number")}
-                    {renderDetailRow("App Name", llmclient.appName)}
-                    {renderDetailRow("App Assistant", llmclient.appAssistant)}
-                    {renderDetailRow("App Welcome Message", llmclient.appWelcomeMessage)}
-                    {renderDetailRow("App Example Prompts", llmclient.appExamplePrompts, "str[]")}
-                    {renderDetailRow("App Placeholder", llmclient.appPlaceholder)}
-                    {renderDetailRow("App Info URL", llmclient.appInfoUrl, "url")}
+                    {renderDetailRow(gettext("URL Chatapp"), llmclient.urlChatapp, "url")}
+                    {renderDetailRow(gettext("Manifest URL"), llmclient.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Provider"), llmclient.provider)}
+                    {renderDetailRow(gettext("Model"), llmclient.defaultModel)}
+                    {renderDetailRow(gettext("Temperature"), llmclient.defaultTemperature, "number")}
+                    {renderDetailRow(gettext("Max Tokens"), llmclient.defaultMaxTokens, "number")}
+                    {renderDetailRow(gettext("App Name"), llmclient.appName)}
+                    {renderDetailRow(gettext("App Assistant"), llmclient.appAssistant)}
+                    {renderDetailRow(gettext("App Welcome Message"), llmclient.appWelcomeMessage)}
+                    {renderDetailRow(gettext("App Example Prompts"), llmclient.appExamplePrompts, "str[]")}
+                    {renderDetailRow(gettext("App Placeholder"), llmclient.appPlaceholder)}
+                    {renderDetailRow(gettext("App Info URL"), llmclient.appInfoUrl, "url")}
                     {renderDetailRow(
-                      "App Background Image URL",
+                      gettext("App Background Image URL"),
                       llmclient.styles?.appBackgroundImageUrl ?? null,
                       "url",
                     )}
-                    {renderDetailRow("App Logo URL", llmclient.styles?.appLogoUrl ?? null, "url")}
-                    {renderDetailRow("App File Attachment", llmclient.appFileAttachment, "bool")}
+                    {renderDetailRow(gettext("App Logo URL"), llmclient.styles?.appLogoUrl ?? null, "url")}
+                    {renderDetailRow(gettext("App File Attachment"), llmclient.appFileAttachment, "bool")}
                     {renderDetailRow(
-                      "Styles",
+                      gettext("Styles"),
                       llmclient.styles,
                       "json",
-                      "The look of the llmclient's chat: its manifest's spec.config.styles.",
+                      gettext("The look of the llmclient's chat: its manifest's spec.config.styles."),
                     )}
                     {renderDetailRow(
-                      "Allowed Origins",
+                      gettext("Allowed Origins"),
                       llmclient.allowedOrigins?.length ? llmclient.allowedOrigins : null,
                       "str[]",
-                      "The web origins, besides the llmclient's own hosts, that may call its api from a browser (CORS).",
+                      gettext(
+                        "The web origins, besides the llmclient's own hosts, that may call its api from a browser (CORS).",
+                      ),
                     )}
-                    {renderDetailRow("DNS Status", llmclient.dnsVerificationStatus)}
-                    {renderDetailRow("TLS Certificate Issuance Status", llmclient.tlsCertificateIssuanceStatus)}
-                    {renderDetailRow("Subdomain", llmclient.subdomain)}
-                    {renderDetailRow("Custom Domain", llmclient.customDomain)}
+                    {renderDetailRow(gettext("DNS Status"), llmclient.dnsVerificationStatus)}
+                    {renderDetailRow(
+                      gettext("TLS Certificate Issuance Status"),
+                      llmclient.tlsCertificateIssuanceStatus,
+                    )}
+                    {renderDetailRow(gettext("Subdomain"), llmclient.subdomain)}
+                    {renderDetailRow(gettext("Custom Domain"), llmclient.customDomain)}
                   </tbody>
                 </table>
               </div>

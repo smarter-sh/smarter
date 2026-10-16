@@ -11,6 +11,7 @@ import { Spinner } from "@/components/common";
 import { configureRequest, initialValue } from "@/lib/settings";
 import type { SecretChoice } from "@/lib/settings";
 import type { ConfigureRequest, ExtensionDetail, ExtensionSetting } from "@/lib/types";
+import { gettext, interpolate, interpolateNodes } from "@smarter/common";
 
 type Props = {
   extension: ExtensionDetail;
@@ -31,7 +32,12 @@ export default function SettingsForm({ extension, busy, onSave }: Props) {
     ),
   );
 
-  if (extension.settings.length === 0) return <p className="text-muted">{extension.displayName} has no settings.</p>;
+  if (extension.settings.length === 0)
+    return (
+      <p className="text-muted">
+        {interpolateNodes(gettext("%(displayName)s has no settings."), { displayName: extension.displayName })}
+      </p>
+    );
 
   const request = configureRequest(extension.settings, values, secrets);
   const changed = Object.keys(request.values ?? {}).length + Object.keys(request.secrets ?? {}).length > 0;
@@ -48,7 +54,7 @@ export default function SettingsForm({ extension, busy, onSave }: Props) {
           <label className="form-label fw-semibold" htmlFor={`setting-${setting.name}`}>
             {setting.name}
             {setting.required ? (
-              <span className="text-danger ms-1" title="Required">
+              <span className="text-danger ms-1" title={gettext("Required")}>
                 *
               </span>
             ) : null}
@@ -70,14 +76,14 @@ export default function SettingsForm({ extension, busy, onSave }: Props) {
           <div className="form-text">
             {setting.description}
             {setting.type !== "secret" && setting.default !== null && setting.default !== undefined
-              ? ` Default: ${String(setting.default)}.`
+              ? " " + interpolate(gettext("Default: %(default)s."), { default: String(setting.default) })
               : ""}
           </div>
         </div>
       ))}
       <button type="submit" className="btn btn-primary" disabled={busy || !changed}>
-        {busy ? <Spinner label="Saving" /> : null}
-        Save settings
+        {busy ? <Spinner label={gettext("Saving")} /> : null}
+        {gettext("Save settings")}
       </button>
     </form>
   );
@@ -112,7 +118,9 @@ function ValueField({
     return (
       <select id={id} className="form-select" value={String(value)} onChange={(event) => onChange(event.target.value)}>
         <option value="">
-          {setting.default !== null && setting.default !== undefined ? `Default (${String(setting.default)})` : "---"}
+          {setting.default !== null && setting.default !== undefined
+            ? interpolate(gettext("Default (%(default)s)"), { default: String(setting.default) })
+            : "---"}
         </option>
         {(setting.choices ?? []).map((choice) => (
           <option key={choice} value={choice}>
@@ -154,30 +162,32 @@ function SecretField({
     <>
       <div className="mb-2">
         {setting.isSet ? (
-          <span className="badge badge-light-success">Set, from the Secret {setting.secretName}</span>
+          <span className="badge badge-light-success">
+            {interpolateNodes(gettext("Set, from the Secret %(secretName)s"), { secretName: setting.secretName })}
+          </span>
         ) : (
-          <span className="badge badge-light-danger">Not set</span>
+          <span className="badge badge-light-danger">{gettext("Not set")}</span>
         )}
       </div>
       <select
         id={id}
         className="form-select mb-2"
-        aria-label={`How to set ${setting.name}`}
+        aria-label={interpolate(gettext("How to set %(name)s"), { name: setting.name })}
         value={choice.mode}
         onChange={(event) => onChange({ ...choice, mode: event.target.value as SecretChoice["mode"] })}
       >
-        <option value="keep">{setting.isSet ? "Keep the current value" : "Leave it unset"}</option>
-        <option value="value">Type a new value</option>
-        <option value="existing">Use one of the platform's Secrets</option>
-        {setting.isSet ? <option value="clear">Clear it</option> : null}
+        <option value="keep">{setting.isSet ? gettext("Keep the current value") : gettext("Leave it unset")}</option>
+        <option value="value">{gettext("Type a new value")}</option>
+        <option value="existing">{gettext("Use one of the platform's Secrets")}</option>
+        {setting.isSet ? <option value="clear">{gettext("Clear it")}</option> : null}
       </select>
       {choice.mode === "value" ? (
         <input
           className="form-control"
           type="password"
           autoComplete="new-password"
-          aria-label={`New value of ${setting.name}`}
-          placeholder="Saved, encrypted, in a Secret; never shown again"
+          aria-label={interpolate(gettext("New value of %(name)s"), { name: setting.name })}
+          placeholder={gettext("Saved, encrypted, in a Secret; never shown again")}
           value={choice.value}
           onChange={(event) => onChange({ ...choice, value: event.target.value })}
         />
@@ -185,11 +195,11 @@ function SecretField({
       {choice.mode === "existing" ? (
         <select
           className="form-select"
-          aria-label={`Secret for ${setting.name}`}
+          aria-label={interpolate(gettext("Secret for %(name)s"), { name: setting.name })}
           value={choice.secretId}
           onChange={(event) => onChange({ ...choice, secretId: event.target.value })}
         >
-          <option value="">Choose a Secret</option>
+          <option value="">{gettext("Choose a Secret")}</option>
           {extension.availableSecrets.map((secret) => (
             <option key={secret.id} value={String(secret.id)}>
               {secret.name}

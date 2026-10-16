@@ -1,13 +1,13 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block dashboard_title %}Account API Keys{% endblock %}
+{% block dashboard_title %}{% translate "Account API Keys" %}{% endblock %}
 
     {% block dashboard_title_breadcrumbs %}
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/dashboard/account/dashboard/api-keys/" class="text-muted text-hover-primary">API Keys</a>
+        <a href="/dashboard/account/dashboard/api-keys/" class="text-muted text-hover-primary">{% translate "API Keys" %}</a>
       </li>
     {% endblock %}
 
@@ -19,7 +19,7 @@
       <div class="card-header">
         <!--begin::Title-->
         <div class="card-title">
-          <h3>API Key Management</h3>
+          <h3>{% translate "API Key Management" %}</h3>
         </div>
         <!--end::Title-->
         <!--begin::Toolbar-->
@@ -27,7 +27,7 @@
         <div class="card-toolbar">
           <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
             <input id="input_sandbox_mode_checkbox" class="form-check-input" type="checkbox" checked="checked" value="1" />
-            <span id="label_sandbox_mode" class="form-check-label text-muted">Live Mode</span>
+            <span id="label_sandbox_mode" class="form-check-label text-muted">{% translate "Live Mode" %}</span>
           </label>
         </div>
         <!--end::Toolbar-->
@@ -47,8 +47,8 @@
             <!--begin::Content-->
             <div class="fw-semibold">
               <div class="fs-6 text-gray-700">
-                You're in sandbox mode. Your API keys can presently only be used for testing purposes, and can only be used by authenticated users in your account. Switch to live mode when you're ready to go to production.
-                <a class="fw-bold" href="#">Learn More</a>.
+                {% blocktranslate trimmed %}You're in sandbox mode. Your API keys can presently only be used for testing purposes, and can only be used by authenticated users in your account. Switch to live mode when you're ready to go to production.
+                <a class="fw-bold" href="#">Learn More</a>.{% endblocktranslate %}
               </div>
             </div>
             <!--end::Content-->
@@ -63,18 +63,18 @@
         <div class="row mb-10">
           <!--begin::Col-->
           <div class="col-md-6 pb-10 pb-lg-0">
-            <h2>How to setup your API</h2>
-            <p class="fs-6 fw-semibold text-gray-600 py-2">Watch this 5-minute how-to video on getting your API setup
-            <br />for production use.</p>
-            <a href="#" class="btn btn-light btn-active-light-primary">Watch Now</a>
+            <h2>{% translate "How to setup your API" %}</h2>
+            <p class="fs-6 fw-semibold text-gray-600 py-2">{% blocktranslate trimmed %}Watch this 5-minute how-to video on getting your API setup
+            <br />for production use.{% endblocktranslate %}</p>
+            <a href="#" class="btn btn-light btn-active-light-primary">{% translate "Watch Now" %}</a>
           </div>
           <!--end::Col-->
           <!--begin::Col-->
           <div class="col-md-6">
-            <h2>Best Practices</h2>
-            <p class="fs-6 fw-semibold text-gray-600 py-2">Follow these best practices to ensure your Smarter API is secure and reliable.
-            <br />This includes setting up rate limits, monitoring usage, doing security</p>
-            <a href="#" class="btn btn-light btn-active-light-primary">Learn</a>
+            <h2>{% translate "Best Practices" %}</h2>
+            <p class="fs-6 fw-semibold text-gray-600 py-2">{% blocktranslate trimmed %}Follow these best practices to ensure your Smarter API is secure and reliable.
+            <br />This includes setting up rate limits, monitoring usage, doing security{% endblocktranslate %}</p>
+            <a href="#" class="btn btn-light btn-active-light-primary">{% translate "Learn" %}</a>
           </div>
           <!--end::Col-->
         </div>
@@ -89,7 +89,7 @@
       <div class="card-header card-header-stretch">
         <!--begin::Title-->
         <div class="card-title">
-          <h3>API Keys</h3>
+          <h3>{% translate "API Keys" %}</h3>
         </div>
         <!--end::Title-->
       </div>
@@ -103,10 +103,10 @@
             <!--begin::Thead-->
             <thead class="border-gray-200 fs-5 fw-semibold bg-lighten">
               <tr>
-                <th class="min-w-250px ps-9">Description</th>
-                <th class="min-w-250px px-0">Secret Key</th>
-                <th class="min-w-100px">Created</th>
-                <th class="min-w-100px">Last Used</th>
+                <th class="min-w-250px ps-9">{% translate "Description" %}</th>
+                <th class="min-w-250px px-0">{% translate "Secret Key" %}</th>
+                <th class="min-w-100px">{% translate "Created" %}</th>
+                <th class="min-w-100px">{% translate "Last Used" %}</th>
                 <th class="w-100px"></th>
                 <th class="w-100px"></th>
               </tr>
@@ -119,15 +119,15 @@
                 <td class="ps-9"><a href="/dashboard/account/dashboard/api-keys/{{ api_key.key_id }}">{{ api_key.user.username }} - {{ api_key.description }}</a></td>
                 <td class="ps-0">{{ api_key }}</td>
                 <td class="ps-0">{{ api_key.created }}</td>
-                <td class="ps-0">{% if api_key.last_used_at %}{{ api_key.last_used_at }}{% else %}Never{% endif %}</td>
+                <td class="ps-0">{% if api_key.last_used_at %}{{ api_key.last_used_at }}{% else %}{% translate "Never" %}{% endif %}</td>
                 <td>
                   {% if api_key.is_active %}
                   <button data-action="disable" data-record-id="{{ api_key.key_id }}" class="button_api_key_deactivate btn btn-icon btn-sm ">
-                    <span class="badge badge-light-success fs-7 fw-semibold">Deactivate</span>
+                    <span class="badge badge-light-success fs-7 fw-semibold">{% translate "Deactivate" %}</span>
                   </button>
                   {% else %}
                   <button data-action="enable" data-record-id="{{ api_key.key_id }}" class="button_api_key_activate btn btn-icon btn-sm ">
-                    <span class="badge badge-light-secondary fs-7 fw-semibold">Activate</span>
+                    <span class="badge badge-light-secondary fs-7 fw-semibold">{% translate "Activate" %}</span>
                   </button>
                   {% endif %}
                 </td>
@@ -135,7 +135,7 @@
                   {% if api_key.is_active %}
                   {% else %}
                   <button data-action="delete" data-record-id="{{ api_key.key_id }}" class="button_api_key_delete btn btn-icon btn-sm ">
-                    <span class="badge badge-light-danger fs-7 fw-semibold">Delete</span>
+                    <span class="badge badge-light-danger fs-7 fw-semibold">{% translate "Delete" %}</span>
                   </button>
                   {% endif %}
                 </td>

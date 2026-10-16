@@ -1,11 +1,11 @@
-{% load static %}
+{% load static i18n %}
 <!--begin:Menu item API-->
 <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
   class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
   <!--begin:Menu link API-->
   <a href="{% url 'docs:schema-swagger-ui' %}" class="menu-link">
     <span class="menu-link">
-      <span class="menu-title">API</span>
+      <span class="menu-title">{% translate "API" %}</span>
       <span class="menu-arrow d-lg-none"></span>
     </span>
   </a>
@@ -23,7 +23,7 @@
             <span class="path2"></span>
           </i>
         </span>
-        <span class="menu-title">Swagger</span>
+        <span class="menu-title">{% translate "Swagger" %}</span>
       </a>
       <!--end:Menu link Swagger-->
     </div>
@@ -39,7 +39,7 @@
             <span class="path2"></span>
           </i>
         </span>
-        <span class="menu-title">Redoc</span>
+        <span class="menu-title">{% translate "Redoc" %}</span>
       </a>
       <!--end:Menu link Redoc-->
     </div>
@@ -55,7 +55,7 @@
             <span class="path2"></span>
           </i>
         </span>
-        <span class="menu-title">OpenAPI Contract</span>
+        <span class="menu-title">{% translate "OpenAPI Contract" %}</span>
       </a>
       <!--end:Menu link OpenAPI Contract-->
     </div>

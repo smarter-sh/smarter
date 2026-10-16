@@ -11,6 +11,7 @@
  */
 import type { LLMHostCompute } from "@/lib/Types";
 import { formatNodes } from "@/lib/format";
+import { gettext, interpolate } from "@smarter/common";
 
 interface StatusbarProps {
   compute: LLMHostCompute;
@@ -23,25 +24,41 @@ function nodeGroupIndicator(compute: LLMHostCompute): { icon: string; title: str
     case "absent":
       return {
         icon: "bi bi-cloud text-secondary",
-        title: "No node group yet: Smarter creates it when an LLMHost first needs one of its nodes.",
+        title: gettext("No node group yet: Smarter creates it when an LLMHost first needs one of its nodes."),
       };
     case "ACTIVE":
       return {
         icon: "bi bi-cloud-check text-success",
-        title: `Node group ${compute.nodegroupName} is active.${message}`,
+        title: interpolate(gettext("Node group %(nodegroupName)s is active.%(message)s"), {
+          nodegroupName: compute.nodegroupName,
+          message,
+        }),
       };
     case "CREATING":
     case "UPDATING":
       return {
         icon: "bi bi-cloud-arrow-up text-primary",
-        title: `Node group ${compute.nodegroupName} is ${compute.nodegroupStatus.toLowerCase()}.${message}`,
+        title: interpolate(gettext("Node group %(nodegroupName)s is %(nodegroupStatus)s.%(message)s"), {
+          nodegroupName: compute.nodegroupName,
+          nodegroupStatus: compute.nodegroupStatus.toLowerCase(),
+          message,
+        }),
       };
     case "DELETING":
-      return { icon: "bi bi-cloud-minus text-warning", title: `Node group ${compute.nodegroupName} is being deleted.` };
+      return {
+        icon: "bi bi-cloud-minus text-warning",
+        title: interpolate(gettext("Node group %(nodegroupName)s is being deleted."), {
+          nodegroupName: compute.nodegroupName,
+        }),
+      };
     default:
       return {
         icon: "bi bi-cloud-slash text-danger",
-        title: `Node group ${compute.nodegroupName} is ${compute.nodegroupStatus}.${message}`,
+        title: interpolate(gettext("Node group %(nodegroupName)s is %(nodegroupStatus)s.%(message)s"), {
+          nodegroupName: compute.nodegroupName,
+          nodegroupStatus: compute.nodegroupStatus,
+          message,
+        }),
       };
   }
 }
@@ -58,7 +75,11 @@ export const StatusBar = ({ compute }: StatusbarProps) => {
       {/* Nodes */}
       <span
         className="status-icon"
-        title={starting ? `Nodes: ${formatNodes(compute)}. Nodes are starting.` : `Nodes: ${formatNodes(compute)}`}
+        title={
+          starting
+            ? interpolate(gettext("Nodes: %(nodes)s. Nodes are starting."), { nodes: formatNodes(compute) })
+            : interpolate(gettext("Nodes: %(nodes)s"), { nodes: formatNodes(compute) })
+        }
       >
         <i className={starting ? "bi bi-hourglass-split text-primary" : "bi bi-hdd-stack"} />{" "}
         <small>
@@ -66,7 +87,12 @@ export const StatusBar = ({ compute }: StatusbarProps) => {
         </small>
       </span>
       {/* LLMHosts */}
-      <span className="status-icon" title={`LLMHosts that run on it: ${compute.llmhostCount}`}>
+      <span
+        className="status-icon"
+        title={interpolate(gettext("LLMHosts that run on it: %(llmhostCount)s"), {
+          llmhostCount: compute.llmhostCount,
+        })}
+      >
         <i className={compute.llmhostCount ? "bi bi-cpu text-info" : "bi bi-cpu text-secondary"} />{" "}
         <small>{compute.llmhostCount}</small>
       </span>

@@ -15,10 +15,10 @@ var KTAuthNewPassword = (function () {
         password: {
           validators: {
             notEmpty: {
-              message: "The password is required",
+              message: gettext("The password is required"),
             },
             callback: {
-              message: "Please enter valid password",
+              message: gettext("Please enter valid password"),
               callback: function (input) {
                 if (input.value.length > 0) {
                   return validatePassword();
@@ -30,13 +30,13 @@ var KTAuthNewPassword = (function () {
         "confirm_password": {
           validators: {
             notEmpty: {
-              message: "The password confirmation is required",
+              message: gettext("The password confirmation is required"),
             },
             identical: {
               compare: function () {
                 return form.querySelector('[name="password"]').value;
               },
-              message: "The password and its confirm are not the same",
+              message: gettext("The password and its confirm are not the same"),
             },
           },
         },
@@ -105,10 +105,10 @@ var KTAuthNewPassword = (function () {
               } else {
                 // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                 Swal.fire({
-                  text: "Sorry, the email is incorrect, please try again.",
+                  text: gettext("Sorry, the email is incorrect, please try again."),
                   icon: "error",
                   buttonsStyling: false,
-                  confirmButtonText: "Ok, got it!",
+                  confirmButtonText: gettext("Ok, got it!"),
                   customClass: {
                     confirmButton: "btn btn-primary",
                   },
@@ -117,10 +117,10 @@ var KTAuthNewPassword = (function () {
             })
             .catch(function (error) {
               Swal.fire({
-                text: "Sorry, looks like there are some errors detected, please try again.",
+                text: gettext("Sorry, looks like there are some errors detected, please try again."),
                 icon: "error",
                 buttonsStyling: false,
-                confirmButtonText: "Ok, got it!",
+                confirmButtonText: gettext("Ok, got it!"),
                 customClass: {
                   confirmButton: "btn btn-primary",
                 },
@@ -136,10 +136,10 @@ var KTAuthNewPassword = (function () {
         } else {
           // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
           Swal.fire({
-            text: "Sorry, looks like there are some errors detected, please try again.",
+            text: gettext("Sorry, looks like there are some errors detected, please try again."),
             icon: "error",
             buttonsStyling: false,
-            confirmButtonText: "Ok, got it!",
+            confirmButtonText: gettext("Ok, got it!"),
             customClass: {
               confirmButton: "btn btn-primary",
             },

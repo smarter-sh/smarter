@@ -28,7 +28,7 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, Loading, SortableHeader } from "@smarter/common";
+import { formatDateTime, gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { LLMTool, LLMToolListViewProps } from "@/lib/Types";
@@ -44,7 +44,7 @@ import "@/components/ListView/styles.css";
  * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
  */
 const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
+  return <span className="text-muted fw-semibold">{gettext("Loading...")}</span>;
 };
 
 /**
@@ -58,25 +58,25 @@ const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
     <thead className="table-light border-bottom-2">
       <tr className="">
         <SortableHeader column="name" sorting={sorting} className=" p-1">
-          Name
+          {gettext("Name")}
         </SortableHeader>
         <SortableHeader column="createdAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
-          Created
+          {gettext("Created")}
         </SortableHeader>
         <SortableHeader column="updatedAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
-          Updated
+          {gettext("Updated")}
         </SortableHeader>
         <SortableHeader column="kind" sorting={sorting} className="">
-          Kind
+          {gettext("Kind")}
         </SortableHeader>
         <SortableHeader column="description" sorting={sorting} className="">
-          Description
+          {gettext("Description")}
         </SortableHeader>
         <SortableHeader column="selector" sorting={sorting} className="min-width-150">
-          Selector
+          {gettext("Selector")}
         </SortableHeader>
-        <th className="d-none d-md-table-cell">Status</th>
-        <th className="">Operations</th>
+        <th className="d-none d-md-table-cell">{gettext("Status")}</th>
+        <th className="">{gettext("Operations")}</th>
       </tr>
     </thead>
   );

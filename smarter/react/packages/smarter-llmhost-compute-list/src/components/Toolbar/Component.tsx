@@ -23,11 +23,35 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { LLMHostCompute } from "@/lib/Types";
 import "@/components/Toolbar/styles.css";
+
+/**
+ * The messages that report the result of an action. Each is a whole sentence, so that it can be
+ * translated.
+ */
+const actionMessages = (verb: string) => {
+  switch (verb) {
+    case "clone":
+      return {
+        failed: gettext("Failed to clone LLMHostCompute (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully cloned LLMHostCompute"),
+      };
+    case "rename":
+      return {
+        failed: gettext("Failed to rename LLMHostCompute (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully renamed LLMHostCompute"),
+      };
+    default:
+      return {
+        failed: gettext("Failed to delete LLMHostCompute (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully deleted LLMHostCompute"),
+      };
+  }
+};
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -48,17 +72,24 @@ interface NameModalProps {
 const ModalClone = ({ show, compute, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show={show} title="Clone LLMHostCompute" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show={show} title={gettext("Clone LLMHostCompute")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Clone <strong>{compute?.name}</strong> to a new LLMHostCompute owned by you.
+        {interpolateNodes(gettext("Clone %(name)s to a new LLMHostCompute owned by you."), {
+          name: <strong>{compute?.name}</strong>,
+        })}
       </p>
       <p>
         <em>
-          The clone has the same kind of node, and its own node group, which Smarter creates when an LLMHost first needs
-          one of its nodes.
+          {gettext(
+            "The clone has the same kind of node, and its own node group, which Smarter creates when an LLMHost first needs one of its nodes.",
+          )}
         </em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={gettext("Enter new name")}
+      />
     </Modal>
   );
 };
@@ -67,14 +98,16 @@ const ModalClone = ({ show, compute, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ show, compute, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(compute?.name || "");
   return (
-    <Modal show={show} title="Rename LLMHostCompute" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show={show} title={gettext("Rename LLMHostCompute")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>{interpolateNodes(gettext("Rename %(name)s."), { name: <strong>{compute?.name}</strong> })}</p>
       <p>
-        Rename <strong>{compute?.name}</strong>.
+        <em>{gettext("Not possible while its node group exists, or LLMHosts use it.")}</em>
       </p>
-      <p>
-        <em>Not possible while its node group exists, or LLMHosts use it.</em>
-      </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={gettext("Enter new name")}
+      />
     </Modal>
   );
 };
@@ -91,12 +124,14 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete LLMHostCompute" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title={gettext("Delete LLMHostCompute")} onOk={onOk} onCancel={onCancel}>
     <p>
-      Are you sure you want to delete <strong>{compute?.name}</strong>?
+      {interpolateNodes(gettext("Are you sure you want to delete %(name)s?"), {
+        name: <strong>{compute?.name}</strong>,
+      })}
     </p>
     <p>
-      <em>Its node group, and any nodes in it, are deleted too. Not possible while LLMHosts use it.</em>
+      <em>{gettext("Its node group, and any nodes in it, are deleted too. Not possible while LLMHosts use it.")}</em>
     </p>
   </Modal>
 );
@@ -113,11 +148,13 @@ const ModalError = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="❌ Error" onClose={onClose}>
+  <Modal show={show} title={gettext("❌ Error")} onClose={onClose}>
     <p>
-      An error occurred while performing the operation on <strong>{compute?.name}</strong>.
+      {interpolateNodes(gettext("An error occurred while performing the operation on %(name)s."), {
+        name: <strong>{compute?.name}</strong>,
+      })}
     </p>
-    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>{gettext("An unknown error occurred.")}</em>}</p>
   </Modal>
 );
 
@@ -133,12 +170,12 @@ const ModalConfirmation = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="✅ Success" onClose={onClose}>
+  <Modal show={show} title={gettext("✅ Success")} onClose={onClose}>
     <p>
       {message} <strong>{compute?.name}</strong>.
     </p>
     <p>
-      <em>Operation completed successfully.</em>
+      <em>{gettext("Operation completed successfully.")}</em>
     </p>
   </Modal>
 );
@@ -177,14 +214,15 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           throw new Error(
-            data.error || `Failed to ${verb} LLMHostCompute (${response.status}): ${response.statusText}`,
+            data.error ||
+              interpolate(actionMessages(verb).failed, { status: response.status, error: response.statusText }),
           );
         }
         return data;
       })
       .then((data) => {
         console.debug(loggerPrefix, `Successfully ${verb}d LLMHostCompute:`, data);
-        setSuccessMessage(`Successfully ${verb}d LLMHostCompute`);
+        setSuccessMessage(actionMessages(verb).succeeded);
         setModal({ type: "confirmation", compute: data && data.id ? (data as LLMHostCompute) : compute });
       })
       .catch((error) => {
@@ -197,11 +235,13 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
 
   return (
     <>
-      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label={gettext("Actions")}>
         <a
           href={compute.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Manifest: Open the YAML manifest that defines this LLMHostCompute, with its node group's status"
+          title={gettext(
+            "Manifest: Open the YAML manifest that defines this LLMHostCompute, with its node group's status",
+          )}
           tabIndex={0}
         >
           <i className="bi bi-pencil-square md-blue" />
@@ -209,7 +249,7 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Clone: Clone this LLMHostCompute to a new resource owned by you"
+          title={gettext("Clone: Clone this LLMHostCompute to a new resource owned by you")}
           onClick={() => setModal({ type: "clone", compute })}
           tabIndex={0}
         >
@@ -218,7 +258,7 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Rename: Rename this LLMHostCompute"
+          title={gettext("Rename: Rename this LLMHostCompute")}
           onClick={() => setModal({ type: "rename", compute })}
           tabIndex={0}
         >
@@ -229,8 +269,10 @@ export const Toolbar = ({ sessionContext, compute, onRequery }: ToolbarProps) =>
           className="btn btn-icon btn-sm border"
           title={
             compute.canDelete === false
-              ? "Delete: You can't delete this LLMHostCompute, because other resources depend on it, or you don't have permission to delete it"
-              : "Delete: Delete this LLMHostCompute and its node group"
+              ? gettext(
+                  "Delete: You can't delete this LLMHostCompute, because other resources depend on it, or you don't have permission to delete it",
+                )
+              : gettext("Delete: Delete this LLMHostCompute and its node group")
           }
           onClick={() => setModal({ type: "delete", compute })}
           disabled={compute.canDelete === false}

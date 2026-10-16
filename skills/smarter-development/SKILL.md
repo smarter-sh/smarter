@@ -183,11 +183,13 @@ reference implementations.
 | The SAM JSON Schemas, example manifests and cli OpenAPI document | `smarter-api-contract`                 |
 | Python docstrings                                                | `smarter-docstrings`                   |
 | Logger calls: prefixes, levels, waffle switches, secrets         | `smarter-logging`                      |
+| Text the web console shows, .po catalogs, adding a language      | `smarter-translations`                 |
 | Type annotations, `Any`, the `smarter.lib.typing` aliases        | `smarter-python-typing`                |
 | Sphinx pages                                                     | `smarter-sphinx-docs`                  |
 | Lint, format, pre-commit                                         | `smarter-code-quality`                 |
 | Writing a commit message                                         | `smarter-git-commits`                  |
 | Publishing an extension's release to the extension registry      | `smarter-extension-registry`           |
+| Code in the cli, an SDK, vscode-yaml or another smarter-sh repo  | `smarter-project-repositories`         |
 | A course design for the Free Course Catalog (instructors docs)   | `smarter-course-design`                |
 | A release announcement post for blog.smarter.sh                  | `blog.smarter.sh-release-announcement` |
 | Any other article for blog.smarter.sh                            | `blog.smarter.sh-blog-post`            |

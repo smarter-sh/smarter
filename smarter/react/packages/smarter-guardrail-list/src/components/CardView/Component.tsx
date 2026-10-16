@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: GuardrailCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,19 +54,19 @@ function CardView({ sessionContext, objects, onRequery }: GuardrailCardViewProps
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", guardrail.id, "number")}
-                    {renderDetailRow("Manifest URL", guardrail.manifestUrl, "url")}
-                    {renderDetailRow("Owner", guardrail.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", guardrail.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", guardrail.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", guardrail.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", guardrail.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", guardrail.version)}
-                    {renderDetailRow("Description", guardrail.description)}
-                    {renderDetailRow("Tags", guardrail.tags, "str[]")}
-                    {renderDetailRow("Annotations", guardrail.annotations, "json")}
-                    {renderDetailRow("Ready", guardrail.ready, "bool")}
-                    {renderDetailRow("RFC 1034 Compliant Name", guardrail.rfc1034CompliantName)}
+                    {renderDetailRow(gettext("ID"), guardrail.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), guardrail.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), guardrail.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), guardrail.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), guardrail.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), guardrail.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), guardrail.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), guardrail.version)}
+                    {renderDetailRow(gettext("Description"), guardrail.description)}
+                    {renderDetailRow(gettext("Tags"), guardrail.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), guardrail.annotations, "json")}
+                    {renderDetailRow(gettext("Ready"), guardrail.ready, "bool")}
+                    {renderDetailRow(gettext("RFC 1034 Compliant Name"), guardrail.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

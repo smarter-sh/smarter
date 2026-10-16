@@ -2,6 +2,7 @@
  * Labels and badges of a Vectorstore's fields, shared by the ListView, CardView and StatusBar.
  */
 import type { Vectorstore, VectorstoreStatus } from "@/lib/Types";
+import { gettext } from "@smarter/common";
 
 export const BACKEND_LABELS: Record<Vectorstore["backend"], string> = {
   qdrant: "Qdrant",
@@ -9,21 +10,33 @@ export const BACKEND_LABELS: Record<Vectorstore["backend"], string> = {
 };
 
 export const HOSTING_LABELS: Record<Vectorstore["hosting"], string> = {
-  self_hosted: "Self-hosted",
-  managed: "Managed",
+  self_hosted: gettext("Self-hosted"),
+  managed: gettext("Managed"),
 };
 
 export const STATUS_BADGES: Record<VectorstoreStatus, { className: string; label: string; help: string }> = {
   pending: {
     className: "badge-light",
-    label: "Pending",
-    help: "Applied, but not deployed. Deploy it to create its database.",
+    label: gettext("Pending"),
+    help: gettext("Applied, but not deployed. Deploy it to create its database."),
   },
-  provisioning: { className: "badge-light-warning", label: "Provisioning", help: "Its database is being created." },
-  ready: { className: "badge-light-success", label: "Ready", help: "Its database is serving." },
-  stopped: { className: "badge-light-secondary", label: "Stopped", help: "Undeployed. Its data is kept." },
-  failed: { className: "badge-light-danger", label: "Failed", help: "See its status message." },
-  deleting: { className: "badge-light-warning", label: "Deleting", help: "Its database is being destroyed." },
+  provisioning: {
+    className: "badge-light-warning",
+    label: gettext("Provisioning"),
+    help: gettext("Its database is being created."),
+  },
+  ready: { className: "badge-light-success", label: gettext("Ready"), help: gettext("Its database is serving.") },
+  stopped: {
+    className: "badge-light-secondary",
+    label: gettext("Stopped"),
+    help: gettext("Undeployed. Its data is kept."),
+  },
+  failed: { className: "badge-light-danger", label: gettext("Failed"), help: gettext("See its status message.") },
+  deleting: {
+    className: "badge-light-warning",
+    label: gettext("Deleting"),
+    help: gettext("Its database is being destroyed."),
+  },
 };
 
 export function databaseLabel(vectorstore: Vectorstore): string {

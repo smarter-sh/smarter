@@ -1,3 +1,4 @@
+import { gettext } from "../../lib/i18n";
 /**
  * ToggleButton React Component
  *
@@ -30,8 +31,8 @@ function ListViewToggleButton({ viewMode, onClick }: ViewToggleButtonProps) {
     <button
       type="button"
       className={`btn btn-sm ${viewMode === "list" ? "btn-primary" : "btn-outline-secondary"}`}
-      title="List View"
-      aria-label="List View"
+      title={gettext("List View")}
+      aria-label={gettext("List View")}
       onClick={onClick}
     >
       <i className="fas fa-list" />
@@ -44,8 +45,8 @@ function ThumbnailViewToggleButton({ viewMode, onClick }: ViewToggleButtonProps)
     <button
       type="button"
       className={`btn btn-sm ${viewMode === "thumbnail" ? "btn-primary" : "btn-outline-secondary"}`}
-      title="Thumbnail View"
-      aria-label="Thumbnail View"
+      title={gettext("Thumbnail View")}
+      aria-label={gettext("Thumbnail View")}
       onClick={onClick}
     >
       <i className="fas fa-th-large" />
@@ -62,7 +63,11 @@ export default function ToggleButton({
 }) {
   return (
     <div id="toggle-buttons" className="p-3">
-      <div className="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
+      <div
+        className="btn-group border border-light rounded-3 bg-white"
+        role="group"
+        aria-label={gettext("View toggle")}
+      >
         <ListViewToggleButton viewMode={viewMode} onClick={() => setViewMode("list")} />
         <ThumbnailViewToggleButton viewMode={viewMode} onClick={() => setViewMode("thumbnail")} />
       </div>

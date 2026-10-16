@@ -41,46 +41,46 @@ var KTModalPaymentMethod = (function () {
         card_name: {
           validators: {
             notEmpty: {
-              message: "Name on card is required",
+              message: gettext("Name on card is required"),
             },
           },
         },
         card_number: {
           validators: {
             notEmpty: {
-              message: "Card member is required",
+              message: gettext("Card member is required"),
             },
             creditCard: {
-              message: "Card number is not valid",
+              message: gettext("Card number is not valid"),
             },
           },
         },
         card_expiry_month: {
           validators: {
             notEmpty: {
-              message: "Month is required",
+              message: gettext("Month is required"),
             },
           },
         },
         card_expiry_year: {
           validators: {
             notEmpty: {
-              message: "Year is required",
+              message: gettext("Year is required"),
             },
           },
         },
         card_cvv: {
           validators: {
             notEmpty: {
-              message: "CVV is required",
+              message: gettext("CVV is required"),
             },
             digits: {
-              message: "CVV must contain only digits",
+              message: gettext("CVV must contain only digits"),
             },
             stringLength: {
               min: 3,
               max: 4,
-              message: "CVV must contain 3 to 4 digits only",
+              message: gettext("CVV must contain 3 to 4 digits only"),
             },
           },
         },
@@ -134,10 +134,10 @@ var KTModalPaymentMethod = (function () {
 
                   // Show popup confirmation
                   Swal.fire({
-                    text: "New payment method saved.",
+                    text: gettext("New payment method saved."),
                     icon: "success",
                     buttonsStyling: false,
-                    confirmButtonText: "Ok",
+                    confirmButtonText: gettext("Ok"),
                     customClass: {
                       confirmButton: "btn btn-primary",
                     },
@@ -149,10 +149,10 @@ var KTModalPaymentMethod = (function () {
                 } else {
                   // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                   Swal.fire({
-                    text: "Sorry, the email is incorrect, please try again.",
+                    text: gettext("Sorry, the email is incorrect, please try again."),
                     icon: "error",
                     buttonsStyling: false,
-                    confirmButtonText: "Ok, got it!",
+                    confirmButtonText: gettext("Ok, got it!"),
                     customClass: {
                       confirmButton: "btn btn-primary",
                     },
@@ -161,10 +161,10 @@ var KTModalPaymentMethod = (function () {
               })
               .catch(function (error) {
                 Swal.fire({
-                  text: "Sorry, looks like there are some errors detected, please try again.",
+                  text: gettext("Sorry, looks like there are some errors detected, please try again."),
                   icon: "error",
                   buttonsStyling: false,
-                  confirmButtonText: "Ok, got it!",
+                  confirmButtonText: gettext("Ok, got it!"),
                   customClass: {
                     confirmButton: "btn btn-primary",
                   },
@@ -180,10 +180,10 @@ var KTModalPaymentMethod = (function () {
           } else {
             // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
             Swal.fire({
-              text: "Please correct the following errors and try again.",
+              text: gettext("Please correct the following errors and try again."),
               icon: "error",
               buttonsStyling: false,
-              confirmButtonText: "Ok, got it!",
+              confirmButtonText: gettext("Ok, got it!"),
               customClass: {
                 confirmButton: "btn btn-primary",
               },
@@ -198,12 +198,12 @@ var KTModalPaymentMethod = (function () {
 
       // Show success message. For more info check the plugin's official documentation: https://sweetalert2.github.io/
       Swal.fire({
-        text: "Are you sure you want to cancel?",
+        text: gettext("Are you sure you want to cancel?"),
         icon: "warning",
         showCancelButton: true,
         buttonsStyling: false,
-        confirmButtonText: "Yes",
-        cancelButtonText: "No, return",
+        confirmButtonText: gettext("Yes"),
+        cancelButtonText: gettext("No, return"),
         customClass: {
           confirmButton: "btn btn-primary",
           cancelButton: "btn btn-active-light",
@@ -215,10 +215,10 @@ var KTModalPaymentMethod = (function () {
         } else if (result.dismiss === "cancel") {
           // Show error message.
           Swal.fire({
-            text: "Your form has not been cancelled!.",
+            text: gettext("Your form has not been cancelled!."),
             icon: "error",
             buttonsStyling: false,
-            confirmButtonText: "Ok",
+            confirmButtonText: gettext("Ok"),
             customClass: {
               confirmButton: "btn btn-primary",
             },
@@ -237,7 +237,7 @@ var KTModalPaymentMethod = (function () {
           "kt_modal_payment_method_title",
         );
         var billingId = this.getAttribute("data-kt-billing-id");
-        modalTitle.innerHTML = "Edit Payment Method: " + billingId;
+        modalTitle.textContent = interpolate(gettext("Edit Payment Method: %(id)s"), { id: billingId }, true);
 
         const csrfToken = getSmarterCsrfToken();
         const url =
@@ -315,10 +315,10 @@ var KTModalPaymentMethod = (function () {
             } else {
               // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
               Swal.fire({
-                text: "Hmmmm, please try again.",
+                text: gettext("Hmmmm, please try again."),
                 icon: "error",
                 buttonsStyling: false,
-                confirmButtonText: "Dismiss",
+                confirmButtonText: gettext("Dismiss"),
                 customClass: {
                   confirmButton: "btn btn-primary",
                 },
@@ -328,10 +328,10 @@ var KTModalPaymentMethod = (function () {
           .catch(function (error) {
             console.log("error", error);
             Swal.fire({
-              text: "Sorry, looks like the server couldn't process your request. Please try again.",
+              text: gettext("Sorry, looks like the server couldn't process your request. Please try again."),
               icon: "error",
               buttonsStyling: false,
-              confirmButtonText: "Dismiss",
+              confirmButtonText: gettext("Dismiss"),
               customClass: {
                 confirmButton: "btn btn-primary",
               },
@@ -371,11 +371,11 @@ var KTModalPaymentMethod = (function () {
 
         swal
           .fire({
-            text: "Delete this payment method?",
+            text: gettext("Delete this payment method?"),
             icon: "warning",
             buttonsStyling: false,
             showDenyButton: true,
-            confirmButtonText: "Yes",
+            confirmButtonText: gettext("Yes"),
             denyButtonText: "No",
             customClass: {
               confirmButton: "btn btn-primary",
@@ -402,9 +402,9 @@ var KTModalPaymentMethod = (function () {
 
                     // Show popup confirmation
                     Swal.fire({
-                      text: "Your selected card has been successfully deleted",
+                      text: gettext("Your selected card has been successfully deleted"),
                       icon: "success",
-                      confirmButtonText: "Ok",
+                      confirmButtonText: gettext("Ok"),
                       buttonsStyling: false,
                       customClass: {
                         confirmButton: "btn btn-light-primary",
@@ -412,9 +412,9 @@ var KTModalPaymentMethod = (function () {
                     })
                       .catch((error) => {
                         Swal.fire({
-                          text: "Sorry, looks like there are some errors detected, please try again.",
+                          text: gettext("Sorry, looks like there are some errors detected, please try again."),
                           icon: "error",
-                          confirmButtonText: "Ok",
+                          confirmButtonText: gettext("Ok"),
                           buttonsStyling: false,
                           customClass: {
                             confirmButton: "btn btn-light-primary",
@@ -429,10 +429,10 @@ var KTModalPaymentMethod = (function () {
                   } else {
                     // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                     Swal.fire({
-                      text: "Oops.",
+                      text: gettext("Oops."),
                       icon: "error",
                       buttonsStyling: false,
-                      confirmButtonText: "Dismiss",
+                      confirmButtonText: gettext("Dismiss"),
                       customClass: {
                         confirmButton: "btn btn-primary",
                       },

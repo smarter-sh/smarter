@@ -28,7 +28,7 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, Loading, SortableHeader } from "@smarter/common";
+import { formatDateTime, gettext, Loading, SortableHeader } from "@smarter/common";
 import type { Sorting } from "@smarter/common";
 
 import type { Extension, ExtensionListViewProps } from "@/lib/Types";
@@ -43,7 +43,7 @@ import "@/components/ListView/styles.css";
  * Displays a muted "Loading..." text, used in skeleton or ghost rows to indicate loading state.
  */
 const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
+  return <span className="text-muted fw-semibold">{gettext("Loading...")}</span>;
 };
 
 /**
@@ -57,22 +57,22 @@ const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
     <thead className="table-light border-bottom-2">
       <tr className="">
         <SortableHeader column="displayName" sorting={sorting} className=" p-1">
-          Name
+          {gettext("Name")}
         </SortableHeader>
-        <th className="">Slug</th>
+        <th className="">{gettext("Slug")}</th>
         <SortableHeader column="version" sorting={sorting} className="">
-          Version
+          {gettext("Version")}
         </SortableHeader>
         <SortableHeader column="publisher" sorting={sorting} className="d-none d-lg-table-cell">
-          Publisher
+          {gettext("Publisher")}
         </SortableHeader>
         <SortableHeader column="description" sorting={sorting} className="">
-          Description
+          {gettext("Description")}
         </SortableHeader>
         <SortableHeader column="updatedAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
-          Updated
+          {gettext("Updated")}
         </SortableHeader>
-        <th className="d-none d-md-table-cell">Status</th>
+        <th className="d-none d-md-table-cell">{gettext("Status")}</th>
       </tr>
     </thead>
   );

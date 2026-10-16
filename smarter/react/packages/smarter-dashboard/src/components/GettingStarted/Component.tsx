@@ -24,7 +24,7 @@
  */
 import { useEffect } from "react";
 import type { SessionContext } from "@smarter/common";
-import { getCookie, setCookie } from "@smarter/common";
+import { getCookie, gettext, interpolate, interpolateNodes, setCookie } from "@smarter/common";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
 import "@/components/GettingStarted/styles.css";
@@ -84,8 +84,10 @@ function GettingStarted({ sessionContext, apiUrl }: GettingStartedProps) {
     return (
       <div className="row g-5 g-xl-10">
         <div className="col-xl-12 mb-5 mb-xl-10">
-          <section id="getting-started" aria-label="Getting Started" className="card border-transparent">
-            <div className="card-body text-danger fs-7">Failed to load the getting started steps: {error}</div>
+          <section id="getting-started" aria-label={gettext("Getting Started")} className="card border-transparent">
+            <div className="card-body text-danger fs-7">
+              {interpolateNodes(gettext("Failed to load the getting started steps: %(error)s"), { error })}
+            </div>
           </section>
         </div>
       </div>
@@ -97,12 +99,14 @@ function GettingStarted({ sessionContext, apiUrl }: GettingStartedProps) {
   return (
     <div className="row g-5 g-xl-10">
       <div className="col-xl-12 mb-5 mb-xl-10">
-        <section id="getting-started" aria-label="Getting Started" className="card border-transparent">
+        <section id="getting-started" aria-label={gettext("Getting Started")} className="card border-transparent">
           <div className="card-header border-0 pt-5">
             <h3 className="card-title align-items-start flex-column">
-              <span className="card-label fw-bold text-gray-900">Getting Started</span>
+              <span className="card-label fw-bold text-gray-900">{gettext("Getting Started")}</span>
               <span className="text-muted mt-1 fw-semibold fs-7">
-                {allDone ? `All ${steps.length} steps done. Nice work!` : `${doneCount} of ${steps.length} steps done`}
+                {allDone
+                  ? interpolate(gettext("All %(length)s steps done. Nice work!"), { length: steps.length })
+                  : interpolate(gettext("%(doneCount)s of %(length)s steps done"), { doneCount, length: steps.length })}
               </span>
             </h3>
           </div>
@@ -122,7 +126,7 @@ function GettingStarted({ sessionContext, apiUrl }: GettingStartedProps) {
                 <li key={step.name} className="col-md-6 col-xl d-flex align-items-start">
                   <span
                     className={`getting-started-step me-3 ${step.done ? "getting-started-step-done" : ""}`}
-                    aria-label={step.done ? "done" : "to do"}
+                    aria-label={step.done ? "done" : gettext("to do")}
                   >
                     {step.done ? <i className="ki-outline ki-check fs-3"></i> : index + 1}
                   </span>

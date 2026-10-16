@@ -7,6 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils.translation import gettext as _
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
@@ -222,12 +223,12 @@ class LoginView(SmarterNeverCachedWebView):
                     return redirect_and_expire_cache(path="/")
                 logger.debug("%s.LoginView.post() authentication failed for user %s", self.formatted_class_name, email)
                 return SmarterHttpResponseBadRequest(
-                    request=request, error_message="Username and/or password do not match."
+                    request=request, error_message=_("Username and/or password do not match.")
                 )
             except User.DoesNotExist:
                 logger.debug("%s.LoginView.post() no user found with email %s", self.formatted_class_name, email)
                 return SmarterHttpResponseForbidden(
-                    request=request, error_message=f"Invalid login attempt. Unknown user {email}"
+                    request=request, error_message=_("Invalid login attempt. Unknown user %(email)s") % {"email": email}
                 )
             # pylint: disable=W0718
             except Exception as e:
@@ -238,6 +239,8 @@ class LoginView(SmarterNeverCachedWebView):
                     e,
                     traceback.format_exc(),
                 )
-                return SmarterHttpResponseServerError(request=request, error_message=f"An unknown error occurred {e}")
+                return SmarterHttpResponseServerError(
+                    request=request, error_message=_("An unknown error occurred %(error)s") % {"error": e}
+                )
         logger.debug("%s.LoginView.post() invalid form data received: %s", self.formatted_class_name, form.errors)
-        return SmarterHttpResponseBadRequest(request=request, error_message="Received invalid responses.")
+        return SmarterHttpResponseBadRequest(request=request, error_message=_("Received invalid responses."))

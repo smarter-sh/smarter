@@ -315,8 +315,30 @@ Adding a prop
 4. Add it to the props table of the README, and of :doc:`Embedding Smarter Chat <embedding>`.
 5. Test it, and add a story if it changes what the chat looks like.
 
+Adding or changing text
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Smarter Chat is translated with gettext, as the web console is (see
+:doc:`Translations <../developer-reference/translations>`), but its catalogs are its own, because the
+npm package and the embed script run on pages that Django didn't render. Its ``src/lib/i18n.tsx``
+has the same functions as ``@smarter/common``: ``gettext``, ``ngettext``, ``pgettext``,
+``npgettext``, ``interpolate`` and ``interpolateNodes``, and the same rules: a whole sentence, as a
+string literal, with named ``%(name)s`` placeholders. Translate when the text is displayed, never in
+a module-level constant, because ``SmarterChat`` activates its language as it renders.
+
+1. Mark the text, e.g. ``gettext("Start a new chat")``.
+2. ``npm run i18n`` (``make i18n``). ``scripts/i18n.mjs`` extracts the messages with the TypeScript
+   compiler into ``locale/smarter-chat.pot``, merges them into
+   ``locale/<language>/LC_MESSAGES/smarter-chat.po``, keeping their translations, and compiles the
+   ``.po`` files into ``src/catalogs.gen.ts``, which the builds bundle.
+3. Translate the new ``msgstr`` entries in the Spanish and French ``.po`` files, with the web
+   console's terms, and check them with ``msgfmt --check -o /dev/null <file>.po``.
+4. ``npm run i18n`` again. ``src/catalogs.test.ts`` fails when a catalog is out of date, or a message
+   isn't translated, or its placeholders differ from the English text's.
+
 Using a new field of the configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 The api's types are not written by hand. They are generated from the contract's JSON Schema, which
 the backend generates from its Pydantic models (see :doc:`The Chat API Contract <api-contract>`):
