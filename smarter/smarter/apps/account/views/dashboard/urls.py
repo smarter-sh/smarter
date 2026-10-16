@@ -16,7 +16,6 @@ from smarter.apps.account.views.dashboard.billing.payment_methods import (
 )
 from smarter.apps.account.views.dashboard.dashboard import (
     ActivityView,
-    CardDeclinedView,
     LogsView,
     OverviewView,
     StatementsView,
@@ -28,6 +27,7 @@ from smarter.apps.account.views.dashboard.users import UsersView, UserView
 class DashboardNamedUrls:
     """
     Holds named URL patterns for the account dashboard.
+
     This class provides constants for all named URL patterns used in the account dashboard views.
     The names follow the convention: 'dashboard_account_<view_name>'.
     These are referenced in Django templates as 'reverse' or 'url' tags.
@@ -37,7 +37,6 @@ class DashboardNamedUrls:
       .. html::
 
       <a href="{% url 'dashboard_account_dashboard_overview' %}">Go to Dashboard Overview</a>
-
     """
 
     namespace = namespace
@@ -48,7 +47,6 @@ class DashboardNamedUrls:
     ACCOUNT_API_KEY_NEW = "dashboard_account_api_key_new"
     ACCOUNT_DASHBOARD_OVERVIEW = "dashboard_account_dashboard_overview"
     ACCOUNT_LOGS = "dashboard_account_logs"
-    ACCOUNT_CARD_DECLINED = "dashboard_card_declined"
     ACCOUNT_BILLING = "dashboard_account_billing"
     ACCOUNT_BILLING_PAYMENT_METHODS = "dashboard_account_billing_payment_methods"
     ACCOUNT_BILLING_PAYMENT_METHOD = "dashboard_account_billing_payment_method"
@@ -72,7 +70,6 @@ urlpatterns = [
     path("settings/", SettingsView.as_view(), name=DashboardNamedUrls.ACCOUNT_SETTINGS),
     path("activity/", ActivityView.as_view(), name=DashboardNamedUrls.ACCOUNT_ACTIVITY),
     path("logs/", LogsView.as_view(), name=DashboardNamedUrls.ACCOUNT_LOGS),
-    path("card-declined/", CardDeclinedView.as_view(), name=DashboardNamedUrls.ACCOUNT_CARD_DECLINED),
     # users
     # -------------------------------------------
     path("users/", UsersView.as_view(), name=DashboardNamedUrls.ACCOUNT_USERS),

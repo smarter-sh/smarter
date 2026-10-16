@@ -6,10 +6,8 @@ from django.views.generic.base import RedirectView
 from smarter.apps.account import urls as account_urls
 from smarter.apps.dashboard.const import namespace
 from smarter.apps.dashboard.views.views import (
-    ChangeLogView,
     DashboardView,
     EmailAdded,
-    NotificationsView,
 )
 from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
 from smarter.apps.llmtool import urls as plugin_urls
@@ -27,8 +25,6 @@ class DashboardReverseNames:
     namespace = namespace
 
     dashboard = namespace
-    notifications = to_snake_case(NotificationsView.__name__)
-    changelog = to_snake_case(ChangeLogView.__name__)
     email_added = to_snake_case(EmailAdded.__name__)
 
 
@@ -39,8 +35,6 @@ urlpatterns = [
     path("plugins/", include(plugin_urls)),
     path("help/", RedirectView.as_view(url="/docs/"), name="help"),
     path("support/", RedirectView.as_view(url="/docs/"), name="support"),
-    path("changelog/", ChangeLogView.as_view(), name=DashboardReverseNames.changelog),
-    path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
 

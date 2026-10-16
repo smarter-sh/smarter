@@ -7,7 +7,6 @@ from django.test import RequestFactory
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.account.views import account as account_views
 from smarter.apps.account.views.dashboard import dashboard
 from smarter.apps.account.views.dashboard.billing.billing import BillingView
 from smarter.apps.account.views.dashboard.billing.billing_addresses import (
@@ -42,15 +41,8 @@ class TestDashboardPages(TestAccountMixin):
             dashboard.ActivityView,
             dashboard.StatementsView,
             dashboard.LogsView,
-            dashboard.CardDeclinedView,
             BillingView,
             SettingsView,
-            account_views.AccountOrganizationView,
-            account_views.AccountTeamView,
-            account_views.AccountLimitsView,
-            account_views.AccountProfileView,
-            account_views.AccountAPIKeysView,
-            account_views.AccountUsageView,
         ):
             with self.subTest(view=view_class.__name__):
                 response = self.call(view_class)
