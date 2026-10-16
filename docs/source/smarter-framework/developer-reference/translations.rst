@@ -3,7 +3,11 @@ Translations
 
 The Smarter web console is translated with `gettext <https://www.gnu.org/software/gettext/>`__, the
 same way as Django itself. English is the source language of every message and the default. Each
-other language is a pair of ``.po`` message catalogs, which a translator fills in. The console's
+other language is a pair of ``.po`` message catalogs, which a translator fills in. The console is
+translated into Spanish and French. The Spanish catalogs are written in Latin American Spanish, under
+the generic ``es`` code, so that a browser that asks for any variant of Spanish (``es-MX``,
+``es-419``, ``es-ES``) gets them. Django's ``LANG_INFO`` has no ``es-419``, so the language menu
+would describe an ``es-419`` language as ``es``, and post ``es`` back. The console's
 Django templates, its Python views, its React apps and its plain JavaScript all share this one
 pipeline, so a translator works with one set of files, in one format. The documentation at
 docs.smarter.sh, and the Smarter api's responses, are not translated.

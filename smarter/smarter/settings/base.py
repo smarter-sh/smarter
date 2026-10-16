@@ -1345,6 +1345,8 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#use-i18n
 
 LANGUAGES = [
     ("en", "English"),
+    ("es", "Spanish"),
+    ("fr", "French"),
 ]
 """
 The languages in which the Smarter web console is available.
@@ -1354,6 +1356,12 @@ language, append it here, then generate and translate its message catalogs
 with ``make i18n-messages LANGUAGE=<code>``. The language menu of the web
 console lists every language here. The names are not translated, so each
 language is listed in its own name.
+
+Spanish is translated in Latin American Spanish, under the generic ``es``
+code rather than ``es-419``. Django's ``LANG_INFO`` has no ``es-419``, so the
+language menu would describe it as ``es`` and post ``es`` back. A browser
+that asks for any variant of Spanish (``es-MX``, ``es-AR``, ``es-419``,
+``es-ES``) gets it, and Django's own messages come from its ``es`` catalog.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#languages
 """

@@ -14,7 +14,7 @@
  */
 import { loggerPrefix } from "./const";
 import { formatDistanceToNow, type Locale } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, es, fr } from "date-fns/locale";
 
 import { currentLanguage, gettext } from "./i18n";
 
@@ -24,6 +24,8 @@ import { currentLanguage, gettext } from "./i18n";
  */
 const DATE_FNS_LOCALES: Record<string, Locale> = {
   en: enUS,
+  es,
+  fr,
 };
 
 export const formatDateTime = (
