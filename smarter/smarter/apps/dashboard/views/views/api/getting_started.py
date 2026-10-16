@@ -3,8 +3,10 @@
 API view for the Dashboard "Getting Started" React component.
 
 Returns the onboarding steps of a new user, each with whether the user has
-done it and a link to the console page where it is done. The React component
-hides itself once every step is done.
+done it and a link to the console page where it is done. A step is done only
+by the user's own resources: the built-in and shared LLMClients and plugins
+that every user can see don't count. The React component keeps showing the
+steps for a while after every step is done, then hides itself.
 """
 
 from http import HTTPStatus
@@ -12,12 +14,9 @@ from http import HTTPStatus
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.models import UserProfile, get_resolved_user
-from smarter.apps.dashboard.views.views.api.my_resources import (
-    get_llmclients,
-    get_plugins,
-    get_secrets,
-)
+from smarter.apps.dashboard.views.views.api.my_resources import get_secrets
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
@@ -73,13 +72,13 @@ class GettingStartedView(SmarterAuthenticatedWebView):
             {
                 "name": "Create an LLM Client",
                 "description": "Configure an LLM, its system prompt and its tools.",
-                "done": get_llmclients(user_profile=user_profile) > 0,
+                "done": LLMClient.objects.filter(user_profile=user_profile).exists(),
                 "url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
             },
             {
                 "name": "Add a Plugin",
                 "description": "Give your LLM Client data and tools to work with.",
-                "done": get_plugins(user_profile=user_profile) > 0,
+                "done": PluginMeta.objects.filter(user_profile=user_profile).exists(),
                 "url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             },
             {

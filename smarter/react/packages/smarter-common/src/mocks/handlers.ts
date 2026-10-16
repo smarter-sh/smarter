@@ -1,7 +1,7 @@
 /** MSW request handlers for the example list api. See mocks/example.tsx. */
 import { http, HttpResponse } from "msw";
 
-import { API_URL, type Example, ownedExamples, sharedExamples } from "./example";
+import { API_URL, type Example, type Other, otherObjects, ownedExamples, sharedExamples } from "./example";
 
 /** The columns that the example list api can sort by. */
 export const EXAMPLE_SORT_FIELDS = ["name"];
@@ -53,3 +53,8 @@ export function manyExamples(count: number): Example[] {
 export const listErrorHandlers = [
   http.post(`${API_URL}:tab/`, () => HttpResponse.json({ error: "Database unavailable" }, { status: 500 })),
 ];
+
+/** The handler of the other tab's list api: see exampleContextWithOtherTab. */
+export function otherHandler(others: Other[] = otherObjects) {
+  return http.post(`${API_URL}others/`, () => HttpResponse.json({ objects: others }));
+}

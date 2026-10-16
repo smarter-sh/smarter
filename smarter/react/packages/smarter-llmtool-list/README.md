@@ -1,7 +1,7 @@
 # Smarter LLMTools List React App
 
 This is the source code for the LLMTools List app located
-at [http://localhost:9357/plugin/](http://localhost:9357/plugin/).
+at [http://localhost:9357/llm-tools/](http://localhost:9357/llm-tools/).
 
 This component is served by Django. See also:
 
