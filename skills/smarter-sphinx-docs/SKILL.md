@@ -13,7 +13,8 @@ theme. They use autodoc, napoleon, `sphinx_autodoc_typehints`,
 ## Don't build the docs to verify
 
 A full build (`make sphinx-docs`) takes about **20 minutes**. Don't run it.
-Verify instead:
+The docs are built and published only from the `main` branch, so a local build
+is never part of the work, however fast it gets. Verify instead:
 
 ```console
 skills/smarter-sphinx-docs/scripts/check-docs.sh docs/source/smarter-resources/smarter-widget.rst docs/source/smarter-resources/widget/*.rst
