@@ -16,6 +16,7 @@ from smarter.apps.dashboard.views.views.api import my_resources
 from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmtool.models import Extension
 from smarter.lib import json
 from smarter.lib.cache import lazy_cache
 from smarter.lib.typing import SmarterDictType
@@ -28,9 +29,13 @@ COUNTERS = (
     my_resources.get_plugins,
     my_resources.get_api_keys,
     my_resources.get_custom_domains,
-    my_resources.get_connections,
+    my_resources.get_mcpclients,
     my_resources.get_secrets,
     my_resources.get_providers,
+    my_resources.get_guardrails,
+    my_resources.get_vectorstores,
+    my_resources.get_llmhosts,
+    my_resources.get_extensions,
 )
 
 
@@ -76,10 +81,48 @@ class TestDashboardApiViews(TestAccountMixin):
     def test_my_resources(self):
         self.clear_cache()
         data = self.my_resources()
-        for key in ("pending_deployments", "llmclients_qty", "plugins_qty", "connections_qty", "providers_qty"):
+        for key in (
+            "pending_deployments",
+            "llmclients_qty",
+            "plugins_qty",
+            "mcpclients_qty",
+            "providers_qty",
+            "guardrails_qty",
+            "secrets_qty",
+            "vectorstores_qty",
+            "custom_domains_qty",
+            "llmhosts_qty",
+            "extensions_qty",
+        ):
             with self.subTest(key=key):
                 self.assertIsInstance(data[key], int)
-        self.assertTrue(data["llmclients_url"].startswith("/"))
+        for key in ("llmclients_url", "guardrails_url", "secrets_url", "custom_domains_url", "llmhosts_url"):
+            with self.subTest(key=key):
+                self.assertTrue(data[key].startswith("/"))
+        self.assertEqual(data["mcpclients_url"], "/mcpclient/")
+        self.assertNotIn("connections_qty", data)
+
+    def test_my_resources_extensions_url(self):
+        """Test that a superuser's Extensions link opens the console page, and anyone else's the docs."""
+        self.clear_cache()
+        self.assertTrue(self.my_resources()["extensions_url"].startswith("/"))
+        self.client.force_login(self.non_admin_user)
+        self.assertEqual(self.my_resources()["extensions_url"], my_resources.EXTENSIONS_DOCS_URL)
+
+    def test_get_extensions(self):
+        """Test that only the enabled extensions available to the user's account are counted."""
+        before = my_resources.get_extensions(invalidate=True, user_profile=self.user_profile)
+        suffix = self.hash_suffix.lower()
+        public = Extension.objects.create(slug=f"dash-public-{suffix}", display_name="x", enabled=True)
+        mine = Extension.objects.create(slug=f"dash-mine-{suffix}", display_name="x", enabled=True, all_accounts=False)
+        mine.accounts.add(self.account)
+        theirs = Extension.objects.create(
+            slug=f"dash-theirs-{suffix}", display_name="x", enabled=True, all_accounts=False
+        )
+        disabled = Extension.objects.create(slug=f"dash-off-{suffix}", display_name="x")
+        for extension in (public, mine, theirs, disabled):
+            self.addCleanup(extension.delete)
+        self.assertEqual(my_resources.get_extensions(invalidate=True, user_profile=self.user_profile), before + 2)
 
     def test_my_resources_anonymous(self):
         self.client.logout()

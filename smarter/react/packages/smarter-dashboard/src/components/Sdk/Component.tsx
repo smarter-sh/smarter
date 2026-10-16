@@ -1,12 +1,14 @@
 /**
  * Sdk dashboard widget.
  *
- * This component renders developer SDK resource links and related branding
- * assets, including references to the React NPM package and Python PyPI
- * library.
+ * This component renders a promotional card for the Smarter developer SDKs:
+ * the smarter-chat NPM package (@smarter.sh/ui-chat), the Node.js SDK
+ * (@smarter.sh/api), the Python PyPI library (smarter-api) and the Go module
+ * (github.com/smarter-sh/smarter-golang). Each SDK shows its logo, links to its
+ * package registry, and shows its install command, followed by links to the
+ * APIs and SDKs documentation and to this platform's OpenAPI document.
  *
- * :returns: A JSX fragment containing SDK resource links and supporting banner
- *     content.
+ * :returns: A JSX fragment containing the SDK call-to-action widget.
  * :rtype: JSX.Element
  *
  * :example:
@@ -15,95 +17,107 @@
  */
 import "@/components/Sdk/styles.css";
 
+/** This platform's OpenAPI document, which every platform serves in its web console. */
+const OPENAPI_URL = "/docs/openapi/";
+
+const SDKS = [
+  {
+    name: "smarter-chat NPM Package",
+    href: "https://www.npmjs.com/package/@smarter.sh/ui-chat",
+    logo: "/static/assets/media/svg/brand-logos/react.svg",
+    install: "npm install @smarter.sh/ui-chat",
+  },
+  {
+    name: "Node.js SDK",
+    href: "https://www.npmjs.com/package/@smarter.sh/api",
+    logo: "/static/images/sdks/nodedotjs.svg",
+    install: "npm install @smarter.sh/api",
+  },
+  {
+    name: "Python PyPi Library",
+    href: "https://pypi.org/project/smarter-api/",
+    logo: "/static/assets/media/svg/brand-logos/python-5.svg",
+    install: "pip install smarter-api",
+  },
+  {
+    name: "Go SDK",
+    href: "https://pkg.go.dev/github.com/smarter-sh/smarter-golang",
+    logo: "/static/images/sdks/go.svg",
+    install: "go get github.com/smarter-sh/smarter-golang",
+  },
+];
+
 function Sdk() {
   return (
     <>
-      <div id="sdk" aria-label="SDK" className="col-xl-4 mb-5 mb-xl-10">
-        {/* begin::SDKs */}
-        <div className="card border-transparent" data-bs-theme="light">
+      <section id="sdk" aria-label="SDK" className="col-xl-4 mb-5 mb-xl-10">
+        {/* begin::SDKs widget */}
+        <div className="card border-transparent h-100 sdk-card" data-bs-theme="light">
           {/* begin::Body */}
-          <div className="card-body d-flex flex-column ps-xl-15 h-100">
+          <div className="card-body d-flex flex-column ps-xl-15 h-100 position-relative">
+            {/* begin::Illustration */}
+            <img
+              src="/static/assets/media/illustrations/dozzy-1/4.png"
+              className="position-absolute top-0 end-0 h-100px me-1 mt-1"
+              alt=""
+            />
+            {/* end::Illustration */}
             {/* begin::Title */}
-            <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">Smarter Developer SDKs</h6>
+            <div className="position-relative fs-2x fw-bold text-gray-900 mb-2 z-index-2">
+              Build with the{" "}
+              <span className="position-relative d-inline-block">
+                SDKs
+                <span className="position-absolute opacity-50 bottom-0 start-0 border-4 border-danger border-bottom w-100"></span>
+              </span>
+            </div>
+            <p className="text-gray-700 fs-6 mb-7 z-index-2 sdk-lede">
+              Typed access to your Smarter resources, in the language you already use.
+            </p>
             {/* end::Title */}
+            {/* begin::SDKs */}
+            <ul className="sdk-list z-index-2">
+              {SDKS.map((sdk) => (
+                <li key={sdk.name} className="sdk-item">
+                  <span className="sdk-logo">
+                    <img src={sdk.logo} alt="" />
+                  </span>
+                  <span className="sdk-text">
+                    <a href={sdk.href} target="_blank" className="sdk-name">
+                      {sdk.name}
+                    </a>
+                    <span className="sdk-install">{sdk.install}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {/* end::SDKs */}
             {/* begin::Action */}
-            <div className="mb-3">
-              <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-                <li>
-                  <span
-                    style={{
-                      color: "#888",
-                      fontSize: "1.2em",
-                      marginRight: "0.5em",
-                    }}
-                  >
-                    &#8594;
-                  </span>
-                  <a href="https://www.npmjs.com/package/@smarter.sh/ui-chat" target="_blank" className="text-dark">
-                    <span>
-                      <img src="/static/assets/media/framework-logos/react.png" className="h-10px" alt="ReactJS Logo" />
-                    </span>
-                    React NPM Package
-                  </a>
-                </li>
-                <li>
-                  <span
-                    style={{
-                      color: "#888",
-                      fontSize: "1.2em",
-                      marginRight: "0.5em",
-                    }}
-                  >
-                    &#8594;
-                  </span>
-                  <a href="https://pypi.org/project/smarter-api/" target="_blank" className="text-dark">
-                    <span>
-                      <img src="/static/images/python-logo.png" className="h-10px" alt="Python Logo" />
-                    </span>
-                    Python PyPi Library
-                  </a>
-                </li>
-              </ul>
+            <div className="d-flex flex-wrap gap-2 mt-auto pt-7 z-index-2">
+              <a
+                href="https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html"
+                target="_blank"
+                className="btn btn-sm btn-danger fw-semibold"
+              >
+                Documentation
+              </a>
+              <a href={OPENAPI_URL} className="btn btn-sm btn-light-danger fw-semibold">
+                API reference
+              </a>
+              <a
+                href="https://github.com/smarter-sh"
+                target="_blank"
+                className="btn btn-sm btn-dark fw-semibold"
+                aria-label="SDK source code"
+              >
+                GitHub
+              </a>
             </div>
             {/* end::Action */}
-            {/* begin::Illustrations */}
-            <div className="d-none d-xl-table-cell">
-              <img
-                src="/static/images/npm-logo.png"
-                className="position-absolute me-3 top-0 end-0 h-75px pt-3"
-                alt="NPM Logo"
-              />
-              <img
-                src="/static/images/pypi-logo-small.svg"
-                className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3"
-                alt="PyPI Logo"
-              />
-            </div>
-            <div className="d-block d-xl-none d-table-cell">
-              <img
-                src="/static/images/npm-logo.png"
-                className="position-absolute me-3 top-0 end-0 h-75px pt-3"
-                alt="NPM Logo"
-              />
-              <img
-                src="/static/images/pypi-logo-small.svg"
-                className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3"
-                alt="PyPI Logo"
-              />
-            </div>
-            {/* end::Illustrations */}
           </div>
           {/* end::Body */}
         </div>
-        {/* end::SDKs */}
-      </div>
-
-      <div className="col-xl-4 mb-5 mb-xl-10 h-100">
-        {/* begin::Row Developer/enthusiast banner */}
-        <div className="mt-15 text-center">
-          <h2 className="text-gray-600">Resources for Developers, Solution Architects, and Enterprise Users</h2>
-        </div>
-      </div>
+        {/* end::SDKs widget */}
+      </section>
     </>
   );
 }
