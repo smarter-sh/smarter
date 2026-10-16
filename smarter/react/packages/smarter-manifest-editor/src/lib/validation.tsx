@@ -5,7 +5,7 @@
  */
 import { EVENT_ID, getScalarValue, load, parseEvents, YAMLException, type Event, type ScalarEvent } from "js-yaml";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 
@@ -146,6 +146,6 @@ export async function samErrors(
   const offsets = keyOffsets(yaml);
   return (body.data.errors ?? []).map((error) => {
     const loc = error.loc ?? [];
-    return { source: "sam", message: error.message || "Invalid value", offset: locOffset(offsets, loc), loc };
+    return { source: "sam", message: error.message || gettext("Invalid value"), offset: locOffset(offsets, loc), loc };
   });
 }

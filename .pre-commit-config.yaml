@@ -13,12 +13,13 @@ repos:
     rev: v3.22.0
     hooks:
       - id: pyupgrade
+  # codespell's dictionary is English, so it skips the message catalogs of the other languages.
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
       - id: codespell
         args: ["--ignore-words=codespell.txt"]
-        exclude: '\.svg$|^smarter/smarter/static/|^helm/|^docs/source/example-manifests/|package-lock\.json$|^smarter/react/storybook/public/mockServiceWorker\.js$'
+        exclude: '\.svg$|^smarter/smarter/static/|^helm/|^docs/source/example-manifests/|package-lock\.json$|^smarter/smarter/locale/(?!en/)|^smarter/react/storybook/public/mockServiceWorker\.js$'
   # The React apps in smarter/react, with the workspace's own Prettier and ESLint (and their
   # configuration in smarter/react), so that the hooks and `npm run format` / `npm run lint`
   # always agree. They need smarter/react's node_modules: make react-install.

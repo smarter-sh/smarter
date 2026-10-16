@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.30.0](https://github.com/smarter-sh/smarter/compare/v0.29.0...v0.30.0) (2026-10-16)
+
+### Features
+
+* **i18n:** add multi-language support to the web console ([434dff4](https://github.com/smarter-sh/smarter/commit/434dff480140e99849f51d617f1adbe632d273d8))
+* **i18n:** translate the web console into spanish and french ([b4958e4](https://github.com/smarter-sh/smarter/commit/b4958e45f50f9adee50877ee6fcd6e4bf2825e58))
+* **react:** link official extension cards to their github repos ([6859f48](https://github.com/smarter-sh/smarter/commit/6859f482a75379561831fa4d094526c56ffbb706))
+
+### Bug Fixes
+
+* **django:** stop caching reverse(), which served stale LLMTools urls ([5be6cf3](https://github.com/smarter-sh/smarter/commit/5be6cf37c942f70e9d49504cec0dbeb5234576e3))
+
+## [0.30.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.30.0-alpha.2...v0.30.0-alpha.3) (2026-10-16)
+
+### Features
+
+* **i18n:** translate the web console into spanish and french ([b4958e4](https://github.com/smarter-sh/smarter/commit/b4958e45f50f9adee50877ee6fcd6e4bf2825e58))
+
+## [0.30.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.30.0-alpha.1...v0.30.0-alpha.2) (2026-10-16)
+
+### Features
+
+* **i18n:** add multi-language support to the web console ([434dff4](https://github.com/smarter-sh/smarter/commit/434dff480140e99849f51d617f1adbe632d273d8))
+
+## [0.30.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.29.1-alpha.1...v0.30.0-alpha.1) (2026-10-16)
+
+### Features
+
+* **react:** link official extension cards to their github repos ([6859f48](https://github.com/smarter-sh/smarter/commit/6859f482a75379561831fa4d094526c56ffbb706))
+
+## [0.29.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.29.0...v0.29.1-alpha.1) (2026-10-16)
+
+### Bug Fixes
+
+* **django:** stop caching reverse(), which served stale LLMTools urls ([5be6cf3](https://github.com/smarter-sh/smarter/commit/5be6cf37c942f70e9d49504cec0dbeb5234576e3))
+
 ## [0.29.0](https://github.com/smarter-sh/smarter/compare/v0.28.2...v0.29.0) (2026-10-16)
 
 ### Features
@@ -18,34 +54,3 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Features
 
 - **dashboard:** redesign the widgets and fix getting started ([e9c0975](https://github.com/smarter-sh/smarter/commit/e9c09757b10931ce26e7a4de8960d205b1820bed))
-
-## [0.28.2](https://github.com/smarter-sh/smarter/compare/v0.28.1...v0.28.2) (2026-10-16)
-
-### Bug Fixes
-
-- resolve problems found in the 0.28.1 init job log ([9b17acf](https://github.com/smarter-sh/smarter/commit/9b17acf79eaec8a6a0d72395357a72f540ac581d))
-
-## [0.28.1](https://github.com/smarter-sh/smarter/compare/v0.28.0...v0.28.1) (2026-10-16)
-
-### Bug Fixes
-
-- fail init on extension errors, redact logs, sweep orphan DNS ([1f7ec8a](https://github.com/smarter-sh/smarter/commit/1f7ec8ac60e0788db71c5fedd12c967691ba8c65))
-
-## [0.28.0](https://github.com/smarter-sh/smarter/compare/v0.27.1...v0.28.0) (2026-10-15)
-
-### Features
-
-- **infrastructure:** email the whole job log, attached or via S3 ([aaa4598](https://github.com/smarter-sh/smarter/commit/aaa45986ea99647a0f5f1270ada27fc641dc0e1e))
-- **llmclient:** send the llmclient's tool count in the chat config ([a8a2a48](https://github.com/smarter-sh/smarter/commit/a8a2a48cb3503ec7e1bef04c41b338f884eb4e37))
-
-## [0.28.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.28.0-alpha.1...v0.28.0-alpha.2) (2026-10-15)
-
-### Features
-
-- **llmclient:** send the llmclient's tool count in the chat config ([a8a2a48](https://github.com/smarter-sh/smarter/commit/a8a2a48cb3503ec7e1bef04c41b338f884eb4e37))
-
-## [0.28.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.27.1...v0.28.0-alpha.1) (2026-10-15)
-
-### Features
-
-- **infrastructure:** email the whole job log, attached or via S3 ([aaa4598](https://github.com/smarter-sh/smarter/commit/aaa45986ea99647a0f5f1270ada27fc641dc0e1e))

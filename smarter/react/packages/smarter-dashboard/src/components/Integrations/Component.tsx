@@ -17,6 +17,7 @@
  *     <Integrations />
  */
 import "@/components/Integrations/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 const DOCS = "https://docs.smarter.sh/en/latest/smarter-framework";
 
@@ -66,7 +67,7 @@ const INTEGRATIONS = [
 function Integrations() {
   return (
     <>
-      <section id="integrations" aria-label="Integrations" className="col-xl-4 mb-5 mb-xl-10">
+      <section id="integrations" aria-label={gettext("Integrations")} className="col-xl-4 mb-5 mb-xl-10">
         {/* begin::Integrations widget */}
         <div className="card border-transparent h-100 integrations-card" data-bs-theme="light">
           {/* begin::Body */}
@@ -80,14 +81,22 @@ function Integrations() {
             {/* end::Illustration */}
             {/* begin::Title */}
             <div className="position-relative fs-2x fw-bold text-white mb-2 z-index-2">
-              Put your chatbot{" "}
-              <span className="position-relative d-inline-block">
-                everywhere
-                <span className="position-absolute opacity-50 bottom-0 start-0 border-4 border-warning border-bottom w-100"></span>
-              </span>
+              {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+              {interpolateNodes(gettext("Put your chatbot %(span)s"), {
+                span: (
+                  <span className="position-relative d-inline-block">
+                    {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                    {interpolateNodes(gettext("everywhere%(span)s"), {
+                      span: (
+                        <span className="position-absolute opacity-50 bottom-0 start-0 border-4 border-warning border-bottom w-100"></span>
+                      ),
+                    })}
+                  </span>
+                ),
+              })}
             </div>
             <p className="text-white opacity-75 fs-6 mb-7 z-index-2 integrations-lede">
-              Add Smarter Chat to the sites your users already visit, with one setting.
+              {gettext("Add Smarter Chat to the sites your users already visit, with one setting.")}
             </p>
             {/* end::Title */}
             {/* begin::Logos */}
@@ -116,15 +125,15 @@ function Integrations() {
                 target="_blank"
                 className="btn btn-sm btn-warning fw-semibold me-2"
               >
-                Embedding guide
+                {gettext("Embedding guide")}
               </a>
               <a
                 href="https://github.com/smarter-sh"
                 target="_blank"
                 className="btn btn-sm btn-light fw-semibold"
-                aria-label="Integrations source code"
+                aria-label={gettext("Integrations source code")}
               >
-                GitHub
+                {gettext("GitHub")}
               </a>
             </div>
             {/* end::Action */}

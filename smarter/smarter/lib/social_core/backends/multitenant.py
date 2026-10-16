@@ -20,6 +20,7 @@ import requests
 from django.contrib import messages
 from django.contrib.auth.backends import ModelBackend
 from django.shortcuts import redirect
+from django.utils.translation import gettext as _
 from requests.exceptions import HTTPError, RequestException, Timeout, TooManyRedirects
 from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
@@ -141,7 +142,7 @@ class GoogleOAuth2Multitenant(GoogleOAuth2):
             return details
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
-            messages.error(request.request, "Your subscription is not active. Please check your payment status.")
+            messages.error(request.request, _("Your subscription is not active. Please check your payment status."))
             request.request.session["account_status"] = "inactive"
         return None
 
@@ -168,7 +169,7 @@ class GithubOAuth2Multitenant(GithubOAuth2):
             return details
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
-            messages.error(request.request, "Your subscription is not active. Please check your payment status.")
+            messages.error(request.request, _("Your subscription is not active. Please check your payment status."))
             request.request.session["account_status"] = "inactive"
         return None
 
@@ -182,6 +183,6 @@ class DjangoModelBackendMultitenant(ModelBackend):
         if user and username:
             if not verify_payment_status(username):
                 if request is not None:
-                    messages.error(request, "Your subscription is not active. Please check your payment status.")
+                    messages.error(request, _("Your subscription is not active. Please check your payment status."))
                 return redirect(INACTIVE_ACCOUNT_REDIRECT_URL)
         return user

@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Modal, WorkbenchHelp } from "@smarter/common";
+import { gettext, interpolate, interpolateNodes, Modal, WorkbenchHelp } from "@smarter/common";
 
 import { Documentation, Notice, Spinner, TrustBadge } from "@/components/common";
 import type { NoticeState } from "@/components/common";
@@ -21,10 +21,11 @@ import type {
 type Tab = "installed" | "browse";
 
 const DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html";
-const HELP_TEXT =
+const HELP_TEXT = gettext(
   "Extensions are Python packages that add tools to the LLMs of this platform. Install them from the signed Smarter " +
-  "Extension registry, or upload an archive, then configure and enable them. An extension's code runs with full " +
-  "access to the platform: install only extensions whose publisher you trust.";
+    "Extension registry, or upload an archive, then configure and enable them. An extension's code runs with full " +
+    "access to the platform: install only extensions whose publisher you trust.",
+);
 
 type Props = {
   context: ConsoleContext;
@@ -124,7 +125,7 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
 
   return (
     <section className="mt-5 mb-5 container" id="extension-list">
-      <WorkbenchHelp title="Extensions" icon="ki-abstract-26" docsUrl={DOCS_URL} helpText={HELP_TEXT} />
+      <WorkbenchHelp title={gettext("Extensions")} icon="ki-abstract-26" docsUrl={DOCS_URL} helpText={HELP_TEXT} />
       <Notice notice={notice} onClose={() => setNotice(null)} />
 
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5">
@@ -138,7 +139,7 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
                 className={`nav-link btn btn-link ${tab === key ? "active fw-bold" : ""}`}
                 onClick={() => setTab(key)}
               >
-                {key === "installed" ? "Installed" : "Browse the registry"}
+                {key === "installed" ? gettext("Installed") : gettext("Browse the registry")}
                 {key === "installed" && list ? (
                   <span className="badge badge-light ms-2">{list.objects.length}</span>
                 ) : null}
@@ -152,7 +153,7 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
             type="file"
             accept=".zip,application/zip"
             className="d-none"
-            aria-label="Extension archive"
+            aria-label={gettext("Extension archive")}
             onChange={(event) => void upload(event.target.files?.[0])}
           />
           <button
@@ -161,18 +162,30 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
             disabled={busy !== null}
             onClick={() => fileInput.current?.click()}
           >
-            {busy === "upload" ? <Spinner label="Uploading" /> : <i className="ki-outline ki-file-up fs-4 me-1" />}
-            Upload extension
+            {busy === "upload" ? (
+              <Spinner label={gettext("Uploading")} />
+            ) : (
+              <i className="ki-outline ki-file-up fs-4 me-1" />
+            )}
+            {gettext("Upload extension")}
           </button>
           <button
             type="button"
             className="btn btn-sm btn-light"
             disabled={busy !== null || !list?.registryEnabled}
-            title={list && !list.registryEnabled ? "The registry is disabled until its public key is set." : undefined}
+            title={
+              list && !list.registryEnabled
+                ? gettext("The registry is disabled until its public key is set.")
+                : undefined
+            }
             onClick={() => void run("check", () => api.checkUpdates(context))}
           >
-            {busy === "check" ? <Spinner label="Checking" /> : <i className="ki-outline ki-arrows-circle fs-4 me-1" />}
-            Check for updates
+            {busy === "check" ? (
+              <Spinner label={gettext("Checking")} />
+            ) : (
+              <i className="ki-outline ki-arrows-circle fs-4 me-1" />
+            )}
+            {gettext("Check for updates")}
           </button>
         </div>
       </div>
@@ -210,19 +223,21 @@ export function InstalledTable({
   busy: string | null;
   onToggle: (extension: ExtensionSummary) => void;
 }) {
-  if (list === null) return <p className="text-muted">Loading...</p>;
+  if (list === null) return <p className="text-muted">{gettext("Loading...")}</p>;
   if (list.objects.length === 0)
-    return <p className="text-muted">No extensions are installed. Browse the registry, or upload an archive.</p>;
+    return (
+      <p className="text-muted">{gettext("No extensions are installed. Browse the registry, or upload an archive.")}</p>
+    );
   return (
     <div className="table-responsive">
       <table className="table table-row-dashed align-middle gs-0 gy-3">
         <thead className="table-light">
           <tr className="fw-bold text-muted">
-            <th>Extension</th>
-            <th>Version</th>
-            <th className="d-none d-md-table-cell">Trust</th>
-            <th className="d-none d-lg-table-cell">Source</th>
-            <th>Enabled</th>
+            <th>{gettext("Extension")}</th>
+            <th>{gettext("Version")}</th>
+            <th className="d-none d-md-table-cell">{gettext("Trust")}</th>
+            <th className="d-none d-lg-table-cell">{gettext("Source")}</th>
+            <th>{gettext("Enabled")}</th>
           </tr>
         </thead>
         <tbody>
@@ -236,7 +251,7 @@ export function InstalledTable({
                   <i
                     className="ki-outline ki-information-5 text-danger fs-4 ms-2"
                     title={extension.error}
-                    aria-label="Error"
+                    aria-label={gettext("Error")}
                   />
                 ) : null}
                 <div className="text-muted fs-7">{extension.description}</div>
@@ -244,7 +259,11 @@ export function InstalledTable({
               <td>
                 {extension.installedVersion}
                 {extension.updateAvailable ? (
-                  <span className="badge badge-light-warning ms-2">{extension.latestVersion} available</span>
+                  <span className="badge badge-light-warning ms-2">
+                    {interpolateNodes(gettext("%(latestVersion)s available"), {
+                      latestVersion: extension.latestVersion,
+                    })}
+                  </span>
                 ) : null}
               </td>
               <td className="d-none d-md-table-cell">
@@ -259,7 +278,7 @@ export function InstalledTable({
                     role="switch"
                     checked={extension.enabled}
                     disabled={busy !== null}
-                    aria-label={`Enable ${extension.displayName}`}
+                    aria-label={interpolate(gettext("Enable %(displayName)s"), { displayName: extension.displayName })}
                     onChange={() => onToggle(extension)}
                   />
                 </div>
@@ -273,10 +292,10 @@ export function InstalledTable({
 }
 
 const BADGE_FILTERS = [
-  { value: "", label: "Any publisher" },
-  { value: "official", label: "Official Smarter Extensions" },
-  { value: "verified", label: "Verified Publishers" },
-  { value: "community", label: "Community" },
+  { value: "", label: gettext("Any publisher") },
+  { value: "official", label: gettext("Official Smarter Extensions") },
+  { value: "verified", label: gettext("Verified Publishers") },
+  { value: "community", label: gettext("Community") },
 ];
 
 /** The registry's extensions, as cards, with a search and a badge filter. */
@@ -305,7 +324,7 @@ export function RegistryGrid({
     );
   }, [registry, query, badge]);
 
-  if (registry === null) return <p className="text-muted">Loading the registry...</p>;
+  if (registry === null) return <p className="text-muted">{gettext("Loading the registry...")}</p>;
   if (registry.error) return <div className="alert alert-warning">{registry.error}</div>;
   return (
     <>
@@ -314,15 +333,15 @@ export function RegistryGrid({
           type="search"
           className="form-control form-control-sm"
           style={{ maxWidth: 320 }}
-          placeholder="Search extensions"
-          aria-label="Search extensions"
+          placeholder={gettext("Search extensions")}
+          aria-label={gettext("Search extensions")}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
         <select
           className="form-select form-select-sm"
           style={{ maxWidth: 260 }}
-          aria-label="Publisher"
+          aria-label={gettext("Publisher")}
           value={badge}
           onChange={(event) => setBadge(event.target.value)}
         >
@@ -333,12 +352,12 @@ export function RegistryGrid({
           ))}
         </select>
         <button type="button" className="btn btn-sm btn-light" disabled={busy !== null} onClick={onRefresh}>
-          {busy === "registry" ? <Spinner label="Refreshing" /> : null}
-          Refresh
+          {busy === "registry" ? <Spinner label={gettext("Refreshing")} /> : null}
+          {gettext("Refresh")}
         </button>
       </div>
       {entries.length === 0 ? (
-        <p className="text-muted">No extensions match.</p>
+        <p className="text-muted">{gettext("No extensions match.")}</p>
       ) : (
         <div className="row g-5">
           {entries.map((entry) => (
@@ -374,7 +393,7 @@ function RegistryCard({
         </div>
         <p className="text-gray-700 flex-grow-1">{entry.description}</p>
         <p className="text-muted fs-7 mb-4">
-          By{" "}
+          {gettext("By")}{" "}
           {entry.publisherUrl ? (
             <a href={entry.publisherUrl} target="_blank" rel="noopener noreferrer">
               {entry.publisher}
@@ -392,23 +411,27 @@ function RegistryCard({
               disabled={busy !== null}
               onClick={() => onInstall(entry)}
             >
-              {installing ? <Spinner label="Installing" /> : null}
-              {entry.action === "install" ? `Install ${entry.latestVersion}` : `Update to ${entry.latestVersion}`}
+              {installing ? <Spinner label={gettext("Installing")} /> : null}
+              {entry.action === "install"
+                ? interpolate(gettext("Install %(latestVersion)s"), { latestVersion: entry.latestVersion })
+                : interpolate(gettext("Update to %(latestVersion)s"), { latestVersion: entry.latestVersion })}
             </button>
           ) : null}
           {entry.action === "installed" && entry.detailUrl ? (
             <a className="btn btn-sm btn-light-success" href={entry.detailUrl}>
-              Installed ({entry.installedVersion})
+              {interpolateNodes(gettext("Installed (%(installedVersion)s)"), {
+                installedVersion: entry.installedVersion,
+              })}
             </a>
           ) : null}
           {entry.action === "uploaded" ? (
-            <span className="text-muted fs-7">Installed from an uploaded archive</span>
+            <span className="text-muted fs-7">{gettext("Installed from an uploaded archive")}</span>
           ) : null}
           {entry.action === "incompatible" ? (
-            <span className="text-muted fs-7">Not compatible with this version of Smarter</span>
+            <span className="text-muted fs-7">{gettext("Not compatible with this version of Smarter")}</span>
           ) : null}
           <button type="button" className="btn btn-sm btn-link ms-auto" onClick={() => onDetails(entry)}>
-            Details
+            {gettext("Details")}
           </button>
         </div>
       </div>
@@ -438,13 +461,13 @@ function RegistryDetails({
       <div className="mb-4">
         <TrustBadge badge={entry.trustBadge} label={entry.trustBadgeLabel} />{" "}
         <span className="text-muted fs-7">
-          By {entry.publisher}
+          {interpolateNodes(gettext("By %(publisher)s"), { publisher: entry.publisher })}
           {entry.license ? ` · ${entry.license}` : ""}
           {entry.homepage ? (
             <>
               {" · "}
               <a href={entry.homepage} target="_blank" rel="noopener noreferrer">
-                homepage
+                {gettext("homepage")}
               </a>
             </>
           ) : null}
@@ -455,7 +478,7 @@ function RegistryDetails({
           <select
             className="form-select form-select-sm"
             style={{ maxWidth: 160 }}
-            aria-label="Version"
+            aria-label={gettext("Version")}
             value={version}
             onChange={(event) => setVersion(event.target.value)}
           >
@@ -471,8 +494,8 @@ function RegistryDetails({
             disabled={busy !== null || !version}
             onClick={() => onInstall(entry, version)}
           >
-            {busy === `install:${entry.slug}` ? <Spinner label="Installing" /> : null}
-            {entry.installedVersion ? "Install this version" : "Install"}
+            {busy === `install:${entry.slug}` ? <Spinner label={gettext("Installing")} /> : null}
+            {entry.installedVersion ? gettext("Install this version") : gettext("Install")}
           </button>
         </div>
       ) : null}

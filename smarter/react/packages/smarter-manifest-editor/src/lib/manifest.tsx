@@ -2,6 +2,7 @@
  * Smarter manifest helpers: parse the editor's YAML, and prepare it for the cli api.
  */
 import { load } from "js-yaml";
+import { gettext } from "@smarter/common";
 
 export type ManifestDependency = {
   kind: string;
@@ -25,16 +26,16 @@ export type Manifest = {
 export function parseManifest(yaml: string): Manifest {
   const manifest = load(yaml) as Manifest;
   if (!manifest || typeof manifest !== "object") {
-    throw new Error("The manifest is not a YAML object.");
+    throw new Error(gettext("The manifest is not a YAML object."));
   }
   if (!manifest.apiVersion?.startsWith?.("smarter.sh/v")) {
-    throw new Error("The manifest's apiVersion is missing, or is not smarter.sh/v1.");
+    throw new Error(gettext("The manifest's apiVersion is missing, or is not smarter.sh/v1."));
   }
   if (!manifest.kind) {
-    throw new Error("The manifest's kind is missing.");
+    throw new Error(gettext("The manifest's kind is missing."));
   }
   if (!manifest.metadata?.name) {
-    throw new Error("The manifest's metadata.name is missing.");
+    throw new Error(gettext("The manifest's metadata.name is missing."));
   }
   return manifest;
 }

@@ -16,6 +16,7 @@
  *     <Sdk />
  */
 import "@/components/Sdk/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 /** This platform's OpenAPI document, which every platform serves in its web console. */
 const OPENAPI_URL = "/docs/openapi/";
@@ -50,7 +51,7 @@ const SDKS = [
 function Sdk() {
   return (
     <>
-      <section id="sdk" aria-label="SDK" className="col-xl-4 mb-5 mb-xl-10">
+      <section id="sdk" aria-label={gettext("SDK")} className="col-xl-4 mb-5 mb-xl-10">
         {/* begin::SDKs widget */}
         <div className="card border-transparent h-100 sdk-card" data-bs-theme="light">
           {/* begin::Body */}
@@ -64,14 +65,22 @@ function Sdk() {
             {/* end::Illustration */}
             {/* begin::Title */}
             <div className="position-relative fs-2x fw-bold text-gray-900 mb-2 z-index-2">
-              Build with the{" "}
-              <span className="position-relative d-inline-block">
-                SDKs
-                <span className="position-absolute opacity-50 bottom-0 start-0 border-4 border-danger border-bottom w-100"></span>
-              </span>
+              {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+              {interpolateNodes(gettext("Build with the %(span)s"), {
+                span: (
+                  <span className="position-relative d-inline-block">
+                    {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                    {interpolateNodes(gettext("SDKs%(span)s"), {
+                      span: (
+                        <span className="position-absolute opacity-50 bottom-0 start-0 border-4 border-danger border-bottom w-100"></span>
+                      ),
+                    })}
+                  </span>
+                ),
+              })}
             </div>
             <p className="text-gray-700 fs-6 mb-7 z-index-2 sdk-lede">
-              Typed access to your Smarter resources, in the language you already use.
+              {gettext("Typed access to your Smarter resources, in the language you already use.")}
             </p>
             {/* end::Title */}
             {/* begin::SDKs */}
@@ -98,18 +107,18 @@ function Sdk() {
                 target="_blank"
                 className="btn btn-sm btn-danger fw-semibold"
               >
-                Documentation
+                {gettext("Documentation")}
               </a>
               <a href={OPENAPI_URL} className="btn btn-sm btn-light-danger fw-semibold">
-                API reference
+                {gettext("API reference")}
               </a>
               <a
                 href="https://github.com/smarter-sh"
                 target="_blank"
                 className="btn btn-sm btn-dark fw-semibold"
-                aria-label="SDK source code"
+                aria-label={gettext("SDK source code")}
               >
-                GitHub
+                {gettext("GitHub")}
               </a>
             </div>
             {/* end::Action */}

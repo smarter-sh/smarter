@@ -1,3 +1,4 @@
+import { gettext } from "../../lib/i18n";
 type WorkbenchHelpProps = {
   title: string;
   icon: string;
@@ -30,7 +31,7 @@ export default function WorkbenchHelp({ title, icon, docsUrl, helpText }: Workbe
               rel="noopener noreferrer"
               className="fs-7 fw-semibold text-primary text-hover-primary text-nowrap"
             >
-              View documentation&nbsp;&#8599;
+              {gettext("View documentation ↗")}
             </a>
           </div>
 

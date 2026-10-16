@@ -20,6 +20,7 @@
  * </Modal>
  */
 import React, { useEffect, useId } from "react";
+import { gettext } from "./i18n";
 
 export function Modal({
   show,
@@ -102,7 +103,7 @@ export function Modal({
               {title}
             </h5>
 
-            {onClose && <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />}
+            {onClose && <button type="button" className="btn-close" aria-label={gettext("Close")} onClick={onClose} />}
           </div>
 
           {inputLabel && (
@@ -117,19 +118,19 @@ export function Modal({
           <div className="modal-footer">
             {onClose && (
               <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Close
+                {gettext("Close")}
               </button>
             )}
 
             {onOk && (
               <button type="button" className="btn btn-primary" onClick={onOk}>
-                OK
+                {gettext("OK")}
               </button>
             )}
 
             {onCancel && (
               <button type="button" className="btn btn-secondary" onClick={onCancel}>
-                Cancel
+                {gettext("Cancel")}
               </button>
             )}
           </div>

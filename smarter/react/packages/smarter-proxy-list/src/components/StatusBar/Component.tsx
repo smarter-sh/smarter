@@ -11,6 +11,7 @@
  */
 import type { Proxy } from "@/lib/Types";
 import { formatAllowedPaths, formatApiKey } from "@/lib/format";
+import { gettext, interpolate } from "@smarter/common";
 
 interface StatusbarProps {
   proxy: Proxy;
@@ -23,7 +24,11 @@ export const StatusBar = ({ proxy }: StatusbarProps) => {
       {/* Active */}
       <span
         className="status-icon"
-        title={proxy.isActive ? "Active: the Proxy forwards requests." : "Inactive: the Proxy refuses every request."}
+        title={
+          proxy.isActive
+            ? gettext("Active: the Proxy forwards requests.")
+            : gettext("Inactive: the Proxy refuses every request.")
+        }
       >
         <i className={proxy.isActive ? "bi bi-check-circle text-success" : "bi bi-pause-circle text-secondary"} />
       </span>
@@ -32,8 +37,11 @@ export const StatusBar = ({ proxy }: StatusbarProps) => {
         className="status-icon"
         title={
           proxy.apiKeySecretName
-            ? `API key: Secret ${formatApiKey(proxy)}, sent in ${proxy.authHeader}.`
-            : "No API key: set the Proxy's spec.apiKey, or its Provider's API key. Requests are refused."
+            ? interpolate(gettext("API key: Secret %(apiKey)s, sent in %(authHeader)s."), {
+                apiKey: formatApiKey(proxy),
+                authHeader: proxy.authHeader,
+              })
+            : gettext("No API key: set the Proxy's spec.apiKey, or its Provider's API key. Requests are refused.")
         }
       >
         <i className={proxy.apiKeySecretName ? "bi bi-key text-success" : "bi bi-key text-danger"} />
@@ -43,8 +51,8 @@ export const StatusBar = ({ proxy }: StatusbarProps) => {
         className="status-icon"
         title={
           restricted
-            ? `Allowed paths: ${proxy.allowedPaths.join(", ")}`
-            : "All paths are allowed: callers may use every endpoint of the provider's API with this API key."
+            ? interpolate(gettext("Allowed paths: %(allowedPaths)s"), { allowedPaths: proxy.allowedPaths.join(", ") })
+            : gettext("All paths are allowed: callers may use every endpoint of the provider's API with this API key.")
         }
       >
         <i className={restricted ? "bi bi-shield-check text-info" : "bi bi-shield-exclamation text-warning"} />{" "}

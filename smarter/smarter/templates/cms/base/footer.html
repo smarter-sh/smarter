@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!--begin::Footer-->
 <div id="kt_app_footer" class="app-footer">
   <!--begin::Footer container-->
@@ -8,19 +8,19 @@
       <span class="text-muted fw-semibold me-1">
         <script>document.write(new Date().getFullYear())</script>&copy;
       </span>
-      <a href="https://github.com/smarter-sh/" target="_self" class="text-gray-800 text-hover-primary">The Smarter Project</a>
+      <a href="https://github.com/smarter-sh/" target="_self" class="text-gray-800 text-hover-primary">{% translate "The Smarter Project" %}</a>
     </div>
     <!--end::Copyright-->
     <!--begin::Menu-->
     <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
       <li class="menu-item">
-        <a href="{{ footer.about_url }}" target="_self" class="menu-link px-2">About</a>
+        <a href="{{ footer.about_url }}" target="_self" class="menu-link px-2">{% translate "About" %}</a>
       </li>
       <li class="menu-item">
-        <a href="{{ footer.support_url }}" target="_self" class="menu-link px-2">Support</a>
+        <a href="{{ footer.support_url }}" target="_self" class="menu-link px-2">{% translate "Support" %}</a>
       </li>
       <li class="menu-item">
-        <a href="{{ footer.contact_url }}" target="_self" class="menu-link px-2">Sales</a>
+        <a href="{{ footer.contact_url }}" target="_self" class="menu-link px-2">{% translate "Sales" %}</a>
       </li>
     </ul>
     <!--end::Menu-->

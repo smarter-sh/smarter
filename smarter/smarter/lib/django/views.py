@@ -237,6 +237,8 @@ class SmarterWebTxtView(SmarterView):
 
     def get(self, request):
         minified_html = self.render_clean_html(request, template_path=self.template_path, context=self.context)
+        if isinstance(minified_html, HttpResponse):
+            return minified_html
         return HttpResponse(content=minified_html, content_type="text/plain")
 
     @property
@@ -270,10 +272,14 @@ class SmarterWebHtmlView(SmarterView):
         :type template_path: str
         :param context: The context to use for rendering the template.
         :type context: dict, optional
-        :return: An HttpResponse with the cleaned HTML content.
+        :return: An HttpResponse with the cleaned HTML content, or the error response of
+            :meth:`render_clean_html` if the template could not be rendered.
         :rtype: HttpResponse
         """
         minified_html = self.render_clean_html(request, template_path, context)
+        if isinstance(minified_html, HttpResponse):
+            # an error response. Wrapping it would turn a 500 into a 200 whose body is its repr.
+            return minified_html
         return HttpResponse(content=minified_html, content_type="text/html")
 
     def get(self, request, *args, **kwargs):

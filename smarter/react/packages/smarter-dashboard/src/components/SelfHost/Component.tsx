@@ -15,26 +15,27 @@
  *     <SelfHost />
  */
 import "@/components/SelfHost/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 const STEPS = [
   {
     name: "Docker",
-    where: "Your laptop",
-    description: "Quick Start with Docker Compose",
+    where: gettext("Your laptop"),
+    description: gettext("Quick Start with Docker Compose"),
     logo: "/static/images/selfhost/docker.svg",
     href: "https://github.com/smarter-sh/smarter-deploy",
   },
   {
     name: "Kubernetes",
-    where: "Your cluster",
-    description: "The official Helm chart",
+    where: gettext("Your cluster"),
+    description: gettext("The official Helm chart"),
     logo: "/static/images/selfhost/kubernetes.svg",
     href: "https://artifacthub.io/packages/helm/project-smarter/smarter",
   },
   {
     name: "Terraform",
-    where: "Your AWS cloud",
-    description: "The official Terraform modules",
+    where: gettext("Your AWS cloud"),
+    description: gettext("The official Terraform modules"),
     logo: "/static/images/selfhost/terraform.svg",
     href: "https://github.com/smarter-sh/smarter-infrastructure",
   },
@@ -46,23 +47,31 @@ function SelfHost() {
       {/* begin::Engage widget 4 */}
       <section
         id="self-host"
-        aria-label="Self Host"
+        aria-label={gettext("Self Host")}
         className="card border-transparent h-100 selfhost-card"
         data-bs-theme="light"
       >
         {/* begin::Body */}
         <div className="card-body d-flex flex-column ps-xl-15 h-100">
           {/* begin::Title */}
-          <span className="selfhost-eyebrow">Self-host Smarter</span>
+          <span className="selfhost-eyebrow">{gettext("Self-host Smarter")}</span>
           <div className="fs-2x fw-bold text-white mt-3 mb-2">
-            Run it{" "}
-            <span className="position-relative d-inline-block">
-              anywhere
-              <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 selfhost-underline"></span>
-            </span>
+            {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+            {interpolateNodes(gettext("Run it %(span)s"), {
+              span: (
+                <span className="position-relative d-inline-block">
+                  {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                  {interpolateNodes(gettext("anywhere%(span)s"), {
+                    span: (
+                      <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 selfhost-underline"></span>
+                    ),
+                  })}
+                </span>
+              ),
+            })}
           </div>
           <p className="fs-6 mb-7 selfhost-lede">
-            The same open source platform, from your laptop to production. No license fees, no seat counts.
+            {gettext("The same open source platform, from your laptop to production. No license fees, no seat counts.")}
           </p>
           {/* end::Title */}
           {/* begin::Steps */}
@@ -89,9 +98,9 @@ function SelfHost() {
               target="_blank"
               className="btn btn-sm fw-semibold selfhost-btn"
             >
-              Installation Guide
+              {gettext("Installation Guide")}
             </a>
-            <span className="selfhost-license">Open source &middot; AGPL-3.0</span>
+            <span className="selfhost-license">{gettext("Open source &middot; AGPL-3.0")}</span>
           </div>
           {/* end::Action */}
         </div>

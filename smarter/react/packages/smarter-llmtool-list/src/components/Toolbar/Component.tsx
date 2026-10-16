@@ -26,7 +26,7 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { LLMTool } from "@/lib/Types";
@@ -44,14 +44,20 @@ interface NameModalProps {
 const ModalClone = ({ llmtool, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone LLMTool" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Clone LLMTool")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Clone LLMTool <strong>{llmtool?.name}</strong> to a new resource owned by you.
+        {interpolateNodes(gettext("Clone LLMTool %(name)s to a new resource owned by you."), {
+          name: <strong>{llmtool?.name}</strong>,
+        })}
       </p>
       <p>
-        <em>Provide the new name for the cloned LLMTool.</em>
+        <em>{gettext("Provide the new name for the cloned LLMTool.")}</em>
       </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new LLMTool name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={gettext("Enter new LLMTool name")}
+      />
     </Modal>
   );
 };
@@ -60,14 +66,16 @@ const ModalClone = ({ llmtool, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ llmtool, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(llmtool?.name || "");
   return (
-    <Modal show title="Rename LLMTool" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Rename LLMTool")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>{interpolateNodes(gettext("Rename LLMTool %(name)s."), { name: <strong>{llmtool?.name}</strong> })}</p>
       <p>
-        Rename LLMTool <strong>{llmtool?.name}</strong>.
+        <em>{gettext("Provide the new name for the LLMTool.")}</em>
       </p>
-      <p>
-        <em>Provide the new name for the LLMTool.</em>
-      </p>
-      <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter new LLMTool name" />
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={gettext("Enter new LLMTool name")}
+      />
     </Modal>
   );
 };
@@ -84,12 +92,14 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete LLMTool" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title={gettext("Delete LLMTool")} onOk={onOk} onCancel={onCancel}>
     <p>
-      Are you sure you want to delete LLMTool <strong>{llmtool?.name}</strong>?
+      {interpolateNodes(gettext("Are you sure you want to delete LLMTool %(name)s?"), {
+        name: <strong>{llmtool?.name}</strong>,
+      })}
     </p>
     <p>
-      <em>Data is not recoverable.</em>
+      <em>{gettext("Data is not recoverable.")}</em>
     </p>
   </Modal>
 );
@@ -106,11 +116,13 @@ const ModalError = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="❌ Error" onClose={onClose}>
+  <Modal show={show} title={gettext("❌ Error")} onClose={onClose}>
     <p>
-      An error occurred while performing the operation on LLMTool <strong>{llmtool?.name}</strong>.
+      {interpolateNodes(gettext("An error occurred while performing the operation on LLMTool %(name)s."), {
+        name: <strong>{llmtool?.name}</strong>,
+      })}
     </p>
-    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>{gettext("An unknown error occurred.")}</em>}</p>
   </Modal>
 );
 
@@ -126,15 +138,39 @@ const ModalConfirmation = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="✅ Success" onClose={onClose}>
+  <Modal show={show} title={gettext("✅ Success")} onClose={onClose}>
     <p>
       {message} <strong>{llmtool?.name}</strong>.
     </p>
     <p>
-      <em>Operation completed successfully.</em>
+      <em>{gettext("Operation completed successfully.")}</em>
     </p>
   </Modal>
 );
+
+/**
+ * The messages that report the result of an action. Each is a whole sentence, so that it can be
+ * translated.
+ */
+const actionMessages = (verb: string) => {
+  switch (verb) {
+    case "clone":
+      return {
+        failed: gettext("Failed to clone LLMTool (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully cloned LLMTool"),
+      };
+    case "rename":
+      return {
+        failed: gettext("Failed to rename LLMTool (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully renamed LLMTool"),
+      };
+    default:
+      return {
+        failed: gettext("Failed to delete LLMTool (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully deleted LLMTool"),
+      };
+  }
+};
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -168,13 +204,18 @@ export const Toolbar = ({ sessionContext, llmtool, onRequery }: ToolbarProps) =>
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(`Failed to ${verb} LLMTool (${response.status}): ${data.error || response.statusText}`);
+          throw new Error(
+            interpolate(actionMessages(verb).failed, {
+              status: response.status,
+              error: data.error || response.statusText,
+            }),
+          );
         }
         return data;
       })
       .then((data) => {
         console.debug(loggerPrefix, `Successfully ${verb}d LLMTool:`, data);
-        setSuccessMessage(`Successfully ${verb}d LLMTool`);
+        setSuccessMessage(actionMessages(verb).succeeded);
         // clone and rename return the resulting LLMTool; delete returns a message.
         setModal({ type: "confirmation", llmtool: data && data.id ? (data as LLMTool) : target });
       })
@@ -187,11 +228,11 @@ export const Toolbar = ({ sessionContext, llmtool, onRequery }: ToolbarProps) =>
 
   return (
     <>
-      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label={gettext("Actions")}>
         <a
           href={llmtool.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Chat: Open the LLMTool workbench"
+          title={gettext("Chat: Open the LLMTool workbench")}
           tabIndex={0}
         >
           <i className="bi bi-chat-dots md-teal" />
@@ -199,7 +240,7 @@ export const Toolbar = ({ sessionContext, llmtool, onRequery }: ToolbarProps) =>
         <a
           href={llmtool.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Edit: Open the YAML manifest that defines this LLMTool resource"
+          title={gettext("Edit: Open the YAML manifest that defines this LLMTool resource")}
           tabIndex={0}
         >
           <i className="bi bi-pencil-square md-blue" />
@@ -207,7 +248,7 @@ export const Toolbar = ({ sessionContext, llmtool, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Clone: Clone this LLMTool resource to a new resource owned by you"
+          title={gettext("Clone: Clone this LLMTool resource to a new resource owned by you")}
           onClick={() => setModal({ type: "clone", llmtool })}
           tabIndex={0}
         >
@@ -216,7 +257,7 @@ export const Toolbar = ({ sessionContext, llmtool, onRequery }: ToolbarProps) =>
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Rename: Rename this LLMTool resource"
+          title={gettext("Rename: Rename this LLMTool resource")}
           onClick={() => setModal({ type: "rename", llmtool })}
           tabIndex={0}
         >
@@ -227,8 +268,10 @@ export const Toolbar = ({ sessionContext, llmtool, onRequery }: ToolbarProps) =>
           className="btn btn-icon btn-sm border"
           title={
             llmtool.canDelete === false
-              ? "Delete: You can't delete this LLMTool, because other resources depend on it, or you don't have permission to delete it"
-              : "Delete: Delete this LLMTool resource"
+              ? gettext(
+                  "Delete: You can't delete this LLMTool, because other resources depend on it, or you don't have permission to delete it",
+                )
+              : gettext("Delete: Delete this LLMTool resource")
           }
           onClick={() => setModal({ type: "delete", llmtool })}
           disabled={llmtool.canDelete === false}

@@ -4,7 +4,7 @@
  * Used to display a list of available llmhosts.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { LLMHost, LLMHostListViewProps, LLMHostCardViewProps } from "@/lib/Types";
@@ -12,8 +12,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your LLMHosts" },
-  { key: "shared" as TabKey, label: "Shared LLMHosts" },
+  { key: "owned" as TabKey, label: gettext("Your LLMHosts") },
+  { key: "shared" as TabKey, label: gettext("Shared LLMHosts") },
 ];
 
 // Set the TabbedViewContext generic object type to LLMHost,
@@ -38,11 +38,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "LLM Hosts";
+  const title = gettext("LLM Hosts");
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llmhost.html";
-  const helpText =
-    "LLMHosts provide a standardized interface for deploying and managing self-hosted large language models from platforms like HuggingFace within Smarter-orchestrated applications.";
+  const helpText = gettext(
+    "LLMHosts provide a standardized interface for deploying and managing self-hosted large language models from platforms like HuggingFace within Smarter-orchestrated applications.",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="llmhost-list">
