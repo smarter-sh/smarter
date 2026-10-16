@@ -2,14 +2,20 @@
 
 <div class="app-navbar-item ms-2 ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
   <!--begin::Menu wrapper-->
+  <!--begin::Avatar: opens the user menu; the email shows on hover, and names the menu for screen readers-->
   <div
-    class="cursor-pointer symbol symbol-35px symbol-md-40px"
+    class="cursor-pointer symbol symbol-circle symbol-35px symbol-md-40px"
     data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
     data-kt-menu-attach="parent"
     data-kt-menu-placement="bottom-end"
+    role="button"
+    tabindex="0"
+    title="{{ dashboard.user_email }}"
+    aria-label="{{ dashboard.user_email }}"
   >
-    {{ dashboard.user_email }}
+    <img class="smarter-profile-image" alt="" src="{{ dashboard.profile_image_url }}" />
   </div>
+  <!--end::Avatar-->
   <!--begin::User account menu-->
   <div
     class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px"
@@ -18,10 +24,18 @@
     <!--begin::Menu item-->
     <div class="menu-item px-3">
       <div class="menu-content d-flex align-items-center px-3">
-        <!--begin::Avatar-->
-        <div class="symbol symbol-50px me-5">
-          <img alt="Logo" src="{{ dashboard.profile_image_url }}" />
-        </div>
+        <!--begin::Avatar: click to upload a profile image-->
+        <label
+          for="smarter_profile_image_input"
+          class="symbol symbol-50px me-5 cursor-pointer"
+          title="{% translate 'Change Profile Image' %}"
+        >
+          <img
+            class="smarter-profile-image"
+            alt="{% translate 'Profile Image' %}"
+            src="{{ dashboard.profile_image_url }}"
+          />
+        </label>
         <!--end::Avatar-->
         <!--begin::Username-->
         <div class="d-flex flex-column">
@@ -94,6 +108,74 @@
       <!--end::Menu sub-->
     </div>
     <!--end::Menu item Language-->
+    {% endif %}
+    {% if user.is_authenticated %}
+    <!--begin::Menu item Profile Image: uploads or removes the user's own image, which takes precedence over the oauth provider's-->
+    <form
+      id="smarter_profile_image_form"
+      action="{% url 'account:dashboard_account_profile_image' %}"
+      method="post"
+      enctype="multipart/form-data"
+      class="d-none"
+    >
+      {% csrf_token %}
+      <input
+        id="smarter_profile_image_input"
+        name="profile_image"
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp"
+      />
+    </form>
+    <div class="menu-item px-5">
+      <label for="smarter_profile_image_input" class="menu-link px-5"
+        >{% translate "Change Profile Image" %}</label
+      >
+    </div>
+    <div class="menu-item px-5">
+      <a href="#" id="smarter_profile_image_remove" class="menu-link px-5"
+        >{% translate "Remove Profile Image" %}</a
+      >
+    </div>
+    <script>
+      (function () {
+        const form = document.getElementById("smarter_profile_image_form");
+        const input = document.getElementById("smarter_profile_image_input");
+        const images = document.querySelectorAll(".smarter-profile-image");
+        const csrftoken = form.querySelector("[name=csrfmiddlewaretoken]").value;
+
+        async function send(method, body) {
+          const response = await fetch(form.action, {
+            method: method,
+            body: body,
+            headers: { "X-CSRFToken": csrftoken },
+            credentials: "same-origin",
+          });
+          const data = await response.json();
+          if (response.ok) {
+            images.forEach(function (image) {
+              image.src = data.profile_image_url;
+            });
+          } else {
+            const errors = data.profile_image || [
+              data.error || "{% translate 'The profile image could not be saved.' as error %}{{ error|escapejs }}",
+            ];
+            alert(errors.join(" "));
+          }
+        }
+
+        input.addEventListener("change", function () {
+          if (input.files.length) {
+            send("POST", new FormData(form));
+            input.value = "";
+          }
+        });
+        document.getElementById("smarter_profile_image_remove").addEventListener("click", function (event) {
+          event.preventDefault();
+          send("DELETE");
+        });
+      })();
+    </script>
+    <!--end::Menu item Profile Image-->
     {% endif %}
     <!--begin::Menu item-->
     <div class="menu-item px-5 my-1">
