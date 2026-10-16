@@ -1,6 +1,9 @@
 # pylint: disable=wrong-import-position
 """Test :mod:`smarter.apps.llmtool.urls`."""
 
+from http import HTTPStatus
+
+from django.test import Client
 from django.urls import resolve, reverse
 
 from smarter.apps.llmtool.const import namespace
@@ -9,6 +12,7 @@ from smarter.apps.llmtool.views.detailview import PluginDetailView
 from smarter.apps.llmtool.views.listview.api import (
     PluginListApiCloneView,
     PluginListApiDeleteView,
+    PluginListApiExtensionsView,
     PluginListApiRenameView,
     PluginListApiView,
 )
@@ -39,7 +43,7 @@ class TestPluginUrls(SmarterTestBase):
     def test_listview(self):
         """Test the React plugin list page."""
         url = self.assertResolves(PluginReverseNames.listview, PluginListView)
-        self.assertEqual(url, "/plugin/")
+        self.assertEqual(url, "/llm-tools/")
 
     def test_listview_api_all(self):
         """Test the list api, without an ownership filter."""
@@ -64,6 +68,11 @@ class TestPluginUrls(SmarterTestBase):
         """Test the delete api."""
         self.assertResolves(PluginReverseNames.listview_api_delete, PluginListApiDeleteView, kwargs={"llmclient_id": 1})
 
+    def test_listview_api_extensions(self):
+        """Test the read-only api of the Extensions tab."""
+        url = self.assertResolves(PluginReverseNames.listview_api_extensions, PluginListApiExtensionsView)
+        self.assertEqual(url, "/llm-tools/react-integration/api/listview/extensions/")
+
     def test_listview_api_rename(self):
         """Test the rename api."""
         self.assertResolves(
@@ -75,4 +84,15 @@ class TestPluginUrls(SmarterTestBase):
     def test_detailview(self):
         """Test the plugin manifest page."""
         url = self.assertResolves(PluginReverseNames.detailview, PluginDetailView, kwargs={"hashed_id": "abc123"})
-        self.assertEqual(url, "/plugin/plugins/abc123/")
+        self.assertEqual(url, "/llm-tools/plugins/abc123/")
+
+    def test_old_plugin_urls_redirect(self):
+        """Test that the pages' old urls, under /plugin/, redirect permanently to /llm-tools/, with their query."""
+        for old, new in (
+            ("/plugin/", "/llm-tools/"),
+            ("/plugin/plugins/abc123/?a=1", "/llm-tools/plugins/abc123/?a=1"),
+        ):
+            with self.subTest(url=old):
+                response = Client().get(old)
+                self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
+                self.assertEqual(response["Location"], new)

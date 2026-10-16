@@ -93,3 +93,38 @@ export const exampleContext: TabbedViewContext<Example> = {
   ListView: ExampleListView,
   CardView: ExampleCardView,
 };
+
+/** Another object type, of a tab with its own views: see exampleContextWithOtherTab. */
+export type Other = { slug: string; title: string };
+
+export const otherObjects: Other[] = [{ slug: "other", title: "An other object" }];
+
+function OtherListView({ isLoading, objects }: { isLoading: boolean; objects: Other[] }) {
+  if (isLoading) return <p>Loading others</p>;
+  return (
+    <ul aria-label="Others">
+      {objects.map((other) => (
+        <li key={other.slug}>{other.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+function OtherCardView({ objects }: { objects: Other[] }) {
+  return (
+    <div aria-label="Other cards">
+      {objects.map((other) => (
+        <article key={other.slug}>{other.title}</article>
+      ))}
+    </div>
+  );
+}
+
+/** The example context, with a third, read-only tab of another object type, as the LLMTool list's Extensions tab is. */
+export const exampleContextWithOtherTab: TabbedViewContext<Example> = {
+  ...exampleContext,
+  tabs: [
+    ...exampleContext.tabs,
+    { key: "others", label: "Others", objectTypeName: "other", ListView: OtherListView, CardView: OtherCardView },
+  ],
+};

@@ -184,7 +184,13 @@ urlpatterns = [
     path("llmhost/", include(llmhost_urls, namespace=llmhost_namespace)),
     path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
     path("orchestrator/", include(orchestrator_urls, namespace=orchestrator_namespace)),
-    path("plugin/", include(llmtool_urls, namespace=llmtool_namespace)),
+    path("llm-tools/", include(llmtool_urls, namespace=llmtool_namespace)),
+    # the LLMTools pages were served under /plugin/. Bookmarks and published links still work.
+    re_path(
+        r"^plugin/(?P<rest>.*)$",
+        RedirectView.as_view(url="/llm-tools/%(rest)s", permanent=True, query_string=True),
+        name=f"{name_prefix}_plugin_redirect",
+    ),
     path("extensions/", include(extension_urls, namespace=extension_urls.namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
