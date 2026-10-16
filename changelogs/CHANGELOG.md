@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.31.1](https://github.com/smarter-sh/smarter/compare/v0.31.0...v0.31.1) (2026-10-16)
+
+### Bug Fixes
+
+* **django:** serve list apis on GET and remove pages without templates ([ce7e1cb](https://github.com/smarter-sh/smarter/commit/ce7e1cbca09800f42d74d3404d5376f2699f684a))
+
 ## [0.31.0](https://github.com/smarter-sh/smarter/compare/v0.30.0...v0.31.0) (2026-10-16)
 
 ### Features
