@@ -18,6 +18,8 @@ spec:
   apiKey: null
   config:
     prompt:
+      allowedOrigins:
+      - https://smarter.sh
       appAssistant: Sam
       appExamplePrompts:
       - How do I add a new SAM resource kind to Smarter?
