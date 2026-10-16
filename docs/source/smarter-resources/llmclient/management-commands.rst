@@ -7,7 +7,6 @@ Management Commands
    commands/add-api-key
    commands/deploy-builtin-llmclients
    commands/deploy-llmclient
-   commands/deploy-example-llmclient
    commands/get-llmclients
    commands/load-from-github
    commands/register-custom-domain

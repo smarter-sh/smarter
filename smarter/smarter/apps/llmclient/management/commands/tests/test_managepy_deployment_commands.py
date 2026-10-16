@@ -1,5 +1,5 @@
 """
-Test the llmclient deployment management commands: deploy_llmclient, undeploy_llmclient, deploy_example_llmclient, register_custom_domain and verify_custom_domain.
+Test the llmclient deployment management commands: deploy_llmclient, undeploy_llmclient, register_custom_domain and verify_custom_domain.
 
 Deploying an llmclient creates real DNS records, so nothing here lets a
 deployment reach the cloud: LLMClient.save() is mocked wherever it would send
@@ -14,7 +14,6 @@ from django.core.management import call_command
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
-from smarter.common.const import SMARTER_EXAMPLE_LLM_CLIENT_NAME
 from smarter.common.exceptions import SmarterValueError
 
 COMMANDS = "smarter.apps.llmclient.management.commands"
@@ -128,43 +127,6 @@ class TestUndeployLLMClient(DeploymentCommandTestBase):
             self.run_command("undeploy_llmclient", account_number=self.account.account_number, name="not_an_llmclient")
         self.undeploy_default_api.assert_not_called()
         self.undeploy_default_api.delay.assert_not_called()
-
-
-class TestDeployExampleLLMClient(DeploymentCommandTestBase):
-    """Test manage.py deploy_example_llmclient, against the test account rather than the Smarter account, so that the real demo llmclient is not modified."""
-
-    def setUp(self):
-        super().setUp()
-        self.addCleanup(
-            LLMClient.objects.filter(user_profile__account=self.account, name=SMARTER_EXAMPLE_LLM_CLIENT_NAME).delete
-        )
-
-    def test_deploy_example_llmclient(self):
-        """In the background, the llmclient is saved with asynchronous=True, which sends no deployment signals."""
-        self.run_command("deploy_example_llmclient", account_number=self.account.account_number)
-        llmclient = LLMClient.objects.get(user_profile__account=self.account, name=SMARTER_EXAMPLE_LLM_CLIENT_NAME)
-        self.assertTrue(llmclient.deployed)
-        self.assertEqual(llmclient.app_name, "Smarter Demo")
-        self.assertEqual(len(llmclient.app_example_prompts), 3)
-
-    def test_deploy_example_llmclient_in_foreground(self):
-        with patch.object(LLMClient, "save", autospec=True) as save:
-            with patch.object(LLMClient.objects, "get_or_create") as get_or_create:
-                llmclient = LLMClient(name=SMARTER_EXAMPLE_LLM_CLIENT_NAME, user_profile=self.user_profile)
-                get_or_create.return_value = (llmclient, True)
-                self.run_command(
-                    "deploy_example_llmclient", account_number=self.account.account_number, foreground=True
-                )
-        self.assertTrue(llmclient.deployed)
-        # once to configure the llmclient, and once, synchronously, to deploy it.
-        self.assertEqual(save.call_count, 2)
-        self.assertEqual(save.call_args.kwargs, {})
-
-    def test_unknown_account(self):
-        self.run_command("deploy_example_llmclient", account_number="0000-0000-0000")
-        self.assertFalse(
-            LLMClient.objects.filter(user_profile__account=self.account, name=SMARTER_EXAMPLE_LLM_CLIENT_NAME).exists()
-        )
 
 
 class TestCustomDomainCommands(DeploymentCommandTestBase):

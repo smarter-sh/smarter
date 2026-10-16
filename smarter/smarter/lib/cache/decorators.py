@@ -412,8 +412,10 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 if key_data is None:
                     return
                 computed_cache_key: str = _generate_cache_key_cached(func, key_data)
-            if lazy_cache.has_key(computed_cache_key):
-                cached_value = lazy_cache.get(computed_cache_key)
+            # one read, rather than has_key() and then get(): an entry that expires, or is evicted,
+            # between the two would be reported as an invalidated None.
+            cached_value = lazy_cache.get(computed_cache_key, CACHE_MISS_SENTINEL)
+            if cached_value is not CACHE_MISS_SENTINEL:
                 lazy_cache.delete(computed_cache_key)
                 logger.info(
                     "%s - invalidated %s - %s",
@@ -422,7 +424,11 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                     + logging.formatted_text(
                         func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY
                     ),
-                    type(cached_value).__name__,
+                    (
+                        "None"
+                        if isinstance(cached_value, str) and cached_value == CACHE_NONE_SENTINEL
+                        else type(cached_value).__name__
+                    ),
                     computed_cache_key,
                 )
             else:

@@ -315,9 +315,42 @@ class SmarterTsxLexer(TsxLexer):
     }
 
 
+###############################################################################
+# Sphinx reads sources in forked worker processes (-j auto), and
+# sphinx_contributors calls the GitHub API while it reads contributors.rst. On
+# macOS a network call in a child forked from a multi-threaded process crashes
+# it (SIGSEGV in CoreFoundation), Sphinx silently drops the documents of every
+# worker, and the build fails with "Sphinx is unable to load the master
+# document". Read the pages that call the network in the main process, before
+# the workers are forked, and hand them back to the builder afterwards so that
+# they are still written.
+###############################################################################
+NETWORK_DOCNAMES = ("contributors",)
+_docnames_read_before_fork = []
+
+
+def read_network_docs_before_fork(app, env, docnames):
+    """Read the pages that call the network in the main process, and remove them from ``docnames``."""
+    _docnames_read_before_fork.clear()
+    for docname in NETWORK_DOCNAMES:
+        if docname in docnames:
+            docnames.remove(docname)
+            app.events.emit("env-purge-doc", env, docname)
+            env.clear_doc(docname)
+            app.builder.read_doc(docname)
+            _docnames_read_before_fork.append(docname)
+
+
+def return_network_docs(app, env):  # pylint: disable=unused-argument
+    """Return the pages read before the fork, so that the builder writes them."""
+    return list(_docnames_read_before_fork)
+
+
 def setup(app):
     """Register this configuration's Sphinx event handlers."""
     app.connect("doctree-read", resolve_builtins_exactly)
     # sphinxcontrib_django's handler runs at the default priority, 500.
     app.connect("autodoc-process-docstring", honor_hide_value, priority=600)
     app.add_lexer("tsx", SmarterTsxLexer)
+    app.connect("env-before-read-docs", read_network_docs_before_fork)
+    app.connect("env-updated", return_network_docs)

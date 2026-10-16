@@ -51,13 +51,16 @@ Alternatives Considered
 Consequences
 ------------
 - **Positive:**
+
   - Prompt engineers add common tools in minutes, with no code and no deployment.
   - Developers add any tool that Python can implement, and administrators install, update and
     roll it back at run time.
   - Every tool's definition is generated from the model that validates its arguments, so the two
     can't disagree.
   - Tool errors are returned to the LLM, which can recover, rather than failing the prompt.
+
 - **Negative:**
+
   - Contributors must understand which of the three sources suits a tool.
   - Extensions run unsandboxed, with the platform's own access, so administrators must trust their
     publishers.
