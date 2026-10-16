@@ -33,6 +33,16 @@ suite of The Smarter Project tools, resources, online tutorials, and documentati
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Smarter Dashboard"/>
 
+Languages
+~~~~~~~~~
+
+The console is shown in the language that you choose in the language menu of your user menu, which
+it remembers in a cookie, or else in your browser's preferred language, when it is available. English
+is the default. The languages that a platform offers are those of its ``LANGUAGES`` setting, and the
+menu is shown when there is more than one. Your resources, and their manifests, aren't translated.
+See :doc:`../smarter-framework/developer-reference/translations` for how the console is translated,
+and how to add a language.
+
 AI Resource Lists
 ~~~~~~~~~~~~~~~~~~~~~
 

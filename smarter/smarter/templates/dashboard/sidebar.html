@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 <div
   id="kt_app_sidebar"
@@ -75,7 +75,7 @@
               <!--begin:Menu content-->
               <div class="menu-content">
                 <span class="menu-heading here fw-bold text-uppercase fs-7"
-                  >Workbench</span
+                  >{% translate "Workbench" %}</span
                 >
               </div>
               <!--end:Menu content-->
@@ -97,7 +97,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Dashboard</span>
+                <span class="menu-title">{% translate "Dashboard" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -118,7 +118,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Apply Manifest</span>
+                <span class="menu-title">{% translate "Apply Manifest" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -139,7 +139,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Prompt Passthrough</span>
+                <span class="menu-title">{% translate "Prompt Passthrough" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -161,7 +161,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Server Logs</span>
+                <span class="menu-title">{% translate "Server Logs" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -173,7 +173,7 @@
               <!--begin:Menu content-->
               <div class="menu-content">
                 <span class="menu-heading here fw-bold text-uppercase fs-7"
-                  >Resources</span
+                  >{% translate "Resources" %}</span
                 >
               </div>
               <!--end:Menu content-->
@@ -195,7 +195,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">API Keys</span>
+                <span class="menu-title">{% translate "API Keys" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -217,7 +217,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Connections</span>
+                <span class="menu-title">{% translate "Connections" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -238,7 +238,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Custom Domains</span>
+                <span class="menu-title">{% translate "Custom Domains" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -259,7 +259,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Budgets</span>
+                <span class="menu-title">{% translate "Budgets" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -280,7 +280,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Guardrails</span>
+                <span class="menu-title">{% translate "Guardrails" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -301,7 +301,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">LLM Clients</span>
+                <span class="menu-title">{% translate "LLM Clients" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -322,7 +322,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">LLM Hosts</span>
+                <span class="menu-title">{% translate "LLM Hosts" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -342,7 +342,7 @@
                     <span class="path2"></span>
                   </i>
                 </span>
-                <span class="menu-title">LLM Host Compute</span>
+                <span class="menu-title">{% translate "LLM Host Compute" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -363,7 +363,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">MCP Clients</span>
+                <span class="menu-title">{% translate "MCP Clients" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -384,7 +384,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Orchestrators</span>
+                <span class="menu-title">{% translate "Orchestrators" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -413,7 +413,7 @@
                     <span class="path10"></span>
                   </i>
                 </span>
-                <span class="menu-title">LLM Tools</span>
+                <span class="menu-title">{% translate "LLM Tools" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -435,7 +435,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Providers</span>
+                <span class="menu-title">{% translate "Providers" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -457,7 +457,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Proxies</span>
+                <span class="menu-title">{% translate "Proxies" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -480,7 +480,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Secrets</span>
+                <span class="menu-title">{% translate "Secrets" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -501,7 +501,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Vectorsearches</span>
+                <span class="menu-title">{% translate "Vectorsearches" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -523,7 +523,7 @@
                     <span class="path3"></span>
                   </i>
                 </span>
-                <span class="menu-title">Vectorstores</span>
+                <span class="menu-title">{% translate "Vectorstores" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -542,7 +542,7 @@
                   </i>
                 </span>
                 <span class="menu-heading here fw-bold text-uppercase fs-7"
-                  >Documentation</span
+                  >{% translate "Documentation" %}</span
                 >
               </div>
               <!--end:Menu content-->
@@ -560,7 +560,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Read the Docs</span>
+                <span class="menu-title">{% translate "Read the Docs" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -573,7 +573,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Project Web Site</span>
+                <span class="menu-title">{% translate "Project Web Site" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -590,7 +590,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Example Manifests</span>
+                <span class="menu-title">{% translate "Example Manifests" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -607,7 +607,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Swagger Api Docs</span>
+                <span class="menu-title">{% translate "Swagger Api Docs" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -624,7 +624,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Redoc</span>
+                <span class="menu-title">{% translate "Redoc" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -637,7 +637,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">OpenAPI Contract</span>
+                <span class="menu-title">{% translate "OpenAPI Contract" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -654,7 +654,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Json Schemas</span>
+                <span class="menu-title">{% translate "Json Schemas" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -672,7 +672,7 @@
                   <span class="bullet bullet-dot"></span>
                 </span>
                 <span class="menu-title"
-                  >GitHub Change Log {{ dashboard.smarter_version }}</span
+                  >{% blocktranslate with version=dashboard.smarter_version %}GitHub Change Log {{ version }}{% endblocktranslate %}</span
                 >
               </a>
               <!--end:Menu link-->
@@ -685,7 +685,7 @@
               <!--begin:Menu content-->
               <div class="menu-content">
                 <span class="menu-heading fw-bold text-uppercase fs-7"
-                  >Settings</span
+                  >{% translate "Settings" %}</span
                 >
               </div>
               <!--end:Menu content-->
@@ -703,7 +703,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Account</span>
+                <span class="menu-title">{% translate "Account" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -722,9 +722,9 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Extensions</span>
+                <span class="menu-title">{% translate "Extensions" %}</span>
                 {% if extension_updates %}
-                <span class="menu-badge"><span class="badge badge-warning" title="Updates available">{{ extension_updates }}</span></span>
+                <span class="menu-badge"><span class="badge badge-warning" title="{% translate "Updates available" %}">{{ extension_updates }}</span></span>
                 {% endif %}
               </a>
               <!--end:Menu link-->
@@ -744,7 +744,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Infrastructure Resources</span>
+                <span class="menu-title">{% translate "Infrastructure Resources" %}</span>
               </a>
               <!--end:Menu link-->
             </div>
@@ -758,7 +758,7 @@
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
-                <span class="menu-title">Django Admin</span>
+                <span class="menu-title">{% translate "Django Admin" %}</span>
               </a>
               <!--end:Menu link-->
             </div>

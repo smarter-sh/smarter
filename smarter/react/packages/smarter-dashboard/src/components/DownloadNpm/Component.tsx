@@ -19,6 +19,7 @@
  */
 import { loggerPrefix } from "@/const";
 import "@/components/DownloadNpm/styles.css";
+import { gettext } from "@smarter/common";
 
 interface DownloadNpmProps {
   apiUrl: string;
@@ -28,7 +29,7 @@ function DownloadNpm({ apiUrl }: DownloadNpmProps) {
   console.debug(loggerPrefix, "Rendering DownloadNpm with apiUrl:", apiUrl);
   return (
     <>
-      <section id="download-npm" aria-label="Download Npm" className="col-xl-4 mb-xl-10">
+      <section id="download-npm" aria-label={gettext("Download Npm")} className="col-xl-4 mb-xl-10">
         {/* begin::Download NPM widget 4 */}
         <div className="card border-transparent" data-bs-theme="light" style={{ backgroundColor: "#1C325E" }}>
           {/* begin::Body */}
@@ -37,7 +38,7 @@ function DownloadNpm({ apiUrl }: DownloadNpmProps) {
             <div className="m-0">
               {/* begin::Title */}
               <div className="position-relative fs-2x z-index-2 fw-bold text-white mb-7">
-                <span className="me-2">React Chat component on NPM</span>
+                <span className="me-2">{gettext("React Chat component on NPM")}</span>
                 {/* end::Title */}
                 {/* begin::Action */}
                 <div className="m-3 mt-5 text-center">
@@ -46,7 +47,7 @@ function DownloadNpm({ apiUrl }: DownloadNpmProps) {
                     target="_blank"
                     className="btn btn-danger fw-semibold me-2"
                   >
-                    Download
+                    {gettext("Download")}
                   </a>
                 </div>
                 {/* end::Action */}

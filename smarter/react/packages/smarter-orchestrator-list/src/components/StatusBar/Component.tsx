@@ -10,6 +10,7 @@
  *   <StatusBar orchestrator={orchestrator} />
  */
 import type { Orchestrator } from "@/lib/Types";
+import { gettext } from "@smarter/common";
 interface StatusbarProps {
   orchestrator: Orchestrator;
 }
@@ -22,34 +23,34 @@ export const StatusBar = ({ orchestrator }: StatusbarProps) => {
         className="status-icon"
         title={
           orchestrator.ready
-            ? "Ready: Orchestrator is ready to serve requests"
-            : "Not ready: Orchestrator is initializing"
+            ? gettext("Ready: Orchestrator is ready to serve requests")
+            : gettext("Not ready: Orchestrator is initializing")
         }
       >
         <i className={orchestrator.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
       </span>
       {/* Deployed */}
-      <span className="status-icon" title="Deployed: Orchestrator is deployed">
+      <span className="status-icon" title={gettext("Deployed: Orchestrator is deployed")}>
         <i className="bi bi-cloud-check" />
       </span>
       {/* Authentication Required */}
-      <span className="status-icon" title="Authentication required to access this orchestrator">
+      <span className="status-icon" title={gettext("Authentication required to access this orchestrator")}>
         <i className="bi bi-lock" />
       </span>
       {/* DNS Verification */}
-      <span className="status-icon" title="DNS verified">
+      <span className="status-icon" title={gettext("DNS verified")}>
         <i className="bi bi-globe" />
       </span>
       {/* TLS Certificate */}
-      <span className="status-icon" title="TLS certificate issued">
+      <span className="status-icon" title={gettext("TLS certificate issued")}>
         <i className="bi bi-shield-lock" />
       </span>
       {/* Subdomain */}
-      <span className="status-icon" title={"Subdomain: example.com"}>
+      <span className="status-icon" title={gettext("Subdomain: example.com")}>
         <i className="bi bi-link-45deg text-info" />
       </span>
       {/* Custom Domain */}
-      <span className="status-icon" title={"Custom domain: example.com"}>
+      <span className="status-icon" title={gettext("Custom domain: example.com")}>
         <i className="bi bi-link text-info" />
       </span>
     </div>

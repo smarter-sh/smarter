@@ -5,7 +5,7 @@
  * and node groups, that their LLMHosts can run on.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { LLMHostCompute, LLMHostComputeListViewProps, LLMHostComputeCardViewProps } from "@/lib/Types";
@@ -13,8 +13,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your LLMHost Compute" },
-  { key: "shared" as TabKey, label: "Shared LLMHost Compute" },
+  { key: "owned" as TabKey, label: gettext("Your LLMHost Compute") },
+  { key: "shared" as TabKey, label: gettext("Shared LLMHost Compute") },
 ];
 
 // Set the TabbedViewContext generic object type to LLMHostCompute,
@@ -39,11 +39,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "LLM Host Compute";
+  const title = gettext("LLM Host Compute");
   const icon = "ki-technology-2";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llmhost.html";
-  const helpText =
-    "LLMHostCompute defines the kinds of server that LLMHosts run on, e.g. an AWS g6.2xlarge with one NVIDIA L4 GPU. Each one is an EKS managed node group, which Smarter creates when an LLMHost first needs one of its servers, and to which it adds and removes servers as LLMHosts are deployed and destroyed.";
+  const helpText = gettext(
+    "LLMHostCompute defines the kinds of server that LLMHosts run on, e.g. an AWS g6.2xlarge with one NVIDIA L4 GPU. Each one is an EKS managed node group, which Smarter creates when an LLMHost first needs one of its servers, and to which it adds and removes servers as LLMHosts are deployed and destroyed.",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="llmhost-compute-list">

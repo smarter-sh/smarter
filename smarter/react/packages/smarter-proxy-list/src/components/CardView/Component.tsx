@@ -30,6 +30,7 @@ import { renderDetailRow } from "@/components/CardView/renderDetail";
 import { formatApiKey, formatAuth, proxyUrl } from "@/lib/format";
 
 import "@/components/CardView/styles.css";
+import { gettext, interpolate } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: ProxyCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -55,32 +56,39 @@ function CardView({ sessionContext, objects, onRequery }: ProxyCardViewProps) {
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
                     {renderDetailRow(
-                      "URL",
+                      gettext("URL"),
                       proxyUrl(proxy),
                       "string",
-                      "Use it as the base URL of the provider's SDK, with a Smarter API key.",
+                      gettext("Use it as the base URL of the provider's SDK, with a Smarter API key."),
                     )}
-                    {renderDetailRow("Provider", proxy.providerName)}
-                    {renderDetailRow("Provider API", proxy.upstreamUrl, "string")}
-                    {renderDetailRow("API Key Secret", formatApiKey(proxy))}
-                    {renderDetailRow("Auth Header", formatAuth(proxy))}
-                    {renderDetailRow("Headers", Object.keys(proxy.headers || {}).length ? proxy.headers : null, "json")}
+                    {renderDetailRow(gettext("Provider"), proxy.providerName)}
+                    {renderDetailRow(gettext("Provider API"), proxy.upstreamUrl, "string")}
+                    {renderDetailRow(gettext("API Key Secret"), formatApiKey(proxy))}
+                    {renderDetailRow(gettext("Auth Header"), formatAuth(proxy))}
                     {renderDetailRow(
-                      "Allowed Paths",
-                      proxy.allowedPaths?.length ? proxy.allowedPaths : "All paths",
+                      gettext("Headers"),
+                      Object.keys(proxy.headers || {}).length ? proxy.headers : null,
+                      "json",
+                    )}
+                    {renderDetailRow(
+                      gettext("Allowed Paths"),
+                      proxy.allowedPaths?.length ? proxy.allowedPaths : gettext("All paths"),
                       "str[]",
                     )}
-                    {renderDetailRow("Timeout", `${proxy.timeout} seconds`)}
-                    {renderDetailRow("Active", proxy.isActive, "bool")}
-                    {renderDetailRow("Manifest", proxy.manifestUrl, "url")}
-                    {renderDetailRow("Owner", proxy.userProfile?.user?.username)}
-                    {renderDetailRow("Account Number", proxy.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", proxy.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", proxy.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", proxy.version)}
-                    {renderDetailRow("Description", proxy.description)}
-                    {renderDetailRow("Tags", proxy.tags, "str[]")}
-                    {renderDetailRow("Annotations", proxy.annotations, "json")}
+                    {renderDetailRow(
+                      gettext("Timeout"),
+                      interpolate(gettext("%(timeout)s seconds"), { timeout: proxy.timeout }),
+                    )}
+                    {renderDetailRow(gettext("Active"), proxy.isActive, "bool")}
+                    {renderDetailRow(gettext("Manifest"), proxy.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), proxy.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Account Number"), proxy.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), proxy.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), proxy.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), proxy.version)}
+                    {renderDetailRow(gettext("Description"), proxy.description)}
+                    {renderDetailRow(gettext("Tags"), proxy.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), proxy.annotations, "json")}
                   </tbody>
                 </table>
               </div>

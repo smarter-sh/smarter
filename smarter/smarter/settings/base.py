@@ -777,6 +777,13 @@ MIDDLEWARE = [
     #
     # this replaces corsheaders.middleware.CorsMiddleware"
     "django.contrib.sessions.middleware.SessionMiddleware",
+    #
+    # activates the web console's language for each request, from the
+    # language cookie (set by django.views.i18n.set_language) or else
+    # the browser's Accept-Language header. It must come after
+    # SessionMiddleware and before CommonMiddleware.
+    # -------------------------------
+    "django.middleware.locale.LocaleMiddleware",
     # -------------------------------
     #
     #
@@ -904,6 +911,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
+                "django.template.context_processors.i18n",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -1307,11 +1315,11 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validator
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
 """
 The default language code for Smarter.
 
-Default is 'en-us'.
+Default is 'en', English, the source language of every message in the web console.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#language-code
 """
@@ -1333,6 +1341,35 @@ should be enabled. Default is True. I18N support is important for
 Smarter to support multiple languages and locales.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#use-i18n
+"""
+
+LANGUAGES = [
+    ("en", "English"),
+]
+"""
+The languages in which the Smarter web console is available.
+
+English is the source language of every message, and the default. To add a
+language, append it here, then generate and translate its message catalogs
+with ``make i18n-messages LANGUAGE=<code>``. The language menu of the web
+console lists every language here. The names are not translated, so each
+language is listed in its own name.
+
+See: https://docs.djangoproject.com/en/5.0/ref/settings/#languages
+"""
+
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
+"""
+Where the web console's gettext message catalogs live.
+
+``smarter/smarter/locale/<language>/LC_MESSAGES/`` holds ``django.po`` (the
+Django templates and Python code) and ``djangojs.po`` (the React apps, served
+to the browser by :class:`django.views.i18n.JavaScriptCatalog`). The compiled
+``.mo`` files are built from them by ``compilemessages`` and are not committed.
+
+See: https://docs.djangoproject.com/en/5.0/ref/settings/#locale-paths
 """
 
 USE_TZ = True

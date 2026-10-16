@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------------
 import { useEffect, useRef, useState } from "react";
 import { loggerPrefix } from "@/const";
+import { gettext } from "@smarter/common";
 
 type LogEvent = {
   message: string;
@@ -58,7 +59,7 @@ export function useLogStream(streamUrl: string) {
       console.error(loggerPrefix, "Error in log stream connection", es);
       setConnected(false);
       setIsInitializing(false);
-      setError("Log stream disconnected. Reconnecting...");
+      setError(gettext("Log stream disconnected. Reconnecting..."));
       // Browser will retry automatically (server says retry: 3000)
     };
 

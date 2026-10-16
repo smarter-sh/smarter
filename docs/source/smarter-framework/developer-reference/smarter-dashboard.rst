@@ -8,6 +8,7 @@ Smarter Dashboard App
    smarter-dashboard/admin
    smarter-dashboard/const
    smarter-dashboard/context_processors
+   smarter-dashboard/management
    smarter-dashboard/models
    smarter-dashboard/receivers
    smarter-dashboard/signals

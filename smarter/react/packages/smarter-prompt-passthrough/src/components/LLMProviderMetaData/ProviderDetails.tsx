@@ -1,4 +1,5 @@
 import type { LLMProvider } from "@/components/LLMProviders";
+import { gettext } from "@smarter/common";
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric",
@@ -24,58 +25,60 @@ export default function ProviderDetails({ provider }: ProviderDetailsProps) {
       <div className="row g-2">
         <div className="col-md-6">
           <div>
-            <strong>Slug:</strong> {provider.rfc1034CompliantName}
+            <strong>{gettext("Slug:")}</strong> {provider.rfc1034CompliantName}
           </div>
           <div>
-            <strong>Default model:</strong> {provider.defaultModel}
+            <strong>{gettext("Default model:")}</strong> {provider.defaultModel}
           </div>
           <div>
-            <strong>API Key Secret Name:</strong> {provider.apiKey.name}
+            <strong>{gettext("API Key Secret Name:")}</strong> {provider.apiKey.name}
           </div>
           <div>
-            <strong>Connectivity path:</strong> {provider.connectivityTestPath}
+            <strong>{gettext("Connectivity path:")}</strong> {provider.connectivityTestPath}
           </div>
           <div>
-            <strong>Account:</strong> {provider.userProfile.account.accountNumber}
+            <strong>{gettext("Account:")}</strong> {provider.userProfile.account.accountNumber}
           </div>
           <div>
-            <strong>User:</strong> {provider.userProfile.user.username} ({provider.userProfile.user.email})
+            <strong>{gettext("User:")}</strong> {provider.userProfile.user.username} ({provider.userProfile.user.email})
           </div>
         </div>
 
         <div className="col-md-6">
           <div>
-            <strong>TOS accepted:</strong> {provider.tosAccepted ? "Yes" : "No"}
+            <strong>{gettext("TOS accepted:")}</strong> {provider.tosAccepted ? gettext("Yes") : gettext("No")}
           </div>
           <div>
-            <strong>TOS accepted by:</strong> {provider.tosAcceptedBy.username} ({provider.tosAcceptedBy.email})
+            <strong>{gettext("TOS accepted by:")}</strong> {provider.tosAcceptedBy.username} (
+            {provider.tosAcceptedBy.email})
           </div>
           <div>
-            <strong>TOS accepted at:</strong> {formatDate(provider.tosAcceptedAt)}
+            <strong>{gettext("TOS accepted at:")}</strong> {formatDate(provider.tosAcceptedAt)}
           </div>
           <div>
-            <strong>Ownership requested:</strong> {provider.ownershipRequested ?? "None"}
+            <strong>{gettext("Ownership requested:")}</strong> {provider.ownershipRequested ?? gettext("None")}
           </div>
           <div>
-            <strong>Created:</strong> {formatDate(provider.createdAt)}
+            <strong>{gettext("Created:")}</strong> {formatDate(provider.createdAt)}
           </div>
           <div>
-            <strong>Updated:</strong> {formatDate(provider.updatedAt)}
+            <strong>{gettext("Updated:")}</strong> {formatDate(provider.updatedAt)}
           </div>
         </div>
       </div>
 
       <div className="mt-2">
-        <strong>Tags:</strong> {provider.tags.length > 0 ? provider.tags.join(", ") : "None"}
+        <strong>{gettext("Tags:")}</strong> {provider.tags.length > 0 ? provider.tags.join(", ") : gettext("None")}
       </div>
 
       <div>
-        <strong>Annotations:</strong> {provider.annotations.length > 0 ? provider.annotations.join(", ") : "None"}
+        <strong>{gettext("Annotations:")}</strong>{" "}
+        {provider.annotations.length > 0 ? provider.annotations.join(", ") : gettext("None")}
       </div>
 
       <div className="mt-2">
-        <strong>Contact:</strong> {provider.contactEmail} ({formatDate(provider.contactEmailVerified)}) |{" "}
-        <strong>Support:</strong> {provider.supportEmail} ({formatDate(provider.supportEmailVerified)})
+        <strong>{gettext("Contact:")}</strong> {provider.contactEmail} ({formatDate(provider.contactEmailVerified)}) |{" "}
+        <strong>{gettext("Support:")}</strong> {provider.supportEmail} ({formatDate(provider.supportEmailVerified)})
       </div>
     </>
   );

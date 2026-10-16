@@ -30,56 +30,56 @@ var KTModalNewAddress = function () {
 					'first-name': {
 						validators: {
 							notEmpty: {
-								message: 'First name is required'
+								message: gettext('First name is required')
 							}
 						}
 					},
 					'last-name': {
 						validators: {
 							notEmpty: {
-								message: 'Last name is required'
+								message: gettext('Last name is required')
 							}
 						}
 					},
 					'country': {
 						validators: {
 							notEmpty: {
-								message: 'Country is required'
+								message: gettext('Country is required')
 							}
 						}
 					},
 					'address1': {
 						validators: {
 							notEmpty: {
-								message: 'Address 1 is required'
+								message: gettext('Address 1 is required')
 							}
 						}
 					},
 					'address2': {
 						validators: {
 							notEmpty: {
-								message: 'Address 2 is required'
+								message: gettext('Address 2 is required')
 							}
 						}
 					},
 					'city': {
 						validators: {
 							notEmpty: {
-								message: 'City is required'
+								message: gettext('City is required')
 							}
 						}
 					},
 					'state': {
 						validators: {
 							notEmpty: {
-								message: 'State is required'
+								message: gettext('State is required')
 							}
 						}
 					},
 					'postcode': {
 						validators: {
 							notEmpty: {
-								message: 'Postcode is required'
+								message: gettext('Postcode is required')
 							}
 						}
 					}
@@ -119,10 +119,10 @@ var KTModalNewAddress = function () {
 
 							// Show success message.  For more info check the plugin's official documentation: https://sweetalert2.github.io/
 							Swal.fire({
-								text: "Form has been successfully submitted!",
+								text: gettext("Form has been successfully submitted!"),
 								icon: "success",
 								buttonsStyling: false,
-								confirmButtonText: "Ok, got it!",
+								confirmButtonText: gettext("Ok, got it!"),
 								customClass: {
 									confirmButton: "btn btn-primary"
 								}
@@ -137,10 +137,10 @@ var KTModalNewAddress = function () {
 					} else {
 						// Show error message.
 						Swal.fire({
-							text: "Sorry, looks like there are some errors detected, please try again.",
+							text: gettext("Sorry, looks like there are some errors detected, please try again."),
 							icon: "error",
 							buttonsStyling: false,
-							confirmButtonText: "Ok, got it!",
+							confirmButtonText: gettext("Ok, got it!"),
 							customClass: {
 								confirmButton: "btn btn-primary"
 							}
@@ -154,12 +154,12 @@ var KTModalNewAddress = function () {
 			e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: gettext("Are you sure you would like to cancel?"),
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: gettext("Yes, cancel it!"),
+				cancelButtonText: gettext("No, return"),
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"
@@ -170,10 +170,10 @@ var KTModalNewAddress = function () {
 					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
-						text: "Your form has not been cancelled!.",
+						text: gettext("Your form has not been cancelled!."),
 						icon: "error",
 						buttonsStyling: false,
-						confirmButtonText: "Ok, got it!",
+						confirmButtonText: gettext("Ok, got it!"),
 						customClass: {
 							confirmButton: "btn btn-primary",
 						}
@@ -190,11 +190,11 @@ var KTModalNewAddress = function () {
         var el = this;
 
         swal.fire({
-            text: "Are you sure you would like to delete selected address ?",
+            text: gettext("Are you sure you would like to delete selected address ?"),
             icon: "warning",
             buttonsStyling: false,
             showDenyButton: true,
-            confirmButtonText: "Yes",
+            confirmButtonText: gettext("Yes"),
             denyButtonText: 'No',
             customClass: {
                 confirmButton: "btn btn-primary",
@@ -207,9 +207,9 @@ var KTModalNewAddress = function () {
 
                 setTimeout(function() {
                     Swal.fire({
-                        text: 'Your selected address has been successfully deleted',
+                        text: gettext('Your selected address has been successfully deleted'),
                         icon: 'success',
-                        confirmButtonText: "Ok",
+                        confirmButtonText: gettext("Ok"),
                         buttonsStyling: false,
                         customClass: {
                             confirmButton: "btn btn-light-primary"

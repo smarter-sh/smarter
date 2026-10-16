@@ -1,13 +1,13 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block dashboard_title %}Account Settings{% endblock %}
+{% block dashboard_title %}{% translate "Account Settings" %}{% endblock %}
 
     {% block dashboard_title_breadcrumbs %}
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/dashboard/account/dashboard/settings/" class="text-muted text-hover-primary">Settings</a>
+        <a href="/dashboard/account/dashboard/settings/" class="text-muted text-hover-primary">{% translate "Settings" %}</a>
       </li>
     {% endblock %}
 
@@ -22,14 +22,14 @@
         <h3 class="fw-bold m-0">
           {% if account_users.user %}{{ account_users.user.username }} - {{ account_users.user.email }}
           {% else %}
-          Create New User
+          {% translate "Create New User" %}
           {% endif %}
         </h3>
       </div>
       <!--end::Card title-->
       <!--begin::Action-->
       {% if account_users.user %}
-      <a id="kt_user_form_edit_btn" href="#" class="btn btn-sm btn-primary align-self-center">Edit</a>
+      <a id="kt_user_form_edit_btn" href="#" class="btn btn-sm btn-primary align-self-center">{% translate "Edit" %}</a>
       {% endif %}
       <!--end::Action-->
     </div>
@@ -49,7 +49,7 @@
           <!--begin::Input group-->
           <div class="row mb-6">
             <!--begin::Label-->
-            <label class="col-lg-4 col-form-label fw-semibold fs-6">Username</label>
+            <label class="col-lg-4 col-form-label fw-semibold fs-6">{% translate "Username" %}</label>
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
@@ -75,8 +75,8 @@
           <div class="row mb-6">
             <!--begin::Label-->
             <label class="col-lg-4 col-form-label fw-semibold fs-6">
-              <span class="required">Email</span>
-              <span class="ms-1" data-bs-toggle="tooltip" title="Your data remains private.">
+              <span class="required">{% translate "Email" %}</span>
+              <span class="ms-1" data-bs-toggle="tooltip" title="{% translate "Your data remains private." %}">
                 <i class="ki-duotone ki-information-5 text-gray-500 fs-6">
                   <span class="path1"></span>
                   <span class="path2"></span>
@@ -92,7 +92,7 @@
                 type="text"
                 name="{{ account_users.user_form.email.name }}"
                 class="form-control form-control-lg form-control-solid email"
-                placeholder="Email address"
+                placeholder="{% translate "Email address" %}"
                 value="{% if account_users.user_form.email.value != None %}{{ account_users.user_form.email.value }}{% endif %}" />
             </div>
             <!--end::Col-->
@@ -103,7 +103,7 @@
           <div class="row mb-6">
             <!--begin::Label-->
             <label class="col-lg-4 col-form-label fw-semibold fs-6">
-              <span class="required">First Name</span>
+              <span class="required">{% translate "First Name" %}</span>
             </label>
             <!--end::Label-->
             <!--begin::Col-->
@@ -113,7 +113,7 @@
                 type="tel"
                 name="{{ account_users.user_form.first_name.name }}"
                 class="form-control form-control-lg form-control-solid"
-                placeholder="First name"
+                placeholder="{% translate "First name" %}"
                 value="{% if account_users.user_form.first_name.value != None %}{{ account_users.user_form.first_name.value }}{% endif %}" />
               </div>
             <!--end::Col-->
@@ -122,7 +122,7 @@
           <!--begin::Input group-->
           <div class="row mb-6">
             <!--begin::Label-->
-            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Last Name</label>
+            <label class="col-lg-4 col-form-label required fw-semibold fs-6">{% translate "Last Name" %}</label>
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
@@ -132,7 +132,7 @@
                 type="tel"
                 name="{{ account_users.user_form.last_name.name }}"
                 class="form-control form-control-lg form-control-solid"
-                placeholder="Last name"
+                placeholder="{% translate "Last name" %}"
                 value="{% if account_users.user_form.last_name.value != None %}{{ account_users.user_form.last_name.value }}{% endif %}" />
               <!--end::Input-->
             </div>
@@ -144,7 +144,7 @@
           <!--begin::Input group-->
           <div class="row mb-6">
             <!--begin::Label-->
-            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Admin</label>
+            <label class="col-lg-4 col-form-label required fw-semibold fs-6">{% translate "Admin" %}</label>
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
@@ -173,13 +173,13 @@
             type="reset"
             class="btn btn-light btn-active-light-primary me-2"
             style="display: none;"
-            >Cancel</button>
+            >{% translate "Cancel" %}</button>
           <button
             id="kt_user_form_save_btn"
             type="submit"
             class="btn btn-primary"
             style="display: none;"
-            >Save Changes</button>
+            >{% translate "Save Changes" %}</button>
         </div>
         <!--end::Actions-->
       </form>

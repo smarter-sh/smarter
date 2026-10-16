@@ -17,19 +17,36 @@
  *
  *     <BudgetAlerts sessionContext={sessionContext} apiUrl="/dashboard/api/budgets/" />
  */
+import type { ReactNode } from "react";
 import type { SessionContext } from "@smarter/common";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
 import { formatAmount } from "@/components/BudgetVsActual/format";
 import type { BudgetStatus } from "@/components/BudgetVsActual/types";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 export const ALERT_PERCENT = 80;
 
-const PERIOD_ADJECTIVE: Record<BudgetStatus["period"], string> = {
-  hour: "hourly",
-  day: "daily",
-  week: "weekly",
-  month: "monthly",
+/** The message for a budget that has spent most of its periodic limit, one per period. */
+const periodicMessage = (period: BudgetStatus["period"]): string => {
+  switch (period) {
+    case "hour":
+      return gettext(
+        "Budget %(budget)s on %(resource)s has spent %(percent)s of its hourly limit (%(actual)s of %(limit)s).",
+      );
+    case "day":
+      return gettext(
+        "Budget %(budget)s on %(resource)s has spent %(percent)s of its daily limit (%(actual)s of %(limit)s).",
+      );
+    case "week":
+      return gettext(
+        "Budget %(budget)s on %(resource)s has spent %(percent)s of its weekly limit (%(actual)s of %(limit)s).",
+      );
+    default:
+      return gettext(
+        "Budget %(budget)s on %(resource)s has spent %(percent)s of its monthly limit (%(actual)s of %(limit)s).",
+      );
+  }
 };
 
 interface BudgetAlertsProps {
@@ -49,16 +66,39 @@ function needsAttention(status: BudgetStatus): boolean {
   return status.is_locked || (percent !== null && percent >= ALERT_PERCENT);
 }
 
-function alertMessage(status: BudgetStatus): string {
+/** The alert's sentence, with the budget's and the resource's names in bold. */
+function alertMessage(status: BudgetStatus): ReactNode {
+  const names = {
+    budget: <span className="fw-bold">{status.budget}</span>,
+    resource: <span className="fw-bold">{status.resource_locator}</span>,
+  };
   if (status.is_locked) {
-    return `is locked${status.lock_reason ? `: ${status.lock_reason}` : "."}`;
+    return status.lock_reason
+      ? interpolateNodes(gettext("Budget %(budget)s on %(resource)s is locked: %(reason)s"), {
+          ...names,
+          reason: status.lock_reason,
+        })
+      : interpolateNodes(gettext("Budget %(budget)s on %(resource)s is locked."), names);
   }
   const periodic = status.periodic_percent ?? 0;
   const absolute = status.absolute_percent ?? 0;
   if (periodic >= absolute) {
-    return `has spent ${periodic}% of its ${PERIOD_ADJECTIVE[status.period]} limit (${formatAmount(status.periodic_actual, status.unit)} of ${formatAmount(status.periodic_limit, status.unit)}).`;
+    return interpolateNodes(periodicMessage(status.period), {
+      ...names,
+      percent: `${periodic}%`,
+      actual: formatAmount(status.periodic_actual, status.unit),
+      limit: formatAmount(status.periodic_limit, status.unit),
+    });
   }
-  return `has spent ${absolute}% of its total limit (${formatAmount(status.absolute_actual, status.unit)} of ${formatAmount(status.absolute_limit, status.unit)}).`;
+  return interpolateNodes(
+    gettext("Budget %(budget)s on %(resource)s has spent %(percent)s of its total limit (%(actual)s of %(limit)s)."),
+    {
+      ...names,
+      percent: `${absolute}%`,
+      actual: formatAmount(status.absolute_actual, status.unit),
+      limit: formatAmount(status.absolute_limit, status.unit),
+    },
+  );
 }
 
 function BudgetAlerts({ sessionContext, apiUrl }: BudgetAlertsProps) {
@@ -67,7 +107,7 @@ function BudgetAlerts({ sessionContext, apiUrl }: BudgetAlertsProps) {
   if (alerts.length === 0) return null;
 
   return (
-    <section id="budget-alerts" aria-label="Budget Alerts" className="row g-5 g-xl-10 mt-3">
+    <section id="budget-alerts" aria-label={gettext("Budget Alerts")} className="row g-5 g-xl-10 mt-3">
       <div className="col-12">
         {alerts.map((status) => {
           const danger = status.is_locked || (spentPercent(status) ?? 0) >= 100;
@@ -80,10 +120,7 @@ function BudgetAlerts({ sessionContext, apiUrl }: BudgetAlertsProps) {
               <i
                 className={`ki-outline ki-notification-bing fs-2x me-4 ${danger ? "text-danger" : "text-warning"}`}
               ></i>
-              <div className="fs-6">
-                Budget <span className="fw-bold">{status.budget}</span> on{" "}
-                <span className="fw-bold">{status.resource_locator}</span> {alertMessage(status)}
-              </div>
+              <div className="fs-6">{alertMessage(status)}</div>
             </div>
           );
         })}

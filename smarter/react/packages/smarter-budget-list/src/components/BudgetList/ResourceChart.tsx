@@ -5,7 +5,7 @@
  * with recharts.
  */
 import { useEffect, useState } from "react";
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import BudgetChart from "@/components/BudgetList/BudgetChart";
@@ -30,7 +30,10 @@ export default function ResourceChart({
   useEffect(() => {
     fetchDjangoUrl(sessionContext, `${status.seriesUrl}?periods=${PERIODS}`, JSON.stringify({}))
       .then(async (response) => {
-        if (!response.ok) throw new Error(`Failed to load the budget series (${response.status}).`);
+        if (!response.ok)
+          throw new Error(
+            interpolate(gettext("Failed to load the budget series (%(status)s)."), { status: response.status }),
+          );
         const data = (await response.json()) as SeriesResponse;
         setSeries(data.find((s) => s.status.budget === status.budget)?.series ?? []);
       })
@@ -41,7 +44,7 @@ export default function ResourceChart({
   }, [sessionContext, status]);
 
   if (errMessage) return <div className="text-danger fs-7">{errMessage}</div>;
-  if (series === null) return <div className="text-muted fs-7">Loading…</div>;
+  if (series === null) return <div className="text-muted fs-7">{gettext("Loading…")}</div>;
   return (
     <BudgetChart
       series={series}

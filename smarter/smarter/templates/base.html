@@ -1,6 +1,7 @@
-{% load static  %}
+{% load static i18n smarter_i18n %}
 <!DOCTYPE html>
-<html lang="en">
+{% get_current_language as CURRENT_LANGUAGE %}{% get_current_language_bidi as CURRENT_LANGUAGE_BIDI %}
+<html lang="{{ CURRENT_LANGUAGE }}"{% if CURRENT_LANGUAGE_BIDI %} dir="rtl"{% endif %}>
 <!--begin::Head-->
 <head>
   {% block head %}
@@ -25,7 +26,8 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="{{ branding.smarter_product_name }}" />
   {% endblock %}
-  <meta property="og:description" content="{{ branding.smarter_product_description }}" />  <meta property="og:locale" content="en_US" />
+  <meta property="og:description" content="{{ branding.smarter_product_description }}" />
+  <meta property="og:locale" content="{{ CURRENT_LANGUAGE|to_locale }}" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="{{ branding.smarter_product_name }}" />
   <meta property="og:site_name" content="{{ branding.smarter_product_name }}" />
@@ -84,6 +86,14 @@
   {% endblock %}
   {% block head_extra %}
   {% endblock %}
+  <!--
+  The JavaScript messages in the current language: Django's JavaScriptCatalog defines gettext(),
+  ngettext(), interpolate() and friends, which the scripts in static/js call, and window.django,
+  which @smarter/common's i18n module calls. It loads before every other script. Hosts whose
+  urlconf has no catalog, such as the api, render pages without it, in English.
+  -->
+  {% url 'javascript-catalog' as javascript_catalog_url %}
+  {% if javascript_catalog_url %}<script src="{{ javascript_catalog_url }}"></script>{% endif %}
 </head>
 <!--end::Head-->
 <!--begin::Body-->

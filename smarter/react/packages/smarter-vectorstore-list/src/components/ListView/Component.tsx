@@ -28,7 +28,7 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, Loading, SortableHeader } from "@smarter/common";
+import { formatDateTime, gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { Vectorstore, VectorstoreListViewProps } from "@/lib/Types";
@@ -45,7 +45,7 @@ import "@/components/ListView/styles.css";
  * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
  */
 const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
+  return <span className="text-muted fw-semibold">{gettext("Loading...")}</span>;
 };
 
 /**
@@ -59,20 +59,20 @@ const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
     <thead className="table-light border-bottom-2">
       <tr className="">
         <SortableHeader column="name" sorting={sorting} className=" p-1">
-          Name
+          {gettext("Name")}
         </SortableHeader>
         <SortableHeader column="database" sorting={sorting} className="d-none d-md-table-cell">
-          Database
+          {gettext("Database")}
         </SortableHeader>
-        <th className="">Status</th>
+        <th className="">{gettext("Status")}</th>
         <SortableHeader column="vectorCount" sorting={sorting} className="d-none d-lg-table-cell text-end">
-          Vectors
+          {gettext("Vectors")}
         </SortableHeader>
-        <th className="d-none d-lg-table-cell text-end">Documents</th>
+        <th className="d-none d-lg-table-cell text-end">{gettext("Documents")}</th>
         <SortableHeader column="updatedAt" sorting={sorting} className="d-none d-lg-table-cell width-100">
-          Updated
+          {gettext("Updated")}
         </SortableHeader>
-        <th className="">Operations</th>
+        <th className="">{gettext("Operations")}</th>
       </tr>
     </thead>
   );

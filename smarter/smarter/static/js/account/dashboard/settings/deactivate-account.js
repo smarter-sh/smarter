@@ -17,7 +17,7 @@ var KTAccountSettingsDeactivateAccount = function () {
                     deactivate: {
                         validators: {
                             notEmpty: {
-                                message: 'Please check the box to deactivate your account'
+                                message: gettext('Please check the box to deactivate your account')
                             }
                         }
                     }
@@ -44,11 +44,11 @@ var KTAccountSettingsDeactivateAccount = function () {
                 if (status == 'Valid') {
 
                     swal.fire({
-                        text: "Are you sure you would like to deactivate your account?",
+                        text: gettext("Are you sure you would like to deactivate your account?"),
                         icon: "warning",
                         buttonsStyling: false,
                         showDenyButton: true,
-                        confirmButtonText: "Yes",
+                        confirmButtonText: gettext("Yes"),
                         denyButtonText: 'No',
                         customClass: {
                             confirmButton: "btn btn-light-primary",
@@ -57,9 +57,9 @@ var KTAccountSettingsDeactivateAccount = function () {
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
-                                text: 'Your account has been deactivated.',
+                                text: gettext('Your account has been deactivated.'),
                                 icon: 'success',
-                                confirmButtonText: "Ok",
+                                confirmButtonText: gettext("Ok"),
                                 buttonsStyling: false,
                                 customClass: {
                                     confirmButton: "btn btn-light-primary"
@@ -67,9 +67,9 @@ var KTAccountSettingsDeactivateAccount = function () {
                             })
                         } else if (result.isDenied) {
                             Swal.fire({
-                                text: 'Account not deactivated.',
+                                text: gettext('Account not deactivated.'),
                                 icon: 'info',
-                                confirmButtonText: "Ok",
+                                confirmButtonText: gettext("Ok"),
                                 buttonsStyling: false,
                                 customClass: {
                                     confirmButton: "btn btn-light-primary"
@@ -80,10 +80,10 @@ var KTAccountSettingsDeactivateAccount = function () {
 
                 } else {
                     swal.fire({
-                        text: "Sorry, looks like there are some errors detected, please try again.",
+                        text: gettext("Sorry, looks like there are some errors detected, please try again."),
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: gettext("Ok, got it!"),
                         customClass: {
                             confirmButton: "btn btn-light-primary"
                         }

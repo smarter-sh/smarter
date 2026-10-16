@@ -6,6 +6,7 @@
  * is called again before the fetch completes.
  *****************************************************************************/
 import { loggerPrefix } from "@/const";
+import { gettext, interpolate } from "@smarter/common";
 export interface LLMProvider {
   id: number;
   tags: string[];
@@ -96,7 +97,7 @@ async function LLMProviders(providerApiUrl: string, signal?: AbortSignal): Promi
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch providers: ${response.status}`);
+    throw new Error(interpolate(gettext("Failed to fetch providers: %(status)s"), { status: response.status }));
   }
 
   const data = (await response.json()) as ProvidersApiResponse;
