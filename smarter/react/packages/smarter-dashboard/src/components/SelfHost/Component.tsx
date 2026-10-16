@@ -1,11 +1,13 @@
 /**
  * SelfHost dashboard widget.
  *
- * This component renders a self-hosting call-to-action card for Smarter,
- * including installation guidance and deployment option links for Docker,
- * Kubernetes, and Terraform.
+ * This component renders a promotional card for self-hosting Smarter, as a
+ * three-step path from a laptop to production: the Docker Compose Quick Start
+ * (smarter-deploy), the official Helm chart for Kubernetes, and the official
+ * Terraform modules for AWS (smarter-infrastructure). Each step links to its
+ * resource, followed by a link to the installation guide.
  *
- * :returns: A JSX fragment containing the self-hosting engagement widget.
+ * :returns: A JSX fragment containing the self-host call-to-action widget.
  * :rtype: JSX.Element
  *
  * :example:
@@ -14,114 +16,87 @@
  */
 import "@/components/SelfHost/styles.css";
 
+const STEPS = [
+  {
+    name: "Docker",
+    where: "Your laptop",
+    description: "Quick Start with Docker Compose",
+    logo: "/static/images/selfhost/docker.svg",
+    href: "https://github.com/smarter-sh/smarter-deploy",
+  },
+  {
+    name: "Kubernetes",
+    where: "Your cluster",
+    description: "The official Helm chart",
+    logo: "/static/images/selfhost/kubernetes.svg",
+    href: "https://artifacthub.io/packages/helm/project-smarter/smarter",
+  },
+  {
+    name: "Terraform",
+    where: "Your AWS cloud",
+    description: "The official Terraform modules",
+    logo: "/static/images/selfhost/terraform.svg",
+    href: "https://github.com/smarter-sh/smarter-infrastructure",
+  },
+];
+
 function SelfHost() {
   return (
     <>
       {/* begin::Engage widget 4 */}
-      <div
+      <section
         id="self-host"
         aria-label="Self Host"
-        className="card border-transparent h-100"
+        className="card border-transparent h-100 selfhost-card"
         data-bs-theme="light"
-        style={{ backgroundColor: "#1C325E" }}
       >
         {/* begin::Body */}
-        <div className="row w-100">
-          <div className="card-body d-flex flex-column ps-xl-15 h-100">
-            {/* begin::Title */}
-            <div className="position-relative fs-2x z-index-2 fw-bold text-white mb-7">
-              <span className="position-relative d-inline-block text-danger">
-                <a
-                  href="https://docs.smarter.sh/en/latest/smarter-platform/installation.html"
-                  target="_blank"
-                  className="btn btn-primary fw-semibold me-2 opacity-75-hover"
-                >
-                  Installation Guide
-                </a>
-                <span className="me-2 d-none d-md-table-cell"> Self-host Smarter</span>
-              </span>
-            </div>
-            {/* end::Title */}
-            {/* begin::Illustration */}
-            <img
-              src="/static/assets/media/illustrations/sigma-1/14-dark-white-bkg.png"
-              className="position-absolute me-3 bottom-0 end-0 w-100"
-              alt=""
-            />
-            <img
-              src="/static/images/docker-logo.png"
-              className="position-absolute top-50 end-0 me-20 w-100px"
-              style={{ transform: "translateY(-100%)" }}
-              alt=""
-            />
-            {/* end::Illustration */}
-
-            <div
-              className="text-white mt-auto mb-0 pt-5 align-self-end rounded"
-              style={{
-                width: "50%",
-                background: "rgba(34, 34, 34, 0.25)",
-                zIndex: 10,
-                position: "relative",
-              }}
-            >
-              <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-                <li className="ps-4">
-                  <span
-                    style={{
-                      color: "#888",
-                      fontSize: "1.2em",
-                      marginRight: "0.5em",
-                    }}
-                  >
-                    &#8594;
-                  </span>
-                  <a href="https://github.com/smarter-sh/smarter-deploy" target="_blank" className="text-gray-200">
-                    Docker
-                  </a>
-                </li>
-                <li className="ps-4">
-                  <span
-                    style={{
-                      color: "#888",
-                      fontSize: "1.2em",
-                      marginRight: "0.5em",
-                    }}
-                  >
-                    &#8594;
-                  </span>
-                  <a
-                    href="https://artifacthub.io/packages/helm/project-smarter/smarter"
-                    target="_blank"
-                    className="text-gray-200"
-                  >
-                    Kubernetes
-                  </a>
-                </li>
-                <li className="ps-4">
-                  <span
-                    style={{
-                      color: "#888",
-                      fontSize: "1.2em",
-                      marginRight: "0.5em",
-                    }}
-                  >
-                    &#8594;
-                  </span>
-                  <a
-                    href="https://github.com/smarter-sh/smarter-infrastructure"
-                    target="_blank"
-                    className="text-gray-200"
-                  >
-                    Terraform
-                  </a>
-                </li>
-              </ul>
-            </div>
+        <div className="card-body d-flex flex-column ps-xl-15 h-100">
+          {/* begin::Title */}
+          <span className="selfhost-eyebrow">Self-host Smarter</span>
+          <div className="fs-2x fw-bold text-white mt-3 mb-2">
+            Run it{" "}
+            <span className="position-relative d-inline-block">
+              anywhere
+              <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 selfhost-underline"></span>
+            </span>
           </div>
+          <p className="fs-6 mb-7 selfhost-lede">
+            The same open source platform, from your laptop to production. No license fees, no seat counts.
+          </p>
+          {/* end::Title */}
+          {/* begin::Steps */}
+          <ol className="selfhost-steps">
+            {STEPS.map((step, index) => (
+              <li key={step.name} className="selfhost-step">
+                <a href={step.href} target="_blank" className="selfhost-step-link hover-elevate-up">
+                  <span className="selfhost-logo">
+                    <img src={step.logo} alt="" />
+                    <span className="selfhost-number">{index + 1}</span>
+                  </span>
+                  <span className="selfhost-where">{step.where}</span>
+                  <span className="selfhost-name">{step.name}</span>
+                  <span className="selfhost-description">{step.description}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+          {/* end::Steps */}
+          {/* begin::Action */}
+          <div className="d-flex flex-wrap align-items-center gap-3 mt-auto pt-7">
+            <a
+              href="https://docs.smarter.sh/en/latest/smarter-platform/installation.html"
+              target="_blank"
+              className="btn btn-sm fw-semibold selfhost-btn"
+            >
+              Installation Guide
+            </a>
+            <span className="selfhost-license">Open source &middot; AGPL-3.0</span>
+          </div>
+          {/* end::Action */}
         </div>
         {/* end::Body */}
-      </div>
+      </section>
       {/* end::Engage widget 4 */}
     </>
   );

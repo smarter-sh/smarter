@@ -1,0 +1,71 @@
+.sdk-card {
+  background: linear-gradient(135deg, #e6f4ff 0%, #fff1e6 100%);
+  overflow: hidden;
+}
+
+.sdk-lede {
+  max-width: 65%;
+}
+
+.sdk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.sdk-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sdk-logo {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  box-shadow: 0 0.4rem 1rem rgba(28, 50, 94, 0.15);
+}
+
+.sdk-logo img {
+  width: 24px;
+  height: 24px;
+}
+
+.sdk-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sdk-name {
+  color: #1c325e;
+  font-weight: 600;
+}
+
+.sdk-name:hover {
+  color: #f1416c;
+}
+
+.sdk-install {
+  align-self: flex-start;
+  max-width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.1rem 0.45rem;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background-color: #1e1e2e;
+  color: #a6e3a1;
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+}

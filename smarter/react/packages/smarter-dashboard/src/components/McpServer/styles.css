@@ -1,0 +1,76 @@
+.mcp-card {
+  background:
+    radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.35) 0%, rgba(244, 114, 182, 0) 50%),
+    linear-gradient(135deg, #4c0519 0%, #881337 55%, #be123c 100%);
+  overflow: hidden;
+}
+
+.mcp-eyebrow {
+  align-self: flex-start;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fecdd3;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mcp-card .mcp-headline {
+  color: #ffffff;
+}
+
+.mcp-underline {
+  border-color: #fda4af !important;
+  opacity: 0.8;
+}
+
+.mcp-lede {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mcp-command {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  color: #ffe4e6;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mcp-prompt {
+  color: #fda4af;
+  font-weight: 700;
+}
+
+.mcp-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mcp-tools li {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #ffe4e6;
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: 0.7rem;
+}
+
+.mcp-btn {
+  background-color: #ffffff;
+  color: #881337;
+}
+
+.mcp-btn:hover {
+  background-color: #ffe4e6;
+  color: #881337;
+}

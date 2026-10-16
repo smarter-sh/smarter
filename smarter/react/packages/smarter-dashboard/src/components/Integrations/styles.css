@@ -1,0 +1,56 @@
+.integrations-card {
+  background: linear-gradient(135deg, #3b1d8f 0%, #1c325e 100%);
+  overflow: hidden;
+}
+
+.integrations-illustration {
+  opacity: 0.9;
+}
+
+.integrations-lede {
+  max-width: 65%;
+}
+
+.integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.integrations-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+}
+
+.integrations-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 0.85rem;
+  background-color: #ffffff;
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.25);
+}
+
+.integrations-logo img {
+  width: 28px;
+  height: 28px;
+}
+
+.integrations-name {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.integrations-tile:hover .integrations-name {
+  color: #ffffff;
+}

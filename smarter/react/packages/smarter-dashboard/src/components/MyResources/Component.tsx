@@ -2,8 +2,11 @@
  * MyResources dashboard widget.
  *
  * This component fetches and displays user resource metrics from a backend API,
- * including pending deployments, llmclients, plugins, connections, and
- * providers, then renders them in a dashboard card layout.
+ * including pending deployments, llmclients, plugins, MCPClients and
+ * providers as large tiles, and guardrails, secrets, vectorstores, custom
+ * domains, LLMHosts and extensions as a compact grid below them, then renders
+ * them in a dashboard card layout. A kind whose url is null, because the
+ * platform has turned it off, is not shown.
  *
  * :param apiUrl: Endpoint used to request My Resources data.
  * :type apiUrl: str
@@ -32,11 +35,33 @@ interface MyResourcesData {
   llmclients_url: string;
   plugins_qty: number;
   plugins_url: string;
-  connections_qty: number;
-  connections_url: string;
+  mcpclients_qty: number;
+  mcpclients_url: string;
   providers_qty: number;
   providers_url: string;
+  guardrails_qty?: number;
+  guardrails_url?: string;
+  secrets_qty?: number;
+  secrets_url?: string;
+  vectorstores_qty?: number;
+  vectorstores_url?: string | null;
+  custom_domains_qty?: number;
+  custom_domains_url?: string;
+  llmhosts_qty?: number;
+  llmhosts_url?: string;
+  extensions_qty?: number;
+  extensions_url?: string;
 }
+
+/** The kinds in the compact grid below the large tiles: [label, icon, count key, url key]. */
+const MORE_RESOURCES: [string, string, keyof MyResourcesData, keyof MyResourcesData][] = [
+  ["Guardrails", "ki-shield-tick", "guardrails_qty", "guardrails_url"],
+  ["Secrets", "ki-lock", "secrets_qty", "secrets_url"],
+  ["VectorStores", "ki-data", "vectorstores_qty", "vectorstores_url"],
+  ["Custom Domains", "ki-route", "custom_domains_qty", "custom_domains_url"],
+  ["LLMHosts", "ki-technology-4", "llmhosts_qty", "llmhosts_url"],
+  ["Extensions", "ki-element-plus", "extensions_qty", "extensions_url"],
+];
 
 function MyResources({ apiUrl }: MyResourcesProps) {
   const [data, setData] = useState<MyResourcesData | null>(null);
@@ -81,7 +106,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
   const my_resources_pending_deployments = data?.pending_deployments ?? 0;
   const my_resources_llmclients = data?.llmclients_qty ?? 0;
   const my_resources_plugins = data?.plugins_qty ?? 0;
-  const my_resources_connections = data?.connections_qty ?? 0;
+  const my_resources_mcpclients = data?.mcpclients_qty ?? 0;
   const my_resources_providers = data?.providers_qty ?? 0;
 
   if (error) return <div>Failed to load resources: {error}</div>;
@@ -174,7 +199,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                   {/* end::Items */}
                 </div>
                 {/* end::Col - LLM Clients */}
-                {/* begin::Col - Plugins */}
+                {/* begin::Col - LLMTools */}
                 <div className="col-6">
                   {/* begin::Items */}
                   <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
@@ -189,7 +214,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                     </div>
                     {/* end::Symbol */}
 
-                    {/* begin::Plugins */}
+                    {/* begin::LLMTools */}
                     <a href={data?.plugins_url}>
                       <div className="m-0">
                         {/* begin::Number */}
@@ -202,23 +227,23 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         )}
                         {/* end::Number */}
                         {/* begin::Desc */}
-                        <span className="text-gray-500 fw-semibold fs-6">Skills/Plugins</span>
+                        <span className="text-gray-500 fw-semibold fs-6">Tools</span>
                         {/* end::Desc */}
                       </div>
                     </a>
-                    {/* end::Plugins */}
+                    {/* end::LLMTools */}
                   </div>
                   {/* end::Items */}
                 </div>
-                {/* end::Col - Plugins */}
-                {/* begin::Col - Connections */}
+                {/* end::Col - LLMTools */}
+                {/* begin::Col - MCPClients */}
                 <div className="col-6">
                   {/* begin::Items */}
                   <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
                     {/* begin::Symbol */}
                     <div className="symbol symbol-30px me-5 mb-8">
                       <span className="symbol-label">
-                        <i className="ki-duotone ki-key fs-1 text-primary">
+                        <i className="ki-duotone ki-message-programming fs-1 text-primary">
                           <span className="path1"></span>
                           <span className="path2"></span>
                           <span className="path3"></span>
@@ -226,28 +251,28 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       </span>
                     </div>
                     {/* end::Symbol */}
-                    {/* begin::Connections */}
-                    <a className="menu-link" href={data?.connections_url} target="_self">
+                    {/* begin::MCPClients */}
+                    <a className="menu-link" href={data?.mcpclients_url} target="_self">
                       <div className="m-0">
                         {/* begin::Number */}
                         {loading ? (
                           <Loading />
                         ) : (
                           <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                            {my_resources_connections}
+                            {my_resources_mcpclients}
                           </span>
                         )}
                         {/* end::Number */}
                         {/* begin::Desc */}
-                        <span className="text-gray-500 fw-semibold fs-6">Connections</span>
+                        <span className="text-gray-500 fw-semibold fs-6">MCPClients</span>
                         {/* end::Desc */}
                       </div>
                     </a>
-                    {/* end::Connections */}
+                    {/* end::MCPClients */}
                   </div>
                   {/* end::Items */}
                 </div>
-                {/* end::Col - Connections */}
+                {/* end::Col - MCPClients */}
                 {/* begin::Col - LLM Providers */}
                 <div className="col-6">
                   {/* begin::Items */}
@@ -287,6 +312,30 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                 {/* end::Col - LLM Providers */}
               </div>
               {/* end::Row */}
+              {/* begin::More */}
+              {data && (
+                <ul className="my-resources-more" aria-label="More resources">
+                  {MORE_RESOURCES.filter(([, , , urlKey]) => data[urlKey]).map(([label, icon, qtyKey, urlKey]) => {
+                    const url = String(data[urlKey]);
+                    const external = url.startsWith("http");
+                    return (
+                      <li key={label}>
+                        <a
+                          href={url}
+                          target={external ? "_blank" : undefined}
+                          rel={external ? "noopener noreferrer" : undefined}
+                          className="my-resources-more-item"
+                        >
+                          <i className={`ki-outline ${icon} fs-3 text-primary`}></i>
+                          <span className="my-resources-more-qty">{Number(data[qtyKey] ?? 0)}</span>
+                          <span className="my-resources-more-label">{label}</span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {/* end::More */}
             </div>
             {/* end::Stats */}
           </div>

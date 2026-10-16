@@ -9,6 +9,7 @@ from .views.detailview import PluginDetailView
 from .views.listview.api import (
     PluginListApiCloneView,
     PluginListApiDeleteView,
+    PluginListApiExtensionsView,
     PluginListApiRenameView,
     PluginListApiView,
 )
@@ -29,6 +30,7 @@ class PluginReverseNames:
     listview_api_all = to_snake_case(PluginListApiView.__name__) + "_all"
     listview_api_clone = to_snake_case(PluginListApiCloneView.__name__)
     listview_api_delete = to_snake_case(PluginListApiDeleteView.__name__)
+    listview_api_extensions = to_snake_case(PluginListApiExtensionsView.__name__)
     listview_api_rename = to_snake_case(PluginListApiRenameView.__name__)
 
 
@@ -39,6 +41,11 @@ urlpatterns = [
         r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
         PluginListApiView.as_view(),
         name=PluginReverseNames.listview_api,
+    ),
+    path(
+        "react-integration/api/listview/extensions/",
+        PluginListApiExtensionsView.as_view(),
+        name=PluginReverseNames.listview_api_extensions,
     ),
     path(
         "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",

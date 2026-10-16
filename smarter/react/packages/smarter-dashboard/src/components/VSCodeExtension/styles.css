@@ -1,0 +1,170 @@
+.vscode-card {
+  background: radial-gradient(circle at 85% 20%, rgba(0, 122, 204, 0.35) 0%, rgba(0, 122, 204, 0) 55%), #23272e;
+  overflow: hidden;
+}
+
+.vscode-title-link {
+  color: #3794ff;
+}
+
+.vscode-title-link:hover {
+  color: #75beff;
+}
+
+.vscode-underline {
+  border-color: #3794ff !important;
+  opacity: 0.5;
+}
+
+.vscode-inline {
+  padding: 0.05rem 0.35rem !important;
+  border-radius: 0.3rem;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #9cdcfe !important;
+  font-size: 0.85em;
+}
+
+.vscode-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  color: #e6e6e6;
+  font-size: 0.9rem;
+}
+
+.vscode-features li {
+  display: flex;
+  align-items: flex-start;
+}
+
+.vscode-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background-color: rgba(55, 148, 255, 0.2);
+  color: #3794ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.vscode-btn {
+  background-color: #007acc;
+  color: #ffffff;
+}
+
+.vscode-btn:hover {
+  background-color: #0062a3;
+  color: #ffffff;
+}
+
+.vscode-editor {
+  border: 1px solid #333842;
+  border-radius: 0.75rem;
+  background-color: #1e1e1e;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.vscode-editor-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.8rem;
+  background-color: #2d2d2d;
+}
+
+.vscode-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+}
+
+.vscode-dot-red {
+  background-color: #ff5f56;
+}
+
+.vscode-dot-yellow {
+  background-color: #ffbd2e;
+}
+
+.vscode-dot-green {
+  background-color: #27c93f;
+}
+
+.vscode-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.8rem;
+  padding: 0.45rem 0.8rem;
+  border-top: 2px solid #007acc;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  font-size: 0.75rem;
+}
+
+.vscode-tab img {
+  width: 14px;
+  height: 14px;
+}
+
+.vscode-code {
+  margin: 0;
+  padding: 0.8rem 0;
+  background: transparent;
+  color: #d4d4d4;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  white-space: pre;
+  overflow: visible;
+}
+
+.vscode-ln {
+  display: inline-block;
+  width: 2.2rem;
+  padding-right: 0.8rem;
+  color: #858585;
+  text-align: right;
+  user-select: none;
+}
+
+.vscode-key {
+  color: #569cd6;
+}
+
+.vscode-str {
+  color: #ce9178;
+}
+
+.vscode-squiggle {
+  padding-bottom: 3px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 L1.5 0.5 L3 2.5 L4.5 0.5 L6 2.5' fill='none' stroke='%23f14c4c' stroke-width='1'/%3E%3C/svg%3E")
+    repeat-x bottom left;
+}
+
+.vscode-hover {
+  display: block;
+  width: fit-content;
+  max-width: calc(100% - 4rem);
+  margin: 0.2rem 0 0.3rem 3rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #454545;
+  border-left: 3px solid #f14c4c;
+  border-radius: 0.3rem;
+  background-color: #252526;
+  box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.5);
+  color: #cccccc;
+  font-family: var(--bs-font-sans-serif, sans-serif);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: normal;
+}
