@@ -99,3 +99,4 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-secret
    smarter-resources/smarter-vectorsearch
    smarter-resources/smarter-vectorstore
+   smarter-resources/getting-started-claude-code
