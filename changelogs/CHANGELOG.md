@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.32.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.31.1...v0.32.0-alpha.1) (2026-10-16)
+
+### Features
+
+* **account:** let users upload a profile image, with a default avatar ([f3a1ff4](https://github.com/smarter-sh/smarter/commit/f3a1ff415de7e031cf3ff0df62ffa6c28cf5dedc))
+
 ## [0.31.1](https://github.com/smarter-sh/smarter/compare/v0.31.0...v0.31.1) (2026-10-16)
 
 ### Bug Fixes
