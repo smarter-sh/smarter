@@ -1,0 +1,22 @@
+<section id="manifest" data-transition="fade" style="background:#F6F4EE;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1F5F66">The big picture</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:400;line-height:1.1;color:#14213D">Infrastructure as code, for AI</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:64px;flex:1">
+<div style="width:760px;background:#14213D;border-radius:16px;padding:32px 40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.45;color:#E6EAF0">apiVersion: smarter.sh/v1<br>kind: LLMClient<br>metadata:<br>&#160;&#160;name: hr_policy_assistant<br>spec:<br>&#160;&#160;config:<br>&#160;&#160;&#160;&#160;prompt:<br>&#160;&#160;&#160;&#160;&#160;&#160;provider: openai<br>&#160;&#160;&#160;&#160;&#160;&#160;defaultModel: gpt-6-luna<br>&#160;&#160;plugins:<br>&#160;&#160;&#160;&#160;- hr_policy_search<br>&#160;&#160;guardrails:<br>&#160;&#160;&#160;&#160;- pii_redaction_input<br>&#160;&#160;&#160;&#160;- prompt_injection_llm_judge_input<br>&#160;&#160;&#160;&#160;- secrets_leak_output</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:28px;justify-content:center">
+<div style="background:#E9E5DA;border-radius:12px;padding:20px 28px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.6;color:#14213D">$ smarter apply -f hr-assistant.yaml<br>$ smarter deploy llmclient hr_policy_assistant</p>
+</div>
+<p style="font-size:28px;line-height:1.4;color:#14213D">Desired state, not code: the platform does the rest.</p>
+<p style="font-size:28px;line-height:1.4;color:#14213D">Validated against published JSON Schemas.</p>
+<p style="font-size:28px;line-height:1.4;color:#14213D">Versioned in Git, reviewed in pull requests, applied from CI/CD.</p>
+<p style="font-size:28px;line-height:1.4;color:#14213D">The same file works from the CLI, the API, VS Code or the console.</p>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;flex-direction:row;justify-content:space-between"><p style="font-size:24px;color:#4A5568">Smarter for IT Leadership · Manifest abridged</p><p style="font-size:24px;color:#4A5568">6</p></div>
+<aside>About 2 minutes. This is the one slide with code, and it is deliberately short. It is an abridged but real-format manifest for an assistant: which model, which tool it may use, and which guardrails screen its input and output. Two commands create it and publish it. For IT, the significance is operational: AI applications become reviewable, diffable configuration that fits your existing change-management process, rather than bespoke code in every team’s repository. For the business, it means a trained analyst can read and change it. The manifest names the plugin and guardrails by reference; those are separate resources, often owned by different people.</aside>
+</section>
