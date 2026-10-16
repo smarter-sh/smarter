@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
 kind: LLMClient
 metadata:
-  description: "A MetaAI Llama pass-through llmclient."
+  description: "A Meta AI Muse Spark pass-through llmclient."
   name: metaai
   version: 0.1.0
   tags:
@@ -18,19 +18,19 @@ spec:
   apiKey: null
   config:
     prompt:
-      appAssistant: Llama
+      appAssistant: Muse
       appExamplePrompts:
       - Write a Python function that generates the Fibonacci sequence.
       - Summarize the book "The Great Gatsby" in 100 words or less.
       - Provide a technical definition for the term "machine learning."
       appFileAttachment: false
       appInfoUrl: https://developers.meta.com/ai/
-      appName: MetaAI Llama 3.1
+      appName: Meta AI Muse Spark
       appPlaceholder: Ask me anything...
-      appWelcomeMessage: Welcome to Llama 3.1!
+      appWelcomeMessage: Welcome to Muse Spark!
       customDomain: null
       defaultMaxTokens: 4096
-      defaultModel: llama3.1-8b
+      defaultModel: muse-spark-1.3-contributor
       defaultSystemRole:
         You are a helpful llmclient.
       defaultTemperature: 0.5
