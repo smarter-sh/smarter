@@ -22,7 +22,7 @@ var KTAccountAPIKey = (function () {
                   description: {
                       validators: {
                           notEmpty: {
-                              message: 'Description is required'
+                              message: gettext('Description is required')
                           }
                       }
                   },
@@ -62,9 +62,9 @@ var KTAccountAPIKey = (function () {
         navigator.clipboard.writeText(inputApiKey.val()).then(
           function () {
             Swal.fire({
-              text: "Copied API key to the clipboard.",
+              text: gettext("Copied API key to the clipboard."),
               icon: "success",
-              confirmButtonText: "Ok",
+              confirmButtonText: gettext("Ok"),
               buttonsStyling: false,
               customClass: {
                 confirmButton: "btn btn-light-primary",
@@ -87,9 +87,9 @@ var KTAccountAPIKey = (function () {
         try {
           document.execCommand("copy");
           Swal.fire({
-            text: "Copied API key to the clipboard.",
+            text: gettext("Copied API key to the clipboard."),
             icon: "success",
-            confirmButtonText: "Ok",
+            confirmButtonText: gettext("Ok"),
             buttonsStyling: false,
             customClass: {
               confirmButton: "btn btn-light-primary",
@@ -97,10 +97,10 @@ var KTAccountAPIKey = (function () {
           });
         } catch (ex) {
           swal.fire({
-            text: "Sorry, looks like there are some errors detected, please try again.",
+            text: gettext("Sorry, looks like there are some errors detected, please try again."),
             icon: "error",
             buttonsStyling: false,
-            confirmButtonText: "Ok, got it!",
+            confirmButtonText: gettext("Ok, got it!"),
             customClass: {
                 confirmButton: "btn btn-light-primary"
             }
@@ -178,10 +178,10 @@ var KTAccountAPIKey = (function () {
               })
               .catch(function (error) {
                 Swal.fire({
-                  text: error.response ? JSON.stringify(error.response.data) : 'An error occurred',
+                  text: error.response ? JSON.stringify(error.response.data) : gettext('An error occurred'),
                   icon: "error",
                   buttonsStyling: false,
-                  confirmButtonText: "Dismiss",
+                  confirmButtonText: gettext("Dismiss"),
                   customClass: {
                     confirmButton: "btn btn-primary",
                   },

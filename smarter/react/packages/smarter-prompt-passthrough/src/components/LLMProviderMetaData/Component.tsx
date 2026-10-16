@@ -2,6 +2,7 @@ import type { LLMProvider } from "@/components/LLMProviders";
 import ProviderDetails from "@/components/LLMProviderMetaData/ProviderDetails";
 import ProviderFlags from "@/components/LLMProviderMetaData/ProviderFlags";
 import ProviderLinks from "@/components/LLMProviderMetaData/ProviderLinks";
+import { gettext, interpolate } from "@smarter/common";
 
 interface ProviderMetaDataProps {
   provider: LLMProvider | null;
@@ -25,7 +26,7 @@ export default function LLMProviderMetaData({ provider }: ProviderMetaDataProps)
             >
               <img
                 src={provider.logo}
-                alt={`${provider.name} logo`}
+                alt={interpolate(gettext("%(name)s logo"), { name: provider.name })}
                 style={{ maxHeight: "48px", maxWidth: "96px", objectFit: "contain" }}
               />
             </a>

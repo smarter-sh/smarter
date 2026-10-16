@@ -12,6 +12,7 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useLogStream } from "@/components/Terminal/logStream";
 import "@/components/Terminal/styles.css";
+import { gettext } from "@smarter/common";
 
 // These strings are internal SSE stream status messages emitted by the server. They can
 // appear in replay history from older log entries and should never surface to dashboard users.
@@ -158,14 +159,14 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
   return (
     <>
-      <section className="terminal-window" aria-label="Log terminal">
+      <section className="terminal-window" aria-label={gettext("Log terminal")}>
         <div className="terminal-window__header">
           <div className="terminal-window__controls" aria-hidden="true">
             <span className="terminal-window__dot terminal-window__dot--close" />
             <span className="terminal-window__dot terminal-window__dot--minimize" />
             <span className="terminal-window__dot terminal-window__dot--maximize" />
           </div>
-          <div className="terminal-window__title">logs@smarter:~</div>
+          <div className="terminal-window__title">{gettext("logs@smarter:~")}</div>
           <div className={`terminal-window__status ${connected ? "is-online" : "is-offline"}`}>
             {connected ? "connected" : "disconnected"}
           </div>
@@ -173,9 +174,9 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
         <div className="terminal-window__body" role="log" aria-live="polite">
           {isInitializing && showLoading && (
-            <div className="terminal-window__loading" aria-label="Loading logs">
+            <div className="terminal-window__loading" aria-label={gettext("Loading logs")}>
               <span className="terminal-window__loading-spinner" aria-hidden="true" />
-              <span>Loading logs…</span>
+              <span>{gettext("Loading logs…")}</span>
             </div>
           )}
           <div ref={terminalContainerRef} className="terminal-window__xterm" />

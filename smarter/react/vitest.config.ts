@@ -6,11 +6,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: ["packages/*/vitest.config.ts"],
+    projects: ["packages/*/vitest.config.ts", "i18n/vitest.config.ts"],
     coverage: {
       provider: "v8",
-      include: ["packages/*/src/**/*.{ts,tsx}"],
-      exclude: ["**/*.stories.tsx", "**/*.test.{ts,tsx}", "**/mocks/**", "**/main.tsx", "**/*.d.ts"],
+      include: ["packages/*/src/**/*.{ts,tsx}", "i18n/*.ts"],
+      exclude: ["**/*.stories.tsx", "**/*.test.{ts,tsx}", "**/*.config.ts", "**/mocks/**", "**/main.tsx", "**/*.d.ts"],
       reporter: ["text-summary", "html", "lcov"],
       reportsDirectory: "coverage",
     },

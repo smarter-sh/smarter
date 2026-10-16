@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "i18n:extract": "node i18n/extract.ts",
     "build-storybook": "npm run build-storybook --workspaces --if-present"
   },
   "dependencies": {

@@ -26,7 +26,7 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { Loading, SortableHeader } from "@smarter/common";
+import { gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { LLMHostCompute, LLMHostComputeListViewProps } from "@/lib/Types";
@@ -43,7 +43,7 @@ import "@/components/ListView/styles.css";
  * Displays a muted "Loading..." text, used in skeleton rows to indicate loading state.
  */
 const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
+  return <span className="text-muted fw-semibold">{gettext("Loading...")}</span>;
 };
 
 /**
@@ -57,22 +57,22 @@ const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
     <thead className="table-light border-bottom-2">
       <tr className="">
         <SortableHeader column="name" sorting={sorting} className=" p-1">
-          Name
+          {gettext("Name")}
         </SortableHeader>
         <SortableHeader column="instanceType" sorting={sorting} className="d-none d-lg-table-cell">
-          Instance Type
+          {gettext("Instance Type")}
         </SortableHeader>
         <SortableHeader column="gpuCount" sorting={sorting} className="">
-          GPUs
+          {gettext("GPUs")}
         </SortableHeader>
         <SortableHeader column="cpu" sorting={sorting} className="d-none d-lg-table-cell">
-          CPU and Memory
+          {gettext("CPU and Memory")}
         </SortableHeader>
         <SortableHeader column="pricePerHour" sorting={sorting} className="d-none d-md-table-cell">
-          Price per Node
+          {gettext("Price per Node")}
         </SortableHeader>
-        <th className="d-none d-md-table-cell">Node Group</th>
-        <th className="">Operations</th>
+        <th className="d-none d-md-table-cell">{gettext("Node Group")}</th>
+        <th className="">{gettext("Operations")}</th>
       </tr>
     </thead>
   );

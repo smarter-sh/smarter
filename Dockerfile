@@ -96,6 +96,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     redis-tools \
     libncurses6 \
     groff \
+    gettext \
     less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -302,6 +303,12 @@ RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
     else \
       echo "Skipping collectstatic"; \
     fi
+
+# Compile the web console's translations, smarter/locale/<language>/LC_MESSAGES/*.po, to the
+# .mo files that Django reads. Only the .po files are committed. compilemessages loads the
+# Django settings, so it gets a throwaway key too, as collectstatic does above.
+RUN SMARTER_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+      python manage.py compilemessages --ignore=react --ignore=node_modules --ignore=static --ignore=staticfiles
 
 RUN echo "Inspecting /home/smarter_user/smarter/staticfiles" && \
     ls -lha /home/smarter_user/smarter/staticfiles/react/ || true && \

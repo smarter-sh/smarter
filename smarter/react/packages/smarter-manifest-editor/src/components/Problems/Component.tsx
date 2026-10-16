@@ -9,6 +9,7 @@ import type * as monaco from "monaco-editor";
 import type { ManifestError } from "@/lib/validation";
 
 import "@/components/Problems/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 interface ProblemsProps {
   errors: ManifestError[];
@@ -36,11 +37,11 @@ function Problems({ errors, isValidating, editor }: ProblemsProps) {
     return (
       <div className="manifest-editor-problems text-muted">
         {isValidating ? (
-          <span>Checking the manifest…</span>
+          <span>{gettext("Checking the manifest…")}</span>
         ) : (
           <span>
             <i className="bi bi-check-circle text-success me-2" />
-            No problems
+            {gettext("No problems")}
           </span>
         )}
       </div>
@@ -59,7 +60,9 @@ function Problems({ errors, isValidating, editor }: ProblemsProps) {
           return (
             <li key={`${error.offset}-${index}`}>
               <button type="button" className="btn btn-link btn-sm p-0 text-start" onClick={() => reveal(error)}>
-                {line !== null && <span className="text-muted me-2">Line {line}</span>}
+                {line !== null && (
+                  <span className="text-muted me-2">{interpolateNodes(gettext("Line %(line)s"), { line })}</span>
+                )}
                 {locLabel(error)}
                 {error.message}
               </button>

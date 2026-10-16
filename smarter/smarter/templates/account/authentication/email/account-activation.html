@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
       {% block root %}
 			<!--begin::Wrapper-->
@@ -25,13 +25,13 @@
 												<!--end:Logo-->
 												<!--begin:Text-->
 												<div style="font-size: 14px; font-weight: 500; margin-bottom: 27px; font-family:Arial,Helvetica,sans-serif;">
-													<p style="margin-bottom:9px; color:#181C32; font-size: 22px; font-weight:700">Activate Your Account</p>
-													<p style="margin-bottom:2px; color:#7E8299">Click on the link below or copy and paste it into your browser's address bar.</p>
-													<p style="margin-bottom:2px; color:#7E8299">Thank you for using Smarter!</p>
+													<p style="margin-bottom:9px; color:#181C32; font-size: 22px; font-weight:700">{% translate "Activate Your Account" %}</p>
+													<p style="margin-bottom:2px; color:#7E8299">{% translate "Click on the link below or copy and paste it into your browser's address bar." %}</p>
+													<p style="margin-bottom:2px; color:#7E8299">{% translate "Thank you for using Smarter!" %}</p>
 												</div>
 												<!--end:Text-->
 												<!--begin:Action-->
-												<a href="{{ account_activation.url }}" target="_blank" style="background-color:rgba(255, 87, 51, .75); border-radius:6px;display:inline-block; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif;">Activate Account</a>
+												<a href="{{ account_activation.url }}" target="_blank" style="background-color:rgba(255, 87, 51, .75); border-radius:6px;display:inline-block; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif;">{% translate "Activate Account" %}</a>
 												<!--end:Action-->
 											</div>
 											<!--end:Email content-->
@@ -39,12 +39,12 @@
 									</tr>
 									<tr>
 										<td align="center" valign="center" style="font-size: 13px; text-align:center; padding: 0 10px 10px 10px; font-weight: 500; color: #A1A5B7; font-family:Arial,Helvetica,sans-serif">
-											<p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">If you require assistance</p>
-											<p style="margin-bottom:2px">Call our customer care number: {{ branding.support_phone_number }}</p>
-											<p style="margin-bottom:4px">Email: {{ branding.support_email }}
-                        <p style="margin-bottom:4px">Contact:
+											<p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">{% translate "If you require assistance" %}</p>
+											<p style="margin-bottom:2px">{% blocktranslate with phone=branding.support_phone_number %}Call our customer care number: {{ phone }}{% endblocktranslate %}</p>
+											<p style="margin-bottom:4px">{% blocktranslate with email=branding.support_email %}Email: {{ email }}{% endblocktranslate %}
+                        <p style="margin-bottom:4px">{% translate "Contact:" %}
 											<a href="{{ branding.contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">{{ branding.contact_url }}</a>.</p>
-											<p>Office Hours: {{ branding.support_hours }}</p>
+											<p>{% blocktranslate with hours=branding.support_hours %}Office Hours: {{ hours }}{% endblocktranslate %}</p>
 										</td>
 									</tr>
 									<tr>

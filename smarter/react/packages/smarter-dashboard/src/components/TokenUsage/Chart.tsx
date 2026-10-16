@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import { ResponsiveContainer, AreaChart, Area, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import type { AreaSeries, LineSeries, TokenUsageChartProps, TokenUsageInterface } from "@/components/TokenUsage/types";
 import { loggerPrefix } from "@/const";
@@ -7,12 +7,12 @@ import { loggerPrefix } from "@/const";
 const areas: AreaSeries[] = [
   {
     key: "requestTokens",
-    label: "Request",
+    label: gettext("Request"),
     color: "#ff5733",
   },
   {
     key: "completionTokens",
-    label: "Completion",
+    label: gettext("Completion"),
     color: "#17C653",
   },
 ];
@@ -20,18 +20,18 @@ const areas: AreaSeries[] = [
 const lines: LineSeries[] = [
   {
     key: "budgetTokens",
-    label: "Limit",
+    label: gettext("Limit"),
     color: "#111827",
   },
 ];
 
 const PERIODICITY_OPTIONS = [
-  { label: "Hour", value: "1_hour" },
-  { label: "Half Day", value: "12_hours" },
-  { label: "Day", value: "24_hours" },
-  { label: "Week", value: "7_days" },
-  { label: "Month", value: "1_month" },
-  { label: "Year", value: "1_year" },
+  { label: gettext("Hour"), value: "1_hour" },
+  { label: gettext("Half Day"), value: "12_hours" },
+  { label: gettext("Day"), value: "24_hours" },
+  { label: gettext("Week"), value: "7_days" },
+  { label: gettext("Month"), value: "1_month" },
+  { label: gettext("Year"), value: "1_year" },
 ];
 
 type DropdownProps = {
@@ -75,7 +75,12 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
             .catch(() => null)
             .then((errorData) => {
               const errorMessage = errorData?.error || response.statusText;
-              throw new Error(`Failed to fetch tokenUsageData (${response.status}): ${errorMessage}`);
+              throw new Error(
+                interpolate(gettext("Failed to fetch tokenUsageData (%(status)s): %(error)s"), {
+                  status: response.status,
+                  error: errorMessage,
+                }),
+              );
             });
         }
         return response.json();
@@ -143,7 +148,7 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
         </AreaChart>
       </ResponsiveContainer>
 
-      {isLoading && <div style={{ marginTop: "0.5rem", fontSize: "0.85rem", opacity: 0.6 }}>Loading…</div>}
+      {isLoading && <div style={{ marginTop: "0.5rem", fontSize: "0.85rem", opacity: 0.6 }}>{gettext("Loading…")}</div>}
     </div>
   );
 }

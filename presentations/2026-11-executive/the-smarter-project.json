@@ -1,0 +1,597 @@
+{
+  "schema": "smarter-presentation-digest/v1",
+  "audience": "Senior decision makers in large organizations and educational institutions, mostly non-technical",
+  "purpose": "Explain what problem The Smarter Project solves: AI literacy first, then production solutions, then an ERP for AI resources",
+  "presenter": "Lawrence McDaniel",
+  "contact": "lpm0073@gmail.com",
+  "date": "2026-11",
+  "duration_minutes": 30,
+  "title": "The Smarter Project",
+  "sections": [
+    {
+      "description": "Opening: what Smarter is for",
+      "starts_at": "cover"
+    },
+    {
+      "description": "The problem: AI is already here, and two gaps stand in the way",
+      "starts_at": "already-here"
+    },
+    {
+      "description": "Phase 1: Smarter as an instructional platform for AI literacy",
+      "starts_at": "p1-why"
+    },
+    {
+      "description": "Phase 2: the same people build production solutions on the same platform",
+      "starts_at": "p2-same"
+    },
+    {
+      "description": "The destination: an ERP for AI resources",
+      "starts_at": "ai-resources"
+    },
+    {
+      "description": "Why open source, and a practical first step",
+      "starts_at": "why-open"
+    }
+  ],
+  "slides": [
+    {
+      "number": 1,
+      "id": "cover",
+      "section": "Opening: what Smarter is for",
+      "eyebrow": "The Smarter Project",
+      "title": "Learn AI. Build with AI. Govern AI.",
+      "body": [
+        {
+          "type": "text",
+          "text": "One open-source platform that takes an organization from its first AI lesson to governed, production AI."
+        },
+        {
+          "type": "text",
+          "text": "Lawrence McDaniel · November 2026"
+        }
+      ],
+      "notes": "About 1 minute. Introduce yourself. Set the frame: this is not a technology talk. It is about a problem almost every large organization and institution now has, and a practical way through it. The three lines on the slide are the whole talk in miniature: first your people learn AI, then they build with it, and then the organization can govern it. Smarter is one platform that serves all three stages."
+    },
+    {
+      "number": 2,
+      "id": "already-here",
+      "section": "The problem: AI is already here, and two gaps stand in the way",
+      "eyebrow": "The situation",
+      "title": "AI is already inside your organization",
+      "body": [
+        {
+          "type": "text",
+          "text": "Staff use public AI tools with work information, often on personal accounts."
+        },
+        {
+          "type": "text",
+          "text": "Departments buy AI features one vendor at a time, each with its own rules."
+        },
+        {
+          "type": "text",
+          "text": "Few leaders can say what it all costs, what data it saw, or what it said."
+        }
+      ],
+      "notes": "About 2 minutes. Start from the room's reality, not from the product. Ask: how many of you are confident you know every AI tool your staff used this week? Usually nobody raises a hand. AI did not arrive through a procurement process. It arrived through browsers and phones. That creates value, and it creates risk: information leaving the organization, inconsistent quality, duplicated spending, and no record of what was asked or answered. Avoid quoting survey numbers unless you have a source you can name."
+    },
+    {
+      "number": 3,
+      "id": "two-gaps",
+      "section": "The problem: AI is already here, and two gaps stand in the way",
+      "eyebrow": "The problem",
+      "title": "Two gaps stand between you and value",
+      "body": [
+        {
+          "type": "heading",
+          "text": "The literacy gap"
+        },
+        {
+          "type": "text",
+          "text": "Most people don’t yet know what AI can do, what it can’t, or how to use it safely with real information."
+        },
+        {
+          "type": "heading",
+          "text": "The control gap"
+        },
+        {
+          "type": "text",
+          "text": "Leadership can’t see which AI is in use, who owns it, what data it touches, or what it costs."
+        },
+        {
+          "type": "text",
+          "text": "Smarter closes both gaps, in that order."
+        }
+      ],
+      "notes": "About 2 minutes. Name the two gaps clearly, because the rest of the talk is organized around them. The literacy gap is about people: they either avoid AI or use it naively. The control gap is about the institution: there is no system of record for AI. The order matters. Most organizations try to close the control gap first, with policies and bans, before their people understand what they are governing. Policies written that way tend to be either too loose or too restrictive. Smarter starts with literacy and arrives at control."
+    },
+    {
+      "number": 4,
+      "id": "one-sentence",
+      "section": "The problem: AI is already here, and two gaps stand in the way",
+      "eyebrow": "Smarter, in one sentence",
+      "title": "A free, open-source platform where your people learn to build AI applications, and then build the real ones, on infrastructure you own and govern.",
+      "notes": "About 1 minute. Read the sentence, then pause. Three phrases carry it. “Learn to build”: Smarter is a teaching platform. “Then build the real ones”: the same platform runs production work, so nothing learned is thrown away. “Infrastructure you own and govern”: it runs on your computers or your cloud account, not someone else’s service."
+    },
+    {
+      "number": 5,
+      "id": "journey",
+      "section": "The problem: AI is already here, and two gaps stand in the way",
+      "eyebrow": "The journey",
+      "title": "Two phases, one platform",
+      "body": [
+        {
+          "type": "text",
+          "text": "Phase 1"
+        },
+        {
+          "type": "heading",
+          "text": "Literacy"
+        },
+        {
+          "type": "text",
+          "text": "Staff learn how AI works by building with it."
+        },
+        {
+          "type": "text",
+          "text": "Phase 2"
+        },
+        {
+          "type": "heading",
+          "text": "Production"
+        },
+        {
+          "type": "text",
+          "text": "The same staff build real solutions for the organization."
+        },
+        {
+          "type": "text",
+          "text": "The result"
+        },
+        {
+          "type": "heading",
+          "text": "An ERP for AI"
+        },
+        {
+          "type": "text",
+          "text": "One system of record for every AI resource you own."
+        }
+      ],
+      "notes": "About 2 minutes. This is the map for the rest of the talk. Where an organization starts depends on its AI literacy. If employees know little about AI and nothing about Smarter, Smarter is first an instructional platform. Once they are literate, they use the same platform to build production solutions. As those solutions accumulate, Smarter becomes the place where the organization keeps track of all of it: an ERP for AI resources. I’ll explain that term in a few minutes. For now, the point is that this is one platform and one continuous path, not three purchases."
+    },
+    {
+      "number": 6,
+      "id": "p1-why",
+      "section": "Phase 1: Smarter as an instructional platform for AI literacy",
+      "eyebrow": "Phase 1 · Literacy",
+      "title": "You can’t govern what your people don’t understand",
+      "body": [
+        {
+          "type": "text",
+          "text": "1"
+        },
+        {
+          "type": "text",
+          "text": "Lectures about AI fade quickly. Building something with it sticks."
+        },
+        {
+          "type": "text",
+          "text": "2"
+        },
+        {
+          "type": "text",
+          "text": "Consumer chat tools teach people to type questions, not how AI works with your information."
+        },
+        {
+          "type": "text",
+          "text": "3"
+        },
+        {
+          "type": "text",
+          "text": "AI-literate staff are better buyers, better builders and better critics of AI."
+        }
+      ],
+      "notes": "About 2 minutes. Make the case for literacy as the first investment. Point three is the one leaders care about: literate staff make better decisions about which vendors to trust, which projects to fund, and which claims to doubt. That pays off well beyond any single AI project."
+    },
+    {
+      "number": 7,
+      "id": "p1-how",
+      "section": "Phase 1: Smarter as an instructional platform for AI literacy",
+      "eyebrow": "Phase 1 · Literacy",
+      "title": "Learning by building, from the first class",
+      "body": [
+        {
+          "type": "text",
+          "text": "21"
+        },
+        {
+          "type": "text",
+          "text": "ready-to-teach course designs, free and open source"
+        },
+        {
+          "type": "text",
+          "text": "A non-programmer builds a working AI assistant in the first class, described in a short, plain-text file. No code."
+        },
+        {
+          "type": "text",
+          "text": "Courses for every role: Prompt Engineering, AI Applications, AI Governance and AI Economics, plus technical tracks for IT."
+        },
+        {
+          "type": "text",
+          "text": "One-day bootcamps, or two- and four-week online courses, with assignments and rubrics."
+        },
+        {
+          "type": "text",
+          "text": "Used at the University of British Columbia to teach AI."
+        }
+      ],
+      "notes": "About 2 minutes. This is what makes Smarter different from an online AI course. Learners don’t watch videos about AI; they build working assistants on a real platform. Because an assistant is described in a short, readable text file rather than programmed, a business analyst, an administrator or a faculty member can do it on day one. The course catalog is complete enough that an internal trainer or an instructor can pick a plan, set the dates and teach it. The governance and economics courses are written for managers, not engineers. Mention the UBC reference here; it is the strongest proof point for an educational audience."
+    },
+    {
+      "number": 8,
+      "id": "p1-outcomes",
+      "section": "Phase 1: Smarter as an instructional platform for AI literacy",
+      "eyebrow": "Phase 1 · Literacy",
+      "title": "What an AI-literate employee can do",
+      "body": [
+        {
+          "type": "text",
+          "text": "Explain what AI is, and why it sometimes makes things up"
+        },
+        {
+          "type": "text",
+          "text": "Connect an assistant to approved documents and data"
+        },
+        {
+          "type": "text",
+          "text": "Recognize the risks: personal data, leaks and manipulation"
+        },
+        {
+          "type": "text",
+          "text": "Estimate what an AI conversation actually costs"
+        },
+        {
+          "type": "text",
+          "text": "Judge which vendor’s model fits which task"
+        },
+        {
+          "type": "text",
+          "text": "Spot where AI could help their own team"
+        }
+      ],
+      "notes": "About 2 minutes. These are outcomes, not topics. Each one is something a learner has actually done on the platform by the end of an introductory course. The last one matters most for leadership: the best ideas for AI projects come from people who know both the work and the technology. Phase 1 produces those people."
+    },
+    {
+      "number": 9,
+      "id": "p2-same",
+      "section": "Phase 2: the same people build production solutions on the same platform",
+      "eyebrow": "Phase 2 · Production",
+      "title": "Coursework becomes production work",
+      "body": [
+        {
+          "type": "text",
+          "text": "1"
+        },
+        {
+          "type": "heading",
+          "text": "Personal sandbox"
+        },
+        {
+          "type": "text",
+          "text": "A learner builds and tests an assistant, visible only to them."
+        },
+        {
+          "type": "text",
+          "text": "2"
+        },
+        {
+          "type": "heading",
+          "text": "Shared team space"
+        },
+        {
+          "type": "text",
+          "text": "Colleagues share and refine it, each with their own login and budget."
+        },
+        {
+          "type": "text",
+          "text": "3"
+        },
+        {
+          "type": "heading",
+          "text": "Live service"
+        },
+        {
+          "type": "text",
+          "text": "One command publishes it to staff, students or customers."
+        },
+        {
+          "type": "text",
+          "text": "The file written in class runs unchanged in production. No rewrite, no second vendor."
+        }
+      ],
+      "notes": "About 2 minutes. This is the hinge of the talk. In most organizations, training and production are separate worlds: people learn on one tool, and then IT builds the real thing on another, usually from scratch. In Smarter they are the same platform. The assistant a learner builds as an exercise is the same artifact that goes live. That means the people who understand the business problem can carry their own solution into production, with IT governing the platform rather than rebuilding every idea."
+    },
+    {
+      "number": 10,
+      "id": "p2-examples",
+      "section": "Phase 2: the same people build production solutions on the same platform",
+      "eyebrow": "Phase 2 · Production",
+      "title": "What your people will build",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Policy assistant"
+        },
+        {
+          "type": "text",
+          "text": "Answers staff questions from your own handbooks and policies."
+        },
+        {
+          "type": "heading",
+          "text": "Student or customer advisor"
+        },
+        {
+          "type": "text",
+          "text": "Lives on your website, under your own name and web address."
+        },
+        {
+          "type": "heading",
+          "text": "Data assistant"
+        },
+        {
+          "type": "text",
+          "text": "Answers plain-English questions from approved databases and systems."
+        },
+        {
+          "type": "heading",
+          "text": "Research assistant"
+        },
+        {
+          "type": "text",
+          "text": "Searches the web and your sources, and shows where its answers came from."
+        }
+      ],
+      "footnote": "Illustrative examples",
+      "notes": "About 2 minutes. Make it concrete. These four patterns cover a large share of what organizations ask for first, and each is a capability Smarter has today: reading your own documents, publishing under your own web address, querying databases, and searching the web. If you know the audience, swap in an example from their world: an admissions advisor for a university, a benefits assistant for HR, a procurement policy assistant for finance. Don’t promise specific results; invite them to name their own first use case."
+    },
+    {
+      "number": 11,
+      "id": "p2-safe",
+      "section": "Phase 2: the same people build production solutions on the same platform",
+      "eyebrow": "Phase 2 · Production",
+      "title": "Safe by default, not by policy memo",
+      "body": [
+        {
+          "type": "text",
+          "text": "Guardrails check every message, in and out: personal data, leaked secrets, manipulation attempts, invented citations, harmful content."
+        },
+        {
+          "type": "text",
+          "text": "The AI never holds the passwords. Credentials for your systems stay locked away from it."
+        },
+        {
+          "type": "text",
+          "text": "Spending caps for every person, team and application."
+        },
+        {
+          "type": "text",
+          "text": "Every conversation is recorded, and traceable to the person and budget that allowed it."
+        }
+      ],
+      "notes": "About 2 minutes. This is the slide for the risk and compliance people in the room. The key idea is that protections are built into the platform, so every assistant gets them automatically, whoever built it. A policy memo asks people to remember the rules; Smarter enforces them on every message. Guardrails screen what goes to the AI and what comes back. Credentials to your databases and systems are stored separately and never given to the AI model. Budgets stop runaway spending. And the record of every conversation is what makes the next section, governance, possible."
+    },
+    {
+      "number": 12,
+      "id": "ai-resources",
+      "section": "The destination: an ERP for AI resources",
+      "eyebrow": "The destination",
+      "title": "What is an “AI resource”?",
+      "body": [
+        {
+          "type": "text",
+          "text": "Anything an organization must own, approve, pay for or answer for in order to use AI."
+        },
+        {
+          "type": "text",
+          "text": "AI models and vendors"
+        },
+        {
+          "type": "text",
+          "text": "Credentials"
+        },
+        {
+          "type": "text",
+          "text": "Data sources"
+        },
+        {
+          "type": "text",
+          "text": "Tools"
+        },
+        {
+          "type": "text",
+          "text": "Guardrails"
+        },
+        {
+          "type": "text",
+          "text": "Budgets"
+        },
+        {
+          "type": "text",
+          "text": "AI assistants"
+        },
+        {
+          "type": "text",
+          "text": "Conversations"
+        },
+        {
+          "type": "text",
+          "text": "In Smarter, each one is a named, owned, recorded item, like an invoice or an employee record."
+        }
+      ],
+      "notes": "About 3 minutes. Slow down here; this is the idea the audience is least likely to have heard before. “AI resource” is the Smarter Project’s term. Today most organizations think of AI as one thing, a chatbot subscription. In practice, using AI responsibly involves many separate things, each of which someone has to approve and pay for: the vendors whose models you use, the passwords to your systems, the data the AI may read, the actions it may take, the safety rules it must follow, the spending limits, the assistants themselves, and the record of every conversation. Walk through the chips briefly. Then the key point: when each of these is a named item with an owner and a history, you can manage AI the way you already manage money, people and assets."
+    },
+    {
+      "number": 13,
+      "id": "erp",
+      "section": "The destination: an ERP for AI resources",
+      "eyebrow": "The destination",
+      "title": "An ERP for AI resources",
+      "body": [
+        {
+          "type": "table",
+          "rows": [
+            ["What your ERP manages", "What Smarter manages for AI"],
+            ["Approved suppliers", "Approved AI vendors, and models you host yourself"],
+            ["Budgets and cost centers", "Spending caps, and the cost of every conversation by team"],
+            ["Roles and permissions", "Who may build, use and change each AI resource"],
+            ["Asset register", "Every assistant, data connection and tool, each with an owner"],
+            ["Audit trail", "Every conversation, traced to who authorized it and what it cost"]
+          ]
+        }
+      ],
+      "notes": "About 2 minutes. Use the analogy the audience already knows. Nobody in this room would run finance on spreadsheets emailed between departments, but that is roughly how most organizations run AI today. An ERP gives finance, HR and procurement one system of record. Smarter does the same for AI: approved vendors, budgets, permissions, an inventory of everything that has been built, and an audit trail. The difference from buying a governance product separately is that the records exist because the work happens on the platform, not because someone filled in a form afterwards."
+    },
+    {
+      "number": 14,
+      "id": "questions",
+      "section": "The destination: an ERP for AI resources",
+      "eyebrow": "The destination",
+      "title": "Questions leadership can finally answer",
+      "body": [
+        {
+          "type": "text",
+          "text": "What AI are we running, and who owns it?"
+        },
+        {
+          "type": "text",
+          "text": "What data can each assistant reach?"
+        },
+        {
+          "type": "text",
+          "text": "What did it say, and why?"
+        },
+        {
+          "type": "text",
+          "text": "What is it costing us, and where?"
+        },
+        {
+          "type": "text",
+          "text": "Which vendors do we depend on, and could we switch?"
+        },
+        {
+          "type": "text",
+          "text": "Is it following our policies?"
+        }
+      ],
+      "notes": "About 2 minutes. Read two or three of these aloud and ask the room which ones they could answer today. These are the questions boards, auditors, regulators and accreditation bodies are starting to ask. With AI resources on one platform, each has an answer that comes from records, not from a survey of departments."
+    },
+    {
+      "number": 15,
+      "id": "why-open",
+      "section": "Why open source, and a practical first step",
+      "eyebrow": "Why Smarter",
+      "title": "Open source changes the economics",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Free"
+        },
+        {
+          "type": "text",
+          "text": "No license fees or seat counts. You pay AI vendors only for what you use."
+        },
+        {
+          "type": "heading",
+          "text": "Yours"
+        },
+        {
+          "type": "text",
+          "text": "Runs on your own computers or cloud. Your data stays where you put it."
+        },
+        {
+          "type": "heading",
+          "text": "Portable"
+        },
+        {
+          "type": "text",
+          "text": "Works with OpenAI, Google, Meta, DeepSeek and others, or models you host."
+        },
+        {
+          "type": "heading",
+          "text": "Open"
+        },
+        {
+          "type": "text",
+          "text": "Every line of code is public, so security teams can inspect it."
+        },
+        {
+          "type": "text",
+          "text": "A shared cloud installation costs around US$350 a month to run. A laptop installation costs nothing."
+        }
+      ],
+      "notes": "About 2 minutes. Address cost and risk directly; this audience will ask. Smarter itself is free under an open-source license, for organizations, instructors and students alike. The real cost is the AI vendors’ per-use charges, which Smarter’s budgets cap and its records report. Running your own instance avoids handing your data to another intermediary, and supporting many vendors means you are not locked in when prices or policies change. Be honest about the trade-off: Smarter is community supported, with no vendor support desk, so an organization needs either in-house IT capacity or a partner to run it."
+    },
+    {
+      "number": 16,
+      "id": "start",
+      "section": "Why open source, and a practical first step",
+      "eyebrow": "Getting started",
+      "title": "A practical first step",
+      "body": [
+        {
+          "type": "text",
+          "text": "[Weeks 1–4]"
+        },
+        {
+          "type": "heading",
+          "text": "Pilot cohort"
+        },
+        {
+          "type": "text",
+          "text": "[20–30] staff from several departments take one course on a shared installation."
+        },
+        {
+          "type": "text",
+          "text": "[Weeks 5–10]"
+        },
+        {
+          "type": "heading",
+          "text": "First real solution"
+        },
+        {
+          "type": "text",
+          "text": "The cohort builds one assistant for a problem they chose, and puts it in front of real users."
+        },
+        {
+          "type": "text",
+          "text": "[Week 12]"
+        },
+        {
+          "type": "heading",
+          "text": "Governance review"
+        },
+        {
+          "type": "text",
+          "text": "Leadership reviews actual costs, usage and the audit trail, and decides how far to scale."
+        }
+      ],
+      "notes": "About 2 minutes. End with something small and concrete. The pilot follows the same arc as the talk: literacy, then production, then governance, in about a quarter. The decision at week 12 is made with the organization’s own data rather than a vendor’s projections. Adjust the cohort size and timing to the audience. This is also the natural place to invite questions."
+    },
+    {
+      "number": 17,
+      "id": "close",
+      "section": "Why open source, and a practical first step",
+      "title": "Learn it. Build it. Govern it.",
+      "body": [
+        {
+          "type": "text",
+          "text": "smarter.sh · docs.smarter.sh · github.com/smarter-sh"
+        },
+        {
+          "type": "text",
+          "text": "Lawrence McDaniel · lpm0073@gmail.com"
+        }
+      ],
+      "notes": "About 1 minute, then questions. Restate the arc in one breath: Smarter teaches your people AI by having them build with it, lets those same people build real solutions on the same platform, and gives the organization one place to govern every AI resource it owns. Offer the pilot from the previous slide as the next step."
+    }
+  ]
+}

@@ -2,10 +2,11 @@
  * Formatting of LLMHostCompute attributes, shared by ListView, CardView and StatusBar.
  */
 import type { LLMHostCompute } from "@/lib/Types";
+import { gettext, interpolate } from "@smarter/common";
 
 /** The node's GPUs, e.g. "1 × L4, 24 GB", or "CPU only". */
 export function formatGpus(compute: LLMHostCompute): string {
-  if (!compute.gpuCount) return "CPU only";
+  if (!compute.gpuCount) return gettext("CPU only");
   return `${compute.gpuCount} × ${compute.gpuType}, ${compute.gpuMemoryGb} GB`;
 }
 
@@ -22,5 +23,9 @@ export function formatPrice(compute: LLMHostCompute): string {
 
 /** The node group's nodes, e.g. "1 of 1 ready, max 4". */
 export function formatNodes(compute: LLMHostCompute): string {
-  return `${compute.readyNodes} of ${compute.desiredNodes} ready, max ${compute.maxNodes}`;
+  return interpolate(gettext("%(ready)s of %(desired)s ready, max %(max)s"), {
+    ready: compute.readyNodes,
+    desired: compute.desiredNodes,
+    max: compute.maxNodes,
+  });
 }

@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 <!--begin::Navbar-->
 <div class="app-navbar flex-shrink-0">
@@ -10,7 +10,7 @@
   <!--end::User menu-->
 
   <!--begin::Header menu toggle-->
-  <div class="app-navbar-item d-lg-none ms-2 me-n2" title="Show header menu">
+  <div class="app-navbar-item d-lg-none ms-2 me-n2" title="{% translate "Show header menu" %}">
     <div
       class="btn btn-flex btn-icon btn-active-color-primary w-30px h-30px"
       id="kt_app_header_menu_toggle"

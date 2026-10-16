@@ -6,6 +6,7 @@ from typing import Union
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils.translation import gettext as _
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.infrastructure.services import infrastructure
@@ -143,7 +144,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
                 user,
             )
             return SmarterHttpResponseNotFound(
-                request=request, error_message="User not found. Please log in to activate your account."
+                request=request, error_message=_("User not found. Please log in to activate your account.")
             )
         # pylint: disable=C0415
         from smarter.apps.account.urls import AccountReverseNames
@@ -157,7 +158,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
             }
         }
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
-        subject = "Activate your account."
+        subject = _("Activate your account.")
         to = user.email
         logger.debug(
             "%s.AccountActivationEmailView.get() sending account activation email to %s with url: %s",
@@ -208,7 +209,7 @@ class AccountActivateView(SmarterNeverCachedWebView):
                 self.formatted_class_name,
             )
             return SmarterHttpResponseNotFound(
-                request=request, error_message="Invalid password reset link. User does not exist."
+                request=request, error_message=_("Invalid password reset link. User does not exist.")
             )
         except (
             TypeError,

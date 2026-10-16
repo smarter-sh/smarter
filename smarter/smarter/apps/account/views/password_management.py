@@ -6,6 +6,7 @@ from django import forms
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.utils.translation import gettext as _
 
 from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountReverseNames
@@ -62,7 +63,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
     def post(self, request, *args, **kwargs):
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
-            return SmarterHttpResponseBadRequest(request=request, error_message="Email address is invalid.")
+            return SmarterHttpResponseBadRequest(request=request, error_message=_("Email address is invalid."))
         email = form.cleaned_data["email"]
         try:
             user = User.objects.get(email=email)
@@ -77,11 +78,11 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         self.password_reset_link = self.generate_password_reset_link(request, user)
         context = {"password_reset": {"url": self.password_reset_link}}
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
-        subject = "Reset your password"
+        subject = _("Reset your password")
         to = email
         # the reset link is a secret, so the admin gets no blind copy.
         infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, bcc_admin=False)
-        return HttpResponse("Email sent.", status=HTTPStatus.OK.value)
+        return HttpResponse(_("Email sent."), status=HTTPStatus.OK.value)
 
 
 class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
@@ -106,7 +107,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             self.uidb64 = kwargs["uidb64"]
             self.token = kwargs["token"]
         except KeyError:
-            return SmarterHttpResponseBadRequest(request=request, error_message="Missing uidb64 or token in URL.")
+            return SmarterHttpResponseBadRequest(request=request, error_message=_("Missing uidb64 or token in URL."))
 
         logger.debug("%s.get() initialized", self.formatted_class_name)
         try:
@@ -114,7 +115,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             logger.debug("%s.get() user: %s", self.formatted_class_name, user)
         except User.DoesNotExist:
             return SmarterHttpResponseNotFound(
-                request=request, error_message="Invalid password reset link. User does not exist."
+                request=request, error_message=_("Invalid password reset link. User does not exist.")
             )
         except (
             TypeError,
@@ -137,23 +138,23 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             self.uidb64 = kwargs["uidb64"]
             self.token = kwargs["token"]
         except KeyError:
-            return SmarterHttpResponseBadRequest(request=request, error_message="Missing uidb64 or token in URL.")
+            return SmarterHttpResponseBadRequest(request=request, error_message=_("Missing uidb64 or token in URL."))
 
         form = PasswordResetView.NewPasswordForm(request.POST)
         if not form.is_valid():
-            return SmarterHttpResponseBadRequest(request=request, error_message="input form is invalid.")
+            return SmarterHttpResponseBadRequest(request=request, error_message=_("input form is invalid."))
 
         password = form.cleaned_data["password"]
         password_confirm = form.cleaned_data["password_confirm"]
 
         if password != password_confirm:
-            return SmarterHttpResponseBadRequest(request=request, error_message="Passwords do not match.")
+            return SmarterHttpResponseBadRequest(request=request, error_message=_("Passwords do not match."))
 
         try:
             user = self.expiring_token.decode_link(uidb64=self.uidb64, token=self.token)
         except User.DoesNotExist:
             return SmarterHttpResponseNotFound(
-                request=request, error_message="Invalid password reset link. User does not exist."
+                request=request, error_message=_("Invalid password reset link. User does not exist.")
             )
         except (
             TypeError,

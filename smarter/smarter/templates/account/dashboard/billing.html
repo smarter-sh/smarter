@@ -1,13 +1,13 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block dashboard_title %}Account Billing{% endblock %}
+{% block dashboard_title %}{% translate "Account Billing" %}{% endblock %}
 
     {% block dashboard_title_breadcrumbs %}
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/dashboard/account/dashboard/billing/" class="text-muted text-hover-primary">Billing</a>
+        <a href="/dashboard/account/dashboard/billing/" class="text-muted text-hover-primary">{% translate "Billing" %}</a>
       </li>
     {% endblock %}
 
@@ -19,7 +19,7 @@
       <div class="card-header card-header-stretch pb-0">
         <!--begin::Title-->
         <div class="card-title">
-          <h3 class="m-0">Payment Methods</h3>
+          <h3 class="m-0">{% translate "Payment Methods" %}</h3>
         </div>
         <!--end::Title-->
         <!--begin::Toolbar-->
@@ -28,12 +28,12 @@
           <ul class="nav nav-stretch nav-line-tabs border-transparent" role="tablist">
             <!--begin::Tab item-->
             <li class="nav-item" role="presentation">
-              <a id="kt_billing_creditcard_tab" class="nav-link fs-5 fw-bold me-5 active" data-bs-toggle="tab" role="tab" href="#kt_billing_creditcard">Credit / Debit Card</a>
+              <a id="kt_billing_creditcard_tab" class="nav-link fs-5 fw-bold me-5 active" data-bs-toggle="tab" role="tab" href="#kt_billing_creditcard">{% translate "Credit / Debit Card" %}</a>
             </li>
             <!--end::Tab item-->
             <!--begin::Tab item-->
             <li class="nav-item" role="presentation">
-              <a id="kt_billing_paypal_tab" class="nav-link fs-5 fw-bold" data-bs-toggle="tab" role="tab" href="#kt_billing_paypal">Paypal</a>
+              <a id="kt_billing_paypal_tab" class="nav-link fs-5 fw-bold" data-bs-toggle="tab" role="tab" href="#kt_billing_paypal">{% translate "Paypal" %}</a>
             </li>
             <!--end::Tab item-->
           </ul>
@@ -47,7 +47,7 @@
         <!--begin::Tab panel-->
         <div id="kt_billing_creditcard" class="tab-pane fade show active" role="tabpanel">
           <!--begin::Title-->
-          <h3 class="mb-5">My Cards</h3>
+          <h3 class="mb-5">{% translate "My Cards" %}</h3>
           <!--end::Title-->
           <!--begin::Row-->
           <div class="row gx-9 gy-6">
@@ -62,7 +62,7 @@
                   <!--begin::Owner-->
                   <div class="d-flex align-items-center fs-4 fw-bold mb-5">{{ payment_method.card_name }}
                   {% if payment_method.is_primary %}
-                  <span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
+                  <span class="badge badge-light-success fs-7 ms-2">{% translate "Primary" %}</span></div>
                   {% endif %}
                   <!--end::Owner-->
                   <!--begin::Wrapper-->
@@ -73,7 +73,7 @@
                     <!--begin::Details-->
                     <div>
                       <div class="fs-4 fw-bold">{{ payment_method.card_masked }}</div>
-                      <div class="fs-6 fw-semibold text-gray-500">Expires {{ payment_method.card_expiration_month }}/{{ payment_method.card_expiration_year }}</div>
+                      <div class="fs-6 fw-semibold text-gray-500">{% blocktranslate with card_expiration_month=payment_method.card_expiration_month card_expiration_year=payment_method.card_expiration_year %}Expires {{ card_expiration_month }}/{{ card_expiration_year }}{% endblocktranslate %}</div>
                     </div>
                     <!--end::Details-->
                   </div>
@@ -87,10 +87,10 @@
                     data-kt-billing-id="{{ payment_method.id }}"
                     data-kt-billing-action="payment-method-delete">
                       <!--begin::Indicator label-->
-                      <span class="indicator-label">Delete</span>
+                      <span class="indicator-label">{% translate "Delete" %}</span>
                       <!--end::Indicator label-->
                       <!--begin::Indicator progress-->
-                      <span class="indicator-progress">Please wait...
+                      <span class="indicator-progress">{% translate "Please wait..." %}
                       <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                       <!--end::Indicator progress-->
                   </button>
@@ -98,7 +98,7 @@
                     class="btn btn-sm btn-light btn-active-light-primary"
                     data-kt-billing-id="{{ payment_method.id }}"
                     data-kt-billing-action="payment-method-edit"
-                    >Edit
+                    >{% translate "Edit" %}
                   </button>
                 </div>
                 <!--end::Actions-->
@@ -116,10 +116,10 @@
                 <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
                   <!--begin::Content-->
                   <div class="mb-3 mb-md-0 fw-semibold">
-                    <h4 class="text-gray-900 fw-bold">Important</h4>
-                    <div class="fs-6 text-gray-700 pe-7">Please review our
-                    <a href="https://{{ branding.smarter_marketing_site_url }}/terms-of-service/" class="fw-bold me-1">Terms of Service</a> before adding
-                    <br />your new payment card.</div>
+                    <h4 class="text-gray-900 fw-bold">{% translate "Important" %}</h4>
+                    <div class="fs-6 text-gray-700 pe-7">{% blocktranslate with smarter_marketing_site_url=branding.smarter_marketing_site_url trimmed %}Please review our
+                    <a href="https://{{ smarter_marketing_site_url }}/terms-of-service/" class="fw-bold me-1">Terms of Service</a> before adding
+                    <br />your new payment card.{% endblocktranslate %}</div>
                   </div>
                   <!--end::Content-->
                   <!--begin::Action-->
@@ -128,7 +128,7 @@
                     class="btn btn-primary px-6 align-self-center text-nowrap"
                     data-kt-billing-action="payment-method-add"
                     data-bs-toggle="modal"
-                    data-bs-target="#kt_modal_payment_method">Add Card
+                    data-bs-target="#kt_modal_payment_method">{% translate "Add Card" %}
                   </a>
                   <!--end::Action-->
                 </div>
@@ -144,17 +144,17 @@
         <!--begin::Tab panel-->
         <div id="kt_billing_paypal" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_billing_paypal_tab">
           <!--begin::Title-->
-          <h3 class="mb-5">My Paypal</h3>
+          <h3 class="mb-5">{% translate "My Paypal" %}</h3>
           <!--end::Title-->
           <!--begin::Description-->
-          <div class="text-gray-600 fs-6 fw-semibold mb-5">To use PayPal as your payment method, you will need to make pre-payments each month before your bill is due.</div>
+          <div class="text-gray-600 fs-6 fw-semibold mb-5">{% translate "To use PayPal as your payment method, you will need to make pre-payments each month before your bill is due." %}</div>
           <!--end::Description-->
           <!--begin::Form-->
           <form class="form">
             <!--begin::Input group-->
             <div class="mb-7 mw-350px">
-              <select name="timezone" data-control="select2" data-placeholder="Select an option" data-hide-search="true" class="form-select form-select-solid form-select-lg fw-semibold fs-6 text-gray-700">
-                <option>Select an option</option>
+              <select name="timezone" data-control="select2" data-placeholder="{% translate "Select an option" %}" data-hide-search="true" class="form-select form-select-solid form-select-lg fw-semibold fs-6 text-gray-700">
+                <option>{% translate "Select an option" %}</option>
                 <option value="25">US $25.00</option>
                 <option value="50">US $50.00</option>
                 <option value="100">US $100.00</option>
@@ -163,7 +163,7 @@
               </select>
             </div>
             <!--end::Input group-->
-            <button type="submit" class="btn btn-primary">Pay with Paypal</button>
+            <button type="submit" class="btn btn-primary">{% translate "Pay with Paypal" %}</button>
           </form>
           <!--end::Form-->
         </div>
@@ -178,7 +178,7 @@
       <div class="card-header">
         <!--begin::Title-->
         <div class="card-title">
-          <h3>Billing Addresses</h3>
+          <h3>{% translate "Billing Addresses" %}</h3>
         </div>
         <!--end::Title-->
       </div>
@@ -195,9 +195,9 @@
             <div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
               <!--begin::Details-->
               <div class="d-flex flex-column py-2">
-                <div class="d-flex align-items-center fs-5 fw-bold mb-5">Address 1
+                <div class="d-flex align-items-center fs-5 fw-bold mb-5">{% translate "Address 1" %}
                   {% if address.is_primary %}
-                  <span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
+                  <span class="badge badge-light-success fs-7 ms-2">{% translate "Primary" %}</span></div>
                   {% endif %}
                   <div class="fs-6 fw-semibold text-gray-600">{{ address.address1 }} {{ address.address2 }}
                 <br />{{ address.city }} {{ address.state }} {{ address.zip }}
@@ -210,14 +210,14 @@
                   class="btn btn-sm btn-light btn-active-light-primary me-3"
                   data-kt-billing-action="address-delete">
                   <!--begin::Indicator label-->
-                  <span class="indicator-label">Delete</span>
+                  <span class="indicator-label">{% translate "Delete" %}</span>
                   <!--end::Indicator label-->
                   <!--begin::Indicator progress-->
-                  <span class="indicator-progress">Please wait...
+                  <span class="indicator-progress">{% translate "Please wait..." %}
                   <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                   <!--end::Indicator progress-->
                 </button>
-                <button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">Edit</button>
+                <button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">{% translate "Edit" %}</button>
               </div>
               <!--end::Actions-->
             </div>
@@ -239,7 +239,7 @@
                 </div>
                 <!--end::Content-->
                 <!--begin::Action-->
-                <a href="#" class="btn btn-primary px-6 align-self-center text-nowrap" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">New Address</a>
+                <a href="#" class="btn btn-primary px-6 align-self-center text-nowrap" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">{% translate "New Address" %}</a>
                 <!--end::Action-->
               </div>
               <!--end::Wrapper-->
@@ -251,10 +251,10 @@
         <!--end::Addresses-->
         <!--begin::Tax info-->
         <div class="mt-10">
-          <h3 class="mb-3">Tax Location</h3>
-          <div class="fw-semibold text-gray-600 fs-6">United States - 10% VAT
+          <h3 class="mb-3">{% translate "Tax Location" %}</h3>
+          <div class="fw-semibold text-gray-600 fs-6">{% blocktranslate trimmed %}United States - 10% VAT
           <br />
-          <a class="fw-bold" href="#">More Info</a></div>
+          <a class="fw-bold" href="#">More Info</a>{% endblocktranslate %}</div>
         </div>
         <!--end::Tax info-->
       </div>
@@ -275,7 +275,7 @@
 					<!--begin::Modal header-->
 					<div class="modal-header">
 						<!--begin::Modal title-->
-						<h2 id="kt_modal_payment_method_title">Add New Card</h2>
+						<h2 id="kt_modal_payment_method_title">{% translate "Add New Card" %}</h2>
 						<!--end::Modal title-->
 						<!--begin::Close-->
 						<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
@@ -296,8 +296,8 @@
 							<div class="d-flex flex-column mb-7 fv-row">
 								<!--begin::Label-->
 								<label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-									<span class="required">Name On Card</span>
-									<span class="ms-1" data-bs-toggle="tooltip" title="Specify a card holder's name">
+									<span class="required">{% translate "Name On Card" %}</span>
+									<span class="ms-1" data-bs-toggle="tooltip" title="{% translate "Specify a card holder's name" %}">
 										<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
 											<span class="path1"></span>
 											<span class="path2"></span>
@@ -306,18 +306,18 @@
 									</span>
 								</label>
 								<!--end::Label-->
-								<input type="text" class="form-control form-control-solid" placeholder="Full name" name="{{ billing.payment_method_form.card_name.name }}" value="" />
+								<input type="text" class="form-control form-control-solid" placeholder="{% translate "Full name" %}" name="{{ billing.payment_method_form.card_name.name }}" value="" />
 							</div>
 							<!--end::Input group-->
 							<!--begin::Input group-->
 							<div class="d-flex flex-column mb-7 fv-row">
 								<!--begin::Label-->
-								<label class="required fs-6 fw-semibold form-label mb-2">Card Number</label>
+								<label class="required fs-6 fw-semibold form-label mb-2">{% translate "Card Number" %}</label>
 								<!--end::Label-->
 								<!--begin::Input wrapper-->
 								<div class="position-relative">
 									<!--begin::Input-->
-									<input type="text" class="form-control form-control-solid" placeholder="xxxx xxxx xxxx xxxx" name="{{ billing.payment_method_form.card_number.name }}" value="" />
+									<input type="text" class="form-control form-control-solid" placeholder="{% translate "xxxx xxxx xxxx xxxx" %}" name="{{ billing.payment_method_form.card_number.name }}" value="" />
 									<!--end::Input-->
 									<!--begin::Card logos-->
 									<div id="card_type" class="position-absolute translate-middle-y top-50 end-0 me-5">
@@ -335,13 +335,13 @@
 								<!--begin::Col-->
 								<div class="col-md-8 fv-row">
 									<!--begin::Label-->
-									<label class="required fs-6 fw-semibold form-label mb-2">Expiration Date</label>
+									<label class="required fs-6 fw-semibold form-label mb-2">{% translate "Expiration Date" %}</label>
 									<!--end::Label-->
 									<!--begin::Row-->
 									<div class="row fv-row">
 										<!--begin::Col-->
 										<div class="col-6">
-											<select name="{{ billing.payment_method_form.card_expiration_month.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Month">
+											<select name="{{ billing.payment_method_form.card_expiration_month.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="{% translate "Month" %}">
 												<option></option>
 												<option value="1">1</option>
 												<option value="2">2</option>
@@ -360,7 +360,7 @@
 										<!--end::Col-->
 										<!--begin::Col-->
 										<div class="col-6">
-											<select name="{{ billing.payment_method_form.card_expiration_year.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Year">
+											<select name="{{ billing.payment_method_form.card_expiration_year.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="{% translate "Year" %}">
 												<option></option>
                         {% for expiration_year in billing.payment_method_expiration_years %}
 												<option value={{ expiration_year }}>{{ expiration_year }}</option>
@@ -376,8 +376,8 @@
 								<div class="col-md-4 fv-row">
 									<!--begin::Label-->
 									<label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-										<span class="required">CVV</span>
-										<span class="ms-1" data-bs-toggle="tooltip" title="Enter a card CVV code">
+										<span class="required">{% translate "CVV" %}</span>
+										<span class="ms-1" data-bs-toggle="tooltip" title="{% translate "Enter a card CVV code" %}">
 											<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
 												<span class="path1"></span>
 												<span class="path2"></span>
@@ -389,7 +389,7 @@
 									<!--begin::Input wrapper-->
 									<div class="position-relative">
 										<!--begin::Input-->
-										<input type="text" class="form-control form-control-solid" minlength="3" maxlength="4" placeholder="CVV" name="{{ billing.payment_method_form.card_cvc.name }}" />
+										<input type="text" class="form-control form-control-solid" minlength="3" maxlength="4" placeholder="{% translate "CVV" %}" name="{{ billing.payment_method_form.card_cvc.name }}" />
 										<!--end::Input-->
 										<!--begin::CVV icon-->
 										<div class="position-absolute translate-middle-y top-50 end-0 me-3">
@@ -407,11 +407,11 @@
 							<!--end::Input group-->
 							<!--begin::Actions-->
 							<div class="text-center pt-15">
-								<button type="reset" id="kt_modal_payment_method_cancel" class="btn btn-light me-3">Cancel</button>
+								<button type="reset" id="kt_modal_payment_method_cancel" class="btn btn-light me-3">{% translate "Cancel" %}</button>
 								<button type="submit" id="kt_modal_payment_method_submit" class="btn btn-primary">
-									<span class="indicator-label">Submit</span>
+									{% blocktranslate trimmed %}<span class="indicator-label">Submit</span>
 									<span class="indicator-progress">Please wait...
-									<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+									<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>{% endblocktranslate %}
 								</button>
 							</div>
 							<!--end::Actions-->
@@ -436,7 +436,7 @@
 						<!--begin::Modal header-->
 						<div class="modal-header" id="kt_modal_new_address_header">
 							<!--begin::Modal title-->
-							<h2>Add New Address</h2>
+							<h2>{% translate "Add New Address" %}</h2>
 							<!--end::Modal title-->
 							<!--begin::Close-->
 							<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
@@ -466,9 +466,9 @@
 									<div class="d-flex flex-stack flex-grow-1">
 										<!--begin::Content-->
 										<div class="fw-semibold">
-											<h4 class="text-gray-900 fw-bold">Warning</h4>
-											<div class="fs-6 text-gray-700">Updating address may affect your
-											<a href="#">Tax Location</a></div>
+											<h4 class="text-gray-900 fw-bold">{% translate "Warning" %}</h4>
+											<div class="fs-6 text-gray-700">{% blocktranslate trimmed %}Updating address may affect your
+											<a href="#">Tax Location</a>{% endblocktranslate %}</div>
 										</div>
 										<!--end::Content-->
 									</div>
@@ -481,7 +481,7 @@
 									<!--begin::Col-->
 									<div class="col-md-6 fv-row">
 										<!--begin::Label-->
-										<label class="required fs-5 fw-semibold mb-2">First name</label>
+										<label class="required fs-5 fw-semibold mb-2">{% translate "First name" %}</label>
 										<!--end::Label-->
 										<!--begin::Input-->
 										<input type="text" class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.first_name.name }}">
@@ -491,7 +491,7 @@
 									<!--begin::Col-->
 									<div class="col-md-6 fv-row">
 										<!--end::Label-->
-										<label class="required fs-5 fw-semibold mb-2">Last name</label>
+										<label class="required fs-5 fw-semibold mb-2">{% translate "Last name" %}</label>
 										<!--end::Label-->
 										<!--end::Input-->
 										<input type="text" class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.last_name.name }}" />
@@ -504,8 +504,8 @@
 								<div class="d-flex flex-column mb-5 fv-row">
 									<!--begin::Label-->
 									<label class="d-flex align-items-center fs-5 fw-semibold mb-2">
-										<span class="required">Country</span>
-										<span class="ms-1" data-bs-toggle="tooltip" title="Your payment statements may very based on selected country">
+										<span class="required">{% translate "Country" %}</span>
+										<span class="ms-1" data-bs-toggle="tooltip" title="{% translate "Your payment statements may very based on selected country" %}">
 											<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
 												<span class="path1"></span>
 												<span class="path2"></span>
@@ -515,8 +515,8 @@
 									</label>
 									<!--end::Label-->
 									<!--begin::Select-->
-									<select name="{{ billing.billing_address_form.country.name }}" data-control="select2" data-dropdown-parent="#kt_modal_new_address" data-placeholder="Select a Country..." class="form-select form-select-solid">
-										<option value="">Select a Country...</option>
+									<select name="{{ billing.billing_address_form.country.name }}" data-control="select2" data-dropdown-parent="#kt_modal_new_address" data-placeholder="{% translate "Select a Country..." %}" class="form-select form-select-solid">
+										<option value="">{% translate "Select a Country..." %}</option>
                     {% for country in billing.countries %}
 										<option value="{{ country.code }}">{{ country.name }}</option>
                     {% endfor %}
@@ -527,7 +527,7 @@
 								<!--begin::Input group-->
 								<div class="d-flex flex-column mb-5 fv-row">
 									<!--begin::Label-->
-									<label class="required fs-5 fw-semibold mb-2">Address Line 1</label>
+									<label class="required fs-5 fw-semibold mb-2">{% translate "Address Line 1" %}</label>
 									<!--end::Label-->
 									<!--begin::Input-->
 									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.address1.name }}" />
@@ -537,7 +537,7 @@
 								<!--begin::Input group-->
 								<div class="d-flex flex-column mb-5 fv-row">
 									<!--begin::Label-->
-									<label class="required fs-5 fw-semibold mb-2">Address Line 2</label>
+									<label class="required fs-5 fw-semibold mb-2">{% translate "Address Line 2" %}</label>
 									<!--end::Label-->
 									<!--begin::Input-->
 									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.address2.name }}" />
@@ -547,7 +547,7 @@
 								<!--begin::Input group-->
 								<div class="d-flex flex-column mb-5 fv-row">
 									<!--begin::Label-->
-									<label class="fs-5 fw-semibold mb-2">City</label>
+									<label class="fs-5 fw-semibold mb-2">{% translate "City" %}</label>
 									<!--end::Label-->
 									<!--begin::Input-->
 									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.city.name }}" />
@@ -559,7 +559,7 @@
 									<!--begin::Col-->
 									<div class="col-md-6 fv-row">
 										<!--begin::Label-->
-										<label class="fs-5 fw-semibold mb-2">State / Province</label>
+										<label class="fs-5 fw-semibold mb-2">{% translate "State / Province" %}</label>
 										<!--end::Label-->
 										<!--begin::Input-->
 										<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.state.name }}" />
@@ -569,7 +569,7 @@
 									<!--begin::Col-->
 									<div class="col-md-6 fv-row">
 										<!--begin::Label-->
-										<label class="fs-5 fw-semibold mb-2">Post Code</label>
+										<label class="fs-5 fw-semibold mb-2">{% translate "Post Code" %}</label>
 										<!--end::Label-->
 										<!--begin::Input-->
 										<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.postcode.name }}" />
@@ -593,13 +593,13 @@
 						<!--begin::Modal footer-->
 						<div class="modal-footer flex-center">
 							<!--begin::Button-->
-							<button type="reset" id="kt_modal_new_address_cancel" class="btn btn-light me-3">Discard</button>
+							<button type="reset" id="kt_modal_new_address_cancel" class="btn btn-light me-3">{% translate "Discard" %}</button>
 							<!--end::Button-->
 							<!--begin::Button-->
 							<button type="submit" id="kt_modal_new_address_submit" class="btn btn-primary">
-								<span class="indicator-label">Submit</span>
+								{% blocktranslate trimmed %}<span class="indicator-label">Submit</span>
 								<span class="indicator-progress">Please wait...
-								<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+								<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>{% endblocktranslate %}
 							</button>
 							<!--end::Button-->
 						</div>

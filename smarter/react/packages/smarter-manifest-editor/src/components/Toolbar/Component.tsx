@@ -12,6 +12,7 @@ import type * as monaco from "monaco-editor";
 import { useCopy } from "@/lib/useCopy";
 
 import "@/components/Toolbar/styles.css";
+import { gettext, interpolate, ngettext } from "@smarter/common";
 
 // the most paths that a Keenicons duotone icon in this toolbar has: ki-trash has 5.
 const DUOTONE_PATHS = [1, 2, 3, 4, 5];
@@ -48,7 +49,7 @@ interface CopiedMessageProps {
 /** The same "Copied to clipboard" message as @smarter/prompt-passthrough's toolbar. */
 export function CopiedMessage({ show }: CopiedMessageProps) {
   if (!show) return null;
-  return <div className="manifest-editor-copied">Copied to clipboard</div>;
+  return <div className="manifest-editor-copied">{gettext("Copied to clipboard")}</div>;
 }
 
 interface ToolbarProps {
@@ -105,54 +106,65 @@ function Toolbar({
   };
 
   return (
-    <div className="btn-toolbar manifest-editor-toolbar position-relative" role="toolbar" aria-label="Manifest editor">
-      <div className="btn-group me-2" role="group" aria-label="Save">
+    <div
+      className="btn-toolbar manifest-editor-toolbar position-relative"
+      role="toolbar"
+      aria-label={gettext("Manifest editor")}
+    >
+      <div className="btn-group me-2" role="group" aria-label={gettext("Save")}>
         <ToolbarButton
           onClick={onSave}
           title={
             !isDirty
-              ? "Save: There are no changes to save"
+              ? gettext("Save: There are no changes to save")
               : problemCount
-                ? `Save: Fix this manifest's ${problemCount === 1 ? "problem" : `${problemCount} problems`} first`
-                : "Save: Apply your changes to this manifest"
+                ? interpolate(
+                    ngettext(
+                      "Save: Fix this manifest's problem first",
+                      "Save: Fix this manifest's %(problemCount)s problems first",
+                      problemCount,
+                    ),
+                    { problemCount },
+                  )
+                : gettext("Save: Apply your changes to this manifest")
           }
           iconClass="bi bi-floppy fs-2"
           disabled={!isDirty || problemCount > 0 || isBusy}
         />
       </div>
-      <div className="btn-group me-2" role="group" aria-label="History">
-        <ToolbarButton onClick={handleUndo} title="Undo" iconClass="ki-duotone ki-arrow-circle-left fs-2" />
-        <ToolbarButton onClick={handleRedo} title="Redo" iconClass="ki-duotone ki-arrow-circle-right fs-2" />
+      <div className="btn-group me-2" role="group" aria-label={gettext("History")}>
+        <ToolbarButton onClick={handleUndo} title={gettext("Undo")} iconClass="ki-duotone ki-arrow-circle-left fs-2" />
+        <ToolbarButton onClick={handleRedo} title={gettext("Redo")} iconClass="ki-duotone ki-arrow-circle-right fs-2" />
       </div>
-      <div className="btn-group me-2" role="group" aria-label="Clipboard">
+      <div className="btn-group me-2" role="group" aria-label={gettext("Clipboard")}>
         <ToolbarButton
           onClick={copy}
-          title="Copy: Copy this manifest to the clipboard"
+          title={gettext("Copy: Copy this manifest to the clipboard")}
           iconClass={`ki-duotone ${copied ? "ki-copy-success" : "ki-copy"} fs-2`}
         />
         <ToolbarButton
           onClick={handlePaste}
-          title="Paste: Paste from the clipboard into this manifest"
+          title={gettext("Paste: Paste from the clipboard into this manifest")}
           iconClass="ki-duotone ki-clipboard fs-2"
         />
       </div>
-      <div className="btn-group me-2" role="group" aria-label="File">
+      <div className="btn-group me-2" role="group" aria-label={gettext("File")}>
         <ToolbarButton
           onClick={onRevert}
-          title="Revert: Discard your changes to this manifest"
+          title={gettext("Revert: Discard your changes to this manifest")}
           iconClass="ki-duotone ki-arrows-circle fs-2"
           disabled={!isDirty || isBusy}
         />
         <ToolbarButton
           onClick={handleDownload}
-          title={`Download: Save this manifest as ${fileName}`}
+          title={interpolate(gettext("Download: Save this manifest as %(fileName)s"), { fileName })}
           iconClass="ki-duotone ki-file-down fs-2"
         />
       </div>
-      <div className="btn-group" role="group" aria-label="Resource">
+      <div className="btn-group" role="group" aria-label={gettext("Resource")}>
         <ToolbarButton
           onClick={onClone}
-          title="Clone: Create a copy of this resource, with a new name"
+          title={gettext("Clone: Create a copy of this resource, with a new name")}
           iconClass="ki-duotone ki-file-added fs-2"
           disabled={isBusy}
         />

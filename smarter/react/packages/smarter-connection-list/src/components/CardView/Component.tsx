@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: ConnectionCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,17 +54,17 @@ function CardView({ sessionContext, objects, onRequery }: ConnectionCardViewProp
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", connection.id, "number")}
-                    {renderDetailRow("Manifest URL", connection.manifestUrl, "url")}
-                    {renderDetailRow("Owner", connection.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", connection.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", connection.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", connection.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", connection.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", connection.version)}
-                    {renderDetailRow("Description", connection.description)}
-                    {renderDetailRow("Tags", connection.tags, "str[]")}
-                    {renderDetailRow("Annotations", connection.annotations, "json")}
+                    {renderDetailRow(gettext("ID"), connection.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), connection.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), connection.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), connection.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), connection.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), connection.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), connection.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), connection.version)}
+                    {renderDetailRow(gettext("Description"), connection.description)}
+                    {renderDetailRow(gettext("Tags"), connection.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), connection.annotations, "json")}
                   </tbody>
                 </table>
               </div>

@@ -1,0 +1,40 @@
+<section id="dev-integrate" data-transition="fade" style="background:#F6F4EE;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1F5F66">For application development</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:400;line-height:1.1;color:#14213D">Standard integration points</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;flex:1">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<x-icon name="Code" style="color:#1F5F66;width:44px;height:44px"></x-icon>
+<h3 style="font-size:28px;font-weight:700;color:#14213D">REST API</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Every operation, with a published OpenAPI document and JSON Schemas.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<x-icon name="Tool" style="color:#1F5F66;width:44px;height:44px"></x-icon>
+<h3 style="font-size:28px;font-weight:700;color:#14213D">SDKs and CLI</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Python, Node.js and Go SDKs; a CLI; a VS Code extension that validates manifests.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<x-icon name="Link" style="color:#1F5F66;width:44px;height:44px"></x-icon>
+<h3 style="font-size:28px;font-weight:700;color:#14213D">Drop-in proxy</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Existing OpenAI, Anthropic or Gemini SDK code works unchanged: swap the base URL and key.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<x-icon name="Chat" style="color:#1F5F66;width:44px;height:44px"></x-icon>
+<h3 style="font-size:28px;font-weight:700;color:#14213D">Embeddable chat</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">A React component and NPM package put an assistant on any web page.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<x-icon name="Globe" style="color:#1F5F66;width:44px;height:44px"></x-icon>
+<h3 style="font-size:28px;font-weight:700;color:#14213D">Model Context Protocol</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Consume any MCP server’s tools, under the same governance.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<x-icon name="Settings" style="color:#1F5F66;width:44px;height:44px"></x-icon>
+<h3 style="font-size:28px;font-weight:700;color:#14213D">Open framework</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Django, DRF and Pydantic, the same framework Smarter is built on, for extensions.</p>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;flex-direction:row;justify-content:space-between"><p style="font-size:24px;color:#4A5568">Smarter for IT Leadership</p><p style="font-size:24px;color:#4A5568">9</p></div>
+<aside>About 2 minutes. The message for development leads: nothing here is proprietary glue. The REST API is fully documented in OpenAPI, so it fits API gateways and client generators. The Proxy is the fastest win: applications already written against a vendor’s SDK keep working, but their keys, spending and logs move under governance by changing two configuration values. MCP support means tools your teams or vendors already expose over the Model Context Protocol plug straight in. And when you do need custom code, it is mainstream Python on Django, not a niche runtime.</aside>
+</section>

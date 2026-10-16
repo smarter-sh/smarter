@@ -1,13 +1,13 @@
 {% extends 'account/dashboard/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block dashboard_title %}Account Users{% endblock %}
+{% block dashboard_title %}{% translate "Account Users" %}{% endblock %}
 
     {% block dashboard_title_breadcrumbs %}
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/dashboard/account/dashboard/users/" class="text-muted text-hover-primary">Users</a>
+        <a href="/dashboard/account/dashboard/users/" class="text-muted text-hover-primary">{% translate "Users" %}</a>
       </li>
     {% endblock %}
 
@@ -23,12 +23,12 @@
             <!--begin::Thead-->
             <thead class="border-gray-200 fs-5 fw-semibold bg-lighten">
               <tr>
-                <th class="min-w-125px">Username</th>
-                <th class="min-w-125px">Email</th>
-                <th class="min-w-125px">First</th>
-                <th class="min-w-125px">Last</th>
-                <th class="min-w-125px">Last Login</th>
-                <th class="min-w-50px">Admin</th>
+                <th class="min-w-125px">{% translate "Username" %}</th>
+                <th class="min-w-125px">{% translate "Email" %}</th>
+                <th class="min-w-125px">{% translate "First" %}</th>
+                <th class="min-w-125px">{% translate "Last" %}</th>
+                <th class="min-w-125px">{% translate "Last Login" %}</th>
+                <th class="min-w-50px">{% translate "Admin" %}</th>
               </tr>
             </thead>
             <!--end::Thead-->
@@ -45,7 +45,7 @@
                 <td>{{ user.first_name }}</td>
                 <td>{{ user.last_name }}</td>
                 <!-- see: https://docs.djangoproject.com/en/3.2/ref/templates/builtins/#date -->
-                <td>{% if user.last_login %}{{ user.last_login|date:"N j, Y" }}{% else %}Never{% endif %}</td>
+                <td>{% if user.last_login %}{{ user.last_login|date:"N j, Y" }}{% else %}{% translate "Never" %}{% endif %}</td>
                 <td>
                   {% if user.is_staff %}
                   <div style="color: green;">

@@ -4,7 +4,7 @@
  * Used to display a list of available guardrails.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Guardrail, GuardrailListViewProps, GuardrailCardViewProps } from "@/lib/Types";
@@ -12,8 +12,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your Guardrails" },
-  { key: "shared" as TabKey, label: "Shared Guardrails" },
+  { key: "owned" as TabKey, label: gettext("Your Guardrails") },
+  { key: "shared" as TabKey, label: gettext("Shared Guardrails") },
 ];
 
 // Set the TabbedViewContext generic object type to Guardrail,
@@ -38,11 +38,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Guardrails";
+  const title = gettext("Guardrails");
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-guardrail.html";
-  const helpText =
-    "Guardrails are responsible for enforcing constraints on the interaction between an application and a large language model. Rather than relying solely on prompt instructions such as 'do not reveal sensitive information' or 'respond only in JSON,' guardrails validate inputs, outputs, and execution state before information is accepted or returned. They may sanitize user input, reject prompt injection attempts, enforce schema validation, filter unsafe or out-of-scope responses, verify citations, limit tool access, or require structured output that conforms to predefined contracts.";
+  const helpText = gettext(
+    "Guardrails are responsible for enforcing constraints on the interaction between an application and a large language model. Rather than relying solely on prompt instructions such as 'do not reveal sensitive information' or 'respond only in JSON,' guardrails validate inputs, outputs, and execution state before information is accepted or returned. They may sanitize user input, reject prompt injection attempts, enforce schema validation, filter unsafe or out-of-scope responses, verify citations, limit tool access, or require structured output that conforms to predefined contracts.",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="guardrail-list">

@@ -90,6 +90,15 @@
   border-radius: 0.85rem;
   background-color: #ffffff;
   box-shadow: 0 0.4rem 1rem rgba(76, 29, 149, 0.08);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.extensions-item:hover {
+  border-color: #c4b5fd;
+  box-shadow: 0 0.4rem 1.2rem rgba(76, 29, 149, 0.16);
 }
 
 .extensions-icon {
