@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.30.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.29.1-alpha.1...v0.30.0-alpha.1) (2026-10-16)
+
+### Features
+
+* **react:** link official extension cards to their github repos ([6859f48](https://github.com/smarter-sh/smarter/commit/6859f482a75379561831fa4d094526c56ffbb706))
+
 ## [0.29.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.29.0...v0.29.1-alpha.1) (2026-10-16)
 
 ### Bug Fixes
