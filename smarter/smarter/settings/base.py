@@ -1347,6 +1347,7 @@ LANGUAGES = [
     ("en", "English"),
     ("es", "Spanish"),
     ("fr", "French"),
+    ("pt-br", "Brazilian Portuguese"),
 ]
 """
 The languages in which the Smarter web console is available.
@@ -1362,6 +1363,10 @@ code rather than ``es-419``. Django's ``LANG_INFO`` has no ``es-419``, so the
 language menu would describe it as ``es`` and post ``es`` back. A browser
 that asks for any variant of Spanish (``es-MX``, ``es-AR``, ``es-419``,
 ``es-ES``) gets it, and Django's own messages come from its ``es`` catalog.
+
+Portuguese is Brazilian Portuguese, under Django's regional ``pt-br`` code,
+whose catalogs are in ``locale/pt_BR``. A browser that asks for ``pt-BR``, or
+for any other variant of Portuguese (``pt``, ``pt-PT``), gets it.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#languages
 """

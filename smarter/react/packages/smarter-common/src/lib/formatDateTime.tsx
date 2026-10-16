@@ -14,18 +14,26 @@
  */
 import { loggerPrefix } from "./const";
 import { formatDistanceToNow, type Locale } from "date-fns";
-import { enUS, es, fr } from "date-fns/locale";
+import { enUS, es, fr, ptBR } from "date-fns/locale";
 
 import { currentLanguage, gettext } from "./i18n";
 
 /**
  * The date-fns locale of each language in Django's settings.LANGUAGES, for relative times such as
- * "3 minutes ago". A language that isn't here falls back to English.
+ * "3 minutes ago", by its lowercase language code. A regional variant that isn't here gets its
+ * generic language, and a language that isn't here falls back to English.
  */
 const DATE_FNS_LOCALES: Record<string, Locale> = {
   en: enUS,
   es,
   fr,
+  "pt-br": ptBR,
+};
+
+/** The date-fns locale of a language code such as "pt-br", "pt-BR", "es-MX" or "fr". */
+const dateFnsLocale = (language: string): Locale => {
+  const code = language.toLowerCase();
+  return DATE_FNS_LOCALES[code] ?? DATE_FNS_LOCALES[code.split("-")[0]] ?? enUS;
 };
 
 export const formatDateTime = (
@@ -65,7 +73,7 @@ export const formatDateTime = (
       // generate a humanized elapsed time string like "3 minutes ago" or "last week"
       const result = formatDistanceToNow(date, {
         addSuffix: true,
-        locale: DATE_FNS_LOCALES[currentLanguage().split("-")[0]] ?? enUS,
+        locale: dateFnsLocale(currentLanguage()),
       });
       return result;
     }
