@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 19:23+0000\n"
+"POT-Creation-Date: 2026-10-16 23:16+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -46,6 +46,18 @@ msgstr ""
 
 #: smarter/apps/account/views/authentication/login_view.py
 msgid "Received invalid responses."
+msgstr ""
+
+#: smarter/apps/account/views/dashboard/profile_image.py
+msgid "Choose an image to upload."
+msgstr ""
+
+#: smarter/apps/account/views/dashboard/profile_image.py
+msgid "The image must be 2 MB or smaller."
+msgstr ""
+
+#: smarter/apps/account/views/dashboard/profile_image.py
+msgid "The image must be a PNG, JPEG, GIF or WebP file."
 msgstr ""
 
 #: smarter/apps/account/views/password_management.py
@@ -1382,11 +1394,27 @@ msgid "System"
 msgstr ""
 
 #: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Change Profile Image"
+msgstr ""
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Profile Image"
+msgstr ""
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Superuser"
 msgstr ""
 
 #: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Staff"
+msgstr ""
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Remove Profile Image"
+msgstr ""
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "The profile image could not be saved."
 msgstr ""
 
 #: smarter/templates/dashboard/navbar/user-menu-item.html
