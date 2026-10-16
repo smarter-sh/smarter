@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.29.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.28.2...v0.29.0-alpha.1) (2026-10-16)
+
+### Features
+
+* **dashboard:** redesign the widgets and fix getting started ([e9c0975](https://github.com/smarter-sh/smarter/commit/e9c09757b10931ce26e7a4de8960d205b1820bed))
+
 ## [0.28.2](https://github.com/smarter-sh/smarter/compare/v0.28.1...v0.28.2) (2026-10-16)
 
 ### Bug Fixes
