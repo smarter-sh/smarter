@@ -14,8 +14,9 @@ from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
 from smarter.apps.llmtool.caching import invalidate_all_cached_plugins_for_user_profile
+from smarter.apps.llmtool.extension.tests.mixins import ExtensionTestMixin
 from smarter.apps.llmtool.manifest.controller import PluginController
-from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
@@ -255,3 +256,83 @@ class TestPluginListApiViews(PluginAppTestBase):
                 data = self.post(self.api_url(name, **kwargs), status=HTTPStatus.BAD_REQUEST)
                 self.assertIn("test error", data["error"])
         self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id, name=self.static_plugin.name).exists())
+
+
+class TestPluginListApiExtensionsView(ExtensionTestMixin):
+    """Test the read-only api of the plugin list's Extensions tab."""
+
+    def setUp(self):
+        super().setUp()
+        self.extension = self.install_echo()
+
+    def listed(self, user, status: int = HTTPStatus.OK, **params) -> SmarterDictType:
+        """POST to the Extensions api as ``user``, with query parameters, and return its json."""
+        client = Client()
+        client.force_login(user)
+        self.addCleanup(client.logout)
+        url = reverse(f"{NAMESPACE}:{PluginReverseNames.listview_api_extensions}")
+        if params:
+            url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
+        response = client.post(url)
+        self.assertEqual(response.status_code, status, response.content)
+        return json.loads(response.content)
+
+    def slugs(self, user, **params) -> list[str]:
+        """Return the slugs of the extensions that the Extensions api lists for ``user``."""
+        return [item["slug"] for item in self.listed(user, **params)["objects"]]
+
+    def test_list(self):
+        """Test that an extension available to every account is listed, read-only, with its manifest's details."""
+        data = self.listed(self.non_admin_user)
+        echo = next(item for item in data["objects"] if item["slug"] == "echo")
+        self.assertEqual(echo["id"], self.extension.pk)
+        self.assertEqual(echo["displayName"], "Echo")
+        self.assertEqual(echo["version"], "1.0.0")
+        self.assertEqual(echo["trustBadge"], "unverified")
+        self.assertEqual(echo["trustBadgeLabel"], "Unverified")
+        self.assertEqual(echo["source"], "upload")
+        self.assertFalse(echo["enabled"])
+        self.assertEqual(echo["license"], "AGPL-3.0")
+        self.assertEqual(echo["homepage"], "https://example.com/echo")
+        self.assertIn("createdAt", echo)
+        self.assertIn("updatedAt", echo)
+        # nothing that only the Extensions console's superusers need.
+        for key in ("detailUrl", "error", "latestVersion", "settings", "canDelete"):
+            self.assertNotIn(key, echo)
+        self.assertIn("displayName", data["pagination"]["sortFields"])
+
+    def test_list_availability(self):
+        """Test that an extension restricted to other accounts is listed only for superusers, and its accounts."""
+        self.extension.all_accounts = False
+        self.extension.save()
+        self.assertNotIn("echo", self.slugs(self.non_admin_user))
+        self.assertIn("echo", self.slugs(self.admin_user))
+
+        self.extension.accounts.add(self.account)
+        self.assertEqual(self.slugs(self.non_admin_user).count("echo"), 1)
+
+    def test_list_not_installed(self):
+        """Test that an extension without an installed version is not listed."""
+        Extension.objects.filter(pk=self.extension.pk).update(installed_version=None)
+        self.assertNotIn("echo", self.slugs(self.admin_user))
+
+    def test_list_search_and_sort(self):
+        """Test that the list is searched by the extension's slug, name, description and publisher, and sorted."""
+        self.assertIn("echo", self.slugs(self.non_admin_user, search="Echoes"))
+        self.assertNotIn("echo", self.slugs(self.non_admin_user, search="no-such-extension"))
+        data = self.listed(self.non_admin_user, ordering="-displayName")
+        self.assertEqual(data["pagination"]["ordering"], "-displayName")
+
+    def test_list_invalid_manifest(self):
+        """Test that an extension whose stored manifest is invalid is still listed, without its manifest's details."""
+        version = self.extension.installed_version
+        version.manifest = {"project": {}}  # type: ignore[union-attr]
+        version.save()  # type: ignore[union-attr]
+        echo = next(item for item in self.listed(self.non_admin_user)["objects"] if item["slug"] == "echo")
+        self.assertIsNone(echo["license"])
+        self.assertIsNone(echo["homepage"])
+
+    def test_list_anonymous_user(self):
+        """Test that an anonymous user is redirected to the login page."""
+        response = Client().post(reverse(f"{NAMESPACE}:{PluginReverseNames.listview_api_extensions}"))
+        self.assertEqual(response.status_code, 302)

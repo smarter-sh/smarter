@@ -1,0 +1,212 @@
+{
+  "$defs": {
+    "ExtensionListItem": {
+      "additionalProperties": false,
+      "description": "An installed Extension, as the read-only Extensions tab of the LLMTool list shows it.",
+      "properties": {
+        "createdAt": {
+          "format": "date-time",
+          "title": "Createdat",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "displayName": {
+          "title": "Displayname",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Whether the extension's tools are offered to LLMs.",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "homepage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The homepage, from the installed version's manifest.",
+          "title": "Homepage"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The license, from the installed version's manifest.",
+          "title": "License"
+        },
+        "publisher": {
+          "description": "The publisher's registry id, or an uploaded archive's authors.",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "slug": {
+          "description": "The extension's slug, e.g. weather. An LLMClient manifest lists it by slug.",
+          "title": "Slug",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "registry",
+            "upload"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "trustBadge": {
+          "enum": [
+            "official",
+            "verified",
+            "community",
+            "unverified"
+          ],
+          "title": "Trustbadge",
+          "type": "string"
+        },
+        "trustBadgeLabel": {
+          "description": "The badge, as people read it, e.g. Official Smarter Extension.",
+          "title": "Trustbadgelabel",
+          "type": "string"
+        },
+        "updatedAt": {
+          "format": "date-time",
+          "title": "Updatedat",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The installed version.",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "displayName",
+        "description",
+        "publisher",
+        "source",
+        "trustBadge",
+        "trustBadgeLabel",
+        "enabled",
+        "version",
+        "license",
+        "homepage",
+        "createdAt",
+        "updatedAt"
+      ],
+      "title": "ExtensionListItem",
+      "type": "object"
+    },
+    "ExtensionListPage": {
+      "additionalProperties": false,
+      "description": "A page of the Extensions tab: the extensions, and the description of the page.",
+      "properties": {
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ExtensionListItem"
+          },
+          "title": "Objects",
+          "type": "array"
+        },
+        "pagination": {
+          "$ref": "#/$defs/ListViewPagination"
+        }
+      },
+      "required": [
+        "objects",
+        "pagination"
+      ],
+      "title": "ExtensionListPage",
+      "type": "object"
+    },
+    "ListViewPagination": {
+      "additionalProperties": false,
+      "description": "The description of one page of a list api's resources, as :func:`paginate_listview` returns it.\n\nIts JSON is camelCase, e.g. ``pageSize``.",
+      "properties": {
+        "count": {
+          "description": "The number of resources that match the search, on every page.",
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        },
+        "numPages": {
+          "description": "The number of pages.",
+          "minimum": 1,
+          "title": "Numpages",
+          "type": "integer"
+        },
+        "ordering": {
+          "default": "",
+          "description": "The column that sorts the list, e.g. -createdAt, or an empty string for the default order.",
+          "title": "Ordering",
+          "type": "string"
+        },
+        "page": {
+          "description": "The page's number, from 1.",
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "pageSize": {
+          "description": "The most resources that a page has.",
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Pagesize",
+          "type": "integer"
+        },
+        "search": {
+          "default": "",
+          "description": "The search, or an empty string.",
+          "title": "Search",
+          "type": "string"
+        },
+        "sortFields": {
+          "description": "The columns that the list may be sorted by.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Sortfields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "page",
+        "pageSize",
+        "numPages",
+        "count"
+      ],
+      "title": "ListViewPagination",
+      "type": "object"
+    }
+  },
+  "$id": "https://smarter.sh/schemas/extension-list.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The responses of the read-only Extensions tab of the web console's LLMTool list. Generated from smarter.apps.llmtool.views.listview.contract; do not edit.",
+  "title": "Smarter LLMTool list Extensions api contract"
+}

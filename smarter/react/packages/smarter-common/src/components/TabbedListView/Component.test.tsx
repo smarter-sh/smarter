@@ -6,8 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 import { server } from "@test/server";
 
 import { makeCacheKey, writeCache } from "../../lib/cache";
-import { API_URL, exampleContext, sessionContext } from "../../mocks/example";
-import { examplePage, listErrorHandlers, listHandlers, manyExamples } from "../../mocks/handlers";
+import { API_URL, exampleContext, exampleContextWithOtherTab, sessionContext } from "../../mocks/example";
+import { examplePage, listErrorHandlers, listHandlers, manyExamples, otherHandler } from "../../mocks/handlers";
 import TabbedListView from "./Component";
 
 /** The rows of the example list view. */
@@ -240,5 +240,39 @@ describe("TabbedListView", () => {
     server.use(...listErrorHandlers);
     setup();
     expect(await screen.findByRole("alert")).toHaveTextContent("Database unavailable");
+  });
+
+  describe("with a tab of its own object type and views", () => {
+    it("loads the tab from its own slug of the list api, and shows it with its own views", async () => {
+      server.use(...listHandlers(), otherHandler());
+      render(<TabbedListView sessionContext={sessionContext} tabbedListViewContext={exampleContextWithOtherTab} />);
+      const user = userEvent.setup();
+      await screen.findByText("first_example");
+      expect(screen.getByRole("searchbox", { name: "Search" })).toHaveAttribute("placeholder", "Search examples");
+
+      await user.click(screen.getByRole("button", { name: "Others" }));
+      expect(within(screen.getByRole("list", { name: "Others" })).getByText("An other object")).toBeInTheDocument();
+      expect(screen.queryByText("first_example")).not.toBeInTheDocument();
+      expect(screen.getByRole("searchbox", { name: "Search" })).toHaveAttribute("placeholder", "Search others");
+
+      await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
+      expect(screen.getByLabelText("Other cards")).toHaveTextContent("An other object");
+    });
+
+    it("searches the tab too", async () => {
+      const searches: string[] = [];
+      server.use(
+        ...listHandlers(),
+        http.post(`${API_URL}others/`, ({ request }) => {
+          searches.push(new URL(request.url).searchParams.get("search") ?? "");
+          return HttpResponse.json({ objects: [] });
+        }),
+      );
+      render(<TabbedListView sessionContext={sessionContext} tabbedListViewContext={exampleContextWithOtherTab} />);
+      const user = userEvent.setup();
+      await screen.findByText("first_example");
+      await user.type(screen.getByRole("searchbox", { name: "Search" }), "other");
+      await vi.waitFor(() => expect(searches).toEqual(["", "other"]));
+    });
   });
 });
