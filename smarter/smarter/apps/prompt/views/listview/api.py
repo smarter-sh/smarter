@@ -137,6 +137,10 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         class_name = f"{__name__}.{PromptListApiView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
+    def get(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """Return the same json as a POST, so that the list api can be browsed."""
+        return self.post(request, *args, **kwargs)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to retrieve a list of LLMClients based on ownership filters and pagination.
