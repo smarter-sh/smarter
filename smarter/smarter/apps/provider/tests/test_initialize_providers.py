@@ -193,6 +193,8 @@ class TestInitializeProviders(TestAccountMixin):
         models = ProviderModel.objects.filter(provider=provider)
         self.assertEqual(sorted(models.values_list("name", flat=True)), ["gemini-a", "model-b"])
         self.assertTrue(models.get(name="model-b").is_default)
+        # the count is of the models that were saved, not of all that the api listed.
+        self.assertIn("initialized 2 of the 6 provider models successfully", self.command.stdout.getvalue())
 
     def test_initialize_generic_provider_without_api_key(self):
         """

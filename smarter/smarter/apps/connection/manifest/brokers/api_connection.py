@@ -374,44 +374,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 thing=self.kind,
             )
 
-        # retrieve the apiKey Secret
-        api_key_name = str(to_snake_case(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
-        if api_key_name:
-            try:
-                secret = (
-                    Secret.objects.filter(name=api_key_name).with_read_permission_for(self.user_profile.user).first()
-                )
-                if not secret:
-                    raise Secret.DoesNotExist()
-                config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id if secret else None  # type: ignore[assignment]
-            except Secret.DoesNotExist:
-                logger.warning(
-                    "%s.manifest_to_django_orm() api key Secret %s not found for user %s",
-                    self.formatted_class_name,
-                    api_key_name,
-                    self.user_profile.user.username,
-                )
-
-        # retrieve the proxyUsername Secret, if it exists
-        proxy_password_name = str(to_snake_case(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
-        if proxy_password_name:
-            try:
-                secret = (
-                    Secret.objects.filter(name=proxy_password_name)
-                    .with_read_permission_for(self.user_profile.user)
-                    .first()
-                )
-                if not secret:
-                    raise Secret.DoesNotExist()
-                config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id if secret else None  # type: ignore[assignment]
-            except Secret.DoesNotExist:
-                logger.warning(
-                    "%s.manifest_to_django_orm() proxy password Secret %s not found for user %s",
-                    self.formatted_class_name,
-                    proxy_password_name,
-                    self.user_profile.user.username,
-                )
-
+        # spec.connection's apiKey and proxyPassword are the names of Secrets, which apply() and
+        # connection resolve with api_key_secret and proxy_password_secret.
         return {**metadata, **config_dump}
 
     @property
@@ -448,6 +412,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 if self.manifest and self.manifest.spec
                 else self.connection.api_key.name if self.connection and self.connection.api_key else None
             )
+            if not name:
+                # an ApiConnection need not have an api key, e.g. with authMethod none.
+                return None
             if self.user_profile:
                 self._api_key_secret = (
                     Secret.objects.filter(name=name).with_read_permission_for(self.user_profile.user).first()
@@ -500,6 +467,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
+            if not name:
+                # a connection need not use a proxy.
+                return None
             if self.user_profile:
                 self._proxy_password_secret = (
                     Secret.objects.filter(name=name).with_read_permission_for(self.user_profile.user).first()

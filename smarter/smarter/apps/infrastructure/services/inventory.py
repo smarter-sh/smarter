@@ -191,7 +191,7 @@ def reconcile(service: KubernetesService, resource_type: str, resources: list[Di
         row = active.get(name)
         if row is None:
             signal_args = {"resource_type": resource_type, "resource_name": name, "billable": resource.billable}
-            service.created_resource(signal_args, resource_id=resource.resource_id or None)
+            service.created_resource(signal_args, resource_id=resource.resource_id or None, reconciled=True)
             created += 1
         elif resource.resource_id and row.resource_id != resource.resource_id:
             # e.g. an Ingress that the service recorded by name, which now has its load balancer.
@@ -199,7 +199,14 @@ def reconcile(service: KubernetesService, resource_type: str, resources: list[Di
             row.save(update_fields=["resource_id", "updated_at"])
     for name, row in active.items():
         if name not in found:
-            service.destroyed_resource(service.destroying_resource(resource_type, name, row.resource_id, row.billable))
+            # it is already gone, so nothing is "destroying" it: only its disappearance is recorded.
+            gone = {
+                "resource_type": resource_type,
+                "resource_name": name,
+                "resource_id": row.resource_id,
+                "billable": row.billable,
+            }
+            service.destroyed_resource(gone, reconciled=True)
             destroyed += 1
     return {"found": len(found), "created": created, "destroyed": destroyed}
 

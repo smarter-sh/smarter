@@ -4,6 +4,7 @@ from .aggregate_llmclient_history import aggregate_llmclient_history
 from .create_custom_domain_dns_record import create_custom_domain_dns_record
 from .create_llmclient_request import create_llmclient_request
 from .delete_default_api import delete_default_api
+from .delete_orphan_dns_records import delete_orphan_dns_records
 from .deploy_custom_api import deploy_custom_api
 from .deploy_default_api import deploy_default_api
 from .destroy_domain_a_record import destroy_domain_A_record
@@ -24,6 +25,7 @@ __all__ = [
     "create_llmclient_request",
     "create_custom_domain_dns_record",
     "delete_default_api",
+    "delete_orphan_dns_records",
     "deploy_custom_api",
     "deploy_default_api",
     "destroy_domain_A_record",
