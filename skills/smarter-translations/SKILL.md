@@ -91,5 +91,8 @@ gitignored and the Dockerfile compiles it.
 - `templates/account/email/welcome.html` (sent outside a request), the Keen demo bodies of
   `account/dashboard/activity.html`, `statements.html` and `logs.html`, unused templates, and the
   Django admin (which Django translates) are not marked.
-- Smarter Chat (`packages/smarter-chat`) is its own repository, and isn't translated here.
+- Smarter Chat (`packages/smarter-chat`) is its own repository, with its own gettext catalogs in the same
+  languages (`locale/`, `npm run i18n`, its `doc/adr/018-translations.md`). Its messages aren't extracted here.
+  A language added here must be added there too (`LANGUAGES` in its `scripts/i18n.mjs`).
+
 - Resource kind names inside sentences (`"Search %(objects)s"`, `"Clone %(kind)s"`) stay English.

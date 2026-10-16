@@ -23,6 +23,15 @@ consume it, and most of them pin a copy of its contracts. Their list is
    give the user the `git -C ../<repository> pull` to run. Don't run it
    yourself: the never-run-git-writes rule applies to every repository, not
    only this one.
+
+   **smarter-chat is the exception.** Its only checkout is the clone that
+   `make react-install` makes inside this repository's React workspace,
+   `smarter/react/packages/smarter-chat`. Read it, change it and test it
+   there, never in a `../smarter-chat`. It is still its own git repository:
+   run its git commands, and write its commits, with
+   `git -C smarter/react/packages/smarter-chat`, and never commit its files
+   from this repository.
+
 3. **The Smarter Project MCP server**, only when a checkout is missing or
    hopelessly stale, or to search the published docs by relevance:
    `skills/smarter-project-repositories/scripts/smarter-project-mcp.sh <tool> '<json>'`.
@@ -52,7 +61,9 @@ requests against the copy:
 | `smarter-vscode-yaml` | SAM schemas and examples, openapi.json                         | `contract/`, `contract/sam/`               |
 
 smarter-chat is the exception: this repository pushes to it. `make chat-contract`
-here copies the chat contract's JSON Schema into `../smarter-chat/contract/`.
+here copies the chat contract's JSON Schema into the workspace clone's
+`contract/` (`SMARTER_CHAT_DIR`, `smarter/react/packages/smarter-chat`), and
+regenerates its types.
 
 The source files are listed in each `sync-contracts.sh`. They're generated here
 by `make api-contract` and `make chat-contract` (see `smarter-api-contract`).

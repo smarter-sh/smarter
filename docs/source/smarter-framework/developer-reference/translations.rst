@@ -34,7 +34,14 @@ language's ``djangojs`` messages, and defines ``window.django.gettext()``, ``nge
 ``pgettext()``, ``interpolate()`` and the global functions of the same names. In tests and in
 Storybook there is no catalog, and ``@smarter/common`` falls back to the English source text.
 
+:doc:`Smarter Chat <../smarter-chat>`, the LLMClient prompt engineering workbench, is its own npm package,
+which also runs on websites that Django didn't render, so it has its own catalogs, in the same
+format and the same languages, in the smarter-chat repository. It follows the console's language
+through the ``<html lang>`` attribute of ``base.html``. See
+:doc:`Developing Smarter Chat <../smarter-chat/development>`.
+
 The language menu, in the user menu of the console's navbar, lists each language in its own name,
+
 and posts the choice to Django's ``set_language`` view at ``/i18n/setlang/``. It is shown only when
 ``settings.LANGUAGES`` has more than one language.
 

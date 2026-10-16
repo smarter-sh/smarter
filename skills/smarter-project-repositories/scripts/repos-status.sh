@@ -21,6 +21,9 @@ fi
 printf "%-24s %-12s %-8s %-11s %s\n" REPOSITORY BRANCH CHANGES COMMITTED REMOTE
 for repository in "${REPOSITORIES[@]}"; do
   dir="$PROJECT_DIR/$repository"
+  # smarter-chat's checkout is the clone in this repository's React workspace (make react-install).
+  [ "$repository" = smarter-chat ] && dir="$ROOT/smarter/react/packages/smarter-chat"
+
   if ! git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then
     printf "%-24s %s\n" "$repository" "no checkout at $dir"
     continue

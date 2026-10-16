@@ -148,6 +148,10 @@ The element's attributes, the script tag's ``data-`` attributes, and the propert
    * - ``debug``
      - ``false``
      - Log to the browser console.
+   * - ``language``
+     - the page's
+     - The language of the chat's own text: ``en``, ``es`` or ``fr``, or a regional variant of one,
+       e.g. ``es-MX``. By default, the page's ``<html lang>``, or else the browser's language.
    * - ``target``
      -
      - The script tag and ``window.SmarterChatConfig`` only: the css selector of an element in which
@@ -257,6 +261,12 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
    * - ``debugMode``
      - ``false``
      - Log to the browser console. The LLMClient's configuration can also turn it on.
+   * - ``language``
+     - ``null``
+     - The language of the chat's own text: ``en``, ``es`` or ``fr``, or a regional variant of one,
+       e.g. ``es-MX``. By default, the page's ``<html lang>``, or else the browser's language. See
+       :doc:`Features <features>`.
+
    * - ``cookieDomain``
      - ``""``
      - The domain whose cookies the chat reads. Empty means the page's own domain. The chat reads a
