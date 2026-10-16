@@ -44,8 +44,22 @@ class TestInitializePlatform(CommandTestBase):
                 raise RuntimeError(name)
 
         with patch(f"{MODULE}.call_command", side_effect=call), patch(f"{MODULE}.logger") as logger:
-            self.run_command("initialize_platform", password="pw")
+            with self.assertRaises(SystemExit):
+                self.run_command("initialize_platform", password="pw")
         self.assertGreaterEqual(logger.error.call_count, 10)
+
+    def test_extension_failure_is_fatal(self):
+        """Test that a failure of add_builtin_extensions lets the remaining steps run, then exits with code 1."""
+
+        def call(name, **kwargs):
+            if name == "add_builtin_extensions":
+                raise SystemExit(1)
+
+        with patch(f"{MODULE}.call_command", side_effect=call) as called:
+            with self.assertRaises(SystemExit) as raised:
+                self.run_command("initialize_platform", password="pw")
+        self.assertEqual(raised.exception.code, 1)
+        self.assertEqual(called.call_args_list[-1].args[0], "sync_infrastructure_inventory")
 
     def test_defaults(self):
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
