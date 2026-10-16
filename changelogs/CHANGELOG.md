@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.28.1](https://github.com/smarter-sh/smarter/compare/v0.28.0...v0.28.1) (2026-10-16)
+
+### Bug Fixes
+
+* fail init on extension errors, redact logs, sweep orphan DNS ([1f7ec8a](https://github.com/smarter-sh/smarter/commit/1f7ec8ac60e0788db71c5fedd12c967691ba8c65))
+
 ## [0.28.0](https://github.com/smarter-sh/smarter/compare/v0.27.1...v0.28.0) (2026-10-15)
 
 ### Features
