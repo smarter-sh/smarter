@@ -1,0 +1,30 @@
+<section id="infra-deploy" data-transition="fade" style="background:#F6F4EE;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1F5F66">For infrastructure</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:400;line-height:1.1;color:#14213D">Laptop to Kubernetes, same images</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:20px;align-items:center">
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:10px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<h3 style="font-size:32px;font-weight:700;color:#14213D">Docker Compose</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Evaluation and development on one machine</p>
+</div>
+<x-shape kind="arrow-right" style="background:#1F5F66;width:56px;height:32px"></x-shape>
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:10px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<h3 style="font-size:32px;font-weight:700;color:#14213D">Helm chart</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">Production on Kubernetes, published on Artifact Hub</p>
+</div>
+<x-shape kind="arrow-right" style="background:#1F5F66;width:56px;height:32px"></x-shape>
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:10px;background:#FDFCF9;border:1px solid #DDD8CC;border-radius:16px;padding:36px">
+<h3 style="font-size:32px;font-weight:700;color:#14213D">Terraform modules</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5568">AWS landing zone: EKS, Route 53, ACM, S3, SES</p>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 64px">
+<p style="font-size:28px;line-height:1.4;color:#14213D;border-left:6px solid #1F5F66;padding:4px 0px 4px 24px">Horizontal autoscaling of app servers and Celery workers</p>
+<p style="font-size:28px;line-height:1.4;color:#14213D;border-left:6px solid #1F5F66;padding:4px 0px 4px 24px">Runs on spot-priced compute</p>
+<p style="font-size:28px;line-height:1.4;color:#14213D;border-left:6px solid #1F5F66;padding:4px 0px 4px 24px">Alpha, beta, next and prod environments in one installation</p>
+<p style="font-size:28px;line-height:1.4;color:#14213D;border-left:6px solid #1F5F66;padding:4px 0px 4px 24px">No managed-service dependency; installs in your existing VPC</p>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;flex-direction:row;justify-content:space-between"><p style="font-size:24px;color:#4A5568">Smarter for IT Leadership</p><p style="font-size:24px;color:#4A5568">10</p></div>
+<aside>About 2 minutes. For the head of infrastructure. The same container images run everywhere, from a laptop under Docker Compose to production Kubernetes under the official Helm chart. For AWS, the project publishes Terraform and Terragrunt modules that build the whole environment, including the EKS cluster, DNS, certificates, storage and email, with remote state in S3. Operationally: app servers and workers scale horizontally, compute can run on spot instances, and one installation separates alpha, beta, next and production environments with clean namespace and resource naming. Be candid that a production install requires real Kubernetes, Terraform and AWS skills; the documentation says so, and recommends a hosting partner for organizations without them.</aside>
+</section>

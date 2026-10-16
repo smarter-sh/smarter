@@ -1,0 +1,730 @@
+{
+  "schema": "smarter-presentation-digest/v1",
+  "audience": "IT leadership (VP and above) at large organizations: the CIO and the heads of custom programming, infrastructure and technical support",
+  "purpose": "Give the big technical picture of Smarter as a self-hosted control plane for AI resources, role by role",
+  "presenter": "Lawrence McDaniel",
+  "contact": "lpm0073@gmail.com",
+  "date": "2026-11",
+  "duration_minutes": 30,
+  "title": "Smarter for IT Leadership",
+  "sections": [
+    {
+      "description": "Opening: the AI sprawl problem in IT terms",
+      "starts_at": "cover"
+    },
+    {
+      "description": "The big picture: architecture and the declarative resource model",
+      "starts_at": "what-it-is"
+    },
+    {
+      "description": "For the CIO: one control plane, one cost model, no lock-in",
+      "starts_at": "cio"
+    },
+    {
+      "description": "For application development: less code to own, standard integration points",
+      "starts_at": "dev-build"
+    },
+    {
+      "description": "For infrastructure: deployment, security architecture and model hosting",
+      "starts_at": "infra-deploy"
+    },
+    {
+      "description": "For technical support: traceability, cost records and runtime diagnostics",
+      "starts_at": "support-observe"
+    },
+    {
+      "description": "Maturity, gaps to plan for, and a 90-day pilot",
+      "starts_at": "plan-for"
+    }
+  ],
+  "slides": [
+    {
+      "number": 1,
+      "id": "cover",
+      "section": "Opening: the AI sprawl problem in IT terms",
+      "eyebrow": "The Smarter Project · For IT leadership",
+      "title": "One control plane for enterprise AI",
+      "body": [
+        {
+          "type": "text",
+          "text": "A self-hosted, open-source platform for building, running and governing AI applications as declared, auditable resources."
+        },
+        {
+          "type": "text",
+          "text": "Lawrence McDaniel · November 2026"
+        }
+      ],
+      "notes": "About 1 minute. Set expectations: this is the big-picture technical view, organized around the four people in the room: the CIO, the head of application development, the head of infrastructure, and the head of technical support. Each gets a section. We’ll start with the problem in IT terms, then the architecture, then each role, and finish with what is still missing and a 90-day pilot."
+    },
+    {
+      "number": 2,
+      "id": "it-problem",
+      "section": "Opening: the AI sprawl problem in IT terms",
+      "eyebrow": "The problem",
+      "title": "AI sprawl is now an IT problem",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Keys everywhere"
+        },
+        {
+          "type": "text",
+          "text": "Provider API keys copied into apps, laptops and CI pipelines, with no central rotation or revocation."
+        },
+        {
+          "type": "heading",
+          "text": "A stack per team"
+        },
+        {
+          "type": "text",
+          "text": "Each team builds its own retrieval, agent and tool-calling code, with its own bugs and its own security review."
+        },
+        {
+          "type": "heading",
+          "text": "No cost attribution"
+        },
+        {
+          "type": "text",
+          "text": "Token spend lands on one vendor invoice, with no breakdown by user, team or application, and no hard limits."
+        },
+        {
+          "type": "heading",
+          "text": "No audit trail"
+        },
+        {
+          "type": "text",
+          "text": "Nobody can reconstruct what a model was sent, which tools it called, or what it returned."
+        }
+      ],
+      "notes": "About 2 minutes. Describe the pattern most IT organizations are living through. AI adoption started bottom-up: individual teams got API keys and built what they needed. The result looks like the early days of cloud before landing zones: credentials scattered, duplicated platforms, a cost line nobody can break down, and nothing an auditor can follow. Ask the room which of the four they recognize. Usually it is all four."
+    },
+    {
+      "number": 3,
+      "id": "what-it-is",
+      "section": "The big picture: architecture and the declarative resource model",
+      "eyebrow": "Smarter, in one sentence",
+      "title": "A self-hosted control plane where every AI capability, from a model key to a guardrail, is a declared resource with an owner, a budget and an audit trail.",
+      "notes": "About 1 minute. If they remember one sentence, it should be this one. The comparison that lands with IT audiences: Smarter does for AI what Kubernetes did for compute. You declare the desired state of a resource in a manifest, the platform reconciles it, and everything it runs is inventoried and governed. The business sees an AI resource management system; IT sees a control plane."
+    },
+    {
+      "number": 4,
+      "id": "architecture",
+      "section": "The big picture: architecture and the declarative resource model",
+      "eyebrow": "The big picture",
+      "title": "Architecture at a glance",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Clients"
+        },
+        {
+          "type": "text",
+          "text": "Web console"
+        },
+        {
+          "type": "text",
+          "text": "CLI and VS Code"
+        },
+        {
+          "type": "text",
+          "text": "REST API (OpenAPI)"
+        },
+        {
+          "type": "text",
+          "text": "Python, Node.js, Go SDKs"
+        },
+        {
+          "type": "text",
+          "text": "Embedded chat"
+        },
+        {
+          "type": "text",
+          "text": "Existing provider SDKs"
+        },
+        {
+          "type": "heading",
+          "text": "Smarter platform"
+        },
+        {
+          "type": "text",
+          "text": "Access & governance · accounts, secrets, budgets, proxy"
+        },
+        {
+          "type": "text",
+          "text": "Model connectivity · providers, self-hosted, orchestration"
+        },
+        {
+          "type": "text",
+          "text": "Extensibility & trust · tools, MCP, RAG, guardrails"
+        },
+        {
+          "type": "text",
+          "text": "Conversation · prompts, history, journal"
+        },
+        {
+          "type": "text",
+          "text": "Django · Celery · MariaDB · Redis · Kubernetes"
+        },
+        {
+          "type": "heading",
+          "text": "AI models"
+        },
+        {
+          "type": "text",
+          "text": "OpenAI, Anthropic, Google, Meta, DeepSeek; self-hosted via vLLM or Ollama"
+        },
+        {
+          "type": "heading",
+          "text": "Your systems"
+        },
+        {
+          "type": "text",
+          "text": "SQL databases, REST APIs, MCP servers, web search, documents"
+        }
+      ],
+      "notes": "About 3 minutes. Walk left to right. On the left, every way people and programs reach Smarter: the web console, the CLI and VS Code extension, a REST API with a published OpenAPI document, SDKs in three languages, an embeddable React chat component, and, through the Proxy, the vendors’ own SDKs unchanged. In the middle, the platform, organized as four resource layers. Underneath it is a conventional, supportable stack: Django and Django REST Framework, Celery workers for asynchronous work, MariaDB, Redis, all containerized and run on Kubernetes. On the right, everything Smarter brokers access to: commercial model vendors, self-hosted open models, and your own systems. The architectural point: all traffic between people and models, and between models and your systems, passes through one governed layer."
+    },
+    {
+      "number": 5,
+      "id": "resource-model",
+      "section": "The big picture: architecture and the declarative resource model",
+      "eyebrow": "The big picture",
+      "title": "Everything is a declared resource",
+      "body": [
+        {
+          "type": "table",
+          "rows": [
+            ["Layer", "Resource kinds", "Typically owned by"],
+            ["Access & governance", "Account, User, Secret, Budget, Proxy, API key", "Infrastructure, security"],
+            [
+              "Model connectivity",
+              "Provider, LLMHost, LLMClient, Orchestrator, Custom Domain",
+              "Architecture, infrastructure"
+            ],
+            [
+              "Extensibility & trust",
+              "Plugin (API, SQL, web search, skill), Connection, MCPClient, Vectorstore, Guardrail",
+              "Development, security"
+            ],
+            ["Conversation", "Prompt: history, tool calls, guardrail results, cost", "Support, analysts"]
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Each resource has an owner and an account, is created from a manifest, and is managed through one API."
+        }
+      ],
+      "notes": "About 2 minutes. This is the idea behind the phrase “AI resources.” Every capability in Smarter is a typed resource, the way a Kubernetes cluster has Deployments, Services and Secrets. The layers matter for governance: Access and Governance resources set the boundaries; everything else operates inside them. And they map naturally onto your organization: infrastructure and security own the top layer, developers mostly work in the middle, and support and analysts work with the conversation records at the bottom. Because every Prompt links back through the guardrails, tools and model that produced it to the account and budget that authorized it, the whole stack is auditable end to end."
+    },
+    {
+      "number": 6,
+      "id": "manifest",
+      "section": "The big picture: architecture and the declarative resource model",
+      "eyebrow": "The big picture",
+      "title": "Infrastructure as code, for AI",
+      "body": [
+        {
+          "type": "code",
+          "text": "apiVersion: smarter.sh/v1\nkind: LLMClient\nmetadata:\n  name: hr_policy_assistant\nspec:\n  config:\n    prompt:\n      provider: openai\n      defaultModel: gpt-6-luna\n  plugins:\n    - hr_policy_search\n  guardrails:\n    - pii_redaction_input\n    - prompt_injection_llm_judge_input\n    - secrets_leak_output"
+        },
+        {
+          "type": "code",
+          "text": "$ smarter apply -f hr-assistant.yaml\n$ smarter deploy llmclient hr_policy_assistant"
+        },
+        {
+          "type": "text",
+          "text": "Desired state, not code: the platform does the rest."
+        },
+        {
+          "type": "text",
+          "text": "Validated against published JSON Schemas."
+        },
+        {
+          "type": "text",
+          "text": "Versioned in Git, reviewed in pull requests, applied from CI/CD."
+        },
+        {
+          "type": "text",
+          "text": "The same file works from the CLI, the API, VS Code or the console."
+        }
+      ],
+      "footnote": "Manifest abridged",
+      "notes": "About 2 minutes. This is the one slide with code, and it is deliberately short. It is an abridged but real-format manifest for an assistant: which model, which tool it may use, and which guardrails screen its input and output. Two commands create it and publish it. For IT, the significance is operational: AI applications become reviewable, diffable configuration that fits your existing change-management process, rather than bespoke code in every team’s repository. For the business, it means a trained analyst can read and change it. The manifest names the plugin and guardrails by reference; those are separate resources, often owned by different people."
+    },
+    {
+      "number": 7,
+      "id": "cio",
+      "section": "For the CIO: one control plane, one cost model, no lock-in",
+      "eyebrow": "For the CIO",
+      "title": "One platform instead of twenty pilots",
+      "body": [
+        {
+          "type": "text",
+          "text": "Vendor control"
+        },
+        {
+          "type": "text",
+          "text": "Provider keys live once, encrypted. Teams get revocable Smarter keys instead."
+        },
+        {
+          "type": "text",
+          "text": "Cost control"
+        },
+        {
+          "type": "text",
+          "text": "Every request is costed by user, account and application. Budgets in USD or tokens enforce hard stops."
+        },
+        {
+          "type": "text",
+          "text": "No lock-in"
+        },
+        {
+          "type": "text",
+          "text": "Five commercial vendors and self-hosted models behind one interface. Changing a model is a one-line change."
+        },
+        {
+          "type": "text",
+          "text": "Talent pipeline"
+        },
+        {
+          "type": "text",
+          "text": "The same platform teaches AI literacy, with 21 free course designs. The business builds; IT governs."
+        },
+        {
+          "type": "text",
+          "text": "Licensing"
+        },
+        {
+          "type": "text",
+          "text": "AGPL-3.0 open source. No license fees or seat counts."
+        }
+      ],
+      "notes": "About 2 minutes. Speak to the CIO’s portfolio view. Five things change. Vendor relationships are centralized: provider keys are stored once, in an encrypted vault, and teams use revocable Smarter keys through the Proxy, so rotating a vendor key happens in one place. Spend becomes attributable and capped. Vendor choice becomes reversible. The literacy curriculum turns the business into a source of solutions rather than shadow IT. And there is no license line item; the costs are infrastructure and model usage. On AGPL: running Smarter unmodified carries no source-sharing obligation. If you modify it and let people use the modified version over a network, those users are entitled to your modified source. Have your counsel confirm for your situation."
+    },
+    {
+      "number": 8,
+      "id": "dev-build",
+      "section": "For application development: less code to own, standard integration points",
+      "eyebrow": "For application development",
+      "title": "Less undifferentiated code to own",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Declared in a manifest, no code"
+        },
+        {
+          "type": "bullet",
+          "text": "Retrieval over your own documents (RAG)"
+        },
+        {
+          "type": "bullet",
+          "text": "SQL and REST tools, with credentials from Secrets"
+        },
+        {
+          "type": "bullet",
+          "text": "Any MCP server’s tools; web search; skills"
+        },
+        {
+          "type": "bullet",
+          "text": "Input and output guardrails"
+        },
+        {
+          "type": "bullet",
+          "text": "Multi-agent orchestration: sequential, parallel, supervisor/worker, routing, voting"
+        },
+        {
+          "type": "heading",
+          "text": "Where your developers go"
+        },
+        {
+          "type": "bullet",
+          "text": "Proprietary integrations"
+        },
+        {
+          "type": "bullet",
+          "text": "Domain-specific user experiences"
+        },
+        {
+          "type": "bullet",
+          "text": "Extensions packaged and shared across teams"
+        },
+        {
+          "type": "bullet",
+          "text": "Reviewing manifests the business writes"
+        }
+      ],
+      "notes": "About 2 minutes. For the head of custom programming. Most of what teams hand-build today for AI applications is the same plumbing: retrieval, tool calling, credential handling, safety filters and agent coordination. In Smarter that plumbing is platform functionality, configured rather than coded, and tested once for everyone. Your developers’ time moves to the work that is specific to your organization, and to reviewing manifests written by trained business staff, much as they review pull requests today. Note that the platform executes no model-generated code: tools are declared, typed calls, which is also a security property."
+    },
+    {
+      "number": 9,
+      "id": "dev-integrate",
+      "section": "For application development: less code to own, standard integration points",
+      "eyebrow": "For application development",
+      "title": "Standard integration points",
+      "body": [
+        {
+          "type": "heading",
+          "text": "REST API"
+        },
+        {
+          "type": "text",
+          "text": "Every operation, with a published OpenAPI document and JSON Schemas."
+        },
+        {
+          "type": "heading",
+          "text": "SDKs and CLI"
+        },
+        {
+          "type": "text",
+          "text": "Python, Node.js and Go SDKs; a CLI; a VS Code extension that validates manifests."
+        },
+        {
+          "type": "heading",
+          "text": "Drop-in proxy"
+        },
+        {
+          "type": "text",
+          "text": "Existing OpenAI, Anthropic or Gemini SDK code works unchanged: swap the base URL and key."
+        },
+        {
+          "type": "heading",
+          "text": "Embeddable chat"
+        },
+        {
+          "type": "text",
+          "text": "A React component and NPM package put an assistant on any web page."
+        },
+        {
+          "type": "heading",
+          "text": "Model Context Protocol"
+        },
+        {
+          "type": "text",
+          "text": "Consume any MCP server’s tools, under the same governance."
+        },
+        {
+          "type": "heading",
+          "text": "Open framework"
+        },
+        {
+          "type": "text",
+          "text": "Django, DRF and Pydantic, the same framework Smarter is built on, for extensions."
+        }
+      ],
+      "notes": "About 2 minutes. The message for development leads: nothing here is proprietary glue. The REST API is fully documented in OpenAPI, so it fits API gateways and client generators. The Proxy is the fastest win: applications already written against a vendor’s SDK keep working, but their keys, spending and logs move under governance by changing two configuration values. MCP support means tools your teams or vendors already expose over the Model Context Protocol plug straight in. And when you do need custom code, it is mainstream Python on Django, not a niche runtime."
+    },
+    {
+      "number": 10,
+      "id": "infra-deploy",
+      "section": "For infrastructure: deployment, security architecture and model hosting",
+      "eyebrow": "For infrastructure",
+      "title": "Laptop to Kubernetes, same images",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Docker Compose"
+        },
+        {
+          "type": "text",
+          "text": "Evaluation and development on one machine"
+        },
+        {
+          "type": "heading",
+          "text": "Helm chart"
+        },
+        {
+          "type": "text",
+          "text": "Production on Kubernetes, published on Artifact Hub"
+        },
+        {
+          "type": "heading",
+          "text": "Terraform modules"
+        },
+        {
+          "type": "text",
+          "text": "AWS landing zone: EKS, Route 53, ACM, S3, SES"
+        },
+        {
+          "type": "text",
+          "text": "Horizontal autoscaling of app servers and Celery workers"
+        },
+        {
+          "type": "text",
+          "text": "Runs on spot-priced compute"
+        },
+        {
+          "type": "text",
+          "text": "Alpha, beta, next and prod environments in one installation"
+        },
+        {
+          "type": "text",
+          "text": "No managed-service dependency; installs in your existing VPC"
+        }
+      ],
+      "notes": "About 2 minutes. For the head of infrastructure. The same container images run everywhere, from a laptop under Docker Compose to production Kubernetes under the official Helm chart. For AWS, the project publishes Terraform and Terragrunt modules that build the whole environment, including the EKS cluster, DNS, certificates, storage and email, with remote state in S3. Operationally: app servers and workers scale horizontally, compute can run on spot instances, and one installation separates alpha, beta, next and production environments with clean namespace and resource naming. Be candid that a production install requires real Kubernetes, Terraform and AWS skills; the documentation says so, and recommends a hosting partner for organizations without them."
+    },
+    {
+      "number": 11,
+      "id": "infra-security",
+      "section": "For infrastructure: deployment, security architecture and model hosting",
+      "eyebrow": "For infrastructure",
+      "title": "Security architecture",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Network"
+        },
+        {
+          "type": "text",
+          "text": "Private subnets for data and compute. HTTPS-only ingress; no SSH needed on EKS. A DNS record and TLS certificate per host, never wildcards."
+        },
+        {
+          "type": "heading",
+          "text": "Credentials"
+        },
+        {
+          "type": "text",
+          "text": "Encrypted Secret vault. Models never receive credentials, and provider keys are never handed to teams."
+        },
+        {
+          "type": "heading",
+          "text": "Application"
+        },
+        {
+          "type": "text",
+          "text": "Guardrails for PII, secrets, prompt injection, jailbreaks and code injection. Rate limits per user and IP. No execution of model-generated code."
+        },
+        {
+          "type": "heading",
+          "text": "Audit"
+        },
+        {
+          "type": "text",
+          "text": "The Smarter Journal persists every API response. Every prompt traces back to its account and budget."
+        }
+      ],
+      "notes": "About 3 minutes. This slide will draw the most questions from security-minded attendees. Network: the reference deployment puts the database and compute in private subnets, exposes only HTTPS through the load balancer and ingress, and needs no SSH access to hosts. Each deployed assistant gets its own DNS record and certificate; Smarter deliberately avoids wildcard DNS to prevent subdomain takeover. Credentials: secrets are encrypted at rest and resolved server-side, so neither the model nor the end user ever sees them. Application: deterministic guardrails screen input and output; every API is rate limited (defaults 600 per minute per user, 120 per minute per anonymous IP); custom middleware blocks probing for sensitive files and floods of 404s; and tools are declared, typed calls rather than code execution. Audit: the Journal is designed for long-term, read-optimized storage of every API response. Note the boundaries too: Smarter relies on your cloud for firewalling, WAF, encryption of storage volumes and malware scanning."
+    },
+    {
+      "number": 12,
+      "id": "infra-models",
+      "section": "For infrastructure: deployment, security architecture and model hosting",
+      "eyebrow": "For infrastructure",
+      "title": "Commercial models, self-hosted models, or both",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Provider"
+        },
+        {
+          "type": "text",
+          "text": "OpenAI, Anthropic, Google, Meta and DeepSeek. Each provider’s models pass compatibility checks before use, and again periodically."
+        },
+        {
+          "type": "heading",
+          "text": "LLMHost"
+        },
+        {
+          "type": "text",
+          "text": "Your own vLLM or Ollama deployments as managed resources, with provenance, health checks, cost tracking and credentials from Secrets."
+        },
+        {
+          "type": "text",
+          "text": "Applications see one interface either way. Move a sensitive workload on-premises without changing the application."
+        }
+      ],
+      "notes": "About 2 minutes. This answers the data-residency question before it is asked. Commercial vendors are onboarded through a Provider resource, and their models are verified against Smarter’s feature set before teams can use them. For workloads that cannot leave your network, LLMHost registers open models you run yourself, on vLLM, Ollama or another inference stack, with the same governance: health monitoring, cost tracking and secrets handling. Because applications talk to an LLMClient rather than to a vendor, moving a workload between a commercial and a self-hosted model is a configuration change, not a rewrite. Mention that the Provider app’s self-onboarding features are still marked as under active development; the five established providers are stable."
+    },
+    {
+      "number": 13,
+      "id": "support-observe",
+      "section": "For technical support: traceability, cost records and runtime diagnostics",
+      "eyebrow": "For technical support",
+      "title": "Every answer is traceable",
+      "body": [
+        {
+          "type": "text",
+          "text": "Account and budget"
+        },
+        {
+          "type": "text",
+          "text": "Assistant"
+        },
+        {
+          "type": "text",
+          "text": "Guardrail checks"
+        },
+        {
+          "type": "text",
+          "text": "Tool calls"
+        },
+        {
+          "type": "text",
+          "text": "Model"
+        },
+        {
+          "type": "text",
+          "text": "Prompt record"
+        },
+        {
+          "type": "heading",
+          "text": "Cost records"
+        },
+        {
+          "type": "text",
+          "text": "Tokens, model, provider, user and session for every request, in SQL-queryable tables."
+        },
+        {
+          "type": "heading",
+          "text": "Runtime diagnostics"
+        },
+        {
+          "type": "text",
+          "text": "Turn on verbose logging for one subsystem from the admin console, with no restart."
+        },
+        {
+          "type": "heading",
+          "text": "Access hygiene"
+        },
+        {
+          "type": "text",
+          "text": "Per-user API keys you can revoke, with warnings when a key outlives its maximum age."
+        }
+      ],
+      "notes": "About 2 minutes. For the head of technical support. When a user reports that “the AI gave a wrong answer,” support today often has nothing to look at. In Smarter, the prompt record is the starting point of a trace: which assistant answered, which guardrails fired, which tools were called with what results, which model replied, and which account and budget authorized it. Cost accounting is stored per request in ordinary database tables, so chargeback reports are a SQL query. Logging verbosity for a specific subsystem can be switched on at runtime from the admin console. And because every user has their own API keys, a compromised or departing user’s access is revoked individually, without rotating anyone else’s."
+    },
+    {
+      "number": 14,
+      "id": "plan-for",
+      "section": "Maturity, gaps to plan for, and a 90-day pilot",
+      "eyebrow": "Due diligence",
+      "title": "Maturity, and the gaps to plan for",
+      "body": [
+        {
+          "type": "heading",
+          "text": "Where it stands"
+        },
+        {
+          "type": "bullet",
+          "text": "Open source since 2024; release v0.29, pre-1.0"
+        },
+        {
+          "type": "bullet",
+          "text": "Semantic-versioned releases and changelogs"
+        },
+        {
+          "type": "bullet",
+          "text": "Automated tests in CI, with published coverage"
+        },
+        {
+          "type": "bullet",
+          "text": "Container images patched at least monthly"
+        },
+        {
+          "type": "bullet",
+          "text": "Full documentation at docs.smarter.sh"
+        },
+        {
+          "type": "bullet",
+          "text": "In teaching use at UBC"
+        },
+        {
+          "type": "heading",
+          "text": "Plan for"
+        },
+        {
+          "type": "bullet",
+          "text": "Enterprise SSO: Google and GitHub sign-in today; SAML or OIDC needs integration work"
+        },
+        {
+          "type": "bullet",
+          "text": "Cloud: automated provisioning is AWS only"
+        },
+        {
+          "type": "bullet",
+          "text": "Support: community and partners; no vendor SLA"
+        },
+        {
+          "type": "bullet",
+          "text": "Perimeter: WAF, storage encryption and malware scanning come from your cloud"
+        }
+      ],
+      "notes": "About 2 minutes. Say this before they ask; it builds credibility. Smarter is a real, actively maintained platform, but it is pre-1.0 and community supported. Four things an enterprise should plan for. First, identity: sign-in today is Google or GitHub OAuth plus local accounts. Single sign-on with Okta, Entra ID or another SAML or OIDC provider requires integration work; the authentication backends are configurable, so it is an engineering task rather than a redesign. Second, the Terraform automation targets AWS; on another cloud you supply Kubernetes, DNS and certificates yourself. Third, there is no vendor support desk or SLA; support comes from GitHub, the documentation and hosting partners. Fourth, Smarter relies on your cloud for perimeter controls such as WAF, volume encryption and malware scanning."
+    },
+    {
+      "number": 15,
+      "id": "pilot",
+      "section": "Maturity, gaps to plan for, and a 90-day pilot",
+      "eyebrow": "Getting started",
+      "title": "A 90-day technical pilot",
+      "body": [
+        {
+          "type": "text",
+          "text": "[Weeks 1–2]"
+        },
+        {
+          "type": "heading",
+          "text": "Stand up"
+        },
+        {
+          "type": "text",
+          "text": "Non-production install with Helm on an existing cluster. Route one provider through the Proxy."
+        },
+        {
+          "type": "text",
+          "text": "[Weeks 3–8]"
+        },
+        {
+          "type": "heading",
+          "text": "Build"
+        },
+        {
+          "type": "text",
+          "text": "A literacy cohort delivers [1–2] business use cases, with one read-only data connection."
+        },
+        {
+          "type": "text",
+          "text": "[Weeks 9–11]"
+        },
+        {
+          "type": "heading",
+          "text": "Assess"
+        },
+        {
+          "type": "text",
+          "text": "Security review against your controls. Cost, usage and audit reports from real traffic."
+        },
+        {
+          "type": "text",
+          "text": "[Week 12]"
+        },
+        {
+          "type": "heading",
+          "text": "Decide"
+        },
+        {
+          "type": "text",
+          "text": "Production architecture, SSO approach and support model."
+        }
+      ],
+      "notes": "About 2 minutes. Each of the four roles has a job in the pilot. Infrastructure stands it up and owns the security review. Application development reviews the manifests and builds the data connection. Technical support uses the prompt records and cost data during the build phase, so it has an informed view by week 12. The CIO gets a decision based on the organization’s own traffic, costs and audit records rather than a vendor’s projections. Routing one existing application through the Proxy in week one is a quick, low-risk way to see cost attribution working before anything new is built. Adjust the timings to the organization."
+    },
+    {
+      "number": 16,
+      "id": "close",
+      "section": "Maturity, gaps to plan for, and a 90-day pilot",
+      "title": "One control plane for every AI resource",
+      "body": [
+        {
+          "type": "text",
+          "text": "smarter.sh · docs.smarter.sh · github.com/smarter-sh"
+        },
+        {
+          "type": "text",
+          "text": "Lawrence McDaniel · lpm0073@gmail.com"
+        }
+      ],
+      "notes": "About 1 minute, then questions. Summarize: Smarter replaces a sprawl of keys, one-off stacks and invisible spend with one self-hosted control plane, where every AI capability is a declared, owned, budgeted and audited resource. It fits how IT already works: infrastructure as code, Kubernetes, CI/CD and SQL reporting. Propose the 90-day pilot as the next step, and invite the security and identity questions."
+    }
+  ]
+}
