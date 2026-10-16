@@ -35,11 +35,23 @@ export const myResources = {
   llmclients_qty: 5,
   llmclients_url: "/workbench/",
   plugins_qty: 7,
-  plugins_url: "/plugin/",
-  connections_qty: 3,
-  connections_url: "/connection/",
+  plugins_url: "/llm-tools/",
+  mcpclients_qty: 3,
+  mcpclients_url: "/mcpclient/",
   providers_qty: 4,
   providers_url: "/provider/",
+  guardrails_qty: 2,
+  guardrails_url: "/guardrail/",
+  secrets_qty: 6,
+  secrets_url: "/secret/",
+  vectorstores_qty: 1,
+  vectorstores_url: "/vectorstore/" as string | null,
+  custom_domains_qty: 0,
+  custom_domains_url: "/llmclient/custom-domains/",
+  llmhosts_qty: 0,
+  llmhosts_url: "/llmhost/",
+  extensions_qty: 3,
+  extensions_url: "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html",
 };
 
 export const serviceHealth = {
@@ -59,8 +71,19 @@ export const serviceHealth = {
 };
 
 export const quickActions = [
-  { name: "New LLMClient", description: "Apply an LLMClient manifest", icon: "ki-rocket", url: "/workbench/" },
-  { name: "Documentation", description: "docs.smarter.sh", icon: "ki-book", url: "https://docs.smarter.sh/" },
+  {
+    name: "Prompt Workbench",
+    description: "Chat with and edit your LLM Clients",
+    icon: "ki-message-programming",
+    url: "/workbench/",
+  },
+  { name: "Plugins", description: "Tools and data for your LLM Clients", icon: "ki-cube-2", url: "/llm-tools/" },
+  { name: "Guardrails", description: "Screen prompts and responses", icon: "ki-shield-tick", url: "/guardrail/" },
+  { name: "Secrets", description: "Encrypted credentials", icon: "ki-lock", url: "/secret/" },
+  { name: "Budgets", description: "Spending limits", icon: "ki-dollar", url: "/budget/" },
+  { name: "Apply Manifest", description: "Drop in a YAML manifest", icon: "ki-file-up", url: "/dashboard/dropzone/" },
+  { name: "API Reference", description: "This platform's OpenAPI document", icon: "ki-code", url: "/docs/openapi/" },
+  { name: "Documentation", description: "docs.smarter.sh", icon: "ki-book-open", url: "https://docs.smarter.sh/" },
 ];
 
 export const gettingStarted = {
