@@ -40,6 +40,14 @@ and check the registry for updates.
 The Django admin console's **LLMTool** › **Extensions** page lists the same Extensions,
 read-only, with a **Manage in the console** link to each one's page.
 
+Every user, superuser or not, sees the Extensions that their account may use on the
+**Extensions** tab of the web console's **LLMTools** page (``/llm-tools/``), beside their own and
+shared Tool Plugins. The tab is read-only for everyone: it lists each Extension's name, slug,
+version, publisher, description, whether it is enabled, its trust badge and its source, so that
+a prompt engineer knows which slugs an LLMClient's ``spec.extensions`` may list. A disabled
+Extension is listed too, because an LLMClient may list it: its tools are offered once a
+superuser enables it.
+
 Installing from the Registry
 ----------------------------
 

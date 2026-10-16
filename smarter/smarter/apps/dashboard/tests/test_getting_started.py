@@ -6,7 +6,6 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.dashboard.views.views.api.my_resources import get_llmclients
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
@@ -45,13 +44,19 @@ class TestGettingStartedApiView(TestAccountMixin):
         self.assertNotIn("Create an API key", mortal_steps)
         self.assertIn("Create an LLM Client", mortal_steps)
 
+    def test_a_new_user_has_done_nothing(self):
+        """Test that the built-in and shared resources that every user can see don't count as the user's own."""
+        steps = self.steps(self.non_admin_user)
+        for name, step in steps.items():
+            with self.subTest(step=name):
+                self.assertFalse(step["done"])
+
     def test_steps_are_done(self):
         """Test that creating, then deploying, an LLM Client marks their steps done."""
         llmclient = LLMClient.objects.create(
             name=f"test_getting_started_{self.hash_suffix}", user_profile=self.non_admin_user_profile
         )
         self.addCleanup(llmclient.delete)
-        get_llmclients(invalidate=True, user_profile=self.non_admin_user_profile)
         steps = self.steps(self.non_admin_user)
         self.assertTrue(steps["Create an LLM Client"]["done"])
         self.assertFalse(steps["Deploy an LLM Client"]["done"])

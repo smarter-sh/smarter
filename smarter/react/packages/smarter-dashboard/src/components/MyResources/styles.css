@@ -1,0 +1,37 @@
+.my-resources-more {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-resources-more-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.6rem;
+  background-color: rgba(var(--bs-gray-100-rgb, 245, 248, 250), 0.7);
+  transition: background-color 150ms ease-in-out;
+}
+
+.my-resources-more-item:hover {
+  background-color: var(--bs-gray-200);
+}
+
+.my-resources-more-qty {
+  margin-top: 0.35rem;
+  color: var(--bs-gray-800);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.my-resources-more-label {
+  color: var(--bs-gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
