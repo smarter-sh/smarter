@@ -6,7 +6,16 @@
  * Superusers may delete a budget. Budgets are created and changed with Budget manifests.
  */
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { Loading, actionUrl, fetchDjangoUrl, formatDateTime } from "@smarter/common";
+import {
+  actionUrl,
+  fetchDjangoUrl,
+  formatDateTime,
+  gettext,
+  interpolate,
+  interpolateNodes,
+  Loading,
+  ngettext,
+} from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import { formatAmount } from "@/components/BudgetList/format";
@@ -34,13 +43,17 @@ function Usage({
   percent: number | null;
   unit: BudgetResourceStatus["unit"];
 }) {
-  if (!limit) return <span className="text-muted">No limit</span>;
+  if (!limit) return <span className="text-muted">{gettext("No limit")}</span>;
   const pct = Math.min(percent ?? 0, 100);
   const color = pct >= 100 ? "bg-danger" : pct >= 80 ? "bg-warning" : "bg-success";
   return (
     <div className="budget-usage">
       <div className="fs-8 mb-1">
-        {formatAmount(actual, unit)} of {formatAmount(limit, unit)} {percent !== null && `(${percent}%)`}
+        {interpolateNodes(gettext("%(amount)s of %(amount2)s"), {
+          amount: formatAmount(actual, unit),
+          amount2: formatAmount(limit, unit),
+        })}{" "}
+        {percent !== null && `(${percent}%)`}
       </div>
       <div className="progress h-6px">
         <div className={`progress-bar ${color}`} role="progressbar" style={{ width: `${pct}%` }} />
@@ -82,18 +95,18 @@ function ResourceStatusRow({
         </td>
         <td>
           {status.isExpired ? (
-            <span className="badge badge-light">Ended</span>
+            <span className="badge badge-light">{gettext("Ended")}</span>
           ) : status.isLocked ? (
             <span className="badge badge-danger" title={status.lockReason ?? ""}>
-              Blocked
+              {gettext("Blocked")}
             </span>
           ) : (
-            <span className="badge badge-light-success">Within budget</span>
+            <span className="badge badge-light-success">{gettext("Within budget")}</span>
           )}
         </td>
         <td className="text-end">
           <button type="button" className="btn btn-sm btn-light" onClick={() => setShowChart(!showChart)}>
-            <i className="bi bi-bar-chart" /> {showChart ? "Hide" : "Chart"}
+            <i className="bi bi-bar-chart" /> {showChart ? gettext("Hide") : gettext("Chart")}
           </button>
         </td>
       </tr>
@@ -134,7 +147,7 @@ const BudgetRow = React.memo(function BudgetRow({
           <button
             type="button"
             className="btn btn-icon btn-sm"
-            aria-label="Show resources"
+            aria-label={gettext("Show resources")}
             onClick={() => setExpanded(!expanded)}
           >
             <i className={`bi ${expanded ? "bi-chevron-down" : "bi-chevron-right"}`} />
@@ -142,21 +155,23 @@ const BudgetRow = React.memo(function BudgetRow({
           <a href={budget.manifestUrl}>{budget.name}</a>
           <div className="text-muted fs-8">{budget.description}</div>
         </td>
-        <td>{limits.length ? limits.join(", ") : "No limit"}</td>
-        <td>{budget.action === "block" ? "Block" : "Warn"}</td>
+        <td>{limits.length ? limits.join(", ") : gettext("No limit")}</td>
+        <td>{budget.action === "block" ? gettext("Block") : gettext("Warn")}</td>
         <td>{budget.resources}</td>
         <td>
           {budget.locked > 0 ? (
-            <span className="badge badge-danger">{budget.locked} blocked</span>
+            <span className="badge badge-danger">
+              {interpolateNodes(gettext("%(locked)s blocked"), { locked: budget.locked })}
+            </span>
           ) : (
-            <span className="text-muted">None</span>
+            <span className="text-muted">{gettext("None")}</span>
           )}
         </td>
         <td className="d-none d-lg-table-cell">{formatDateTime(budget.updatedAt, "relative", budget.createdAt)}</td>
         <td className="text-end">
           {isSuperuser && (
             <button type="button" className="btn btn-sm btn-light-danger" onClick={() => onDelete(budget)}>
-              <i className="bi bi-trash" /> Delete
+              <i className="bi bi-trash" /> {gettext("Delete")}
             </button>
           )}
         </td>
@@ -165,15 +180,17 @@ const BudgetRow = React.memo(function BudgetRow({
         <tr className="budget-resources">
           <td colSpan={7}>
             {budget.resourceStatus.length === 0 ? (
-              <div className="text-muted p-3">This budget is not attached to any resource that you may see.</div>
+              <div className="text-muted p-3">
+                {gettext("This budget is not attached to any resource that you may see.")}
+              </div>
             ) : (
               <table className="table table-sm align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>Resource</th>
-                    <th>This {budget.period}</th>
-                    <th>Total</th>
-                    <th>Status</th>
+                    <th>{gettext("Resource")}</th>
+                    <th>{interpolateNodes(gettext("This %(period)s"), { period: budget.period })}</th>
+                    <th>{gettext("Total")}</th>
+                    <th>{gettext("Status")}</th>
                     <th />
                   </tr>
                 </thead>
@@ -198,7 +215,8 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
   const load = useCallback(() => {
     fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, JSON.stringify({}))
       .then(async (response) => {
-        if (!response.ok) throw new Error(`Failed to load budgets (${response.status}).`);
+        if (!response.ok)
+          throw new Error(interpolate(gettext("Failed to load budgets (%(status)s)."), { status: response.status }));
         setData((await response.json()) as BudgetListResponse);
         setErrMessage("");
       })
@@ -216,7 +234,14 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
     (budget: Budget) => {
       if (
         !window.confirm(
-          `Delete the budget ${budget.name}? It will no longer be enforced on its ${budget.resources} resources.`,
+          interpolate(
+            ngettext(
+              "Delete the budget %(name)s? It will no longer be enforced on its %(count)s resource.",
+              "Delete the budget %(name)s? It will no longer be enforced on its %(count)s resources.",
+              budget.resources,
+            ),
+            { name: budget.name, count: budget.resources },
+          ),
         )
       )
         return;
@@ -224,7 +249,10 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
         .then(async (response) => {
           if (!response.ok) {
             const body = await response.json().catch(() => null);
-            throw new Error(body?.error || `Failed to delete the budget (${response.status}).`);
+            throw new Error(
+              body?.error ||
+                interpolate(gettext("Failed to delete the budget (%(status)s)."), { status: response.status }),
+            );
           }
           load();
         })
@@ -245,8 +273,8 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
         {data && data.objects.length === 0 && (
           <div className="text-muted p-4">
             {data.isSuperuser
-              ? "There are no budgets. Create one with a Budget manifest: smarter apply -f budget.yaml"
-              : "No budgets apply to you, or to your resources."}
+              ? gettext("There are no budgets. Create one with a Budget manifest: smarter apply -f budget.yaml")
+              : gettext("No budgets apply to you, or to your resources.")}
           </div>
         )}
         {data && data.objects.length > 0 && (
@@ -254,12 +282,12 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
             <table className="table table-striped table-hover align-middle border">
               <thead className="table-light">
                 <tr>
-                  <th>Name</th>
-                  <th>Limits</th>
-                  <th>Action</th>
-                  <th>Resources</th>
-                  <th>Blocked</th>
-                  <th className="d-none d-lg-table-cell">Updated</th>
+                  <th>{gettext("Name")}</th>
+                  <th>{gettext("Limits")}</th>
+                  <th>{gettext("Action")}</th>
+                  <th>{gettext("Resources")}</th>
+                  <th>{gettext("Blocked")}</th>
+                  <th className="d-none d-lg-table-cell">{gettext("Updated")}</th>
                   <th />
                 </tr>
               </thead>

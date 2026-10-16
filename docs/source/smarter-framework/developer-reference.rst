@@ -8,6 +8,7 @@ Developer Technical Reference
 
    developer-reference/agentic-development
    developer-reference/react-integration
+   developer-reference/translations
    developer-reference/smarter-journal
    developer-reference/smarter-enum
    developer-reference/smarter-mixins

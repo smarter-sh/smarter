@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 <div id="kt_app_footer" class="app-footer">
   <!--begin::Footer container-->
@@ -21,7 +21,7 @@
           href="https://smarter.sh/about/"
           target="_blank"
           class="menu-link px-2"
-          >About</a
+          >{% translate "About" %}</a
         >
       </li>
       <li class="menu-item">
@@ -29,7 +29,7 @@
           href="https://smarter.sh/contact/"
           target="_blank"
           class="menu-link px-2"
-          >Support</a
+          >{% translate "Support" %}</a
         >
       </li>
       <li class="menu-item">
@@ -37,7 +37,7 @@
           href="https://smarter.sh/privacy-policy/"
           target="_blank"
           class="menu-link px-2"
-          >Legal</a
+          >{% translate "Legal" %}</a
         >
       </li>
     </ul>

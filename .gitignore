@@ -118,3 +118,6 @@ node_modules
 /package-lock.json
 
 *.code-workspace
+
+# compiled gettext catalogs, built from the committed .po files by compilemessages
+smarter/smarter/locale/**/*.mo

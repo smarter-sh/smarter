@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { promptTemplates } from "@/components/Prompt/templates";
 import "@/components/TemplateSelector/styles.css";
+import { gettext } from "@smarter/common";
 
 interface TemplateSelectorProps {
   value: number;
@@ -11,7 +12,7 @@ function TemplateSelector({ value, onChange }: TemplateSelectorProps) {
   const [selectedValue, setSelectedValue] = useState(value);
   return (
     <select
-      aria-label="Prompt template"
+      aria-label={gettext("Prompt template")}
       className="form-select form-select-sm ms-auto"
       style={{ width: "220px" }}
       value={selectedValue}

@@ -4,7 +4,7 @@
  * Used to display a list of available vectorsearchs.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Vectorsearch, VectorsearchListViewProps, VectorsearchCardViewProps } from "@/lib/Types";
@@ -12,8 +12,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your Vectorsearch" },
-  { key: "shared" as TabKey, label: "Shared Vectorsearch" },
+  { key: "owned" as TabKey, label: gettext("Your Vectorsearch") },
+  { key: "shared" as TabKey, label: gettext("Shared Vectorsearch") },
 ];
 
 // Set the TabbedViewContext generic object type to Vectorsearch,
@@ -38,11 +38,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Vector Search";
+  const title = gettext("Vector Search");
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-vectorsearch.html";
-  const helpText =
-    "Smarter Vectorsearch provides a framework for executing RAG (Retrieval Augmented Generation) semantic search queries against locally-hosted vector databases managed by Smarter Vectorstore.";
+  const helpText = gettext(
+    "Smarter Vectorsearch provides a framework for executing RAG (Retrieval Augmented Generation) semantic search queries against locally-hosted vector databases managed by Smarter Vectorstore.",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="vectorsearch-list">

@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
   <div class="app-navbar-item ms-1 ms-lg-3">
     <!--begin::Menu toggle-->
@@ -55,7 +55,7 @@
               <span class="path10"></span>
             </i>
           </span>
-          <span class="menu-title">Light</span>
+          <span class="menu-title">{% translate "Light" %}</span>
         </a>
       </div>
       <!--end::Menu item-->
@@ -73,7 +73,7 @@
               <span class="path2"></span>
             </i>
           </span>
-          <span class="menu-title">Dark</span>
+          <span class="menu-title">{% translate "Dark" %}</span>
         </a>
       </div>
       <!--end::Menu item-->
@@ -93,7 +93,7 @@
               <span class="path4"></span>
             </i>
           </span>
-          <span class="menu-title">System</span>
+          <span class="menu-title">{% translate "System" %}</span>
         </a>
       </div>
       <!--end::Menu item-->

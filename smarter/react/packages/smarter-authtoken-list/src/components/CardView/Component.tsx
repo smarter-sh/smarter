@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: AuthTokenCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,17 +54,17 @@ function CardView({ sessionContext, objects, onRequery }: AuthTokenCardViewProps
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", authtoken.id, "number")}
-                    {renderDetailRow("Manifest URL", authtoken.manifestUrl, "url")}
-                    {renderDetailRow("Owner", authtoken.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", authtoken.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", authtoken.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", authtoken.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", authtoken.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", authtoken.version)}
-                    {renderDetailRow("Description", authtoken.description)}
-                    {renderDetailRow("Tags", authtoken.tags, "str[]")}
-                    {renderDetailRow("Annotations", authtoken.annotations, "json")}
+                    {renderDetailRow(gettext("ID"), authtoken.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), authtoken.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), authtoken.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), authtoken.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), authtoken.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), authtoken.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), authtoken.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), authtoken.version)}
+                    {renderDetailRow(gettext("Description"), authtoken.description)}
+                    {renderDetailRow(gettext("Tags"), authtoken.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), authtoken.annotations, "json")}
                   </tbody>
                 </table>
               </div>

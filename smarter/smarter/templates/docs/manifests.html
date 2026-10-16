@@ -1,5 +1,5 @@
 {% extends 'docs/base.html' %}
-{% load static custom_filters %}
+{% load static custom_filters i18n %}
 
 
 {% block docs_content %}
@@ -7,7 +7,7 @@
   <!--begin::Heading-->
   <div class="mb-10">
     <!--begin::Title-->
-    <h1 class="fs-2x text-gray-900 mb-6">Smarter Manifests</h1>
+    <h1 class="fs-2x text-gray-900 mb-6">{% translate "Smarter Manifests" %}</h1>
     <!--end::Title-->
   </div>
   <!--end::Heading-->
@@ -15,23 +15,23 @@
   <div class="row g-10 mb-15">
     <!--begin::heading-1-->
     <div id="heading-1">
-      <h3 class="mt-6 mb-6">A Human-to-Cloud Interface</h3>
-      <p>In a word, cloud is <strong>COMPLICATED</strong>. Add data science, artificial intelligence and your customer's
+      <h3 class="mt-6 mb-6">{% translate "A Human-to-Cloud Interface" %}</h3>
+      <p>{% blocktranslate trimmed %}In a word, cloud is <strong>COMPLICATED</strong>. Add data science, artificial intelligence and your customer's
         demands to that and, well, things get messy. Introduce Smarter Manifests: a better, simpler, cleaner way to
         manage your AI resources in the cloud. Smarter Manifests are very much inspired by Kubernetes manifests. In
         fact, we did everything in our power to make ours resemble theirs theirs in every way possible. Because, why
-        mess with perfection?
+        mess with perfection?{% endblocktranslate %}
       </p>
 
       <!--begin::Anatomy-->
-      <h4 class="mt-6 mb-6">Anatomy of a Manifest Document</h4>
+      <h4 class="mt-6 mb-6">{% translate "Anatomy of a Manifest Document" %}</h4>
       <p>
-        A Smarter Manifest is a <a href="https://en.wikipedia.org/wiki/YAML">YAML</a> document that describes a resource that makes up your AI solution. It has
+        {% blocktranslate trimmed %}A Smarter Manifest is a <a href="https://en.wikipedia.org/wiki/YAML">YAML</a> document that describes a resource that makes up your AI solution. It has
         four main parts: <code>apiVersion</code>, <code>kind</code>, <code>spec</code> and <code>status</code>.
         Each of these section plays a specific role in the lifecycle of your AI resources. The <code>apiVersion</code>
         identifies the Manifest document to the Smarter API. The <code>kind</code> identifies the type of resource
         being described. The <code>spec</code> section contains the configuration of the resource. And lastly, the <code>status</code>
-        section contains read-only data about the state of resource. Here is the layout of a generic Manifest:
+        section contains read-only data about the state of resource. Here is the layout of a generic Manifest:{% endblocktranslate %}
       </p>
       <!--begin::example-->
       <div class="smarter-static-page-block">
@@ -58,15 +58,15 @@ status:
       </div>
       <!--end::example-->
       <p>
-        You use the Smarter CLI to apply your Manifests. The Smarter CLI reads your Manifests, and then creates and
+        {% blocktranslate trimmed %}You use the Smarter CLI to apply your Manifests. The Smarter CLI reads your Manifests, and then creates and
         executes a work plan to create, update, or delete your AI resources, to synchronize the state of the resources
-        in your account with those of your Manifest(s). It's a simple and powerful way to manage your AI cloud resources.
+        in your account with those of your Manifest(s). It's a simple and powerful way to manage your AI cloud resources.{% endblocktranslate %}
       </p>
       <!--end::Anatomy-->
       <!--begin::Usage-->
-      <h4 class="mt-6 mb-6">Usage</h4>
+      <h4 class="mt-6 mb-6">{% translate "Usage" %}</h4>
       <p>
-        Here's an example of how you would apply a Manifest using the Smarter CLI: <code>smarter apply -f my-manifest.yaml</code>
+        {% blocktranslate %}Here's an example of how you would apply a Manifest using the Smarter CLI: <code>smarter apply -f my-manifest.yaml</code>{% endblocktranslate %}
       </p>
       <!--end::Usage-->
     </div>
@@ -74,17 +74,17 @@ status:
 
     <!--begin::heading-2-->
     <div id="heading-2">
-      <h2 class="mt-6 mb-6">Design, Train, Test, Deploy</h2>
-      <p>A Smarter Manifest describes, in a human-readle format, the resources that makeup your LLMClient solution. You
+      <h2 class="mt-6 mb-6">{% translate "Design, Train, Test, Deploy" %}</h2>
+      <p>{% blocktranslate trimmed %}A Smarter Manifest describes, in a human-readle format, the resources that makeup your LLMClient solution. You
         use manifests to creates, manage, deploy, and destroy your AI resources. Manifests are simple text files in YAML
         format. Start with an example manifest, here or from the Smarter CLI. Tweak it to suit your needs. Then use the
-        Smarter CLI to apply it. That's it! It doesn't get any simpler.</p>
+        Smarter CLI to apply it. That's it! It doesn't get any simpler.{% endblocktranslate %}</p>
     </div>
     <!--end::heading-2-->
     <!--begin::heading-3-->
     <div id="heading-3" class="row">
-      <h3 class="mt-6 mb-6">Example Manifests</h3>
-      <p>There are nearly two dozen kinds of Smarter resources.</p>
+      <h3 class="mt-6 mb-6">{% translate "Example Manifests" %}</h3>
+      <p>{% translate "There are nearly two dozen kinds of Smarter resources." %}</p>
       <!--begin::Manifests-->
       <div class="row">
         {% for manifest in manifests %}
@@ -104,16 +104,16 @@ status:
     <!--end::heading-3-->
     <!--begin::heading-4-->
     <div id="heading-2">
-      <h2 class="mt-6 mb-6">smarter.sh/v1 Specification</h2>
+      <h2 class="mt-6 mb-6">{% translate "smarter.sh/v1 Specification" %}</h2>
       <p>
-        We published technical specifications for all of our manifests, so that other platforms can adopt
+        {% blocktranslate trimmed %}We published technical specifications for all of our manifests, so that other platforms can adopt
         these, making your AI resources cross-platform compatible. Additionally, this opens up the potential
         for a marketplace of AI resources, where you can share your manifests with others, and where
-        third party developers can create exciting new value-added services for the Smarter platform.
+        third party developers can create exciting new value-added services for the Smarter platform.{% endblocktranslate %}
       </p>
       <div class="mb-3 d-flex justify-content-center">
         <a class="btn" href="/docs/json-schemas/" style="color: white; background-color: orange;">
-          Learn More
+          {% translate "Learn More" %}
         </a>
       </div>
     </div>

@@ -15,7 +15,7 @@
 import { useEffect, useRef, useState } from "react";
 import { load } from "js-yaml";
 
-import { fetchDjangoUrl } from "@smarter/common";
+import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
@@ -98,23 +98,23 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
 
   function validateManifest(manifest: Manifest) {
     if (!manifest || typeof manifest !== "object") {
-      throw new Error("Manifest is not a valid object");
+      throw new Error(gettext("Manifest is not a valid object"));
     }
 
     if (!manifest.metadata?.name) {
-      throw new Error("Missing metadata.name");
+      throw new Error(gettext("Missing metadata.name"));
     }
 
     if (!manifest.apiVersion) {
-      throw new Error("Missing apiVersion");
+      throw new Error(gettext("Missing apiVersion"));
     }
 
     if (!manifest.apiVersion.startsWith("smarter.sh/v")) {
-      throw new Error("Invalid apiVersion");
+      throw new Error(gettext("Invalid apiVersion"));
     }
 
     if (!manifest.kind) {
-      throw new Error("Missing kind");
+      throw new Error(gettext("Missing kind"));
     }
   }
 
@@ -130,7 +130,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(`Manifest apply failed (${response.status})`);
+      throw new Error(interpolate(gettext("Manifest apply failed (%(status)s)"), { status: response.status }));
     }
 
     return data;
@@ -145,11 +145,15 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
       validateManifest(manifest);
       const result = await applyManifest(manifest);
 
-      showModal("Manifest Applied", result, false);
+      showModal(gettext("Manifest Applied"), result, false);
     } catch (error) {
       console.error(loggerPrefix, error);
 
-      showModal("Manifest Apply Failed", error instanceof Error ? error.message : "Unknown error", true);
+      showModal(
+        gettext("Manifest Apply Failed"),
+        error instanceof Error ? error.message : gettext("Unknown error"),
+        true,
+      );
     } finally {
       setIsUploading(false);
     }
@@ -174,7 +178,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     try {
       if (file) await processFile(file);
     } catch (error) {
-      showModal("Error", error instanceof Error ? error.message : "Failed", true);
+      showModal(gettext("Error"), error instanceof Error ? error.message : gettext("Failed"), true);
     }
   };
 
@@ -182,19 +186,19 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     <section id="manifest-apply">
       <div className="app-content flex-column-fluid">
         <div className="app-container container-xxl">
-          <h3 className="pt-5">Apply Smarter YAML Manifest</h3>
+          <h3 className="pt-5">{gettext("Apply Smarter YAML Manifest")}</h3>
 
           <input
             ref={fileInputRef}
             type="file"
             accept=".yaml,.yml"
-            aria-label="Manifest file"
+            aria-label={gettext("Manifest file")}
             hidden
             onChange={handleFileSelected}
           />
 
           <button type="button" className="btn btn-sm btn-primary" disabled={isUploading} onClick={openFileDialog}>
-            {isUploading ? "Uploading..." : "File Open"}
+            {isUploading ? gettext("Uploading...") : gettext("File Open")}
           </button>
 
           <div
@@ -204,7 +208,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
-            <span>{isUploading ? "Uploading..." : "Drop Zone"}</span>
+            <span>{isUploading ? gettext("Uploading...") : gettext("Drop Zone")}</span>
           </div>
 
           <DropZoneModal {...modal} onClose={() => setModal((m) => ({ ...m, open: false }))} />

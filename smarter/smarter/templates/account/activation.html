@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
     {% block root %}
 			<!--begin::Page bg image-->
@@ -20,20 +20,20 @@
 							</div>
 							<!--end::Logo-->
 							<!--begin::Title-->
-							<h1 class="fw-bolder text-gray-900 mb-5">Activate Your Account.</h1>
+							<h1 class="fw-bolder text-gray-900 mb-5">{% translate "Activate Your Account." %}</h1>
 							<!--end::Title-->
 							<!--begin::Action-->
 							<div class="mb-11">
-								<p>Look for an email from us with instructions on how to activate your account.</p>
+								<p>{% translate "Look for an email from us with instructions on how to activate your account." %}</p>
 							</div>
 							<div class="fs-6 mb-8">
-								<span class="fw-semibold text-gray-500">Did’t receive an email? </span>
-								<a href="{{ account_activation.resend }}" class="link-primary fw-bold">Try Again</a>
+								<span class="fw-semibold text-gray-500">{% translate "Didn't receive an email?" %} </span>
+								<a href="{{ account_activation.resend }}" class="link-primary fw-bold">{% translate "Try Again" %}</a>
 							</div>
 							<!--end::Action-->
 							<!--begin::Link-->
 							<div class="mb-11">
-								<a href="{% url 'console_home' %}" class="btn btn-sm btn-primary">Skip for now</a>
+								<a href="{% url 'console_home' %}" class="btn btn-sm btn-primary">{% translate "Skip for now" %}</a>
 							</div>
 							<!--end::Link-->
 							<!--begin::Illustration-->

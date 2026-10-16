@@ -13,6 +13,7 @@
  *     <WhatsNew />
  */
 import "@/components/WhatsNew/styles.css";
+import { gettext } from "@smarter/common";
 
 interface Feature {
   name: string;
@@ -25,75 +26,75 @@ const DOCS_BASE_URL = "https://docs.smarter.sh";
 
 const FEATURES: Feature[] = [
   {
-    name: "Extensions",
+    name: gettext("Extensions"),
     version: "0.27",
-    description: "Install signed, third-party LLM tools from the Smarter Extension registry",
+    description: gettext("Install signed, third-party LLM tools from the Smarter Extension registry"),
     docsPath: "smarter-platform/extensions.html",
   },
   {
     name: "Smarter MCP Server",
     version: "0.24",
-    description: "Answers about The Smarter Project, from its own code and docs, for any MCP client",
+    description: gettext("Answers about The Smarter Project, from its own code and docs, for any MCP client"),
     docsPath: "smarter-platform/smarter-project-mcp-server.html",
   },
   {
     name: "OpenAPI",
     version: "0.22",
-    description: "An OpenAPI document and JSON Schemas for the Smarter api, served by every platform",
+    description: gettext("An OpenAPI document and JSON Schemas for the Smarter api, served by every platform"),
     docsPath: "smarter-framework/smarter-openapi.html",
   },
   {
-    name: "Themable Chat",
+    name: gettext("Themable Chat"),
     version: "0.21",
-    description: "Brand your LLMClient's chat with your own logo, colors, fonts and avatar",
+    description: gettext("Brand your LLMClient's chat with your own logo, colors, fonts and avatar"),
     docsPath: "smarter-resources/llmclient/styles.html",
   },
   {
     name: "ImageSearchPlugin",
     version: "0.19",
-    description: "Let LLMs find and show images from the web",
+    description: gettext("Let LLMs find and show images from the web"),
     docsPath: "smarter-resources/llmtool/plugin/image-search.html",
   },
   {
-    name: "Infrastructure Manager",
+    name: gettext("Infrastructure Manager"),
     version: "0.18",
-    description: "Manage and monitor your cloud infrastructure from the web console",
+    description: gettext("Manage and monitor your cloud infrastructure from the web console"),
     docsPath: "smarter-framework/technologies/infrastructure.html",
   },
   {
-    name: "Custom Domains",
+    name: gettext("Custom Domains"),
     version: "0.18",
-    description: "Serve LLMClients from your own branded domain, managed with a SAM manifest",
+    description: gettext("Serve LLMClients from your own branded domain, managed with a SAM manifest"),
     docsPath: "smarter-resources/smarter-custom-domain.html",
   },
   {
-    name: "Manifest Editor",
+    name: gettext("Manifest Editor"),
     version: "0.17",
-    description: "Edit, validate, save, clone and delete manifests in the web console",
+    description: gettext("Edit, validate, save, clone and delete manifests in the web console"),
     docsPath: "smarter-platform/smarter-web-console.html",
   },
   {
-    name: "Budgets",
+    name: gettext("Budgets"),
     version: "0.16",
-    description: "Enforce spending limits on any resource, with budget vs actual charts",
+    description: gettext("Enforce spending limits on any resource, with budget vs actual charts"),
     docsPath: "smarter-resources/smarter-budget.html",
   },
   {
     name: "LLMHosts",
     version: "0.16",
-    description: "Run open-weight LLMs on your own Kubernetes cluster",
+    description: gettext("Run open-weight LLMs on your own Kubernetes cluster"),
     docsPath: "smarter-resources/smarter-llmhost.html",
   },
   {
-    name: "Proxies",
+    name: gettext("Proxies"),
     version: "0.16",
-    description: "Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets",
+    description: gettext("Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets"),
     docsPath: "smarter-resources/smarter-proxy.html",
   },
   {
     name: "VectorStores",
     version: "0.16",
-    description: "Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone",
+    description: gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone"),
     docsPath: "smarter-resources/smarter-vectorstore.html",
   },
 ];
@@ -102,12 +103,12 @@ function WhatsNew() {
   return (
     <>
       {/* begin::What's New widget */}
-      <section id="whats-new" aria-label="What's New" className="card border-transparent h-xl-100">
+      <section id="whats-new" aria-label={gettext("What's New")} className="card border-transparent h-xl-100">
         {/* begin::Header */}
         <div className="card-header border-0 pt-5">
           <h3 className="card-title align-items-start flex-column">
-            <span className="card-label fw-bold text-gray-900">What's New</span>
-            <span className="text-muted mt-1 fw-semibold fs-7">Recently added Smarter features</span>
+            <span className="card-label fw-bold text-gray-900">{gettext("What's New")}</span>
+            <span className="text-muted mt-1 fw-semibold fs-7">{gettext("Recently added Smarter features")}</span>
           </h3>
         </div>
         {/* end::Header */}

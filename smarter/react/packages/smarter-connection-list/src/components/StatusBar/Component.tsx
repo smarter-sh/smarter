@@ -10,6 +10,7 @@
  *   <StatusBar connection={connection} />
  */
 import type { Connection } from "@/lib/Types";
+import { gettext } from "@smarter/common";
 interface StatusbarProps {
   connection: Connection;
 }
@@ -21,33 +22,35 @@ export const StatusBar = ({ connection }: StatusbarProps) => {
       <span
         className="status-icon"
         title={
-          connection.ready ? "Ready: Connection is ready to serve requests" : "Not ready: Connection is initializing"
+          connection.ready
+            ? gettext("Ready: Connection is ready to serve requests")
+            : gettext("Not ready: Connection is initializing")
         }
       >
         <i className={connection.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
       </span>
       {/* Deployed */}
-      <span className="status-icon" title="Deployed: Connection is deployed">
+      <span className="status-icon" title={gettext("Deployed: Connection is deployed")}>
         <i className="bi bi-cloud-check" />
       </span>
       {/* Authentication Required */}
-      <span className="status-icon" title="Authentication required to access this connection">
+      <span className="status-icon" title={gettext("Authentication required to access this connection")}>
         <i className="bi bi-lock" />
       </span>
       {/* DNS Verification */}
-      <span className="status-icon" title="DNS verified">
+      <span className="status-icon" title={gettext("DNS verified")}>
         <i className="bi bi-globe" />
       </span>
       {/* TLS Certificate */}
-      <span className="status-icon" title="TLS certificate issued">
+      <span className="status-icon" title={gettext("TLS certificate issued")}>
         <i className="bi bi-shield-lock" />
       </span>
       {/* Subdomain */}
-      <span className="status-icon" title={"Subdomain: example.com"}>
+      <span className="status-icon" title={gettext("Subdomain: example.com")}>
         <i className="bi bi-link-45deg text-info" />
       </span>
       {/* Custom Domain */}
-      <span className="status-icon" title={"Custom domain: example.com"}>
+      <span className="status-icon" title={gettext("Custom domain: example.com")}>
         <i className="bi bi-link text-info" />
       </span>
     </div>

@@ -56,11 +56,12 @@ import SelfHost from "@/components/SelfHost/Component";
 import Contribute from "@/components/Contribute/Component";
 import UserCharges from "@/components/TokenUsage";
 import BudgetVsActual from "@/components/BudgetVsActual";
+import { gettext } from "@smarter/common";
 
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
   return (
     <>
-      <section id="kt_app_content" aria-label="Dashboard" className="app-content flex-column-fluid">
+      <section id="kt_app_content" aria-label={gettext("Dashboard")} className="app-content flex-column-fluid">
         <div id="kt_app_content_container" className="app-container container-xxl">
           {appContext.budgetsApiUrl && (
             <BudgetAlerts sessionContext={appContext.sessionContext} apiUrl={appContext.budgetsApiUrl} />

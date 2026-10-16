@@ -19,7 +19,7 @@
  *     <ServiceHealth apiUrl="https://api.smarter.sh/health" />
  */
 import { useEffect, useState } from "react";
-import { Loading } from "@smarter/common";
+import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 import HealthRing from "@/components/ServiceHealth/HealthRing";
@@ -69,7 +69,9 @@ function CardHeader({ smarter_version, linux_distribution }: CardHeaderProps) {
       {/* begin::Title */}
       <div className="row">
         <div className="col-12 border-bottom border-gray-200 pb-2 mb-2">
-          <h4 className="card-title card-label fw-bold text-gray-800">Smarter v{smarter_version}</h4>
+          <h4 className="card-title card-label fw-bold text-gray-800">
+            {interpolateNodes(gettext("Smarter v%(smarter_version)s"), { smarter_version })}
+          </h4>
         </div>
         <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">{linux_distribution}</div>
       </div>
@@ -89,7 +91,12 @@ function PlatformVersions({ python_version, django_version, pydantic_version, dr
   return (
     <div className="row">
       <span className="col-12 text-gray-500 text-center mt-3 mb-0 pb-0 fs-9">
-        Python {python_version} / Django {django_version} / Pydantic {pydantic_version} / DRF {drf_version}
+        {interpolateNodes(
+          gettext(
+            "Python %(python_version)s / Django %(django_version)s / Pydantic %(pydantic_version)s / DRF %(drf_version)s",
+          ),
+          { python_version, django_version, pydantic_version, drf_version },
+        )}
       </span>
     </div>
   );
@@ -119,7 +126,7 @@ function ServiceHealthChecks({ healthChecks, healthScore }: ServiceHealthChecksP
           </div>
         </div>
         <div className="col-9">
-          <h4 className="fw-bold text-gray-800 mb-3">Backend Service Health</h4>
+          <h4 className="fw-bold text-gray-800 mb-3">{gettext("Backend Service Health")}</h4>
           <div className="d-flex d-grid gap-5">
             <div className="d-flex flex-column flex-shrink-0 me-4">
               {healthChecks.slice(0, half).map((check) => (
@@ -159,7 +166,7 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
         });
 
         if (!res.ok) {
-          throw new Error("Request failed: " + res.status);
+          throw new Error(interpolate(gettext("Request failed: %(status)s"), { status: res.status }));
         }
 
         const json = (await res.json()) as ServiceHealthData;
@@ -168,7 +175,7 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
       } catch (err) {
         console.error(loggerPrefix, "Error loading Service Health:", err);
         if (err instanceof DOMException && err.name === "AbortError") return;
-        setError(err instanceof Error ? err.message : "Unknown error");
+        setError(err instanceof Error ? err.message : gettext("Unknown error"));
       } finally {
         setLoading(false);
       }
@@ -183,17 +190,17 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   const python_version = data?.python_version ?? "0.0.0";
   const pydantic_version = data?.pydantic_version ?? "0.0.0";
   const drf_version = data?.drf_version ?? "0.0.0";
-  const linux_distribution = data?.linux_distribution ?? "Unknown Linux distribution";
+  const linux_distribution = data?.linux_distribution ?? gettext("Unknown Linux distribution");
   const health_checks = data?.health_checks ?? [];
   const health_score = data?.health_score ?? 0;
 
   if (loading) return <Loading />;
-  if (error) return <div>Failed to load service health: {error}</div>;
+  if (error) return <div>{interpolateNodes(gettext("Failed to load service health: %(error)s"), { error })}</div>;
 
   return (
     <>
       {/* begin::Col */}
-      <div id="service-health" aria-label="Service Health" className="col-xl-6 mb-xl-10">
+      <div id="service-health" aria-label={gettext("Service Health")} className="col-xl-6 mb-xl-10">
         <div className="card card-flush h-xl-100">
           <CardHeader smarter_version={smarter_version} linux_distribution={linux_distribution} />
           <div className="card-body py-6">

@@ -17,6 +17,7 @@ import { useLockedFields } from "@/lib/useLockedFields";
 import type { ManifestError } from "@/lib/validation";
 
 import "@/components/ManifestEditor/styles.css";
+import { gettext } from "@smarter/common";
 
 const THEME = "smarter-manifest";
 const BACKGROUND = "#333333";
@@ -66,7 +67,7 @@ function ManifestEditor({ value, errors, editor, onEditorDidMount, onChange }: M
       return {
         severity: monacoInstance.MarkerSeverity.Error,
         message: error.message,
-        source: error.source === "yaml" ? "YAML" : "Smarter manifest",
+        source: error.source === "yaml" ? "YAML" : gettext("Smarter manifest"),
         startLineNumber: position.lineNumber,
         startColumn: position.column,
         endLineNumber: position.lineNumber,
@@ -88,7 +89,7 @@ function ManifestEditor({ value, errors, editor, onEditorDidMount, onChange }: M
       <button
         type="button"
         className="btn btn-sm btn-icon manifest-editor-copy"
-        title="Copy: Copy this manifest to the clipboard"
+        title={gettext("Copy: Copy this manifest to the clipboard")}
         onClick={copy}
       >
         <i className={`ki-duotone ${copied ? "ki-copy-success" : "ki-copy"} fs-2`}>

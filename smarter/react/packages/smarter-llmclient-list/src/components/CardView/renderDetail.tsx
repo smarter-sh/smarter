@@ -20,7 +20,7 @@
 import type { ReactNode } from "react";
 import { loggerPrefix } from "@/const";
 
-import { formatDateTime } from "@smarter/common";
+import { formatDateTime, gettext } from "@smarter/common";
 
 export type DetailRowRenderer = (
   label: string,
@@ -48,7 +48,7 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
     return (
       <tr>
         {tdLabel}
-        <td className={dataClasses}>No value</td>
+        <td className={dataClasses}>{gettext("No value")}</td>
       </tr>
     );
   }
@@ -91,7 +91,7 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
   } else if (dataType === "number") {
     displayValue = Number(value);
   } else if (dataType === "bool") {
-    displayValue = value ? "Yes" : "No";
+    displayValue = value ? gettext("Yes") : gettext("No");
   } else if (dataType === "json") {
     let jsonString: string;
     if (typeof value === "object") {
