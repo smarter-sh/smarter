@@ -68,6 +68,10 @@ class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
         class_name = f"{__name__}.{CustomDomainListApiView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
+    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
+        """Return the same json as a POST, so that the list api can be browsed."""
+        return self.post(request, *args, **kwargs)
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[LLMClientCustomDomain]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
