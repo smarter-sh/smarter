@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.31.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.30.0...v0.31.0-alpha.1) (2026-10-16)
+
+### Features
+
+* **i18n:** translate the web console into brazilian portuguese ([ce98296](https://github.com/smarter-sh/smarter/commit/ce98296e18f70170402ef238dee3163700dee352))
+
 ## [0.30.0](https://github.com/smarter-sh/smarter/compare/v0.29.0...v0.30.0) (2026-10-16)
 
 ### Features
