@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: OrchestratorCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,21 +54,21 @@ function CardView({ sessionContext, objects, onRequery }: OrchestratorCardViewPr
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", orchestrator.id, "number")}
-                    {renderDetailRow("Strategy", orchestrator.strategy)}
-                    {renderDetailRow("Manifest URL", orchestrator.manifestUrl, "url")}
-                    {renderDetailRow("Base URL", orchestrator.baseUrl, "url")}
-                    {renderDetailRow("Owner", orchestrator.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", orchestrator.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", orchestrator.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", orchestrator.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", orchestrator.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", orchestrator.version)}
-                    {renderDetailRow("Description", orchestrator.description)}
-                    {renderDetailRow("Tags", orchestrator.tags, "str[]")}
-                    {renderDetailRow("Annotations", orchestrator.annotations, "json")}
-                    {renderDetailRow("Ready", orchestrator.ready, "bool")}
-                    {renderDetailRow("RFC 1034 Compliant Name", orchestrator.rfc1034CompliantName)}
+                    {renderDetailRow(gettext("ID"), orchestrator.id, "number")}
+                    {renderDetailRow(gettext("Strategy"), orchestrator.strategy)}
+                    {renderDetailRow(gettext("Manifest URL"), orchestrator.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Base URL"), orchestrator.baseUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), orchestrator.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), orchestrator.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), orchestrator.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), orchestrator.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), orchestrator.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), orchestrator.version)}
+                    {renderDetailRow(gettext("Description"), orchestrator.description)}
+                    {renderDetailRow(gettext("Tags"), orchestrator.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), orchestrator.annotations, "json")}
+                    {renderDetailRow(gettext("Ready"), orchestrator.ready, "bool")}
+                    {renderDetailRow(gettext("RFC 1034 Compliant Name"), orchestrator.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

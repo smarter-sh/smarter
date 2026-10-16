@@ -26,7 +26,7 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { actionUrl, fetchDjangoUrl, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/lib/const";
 import type { Vectorstore } from "@/lib/Types";
@@ -44,17 +44,19 @@ interface NameModalProps {
 const ModalClone = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState("");
   return (
-    <Modal show title="Clone Vectorstore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Clone Vectorstore")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
       <p>
-        Clone vectorstore <strong>{vectorstore?.name}</strong> to a new resource owned by you.
+        {interpolateNodes(gettext("Clone vectorstore %(name)s to a new resource owned by you."), {
+          name: <strong>{vectorstore?.name}</strong>,
+        })}
       </p>
       <p>
-        <em>Provide the new name for the cloned vectorstore.</em>
+        <em>{gettext("Provide the new name for the cloned vectorstore.")}</em>
       </p>
       <input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Enter new vectorstore name"
+        placeholder={gettext("Enter new vectorstore name")}
       />
     </Modal>
   );
@@ -64,17 +66,15 @@ const ModalClone = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
 const ModalRename = ({ vectorstore, onOk, onCancel }: NameModalProps) => {
   const [inputValue, setInputValue] = useState(vectorstore?.name || "");
   return (
-    <Modal show title="Rename Vectorstore" onOk={() => onOk(inputValue)} onCancel={onCancel}>
+    <Modal show title={gettext("Rename Vectorstore")} onOk={() => onOk(inputValue)} onCancel={onCancel}>
+      <p>{interpolateNodes(gettext("Rename vectorstore %(name)s."), { name: <strong>{vectorstore?.name}</strong> })}</p>
       <p>
-        Rename vectorstore <strong>{vectorstore?.name}</strong>.
-      </p>
-      <p>
-        <em>Provide the new name for the vectorstore.</em>
+        <em>{gettext("Provide the new name for the vectorstore.")}</em>
       </p>
       <input
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Enter new vectorstore name"
+        placeholder={gettext("Enter new vectorstore name")}
       />
     </Modal>
   );
@@ -92,14 +92,17 @@ const ModalDelete = ({
   onOk: () => void;
   onCancel: () => void;
 }) => (
-  <Modal show={show} title="Delete Vectorstore" onOk={onOk} onCancel={onCancel}>
+  <Modal show={show} title={gettext("Delete Vectorstore")} onOk={onOk} onCancel={onCancel}>
     <p>
-      Are you sure you want to delete vectorstore <strong>{vectorstore?.name}</strong>?
+      {interpolateNodes(gettext("Are you sure you want to delete vectorstore %(name)s?"), {
+        name: <strong>{vectorstore?.name}</strong>,
+      })}
     </p>
     <p>
       <em>
-        Its database, its documents and its snapshots are destroyed, and cannot be recovered. A vectorstore with
-        deletion protection cannot be deleted.
+        {gettext(
+          "Its database, its documents and its snapshots are destroyed, and cannot be recovered. A vectorstore with deletion protection cannot be deleted.",
+        )}
       </em>
     </p>
   </Modal>
@@ -117,11 +120,13 @@ const ModalError = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="❌ Error" onClose={onClose}>
+  <Modal show={show} title={gettext("❌ Error")} onClose={onClose}>
     <p>
-      An error occurred while performing the operation on vectorstore <strong>{vectorstore?.name}</strong>.
+      {interpolateNodes(gettext("An error occurred while performing the operation on vectorstore %(name)s."), {
+        name: <strong>{vectorstore?.name}</strong>,
+      })}
     </p>
-    <p>{message ? <span className="text-danger">{message}</span> : <em>An unknown error occurred.</em>}</p>
+    <p>{message ? <span className="text-danger">{message}</span> : <em>{gettext("An unknown error occurred.")}</em>}</p>
   </Modal>
 );
 
@@ -137,15 +142,39 @@ const ModalConfirmation = ({
   message: string;
   onClose: () => void;
 }) => (
-  <Modal show={show} title="✅ Success" onClose={onClose}>
+  <Modal show={show} title={gettext("✅ Success")} onClose={onClose}>
     <p>
       {message} <strong>{vectorstore?.name}</strong>.
     </p>
     <p>
-      <em>Operation completed successfully.</em>
+      <em>{gettext("Operation completed successfully.")}</em>
     </p>
   </Modal>
 );
+
+/**
+ * The messages that report the result of an action. Each is a whole sentence, so that it can be
+ * translated.
+ */
+const actionMessages = (verb: string) => {
+  switch (verb) {
+    case "clone":
+      return {
+        failed: gettext("Failed to clone vectorstore (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully cloned vectorstore"),
+      };
+    case "rename":
+      return {
+        failed: gettext("Failed to rename vectorstore (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully renamed vectorstore"),
+      };
+    default:
+      return {
+        failed: gettext("Failed to delete vectorstore (%(status)s): %(error)s"),
+        succeeded: gettext("Successfully deleted vectorstore"),
+      };
+  }
+};
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -182,13 +211,18 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(`Failed to ${verb} vectorstore (${response.status}): ${data.error || response.statusText}`);
+          throw new Error(
+            interpolate(actionMessages(verb).failed, {
+              status: response.status,
+              error: data.error || response.statusText,
+            }),
+          );
         }
         return data;
       })
       .then((data) => {
         console.debug(loggerPrefix, `Successfully ${verb}d vectorstore:`, data);
-        setSuccessMessage(`Successfully ${verb}d vectorstore`);
+        setSuccessMessage(actionMessages(verb).succeeded);
         // clone and rename return the resulting vectorstore; delete returns a message.
         setModal({ type: "confirmation", vectorstore: data && data.id ? (data as Vectorstore) : target });
       })
@@ -201,11 +235,11 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
 
   return (
     <>
-      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label={gettext("Actions")}>
         <a
           href={vectorstore.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Chat: Open the vectorstore workbench"
+          title={gettext("Chat: Open the vectorstore workbench")}
           tabIndex={0}
         >
           <i className="bi bi-chat-dots md-teal" />
@@ -213,7 +247,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
         <a
           href={vectorstore.manifestUrl}
           className="btn btn-icon btn-sm border"
-          title="Edit: Open the YAML manifest that defines this vectorstore resource"
+          title={gettext("Edit: Open the YAML manifest that defines this vectorstore resource")}
           tabIndex={0}
         >
           <i className="bi bi-pencil-square md-blue" />
@@ -221,7 +255,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Clone: Clone this vectorstore resource to a new resource owned by you"
+          title={gettext("Clone: Clone this vectorstore resource to a new resource owned by you")}
           onClick={() => setModal({ type: "clone", vectorstore })}
           tabIndex={0}
         >
@@ -230,7 +264,7 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
         <button
           type="button"
           className="btn btn-icon btn-sm border"
-          title="Rename: Rename this vectorstore resource"
+          title={gettext("Rename: Rename this vectorstore resource")}
           onClick={() => setModal({ type: "rename", vectorstore })}
           tabIndex={0}
         >
@@ -241,8 +275,10 @@ export const Toolbar = ({ sessionContext, vectorstore, onRequery }: ToolbarProps
           className="btn btn-icon btn-sm border"
           title={
             vectorstore.canDelete === false
-              ? "Delete: You can't delete this vectorstore, because other resources depend on it, or you don't have permission to delete it"
-              : "Delete: Delete this vectorstore resource"
+              ? gettext(
+                  "Delete: You can't delete this vectorstore, because other resources depend on it, or you don't have permission to delete it",
+                )
+              : gettext("Delete: Delete this vectorstore resource")
           }
           onClick={() => setModal({ type: "delete", vectorstore })}
           disabled={vectorstore.canDelete === false}

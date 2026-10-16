@@ -10,6 +10,7 @@ from django.contrib.admin.exceptions import AlreadyRegistered
 from django.contrib.admindocs import urls as admindocs_urls
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
+from django.views.i18n import JavaScriptCatalog
 from django.views.static import serve
 from social_django import urls as social_django_urls
 from waffle import get_waffle_switch_model
@@ -241,6 +242,12 @@ urlpatterns = [
             "document_root": settings.STATIC_ROOT,
         },
     ),
+    # -----------------------------------
+    # internationalization: the language menu posts to i18n/setlang/, and every page
+    # loads the React apps' message catalog (the djangojs domain) from jsi18n/.
+    # -----------------------------------
+    path("i18n/", include("django.conf.urls.i18n")),
+    path("jsi18n/", JavaScriptCatalog.as_view(domain="djangojs"), name="javascript-catalog"),
     # -----------------------------------
     # routes for 3rd party apps
     # -----------------------------------

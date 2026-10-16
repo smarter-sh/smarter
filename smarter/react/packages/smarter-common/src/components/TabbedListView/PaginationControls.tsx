@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { Pagination } from "../../lib/Types";
+import { gettext, interpolateNodes } from "../../lib/i18n";
 
 interface PageInputProps {
   page: number;
@@ -31,7 +32,7 @@ function PageInput({ page, numPages, disabled, onPage }: PageInputProps) {
       style={{ width: "4.5rem" }}
       min={1}
       max={numPages}
-      aria-label="Page number"
+      aria-label={gettext("Page number")}
       disabled={disabled}
       value={draft}
       onChange={(event) => setDraft(event.target.value)}
@@ -57,27 +58,33 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({ paginati
   return (
     <div className="d-flex flex-wrap gap-3 align-items-center justify-content-between p-3">
       <div className="text-muted fs-7" aria-live="polite">
-        Showing {first.toLocaleString()}–{last.toLocaleString()} of {count.toLocaleString()}
+        {interpolateNodes(gettext("Showing %(first)s–%(last)s of %(count)s"), {
+          first: first.toLocaleString(),
+          last: last.toLocaleString(),
+          count: count.toLocaleString(),
+        })}
       </div>
-      <nav className="d-flex gap-2 align-items-center" aria-label="Pagination">
+      <nav className="d-flex gap-2 align-items-center" aria-label={gettext("Pagination")}>
         <button
           type="button"
           className="btn btn-sm btn-light"
-          aria-label="Previous page"
-          title="Previous page"
+          aria-label={gettext("Previous page")}
+          title={gettext("Previous page")}
           disabled={disabled || page <= 1}
           onClick={() => onPage(page - 1)}
         >
           <i className="fas fa-chevron-left" />
         </button>
-        <span className="text-muted fs-7">Page</span>
+        <span className="text-muted fs-7">{gettext("Page")}</span>
         <PageInput key={page} page={page} numPages={numPages} disabled={disabled || numPages <= 1} onPage={onPage} />
-        <span className="text-muted fs-7">of {numPages.toLocaleString()}</span>
+        <span className="text-muted fs-7">
+          {interpolateNodes(gettext("of %(numPages)s"), { numPages: numPages.toLocaleString() })}
+        </span>
         <button
           type="button"
           className="btn btn-sm btn-light"
-          aria-label="Next page"
-          title="Next page"
+          aria-label={gettext("Next page")}
+          title={gettext("Next page")}
           disabled={disabled || page >= numPages}
           onClick={() => onPage(page + 1)}
         >

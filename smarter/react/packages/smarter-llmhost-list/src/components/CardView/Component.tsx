@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: LLMHostCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,20 +54,20 @@ function CardView({ sessionContext, objects, onRequery }: LLMHostCardViewProps) 
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", llmhost.id, "number")}
-                    {renderDetailRow("Manifest URL", llmhost.manifestUrl, "url")}
-                    {renderDetailRow("Base URL", llmhost.baseUrl, "url")}
-                    {renderDetailRow("Owner", llmhost.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", llmhost.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", llmhost.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", llmhost.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", llmhost.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", llmhost.version)}
-                    {renderDetailRow("Description", llmhost.description)}
-                    {renderDetailRow("Tags", llmhost.tags, "str[]")}
-                    {renderDetailRow("Annotations", llmhost.annotations, "json")}
-                    {renderDetailRow("Ready", llmhost.ready, "bool")}
-                    {renderDetailRow("RFC 1034 Compliant Name", llmhost.rfc1034CompliantName)}
+                    {renderDetailRow(gettext("ID"), llmhost.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), llmhost.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Base URL"), llmhost.baseUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), llmhost.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), llmhost.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), llmhost.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), llmhost.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), llmhost.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), llmhost.version)}
+                    {renderDetailRow(gettext("Description"), llmhost.description)}
+                    {renderDetailRow(gettext("Tags"), llmhost.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), llmhost.annotations, "json")}
+                    {renderDetailRow(gettext("Ready"), llmhost.ready, "bool")}
+                    {renderDetailRow(gettext("RFC 1034 Compliant Name"), llmhost.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

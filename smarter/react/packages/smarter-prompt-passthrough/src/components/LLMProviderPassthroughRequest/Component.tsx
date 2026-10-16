@@ -8,6 +8,7 @@ import TemplateSelector from "@/components/TemplateSelector/";
 import { type LLMProvider } from "@/components/LLMProviders";
 
 import "@/components/LLMProviderPassthroughRequest/styles.css";
+import { gettext } from "@smarter/common";
 
 export interface ProviderPassthroughRequestProps {
   providersJson: LLMProvider[];
@@ -63,7 +64,7 @@ export default function LLMProviderPassthroughRequest({
           </div>
           <div className="col-3 d-flex align-items-center justify-content-end">
             <button className="btn btn-primary w-100" type="button" onClick={onSend} disabled={isSending}>
-              {isSending ? "SENDING..." : "SEND"}
+              {isSending ? gettext("SENDING...") : gettext("SEND")}
             </button>
           </div>
         </div>

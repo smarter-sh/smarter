@@ -4,7 +4,7 @@
  * Used to display a list of available mcpclients.
  *
  */
-import { TabbedListView, WorkbenchHelp } from "@smarter/common";
+import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { MCPClient, MCPClientListViewProps, MCPClientCardViewProps } from "@/lib/Types";
@@ -12,8 +12,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your MCPClients" },
-  { key: "shared" as TabKey, label: "Shared MCPClients" },
+  { key: "owned" as TabKey, label: gettext("Your MCPClients") },
+  { key: "shared" as TabKey, label: gettext("Shared MCPClients") },
 ];
 
 // Set the TabbedViewContext generic object type to MCPClient,
@@ -38,11 +38,12 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "MCP (Model Context Protocol) Clients";
+  const title = gettext("MCP (Model Context Protocol) Clients");
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-mcpclient.html";
-  const helpText =
-    "MCP Clients provide a standardized interface for connecting large language models to external tools and services through the Model Context Protocol (MCP).";
+  const helpText = gettext(
+    "MCP Clients provide a standardized interface for connecting large language models to external tools and services through the Model Context Protocol (MCP).",
+  );
   return (
     <>
       <section className="mt-5 mb-5 container" id="mcpclient-list">

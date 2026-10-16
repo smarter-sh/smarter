@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: VectorsearchCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -53,22 +54,22 @@ function CardView({ sessionContext, objects, onRequery }: VectorsearchCardViewPr
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", vectorsearch.id, "number")}
-                    {renderDetailRow("Vectorstore", vectorsearch.vectorstore)}
-                    {renderDetailRow("Search Type", vectorsearch.searchType)}
-                    {renderDetailRow("Manifest URL", vectorsearch.manifestUrl, "url")}
-                    {renderDetailRow("Base URL", vectorsearch.baseUrl, "url")}
-                    {renderDetailRow("Owner", vectorsearch.userProfile?.user?.username)}
-                    {renderDetailRow("Owner Email", vectorsearch.userProfile?.user?.email)}
-                    {renderDetailRow("Account Number", vectorsearch.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", vectorsearch.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", vectorsearch.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", vectorsearch.version)}
-                    {renderDetailRow("Description", vectorsearch.description)}
-                    {renderDetailRow("Tags", vectorsearch.tags, "str[]")}
-                    {renderDetailRow("Annotations", vectorsearch.annotations, "json")}
-                    {renderDetailRow("Ready", vectorsearch.ready, "bool")}
-                    {renderDetailRow("RFC 1034 Compliant Name", vectorsearch.rfc1034CompliantName)}
+                    {renderDetailRow(gettext("ID"), vectorsearch.id, "number")}
+                    {renderDetailRow(gettext("Vectorstore"), vectorsearch.vectorstore)}
+                    {renderDetailRow(gettext("Search Type"), vectorsearch.searchType)}
+                    {renderDetailRow(gettext("Manifest URL"), vectorsearch.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Base URL"), vectorsearch.baseUrl, "url")}
+                    {renderDetailRow(gettext("Owner"), vectorsearch.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Owner Email"), vectorsearch.userProfile?.user?.email)}
+                    {renderDetailRow(gettext("Account Number"), vectorsearch.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), vectorsearch.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), vectorsearch.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), vectorsearch.version)}
+                    {renderDetailRow(gettext("Description"), vectorsearch.description)}
+                    {renderDetailRow(gettext("Tags"), vectorsearch.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), vectorsearch.annotations, "json")}
+                    {renderDetailRow(gettext("Ready"), vectorsearch.ready, "bool")}
+                    {renderDetailRow(gettext("RFC 1034 Compliant Name"), vectorsearch.rfc1034CompliantName)}
                   </tbody>
                 </table>
               </div>

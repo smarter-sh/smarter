@@ -16,6 +16,7 @@
  *     <Instructors />
  */
 import "@/components/Instructors/styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
 
 const DOCS_BASE_URL = "https://docs.smarter.sh";
 const CATALOG = `${DOCS_BASE_URL}/smarter-instructors/example-courses`;
@@ -26,40 +27,40 @@ interface Course {
 }
 
 const STATS = [
-  { value: "21", label: "course designs" },
-  { value: "19", label: "micro courses" },
-  { value: "2", label: "master classes" },
-  { value: "$0", label: "license fees" },
+  { value: "21", label: gettext("course designs") },
+  { value: "19", label: gettext("micro courses") },
+  { value: "2", label: gettext("master classes") },
+  { value: "$0", label: gettext("license fees") },
 ];
 
 const COURSES: Course[] = [
-  { name: "Prompt Engineering", path: "micro-courses/prompt-engineering" },
-  { name: "Building AI Applications", path: "micro-courses/ai-applications" },
-  { name: "Agentic Development", path: "micro-courses/agentic-development" },
+  { name: gettext("Prompt Engineering"), path: "micro-courses/prompt-engineering" },
+  { name: gettext("Building AI Applications"), path: "micro-courses/ai-applications" },
+  { name: gettext("Agentic Development"), path: "micro-courses/agentic-development" },
   { name: "Kubernetes", path: "micro-courses/kubernetes" },
-  { name: "Django Master Class", path: "master-classes/django-master-class" },
-  { name: "The Economics of AI", path: "micro-courses/ai-economics" },
-  { name: "AI Governance", path: "micro-courses/ai-governance" },
-  { name: "API Design", path: "micro-courses/api-design" },
-  { name: "Backend Development", path: "micro-courses/backend-development" },
+  { name: gettext("Django Master Class"), path: "master-classes/django-master-class" },
+  { name: gettext("The Economics of AI"), path: "micro-courses/ai-economics" },
+  { name: gettext("AI Governance"), path: "micro-courses/ai-governance" },
+  { name: gettext("API Design"), path: "micro-courses/api-design" },
+  { name: gettext("Backend Development"), path: "micro-courses/backend-development" },
   { name: "Docker", path: "micro-courses/docker" },
-  { name: "AI Application Development Master Class", path: "master-classes/ai-application-development" },
-  { name: "Extension Development", path: "micro-courses/extension-development" },
-  { name: "Front End Development", path: "micro-courses/frontend-development" },
-  { name: "Full Stack Development", path: "micro-courses/full-stack-development" },
-  { name: "Infrastructure as Code", path: "micro-courses/infrastructure-as-code" },
-  { name: "Open Source Participation", path: "micro-courses/open-source" },
-  { name: "Secure Software", path: "micro-courses/secure-software" },
-  { name: "Self-Hosting Open Models", path: "micro-courses/self-hosted-models" },
-  { name: "Software Architecture", path: "micro-courses/software-architecture" },
-  { name: "Software Quality", path: "micro-courses/software-quality" },
-  { name: "Documentation with Sphinx", path: "micro-courses/sphinx-documentation" },
+  { name: gettext("AI Application Development Master Class"), path: "master-classes/ai-application-development" },
+  { name: gettext("Extension Development"), path: "micro-courses/extension-development" },
+  { name: gettext("Front End Development"), path: "micro-courses/frontend-development" },
+  { name: gettext("Full Stack Development"), path: "micro-courses/full-stack-development" },
+  { name: gettext("Infrastructure as Code"), path: "micro-courses/infrastructure-as-code" },
+  { name: gettext("Open Source Participation"), path: "micro-courses/open-source" },
+  { name: gettext("Secure Software"), path: "micro-courses/secure-software" },
+  { name: gettext("Self-Hosting Open Models"), path: "micro-courses/self-hosted-models" },
+  { name: gettext("Software Architecture"), path: "micro-courses/software-architecture" },
+  { name: gettext("Software Quality"), path: "micro-courses/software-quality" },
+  { name: gettext("Documentation with Sphinx"), path: "micro-courses/sphinx-documentation" },
 ];
 
 const FORMATS = [
-  { value: "8 hours", label: "classroom bootcamp" },
-  { value: "2 weeks", label: "online course" },
-  { value: "4 weeks", label: "online course" },
+  { value: "8 hours", label: gettext("classroom bootcamp") },
+  { value: "2 weeks", label: gettext("online course") },
+  { value: "4 weeks", label: gettext("online course") },
 ];
 
 function CourseChips({ courses, hidden }: { courses: Course[]; hidden?: boolean }) {
@@ -84,7 +85,7 @@ function CourseChips({ courses, hidden }: { courses: Course[]; hidden?: boolean 
 function Instructors() {
   return (
     <>
-      <section id="instructors" aria-label="Instructors" className="col-xl-6 mb-5 mb-xl-10">
+      <section id="instructors" aria-label={gettext("Instructors")} className="col-xl-6 mb-5 mb-xl-10">
         {/* begin::Instructors widget */}
         <div className="card border-transparent h-100 instructors-card" data-bs-theme="light">
           {/* begin::Body */}
@@ -97,17 +98,26 @@ function Instructors() {
             />
             {/* end::Illustration */}
             {/* begin::Title */}
-            <span className="instructors-eyebrow z-index-2">Free for instructors</span>
+            <span className="instructors-eyebrow z-index-2">{gettext("Free for instructors")}</span>
             <div className="fs-2x fw-bold text-white mt-3 mb-2 z-index-2 instructors-headline">
-              Teach AI with a{" "}
-              <span className="position-relative d-inline-block">
-                real platform
-                <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 instructors-underline"></span>
-              </span>
+              {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+              {interpolateNodes(gettext("Teach AI with a %(span)s"), {
+                span: (
+                  <span className="position-relative d-inline-block">
+                    {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                    {interpolateNodes(gettext("real platform%(span)s"), {
+                      span: (
+                        <span className="position-absolute bottom-0 start-0 border-4 border-bottom w-100 instructors-underline"></span>
+                      ),
+                    })}
+                  </span>
+                ),
+              })}
             </div>
             <p className="fs-6 mb-6 z-index-2 instructors-lede">
-              Ready-to-teach course designs, from prompt engineering for non-programmers to Kubernetes for platform
-              engineers, with schedules, graded assignments, rubrics and capstone projects.
+              {gettext(
+                "Ready-to-teach course designs, from prompt engineering for non-programmers to Kubernetes for platform engineers, with schedules, graded assignments, rubrics and capstone projects.",
+              )}
             </p>
             {/* end::Title */}
             {/* begin::Stats */}
@@ -121,7 +131,7 @@ function Instructors() {
             </dl>
             {/* end::Stats */}
             {/* begin::Courses */}
-            <nav className="instructors-ribbons z-index-2" aria-label="Free courses">
+            <nav className="instructors-ribbons z-index-2" aria-label={gettext("Free courses")}>
               {[COURSES.slice(0, 11), COURSES.slice(11)].map((courses, row) => (
                 <div key={row} className="instructors-ribbon">
                   <div className={`instructors-ribbon-track${row ? " instructors-ribbon-reverse" : ""}`}>
@@ -134,7 +144,7 @@ function Instructors() {
             {/* end::Courses */}
             {/* begin::Formats */}
             <div className="instructors-formats z-index-2">
-              <span className="instructors-formats-label">Every micro course, three ways</span>
+              <span className="instructors-formats-label">{gettext("Every micro course, three ways")}</span>
               <ul>
                 {FORMATS.map((format) => (
                   <li key={format.value}>
@@ -147,14 +157,14 @@ function Instructors() {
             {/* begin::Action */}
             <div className="mt-auto pt-7 z-index-2">
               <a href={`${CATALOG}/index.html`} target="_blank" className="btn btn-sm fw-semibold me-2 instructors-btn">
-                Browse the free courses
+                {gettext("Browse the free courses")}
               </a>
               <a
                 href={`${DOCS_BASE_URL}/smarter-instructor.html`}
                 target="_blank"
                 className="btn btn-sm btn-light fw-semibold"
               >
-                Instructor Guide
+                {gettext("Instructor Guide")}
               </a>
             </div>
             {/* end::Action */}

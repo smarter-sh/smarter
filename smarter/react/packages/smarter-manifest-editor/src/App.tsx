@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { load } from "js-yaml";
 import type * as monaco from "monaco-editor";
 
-import { Modal } from "@smarter/common";
+import { gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import ManifestEditor from "@/components/ManifestEditor";
@@ -68,19 +68,27 @@ interface CloneModalProps {
 function CloneModal({ kind, name, onOk, onCancel }: CloneModalProps) {
   const [newName, setNewName] = useState("");
   return (
-    <Modal show title={`Clone ${kind}`} onOk={() => onOk(newName.trim())} onCancel={onCancel}>
+    <Modal
+      show
+      title={interpolate(gettext("Clone %(kind)s"), { kind })}
+      onOk={() => onOk(newName.trim())}
+      onCancel={onCancel}
+    >
       <p>
-        Clone {kind} <strong>{name}</strong> to a new resource owned by you.
+        {interpolateNodes(gettext("Clone %(kind)s %(name)s to a new resource owned by you."), {
+          kind,
+          name: <strong>{name}</strong>,
+        })}
       </p>
       <p>
-        <em>Provide the new name for the cloned {kind}.</em>
+        <em>{interpolateNodes(gettext("Provide the new name for the cloned %(kind)s."), { kind })}</em>
       </p>
       <input
         className="form-control"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
-        placeholder={`Enter new ${kind} name`}
-        aria-label={`New ${kind} name`}
+        placeholder={interpolate(gettext("Enter new %(kind)s name"), { kind })}
+        aria-label={interpolate(gettext("New %(kind)s name"), { kind })}
         // focus moves into the dialog that just opened, as dialogs should do.
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
@@ -142,10 +150,14 @@ function App({
   const isDirty = yaml !== savedYaml;
 
   const deleteTitle = dependencies.length
-    ? `Delete: You can't delete this ${kind}, because these resources depend on it: ${dependencies
-        .map((d) => `${d.kind} ${d.name}`)
-        .join(", ")}`
-    : `Delete: Delete this ${kind}`;
+    ? interpolate(
+        gettext("Delete: You can't delete this %(kind)s, because these resources depend on it: %(dependencies)s"),
+        {
+          kind,
+          dependencies: dependencies.map((d) => `${d.kind} ${d.name}`).join(", "),
+        },
+      )
+    : interpolate(gettext("Delete: Delete this %(kind)s"), { kind });
 
   const showResult = (title: string, result: CliResult, afterClose?: () => void) =>
     setModal({ type: "result", title, result, afterClose });
@@ -167,7 +179,10 @@ function App({
     try {
       manifest = parseManifest(yaml);
     } catch (error) {
-      showResult("Save Failed", { ok: false, message: error instanceof Error ? error.message : String(error) });
+      showResult(gettext("Save Failed"), {
+        ok: false,
+        message: error instanceof Error ? error.message : String(error),
+      });
       return;
     }
     const result = await run(() =>
@@ -175,11 +190,11 @@ function App({
         sessionContext,
         applyApiUrl,
         manifestToApply(manifest),
-        `${manifest.kind} ${manifest.metadata.name} saved`,
+        interpolate(gettext("%(kind)s %(name)s saved"), { kind: manifest.kind, name: manifest.metadata.name }),
       ),
     );
     if (result.ok) setSavedYaml(yaml);
-    showResult(result.ok ? "Saved" : "Save Failed", result);
+    showResult(result.ok ? gettext("Saved") : gettext("Save Failed"), result);
   };
 
   const handleRevert = () => {
@@ -191,17 +206,24 @@ function App({
     setModal({ type: null });
     if (!saved || !newName) return;
     const result = await run(() =>
-      callCli(sessionContext, applyApiUrl, cloneManifest(saved, newName), `${kind} ${newName} created`),
+      callCli(
+        sessionContext,
+        applyApiUrl,
+        cloneManifest(saved, newName),
+        interpolate(gettext("%(kind)s %(name)s created"), { kind, name: newName }),
+      ),
     );
-    showResult(result.ok ? "Cloned" : "Clone Failed", result);
+    showResult(result.ok ? gettext("Cloned") : gettext("Clone Failed"), result);
   };
 
   const handleDelete = async () => {
     setModal({ type: null });
     if (!saved) return;
     const url = `${deleteApiUrl.replace(kindPlaceholder, encodeURIComponent(kind))}?name=${encodeURIComponent(name)}`;
-    const result = await run(() => callCli(sessionContext, url, {}, `${kind} ${name} deleted`));
-    showResult(result.ok ? "Deleted" : "Delete Failed", result, result.ok ? leavePage : undefined);
+    const result = await run(() =>
+      callCli(sessionContext, url, {}, interpolate(gettext("%(kind)s %(name)s deleted"), { kind, name })),
+    );
+    showResult(result.ok ? gettext("Deleted") : gettext("Delete Failed"), result, result.ok ? leavePage : undefined);
   };
 
   const closeResult = () => {
@@ -238,13 +260,21 @@ function App({
         <CloneModal kind={kind} name={name} onOk={handleClone} onCancel={() => setModal({ type: null })} />
       )}
       {modal.type === "delete" && (
-        <Modal show title={`Delete ${kind}`} onOk={handleDelete} onCancel={() => setModal({ type: null })}>
+        <Modal
+          show
+          title={interpolate(gettext("Delete %(kind)s"), { kind })}
+          onOk={handleDelete}
+          onCancel={() => setModal({ type: null })}
+        >
           <p>
-            Are you sure you want to delete {kind} <strong>{name}</strong>?
+            {interpolateNodes(gettext("Are you sure you want to delete %(kind)s %(name)s?"), {
+              kind,
+              name: <strong>{name}</strong>,
+            })}
           </p>
           {isDirty && (
             <p>
-              <em>Your unsaved changes will be lost.</em>
+              <em>{gettext("Your unsaved changes will be lost.")}</em>
             </p>
           )}
         </Modal>

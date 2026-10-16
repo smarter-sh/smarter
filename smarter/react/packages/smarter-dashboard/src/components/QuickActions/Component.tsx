@@ -19,7 +19,7 @@
  *     <QuickActions sessionContext={sessionContext} apiUrl="/dashboard/api/quick-actions/" />
  */
 import type { SessionContext } from "@smarter/common";
-import { Loading } from "@smarter/common";
+import { gettext, interpolateNodes, Loading } from "@smarter/common";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
 import "@/components/QuickActions/styles.css";
@@ -40,13 +40,17 @@ function QuickActions({ sessionContext, apiUrl }: QuickActionsProps) {
   const { data, error } = useDashboardApi<QuickAction[]>(sessionContext, apiUrl);
 
   return (
-    <section id="quick-actions" aria-label="Quick Actions" className="col-xl-6 mb-xl-10">
+    <section id="quick-actions" aria-label={gettext("Quick Actions")} className="col-xl-6 mb-xl-10">
       <div className="card card-flush h-xl-100">
         <div className="card-header pt-5">
-          <h4 className="card-title card-label fw-bold text-gray-800">Quick Actions</h4>
+          <h4 className="card-title card-label fw-bold text-gray-800">{gettext("Quick Actions")}</h4>
         </div>
         <div className="card-body pt-2">
-          {error && <div className="text-danger fs-7">Failed to load quick actions: {error}</div>}
+          {error && (
+            <div className="text-danger fs-7">
+              {interpolateNodes(gettext("Failed to load quick actions: %(error)s"), { error })}
+            </div>
+          )}
           {!data && !error && <Loading />}
           {data && (
             <div className="row g-2">

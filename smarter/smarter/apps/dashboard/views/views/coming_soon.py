@@ -26,6 +26,7 @@ import html
 from django import forms
 from django.core.handlers.asgi import ASGIRequest
 from django.http import JsonResponse
+from django.utils.translation import gettext as _
 
 from smarter.apps.dashboard.models import EmailContactList
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
@@ -74,6 +75,7 @@ class ComingSoon(SmarterWebHtmlView):
     def get(self, request, *args, **kwargs):
         """
         Handle GET requests to render the "Coming Soon" page with an empty email form.
+
         :param request: The incoming HTTP GET request from the client.
         :type request: django.core.handlers.wsgi.ASGIRequest
         :param args: Additional positional arguments forwarded by the URL dispatcher.
@@ -88,6 +90,7 @@ class ComingSoon(SmarterWebHtmlView):
     def post(self, request: ASGIRequest):
         """
         Handle POST requests to process email sign-up submissions.
+
         On success, returns a JSON object with a redirect URL and a message
         indicating whether the email was newly added or already exists. On
         form validation failure, returns a JSON object containing the error
@@ -97,7 +100,6 @@ class ComingSoon(SmarterWebHtmlView):
         :type request: django.core.handlers.wsgi.ASGIRequest
         :returns: A JSON response indicating success or failure of the email submission.
         :rtype: django.http.JsonResponse
-
         """
         form = ComingSoon.EmailForm(request.POST)
         if form.is_valid():
@@ -105,9 +107,11 @@ class ComingSoon(SmarterWebHtmlView):
             email_contact_list, created = EmailContactList.objects.get_or_create(email=email)
             if created:
                 MailchimpHelper().add_list_member(email_contact_list.email)
-                message = "We'll notify you when the launch date nears."
+                message = _("We'll notify you when the launch date nears.")
             else:
-                message = f"{email_contact_list.email} is already in our contact list. We'll keep you updated."
+                message = _("%(email)s is already in our contact list. We'll keep you updated.") % {
+                    "email": email_contact_list.email
+                }
             return JsonResponse(
                 {
                     "redirect": "/email-added/",

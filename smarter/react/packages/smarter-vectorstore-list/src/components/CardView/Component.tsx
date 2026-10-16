@@ -30,6 +30,7 @@ import { renderDetailRow } from "@/components/CardView/renderDetail";
 import { databaseLabel, formatCount } from "@/lib/format";
 
 import "@/components/CardView/styles.css";
+import { gettext } from "@smarter/common";
 
 function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
@@ -54,39 +55,39 @@ function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewPro
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("ID", vectorstore.id, "number")}
-                    {renderDetailRow("Manifest URL", vectorstore.manifestUrl, "url")}
-                    {renderDetailRow("Description", vectorstore.description)}
-                    {renderDetailRow("Database", databaseLabel(vectorstore))}
-                    {renderDetailRow("Status", vectorstore.status)}
-                    {renderDetailRow("Status Message", vectorstore.statusMessage)}
-                    {renderDetailRow("Active", vectorstore.isActive, "bool")}
-                    {renderDetailRow("Index or Collection", vectorstore.indexName)}
-                    {renderDetailRow("Endpoint", vectorstore.endpointUrl)}
-                    {renderDetailRow("ApiConnection", vectorstore.connection)}
-                    {renderDetailRow("API Key Secret", vectorstore.apiKeySecret)}
+                    {renderDetailRow(gettext("ID"), vectorstore.id, "number")}
+                    {renderDetailRow(gettext("Manifest URL"), vectorstore.manifestUrl, "url")}
+                    {renderDetailRow(gettext("Description"), vectorstore.description)}
+                    {renderDetailRow(gettext("Database"), databaseLabel(vectorstore))}
+                    {renderDetailRow(gettext("Status"), vectorstore.status)}
+                    {renderDetailRow(gettext("Status Message"), vectorstore.statusMessage)}
+                    {renderDetailRow(gettext("Active"), vectorstore.isActive, "bool")}
+                    {renderDetailRow(gettext("Index or Collection"), vectorstore.indexName)}
+                    {renderDetailRow(gettext("Endpoint"), vectorstore.endpointUrl)}
+                    {renderDetailRow(gettext("ApiConnection"), vectorstore.connection)}
+                    {renderDetailRow(gettext("API Key Secret"), vectorstore.apiKeySecret)}
                     {renderDetailRow(
-                      "Embeddings",
+                      gettext("Embeddings"),
                       vectorstore.embeddingsProvider
                         ? `${vectorstore.embeddingsProvider} / ${vectorstore.embeddingsModel}`
                         : vectorstore.embeddingsModel,
                     )}
-                    {renderDetailRow("Dimensions", vectorstore.dimension, "number")}
-                    {renderDetailRow("Metric", vectorstore.metric)}
-                    {renderDetailRow("Deletion Protection", vectorstore.deletionProtection, "bool")}
-                    {renderDetailRow("Vectors", formatCount(vectorstore.vectorCount))}
-                    {renderDetailRow("Documents", formatCount(vectorstore.documentCount))}
-                    {renderDetailRow("Snapshots", formatCount(vectorstore.snapshotCount))}
-                    {renderDetailRow("Deployed", vectorstore.deployedAt, "dateTime")}
-                    {renderDetailRow("Last Checked", vectorstore.lastCheckedAt, "dateTime")}
-                    {renderDetailRow("Last Snapshot", vectorstore.lastSnapshotAt, "dateTime")}
-                    {renderDetailRow("Owner", vectorstore.userProfile?.user?.username)}
-                    {renderDetailRow("Account Number", vectorstore.userProfile?.account?.accountNumber)}
-                    {renderDetailRow("Created", vectorstore.createdAt, "dateTime")}
-                    {renderDetailRow("Last Updated", vectorstore.updatedAt, "dateTime")}
-                    {renderDetailRow("Version", vectorstore.version)}
-                    {renderDetailRow("Tags", vectorstore.tags, "str[]")}
-                    {renderDetailRow("Annotations", vectorstore.annotations, "json")}
+                    {renderDetailRow(gettext("Dimensions"), vectorstore.dimension, "number")}
+                    {renderDetailRow(gettext("Metric"), vectorstore.metric)}
+                    {renderDetailRow(gettext("Deletion Protection"), vectorstore.deletionProtection, "bool")}
+                    {renderDetailRow(gettext("Vectors"), formatCount(vectorstore.vectorCount))}
+                    {renderDetailRow(gettext("Documents"), formatCount(vectorstore.documentCount))}
+                    {renderDetailRow(gettext("Snapshots"), formatCount(vectorstore.snapshotCount))}
+                    {renderDetailRow(gettext("Deployed"), vectorstore.deployedAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Checked"), vectorstore.lastCheckedAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Snapshot"), vectorstore.lastSnapshotAt, "dateTime")}
+                    {renderDetailRow(gettext("Owner"), vectorstore.userProfile?.user?.username)}
+                    {renderDetailRow(gettext("Account Number"), vectorstore.userProfile?.account?.accountNumber)}
+                    {renderDetailRow(gettext("Created"), vectorstore.createdAt, "dateTime")}
+                    {renderDetailRow(gettext("Last Updated"), vectorstore.updatedAt, "dateTime")}
+                    {renderDetailRow(gettext("Version"), vectorstore.version)}
+                    {renderDetailRow(gettext("Tags"), vectorstore.tags, "str[]")}
+                    {renderDetailRow(gettext("Annotations"), vectorstore.annotations, "json")}
                   </tbody>
                 </table>
               </div>

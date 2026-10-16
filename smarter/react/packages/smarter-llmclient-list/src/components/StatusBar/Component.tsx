@@ -1,4 +1,5 @@
 import type { LLMClient } from "@/lib/Types";
+import { gettext, interpolate } from "@smarter/common";
 /**
  * @file Component.tsx
  * @module StatusBar/Component
@@ -22,12 +23,19 @@ export const StatusBar = ({ llmclient }: StatusbarProps) => {
       {/* Ready */}
       <span
         className="status-icon"
-        title={llmclient.ready ? "Ready: LLMClient is ready to serve requests" : "Not ready: LLMClient is initializing"}
+        title={
+          llmclient.ready
+            ? gettext("Ready: LLMClient is ready to serve requests")
+            : gettext("Not ready: LLMClient is initializing")
+        }
       >
         <i className={llmclient.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
       </span>
       {/* Deployed */}
-      <span className="status-icon" title={llmclient.deployed ? "Deployed: LLMClient is deployed" : "Not deployed"}>
+      <span
+        className="status-icon"
+        title={llmclient.deployed ? gettext("Deployed: LLMClient is deployed") : gettext("Not deployed")}
+      >
         <i className={llmclient.deployed ? "bi bi-cloud-check" : "bi bi-cloud-slash"} />
       </span>
       {/* Authentication Required */}
@@ -35,8 +43,8 @@ export const StatusBar = ({ llmclient }: StatusbarProps) => {
         className="status-icon"
         title={
           llmclient.isAuthenticationRequired
-            ? "Authentication required to access this llmclient"
-            : "No authentication required"
+            ? gettext("Authentication required to access this llmclient")
+            : gettext("No authentication required")
         }
       >
         <i className={llmclient.isAuthenticationRequired ? "bi bi-lock" : "bi bi-unlock"} />
@@ -44,7 +52,11 @@ export const StatusBar = ({ llmclient }: StatusbarProps) => {
       {/* DNS Verification */}
       <span
         className="status-icon"
-        title={llmclient.dnsVerificationStatus === "verified" ? "DNS verified" : "DNS verification pending or failed"}
+        title={
+          llmclient.dnsVerificationStatus === "verified"
+            ? gettext("DNS verified")
+            : gettext("DNS verification pending or failed")
+        }
       >
         <i className={llmclient.dnsVerificationStatus === "verified" ? "bi bi-globe" : "bi bi-exclamation-circle"} />
       </span>
@@ -53,8 +65,8 @@ export const StatusBar = ({ llmclient }: StatusbarProps) => {
         className="status-icon"
         title={
           llmclient.tlsCertificateIssuanceStatus === "issued"
-            ? "TLS certificate issued"
-            : "TLS certificate pending or failed"
+            ? gettext("TLS certificate issued")
+            : gettext("TLS certificate pending or failed")
         }
       >
         <i
@@ -65,13 +77,19 @@ export const StatusBar = ({ llmclient }: StatusbarProps) => {
       </span>
       {/* Subdomain */}
       {llmclient.subdomain && (
-        <span className="status-icon" title={`Subdomain: ${llmclient.subdomain}`}>
+        <span
+          className="status-icon"
+          title={interpolate(gettext("Subdomain: %(subdomain)s"), { subdomain: llmclient.subdomain })}
+        >
           <i className="bi bi-link-45deg text-info" />
         </span>
       )}
       {/* Custom Domain */}
       {llmclient.customDomain && (
-        <span className="status-icon" title={`Custom domain: ${llmclient.customDomain}`}>
+        <span
+          className="status-icon"
+          title={interpolate(gettext("Custom domain: %(customDomain)s"), { customDomain: llmclient.customDomain })}
+        >
           <i className="bi bi-link text-info" />
         </span>
       )}

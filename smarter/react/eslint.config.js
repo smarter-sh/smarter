@@ -32,6 +32,7 @@ export default defineConfig([
     "**/node_modules",
     "storybook/public",
     "**/.storybook/public",
+    "i18n/messages.js",
   ]),
   {
     files: ["**/*.{ts,tsx}"],
@@ -52,7 +53,7 @@ export default defineConfig([
   },
   {
     // configuration files run in Node.
-    files: ["**/*.config.{js,ts}", "**/.storybook/*.ts", "storybook/*.ts", "vitest.shared.ts"],
+    files: ["**/*.config.{js,ts}", "**/.storybook/*.ts", "storybook/*.ts", "vitest.shared.ts", "i18n/*.ts"],
     languageOptions: {
       globals: globals.node,
     },

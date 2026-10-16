@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block head_extra %}
 <style>
@@ -29,7 +29,7 @@
                   <!--end::Title-->
                   <!--begin::Text-->
                   <div class="d-none d-lg-block text-white fs-base text-center">
-                    {{ branding.smarter_product_description }} <a href="{{ branding.smarter_project_website_url }}" style="color: #ffffff; text-decoration: underline;" target="_blank">Learn more</a>
+                    {{ branding.smarter_product_description }} <a href="{{ branding.smarter_project_website_url }}" style="color: #ffffff; text-decoration: underline;" target="_blank">{% translate "Learn more" %}</a>
                   </div>
                   <!--end::Text-->
                 </div>
@@ -46,9 +46,9 @@
           <div class="d-flex flex-center flex-wrap px-5">
             <!--begin::Links-->
             <div class="d-flex fw-semibold text-primary fs-base">
-              <a href="{{ footer.legal_url }}" class="px-5" target="_blank">Legal</a>
-              <a href="{{ footer.plans_url }}" class="px-5" target="_blank">Plans</a>
-              <a href="{{ footer.contact_url }}" class="px-5" target="_blank">Contact Us</a>
+              <a href="{{ footer.legal_url }}" class="px-5" target="_blank">{% translate "Legal" %}</a>
+              <a href="{{ footer.plans_url }}" class="px-5" target="_blank">{% translate "Plans" %}</a>
+              <a href="{{ footer.contact_url }}" class="px-5" target="_blank">{% translate "Contact Us" %}</a>
             </div>
             <!--end::Links-->
           </div>

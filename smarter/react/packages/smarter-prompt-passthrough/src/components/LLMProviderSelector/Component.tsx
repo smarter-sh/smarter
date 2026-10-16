@@ -1,6 +1,7 @@
 import { type LLMProvider } from "@/components/LLMProviders";
 
 import "@/components/LLMProviderSelector/styles.css";
+import { gettext } from "@smarter/common";
 
 interface LLMProviderSelectorProps {
   providersJson: LLMProvider[];
@@ -11,13 +12,13 @@ interface LLMProviderSelectorProps {
 function LLMProviderSelector({ value, onChange, providersJson }: LLMProviderSelectorProps) {
   return (
     <select
-      aria-label="LLM provider"
+      aria-label={gettext("LLM provider")}
       className="form-select form-select-sm"
       style={{ width: "220px" }}
       value={value}
       onChange={onChange}
     >
-      {providersJson.length === 0 && <option value="">No providers available</option>}
+      {providersJson.length === 0 && <option value="">{gettext("No providers available")}</option>}
       {providersJson.map((provider) => (
         <option key={provider.id} value={provider.id}>
           {provider.name}
