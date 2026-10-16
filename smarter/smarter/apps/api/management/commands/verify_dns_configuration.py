@@ -43,10 +43,17 @@ class Command(SmarterCommand):
       and NS records in the local proxy domain hosted zone delegating to it.
     - [alpha].[platform].example.com
       A non-production platform domain with hosted zone in AWS Route53 in the AWS account
-      and NS records in the root domain hosted zone delegating to it.
+      and NS records in the platform domain hosted zone delegating to it.
     - [alpha].api.[platform].example.com
       A non-production API domain with hosted zone in AWS Route53 in the AWS
-      account and NS records in the platform domain hosted zone delegating to it.
+      account and NS records in the API domain hosted zone delegating to it.
+
+    Each domain is delegated from the zone immediately above it. Resolvers ignore NS records for
+    a domain in any zone higher than that, e.g. records for api.[platform].example.com in the
+    example.com zone, because [platform].example.com is itself delegated.
+
+    A child zone's existing A record is never overwritten. One that does not point at the
+    platform's load balancer, e.g. one served by a CDN, is reported, rather than verified.
 
     **Usage:**
 
@@ -66,6 +73,9 @@ class Command(SmarterCommand):
     """
 
     log_prefix = logging.formatted_text(f"{__name__}.Command()")
+
+    unchanged_a_record_domains: list[str]
+    """Domains whose existing A record points somewhere other than the platform's load balancer, and was left unchanged."""
 
     def get_any_A_record(self) -> DNSRecord:
         """
@@ -126,24 +136,29 @@ class Command(SmarterCommand):
             )
         return a_record
 
-    def verify_domain_delegated_from_parent(self, child_domain: str, parent_domain: str, a_record: DNSRecord):
+    def verify_domain_delegated_from_parent(self, child_domain: str, parent_domain: str, a_record: DNSRecord) -> bool:
         """
         Verify the DNS zone for the child domain.
 
-        example: api.example.com
+        example: api.platform.example.com
 
         - the zone for child_domain should exist.
-        - the zone should contain an A record of the load balancer.
-        - NS records for the child_domain zone should exist in the parent_domain zone.
+        - the zone should contain an A record of the load balancer. An existing A record that points
+          elsewhere, e.g. at a CDN, is left unchanged, and reported.
+        - NS records for the child_domain zone should exist in the parent_domain zone. The parent is
+          the zone immediately above the child: NS records in any zone above that one are ignored by
+          resolvers, because the zone in between is itself delegated.
 
-        :param child_domain: the child domain to verify. example: api.example.com
+        :param child_domain: the child domain to verify. example: api.platform.example.com
         :type child_domain: str
-        :param parent_domain: the parent domain that should have NS records delegating to the child domain. example: example.com
+        :param parent_domain: the parent domain that should have NS records delegating to the child domain. example: platform.example.com
         :type parent_domain: str
-        :param a_record: an A record to use for verification and creation if needed. This should be an A record alias to the AWS Classic Load Balancer that is serving traffic for the Sm
+        :param a_record: an A record to use for verification and creation if needed. This should be an A record alias to the load balancer that serves the Smarter platform.
         :type a_record: DNSRecord
 
-        :return: None
+        :return: True if the child domain's A record points at the load balancer, False if it points elsewhere
+            and was left unchanged, or if the DNS service is not ready.
+        :rtype: bool
         """
 
         log_prefix = self.log_prefix + ".verify_domain_delegated_from_parent()"
@@ -155,7 +170,7 @@ class Command(SmarterCommand):
                 log_prefix,
                 child_domain,
             )
-            return
+            return False
 
         parent_zone, _ = dns.get_or_create_zone(parent_domain)
 
@@ -175,9 +190,13 @@ class Command(SmarterCommand):
         # Never overwrite an existing A record. The root domain's A record is not necessarily
         # the platform's load balancer, e.g. example.com may be served by a CDN. Overwriting
         # child records with it takes the whole platform offline.
+        points_at_load_balancer = True
         existing_a_record = dns.get_record(child_zone.id, child_domain, "A")
         if existing_a_record is not None:
-            if not existing_a_record.same_target(a_record):
+            if existing_a_record.same_target(a_record):
+                self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for {child_domain}."))
+            else:
+                points_at_load_balancer = False
                 logger.warning(
                     "%s A record for %s points at %s, not at the A record of %s (%s). Leaving it unchanged.",
                     log_prefix,
@@ -186,7 +205,11 @@ class Command(SmarterCommand):
                     a_record.name,
                     a_record.alias or a_record.values,
                 )
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for api base domain {child_domain}."))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"{log_prefix} the A record for {child_domain} does not point at the platform's load balancer. Left it unchanged."
+                    )
+                )
         else:
             dns.get_or_create_record(
                 zone_id=child_zone.id,
@@ -196,7 +219,7 @@ class Command(SmarterCommand):
                 values=a_record.values,
                 alias=a_record.alias,
             )
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created A record for api base domain {child_domain}."))
+            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created A record for {child_domain}."))
 
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} verify that NS records for {child_domain} exist in {parent_domain} zone.")
@@ -222,6 +245,33 @@ class Command(SmarterCommand):
                 f"{log_prefix} verified that {child_domain} is properly delegated from parent domain: {parent_domain}"
             )
         )
+        return points_at_load_balancer
+
+    def verify_child_domain(
+        self, child_domain: str, parent_domain: str, a_record: DNSRecord, verified_domains: list[str]
+    ) -> None:
+        """
+        Verify a child domain, and record the result.
+
+        The child domain is appended to ``verified_domains`` if its A record points at the load
+        balancer, and to :attr:`unchanged_a_record_domains` if it points elsewhere.
+
+        :param child_domain: the child domain to verify.
+        :type child_domain: str
+        :param parent_domain: the zone immediately above the child domain.
+        :type parent_domain: str
+        :param a_record: the A record of the platform's load balancer.
+        :type a_record: DNSRecord
+        :param verified_domains: the domains verified so far.
+        :type verified_domains: list[str]
+        :return: None
+        """
+        if self.verify_domain_delegated_from_parent(
+            child_domain=child_domain, parent_domain=parent_domain, a_record=a_record
+        ):
+            verified_domains.append(child_domain)
+        else:
+            self.unchanged_a_record_domains.append(child_domain)
 
     def verify_root_domain_dns_config(self):
         """
@@ -285,7 +335,7 @@ class Command(SmarterCommand):
                 f"{log_prefix} verify that we can retrieve a list of NS records from the zone for {smarter_settings.root_domain}"
             )
         )
-        # we're expecting three sets of NS records, for example.com, api.example.com, platform.example.com.
+        # we're expecting NS records that delegate platform.example.com and local.example.com.
         ns_records = [record for record in dns.list_records(root_zone.id) if record.type == "NS"]
         additional_ns_records = [record.name for record in ns_records if record.name != root_zone.name]
         self.stdout.write(
@@ -314,6 +364,10 @@ class Command(SmarterCommand):
         - alpha.platform.example.com (non-production platform domain)
         - alpha.api.platform.example.com (non-production api domain)
 
+        Domains whose delegation was verified, but whose existing A record points somewhere other
+        than the platform's load balancer, are not returned. They are listed in
+        :attr:`unchanged_a_record_domains` instead.
+
         :return: list of verified domains
         :rtype: list[str]
         """
@@ -322,6 +376,7 @@ class Command(SmarterCommand):
 
         log_prefix = self.log_prefix + ".verify_base_dns_config()"
         verified_domains = []
+        self.unchanged_a_record_domains = []
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
@@ -339,12 +394,12 @@ class Command(SmarterCommand):
         # 2. platform domain hosted zone verification. ie platform.example.com
         # ---------------------------------------------------------------------
         if smarter_settings.environment != SmarterEnvironments.LOCAL:
-            self.verify_domain_delegated_from_parent(
+            self.verify_child_domain(
                 child_domain=smarter_settings.root_platform_domain,
                 parent_domain=smarter_settings.root_domain,
                 a_record=a_record,
+                verified_domains=verified_domains,
             )
-            verified_domains.append(smarter_settings.root_platform_domain)
         else:
             self.stdout.write(
                 self.style.NOTICE(
@@ -355,36 +410,39 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         # 3. Local proxy domain hosted zone verification. ie local.example.com
         # ---------------------------------------------------------------------
-        self.verify_domain_delegated_from_parent(
+        self.verify_child_domain(
             child_domain=smarter_settings.root_proxy_domain,
             parent_domain=smarter_settings.root_domain,
             a_record=a_record,
+            verified_domains=verified_domains,
         )
-        verified_domains.append(smarter_settings.root_proxy_domain)
 
         # ---------------------------------------------------------------------
         # 4. Local api proxy domain hosted zone verification. ie api.local.example.com
         # ---------------------------------------------------------------------
-        self.verify_domain_delegated_from_parent(
+        self.verify_child_domain(
             child_domain=smarter_settings.proxy_api_domain,
             parent_domain=smarter_settings.root_proxy_domain,
             a_record=a_record,
+            verified_domains=verified_domains,
         )
-        verified_domains.append(smarter_settings.proxy_api_domain)
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
             return verified_domains
 
         # ---------------------------------------------------------------------
-        # 5. Api domain hosted zone verification. ie api.example.com
+        # 5. Api domain hosted zone verification. ie api.platform.example.com
+        #    It is delegated from the platform domain, not the root domain: the
+        #    platform domain is itself delegated, so resolvers never read NS
+        #    records for api.platform.example.com in the root domain's zone.
         # ---------------------------------------------------------------------
         if smarter_settings.environment != SmarterEnvironments.LOCAL:
-            self.verify_domain_delegated_from_parent(
+            self.verify_child_domain(
                 child_domain=smarter_settings.root_api_domain,
-                parent_domain=smarter_settings.root_domain,
+                parent_domain=smarter_settings.root_platform_domain,
                 a_record=a_record,
+                verified_domains=verified_domains,
             )
-            verified_domains.append(smarter_settings.root_api_domain)
         else:
             self.stdout.write(
                 self.style.NOTICE(
@@ -397,24 +455,24 @@ class Command(SmarterCommand):
         # ie alpha.platform.example.com
         # ---------------------------------------------------------------------
         if smarter_settings.environment_platform_domain != smarter_settings.root_platform_domain:
-            self.verify_domain_delegated_from_parent(
+            self.verify_child_domain(
                 child_domain=smarter_settings.environment_platform_domain,
                 parent_domain=smarter_settings.root_platform_domain,
                 a_record=a_record,
+                verified_domains=verified_domains,
             )
-            verified_domains.append(smarter_settings.environment_platform_domain)
 
         # ---------------------------------------------------------------------
         # 7. Environment specific domain hosted zone verification.
         # ie alpha.api.platform.example.com
         # ---------------------------------------------------------------------
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
-            self.verify_domain_delegated_from_parent(
+            self.verify_child_domain(
                 child_domain=smarter_settings.environment_api_domain,
                 parent_domain=smarter_settings.root_api_domain,
                 a_record=a_record,
+                verified_domains=verified_domains,
             )
-            verified_domains.append(smarter_settings.environment_api_domain)
 
         return verified_domains
 
@@ -439,6 +497,12 @@ class Command(SmarterCommand):
             self.stdout.write(
                 self.style.SUCCESS(
                     f"{self.log_prefix} verified platform level DNS infrastructure for the following domains: {', '.join(verified_domains)}"
+                )
+            )
+        if self.unchanged_a_record_domains:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"{self.log_prefix} delegated, but A record left unchanged because it does not point at the platform's load balancer: {', '.join(self.unchanged_a_record_domains)}"
                 )
             )
 

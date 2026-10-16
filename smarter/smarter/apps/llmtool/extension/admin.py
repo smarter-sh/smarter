@@ -2,9 +2,10 @@
 The Django admin console of Smarter Extensions: a read-only view, for superusers only.
 
 Extensions are managed in the web console's Extensions pages, at ``/extensions/``
-(:mod:`.views`): browsing the registry, installing, uploading, configuring, enabling,
-updating, rolling back and uninstalling. The admin lists the installed extensions, with
-their versions, trust badges and resources, and links each one to its page in the console.
+(:mod:`smarter.apps.llmtool.extension.views`): browsing the registry, installing,
+uploading, configuring, enabling, updating, rolling back and uninstalling. The admin
+lists the installed extensions, with their versions, trust badges and resources, and
+links each one to its page in the console.
 """
 
 from django.contrib import admin
