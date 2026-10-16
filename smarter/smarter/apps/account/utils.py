@@ -23,6 +23,7 @@ import re
 from typing import Optional
 
 from django.db.models import Q
+from django.templatetags.static import static
 from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
@@ -31,6 +32,7 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
+from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
@@ -347,6 +349,40 @@ def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Opt
         _get_user.invalidate(user_id, class_name=User.__name__)
 
     return _get_user(user_id=user_id, class_name=User.__name__)
+
+
+def get_cached_avatar_url(user_id: int, invalidate: Optional[bool] = False) -> str:
+    """
+    Return the url of the image that represents a user in the web console, using caching for performance.
+
+    The url is :attr:`UserProfile.avatar_url`: the image the user uploaded, else the
+    one the oauth provider supplied, else the default profile image. A user with no
+    UserProfile gets the default profile image.
+
+    :param user_id: Integer. The primary key of the user.
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :returns: The image's url.
+
+    .. tip::
+
+           Use ``invalidate=True`` after changing a user's profile image, so that the console shows it at once.
+
+    **Example usage**::
+
+        url = get_cached_avatar_url(user_id=request.user.id)
+    """
+
+    @cache_results()
+    def _get_avatar_url(user_id: int, class_name: str = UserProfile.__name__) -> str:
+        user_profile = UserProfile.objects.filter(user_id=user_id).order_by("-pk").first()
+        if user_profile is None:
+            return static(DEFAULT_PROFILE_IMAGE)
+        return user_profile.avatar_url
+
+    if invalidate:
+        _get_avatar_url.invalidate(user_id, class_name=UserProfile.__name__)
+
+    return _get_avatar_url(user_id, class_name=UserProfile.__name__)
 
 
 def get_cached_user_for_username(invalidate: Optional[bool] = False, username: Optional[str] = None) -> User:

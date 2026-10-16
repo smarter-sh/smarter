@@ -346,7 +346,10 @@ class MetaDataModel(TimestampedModel):
         super().save(*args, **kwargs)
         if not is_new and type(self).__bases__[0] == MetaDataModel:
             self.__class__.get_cached_object(invalidate=True, pk=self.pk)  # type: ignore
-            self.__class__.get_cached_object(invalidate=True, name=self.name)  # type: ignore
+            # a blank name, e.g. a UserProfile created by the oauth pipeline, was never cached by name,
+            # and get_cached_object() refuses to look one up.
+            if self.name:
+                self.__class__.get_cached_object(invalidate=True, name=self.name)  # type: ignore
             self.__class__.get_cached_objects(invalidate=True)  # type: ignore
 
     def __str__(self) -> str:

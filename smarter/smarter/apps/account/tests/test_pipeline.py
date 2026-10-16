@@ -19,6 +19,7 @@ from social_core.exceptions import AuthAlreadyAssociated
 from smarter.apps.account import pipeline
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.account.utils import get_cached_avatar_url
 
 MODULE = "smarter.apps.account.pipeline"
 IMAGE = "https://example.com/picture.png"
@@ -79,6 +80,19 @@ class TestPipeline(TestAccountMixin):
         user = User.objects.get(pk=self.non_admin_user.pk)
         self.assertEqual((user.first_name, user.last_name, user.email), ("Ada", "Lovelace", "ada@example.com"))
         self.assertEqual(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).profile_image_url, IMAGE)
+
+    def test_user_details_github_avatar(self):
+        """Test that GitHub's avatar_url is stored, as Google's and LinkedIn's picture is, and the console shows it."""
+        user = self.non_admin_user
+        UserProfile.objects.filter(pk=self.non_admin_user_profile.pk).update(profile_image_url=None)
+        self.addCleanup(get_cached_avatar_url, user_id=user.id, invalidate=True)
+        self.addCleanup(UserProfile.objects.filter(pk=self.non_admin_user_profile.pk).update, profile_image_url=None)
+        details = {"first_name": user.first_name, "last_name": user.last_name, "email": user.email}
+        self.assertNotEqual(get_cached_avatar_url(user_id=user.id, invalidate=True), IMAGE)
+        with patch(f"{MODULE}.requests.head", return_value=MagicMock(status_code=HTTPStatus.OK)):
+            pipeline.user_details(None, details, None, user=user, response={"avatar_url": IMAGE})
+        self.assertEqual(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).profile_image_url, IMAGE)
+        self.assertEqual(get_cached_avatar_url(user_id=user.id), IMAGE)
 
     def test_user_details_without_image(self):
         """Test that an unchanged user, a missing image and an image that can't be fetched change nothing."""
