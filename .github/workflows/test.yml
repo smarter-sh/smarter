@@ -411,21 +411,23 @@ jobs:
       # BuildKit exports the cache during the build itself, so it is saved
       # even if a later step fails.
       #========================================================================
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-        with:
-          # BuildKit's image, from the ECR Public Gallery's mirror of Docker Hub.
-          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
-
-      # The build pulls the python base image, and docker-init pulls mariadb
-      # and redis, all from Docker Hub. Anonymous pulls share the runner's
-      # IP-based rate limit and fail with 429 Too Many Requests.
+      # docker-init pulls mariadb and redis from Docker Hub, and Buildx pulls
+      # its BuildKit image (moby/buildkit) from there too, so log in first.
+      # Anonymous pulls share the runner's IP-based rate limit and fail with
+      # 429 Too Many Requests. BuildKit used to come from the ECR Public
+      # Gallery, but anonymous ECR Public pulls have a monthly data quota per
+      # source IP that GitHub's shared runner IPs exhaust ("toomanyrequests:
+      # Data limit exceeded"), and this workflow has no AWS credentials to
+      # authenticate them. See the note at the top of this file.
       - name: Login to Docker Hub
         id: login-dockerhub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Expose GitHub runtime for BuildKit cache
         uses: crazy-max/ghaction-github-runtime@v3

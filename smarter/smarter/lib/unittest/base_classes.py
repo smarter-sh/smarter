@@ -13,6 +13,7 @@ from smarter.common.helpers.console_helpers import formatted_text, formatted_tex
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import json, logging
+from smarter.lib.django.waffle.is_active import clear_switch_cache
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         cls.name = str(to_snake_case("smarterTestBase_" + cls.hash_suffix))
         cls.uid = SmarterTestBase.generate_uid()
         cache.clear()
+        clear_switch_cache()
 
         logger.debug(
             "%s.setUpClass() Setting up test class with hash suffix: %s",

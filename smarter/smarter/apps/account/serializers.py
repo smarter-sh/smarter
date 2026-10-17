@@ -305,13 +305,13 @@ def user_can_delete(obj, kind: Optional[str], user: object) -> bool:
 
     The user must have ownership permission for the resource, as in
     :meth:`MetaDataWithOwnershipModelManager.with_ownership_permission_for`, and no other resource may
-    depend on it, as in :meth:`AbstractBroker.dependencies`. It is the ``canDelete`` of the
+    depend on it, as in :meth:`AbstractBroker.has_dependents`. It is the ``canDelete`` of the
     resource's api responses, e.g. :meth:`MetaDataWithOwnershipModelSerializer.get_can_delete`.
 
     .. note::
 
-        This builds a broker, and queries its dependencies. Checking a long list of resources is
-        correspondingly slower.
+        A resource list calls this for every row that it shows, so it builds no broker: it asks
+        the broker class whether any resource depends on this one, with a few ``EXISTS`` queries.
 
     :param obj: The resource.
     :type obj: MetaDataWithOwnershipModel
@@ -332,10 +332,8 @@ def user_can_delete(obj, kind: Optional[str], user: object) -> bool:
     if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
         return False
     try:
-        broker = broker_class(None, name=obj.name, kind=kind, user_profile=obj.user_profile)
-        return not broker.dependencies()
-    # an incomplete resource, e.g. a plugin without its plugin data, can fail to initialize its broker.
-    # pylint: disable=W0718
+        return not broker_class.has_dependents(obj)
+    # e.g. a broker that does not implement dependents(). pylint: disable=W0718
     except Exception as e:
         logger.warning(
             "%s.user_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
@@ -389,12 +387,7 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
 
         The user must have ownership permission for the resource, as in
         :meth:`MetaDataWithOwnershipModelManager.with_ownership_permission_for`, and no other
-        resource may depend on it, as in :meth:`AbstractBroker.dependencies`.
-
-        .. note::
-
-            This builds a broker, and queries its dependencies, for each resource that the user
-            may delete. Serializing a long list of resources is correspondingly slower.
+        resource may depend on it, as in :meth:`AbstractBroker.has_dependents`.
 
         :param obj: The resource.
         :type obj: MetaDataWithOwnershipModel
