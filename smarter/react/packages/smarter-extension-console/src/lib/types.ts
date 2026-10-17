@@ -35,10 +35,12 @@ export type {
  * - apiUrl: the api's root, e.g. /extensions/react-integration/api/, with a trailing slash.
  * - listUrl: the Extensions list page, e.g. /extensions/.
  * - slug: the extension of a detail page, or undefined on the list page.
+ * - canEdit: whether the user may manage extensions (a superuser); everyone else sees the pages read-only.
  */
 export type ConsoleContext = {
   session: SessionContext;
   apiUrl: string;
   listUrl: string;
   slug?: string;
+  canEdit: boolean;
 };

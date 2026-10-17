@@ -1,6 +1,7 @@
 /**
  * An extension's page: its documentation, tools, settings, availability, versions and resources,
- * and every action on it. For superusers.
+ * and every action on it. Superusers manage it; everyone else sees its overview, tools, versions and
+ * resources read-only.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -14,6 +15,9 @@ import { errorText } from "@/lib/api";
 import type { AccountRef, ActionResponse, ConsoleContext, ExtensionDetail } from "@/lib/types";
 
 type Tab = "overview" | "tools" | "settings" | "availability" | "versions" | "resources";
+
+/** The tabs that only a superuser sees: the settings and availability aren't sent to anyone else. */
+const EDIT_TABS: Tab[] = ["settings", "availability"];
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: gettext("Overview") },
@@ -126,28 +130,30 @@ export default function ExtensionPage({
             </span>
           </div>
         </div>
-        <button
-          type="button"
-          className={`btn btn-sm ${extension.enabled ? "btn-light" : "btn-primary"}`}
-          disabled={busy !== null || (!extension.enabled && extension.missingSettings.length > 0)}
-          title={
-            !extension.enabled && extension.missingSettings.length > 0
-              ? interpolate(gettext("Configure %(missingSettings)s first."), {
-                  missingSettings: extension.missingSettings.join(", "),
-                })
-              : undefined
-          }
-          onClick={() =>
-            void run("toggle", () => (extension.enabled ? api.disable(context, slug) : api.enable(context, slug)))
-          }
-        >
-          {busy === "toggle" ? <Spinner /> : null}
-          {extension.enabled ? gettext("Disable") : gettext("Enable")}
-        </button>
+        {context.canEdit ? (
+          <button
+            type="button"
+            className={`btn btn-sm ${extension.enabled ? "btn-light" : "btn-primary"}`}
+            disabled={busy !== null || (!extension.enabled && extension.missingSettings.length > 0)}
+            title={
+              !extension.enabled && extension.missingSettings.length > 0
+                ? interpolate(gettext("Configure %(missingSettings)s first."), {
+                    missingSettings: extension.missingSettings.join(", "),
+                  })
+                : undefined
+            }
+            onClick={() =>
+              void run("toggle", () => (extension.enabled ? api.disable(context, slug) : api.enable(context, slug)))
+            }
+          >
+            {busy === "toggle" ? <Spinner /> : null}
+            {extension.enabled ? gettext("Disable") : gettext("Enable")}
+          </button>
+        ) : null}
       </div>
 
       <Notice notice={notice} onClose={() => setNotice(null)} />
-      {extension.updateAvailable ? (
+      {context.canEdit && extension.updateAvailable ? (
         <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-3">
           <span>
             {interpolateNodes(
@@ -178,7 +184,7 @@ export default function ExtensionPage({
           })}
         </div>
       ) : null}
-      {!extension.enabled && extension.missingSettings.length > 0 ? (
+      {context.canEdit && !extension.enabled && extension.missingSettings.length > 0 ? (
         <div className="alert alert-info">
           {interpolateNodes(gettext("Configure %(missingSettings)s on the Settings tab, then enable the extension."), {
             missingSettings: extension.missingSettings.join(", "),
@@ -187,7 +193,7 @@ export default function ExtensionPage({
       ) : null}
 
       <ul className="nav nav-tabs nav-line-tabs fs-6 mb-6" role="tablist">
-        {TABS.map(({ key, label }) => (
+        {TABS.filter(({ key }) => context.canEdit || !EDIT_TABS.includes(key)).map(({ key, label }) => (
           <li className="nav-item" key={key} role="presentation">
             <button
               type="button"
@@ -204,7 +210,7 @@ export default function ExtensionPage({
 
       {tab === "overview" ? <Overview extension={extension} /> : null}
       {tab === "tools" ? <Tools extension={extension} /> : null}
-      {tab === "settings" ? (
+      {context.canEdit && tab === "settings" ? (
         <SettingsForm
           key={JSON.stringify(extension.settings)}
           extension={extension}
@@ -212,7 +218,7 @@ export default function ExtensionPage({
           onSave={(request) => void run("configure", () => api.configure(context, slug, request))}
         />
       ) : null}
-      {tab === "availability" ? (
+      {context.canEdit && tab === "availability" ? (
         <Availability
           key={`${extension.allAccounts}:${extension.accounts.map((account) => account.id).join(",")}`}
           context={context}
@@ -227,6 +233,7 @@ export default function ExtensionPage({
         <Versions
           extension={extension}
           busy={busy}
+          canEdit={context.canEdit}
           onRollback={(versionId, version) => {
             if (
               confirm(
@@ -242,27 +249,29 @@ export default function ExtensionPage({
       ) : null}
       {tab === "resources" ? <Resources extension={extension} /> : null}
 
-      <div className="card card-bordered border-danger mt-10">
-        <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
-          <div>
-            <h2 className="fs-5 fw-bold text-danger mb-1">{gettext("Uninstall")}</h2>
-            <p className="text-muted mb-0">
-              {gettext(
-                "Deletes the extension, its settings and versions, and the waffle switches and resources it created.",
-              )}
-            </p>
+      {context.canEdit ? (
+        <div className="card card-bordered border-danger mt-10">
+          <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <h2 className="fs-5 fw-bold text-danger mb-1">{gettext("Uninstall")}</h2>
+              <p className="text-muted mb-0">
+                {gettext(
+                  "Deletes the extension, its settings and versions, and the waffle switches and resources it created.",
+                )}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-danger"
+              disabled={busy !== null}
+              onClick={() => void uninstall()}
+            >
+              {busy === "uninstall" ? <Spinner label={gettext("Uninstalling")} /> : null}
+              {interpolateNodes(gettext("Uninstall %(displayName)s"), { displayName: extension.displayName })}
+            </button>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-danger"
-            disabled={busy !== null}
-            onClick={() => void uninstall()}
-          >
-            {busy === "uninstall" ? <Spinner label={gettext("Uninstalling")} /> : null}
-            {interpolateNodes(gettext("Uninstall %(displayName)s"), { displayName: extension.displayName })}
-          </button>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 }
@@ -446,10 +455,12 @@ function Availability({
 function Versions({
   extension,
   busy,
+  canEdit,
   onRollback,
 }: {
   extension: ExtensionDetail;
   busy: string | null;
+  canEdit: boolean;
   onRollback: (versionId: number, version: string) => void;
 }) {
   return (
@@ -479,7 +490,7 @@ function Versions({
                 <code title={version.sha256}>{version.sha256.slice(0, 12)}</code>
               </td>
               <td className="text-end">
-                {!version.isInstalled ? (
+                {canEdit && !version.isInstalled ? (
                   <button
                     type="button"
                     className="btn btn-sm btn-light"

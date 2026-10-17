@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 23:16+0000\n"
+"POT-Creation-Date: 2026-10-17 20:52+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -1442,47 +1442,7 @@ msgid "Server Logs"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html
-msgid "Resources"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Connections"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Custom Domains"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Budgets"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Guardrails"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Clients"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Hosts"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Host Compute"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "MCP Clients"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Orchestrators"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Tools"
+msgid "Models"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html
@@ -1494,11 +1454,75 @@ msgid "Proxies"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html
+msgid "LLM Hosts"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Host Compute"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Harnesses"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Clients"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Orchestrators"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Custom Domains"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Tools"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Extensions"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Updates available"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "LLM Tools"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "MCP Clients"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Connections"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "RAG"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
 msgid "Vectorsearches"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html
 msgid "Vectorstores"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Governance"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Budgets"
+msgstr ""
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Guardrails"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html
@@ -1525,14 +1549,6 @@ msgstr ""
 #: smarter/templates/dashboard/sidebar.html
 #, python-format
 msgid "GitHub Change Log %(version)s"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Extensions"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Updates available"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html

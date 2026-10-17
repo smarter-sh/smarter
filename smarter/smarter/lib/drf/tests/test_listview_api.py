@@ -83,6 +83,8 @@ class TestAuthTokenListApi(TestAccountMixin):
                 "search": "listview_api_PAGE",
                 "ordering": "",
                 "sortFields": ["createdAt", "description", "name", "updatedAt"],
+                "filter": "",
+                "filters": [],
             },
         )
         self.assertEqual(len(data["objects"]), 1)
