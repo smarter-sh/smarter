@@ -36,6 +36,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -977,27 +979,36 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the ApiPlugins and Vectorstores that use this ApiConnection.
+    @classmethod
+    def dependents(cls, instance: ApiConnection) -> SAMDependents:
+        """Return the ApiPlugins and Vectorstores that use an ApiConnection.
 
-        :return: A broker for each ApiPlugin and Vectorstore whose ``spec.connection`` is this ApiConnection.
-        :rtype: List[AbstractBroker]
+        :param instance: The ApiConnection.
+        :type instance: ApiConnection
+        :return: The ApiPlugins and Vectorstores whose ``spec.connection`` is the ApiConnection.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.llmtool.models import PluginDataApi, PluginMeta
         from smarter.apps.vectorstore.models import VectorstoreMeta
 
-        connection = self.connection
-        if not connection:
-            return []
         plugins = PluginMeta.objects.filter(
-            id__in=PluginDataApi.objects.filter(connection=connection).values("plugin_id")
+            id__in=PluginDataApi.objects.filter(connection=instance).values("plugin_id")
         )
-        return self.dependency_brokers(SAMKinds.API_PLUGIN.value, plugins) + self.dependency_brokers(
-            SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(connection=connection)
-        )
+        return [
+            (SAMKinds.API_PLUGIN.value, plugins),
+            (SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(connection=instance)),
+        ]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the ApiPlugins and Vectorstores that use this ApiConnection.
+
+        :return: A broker for each ApiPlugin and Vectorstore whose ``spec.connection`` is this ApiConnection.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.connection)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

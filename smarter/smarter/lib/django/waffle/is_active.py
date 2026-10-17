@@ -1,10 +1,12 @@
 """Switch_is_active() - Check if a Waffle switch is active with caching and database readiness checks."""
 
+import time
 from importlib import import_module
 
 from asgiref.sync import sync_to_async
 from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
+from django.db.models.signals import post_delete, post_save
 from django.db.utils import OperationalError, ProgrammingError
 from waffle import get_waffle_switch_model
 from waffle.utils import get_cache
@@ -32,6 +34,33 @@ except ImportError:
     MariaDBProgrammingError = None
 
 prefix = f"{formatted_text(__name__)}.switch_is_active()"
+
+SWITCH_CACHE_SECONDS = 5
+"""
+How long a process remembers a switch's state.
+
+Every log call of a switched logger checks a switch, often dozens of times per request, and
+waffle's own cache is Redis, so each check was a network round trip. A process now remembers
+each switch for this many seconds. Saving or deleting a switch clears what this process
+remembers at once; other processes see the change within this many seconds.
+"""
+
+_switch_cache: dict[str, tuple[bool, float]] = {}
+"""Each switch's state, and the :func:`time.monotonic` time until which it is current."""
+
+
+def clear_switch_cache(*args, **kwargs) -> None:
+    """
+    Forget every switch's remembered state, so that the next check reads it again.
+
+    It receives the ``post_save`` and ``post_delete`` signals of waffle's Switch model, e.g. from
+    the Django admin or ``waffle.testutils.override_switch``, and takes their arguments.
+    """
+    _switch_cache.clear()
+
+
+post_save.connect(clear_switch_cache, sender="waffle.Switch", dispatch_uid="smarter_clear_switch_cache_on_save")
+post_delete.connect(clear_switch_cache, sender="waffle.Switch", dispatch_uid="smarter_clear_switch_cache_on_delete")
 
 
 def create_missing_switch(switch_name: str):
@@ -65,6 +94,7 @@ def switch_is_active(switch_name: str) -> bool:
 
         This is the preferred method for checking Waffle switches in the Smarter codebase.
         It includes caching to optimize performance and handles database readiness to prevent errors.
+        Each process remembers a switch's state for :data:`SWITCH_CACHE_SECONDS`.
 
     Example:
         .. code-block:: python
@@ -108,11 +138,16 @@ def switch_is_active(switch_name: str) -> bool:
         )
         if t is not None
     ) or (Exception,)
+    cached = _switch_cache.get(switch_name)
+    if cached is not None and cached[1] > time.monotonic():
+        return cached[0]
     try:
         switch = get_waffle_switch_model().get(switch_name)
         if not switch.pk:
             switch = create_missing_switch(switch_name)
-        return switch.is_active()
+        is_active = switch.is_active()
+        _switch_cache[switch_name] = (is_active, time.monotonic() + SWITCH_CACHE_SECONDS)
+        return is_active
     except (*db_exceptions, AppRegistryNotReady) as e:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
