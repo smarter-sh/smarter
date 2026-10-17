@@ -130,3 +130,6 @@ instead of naming a customer's database.
   or only in your scratchpad.
 - In your reply, list what to review before publishing: guessed content,
   unverified links, anything you left out on purpose, and the exact date.
+- If you were asked to publish the post yourself, or to pick up from the last
+  published announcement and group several releases, continue with
+  `blog.smarter.sh-publish`.

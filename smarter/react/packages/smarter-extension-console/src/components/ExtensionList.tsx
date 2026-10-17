@@ -1,6 +1,6 @@
 /**
  * The Extensions list page: the installed extensions, and the registry's, which can be installed,
- * and an archive's upload. For superusers.
+ * and an archive's upload. Superusers manage them; everyone else sees them read-only.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -147,55 +147,63 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
             </li>
           ))}
         </ul>
-        <div className="d-flex gap-2">
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".zip,application/zip"
-            className="d-none"
-            aria-label={gettext("Extension archive")}
-            onChange={(event) => void upload(event.target.files?.[0])}
-          />
-          <button
-            type="button"
-            className="btn btn-sm btn-light-primary"
-            disabled={busy !== null}
-            onClick={() => fileInput.current?.click()}
-          >
-            {busy === "upload" ? (
-              <Spinner label={gettext("Uploading")} />
-            ) : (
-              <i className="ki-outline ki-file-up fs-4 me-1" />
-            )}
-            {gettext("Upload extension")}
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm btn-light"
-            disabled={busy !== null || !list?.registryEnabled}
-            title={
-              list && !list.registryEnabled
-                ? gettext("The registry is disabled until its public key is set.")
-                : undefined
-            }
-            onClick={() => void run("check", () => api.checkUpdates(context))}
-          >
-            {busy === "check" ? (
-              <Spinner label={gettext("Checking")} />
-            ) : (
-              <i className="ki-outline ki-arrows-circle fs-4 me-1" />
-            )}
-            {gettext("Check for updates")}
-          </button>
-        </div>
+        {context.canEdit ? (
+          <div className="d-flex gap-2">
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".zip,application/zip"
+              className="d-none"
+              aria-label={gettext("Extension archive")}
+              onChange={(event) => void upload(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              className="btn btn-sm btn-light-primary"
+              disabled={busy !== null}
+              onClick={() => fileInput.current?.click()}
+            >
+              {busy === "upload" ? (
+                <Spinner label={gettext("Uploading")} />
+              ) : (
+                <i className="ki-outline ki-file-up fs-4 me-1" />
+              )}
+              {gettext("Upload extension")}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-light"
+              disabled={busy !== null || !list?.registryEnabled}
+              title={
+                list && !list.registryEnabled
+                  ? gettext("The registry is disabled until its public key is set.")
+                  : undefined
+              }
+              onClick={() => void run("check", () => api.checkUpdates(context))}
+            >
+              {busy === "check" ? (
+                <Spinner label={gettext("Checking")} />
+              ) : (
+                <i className="ki-outline ki-arrows-circle fs-4 me-1" />
+              )}
+              {gettext("Check for updates")}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {tab === "installed" ? (
-        <InstalledTable list={list} busy={busy} onToggle={(extension) => void toggle(extension)} />
+        <InstalledTable
+          list={list}
+          busy={busy}
+          canEdit={context.canEdit}
+          onToggle={(extension) => void toggle(extension)}
+        />
       ) : (
         <RegistryGrid
           registry={registry}
           busy={busy}
+          canEdit={context.canEdit}
           onRefresh={refreshRegistry}
           onInstall={(entry) => void installFromRegistry(entry)}
           onDetails={setDetails}
@@ -206,6 +214,7 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
         key={details?.slug ?? ""}
         entry={details}
         busy={busy}
+        canEdit={context.canEdit}
         onClose={() => setDetails(null)}
         onInstall={(entry, version) => void installFromRegistry(entry, version)}
       />
@@ -217,16 +226,23 @@ export default function ExtensionList({ context, navigate = (url) => window.loca
 export function InstalledTable({
   list,
   busy,
+  canEdit = true,
   onToggle,
 }: {
   list: ExtensionListResponse | null;
   busy: string | null;
+  /** Whether the enabled switches can be toggled. */
+  canEdit?: boolean;
   onToggle: (extension: ExtensionSummary) => void;
 }) {
   if (list === null) return <p className="text-muted">{gettext("Loading...")}</p>;
   if (list.objects.length === 0)
     return (
-      <p className="text-muted">{gettext("No extensions are installed. Browse the registry, or upload an archive.")}</p>
+      <p className="text-muted">
+        {canEdit
+          ? gettext("No extensions are installed. Browse the registry, or upload an archive.")
+          : gettext("No extensions are installed.")}
+      </p>
     );
   return (
     <div className="table-responsive">
@@ -277,7 +293,7 @@ export function InstalledTable({
                     type="checkbox"
                     role="switch"
                     checked={extension.enabled}
-                    disabled={busy !== null}
+                    disabled={busy !== null || !canEdit}
                     aria-label={interpolate(gettext("Enable %(displayName)s"), { displayName: extension.displayName })}
                     onChange={() => onToggle(extension)}
                   />
@@ -302,12 +318,15 @@ const BADGE_FILTERS = [
 export function RegistryGrid({
   registry,
   busy,
+  canEdit = true,
   onRefresh,
   onInstall,
   onDetails,
 }: {
   registry: RegistryResponse | null;
   busy: string | null;
+  /** Whether the registry can be refreshed, and its extensions installed. */
+  canEdit?: boolean;
   onRefresh: () => void;
   onInstall: (entry: RegistryExtension) => void;
   onDetails: (entry: RegistryExtension) => void;
@@ -351,10 +370,12 @@ export function RegistryGrid({
             </option>
           ))}
         </select>
-        <button type="button" className="btn btn-sm btn-light" disabled={busy !== null} onClick={onRefresh}>
-          {busy === "registry" ? <Spinner label={gettext("Refreshing")} /> : null}
-          {gettext("Refresh")}
-        </button>
+        {canEdit ? (
+          <button type="button" className="btn btn-sm btn-light" disabled={busy !== null} onClick={onRefresh}>
+            {busy === "registry" ? <Spinner label={gettext("Refreshing")} /> : null}
+            {gettext("Refresh")}
+          </button>
+        ) : null}
       </div>
       {entries.length === 0 ? (
         <p className="text-muted">{gettext("No extensions match.")}</p>
@@ -362,7 +383,7 @@ export function RegistryGrid({
         <div className="row g-5">
           {entries.map((entry) => (
             <div className="col-md-6 col-xl-4" key={entry.slug}>
-              <RegistryCard entry={entry} busy={busy} onInstall={onInstall} onDetails={onDetails} />
+              <RegistryCard entry={entry} busy={busy} canEdit={canEdit} onInstall={onInstall} onDetails={onDetails} />
             </div>
           ))}
         </div>
@@ -375,11 +396,13 @@ export function RegistryGrid({
 function RegistryCard({
   entry,
   busy,
+  canEdit,
   onInstall,
   onDetails,
 }: {
   entry: RegistryExtension;
   busy: string | null;
+  canEdit: boolean;
   onInstall: (entry: RegistryExtension) => void;
   onDetails: (entry: RegistryExtension) => void;
 }) {
@@ -404,7 +427,7 @@ function RegistryCard({
           {entry.license ? ` · ${entry.license}` : ""}
         </p>
         <div className="d-flex gap-2 align-items-center">
-          {entry.action === "install" || entry.action === "update" ? (
+          {canEdit && (entry.action === "install" || entry.action === "update") ? (
             <button
               type="button"
               className="btn btn-sm btn-primary"
@@ -443,11 +466,13 @@ function RegistryCard({
 function RegistryDetails({
   entry,
   busy,
+  canEdit,
   onClose,
   onInstall,
 }: {
   entry: RegistryExtension | null;
   busy: string | null;
+  canEdit: boolean;
   onClose: () => void;
   onInstall: (entry: RegistryExtension, version: string) => void;
 }) {
@@ -455,7 +480,7 @@ function RegistryDetails({
   // the dialog is keyed by its extension, so its version starts as the extension's newest.
   const [version, setVersion] = useState(entry?.latestVersion ?? "");
   if (!entry) return null;
-  const canInstall = entry.action !== "uploaded" && compatible.length > 0;
+  const canInstall = canEdit && entry.action !== "uploaded" && compatible.length > 0;
   return (
     <Modal show={true} title={entry.displayName} onClose={onClose}>
       <div className="mb-4">

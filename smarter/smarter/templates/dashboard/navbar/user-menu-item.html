@@ -80,13 +80,14 @@
         <span class="menu-title position-relative"
           >{% translate "Language" %}
           <span
-            class="fs-8 rounded bg-light px-3 py-2 position-absolute translate-middle-y top-50 end-0"
+            class="fs-8 rounded bg-light px-3 py-2 position-absolute translate-middle-y top-50 end-0 text-nowrap"
             lang="{{ current_language.code }}"
             >{{ current_language.name_local|capfirst }}</span
         ></span>
       </a>
       <!--begin::Menu sub-->
-      <div class="menu-sub menu-sub-dropdown w-175px py-4">
+      <!-- as wide as its longest language name, e.g. "Português brasileiro", which mustn't wrap -->
+      <div class="menu-sub menu-sub-dropdown min-w-175px py-4">
         <form action="{% url 'set_language' %}" method="post">
           {% csrf_token %}
           <input name="next" type="hidden" value="{{ request.get_full_path }}" />
@@ -97,7 +98,7 @@
               name="language"
               value="{{ language.code }}"
               lang="{{ language.code }}"
-              class="menu-link d-flex px-5 w-100 border-0 bg-transparent{% if language.code == current_language.code %} active{% endif %}"
+              class="menu-link d-flex px-5 w-100 border-0 bg-transparent text-nowrap{% if language.code == current_language.code %} active{% endif %}"
             >
               {{ language.name_local|capfirst }}
             </button>

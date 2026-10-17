@@ -1,3 +1,196 @@
-.card-body {
-  min-height: 500px;
+/* the same small uppercase label as the request card's and the provider card's. */
+.passthrough-response-label {
+  display: flex;
+  align-items: center;
+  margin: 0 0 0.6rem;
+  color: var(--bs-gray-500);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.passthrough-response-label i {
+  color: inherit;
+}
+
+.passthrough-response-meta {
+  display: inline-flex;
+  align-items: center;
+  color: var(--bs-gray-600);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.passthrough-response-meta i {
+  color: inherit;
+}
+
+/* before the first response, and while one is on its way. */
+.passthrough-response-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+  text-align: center;
+}
+
+.passthrough-response-placeholder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background-color: var(--bs-gray-100);
+  color: var(--bs-gray-500);
+}
+
+.passthrough-response-placeholder-icon i {
+  color: inherit;
+}
+
+.passthrough-response-panel {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--bs-success);
+  border-radius: 0.75rem;
+  background-color: rgba(var(--bs-gray-100-rgb, 245, 248, 250), 0.7);
+}
+
+.passthrough-response-error {
+  border-left-color: var(--bs-danger);
+  background-color: var(--bs-danger-light);
+}
+
+.passthrough-response-error .passthrough-response-label {
+  color: var(--bs-danger);
+}
+
+.passthrough-response-content {
+  margin: 0;
+  color: var(--bs-gray-900);
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.passthrough-response-tool-calls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passthrough-response-tool-calls li {
+  display: flex;
+  align-items: center;
+  color: var(--bs-gray-600);
+}
+
+.passthrough-response-tool-calls i {
+  color: inherit;
+}
+
+/* outranks the theme's code:not([class*=language-]). */
+.passthrough-response-tool-calls code.passthrough-response-code {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--bs-gray-200);
+  border-radius: 0.35rem;
+  background-color: var(--bs-body-bg, #fff);
+  color: var(--bs-gray-800);
+  font-size: 0.85rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.passthrough-response-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0.9rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--bs-gray-300);
+}
+
+.passthrough-response-stats dt {
+  color: var(--bs-gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.passthrough-response-stats dd {
+  margin: 0;
+  color: var(--bs-gray-800);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.passthrough-response-stacktrace {
+  margin-top: 0.75rem;
+}
+
+.passthrough-response-stacktrace summary {
+  color: var(--bs-danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.passthrough-response-stacktrace pre {
+  max-height: 320px;
+  margin: 0.5rem 0 0;
+  padding: 0.75rem 1rem;
+  overflow: auto;
+  border-radius: 0.5rem;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* the success emoji pops in, a moment after the response. */
+.emoji-animate {
+  display: inline-block;
+  font-size: 1.4rem;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity 200ms ease-out,
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.emoji-animate--show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emoji-animate {
+    transition: none;
+  }
+}
+
+/* the header keeps its height whether or not it has a status and buttons. */
+.card-header.passthrough-response-header {
+  min-height: 4.5rem;
+}
+
+.passthrough-response-error-class {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.35rem;
+  background-color: var(--bs-body-bg, #fff);
+  font-family: var(--bs-font-monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }

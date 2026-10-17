@@ -1,5 +1,6 @@
 /**
- * The Smarter Extensions app: the Extensions list, or an extension's page, for superusers.
+ * The Smarter Extensions app: the Extensions list, or an extension's page. Superusers manage
+ * extensions; everyone else sees them read-only.
  */
 import ExtensionList from "@/components/ExtensionList";
 import ExtensionPage from "@/components/ExtensionPage";

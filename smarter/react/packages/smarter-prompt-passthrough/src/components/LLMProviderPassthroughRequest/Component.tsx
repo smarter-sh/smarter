@@ -43,30 +43,33 @@ export default function LLMProviderPassthroughRequest({
 }: ProviderPassthroughRequestProps) {
   return (
     <div className="card shadow-sm">
-      <div className="card-header d-flex flex-column align-items-stretch">
-        <div className="row w-100 mt-3 mb-2">
-          <div className="col-6">
+      <div className="card-header d-block py-5">
+        <div className="d-flex flex-wrap gap-4 mb-4">
+          <label className="passthrough-request-field">
+            <span className="passthrough-request-label">{gettext("LLM provider")}</span>
             <LLMProviderSelector providersJson={providersJson} value={llmProviderId} onChange={onLLMProviderChange} />
-          </div>
-          <div className="col-6">
+          </label>
+          <label className="passthrough-request-field">
+            <span className="passthrough-request-label">{gettext("Prompt template")}</span>
             <TemplateSelector value={templateId} onChange={onTemplateChange} />
-          </div>
+          </label>
         </div>
-        <div className="row w-100 mt-3 mb-2">
-          <div className="col-9">
-            <input
-              type="text"
-              className="form-control"
-              value={providerBaseUrl ? `${providerBaseUrl}${connectivityTestPath}` : ""}
-              readOnly
-              style={{ backgroundColor: "#f8f9fa", fontSize: "0.95rem" }}
-            />
-          </div>
-          <div className="col-3 d-flex align-items-center justify-content-end">
-            <button className="btn btn-primary w-100" type="button" onClick={onSend} disabled={isSending}>
-              {isSending ? gettext("SENDING...") : gettext("SEND")}
-            </button>
-          </div>
+        <div className="input-group">
+          <input
+            type="text"
+            aria-label={gettext("Endpoint")}
+            className="form-control bg-light font-monospace fs-7"
+            value={providerBaseUrl ? `${providerBaseUrl}${connectivityTestPath}` : ""}
+            readOnly
+          />
+          <button className="btn btn-primary px-8" type="button" onClick={onSend} disabled={isSending}>
+            {isSending ? (
+              <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            ) : (
+              <i className="ki-outline ki-send fs-4 me-1" aria-hidden="true"></i>
+            )}
+            {isSending ? gettext("SENDING...") : gettext("SEND")}
+          </button>
         </div>
       </div>
 
