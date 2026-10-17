@@ -76,6 +76,15 @@ email links to its CDN URL. The email is sent only when SMTP is configured (see
 :doc:`technologies/smtp`), and a Job that is killed, for example for running out of memory, sends
 none.
 
+A CronJob, ``smarter-mysql-backup``, backs up the database every night (``databaseScheduledBackup``),
+with ``mysqldump``, and uploads the compressed dump to S3. It emails its result the same way, to
+``databaseScheduledBackup.notifyEmail`` or to ``SMARTER_EMAIL_ADMIN``, with the backup's log
+attached. After a successful backup, the email names the backup file, its size, and its location in
+S3, which the backup confirms by comparing the uploaded object's size with the file's. The backup runs
+on a plain Debian image, as an init container, so the email is sent by a second container, from the
+Smarter image, which passes that summary to ``email_job_log --summary``. A failed backup is retried
+in a new pod, up to twice, and each attempt sends its own email.
+
 
 Docker and Kubernetes Compared
 ------------------------------

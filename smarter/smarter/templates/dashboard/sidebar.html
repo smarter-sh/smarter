@@ -145,6 +145,30 @@
             </div>
             <!--end:Menu item Prompt Passthrough -->
 
+            <!--begin:Menu item Terminal -->
+            {% if sidebar.terminal and user.is_superuser %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.terminal }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-screen fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                    <span class="path4"></span>
+                  </i>
+                </span>
+                <span class="menu-title">{% translate "Terminal" %}</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Terminal -->
+
             <!--begin:Menu item Models-->
             <div class="here menu-item pt-5">
               <!--begin:Menu content-->
