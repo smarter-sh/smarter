@@ -38,8 +38,8 @@ Prerequisites
 
 You are assumed to have the following:
 
-- A running Smarter platform, v0.16.0 or later (includes the Proxy feature).
-- A Smarter administrator-level account that can login to the Smarter
+- A running Smarter platform, v0.16.0 or later (includes built-in proxies).
+- A Smarter administrator-level account that can log in to the Smarter
   web console.
 - The `Smarter CLI <https://docs.smarter.sh/smarter-framework/smarter-cli.html>`__
   installed and configured with your own Smarter administrator API key.
@@ -208,9 +208,6 @@ Step 4: Initialize the provider and the proxy
    docker exec smarter-app python manage.py initialize_providers
    docker exec smarter-app python manage.py add_builtin_proxies
 
-**Production:** the Helm chart's post-upgrade job runs platform
-initialization. To run the commands yourself, run them in the application pod.
-
 The second command reports which proxies it created. Only providers with a key
 get one:
 
@@ -221,6 +218,9 @@ get one:
    Skipped Proxy openai: its Provider or API key Secret does not exist.
    ...
 
+**Production:** the Helm chart's post-upgrade job runs platform
+initialization. To run the commands yourself, run them in the application pod.
+
 Step 5: Verify the proxy exists
 -------------------------------
 
@@ -228,7 +228,7 @@ Step 5: Verify the proxy exists
 
    smarter get proxies
 
-Before Step 4 this table is empty. Afterwards it contains one row named
+Before Step 4 this table would be empty. Afterwards it contains one row named
 ``anthropic`` with ``isActive`` true.
 
 Like every Smarter resource, the proxy can be expressed as a YAML manifest.
@@ -287,7 +287,7 @@ Give each programmer the proxy address and their key. Their entire setup is:
 
 .. code-block:: bash
 
-   export ANTHROPIC_BASE_URL="http://<smarter-host>/api/v1/proxy/anthropic"
+   export ANTHROPIC_BASE_URL="https://<smarter-host>/api/v1/proxy/anthropic"
    export ANTHROPIC_API_KEY="<personal Smarter API key>"
    claude
 
@@ -306,12 +306,11 @@ produces ``.../v1/v1/messages``, which the proxy rejects with ``403``.
    programmer who declines by mistake is not asked again and the key is not
    used.
 
-
 .. note::
 
    All proxy usage is billed to the platform's Anthropic key. Claude Code
    chooses its own default model, which may be the most expensive tier, so
-   tell programmers which model to choose with ``/model``, and consider
+   tell programmers which model to choose with ``/model``, and to consider
    Smarter budgets.
 
 Proof of Concept
@@ -319,7 +318,7 @@ Proof of Concept
 
 The setup is complete when a programmer's Smarter API key, with no Anthropic
 key on the programmer's side, returns real Claude responses. Run these tests
-as a programmer would: with a key issued in Step 6 to a staff user who is not
+as a programmer would, using a key issued in Step 6 to a staff user who is not
 the administrator.
 
 .. code-block:: bash
@@ -331,7 +330,7 @@ the administrator.
 
 .. code-block:: bash
 
-   curl -s https://localhost:9357/api/v1/proxy/anthropic/v1/models \
+   curl -s http://localhost:9357/api/v1/proxy/anthropic/v1/models \
      -H "x-api-key: $PROGRAMMER_KEY" \
      -H "anthropic-version: 2023-06-01"
 
@@ -415,9 +414,8 @@ List each key's last use:
        print(t.name, '|', t.last_used_at)
    "
 
-**Expected result:** the programmer's key shows a last-used time matching the
-Claude Code requests in the log, and the administrator's key does not
-(abbreviated):
+**Expected result** (abbreviated): the programmer's key shows a last-used time
+matching the Claude Code requests in the log.
 
 .. code-block:: text
 
