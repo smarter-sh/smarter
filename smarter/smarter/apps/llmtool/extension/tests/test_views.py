@@ -61,16 +61,67 @@ class TestExtensionPages(ConsoleClientMixin, ExtensionTestMixin):
         self.assertIn('smarter-extension-slug="echo"', content)
         self.assertEqual(self.client.get(PAGE + "nope/").status_code, 404)
 
-    def test_superusers_only(self):
-        """The pages and the api are for superusers only."""
+    def test_can_edit(self):
+        """The pages tell the React app whether the user may manage extensions."""
+        self.install_echo()
+        self.assertIn('smarter-extension-can-edit="true"', self.client.get(PAGE).content.decode())
         client = self.client_for(self.non_admin_user)
-        self.assertEqual(client.get(PAGE).status_code, 403)
-        self.assertEqual(client.get(PAGE + "echo/").status_code, 403)
-        self.assertIn("superusers", self.post("list/", client=client, expect=403)["error"])
+        self.assertIn('smarter-extension-can-edit="false"', client.get(PAGE).content.decode())
+        self.assertIn('smarter-extension-can-edit="false"', client.get(PAGE + "echo/").content.decode())
+
+    def test_restricted_extension_page(self):
+        """A user who is not a superuser can't see the page of an extension that their account may not use."""
+        extension = self.install_echo()
+        extension.all_accounts = False
+        extension.save()
+        self.assertEqual(self.client_for(self.non_admin_user).get(PAGE + "echo/").status_code, 404)
+        self.assertEqual(self.client.get(PAGE + "echo/").status_code, 200)
 
     def test_api_is_post_only(self):
         """The api answers only POST."""
         self.assertEqual(self.client.get(BASE + "list/").status_code, 405)
+
+
+class TestExtensionApiReadOnly(ConsoleClientMixin, ExtensionTestMixin):
+    """Test what a user who is not a superuser may see and do with the api."""
+
+    def setUp(self):
+        super().setUp()
+        self.mortal = self.client_for(self.non_admin_user)
+
+    def test_list(self):
+        """The list has the extensions that the user's account may use."""
+        extension = self.install_echo()
+        self.assertIn("echo", [item["slug"] for item in self.post("list/", client=self.mortal)["objects"]])
+        extension.all_accounts = False
+        extension.save()
+        self.assertNotIn("echo", [item["slug"] for item in self.post("list/", client=self.mortal)["objects"]])
+        extension.accounts.add(self.account)
+        self.assertIn("echo", [item["slug"] for item in self.post("list/", client=self.mortal)["objects"]])
+
+    def test_detail(self):
+        """The detail leaves out the settings, the accounts, the admin's Secrets and who installed each version."""
+        self.install_echo()
+        self.secret("echo_read_only_key")
+        detail = self.post("extensions/echo/", client=self.mortal)["extension"]
+        self.assertEqual((detail["settings"], detail["accounts"], detail["availableSecrets"]), ([], [], []))
+        self.assertIsNone(detail["versions"][0]["installedBy"])
+        self.assertIn("ext_echo_echo", [tool["functionName"] for tool in detail["tools"]])
+        self.assertTrue(self.post("extensions/echo/")["extension"]["availableSecrets"])
+
+    def test_restricted_detail(self):
+        """The detail of an extension that the user's account may not use is a 404."""
+        extension = self.install_echo()
+        extension.all_accounts = False
+        extension.save()
+        self.post("extensions/echo/", client=self.mortal, expect=404)
+
+    def test_actions_are_forbidden(self):
+        """Every action, and the accounts, are for superusers only."""
+        self.install_echo()
+        for path in ("extensions/echo/enable/", "extensions/echo/uninstall/", "accounts/", "check-updates/"):
+            self.assertIn("superusers", self.post(path, client=self.mortal, expect=403)["error"])
+        self.assertIsNotNone(Extension.objects.filter(slug="echo").first())
 
 
 class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
@@ -239,6 +290,14 @@ class TestExtensionRegistryApi(ConsoleClientMixin, RegistryTestMixin):
         self.assertIn("<p>Echoes.</p>", echo["docsHtml"])
         self.assertEqual([version["version"] for version in echo["versions"]], ["9.0.0", "1.1.0", "1.0.0"])
         self.assertFalse(echo["versions"][0]["compatible"])
+
+    def test_registry_read_only(self):
+        """A user who is not a superuser sees the registry, but can't refresh it."""
+        client = self.client_for(self.non_admin_user)
+        with patch.object(views.registry, "refresh_index") as refresh_index:
+            data = self.post("registry/", {"refresh": True}, client=client)
+        refresh_index.assert_not_called()
+        self.assertEqual(data["objects"][0]["slug"], "echo")
 
     def test_install_update_and_check(self):
         """An extension is installed, offered its update, and updated."""

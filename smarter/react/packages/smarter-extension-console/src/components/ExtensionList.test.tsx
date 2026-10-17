@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import ExtensionList from "@/components/ExtensionList";
-import { API_URL, disabledRegistry, listContext, listResponse } from "@/mocks/fixtures";
+import { API_URL, disabledRegistry, listContext, listResponse, readOnlyListContext } from "@/mocks/fixtures";
 import { errorHandlers, listHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
@@ -28,6 +28,20 @@ describe("ExtensionList", () => {
     expect(await screen.findByText("Disabled.")).toBeInTheDocument();
     await user.click(screen.getByLabelText("Enable Acme CRM"));
     expect(await screen.findByText("Enabled.")).toBeInTheDocument();
+  });
+
+  it("is read-only for a user who is not a superuser", async () => {
+    server.use(...listHandlers());
+    const user = userEvent.setup();
+    render(<ExtensionList context={readOnlyListContext} />);
+    await screen.findByRole("row", { name: /Weather/ });
+    expect(screen.getByLabelText("Enable Weather")).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Upload extension/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Check for updates/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "Browse the registry" }));
+    expect(await screen.findByRole("article", { name: "Weather" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^(Install|Update to)/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh" })).not.toBeInTheDocument();
   });
 
   it("checks the registry for updates", async () => {

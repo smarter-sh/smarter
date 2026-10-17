@@ -8,6 +8,8 @@ import {
   disabledRegistry,
   listContext,
   listResponse,
+  readOnlyDetailContext,
+  readOnlyListContext,
 } from "@/mocks/fixtures";
 import { detailHandlers, errorHandlers, listHandlers } from "@/mocks/handlers";
 
@@ -30,6 +32,17 @@ export const NothingInstalled: Story = {
   parameters: {
     msw: { handlers: listHandlers({ ...listResponse, objects: [], registryEnabled: false }, disabledRegistry) },
   },
+};
+
+/** The Extensions list, read-only, as a user who is not a superuser sees it. */
+export const ReadOnlyList: Story = {
+  args: { context: readOnlyListContext },
+};
+
+/** An extension's page, read-only, as a user who is not a superuser sees it. */
+export const ReadOnlyPage: Story = {
+  args: { context: readOnlyDetailContext },
+  parameters: { msw: { handlers: detailHandlers() } },
 };
 
 /** An extension's page, with an update. */

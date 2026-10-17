@@ -1,0 +1,173 @@
+/* the logo, on a dark tile: most providers publish a white logo, for dark backgrounds. */
+.provider-meta-logo {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 60px;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: #1e1e2d;
+}
+
+.provider-meta-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.provider-meta-logo-initial {
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.provider-meta-label {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  color: var(--bs-gray-500);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.provider-meta-label i {
+  color: inherit;
+}
+
+.provider-meta-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.provider-meta-flag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: default;
+}
+
+.provider-meta-flag i {
+  color: inherit;
+}
+
+.provider-meta-flag-on {
+  background-color: var(--bs-success-light);
+  color: var(--bs-success);
+}
+
+.provider-meta-flag-warning {
+  background-color: var(--bs-danger-light);
+  color: var(--bs-danger);
+}
+
+.provider-meta-flag-off {
+  border: 1px dashed var(--bs-gray-300);
+  color: var(--bs-gray-500);
+}
+
+/* four tiles across on a wide page, two on a medium one, stacked on a phone. */
+.provider-meta-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.provider-meta-section {
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(var(--bs-gray-100-rgb, 245, 248, 250), 0.7);
+}
+
+.provider-meta-section .provider-meta-label {
+  margin-bottom: 0.75rem;
+}
+
+.provider-meta-detail + .provider-meta-detail {
+  margin-top: 0.7rem;
+}
+
+.provider-meta-detail dt {
+  margin-bottom: 0.1rem;
+  color: var(--bs-gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.provider-meta-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--bs-gray-800);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.provider-meta-detail dd i {
+  color: inherit;
+}
+
+.provider-meta-secondary {
+  display: inline-flex;
+  align-items: center;
+  color: var(--bs-gray-500);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.provider-meta-secondary a {
+  color: inherit;
+}
+
+/* outranks the theme's code:not([class*=language-]), whose large pink code is for prose. */
+.provider-meta-detail code.provider-meta-code {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--bs-gray-200);
+  border-radius: 0.35rem;
+  background-color: var(--bs-body-bg, #fff);
+  color: var(--bs-gray-800);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.provider-meta-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--bs-gray-300);
+}
+
+.provider-meta-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.provider-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Prompt's styles.css gives every .card-body room for the editor. This card needs only its content's. */
+.card-body.provider-meta-body {
+  min-height: 0;
+}
