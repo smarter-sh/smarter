@@ -71,6 +71,7 @@ from smarter.common.helpers.console_helpers import (
 )
 from smarter.common.utils import (
     get_diagnostics,
+    get_repository_url,
     get_semantic_version,
     recursive_sort_dict,
 )
@@ -2582,7 +2583,7 @@ class Settings(BaseSettings):
     This setting specifies the web address of the logo image used in the platform's user interface.
     It should be a valid URL pointing to an external image resource accessible by the frontend.
 
-    :type: Optional[str]
+    :type: Optional[AnyUrl]
     :default: Value from ``settings_defaults.LOGO``
     :raises SmarterConfigurationError: If the value is not a valid URL string.
     """
@@ -2595,7 +2596,7 @@ class Settings(BaseSettings):
             v (Optional[AnyUrl]): The logo value to validate.
 
         Returns:
-            HttpUrl: The validated logo.
+            AnyUrl: The validated logo.
         """
         if v is None:
             return settings_defaults.LOGO
@@ -4379,6 +4380,23 @@ class Settings(BaseSettings):
             See https://github.com/smarter-sh/smarter/blob/main/docs/legacy/SEMANTIC_VERSIONING.md for more information.
         """
         return get_semantic_version()
+
+    @cached_property
+    def repository_url(self) -> str:
+        """
+        The https url of the source code repository of the running platform, without credentials.
+
+        Taken from ``git remote -v`` (the ``origin`` remote's fetch url), so that a fork links
+        to its own repository, and its own GitHub Actions badges. The Docker image has no
+        ``.git`` directory, so a platform running in a container gets the default,
+        :data:`~smarter.common.const.SMARTER_PROJECT_REPOSITORY_URL`. See
+        :func:`smarter.common.utils.repository.get_repository_url`.
+
+        Example:
+            >>> print(smarter_settings.repository_url)
+            'https://github.com/smarter-sh/smarter'
+        """
+        return get_repository_url()
 
     @cached_property
     def python_version(self) -> str:

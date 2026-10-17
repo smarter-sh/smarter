@@ -33,6 +33,8 @@ interface MyResourcesData {
   pending_deployments: number;
   llmclients_qty: number;
   llmclients_url: string;
+  /** The LLMClient list, narrowed to the LLMClients that pending_deployments counts. */
+  pending_deployments_url?: string;
   plugins_qty: number;
   plugins_url: string;
   mcpclients_qty: number;
@@ -142,7 +144,10 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       {loading ? (
                         <Loading />
                       ) : (
-                        <a href={data?.llmclients_url} className="link-white opacity-75-hover fw-bold d-block mb-1">
+                        <a
+                          href={data?.pending_deployments_url ?? data?.llmclients_url}
+                          className="link-white opacity-75-hover fw-bold d-block mb-1"
+                        >
                           {interpolateNodes(gettext("%(my_resources_pending_deployments)s pending"), {
                             my_resources_pending_deployments,
                           })}

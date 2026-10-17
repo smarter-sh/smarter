@@ -30,6 +30,9 @@ SMARTER_ORGANIZATION_WEBSITE_URL = "https://lawrencemcdaniel.com"  # FIX NOTE: s
 SMARTER_ORGANIZATION_NAME = "Lawrence P. McDaniel"  # FIX NOTE: set this to the non-profit organization website URL when that is set up. For now, it points to my personal website.
 SMARTER_PROJECT_CDN_URL = f"https://cdn.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_PROJECT_DOCS_URL = f"https://docs.{SMARTER_PROJECT_ROOT_DOMAIN}"
+SMARTER_PROJECT_REPOSITORY_URL = (
+    "https://github.com/smarter-sh/smarter"  # the default of smarter_settings.repository_url
+)
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 
 # The following are used in the React app
