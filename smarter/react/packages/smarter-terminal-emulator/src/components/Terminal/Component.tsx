@@ -1,22 +1,30 @@
 // ----------------------------------------------------------------------------
 // TerminalEmulator Component.
 //
-// This component renders a terminal emulator using xterm.js and connects to a
-// log stream API. It displays incoming log messages in real-time and shows
-// connection status. The component is styled to resemble a classic terminal
-// window and is responsive to container size changes.
+// This component renders a terminal emulator using xterm.js, connected to a
+// bash shell inside the server's container through a WebSocket (see
+// lib/session.ts). It prints a banner that says where the shell runs and how
+// the session can end, passes keystrokes and resizes to the shell, and draws
+// the shell's output. When the session ends, Enter starts a new one. Its
+// screen is kept when the page is left, and redrawn when it is opened again in
+// the same browser tab, above a new session (see lib/screen.ts). The
+// component is styled to resemble a classic terminal window and is responsive
+// to container size changes.
 // ----------------------------------------------------------------------------
 import { useEffect, useRef, useState } from "react";
 import { FitAddon } from "@xterm/addon-fit";
+import { SerializeAddon } from "@xterm/addon-serialize";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import { useLogStream } from "@/components/Terminal/logStream";
 import "@/components/Terminal/styles.css";
 import { gettext } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
 
-// These strings are internal SSE stream status messages emitted by the server. They can
-// appear in replay history from older log entries and should never surface to dashboard users.
-const SUPPRESSED_STARTUP_LINES = new Set(["Waiting for log stream...", "[stream] connected"]);
+import { banner, ended, restored } from "@/lib/banner";
+import { MAX_SAVED_LINES, loadScreen, saveScreen } from "@/lib/screen";
+import { TerminalSession } from "@/lib/session";
+import type { SessionInfo } from "@/lib/session";
+
 const terminalTheme = {
   background: "#171b20",
   foreground: "#d9e1ea",
@@ -39,28 +47,24 @@ const terminalTheme = {
   brightWhite: "#ffffff",
 };
 const terminalConfig = {
-  convertEol: true,
-  cursorBlink: false,
-  disableStdin: true,
+  cursorBlink: true,
   fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, monospace',
   fontSize: 13,
-  lineHeight: 1.4,
-  scrollback: 5000,
+  lineHeight: 1.2,
+  scrollback: 10000,
   theme: terminalTheme,
 };
 
+type Status = "connecting" | "connected" | "ended";
+
 interface TerminalEmulatorProps {
-  apiUrl: string;
+  sessionContext: SessionContext;
 }
 
-function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
-  const { logs, connected, error, isInitializing } = useLogStream(apiUrl);
-  const [showLoading, setShowLoading] = useState(false);
+function TerminalEmulator({ sessionContext }: TerminalEmulatorProps) {
+  const [status, setStatus] = useState<Status>("connecting");
+  const [info, setInfo] = useState<SessionInfo | null>(null);
   const terminalContainerRef = useRef<HTMLDivElement | null>(null);
-  const terminalRef = useRef<Terminal | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
-  const lastLogIndexRef = useRef(0);
-  const initBufferRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!terminalContainerRef.current) {
@@ -69,120 +73,104 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
     const term = new Terminal(terminalConfig);
     const fitAddon = new FitAddon();
+    const serializeAddon = new SerializeAddon();
     term.loadAddon(fitAddon);
+    term.loadAddon(serializeAddon);
     term.open(terminalContainerRef.current);
-    // defer fit until after browser layout
-    const rafId = requestAnimationFrame(() => {
-      fitAddon.fit();
-      term.write("\x1b[?7l");
-    });
 
-    terminalRef.current = term;
-    fitAddonRef.current = fitAddon;
+    // the screen from before the page was left: its shell has ended.
+    const screen = loadScreen();
+    if (screen) {
+      term.write(screen);
+      term.write(restored());
+    }
+    // a full screen program's alternate screen, and modes such as mouse tracking, are not kept,
+    // so that the redrawn screen is the plain terminal.
+    const keepScreen = () =>
+      saveScreen(serializeAddon.serialize({ scrollback: MAX_SAVED_LINES, excludeAltBuffer: true, excludeModes: true }));
+    window.addEventListener("pagehide", keepScreen);
 
-    const handleResize = () => {
-      fitAddonRef.current?.fit();
+    let session: TerminalSession | null = null;
+    let running = false;
+
+    const connect = () => {
+      setStatus("connecting");
+      setInfo(null);
+      running = true;
+      session = new TerminalSession(sessionContext, {
+        onOpen: (sessionInfo) => {
+          setInfo(sessionInfo);
+          setStatus("connected");
+          term.write(banner(sessionInfo));
+        },
+        onOutput: (data) => term.write(data),
+        onExit: (reason, code) => {
+          running = false;
+          setStatus("ended");
+          term.write(ended(reason, code));
+        },
+      });
+      void session.connect(term.cols, term.rows);
     };
 
-    const resizeObserver = new ResizeObserver(() => {
-      fitAddonRef.current?.fit();
+    const onData = term.onData((data) => {
+      if (running) {
+        session?.sendInput(data);
+      } else if (data.includes("\r")) {
+        connect();
+      }
     });
+    const onResize = term.onResize(({ cols, rows }) => session?.resize(cols, rows));
 
+    const fit = () => fitAddon.fit();
+    const resizeObserver = new ResizeObserver(fit);
     resizeObserver.observe(terminalContainerRef.current);
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", fit);
+
+    // connect at the terminal's fitted size, after the browser's layout.
+    const rafId = requestAnimationFrame(() => {
+      fit();
+      term.focus();
+      connect();
+    });
 
     return () => {
       cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("pagehide", keepScreen);
+      keepScreen();
       resizeObserver.disconnect();
-      fitAddonRef.current = null;
-      terminalRef.current = null;
+      onData.dispose();
+      onResize.dispose();
+      session?.close();
       term.dispose();
     };
-  }, []);
+  }, [sessionContext]);
 
-  useEffect(() => {
-    if (!terminalRef.current) {
-      return;
-    }
-
-    const nextLogs = logs.slice(lastLogIndexRef.current);
-    if (!nextLogs.length) {
-      return;
-    }
-
-    const nextMessages = nextLogs
-      .map((log) => log.message)
-      .filter((message) => !SUPPRESSED_STARTUP_LINES.has(message.trim())); // drop internal stream noise
-    lastLogIndexRef.current = logs.length;
-
-    if (!nextMessages.length) {
-      return;
-    }
-
-    if (isInitializing) {
-      initBufferRef.current.push(...nextMessages);
-      return;
-    }
-
-    const bufferedMessages = initBufferRef.current;
-    initBufferRef.current = [];
-    const allMessages = bufferedMessages.concat(nextMessages);
-    const batchedOutput = `${allMessages.join("\r\n")}\r\n`;
-    terminalRef.current.write(batchedOutput);
-  }, [isInitializing, logs]);
-
-  // show the loading indicator only if initializing takes longer than 250ms. It is hidden as soon
-  // as initializing ends: see the render, which shows it only while isInitializing.
-  useEffect(() => {
-    if (!isInitializing) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setShowLoading(true);
-    }, 250);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      setShowLoading(false);
-    };
-  }, [isInitializing]);
-
-  useEffect(() => {
-    if (!terminalRef.current || !error) {
-      return;
-    }
-
-    terminalRef.current.writeln(`\x1b[31m[stream] ${error}\x1b[0m`);
-  }, [error]);
+  const statusText = {
+    connecting: gettext("connecting"),
+    connected: gettext("connected"),
+    ended: gettext("disconnected"),
+  }[status];
 
   return (
-    <>
-      <section className="terminal-window" aria-label={gettext("Log terminal")}>
-        <div className="terminal-window__header">
-          <div className="terminal-window__controls" aria-hidden="true">
-            <span className="terminal-window__dot terminal-window__dot--close" />
-            <span className="terminal-window__dot terminal-window__dot--minimize" />
-            <span className="terminal-window__dot terminal-window__dot--maximize" />
-          </div>
-          <div className="terminal-window__title">{gettext("logs@smarter:~")}</div>
-          <div className={`terminal-window__status ${connected ? "is-online" : "is-offline"}`}>
-            {connected ? "connected" : "disconnected"}
-          </div>
+    <section className="terminal-window" aria-label={gettext("Terminal")}>
+      <div className="terminal-window__header">
+        <div className="terminal-window__controls" aria-hidden="true">
+          <span className="terminal-window__dot terminal-window__dot--close" />
+          <span className="terminal-window__dot terminal-window__dot--minimize" />
+          <span className="terminal-window__dot terminal-window__dot--maximize" />
         </div>
+        <div className="terminal-window__title">{info ? `${info.user}@${info.hostname}` : gettext("terminal")}</div>
+        <div className={`terminal-window__status ${status === "connected" ? "is-online" : "is-offline"}`} role="status">
+          {statusText}
+        </div>
+      </div>
 
-        <div className="terminal-window__body" role="log" aria-live="polite">
-          {isInitializing && showLoading && (
-            <div className="terminal-window__loading" aria-label={gettext("Loading logs")}>
-              <span className="terminal-window__loading-spinner" aria-hidden="true" />
-              <span>{gettext("Loading logs…")}</span>
-            </div>
-          )}
-          <div ref={terminalContainerRef} className="terminal-window__xterm" />
-        </div>
-      </section>{" "}
-    </>
+      <div className="terminal-window__body">
+        <div ref={terminalContainerRef} className="terminal-window__xterm" />
+      </div>
+    </section>
   );
 }
 

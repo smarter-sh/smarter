@@ -75,6 +75,13 @@ semantic-release (`release.config.js`) to version the release.
     `feat(chat): add keyboard navigation and a toolbar to the server logs`,
     and the user corrected it to `fix`: it repaired UI defects in an existing
     tab, however much code it took.
+  - Anti-example: the read-only Server Logs window (the
+    smarter-terminal-emulator app) became a real bash terminal, with a new
+    WebSocket consumer, shell, ticket api and setting. Its commit was written
+    as `feat(console): add a superuser bash terminal to the web console`, and
+    the user corrected it to a `fix` described as a refactor of the existing
+    window: reworking an existing app, even into one that does much more, is
+    not a new feature.
 - **scope:** the Django app or area that the change centers on, in lower case:
   `llmclient`, `guardrail`, `plugin`, `passthrough`, `react`, `api`, ... You
   can omit it for changes that span the whole repository.

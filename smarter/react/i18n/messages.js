@@ -1992,7 +1992,7 @@ gettext("Failed to fetch providers: %(status)s");
 gettext("No providers available");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("LLM Provider API Passthrough");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("Server Logs");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("Send a request to see its server logs here.");
@@ -2338,16 +2338,52 @@ gettext("Rename: Rename this secret resource");
 gettext("Delete: You can't delete this secret, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this secret resource");
+// Translators: used in react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
+gettext("Terminal");
 // Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-gettext("Log terminal");
+gettext("connecting");
 // Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-gettext("logs@smarter:~");
+gettext("connected");
 // Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-gettext("Loading logs");
+gettext("disconnected");
 // Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-gettext("Loading logs…");
-// Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/logStream.tsx
-gettext("Log stream disconnected. Reconnecting...");
+gettext("terminal");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+ngettext("%(count)s minute", "%(count)s minutes", 1);
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+ngettext("%(count)s hour", "%(count)s hours", 1);
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("Smarter Terminal: %(command)s on %(hostname)s, as %(user)s, pid %(pid)s.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("This shell runs inside the server process that accepted your connection: one of the platform's replicas, which the load balancer chose. Another window may open on another replica.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("This session can end suddenly, without warning:");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("when the server restarts, or is redeployed or scaled down,");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("when your connection drops, or you reload or leave this page,");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("after %(idle)s without input, and after %(max)s in any case.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("When it ends, everything that it started is stopped, so it is a poor place for long-running processes. Files that it writes may disappear when the container is replaced.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The shell has the server's environment, and every one of its credentials.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("Restored from before this page was left. That shell has ended, and a new one starts below.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The shell exited with status %(code)s.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The session ended after too long without input.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The session reached its time limit.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The server could not start a shell.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The server refused the connection. The terminal may be disabled, or your sign-in may have expired.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("The connection to the server closed, and the session ended.");
+// Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+gettext("Press Enter to start a new session.");
 // Translators: used in react/packages/smarter-vectorsearch-list/src/App.tsx
 gettext("Your Vectorsearch");
 // Translators: used in react/packages/smarter-vectorsearch-list/src/App.tsx
