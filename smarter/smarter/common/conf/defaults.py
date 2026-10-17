@@ -13,6 +13,7 @@ from urllib.parse import urljoin  # library for URL manipulation
 
 # 3rd party stuff
 from pydantic import (
+    AnyUrl,
     EmailStr,
     HttpUrl,
     SecretStr,
@@ -223,7 +224,7 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
-    LOGO: str = get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png"))
+    LOGO: AnyUrl = AnyUrl(get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png")))
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 

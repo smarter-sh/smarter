@@ -23,9 +23,7 @@ export const gettingStartedHandler = http.post(appContext.gettingStartedApiUrl, 
   HttpResponse.json(gettingStarted),
 );
 export const activityHandler = http.post(appContext.activityApiUrl, () => HttpResponse.json(activity));
-export const chargesHandler = http.post(`${appContext.chargesApiUrl}:periodicity/`, () =>
-  HttpResponse.json(tokenUsage),
-);
+export const chargesHandler = http.post(appContext.chargesApiUrl, () => HttpResponse.json(tokenUsage));
 export const budgetsHandlers = [
   http.post(appContext.budgetsApiUrl, () => HttpResponse.json(budgets)),
   http.post(`${appContext.budgetsApiUrl}:locator/series/`, () => HttpResponse.json(budgetSeries)),

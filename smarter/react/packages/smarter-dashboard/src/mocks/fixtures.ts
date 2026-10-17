@@ -5,7 +5,7 @@
 import type { SessionContext } from "@smarter/common";
 
 import type { BudgetSeries, BudgetStatus } from "@/components/BudgetVsActual/types";
-import type { TokenUsageInterface } from "@/components/TokenUsage/types";
+import type { TokenUsageSeries } from "@/components/TokenUsage/types";
 import type { AppContextInterface } from "@/main";
 
 export const sessionContext: SessionContext = {
@@ -32,6 +32,7 @@ export const appContext: AppContextInterface = {
 
 export const myResources = {
   pending_deployments: 2,
+  pending_deployments_url: "/workbench/?filter=pending",
   llmclients_qty: 5,
   llmclients_url: "/workbench/",
   plugins_qty: 7,
@@ -61,11 +62,12 @@ export const serviceHealth = {
   python_version: "3.14.0",
   pydantic_version: "2.13.5",
   drf_version: "3.16.1",
+  repository_url: "https://github.com/smarter-sh/smarter",
   health_checks: [
     { name: "Database", healthy: true },
-    { name: "Redis", healthy: true },
-    { name: "Celery", healthy: true },
-    { name: "Kubernetes", healthy: false },
+    { name: "Cache", healthy: true },
+    { name: "Task Broker", healthy: true },
+    { name: "Workers", healthy: false },
   ],
   health_score: 75,
 };
@@ -102,15 +104,23 @@ export const activity = {
   ],
 };
 
-export const tokenUsage: TokenUsageInterface[] = ["10:00", "11:00", "12:00"].map((time, i) => ({
-  timestamp: `2026-06-15T${time}:00Z`,
-  requestTokens: [1200, 2400, 1800][i],
-  completionTokens: [800, 1600, 900][i],
-  budgetTokens: 10000,
-  totalTokens: [2000, 4000, 2700][i],
-  remainingTokens: [8000, 4000, 1300][i],
-  utilization: [20, 60, 87][i],
-}));
+/** The token usage api's response: the last 24 hours, by hour, with usage in three of them. */
+export const tokenUsage: TokenUsageSeries = {
+  periodicity: "24_hours",
+  period: "hour",
+  points: Array.from({ length: 24 }, (_, i) => {
+    const prompt = [0, 0, 1200, 0, 2400, 1800][i % 6];
+    const completion = [0, 0, 800, 0, 1600, 900][i % 6];
+    return {
+      period_start: new Date(Date.UTC(2026, 5, 15, i)).toISOString(),
+      records: prompt ? 2 : 0,
+      prompt_tokens: prompt,
+      completion_tokens: completion,
+      total_tokens: prompt + completion,
+      total_cost: prompt ? 0.01 : 0,
+    };
+  }),
+};
 
 export function makeBudgetStatus(overrides: Partial<BudgetStatus> = {}): BudgetStatus {
   return {

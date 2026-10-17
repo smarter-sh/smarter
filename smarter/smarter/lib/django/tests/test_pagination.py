@@ -1,5 +1,6 @@
 """Test the pagination, search and sorting of the list apis, :mod:`smarter.lib.django.pagination`."""
 
+from django.db.models import Q
 from django.test import RequestFactory
 from django.utils import timezone
 
@@ -9,6 +10,7 @@ from smarter.lib.django.pagination import (
     DEFAULT_SORT_FIELDS,
     MAX_PAGE_SIZE,
     MAX_SEARCH_LENGTH,
+    filter_queryset,
     has_field,
     paginate_listview,
     positive_int,
@@ -36,6 +38,17 @@ SORT_FIELDS = {**DEFAULT_SORT_FIELDS, "lastUsedAt": "last_used_at", "username": 
 """The default columns, a nullable one, and one of a related model."""
 
 DEFAULT_SORT_COLUMNS = ["createdAt", "description", "name", "updatedAt"]
+
+
+class TestDefaultSortFields(TestAccountMixin):
+    """Test DEFAULT_SORT_FIELDS, the default columns of every list."""
+
+    def test_read_only(self):
+        """A list can't change every other list's default columns by changing its own."""
+        with self.assertRaises(TypeError):
+            DEFAULT_SORT_FIELDS["extra"] = "extra"  # type: ignore[index]
+        self.assertEqual({**DEFAULT_SORT_FIELDS, "stage": "stage"}["stage"], "stage")
+        self.assertNotIn("stage", DEFAULT_SORT_FIELDS)
 
 
 class TestPagination(TestAccountMixin):
@@ -67,14 +80,18 @@ class TestPagination(TestAccountMixin):
     def names(self, queryset) -> list[str]:
         return [token.name for token in queryset]
 
-    def paginate(self, sort_fields=DEFAULT_SORT_FIELDS, **params):
+    def paginate(self, sort_fields=DEFAULT_SORT_FIELDS, filters=None, **params):
         return paginate_listview(
             self.factory.post("/", QUERY_STRING="&".join(f"{k}={v}" for k, v in params.items())),
             self.queryset,
             sort_fields=sort_fields,
+            filters=filters,
         )
 
-    def description(self, page=1, page_size=DEFAULT_PAGE_SIZE, num_pages=1, count=3, search="", ordering=""):
+    # pylint: disable=too-many-arguments
+    def description(
+        self, page=1, page_size=DEFAULT_PAGE_SIZE, num_pages=1, count=3, search="", ordering="", filter_="", filters=()
+    ):
         return {
             "page": page,
             "pageSize": page_size,
@@ -83,6 +100,8 @@ class TestPagination(TestAccountMixin):
             "search": search,
             "ordering": ordering,
             "sortFields": DEFAULT_SORT_COLUMNS,
+            "filter": filter_,
+            "filters": list(filters),
         }
 
     def test_search_matches_name_or_description_ignoring_case(self):
@@ -212,3 +231,30 @@ class TestPagination(TestAccountMixin):
         _, pagination = self.paginate(sort_fields={**SORT_FIELDS, "missing": "no_such_field"}, ordering="missing")
         self.assertEqual(pagination["ordering"], "")
         self.assertEqual(pagination["sortFields"], sorted(SORT_FIELDS))
+
+    def test_filter_narrows_the_list(self):
+        filters = {"greek": Q(description__icontains="a"), "first": Q(name="test_pagination_0")}
+        queryset, applied = filter_queryset(self.queryset, " first ", filters)
+        self.assertEqual((self.names(queryset), applied), (["test_pagination_0"], "first"))
+
+    def test_empty_or_unknown_filter_is_everything(self):
+        filters = {"first": Q(name="test_pagination_0")}
+        for name in ("", "  ", "nope"):
+            with self.subTest(name=name):
+                queryset, applied = filter_queryset(self.queryset, name, filters)
+                self.assertEqual((queryset, applied), (self.queryset, ""))
+
+    def test_filter_search_sort_and_pages(self):
+        filters = {"tokens": Q(description__icontains="token"), "first": Q(name="test_pagination_0")}
+        page, pagination = self.paginate(filters=filters, filter="tokens", ordering="-name", page_size=1)
+        self.assertEqual(self.names(page), ["test_pagination_1"])
+        self.assertEqual(
+            pagination,
+            self.description(
+                page_size=1, num_pages=2, count=2, ordering="-name", filter_="tokens", filters=["first", "tokens"]
+            ),
+        )
+
+    def test_unknown_filter_is_reported_empty(self):
+        _, pagination = self.paginate(filters={"first": Q(name="test_pagination_0")}, filter="nope")
+        self.assertEqual(pagination, self.description(filters=["first"]))
