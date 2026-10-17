@@ -4,6 +4,8 @@ from .abstract_broker_class import (
     AbstractBroker,
     SAMDependency,
     SAMDependencyReference,
+    SAMDependents,
+    dependents_exist,
     memoized_dependencies,
 )
 from .error_classes import (
@@ -21,6 +23,8 @@ __all__ = [
     "memoized_dependencies",
     "SAMDependency",
     "SAMDependencyReference",
+    "SAMDependents",
+    "dependents_exist",
     "SAMBrokerError",
     "SAMBrokerReadOnlyError",
     "SAMBrokerErrorNotImplemented",

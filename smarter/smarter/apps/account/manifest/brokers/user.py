@@ -28,6 +28,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -1035,15 +1037,17 @@ class SAMUserBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the resources that this User owns.
+    @classmethod
+    def dependents(cls, instance: User) -> SAMDependents:
+        """Return the resources that a User owns.
 
         Deleting a User also deletes every resource that it owns, so they must be deleted, or
         moved to another owner, first.
 
-        :return: A broker for each resource that the User owns.
-        :rtype: List[AbstractBroker]
+        :param instance: The User.
+        :type instance: User
+        :return: The resources of each kind that the User owns. Its plugins have their own kinds.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -1061,31 +1065,40 @@ class SAMUserBroker(AbstractBroker):
         from smarter.apps.vectorstore.models import VectorstoreMeta
         from smarter.lib.drf.models import SmarterAuthToken
 
-        user = self.brokered_user
-        if not user:
-            return []
-        retval: List[AbstractBroker] = []
-        for kind, model in (
-            (SAMKinds.API_CONNECTION, ApiConnection),
-            (SAMKinds.SQL_CONNECTION, SqlConnection),
-            (SAMKinds.CUSTOM_DOMAIN, LLMClientCustomDomain),
-            (SAMKinds.GUARDRAIL, Guardrail),
-            (SAMKinds.LLM_CLIENT, LLMClient),
-            (SAMKinds.LLM_HOST, LLMHost),
-            (SAMKinds.LLM_HOST_COMPUTE, LLMHostCompute),
-            (SAMKinds.MCP_CLIENT, MCPClient),
-            (SAMKinds.ORCHESTRATOR, Orchestrator),
-            (SAMKinds.PROVIDER, Provider),
-            (SAMKinds.PROXY, Proxy),
-            (SAMKinds.SECRET, Secret),
-            (SAMKinds.VECTORSEARCH, Vectorsearch),
-            (SAMKinds.VECTORSTORE, VectorstoreMeta),
-            (SAMKinds.AUTH_TOKEN, SmarterAuthToken),
-        ):
-            retval += self.dependency_brokers(kind.value, model.objects.filter(user_profile__user=user))
-        for plugin_meta in PluginMeta.objects.filter(user_profile__user=user):
-            retval.append(self.dependency_broker(plugin_meta.kind.value, plugin_meta))
+        retval: SAMDependents = [
+            (kind.value, model.objects.filter(user_profile__user=instance))
+            for kind, model in (
+                (SAMKinds.API_CONNECTION, ApiConnection),
+                (SAMKinds.SQL_CONNECTION, SqlConnection),
+                (SAMKinds.CUSTOM_DOMAIN, LLMClientCustomDomain),
+                (SAMKinds.GUARDRAIL, Guardrail),
+                (SAMKinds.LLM_CLIENT, LLMClient),
+                (SAMKinds.LLM_HOST, LLMHost),
+                (SAMKinds.LLM_HOST_COMPUTE, LLMHostCompute),
+                (SAMKinds.MCP_CLIENT, MCPClient),
+                (SAMKinds.ORCHESTRATOR, Orchestrator),
+                (SAMKinds.PROVIDER, Provider),
+                (SAMKinds.PROXY, Proxy),
+                (SAMKinds.SECRET, Secret),
+                (SAMKinds.VECTORSEARCH, Vectorsearch),
+                (SAMKinds.VECTORSTORE, VectorstoreMeta),
+                (SAMKinds.AUTH_TOKEN, SmarterAuthToken),
+            )
+        ]
+        retval.append((None, PluginMeta.objects.filter(user_profile__user=instance)))
         return retval
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the resources that this User owns.
+
+        Deleting a User also deletes every resource that it owns, so they must be deleted, or
+        moved to another owner, first.
+
+        :return: A broker for each resource that the User owns.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.brokered_user)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

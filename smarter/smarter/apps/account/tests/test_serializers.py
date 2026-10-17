@@ -3,14 +3,17 @@
 import copy
 import importlib
 from typing import Optional
+from unittest.mock import patch
 
 from django.test import RequestFactory
 
+from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.serializers import GuardrailSerializer
 from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import logging
+from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 
 from ..serializers import (
     AccountMiniSerializer,
@@ -105,6 +108,16 @@ class TestCanDelete(TestAccountMixin):
         self.assertIs(user_can_delete(self.guardrail, "Guardrail", None), False)
         self.assertIs(user_can_delete(self.guardrail, "NotAKind", self.admin_user), False)
         self.assertIs(user_can_delete(self.guardrail, None, self.admin_user), False)
+
+    def test_user_can_delete_builds_no_broker(self):
+        """Test that user_can_delete() asks the broker class, so that a list page builds no broker per row."""
+        with patch.object(SAMGuardrailBroker, "__init__", side_effect=AssertionError("a broker was built")):
+            self.assertIs(user_can_delete(self.guardrail, "Guardrail", self.admin_user), True)
+
+    def test_user_can_delete_when_dependents_fail(self):
+        """Test that a resource whose dependents cannot be checked may not be deleted."""
+        with patch.object(SAMGuardrailBroker, "has_dependents", side_effect=SAMBrokerErrorNotImplemented("no")):
+            self.assertIs(user_can_delete(self.guardrail, "Guardrail", self.admin_user), False)
 
     def test_every_subclass_has_can_delete(self):
         """Test that every subclass of MetaDataWithOwnershipModelSerializer serializes can_delete."""
