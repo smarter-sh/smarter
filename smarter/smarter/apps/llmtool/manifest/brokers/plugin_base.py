@@ -41,6 +41,8 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -411,24 +413,32 @@ class SAMPluginBaseBroker(AbstractBroker):
             )
         return self._plugin
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the LLMClients that use this plugin.
+    @classmethod
+    def dependents(cls, instance: PluginMeta) -> SAMDependents:
+        """Return the LLMClients that use a plugin.
 
-        :return: A broker for each LLMClient that lists this plugin in its ``spec.plugins``.
-        :rtype: List[AbstractBroker]
+        :param instance: The PluginMeta.
+        :type instance: PluginMeta
+        :return: The LLMClients that list the plugin in their ``spec.plugins``.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
 
-        plugin_meta = self.plugin_meta
-        if not plugin_meta:
-            return []
         llmclients = LLMClient.objects.filter(
-            id__in=LLMClientPlugin.objects.filter(plugin_meta=plugin_meta).values("llmclient_id")
+            id__in=LLMClientPlugin.objects.filter(plugin_meta=instance).values("llmclient_id")
         )
-        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+        return [(SAMKinds.LLM_CLIENT.value, llmclients)]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the LLMClients that use this plugin.
+
+        :return: A broker for each LLMClient that lists this plugin in its ``spec.plugins``.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.plugin_meta)
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:

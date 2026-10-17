@@ -57,6 +57,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -401,20 +403,28 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the LLMHosts that run on this LLMHostCompute.
+    @classmethod
+    def dependents(cls, instance: LLMHostCompute) -> SAMDependents:
+        """Return the LLMHosts that run on an LLMHostCompute.
 
-        :return: A broker for each LLMHost whose ``spec.compute`` is this LLMHostCompute.
-        :rtype: List[AbstractBroker]
+        :param instance: The LLMHostCompute.
+        :type instance: LLMHostCompute
+        :return: The LLMHosts whose ``spec.compute`` is the LLMHostCompute.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
 
-        compute = self.compute
-        if not compute:
-            return []
-        return self.dependency_brokers(SAMKinds.LLM_HOST.value, compute.llmhosts.all())  # type: ignore[attr-defined]
+        return [(SAMKinds.LLM_HOST.value, instance.llmhosts.all())]  # type: ignore[attr-defined]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the LLMHosts that run on this LLMHostCompute.
+
+        :return: A broker for each LLMHost whose ``spec.compute`` is this LLMHostCompute.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.compute)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the LLMHostCompute, and its node group.

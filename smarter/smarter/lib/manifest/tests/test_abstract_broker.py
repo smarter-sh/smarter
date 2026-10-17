@@ -7,16 +7,23 @@ dependencies() or the json responses, so these tests exercise AbstractBroker's.
 
 import os
 from http import HTTPStatus
+from types import SimpleNamespace
 
 from django.utils.crypto import get_random_string
 
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.apps.secret.models import Secret
 from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalCliCommands
-from smarter.lib.manifest.broker import SAMBrokerError
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    dependents_exist,
+)
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -105,6 +112,70 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         self.assertEqual(len(broker.dependency_brokers(KIND, [guardrail, guardrail])), 1)
         with self.assertRaises(SAMBrokerError):
             broker.dependency_broker("NotAKind", guardrail)
+
+    def test_dependency_brokers_of_rows_with_their_own_kinds(self):
+        """Test that a kind of None builds each row's broker from the row's own kind, as for plugins."""
+        guardrail = self.create_guardrail(self.user_profile)
+        row = SimpleNamespace(
+            pk=guardrail.pk, kind=SimpleNamespace(value=KIND), name=self.name, user_profile=self.user_profile
+        )
+        dependencies = self.orm_broker(self.user_profile).dependency_brokers(None, [row])
+        self.assertEqual(len(dependencies), 1)
+        self.assertIsInstance(dependencies[0], SAMGuardrailBroker)
+
+    def test_has_dependents(self):
+        """Test that has_dependents() and dependencies() agree, before and after an LLMClient uses the Guardrail."""
+        guardrail = self.create_guardrail(self.user_profile)
+        self.assertIs(SAMGuardrailBroker.has_dependents(guardrail), False)
+        self.assertEqual(self.orm_broker(self.user_profile).dependency_brokers_for(guardrail), [])
+
+        llmclient = LLMClient.objects.create(name=self.name, user_profile=self.user_profile)
+        self.addCleanup(llmclient.delete)
+        LLMClientGuardrails.objects.create(llmclient=llmclient, guardrail=guardrail)
+        self.assertIs(SAMGuardrailBroker.has_dependents(guardrail), True)
+        dependencies = self.orm_broker(self.user_profile).dependencies()
+        self.assertEqual([(d.kind, d.name) for d in dependencies], [("LLMClient", self.name)])
+
+    def test_dependency_brokers_for_a_missing_resource(self):
+        """Test that a resource that does not exist has no dependencies."""
+        self.assertEqual(self.orm_broker(self.user_profile).dependency_brokers_for(None), [])
+
+    def test_dependents_not_implemented(self):
+        """Test that a broker that does not implement dependents() says so, rather than having none."""
+        guardrail = self.create_guardrail(self.user_profile)
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            AbstractBroker.dependents(guardrail)
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            AbstractBroker.has_dependents(guardrail)
+
+    def test_every_broker_implements_dependents(self):
+        """Test that every registered broker implements dependents(), which canDelete depends on."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        for kind in Brokers.all_brokers():
+            broker_class = Brokers.get_broker(kind)
+            with self.subTest(kind=kind):
+                self.assertIsNot(
+                    broker_class.dependents.__func__,  # type: ignore[union-attr]
+                    AbstractBroker.dependents.__func__,  # type: ignore[attr-defined]
+                )
+
+    def test_dependents_exist(self):
+        """Test that dependents_exist() asks a QuerySet with EXISTS, and reads any other iterable only to its first row."""
+        guardrail = self.create_guardrail(self.user_profile)
+        self.assertIs(dependents_exist(Guardrail.objects.filter(pk=guardrail.pk)), True)
+        self.assertIs(dependents_exist(Guardrail.objects.none()), False)
+        self.assertIs(dependents_exist([]), False)
+        read = []
+
+        def rows():
+            for row in (guardrail, guardrail):
+                read.append(row)
+                yield row
+
+        self.assertIs(dependents_exist(rows()), True)
+        self.assertEqual(len(read), 1)
 
     def test_get_or_create_secret(self):
         """Test that a secret is created with a value, then found without one."""

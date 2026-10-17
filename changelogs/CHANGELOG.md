@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.32.1](https://github.com/smarter-sh/smarter/compare/v0.32.0...v0.32.1) (2026-10-17)
+
+### Performance
+
+* **broker:** compute canDelete without building a broker per row ([b84e241](https://github.com/smarter-sh/smarter/commit/b84e241927f5bb69ffbaabb093e2dac8761af80b))
+
 ## [0.32.0](https://github.com/smarter-sh/smarter/compare/v0.31.1...v0.32.0) (2026-10-16)
 
 ### Features

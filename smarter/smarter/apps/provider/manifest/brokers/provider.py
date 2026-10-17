@@ -35,6 +35,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -722,16 +724,20 @@ class SAMProviderBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the resources that use this Provider.
+    @classmethod
+    def dependents(cls, instance: Provider) -> SAMDependents:
+        """Return the resources that use a Provider.
 
         Proxies and Vectorstores refer to the Provider itself. LLMClients, plugins and Guardrails
         refer to a Provider by name, so they only depend on this Provider when no other active
-        Provider has the same name.
+        Provider has the same name. A Guardrail keeps its provider in its ``config``, so
+        Guardrails are filtered in Python, last, and only as far as :meth:`has_dependents` reads.
 
-        :return: A broker for each Proxy, Vectorstore, LLMClient, plugin and Guardrail that uses this Provider.
-        :rtype: List[AbstractBroker]
+        :param instance: The Provider.
+        :type instance: Provider
+        :return: The Proxies, Vectorstores, LLMClients, plugins and Guardrails that use the Provider.
+            The plugins have their own kinds.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -741,31 +747,43 @@ class SAMProviderBroker(AbstractBroker):
         from smarter.apps.proxy.models import Proxy
         from smarter.apps.vectorstore.models import VectorstoreMeta
 
-        provider = self.provider
-        if not provider and self.name and self.user_profile:
-            provider = Provider.objects.filter(user_profile=self.user_profile, name=self.name).first()
-        if not provider:
-            return []
-        retval = self.dependency_brokers(SAMKinds.PROXY.value, Proxy.objects.filter(provider=provider))
-        retval += self.dependency_brokers(
-            SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(embeddings_provider=provider)
-        )
-        name = provider.name
-        if Provider.objects.filter(name__iexact=name, is_active=True).exclude(pk=provider.pk).exists():
+        retval: SAMDependents = [
+            (SAMKinds.PROXY.value, Proxy.objects.filter(provider=instance)),
+            (SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(embeddings_provider=instance)),
+        ]
+        name = instance.name
+        if Provider.objects.filter(name__iexact=name, is_active=True).exclude(pk=instance.pk).exists():
             return retval
-        retval += self.dependency_brokers(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(provider__iexact=name))
         plugins = PluginMeta.objects.filter(
             id__in=PluginPrompt.objects.filter(provider__iexact=name).values("plugin_id")
         )
-        for plugin_meta in plugins:
-            retval.append(self.dependency_broker(plugin_meta.kind.value, plugin_meta))
-        guardrails = [
+        guardrails = (
             guardrail
-            for guardrail in Guardrail.objects.all()
+            for guardrail in Guardrail.objects.all().iterator()
             if str((guardrail.config or {}).get("provider") or "").lower() == name.lower()
+        )
+        retval += [
+            (SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(provider__iexact=name)),
+            (None, plugins),
+            (SAMKinds.GUARDRAIL.value, guardrails),
         ]
-        retval += self.dependency_brokers(SAMKinds.GUARDRAIL.value, guardrails)
         return retval
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the resources that use this Provider.
+
+        Proxies and Vectorstores refer to the Provider itself. LLMClients, plugins and Guardrails
+        refer to a Provider by name, so they only depend on this Provider when no other active
+        Provider has the same name.
+
+        :return: A broker for each Proxy, Vectorstore, LLMClient, plugin and Guardrail that uses this Provider.
+        :rtype: List[SAMDependency]
+        """
+        provider = self.provider
+        if not provider and self.name and self.user_profile:
+            provider = Provider.objects.filter(user_profile=self.user_profile, name=self.name).first()
+        return self.dependency_brokers_for(provider)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
