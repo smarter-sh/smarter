@@ -18,6 +18,12 @@ Behavior
     query parameter, for example ``?level=DEBUG``, or by default
     ``smarter_settings.log_level``. Smarter Chat's Sandbox mode asks for
     ``DEBUG``, and its Production mode for the default.
+- Streams only the records of one request, when the ``request_id`` query
+    parameter is set: the records that the request's ``X-Smarter-RequestId``
+    header tagged. See
+    :class:`smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware`.
+    The Prompt Passthrough's Server Logs tab streams the logs of each prompt
+    that it sends this way.
 - Emits a retry hint and keepalive comments to keep long-lived connections
     healthy through intermediate proxies.
 - Closes the Redis Pub/Sub connection when the stream terminates.
@@ -38,7 +44,7 @@ See Also
 import asyncio
 import json
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, Union
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, Optional, Union
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
@@ -53,6 +59,7 @@ from smarter.lib.logging.redis_log_handler import (
     get_user_context,
     job_id_factory,
     stream_key,
+    valid_request_id,
 )
 
 if TYPE_CHECKING:
@@ -189,8 +196,64 @@ def _is_below_level(payload_text: str, min_level: int) -> bool:
     return level is not None and level < min_level
 
 
+def _request_id(request: HttpRequest) -> Optional[str]:
+    """
+    Return the request id whose records a stream sends, or None for every record.
+
+    :param request: The stream's request. Its ``request_id`` query parameter is the request id.
+    :type request: django.http.HttpRequest
+    :return: The request id, or None when the parameter is missing or is not a valid request id.
+    :rtype: Optional[str]
+    """
+    return valid_request_id(request.GET.get("request_id"))
+
+
+def _is_other_request(payload_text: str, request_id: Optional[str]) -> bool:
+    """
+    Return True when a stream sends only one request's records, and a payload is not one of them.
+
+    Payloads that aren't JSON log records carry no request id, so they are not the request's.
+
+    :param payload_text: The log record, as JSON, or as plain text.
+    :type payload_text: str
+    :param request_id: The request id whose records are streamed, or None for every record.
+    :type request_id: Optional[str]
+    :return: True if the record should not be streamed.
+    :rtype: bool
+    """
+    if not request_id:
+        return False
+    try:
+        payload_json = json.loads(payload_text)
+    except (ValueError, TypeError):
+        return True
+    return not isinstance(payload_json, dict) or payload_json.get("request_id") != request_id
+
+
+def _should_skip(payload_text: str, min_level: int, request_id: Optional[str]) -> bool:
+    """
+    Return True when a stream does not send a payload.
+
+    See :func:`_should_skip_stream_internal_log`, :func:`_is_below_level` and :func:`_is_other_request`.
+
+    :param payload_text: The log record, as JSON, or as plain text.
+    :type payload_text: str
+    :param min_level: The minimum log level, as a Python logging level number.
+    :type min_level: int
+    :param request_id: The request id whose records are streamed, or None for every record.
+    :type request_id: Optional[str]
+    :return: True if the record should not be streamed.
+    :rtype: bool
+    """
+    return (
+        _should_skip_stream_internal_log(payload_text)
+        or _is_below_level(payload_text, min_level)
+        or _is_other_request(payload_text, request_id)
+    )
+
+
 async def _replay_stream_history(
-    redis_cache: "Redis", channel: str, min_level: int = logging.NOTSET
+    redis_cache: "Redis", channel: str, min_level: int = logging.NOTSET, request_id: Optional[str] = None
 ) -> AsyncIterator[str]:
     """
     Replay persisted Redis stream entries as SSE frames before live Pub/Sub.
@@ -213,6 +276,10 @@ async def _replay_stream_history(
         The minimum log level of the replayed records. Records below it are
         dropped. See :func:`_is_below_level`.
     :type min_level: int
+    :param request_id:
+        The request id whose records are replayed, or None for every record.
+        See :func:`_is_other_request`.
+    :type request_id: Optional[str]
     :yields:
         Individual SSE frame fragments for each persisted log payload. Each
         payload is emitted as one or more ``data:`` lines followed by a blank
@@ -257,7 +324,7 @@ async def _replay_stream_history(
             fields = payload or {}
             raw = fields.get("data", fields.get(b"data", ""))
             decoded = _decode_redis_payload(raw)
-            if _should_skip_stream_internal_log(decoded) or _is_below_level(decoded, min_level):
+            if _should_skip(decoded, min_level, request_id):
                 # Advance the cursor past this entry even though we're dropping it,
                 # so the next batch starts from the correct position.
                 upper_bound = f"({_decode_redis_payload(entry_id)}"
@@ -291,6 +358,9 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     ``?level=DEBUG``, are streamed. Without it, the level is
     ``smarter_settings.log_level``. See :func:`_min_log_level`.
 
+    With the ``request_id`` query parameter, only the records of that request are
+    streamed. See :func:`_request_id`.
+
     :param request: Incoming HTTP request. The view requires authentication
         via :func:`django.contrib.auth.decorators.login_required`.
     :type request: django.http.HttpRequest
@@ -321,11 +391,13 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         user_context = get_user_context(user)
     logger_prefix = logging.formatted_text(f"{__name__}.stream_user_logs()")
     min_level = _min_log_level(request)
+    request_id = _request_id(request)
     logger.info(
-        "%s called for user_context='%s' min_level=%s",
+        "%s called for user_context='%s' min_level=%s request_id=%s",
         logger_prefix,
         user_context,
         logging.getLevelName(min_level),
+        request_id,
     )
 
     if not smarter_settings.enable_dashboard_server_logs:
@@ -373,7 +445,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
             yield "retry: 3000\n\n"
 
             try:
-                async for event in _replay_stream_history(redis_cache, channel, min_level):
+                async for event in _replay_stream_history(redis_cache, channel, min_level, request_id):
                     yield event
             except RedisError:
                 logger.exception("%s Failed to replay Redis stream history for log streaming.", logger_prefix)
@@ -388,7 +460,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                 if message and message.get("type") == "message":
                     raw = message.get("data", "")
                     decoded = _decode_redis_payload(raw)
-                    if _should_skip_stream_internal_log(decoded) or _is_below_level(decoded, min_level):
+                    if _should_skip(decoded, min_level, request_id):
                         continue
                     for frame in _iter_sse_data_frames(decoded):
                         yield frame

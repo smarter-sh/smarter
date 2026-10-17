@@ -103,10 +103,57 @@ and for evaluating new LLM providers.
 Live Server Logs
 ~~~~~~~~~~~~~~~~~~~~~
 
-Authors have direct visibility into live Linux application server logs from the console,
-with powerful filtering and search capabilities to quickly identify relevant log entries.
-This feature is invaluable for debugging complex multi-pass prompts, monitoring real-time
-system behavior, and gaining insights into platform performance.
+Authors have direct visibility into the live Linux application server logs of each prompt, with
+filtering, to quickly identify relevant log entries. The Passthrough Tool's **Server Logs** tab, to
+the right of its Request and Response tabs, streams the logs of the request that it sent last, and
+only that request's logs: each request has its own id, in its ``X-Smarter-RequestId`` header, and
+the platform tags every log record of the request with it. Smarter Chat's Console has a Server Logs
+tab too, with the user's logs of the chat. This feature is invaluable for debugging complex
+multi-pass prompts, monitoring real-time system behavior, and gaining insights into platform
+performance.
+
+The two log viewers look and work the same. Long lines scroll horizontally, or wrap. The viewer
+follows new records while it is scrolled to the bottom. Click the lines, then use the keyboard,
+as in k9s or ``less``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Keys
+     - Action
+   * - :kbd:`Ctrl+↑`, :kbd:`Cmd+↑`, :kbd:`Home`, :kbd:`g`
+     - Top
+   * - :kbd:`Ctrl+↓`, :kbd:`Cmd+↓`, :kbd:`End`, :kbd:`G`
+     - Bottom, and follow new records
+   * - :kbd:`↑` :kbd:`↓`, :kbd:`k` :kbd:`j`
+     - Up or down a line
+   * - :kbd:`PgUp` :kbd:`PgDn`, :kbd:`Shift+Space` :kbd:`Space`, :kbd:`b` :kbd:`f`
+     - Up or down a page
+   * - :kbd:`←` :kbd:`→`, :kbd:`h` :kbd:`l`
+     - Scroll left or right
+   * - :kbd:`Ctrl+←` :kbd:`Ctrl+→`, :kbd:`0` :kbd:`$`
+     - Start of the lines, or end of the longest line
+   * - :kbd:`w`
+     - Wrap long lines, or scroll them
+   * - :kbd:`s`
+     - Follow new records, or stop
+   * - :kbd:`/`
+     - Filter the lines
+   * - :kbd:`c`
+     - Copy the lines
+   * - :kbd:`F`
+     - Full screen, or not
+   * - :kbd:`?`
+     - Show the shortcuts
+   * - :kbd:`Esc`
+     - Leave full screen, hide the shortcuts, or clear the filter
+
+Browsers keep :kbd:`Ctrl+W` and :kbd:`Cmd+W` to close the tab, so wrap is :kbd:`w`, as in k9s. On
+macOS, Mission Control keeps :kbd:`Ctrl+↑` and :kbd:`Ctrl+↓`: use :kbd:`Cmd+↑` and :kbd:`Cmd+↓`.
+
+The server logs are viewable while ``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS`` is set and the
+``enable_web_console_server_logs`` waffle switch is active.
 
 .. raw:: html
 

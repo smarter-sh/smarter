@@ -9,7 +9,11 @@ from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.logging.middleware import SmarterRequestLogContextMiddleware
-from smarter.lib.logging.redis_log_handler import get_user_context, user_id_context
+from smarter.lib.logging.redis_log_handler import (
+    get_user_context,
+    request_id_context,
+    user_id_context,
+)
 
 
 class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
@@ -27,8 +31,8 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
         self.seen.append(user_id_context.get())
         return HttpResponse("ok")
 
-    def request(self, path="/dashboard/", user=None):
-        request = self.factory.get(path)
+    def request(self, path="/dashboard/", user=None, **headers):
+        request = self.factory.get(path, headers=headers)
         request.user = user or AnonymousUser()
         return request
 
@@ -89,3 +93,35 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
         self.assertFalse(SmarterRequestLogContextMiddleware.is_authenticated(None))
         self.assertFalse(SmarterRequestLogContextMiddleware.is_authenticated(AnonymousUser()))
         self.assertTrue(SmarterRequestLogContextMiddleware.is_authenticated(self.admin_user))
+
+    def test_request_id(self):
+        """Test that the request's X-Smarter-RequestId tags its logs while the view runs, if it is valid."""
+        seen = []
+
+        def get_response(request):
+            seen.append(request_id_context.get())
+            return HttpResponse("ok")
+
+        middleware = SmarterRequestLogContextMiddleware(get_response)
+        middleware(self.request(user=self.admin_user, **{"X-Smarter-RequestId": "0123456789abcdef"}))
+        middleware(self.request(user=self.admin_user, **{"X-Smarter-RequestId": "not a request id"}))
+        middleware(self.request(user=self.admin_user))
+        self.assertEqual(seen, ["0123456789abcdef", None, None])
+        self.assertIsNone(request_id_context.get())
+
+    def test_async_request_id(self):
+        """Test that an async request's X-Smarter-RequestId tags its logs while the view runs."""
+        seen = []
+
+        async def get_response(request):
+            seen.append(request_id_context.get())
+            return HttpResponse("async ok")
+
+        middleware = SmarterRequestLogContextMiddleware(get_response)
+        with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
+            asyncio.run(middleware(self.request(**{"X-Smarter-RequestId": "async-request-1"})))
+        self.assertEqual(seen, ["async-request-1"])
+        self.assertIsNone(request_id_context.get())
+
+    def test_get_request_id_without_headers(self):
+        self.assertIsNone(SmarterRequestLogContextMiddleware.get_request_id(object()))  # type: ignore[arg-type]
