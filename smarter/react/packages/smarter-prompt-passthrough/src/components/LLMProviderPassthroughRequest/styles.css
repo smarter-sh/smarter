@@ -1,0 +1,15 @@
+.passthrough-request-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+/* the same small uppercase label as the provider card's. */
+.passthrough-request-label {
+  color: var(--bs-gray-500);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
